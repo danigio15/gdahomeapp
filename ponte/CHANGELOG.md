@@ -10,6 +10,40 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.11.1
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Alexa dice solo quello che hai scelto**: «arrivano le notifiche su Alexa
+  anche se non ho selezionato quella notifica». Il ponte guardava solo i
+  gruppi di Config › Alexa (Urgenti, Sicurezza, Casa, Persone…) e non le
+  voci spente nella pagina Notifiche dell'app: un «elettrodomestico finito»
+  spento sul telefono, Alexa lo diceva lo stesso. Adesso un Echo dice una
+  notifica solo se il suo gruppo è acceso in Config **e** almeno un telefono
+  della casa la riceve, con le stesse persone scelte, gli stessi orari del
+  movimento e la stessa soglia del costo. Gli arrivi non annunciano più chi
+  nessun telefono segue, e il movimento di giorno con la casa piena non
+  parla più. E il gruppo «Da automazioni di Home Assistant», che si vedeva
+  nel Config ma non faceva mai parlare gli Echo, adesso funziona.
+- **Il più e il meno del Clima vanno di mezzo grado**: sulla card di una
+  stanza il «+» saltava di un grado intero, mentre la finestra del
+  termostato andava di 0,5°. Adesso tutti i più e meno dei gradi (card,
+  widget della Home, pannello a muro, comando rapido, stufe) usano lo stesso
+  passo: quello dell'apparecchio, se no mezzo grado.
+- **Pannello a muro: la pagina Clima si apre anche sul Termostato**: «Si apre
+  su» ha la terza scelta, 🌡️ Termostato, e resta salvata.
+- **Pannello a muro: i riquadri si allargano**: «ho lasciato solo l'antifurto
+  ma rimane piccolo e non si espande». Il numero di riquadri scelto (6, 8, 12) è il massimo, non la misura: un riquadro solo riempie la pagina, due la
+  dividono, tre o quattro fanno 2×2, e i posti vuoti in fondo non si
+  disegnano più. Sul 4" l'antifurto da solo mostra la card intera, con lo
+  stato, «2 di 3 inserite» e i tasti di ogni area.
+- **Quadro: la gestione rifatta**: «Abbonamenti e licenze» in un posto solo,
+  con i numeri grandi (paganti, in prova, non rinnovano, ricorrente,
+  incassato, case Premium), le case divise per piano, le scadenze dei
+  prossimi 30 giorni su una linea del tempo, «Come funziona» in cinque righe
+  e la tabella delle licenze con origine, stato, scadenza e importo. Menu a
+  lato sul computer, barra in basso sul telefono, anche al buio.
+
 ## 1.18.11
 
 _App GdAHome e Home Assistant._

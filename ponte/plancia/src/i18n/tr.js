@@ -7495,6 +7495,9 @@ export default Object.freeze({
   "Urgent ones are said anyway.": "Acil olanlar yine de söylenir.",
   "Voice": "Ses",
   "Which Echos": "Hangi Echo'lar",
+  "Which notifications": "Hangi bildirimler",
+  "Only those turned on in the app's Notifications: an item turned off on every phone is not said by the Echos.":
+    "Yalnızca uygulamanın Bildirimler bölümünde açık olanlar: her telefonda kapalı olan bir öğeyi Echo'lar söylemez.",
   "Urgent: alarm, sensors, doorbell, blackout": "Acil: alarm, sensörler, kapı zili, elektrik kesintisi",
   "Security: arming, openings, motion": "Güvenlik: kurma, açılmalar, hareket",
   "Home: appliances, fridge, rain, pets": "Ev: cihazlar, buzdolabı, yağmur, evcil hayvanlar",
@@ -8184,4 +8187,5 @@ export default Object.freeze({
   "🖥️ Computer": "🖥️ Bilgisayar",
   "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "sekmelerinin önizlemesinde değiştirilen sayfalar — blokların sırası ve gizlenenler. «Sıfırla» eski haline getirir.",
   "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.": "önizlemede parçalarını taşıdığın çizimler, bilgisayarda ve telefonda. «Sıfırla» onları eski haline getirir.",
+  "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.": "Henüz ısıtma ve soğutma yapan bir termostat yok: olana kadar Soğutma'da açılır.",
 });

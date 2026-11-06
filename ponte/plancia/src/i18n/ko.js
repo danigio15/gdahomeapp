@@ -7469,6 +7469,9 @@ export default Object.freeze({
   "Urgent ones are said anyway.": "긴급 알림은 그래도 말합니다.",
   "Voice": "음성",
   "Which Echos": "어떤 Echo",
+  "Which notifications": "어떤 알림",
+  "Only those turned on in the app's Notifications: an item turned off on every phone is not said by the Echos.":
+    "앱의 알림에서 켜 둔 것만: 모든 휴대폰에서 꺼진 항목은 Echo가 말하지 않습니다.",
   "Urgent: alarm, sensors, doorbell, blackout": "긴급: 경보, 센서, 초인종, 정전",
   "Security: arming, openings, motion": "보안: 경계 설정, 열림, 움직임",
   "Home: appliances, fridge, rain, pets": "집: 가전, 냉장고, 비, 반려동물",
@@ -8158,4 +8161,5 @@ export default Object.freeze({
   "🖥️ Computer": "🖥️ 컴퓨터",
   "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "탭의 미리보기에서 바꾼 페이지 — 상자의 순서와 숨긴 상자. «초기화»하면 원래대로 돌아갑니다.",
   "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.": "미리보기에서 조각을 옮긴 그림, 컴퓨터와 휴대폰 각각. «초기화»하면 원래대로 돌아갑니다.",
+  "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.": "아직 난방과 냉방을 함께 하는 온도 조절기가 없습니다. 생길 때까지 냉방으로 열립니다.",
 });

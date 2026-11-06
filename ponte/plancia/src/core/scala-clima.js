@@ -76,17 +76,42 @@ export function scalaDellaZona(attributi, zona) {
   return scalaDellUnita(attributi, SCALA_DI_FAMIGLIA[zona] || SCALA_DI_FAMIGLIA.freddo);
 }
 
-/* Di quanto si muove un passo.
+/* Di quanto si muove un passo, col ripiego scelto da chi chiama.
  *
- * Un grado alla volta e' quello che la plancia fa da sempre — «una pressione,
- * un grado» — e su una scala da trenta gradi va benissimo. Chi pero' dichiara
- * un passo piu' fine lo dichiara perche' la sua macchina lo accetta, e allora
- * il passo e' quello: mezzo grado su un termostato che lavora a mezzi gradi
- * non e' una finezza, e' l'unico modo di arrivare al numero che si vuole. */
+ * Per l'obiettivo di un clima non si usa piu': c'e' `passoDelClima`, qui
+ * sotto, che e' la regola unica. Resta per chi ha un ripiego suo. Chi
+ * dichiara un passo lo dichiara perche' la sua macchina lo accetta, e allora
+ * il passo e' quello. */
 export function passoDellUnita(attributi, ripiego = 1) {
   const passo = numero(attributi?.target_temp_step);
   if (passo === null || passo <= 0) return ripiego;
   return passo;
+}
+
+/* Il passo di chi non lo dichiara: mezzo grado, come la scheda del termostato
+ * di Home Assistant coi gradi Celsius. Coi Fahrenheit e' un grado intero,
+ * sempre come fa lei: mezzo grado Fahrenheit non lo accetta quasi nessuno. */
+export const PASSO_DEL_CLIMA = 0.5;
+const PASSO_FAHRENHEIT = 1;
+
+/**
+ * Di quanto si muove l'obiettivo di un clima a ogni meno o piu' — e a ogni
+ * scatto della barra. UNA regola sola per tutta la plancia.
+ *
+ * «Se fai piu' o meno ti cambia la temperatura a un grado e non mezzo;
+ * invece se la apri fa i mezzi gradi.» Erano due regole: il popup faceva il
+ * mezzo grado, la card della pagina Clima un grado intero (il `setTemp()` del
+ * guscio, e la lettura della card che ripiegava su uno). La stessa unita'
+ * rispondeva in due modi a seconda di dove la si toccava. Adesso la card, il
+ * popup, la Home, il muro e i comandi rapidi chiedono tutti qui:
+ *
+ * - il `target_temp_step` che l'unita' dichiara, se lo dichiara;
+ * - altrimenti mezzo grado, o un grado coi Fahrenheit (`unita`, se si sa).
+ */
+export function passoDelClima(attributi, unita = "") {
+  const dichiarato = numero(attributi?.target_temp_step);
+  if (dichiarato !== null && dichiarato > 0) return dichiarato;
+  return /F$/i.test(String(unita || "").trim()) ? PASSO_FAHRENHEIT : PASSO_DEL_CLIMA;
 }
 
 /** Il grado, riportato dentro la scala: mai un comando fuori dai suoi estremi. */

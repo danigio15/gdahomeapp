@@ -7497,6 +7497,9 @@ export default Object.freeze({
   "Urgent ones are said anyway.": "緊急のものはそれでも読み上げます。",
   "Voice": "音声",
   "Which Echos": "どの Echo",
+  "Which notifications": "どの通知",
+  "Only those turned on in the app's Notifications: an item turned off on every phone is not said by the Echos.":
+    "アプリの通知でオンになっているものだけ：すべてのスマートフォンでオフの項目は Echo が読み上げません。",
   "Urgent: alarm, sensors, doorbell, blackout": "緊急：警報、センサー、ドアベル、停電",
   "Security: arming, openings, motion": "セキュリティ：警戒、開放、動き",
   "Home: appliances, fridge, rain, pets": "家：家電、冷蔵庫、雨、ペット",
@@ -8186,4 +8189,5 @@ export default Object.freeze({
   "🖥️ Computer": "🖥️ パソコン",
   "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "タブのプレビューで変更したページ — ボックスの順番と非表示のもの。「リセット」で元に戻ります。",
   "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.": "プレビューでパーツを動かした図、パソコンとスマートフォンそれぞれ。「リセット」で元に戻ります。",
+  "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.": "暖房と冷房の両方を持つサーモスタットはまだありません。それまでは冷房で開きます。",
 });

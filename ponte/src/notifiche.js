@@ -378,6 +378,41 @@ export function inSilenzio(impostazioni, data) {
   return dalle < alle ? ora >= dalle && ora < alle : ora >= dalle || ora < alle;
 }
 
+/* Se un telefono ha scelto questa voce, com'e' scritta nella pagina
+ * Notifiche dell'app: l'interruttore della voce, le persone di cui dire chi
+ * arriva, quando dire un movimento, i dispositivi e la soglia su misura.
+ * Non le ore (il silenzio, «in che ore») ne' dove sta chi tiene il telefono:
+ * quelle sono del telefono, e gli Echo hanno il loro silenzio. La usano i
+ * telefoni e gli Echo (`_qualcunoLaVuole`). */
+export function vuoleLaVoce(imp, evento) {
+  /* Le batterie da cambiare passano anche col riepilogo spento. */
+  if (imp.eventi?.[evento.tipo] === false && !evento.sempre) return false;
+  if (evento.tipo === "suggerimenti" && imp.assistente === "importanti" && !evento.importante)
+    return false;
+  if (evento.tipo === "arrivi" && !imp.persone?.includes(evento.persona)) return false;
+  /* Su misura, voce per voce. */
+  const su = suDi(imp, evento.tipo);
+  if (su.quali.length && ![evento.entita, evento.camera].some((uno) => su.quali.includes(uno)))
+    return false;
+  if (evento.tipo === "movimento" && evento.perche) {
+    const vuole = {
+      sempre: true,
+      "casa-vuota": evento.perche === "casa-vuota",
+      notte: evento.perche === "notte",
+      "casa-vuota-o-notte": evento.perche !== "giorno",
+    }[su.quando];
+    if (!vuole) return false;
+  }
+  if (
+    evento.tipo === "elettrodomestici" &&
+    su.soglia !== null &&
+    typeof evento.misura?.euro === "number" &&
+    evento.misura.euro < su.soglia
+  )
+    return false;
+  return true;
+}
+
 /* Una notifica personalizzata come arriva dal telefono, ripulita. `null` se
  * non sta in piedi. */
 export function personalizzataPulita(detta) {
@@ -1150,11 +1185,7 @@ export class Notifiche {
   _lovuole(imp, evento, utente) {
     if (!imp.acceso) return false;
     if (evento.tipo === "prova") return true;
-    /* Le batterie da cambiare passano anche col riepilogo spento. */
-    if (imp.eventi[evento.tipo] === false && !evento.sempre) return false;
-    if (evento.tipo === "suggerimenti" && imp.assistente === "importanti" && !evento.importante)
-      return false;
-    if (evento.tipo === "arrivi" && !imp.persone.includes(evento.persona)) return false;
+    if (!vuoleLaVoce(imp, evento)) return false;
     if (evento.solo?.length && !evento.solo.includes(utente)) return false;
     /* Un messaggio dalla Home non torna a chi l'ha scritto. */
     if (evento.tranne && evento.tranne === utente) return false;
@@ -1170,27 +1201,7 @@ export class Notifiche {
     if (imp.soloFuori && (categoria === "casa" || categoria === "assistente")) {
       if (this.sentinella.aCasa(utente) === true) return false;
     }
-    /* Su misura, voce per voce. */
-    const su = suDi(imp, evento.tipo);
-    if (su.quali.length && ![evento.entita, evento.camera].some((uno) => su.quali.includes(uno)))
-      return false;
-    if (!dentroLeOre(su.orari, new Date(this.adesso()))) return false;
-    if (evento.tipo === "movimento" && evento.perche) {
-      const vuole = {
-        sempre: true,
-        "casa-vuota": evento.perche === "casa-vuota",
-        notte: evento.perche === "notte",
-        "casa-vuota-o-notte": evento.perche !== "giorno",
-      }[su.quando];
-      if (!vuole) return false;
-    }
-    if (
-      evento.tipo === "elettrodomestici" &&
-      su.soglia !== null &&
-      typeof evento.misura?.euro === "number" &&
-      evento.misura.euro < su.soglia
-    )
-      return false;
+    if (!dentroLeOre(suDi(imp, evento.tipo).orari, new Date(this.adesso()))) return false;
     return true;
   }
 
@@ -1387,8 +1398,32 @@ export class Notifiche {
     return { conf: normalizzaAlexa(valori[CHIAVE_ALEXA]), lingua };
   }
 
+  /* Se almeno un telefono della casa ha accesa questa voce (`vuoleLaVoce`).
+   *
+   * «Perche' arrivano le notifiche su Alexa anche se non ho selezionato
+   * quella notifica?» Nel Config si sceglie la famiglia (Casa, Sicurezza…), e
+   * le voci una per una le sceglie la pagina Notifiche dell'app: gli Echo
+   * dicono le notifiche che arrivano ai telefoni, e una voce che nessun
+   * telefono riceve non la dicono. Nemmeno un'urgente: spenta su ogni
+   * telefono e' una scelta di chi ci abita. Un telefono con le notifiche
+   * tutte spente non sceglie; senza telefoni decide il Config da solo. */
+  _qualcunoLaVuole(evento) {
+    let telefoni = [];
+    try {
+      telefoni = (this.dispositivi?.elenco?.() ?? [])
+        .map((dispositivo) => this.archivio.dati.telefoni[dispositivo?.id])
+        .filter((voce) => voce?.gettone)
+        .map((voce) => impostazioniPulite(voce.impostazioni))
+        .filter((imp) => imp.acceso);
+    } catch (_errore) {
+      return true;
+    }
+    return !telefoni.length || telefoni.some((imp) => vuoleLaVoce(imp, evento));
+  }
+
   /* Fa dire un evento agli Echo scelti, se la casa lo vuole
-   * (`alexa-annunci.js`, `daDire`). Lo stesso evento (`chiave`) non si
+   * (`alexa-annunci.js`, `daDire`) e un telefono ha accesa la sua voce
+   * (`_qualcunoLaVuole`). Lo stesso evento (`chiave`) non si
    * ripete prima di due minuti, e in un'ora al piu' ALEXA_IN_UN_ORA volte:
    * un sensore che sbatte non deve far parlare la casa tutto il giorno.
    * Torna se l'ha mandato a Home Assistant. */
@@ -1405,6 +1440,7 @@ export class Notifiche {
         )
       )
         return false;
+      if (!this._qualcunoLaVuole(evento)) return false;
       const ora = this.adesso();
       this._alexaDette = (this._alexaDette || []).filter((una) => ora - una.quando < UN_ORA);
       const chiave = String(evento.chiave ?? evento.tipo);

@@ -842,3 +842,47 @@ test("senza un utente sul filo non si vede niente, e si ascolta Home Assistant",
     casa.spegni();
   }
 });
+
+test("gli Echo la dicono una volta, e solo con «Dalle automazioni di Home Assistant» scelta", async () => {
+  const casa = unaCasa();
+  const alexa = (categorie) => ({
+    leggi: () => ({
+      snapshot: {
+        values: {
+          cd_alexa: JSON.stringify({
+            attivo: true,
+            altoparlanti: ["media_player.echo_cucina"],
+            categorie,
+          }),
+        },
+      },
+    }),
+  });
+  const dette = () => casa.chiamate.filter((una) => una.service === "alexa_media");
+  try {
+    await casa.registra(casa.a);
+    await casa.registra(casa.b);
+    await casa.ha.leggi();
+    for (const chi of [casa.a, casa.b])
+      await casa.chiedi(chi, {
+        type: "ponte/notifiche/ha/imposta",
+        voci: { 1700000000004: { acceso: true } },
+      });
+    const garage = { message: "La porta del garage è aperta" };
+    casa.notifiche.configurazione = alexa(["urgenti"]);
+    assert.equal(await casa.corre("automation.garage", "notify", garage), 2);
+    await new Promise((fatto) => setImmediate(fatto));
+    assert.equal(dette().length, 0);
+    casa.orologio.ora += 3 * MINUTO;
+    casa.notifiche.configurazione = alexa(["homeassistant"]);
+    assert.equal(await casa.corre("automation.garage", "notify", garage), 2);
+    await new Promise((fatto) => setImmediate(fatto));
+    assert.equal(dette().length, 1);
+    assert.equal(
+      dette()[0].service_data.message,
+      "Porta garage aperta da 10 minuti. La porta del garage è aperta",
+    );
+  } finally {
+    casa.spegni();
+  }
+});

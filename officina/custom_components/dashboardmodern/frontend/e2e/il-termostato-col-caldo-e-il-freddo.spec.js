@@ -275,13 +275,14 @@ test("i testimoni a obiettivo solo restano in Caldo e in Freddo, e mandano tempe
   await expect(bagno.locator("[data-dm-cl-target]")).toHaveText("23°");
   await bagno.locator(".dm-cl-step").nth(1).click();
   await expect.poll(() => temperature(page), { timeout: 10000 }).toHaveLength(1);
-  expect((await temperature(page))[0]).toEqual({ entity_id: "climate.bagno", temperature: 24 });
+  /* Senza un passo dichiarato, mezzo grado: lo stesso del popup. */
+  expect((await temperature(page))[0]).toEqual({ entity_id: "climate.bagno", temperature: 23.5 });
   await linguetta(page, "freddo").click();
   const salone = griglia(page, "freddo").locator('[data-dm-cl="climate.salone"]');
   await expect(salone.locator("[data-dm-cl-target]")).toHaveText("24°");
   await salone.locator(".dm-cl-step").first().click();
   await expect.poll(() => temperature(page), { timeout: 10000 }).toHaveLength(2);
-  expect((await temperature(page))[1]).toEqual({ entity_id: "climate.salone", temperature: 23 });
+  expect((await temperature(page))[1]).toEqual({ entity_id: "climate.salone", temperature: 23.5 });
 });
 
 test("senza termostati a coppia la terza linguetta non c'e', e la pagina torna indietro", async ({

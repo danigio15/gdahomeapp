@@ -7478,6 +7478,9 @@ export default Object.freeze({
   "Urgent ones are said anyway.": "ज़रूरी सूचनाएँ फिर भी बोली जाती हैं।",
   "Voice": "आवाज़",
   "Which Echos": "कौन से Echo",
+  "Which notifications": "कौन-सी सूचनाएँ",
+  "Only those turned on in the app's Notifications: an item turned off on every phone is not said by the Echos.":
+    "केवल ऐप की सूचनाओं में चालू वाली: जो आइटम हर फ़ोन पर बंद है, उसे Echo नहीं बोलते।",
   "Urgent: alarm, sensors, doorbell, blackout": "ज़रूरी: अलार्म, सेंसर, डोरबेल, बिजली गुल",
   "Security: arming, openings, motion": "सुरक्षा: आर्म करना, खुलना, गतिविधि",
   "Home: appliances, fridge, rain, pets": "घर: उपकरण, फ्रिज, बारिश, पालतू",
@@ -8167,4 +8170,5 @@ export default Object.freeze({
   "🖥️ Computer": "🖥️ कंप्यूटर",
   "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "अपने टैब के पूर्वावलोकन में बदले गए पेज — बॉक्स का क्रम और छिपे हुए बॉक्स। «रीसेट» उसे पहले जैसा कर देता है।",
   "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.": "वे ड्रॉइंग जिनके हिस्से आपने पूर्वावलोकन में हिलाए, कंप्यूटर और फ़ोन पर। «रीसेट» उन्हें पहले जैसा कर देता है।",
+  "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.": "अभी गर्म और ठंडा करने वाला कोई थर्मोस्टैट नहीं है: जब तक नहीं होता, यह ठंडा पर खुलता है।",
 });

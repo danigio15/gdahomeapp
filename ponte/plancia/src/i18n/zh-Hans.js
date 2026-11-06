@@ -7359,6 +7359,9 @@ export default Object.freeze({
   "Urgent ones are said anyway.": "紧急通知仍会播报。",
   "Voice": "语音",
   "Which Echos": "哪些 Echo",
+  "Which notifications": "哪些通知",
+  "Only those turned on in the app's Notifications: an item turned off on every phone is not said by the Echos.":
+    "仅限在应用“通知”中开启的：在所有手机上都关闭的项目，Echo 不会播报。",
   "Urgent: alarm, sensors, doorbell, blackout": "紧急：警报、传感器、门铃、停电",
   "Security: arming, openings, motion": "安全：布防、开启、移动",
   "Home: appliances, fridge, rain, pets": "家：家电、冰箱、下雨、宠物",
@@ -8048,4 +8051,5 @@ export default Object.freeze({
   "🖥️ Computer": "🖥️ 电脑",
   "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "在其选项卡预览中更改过的页面——方框的顺序和隐藏的方框。「重置」会恢复原样。",
   "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.": "在预览中移动过部件的图，分别针对电脑和手机。「重置」会恢复原样。",
+  "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.": "还没有同时制热和制冷的恒温器：在有之前，打开时显示制冷。",
 });

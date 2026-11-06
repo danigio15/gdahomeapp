@@ -344,7 +344,7 @@ import {
   versoInvertito,
 } from "../core/verso-aperture.js";
 import { normalizeRobots, robotStateLabel, robotView } from "../core/robot-model.js";
-import { passoDellUnita, scalaDellUnita } from "../core/scala-clima.js";
+import { PASSO_DEL_CLIMA, passoDelClima, scalaDellUnita } from "../core/scala-clima.js";
 import {
   coppiaSpostata,
   obiettiviDelClima,
@@ -1254,7 +1254,7 @@ function rigaClima(states, unit) {
      * ne dichiara settanta (#252). */
     minima: scala[0],
     massima: scala[1],
-    passo: passoDellUnita(attributi, 0.5),
+    passo: passoDelClima(attributi),
     umidita: numero(attributi.current_humidity),
     azione: clean(attributi.hvac_action),
     /* Che macchina e', non solo cosa sta facendo adesso: un termosifone
@@ -1370,7 +1370,7 @@ export function obiettivoSpostato(riga, verso, base) {
   const scritto = base === null || base === undefined || base === "" ? NaN : Number(base);
   const partenza = Number.isFinite(scritto) ? scritto : riga.target;
   if (partenza === null || partenza === undefined || !Number.isFinite(Number(partenza))) return undefined;
-  const passo = Number(riga.passo) > 0 ? Number(riga.passo) : 0.5;
+  const passo = Number(riga.passo) > 0 ? Number(riga.passo) : PASSO_DEL_CLIMA;
   const minima = Number.isFinite(Number(riga.minima)) ? Number(riga.minima) : -Infinity;
   const massima = Number.isFinite(Number(riga.massima)) ? Number(riga.massima) : Infinity;
   const segno = Number(verso) < 0 ? -1 : 1;

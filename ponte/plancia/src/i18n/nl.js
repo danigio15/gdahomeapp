@@ -7529,6 +7529,9 @@ export default Object.freeze({
   "Urgent ones are said anyway.": "Dringende worden toch gezegd.",
   "Voice": "Stem",
   "Which Echos": "Welke Echo's",
+  "Which notifications": "Welke meldingen",
+  "Only those turned on in the app's Notifications: an item turned off on every phone is not said by the Echos.":
+    "Alleen die aan staan in de Meldingen van de app: een onderdeel dat op elke telefoon uit staat, zeggen de Echo's niet.",
   "Urgent: alarm, sensors, doorbell, blackout": "Dringend: alarm, sensoren, deurbel, stroomuitval",
   "Security: arming, openings, motion": "Beveiliging: inschakelen, openingen, beweging",
   "Home: appliances, fridge, rain, pets": "Huis: apparaten, koelkast, regen, huisdieren",
@@ -8218,4 +8221,5 @@ export default Object.freeze({
   "🖥️ Computer": "🖥️ Computer",
   "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "de pagina's gewijzigd in het voorbeeld van hun tabblad — de volgorde van de blokken en de verborgen. «Herstellen» zet ze terug zoals ze waren.",
   "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.": "de tekeningen waarvan je de stukken in het voorbeeld hebt verplaatst, op de computer en op de telefoon. «Herstellen» zet ze terug zoals ze waren.",
+  "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.": "Er is nog geen thermostaat met verwarmen en koelen: tot die er is, opent ze op Koelen.",
 });

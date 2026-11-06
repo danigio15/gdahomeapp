@@ -392,3 +392,123 @@ test("un avviso personalizzato e la prova arrivano anche agli Echo di Alexa Devi
     rmSync(banco.cartella, { recursive: true, force: true });
   }
 });
+
+/* ─── Solo le voci che qualcuno ha acceso ────────────────────────────────
+ *
+ * «Perche' arrivano le notifiche su Alexa anche se non ho selezionato quella
+ * notifica?» Le voci si scelgono nella pagina Notifiche dell'app, telefono
+ * per telefono; gli Echo guardavano solo le famiglie del Config, e dicevano
+ * anche quelle che nessun telefono riceve. */
+
+/* I telefoni della casa, ognuno con le sue impostazioni. */
+function conTelefoni(banco, ...impostazioni) {
+  const elenco = impostazioni.map((_una, indice) => ({
+    id: `dm_telefono${indice}`,
+    utente: String(indice).repeat(32),
+  }));
+  banco.notifiche.dispositivi = { elenco: () => elenco };
+  for (const [indice, una] of impostazioni.entries())
+    banco.notifiche.archivio.dati.telefoni[elenco[indice].id] = {
+      gettone: `gettone-${indice}-${"x".repeat(20)}`,
+      impostazioni: una,
+    };
+}
+
+const arrivo = (persona = "person.figlio") => ({
+  tipo: "arrivi",
+  urgenza: "normale",
+  chiave: `arrivi:${persona}`,
+  persona,
+  parole: { it: { titolo: "🏠 È arrivato a casa", testo: "" } },
+});
+
+const movimento = (perche = "giorno") => ({
+  tipo: "movimento",
+  urgenza: "normale",
+  chiave: "movimento:binary_sensor.soggiorno",
+  entita: "binary_sensor.soggiorno",
+  perche,
+  parole: { it: { titolo: "Movimento in soggiorno", testo: "" } },
+});
+
+test("una voce spenta nell'app gli Echo non la dicono, anche con la sua famiglia scelta", async () => {
+  const banco = unBanco({ alexa: accesa({ categorie: ["urgenti", "casa"] }) });
+  try {
+    conTelefoni(banco, { eventi: { elettrodomestici: false } });
+    assert.equal(await banco.notifiche._dilloAdAlexa(lavatrice()), false);
+    /* Le altre della stessa casa si dicono come prima. */
+    assert.equal(await banco.notifiche._dilloAdAlexa(campanello()), true);
+    assert.deepEqual(
+      banco.dette().map((una) => una.service_data.message),
+      ["Suonano alla porta. Ingresso"],
+    );
+  } finally {
+    rmSync(banco.cartella, { recursive: true, force: true });
+  }
+});
+
+test("anche le urgenti: spente su ogni telefono, gli Echo stanno zitti", async () => {
+  const banco = unBanco({ alexa: accesa() });
+  try {
+    conTelefoni(banco, { eventi: { campanello: false } }, { eventi: { campanello: false } });
+    assert.equal(await banco.notifiche._dilloAdAlexa(campanello()), false);
+    assert.equal(banco.dette().length, 0);
+  } finally {
+    rmSync(banco.cartella, { recursive: true, force: true });
+  }
+});
+
+test("basta un telefono che la riceve, e gli Echo la dicono", async () => {
+  const banco = unBanco({ alexa: accesa() });
+  try {
+    conTelefoni(banco, { eventi: { elettrodomestici: false } }, {});
+    assert.equal(await banco.notifiche._dilloAdAlexa(lavatrice()), true);
+  } finally {
+    rmSync(banco.cartella, { recursive: true, force: true });
+  }
+});
+
+test("un telefono con le notifiche tutte spente non sceglie per gli Echo", async () => {
+  const banco = unBanco({ alexa: accesa() });
+  try {
+    conTelefoni(banco, { acceso: false, eventi: { elettrodomestici: false } });
+    assert.equal(await banco.notifiche._dilloAdAlexa(lavatrice()), true);
+  } finally {
+    rmSync(banco.cartella, { recursive: true, force: true });
+  }
+});
+
+test("chi arriva: solo le persone che un telefono ha scelto", async () => {
+  const banco = unBanco({ alexa: accesa({ categorie: ["persone"] }) });
+  try {
+    conTelefoni(banco, { persone: ["person.figlio"] });
+    assert.equal(await banco.notifiche._dilloAdAlexa(arrivo("person.ospite")), false);
+    assert.equal(await banco.notifiche._dilloAdAlexa(arrivo("person.figlio")), true);
+    assert.equal(banco.dette().length, 1);
+  } finally {
+    rmSync(banco.cartella, { recursive: true, force: true });
+  }
+});
+
+test("il movimento di giorno con la casa piena no, se nessun telefono lo vuole «sempre»", async () => {
+  const banco = unBanco({ alexa: accesa({ categorie: ["sicurezza"] }) });
+  try {
+    conTelefoni(banco, {});
+    assert.equal(await banco.notifiche._dilloAdAlexa(movimento("giorno")), false);
+    assert.equal(await banco.notifiche._dilloAdAlexa(movimento("casa-vuota")), true);
+  } finally {
+    rmSync(banco.cartella, { recursive: true, force: true });
+  }
+});
+
+test("la consegna di una voce spenta non arriva a Home Assistant", async () => {
+  const banco = unBanco({ alexa: accesa() });
+  try {
+    conTelefoni(banco, { eventi: { elettrodomestici: false } });
+    await banco.notifiche.consegna(lavatrice());
+    await new Promise((fatto) => setImmediate(fatto));
+    assert.equal(banco.dette().length, 0);
+  } finally {
+    rmSync(banco.cartella, { recursive: true, force: true });
+  }
+});

@@ -654,6 +654,20 @@ export class NotificheDiHomeAssistant {
     const titoloVero = titolo || alias || "Home Assistant";
     let quanti = 0;
     const ora = this.adesso();
+    /* Gli Echo di casa una volta per notifica, non una per telefono: qui
+     * ogni telefono ha la sua consegna (`soloA`), che agli Echo non arriva.
+     * Li fa parlare solo la famiglia «Dalle automazioni di Home Assistant»
+     * scelta nel Config › Alexa (`alexa-annunci.js`). */
+    void this.notifiche._dilloAdAlexa?.({
+      tipo: "ha_notify",
+      urgenza: segni.urgente ? "urgente" : "normale",
+      chiave: `ha:${chiave}`,
+      quando: ora,
+      parole: {
+        it: { titolo: titoloVero, testo },
+        en: { titolo: titoloVero, testo },
+      },
+    });
     for (const [chi, oltreIlSilenzio] of a) {
       const gia = `${evento?.context?.id || ""}|${chi}|${titoloVero}|${testo}`;
       if (this._gia.has(gia)) continue;

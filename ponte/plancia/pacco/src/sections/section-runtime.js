@@ -69,6 +69,7 @@ import {
   NOTA_DI_SCHEDA,
   ORDINE_IMPOSTAZIONI,
   PANNELLO,
+  PASSO_DEL_CLIMA,
   PAUSA_DENTRO_UN_CICLO_MS,
   PERIOD_SOURCES,
   PIANI_FIELD,
@@ -398,7 +399,7 @@ import {
   parseDurationSeconds,
   parseTimestampMs,
   partiDelComando,
-  passoDellUnita,
+  passoDelClima,
   pausaDentroUnCiclo,
   pelletScarso,
   periodConsumption,
@@ -568,7 +569,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-LHVHSDO3.js";
+} from "../../chunk-JKKHDTBV.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -4898,6 +4899,7 @@ var SOURCE_INDEX = Object.freeze({
   "in casa ci sono persone e luci: nessuna resta accesa per niente.": "the home knows its people and lights: none stays on for nothing.",
   "In casa ci sono questi — un tocco lo sceglie:": "These are in the house — one tap picks it:",
   "In casa è tutto in ordine.": "Everything is fine at home.",
+  "In casa non c'è ancora un termostato col caldo e il freddo: finché non c'è, si apre su Freddo.": "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.",
   "in certi giorni": "on certain days",
   "In che ordine si vedono in Home. Le prime due — la striscia col menù e il riquadro col meteo — finché stanno in cima restano sopra la pagina, dove sono sempre state; spostandole più in basso scendono in pagina insieme agli altri blocchi. La striscia col menù scende solo qui: sulle altre pagine torna in alto da sola, o l'hamburger sparirebbe. Dentro ogni blocco l'ordine si fa dove si configura quel blocco: le persone nella loro scheda, le tessere in Widget, le azioni rapide nella loro.": "The order they appear in on Home. The first two — the strip with the menu and the weather box — stay above the page as long as they are on top, where they have always been; move them further down and they come into the page with the other blocks. The menu strip only comes down here: on the other pages it goes back up by itself, or the hamburger would disappear. Inside each block the order is set where that block is configured: people in their own tab, tiles in Widgets, quick actions in theirs.",
   "In chiusura": "Closing",
@@ -6855,6 +6857,7 @@ var SOURCE_INDEX = Object.freeze({
   "Quale voce": "Which option",
   "Quale voce dell'elenco": "Which option",
   "Quali Echo": "Which Echos",
+  "Quali notifiche": "Which notifications",
   "Quali sezioni si vedono": "Which sections are visible",
   "Quali stanze si vedono in Home, con la temperatura e quante cose sono accese: un tocco porta dentro la stanza. Quante ne vuoi; nessuna spuntata vuol dire nessun blocco.": "Which rooms show up on Home, with the temperature and how many things are on: one tap takes you into the room. As many as you like; none ticked means no block at all.",
   "Qualifica 1": "Qualifying 1",
@@ -7757,6 +7760,7 @@ var SOURCE_INDEX = Object.freeze({
   "Solo perimetro": "Perimeter only",
   "Solo quando qualcosa è acceso": "Only while something is on",
   "Solo quando uno è in funzione": "Only while one is running",
+  "Solo quelle accese nelle Notifiche dell'app: una voce spenta su tutti i telefoni gli Echo non la dicono.": "Only those turned on in the app's Notifications: an item turned off on every phone is not said by the Echos.",
   "Solo sblocca": "Unlock only",
   "Solo se": "Only if",
   "Solo se hai già un helper che misura il periodo. Senza, il periodo viene dal contatore totale.": "Only if you already have a helper measuring the period. Without one, the period comes from the total meter.",
@@ -60065,7 +60069,7 @@ RISPOSTE.clima_imposta = (c, s, m) => {
   const e = voci4[0];
   const a = e.attributi || {};
   const attuale = numero39(a.temperature);
-  const passo = numero39(a.target_temp_step) || (u === "°F" ? 1 : 0.5);
+  const passo = passoDelClima(a, u);
   let nuovo = c.gradi ?? null;
   if (nuovo === null && c.direzione) {
     if (attuale === null)
@@ -65710,7 +65714,7 @@ function passiDellObiettivo(lettura4, states) {
   if (!entity2 || lettura4.obiettivo == null || !siComanda(entity2)) return "";
   if (!comandoDellObiettivo(entity2, 0)) return "";
   const attributi2 = states?.[entity2]?.attributes || {};
-  const passo = num3(attributi2.target_temp_step) ?? num3(attributi2.step) ?? 1;
+  const passo = clean(entity2).startsWith("climate.") ? passoDelClima(attributi2) : num3(attributi2.target_temp_step) ?? num3(attributi2.step) ?? 1;
   const minimo = num3(attributi2.min_temp) ?? num3(attributi2.min) ?? -Infinity;
   const massimo = num3(attributi2.max_temp) ?? num3(attributi2.max) ?? Infinity;
   const tasto5 = (verso2, segno5, nome) => {
@@ -76371,7 +76375,7 @@ function rigaClima(states, unit) {
      * ne dichiara settanta (#252). */
     minima: scala2[0],
     massima: scala2[1],
-    passo: passoDellUnita(attributi2, 0.5),
+    passo: passoDelClima(attributi2),
     umidita: numero66(attributi2.current_humidity),
     azione: clean(attributi2.hvac_action),
     /* Che macchina e', non solo cosa sta facendo adesso: un termosifone
@@ -76444,7 +76448,7 @@ function obiettivoSpostato(riga5, verso2, base) {
   const scritto3 = base === null || base === void 0 || base === "" ? NaN : Number(base);
   const partenza = Number.isFinite(scritto3) ? scritto3 : riga5.target;
   if (partenza === null || partenza === void 0 || !Number.isFinite(Number(partenza))) return void 0;
-  const passo = Number(riga5.passo) > 0 ? Number(riga5.passo) : 0.5;
+  const passo = Number(riga5.passo) > 0 ? Number(riga5.passo) : PASSO_DEL_CLIMA;
   const minima = Number.isFinite(Number(riga5.minima)) ? Number(riga5.minima) : -Infinity;
   const massima = Number.isFinite(Number(riga5.massima)) ? Number(riga5.massima) : Infinity;
   const segno5 = Number(verso2) < 0 ? -1 : 1;
@@ -84609,7 +84613,11 @@ function climateReading(entity2, states = allStates(), unita3 = unitaDellEntita(
      * evento di stato, e andarli a ripescare vorrebbe dire risolvere di nuovo
      * la stessa entita' che si e' appena letta. */
     attributi: attributes,
-    passo: passoDellUnita(attributes)
+    /* Il passo e' quello di tutta la plancia (`passoDelClima`): mezzo grado
+     * per chi non ne dichiara uno, come il popup. Prima qui ripiegava su un
+     * grado intero, e la card e il popup della stessa unita' si muovevano
+     * di due misure diverse. */
+    passo: passoDelClima(attributes)
   };
 }
 function scalaDellaCard(reading, zone) {
@@ -85037,8 +85045,9 @@ function paintCard(card2, unit, reading, labels) {
     return;
   }
   const invertita = cartaInvertita();
-  const grande = invertita ? reading.ambient : reading.target;
-  const piccolo = invertita ? reading.target : reading.ambient;
+  const obiettivo2 = obiettivoDaMostrare({ entity: unit.entity, target: reading.target });
+  const grande = invertita ? reading.ambient : obiettivo2;
+  const piccolo = invertita ? obiettivo2 : reading.ambient;
   const target = card2.querySelector("[data-dm-cl-target]");
   if (target) {
     target.innerHTML = grande === null ? `--<span class="dm-cl-deg">°</span>` : `${Math.round(grande * 10) / 10}<span class="dm-cl-deg">°</span>`;
@@ -85059,7 +85068,7 @@ function paintCard(card2, unit, reading, labels) {
   if (estremoBasso) estremoBasso.textContent = `${gradoScritto(scala2[0])}°`;
   const estremoAlto = card2.querySelector("[data-dm-cl-high]");
   if (estremoAlto) estremoAlto.textContent = `${gradoScritto(scala2[1])}°`;
-  const targetRatio = ratio(reading.target, scala2);
+  const targetRatio = ratio(obiettivo2, scala2);
   const fill = card2.querySelector("[data-dm-cl-fill]");
   const knob = card2.querySelector("[data-dm-cl-knob]");
   if (fill) fill.style.width = targetRatio === null ? "0%" : `${(targetRatio * 100).toFixed(1)}%`;
@@ -85586,12 +85595,20 @@ function apriIlTimer(event) {
   if (entita4) apriLaFinestraDelTimer(entita4, unita3, pastiglia5.dataset.dmClTimerOn === "true");
   return true;
 }
-function wholeDegreeDelta(shown, delta) {
-  const down = Number(delta) < 0;
-  const current = Number(shown);
-  if (!Number.isFinite(current)) return down ? -1 : 1;
-  const next = down ? Math.ceil(current) - 1 : Math.floor(current) + 1;
-  return next - current;
+function gradoDopoIlPasso(attributi2, verso2, base) {
+  const scritto3 = base === null || base === void 0 || base === "" ? NaN : Number(base);
+  const partenza = Number.isFinite(scritto3) ? scritto3 : Number(attributi2?.temperature);
+  if (!Number.isFinite(partenza)) return null;
+  const passo = passoDelClima(attributi2);
+  const segno5 = Number(verso2) < 0 ? -1 : 1;
+  const sulPasso = Math.round((partenza + segno5 * passo) / passo) * passo;
+  const minima = Number(attributi2?.min_temp);
+  const massima = Number(attributi2?.max_temp);
+  const dentro3 = Math.min(
+    Number.isFinite(massima) ? massima : Infinity,
+    Math.max(Number.isFinite(minima) ? minima : -Infinity, sulPasso)
+  );
+  return Math.round(dentro3 * 100) / 100;
 }
 function gradoScritto(valore3) {
   const numero66 = Number(valore3);
@@ -85680,7 +85697,13 @@ function installTemperatureStep() {
       if (voluta !== null && casella7) scriviSeCambia(casella7, esc(gradiScritti(voluta)));
       return void 0;
     }
-    return current.call(this, wholeDegreeDelta(shown, delta));
+    const attributi2 = allStates()?.[aperta2]?.attributes;
+    const prossimo = attributi2 ? gradoDopoIlPasso(attributi2, verso2, Number.isFinite(shown) ? shown : void 0) : null;
+    if (prossimo === null) return current.call(this, delta);
+    root.navigator?.vibrate?.(8);
+    chiamaClima(aperta2, "set_temperature", { temperature: prossimo });
+    if (casella7) scriviSeCambia(casella7, esc(gradiScritti(prossimo)));
+    return void 0;
   }
   cpSetTempThermal.__dmClimateThermal = true;
   cpSetTempThermal.__dmPrevious = current;
@@ -85716,8 +85739,22 @@ function installPassoDellaCard() {
   const current = root.setTemp;
   if (typeof current !== "function" || current.__dmClimateThermal) return;
   function setTempThermal(entity2, direction, zona) {
-    if (muoviIlClimaDoppio(entity2, direction === "up" ? 1 : -1, zona)) return void 0;
-    return current.call(this, entity2, direction);
+    const verso2 = direction === "up" ? 1 : -1;
+    if (muoviIlClimaDoppio(entity2, verso2, zona)) return void 0;
+    const chiave2 = clean(entity2);
+    const voluta = passoDellObiettivo(chiave2, verso2);
+    if (voluta !== void 0) {
+      root.navigator?.vibrate?.(10);
+      if (voluta !== null) renderClimate();
+      return void 0;
+    }
+    const attributi2 = allStates()?.[chiave2]?.attributes;
+    const prossimo = attributi2 ? gradoDopoIlPasso(attributi2, verso2) : null;
+    if (prossimo === null) return current.call(this, entity2, direction);
+    root.navigator?.vibrate?.(10);
+    if (prossimo !== Number(attributi2.temperature))
+      chiamaClima(chiave2, "set_temperature", { temperature: prossimo });
+    return void 0;
   }
   setTempThermal.__dmClimateThermal = true;
   setTempThermal.__dmPrevious = current;
@@ -101669,12 +101706,10 @@ function temperaturaDelPreset(scelta3, attributi2, zona) {
   const quale = scelta3.mode === "heat" ? "basso" : RAFFRESCANO.has(scelta3.mode) ? "alto" : estremoDiPartenza({ zona });
   const minimo = gradi10(attributi2.min_temp);
   const massimo = gradi10(attributi2.max_temp);
-  const passo = gradi10(attributi2.target_temp_step) > 0 ? gradi10(attributi2.target_temp_step) : null;
-  let voluto = scelta3.temperature;
-  if (passo) {
-    const origine = minimo ?? 0;
-    voluto = origine + Math.round((voluto - origine) / passo) * passo;
-  }
+  const passo = passoDelClima(attributi2);
+  const origine = minimo ?? 0;
+  const scatti = Math.round((scelta3.temperature - origine) / passo);
+  const voluto = Math.round((origine + scatti * passo) * 1e3) / 1e3;
   return coppiaCon(lettura4, quale, voluto, { scala: [minimo, massimo] });
 }
 function quickClimatePresetOf(entity2, zona, perUnita, globale) {
@@ -103946,6 +103981,19 @@ function corpoMarkup5() {
       ${echoMarkup(config, echo)}
     </div>
     <div class="mu-ed-blocco${dis}">
+      ${riga2(
+    esc(t("Quali notifiche", "Which notifications")),
+    /* Gli Echo dicono solo le voci che un telefono riceve
+     * (`notifiche.js`, `_qualcunoLaVuole`): una famiglia accesa qui non
+     * riaccende la voce spenta nell'app. */
+    esc(
+      t(
+        "Solo quelle accese nelle Notifiche dell'app: una voce spenta su tutti i telefoni gli Echo non la dicono.",
+        "Only those turned on in the app's Notifications: an item turned off on every phone is not said by the Echos."
+      )
+    ),
+    ""
+  )}
       ${CATEGORIE_ALEXA.map(
     (voce3) => riga2(
       esc(nomeDellaFamiglia2(voce3)),
@@ -107461,7 +107509,8 @@ var MODELLI = Object.freeze([
   "comandi"
 ]);
 var MODELLI_ELENCO = Object.freeze(["luci", "clima", "tapparelle"]);
-var ZONE_DEL_CLIMA2 = Object.freeze(["freddo", "caldo"]);
+var PAGINE_CLIMA_DI_UNA_VOLTA = Object.freeze(["freddo", "caldo"]);
+var ZONE_DEL_CLIMA2 = Object.freeze(["freddo", "caldo", "termostato"]);
 var PAGINE_AL_MASSIMO = 8;
 var POSTI = 6;
 var GRIGLIE = Object.freeze({
@@ -107486,6 +107535,33 @@ function postiDellaPagina(pagina3) {
 function grigliaDellaPagina(pagina3, versoScelto = "orizzontale") {
   const g = GRIGLIE[postiDellaPagina(pagina3)];
   return versoScelto === "verticale" ? { colonne: g.righe, righe: g.colonne } : { colonne: g.colonne, righe: g.righe };
+}
+var FORME_PER_QUANTI = Object.freeze([
+  [1, 1],
+  [2, 1],
+  [2, 2],
+  [3, 2],
+  [4, 2],
+  [3, 3],
+  [4, 3],
+  [4, 4],
+  [5, 4],
+  [6, 4]
+]);
+function grigliaPerQuanti(quanti4, griglia3) {
+  const colonne = Math.max(1, Math.floor(Number(griglia3?.colonne)) || 1);
+  const righe4 = Math.max(1, Math.floor(Number(griglia3?.righe)) || 1);
+  const n = Math.floor(Number(quanti4));
+  const scelta3 = { colonne, righe: righe4, larga: 1, adatta: false };
+  if (!(n >= 1) || n >= colonne * righe4) return scelta3;
+  const verticale = righe4 > colonne;
+  for (const [orizzontali, verticali] of FORME_PER_QUANTI) {
+    const c = verticale ? verticali : orizzontali;
+    const r = verticale ? orizzontali : verticali;
+    if (c * r < n || c > colonne || r > righe4) continue;
+    return { colonne: c, righe: r, larga: Math.min(c, c * r - n + 1), adatta: true };
+  }
+  return scelta3;
 }
 var COLORI_DELLE_PAGINE = Object.freeze([
   "#f59e0b",
@@ -107755,7 +107831,7 @@ var contatore = 0;
 var nuovoId2 = () => `p${Date.now().toString(36)}${(contatore++).toString(36)}`;
 function paginaPulita(input, indice = 0) {
   const dentro3 = input && typeof input === "object" ? input : {};
-  const vecchia = ZONE_DEL_CLIMA2.includes(dentro3.modello) ? dentro3.modello : "";
+  const vecchia = PAGINE_CLIMA_DI_UNA_VOLTA.includes(dentro3.modello) ? dentro3.modello : "";
   const modello2 = vecchia ? "clima" : scelta(dentro3.modello, MODELLI, "stanza");
   const id = /^[a-z0-9-]{1,24}$/.test(String(dentro3.id || "")) ? dentro3.id : `p${indice + 1}`;
   const scritta = Number(dentro3.griglia ?? dentro3.posti);
@@ -110728,7 +110804,7 @@ var SEGNI_DEL_TERMOSTATO = Object.freeze({
 function righeDelTermostato(id) {
   const coppia2 = coppiaDelMuro(id);
   const a = attributi(id);
-  const passo = numero52(a.target_temp_step) || 0.5;
+  const passo = passoDelClima(a);
   const scala2 = [numero52(a.min_temp) ?? 7, numero52(a.max_temp) ?? 35];
   return [
     [
@@ -110761,7 +110837,7 @@ var menoGradiPiu = (id, gradi13, estremo = "", fermo = () => "") => {
 function righeDiVetro(id) {
   const coppia2 = coppiaDelMuro(id);
   const a = attributi(id);
-  const passo = numero52(a.target_temp_step) || 0.5;
+  const passo = passoDelClima(a);
   const scala2 = [numero52(a.min_temp) ?? 7, numero52(a.max_temp) ?? 35];
   return [
     ["basso", t("Caldo", "Heating"), "#f97316"],
@@ -111189,9 +111265,9 @@ function paginaStanza(pagina3) {
     ([z, d, parola2, acc]) => `<button type="button" role="tab" class="${z === zona ? "si" : ""}" style="--acc:${acc}" data-mu-zona="${z}" aria-selected="${z === zona}">${disegno(d, 22, `zona-${z}`)}${esc(parola2)}</button>`
   ).join("")}</div>` : "";
   const posti = postiDellaPagina(pagina3);
-  const quante3 = elenco18 ? Math.max(comandi.length, 1) : posti;
+  const quante3 = elenco18 ? Math.max(comandi.length, 1) : comandi.length ? Math.min(comandi.length, posti) : posti;
   if (elenco18 && !comandi.length)
-    return `${linguette4}<div class="mu-g6" style="${stileDellaGriglia(pagina3)}">${vuoto3(0, t("Niente da mostrare qui", "Nothing to show here"))}</div>`;
+    return `${linguette4}${griglia2(pagina3, [vuoto3(0, t("Niente da mostrare qui", "Nothing to show here"))])}`;
   const carte = Array.from({ length: quante3 }, (_, i) => cardDelPosto(comandi[i], i, zona));
   const riga5 = pagina3.modello === "stanza" ? pillole(pagina3) : linguette4;
   return `${riga5}${griglia2(pagina3, carte, quante3)}`;
@@ -111200,21 +111276,22 @@ function misureDellaGriglia(pagina3) {
   const g = grigliaDellaPagina(pagina3, state112.verso || "orizzontale");
   return state112.compatto ? { colonne: Math.min(g.colonne, 3), righe: Math.min(g.righe, 3) } : g;
 }
-var stileDellaGriglia = (pagina3) => {
-  const g = misureDellaGriglia(pagina3);
-  return `--mu-col:${g.colonne};--mu-righe:${g.righe}`;
-};
 var CARD_STRETTA = 340;
 function griglia2(pagina3, carte, quante3 = carte.length) {
-  const g = misureDellaGriglia(pagina3);
+  const scelta3 = misureDellaGriglia(pagina3);
+  const forma2 = grigliaPerQuanti(quante3, scelta3);
+  const g = forma2.adatta ? forma2 : scelta3;
   const scorre = quante3 > g.colonne * g.righe ? " mu-scorre" : "";
   const base = (state112.verso === "verticale" ? 800 : 1280) / g.colonne;
   const fitta = !state112.compatto && base < CARD_STRETTA ? " mu-fitta" : "";
-  return `<div class="mu-g6${scorre}${fitta}" style="${stileDellaGriglia(pagina3)}">${carte.join("")}</div>`;
+  const adatta2 = forma2.adatta ? ` mu-adatta${state112.compatto && g.colonne * g.righe <= 2 ? " mu-ampia" : ""}` : "";
+  const stile8 = `--mu-col:${g.colonne};--mu-righe:${g.righe}${forma2.adatta ? `;--mu-larga:${forma2.larga}` : ""}`;
+  return `<div class="mu-g6${scorre}${fitta}${adatta2}" style="${stile8}">${carte.join("")}</div>`;
 }
 function paginaScene(pagina3) {
   const scene = pagina3.scene.length ? pagina3.scene : [];
-  const carte = Array.from({ length: postiDellaPagina(pagina3) }, (_, i) => {
+  const quante3 = scene.length ? Math.min(scene.length, postiDellaPagina(pagina3)) : postiDellaPagina(pagina3);
+  const carte = Array.from({ length: quante3 }, (_, i) => {
     const c = scene[i];
     return cardDelPosto(c, i, "", { scena: true });
   });
@@ -111885,6 +111962,13 @@ function finestraDellaLettura(f) {
       <div class="mu-ing-righe">${righe4 || `<div class="mu-sotto">${esc(t("Niente da mostrare qui", "Nothing to show here"))}</div>`}</div></div>`;
 }
 function paginaIngressoCompatta(pagina3) {
+  return griglia2(pagina3, tessereDellIngressoCompatto(pagina3));
+}
+function soloLAntifurto(pagina3) {
+  const tessere2 = tessereDellIngressoCompatto(pagina3);
+  return tessere2.length === 1 && tessere2[0].includes('data-mu-fa="finestra-antifurto"');
+}
+function tessereDellIngressoCompatto(pagina3) {
   const ing = pagina3.ingresso;
   const aree2 = areeDellaPagina(pagina3);
   const centrale = centraleDelMuro(pagina3);
@@ -111969,10 +112053,10 @@ function paginaIngressoCompatta(pagina3) {
       immagine: immagineDellaTessera("letture")
     }) : ""
   ].filter(Boolean).slice(0, 6);
-  return `<div class="mu-g6">${tessere2.join("")}</div>`;
+  return tessere2;
 }
 function paginaIngresso(pagina3) {
-  if (state112.compatto) return paginaIngressoCompatta(pagina3);
+  if (state112.compatto && !soloLAntifurto(pagina3)) return paginaIngressoCompatta(pagina3);
   const ing = pagina3.ingresso;
   const aree2 = areeDellaPagina(pagina3);
   const contoProprio = Boolean(lettureDellIngresso2(ing.letture, allStates() || {}).gruppo);
@@ -113271,7 +113355,7 @@ function cambiaTemperatura(id, verso2, estremo = "") {
   const lettura4 = coppiaVista || obiettiviDelMuro(id);
   if (lettura4.doppio) {
     const quale = coppiaVista ? estremo : estremoDelMuro(id, lettura4);
-    const passo2 = numero52(a.target_temp_step) || 0.5;
+    const passo2 = passoDelClima(a);
     const scala2 = [numero52(a.min_temp) ?? 7, numero52(a.max_temp) ?? 35];
     const coppia2 = quale ? coppiaSpostata(lettura4, quale, verso2, { passo: passo2, scala: scala2 }) : null;
     if (!coppia2) return;
@@ -113284,7 +113368,7 @@ function cambiaTemperatura(id, verso2, estremo = "") {
     );
     return;
   }
-  const passo = numero52(a.target_temp_step) || 0.5;
+  const passo = passoDelClima(a);
   const min = numero52(a.min_temp) ?? 7;
   const max = numero52(a.max_temp) ?? 35;
   const ora8 = obiettivo(id) ?? numero52(a.current_temperature) ?? 20;
@@ -114651,6 +114735,12 @@ ${MURO} .mu-g6.mu-scorre>*{scroll-snap-align:start}
 /* Sul telefono i riquadri non si allungano a riempire lo schermo: «li trovo
    troppo grandi». Hanno un'altezza loro, e la pagina scorre se servono. */
 ${MURO}[data-compatto="1"][data-verso="verticale"] .mu-g6{grid-template-rows:none!important;grid-auto-rows:var(--mu-alto,150px)!important;align-content:start;overflow-y:auto;scrollbar-width:none}
+/* Meno riquadri dei posti (\`grigliaPerQuanti\`): la griglia ha gia' la forma
+   di quelli che ci sono, e l'ultimo di una riga corta si allarga fino in
+   fondo. Sul telefono le righe partono dalla loro altezza e crescono fino a
+   riempire la pagina: un riquadro solo non resta una striscia in cima. */
+${MURO} .mu-g6.mu-adatta>:last-child{grid-column:span var(--mu-larga,1)}
+${MURO}[data-compatto="1"][data-verso="verticale"] .mu-g6.mu-adatta{grid-template-rows:repeat(var(--mu-righe),minmax(var(--mu-alto,150px),1fr))!important;grid-auto-rows:var(--mu-alto,150px)!important;align-content:stretch}
 ${MURO} .mu-card{padding:22px;display:flex;flex-direction:column;gap:14px;min-height:0;width:100%}
 ${MURO} .mu-tessera{text-align:left}
 ${MURO} .mu-tessera .mu-osw{margin-top:auto}
@@ -114894,6 +114984,25 @@ ${MURO} .mu-aree[data-quante="4"]{gap:6px}
 ${MURO} .mu-aree[data-quante="4"] .mu-area{padding-top:5px;padding-bottom:5px}
 ${MURO} .mu-aree[data-quante="4"] .mu-modi-area>button{height:40px;font-size:14px}
 ${MURO} .mu-aree[data-quante="4"] .mu-area-nome{font-size:16px}
+/* L'antifurto da solo sul pannello piccolo (\`soloLAntifurto\`): la card dei
+ * tablet grandi, nella misura di quattro pollici. Il disegno e lo stato si
+ * stringono, e ogni area tiene la sua riga coi suoi tasti: tre aree ci stanno
+ * senza scorrere. */
+${MURO}[data-compatto="1"] .mu-allarme{padding:14px;gap:10px;border-radius:20px}
+${MURO}[data-compatto="1"] .mu-allarme .mu-riga1{gap:12px;flex-wrap:nowrap}
+${MURO}[data-compatto="1"] .mu-allarme .mu-riga1>.mu-chip{--c:64px!important}
+${MURO}[data-compatto="1"] .mu-allarme .mu-riga1>.mu-chip .dm-oggetto,${MURO}[data-compatto="1"] .mu-allarme .mu-riga1>.mu-chip svg{width:38px!important;height:38px!important}
+${MURO}[data-compatto="1"] .mu-allarme .mu-stato-allarme{font-size:40px;margin-top:2px}
+${MURO}[data-compatto="1"] .mu-allarme-aree .mu-stato-allarme{font-size:28px}
+${MURO}[data-compatto="1"] .mu-allarme>.mu-modi>button{height:56px;font-size:15px}
+${MURO}[data-compatto="1"] .mu-aree{gap:6px}
+${MURO}[data-compatto="1"] .mu-area{gap:8px;padding:5px 5px 5px 10px;border-radius:14px}
+${MURO}[data-compatto="1"] .mu-area-dice{flex:0 1 28%}
+${MURO}[data-compatto="1"] .mu-area-nome{font-size:15px}
+${MURO}[data-compatto="1"] .mu-area-stato{font-size:10px;gap:5px;letter-spacing:.02em}
+${MURO}[data-compatto="1"] .mu-area-stato i{flex-basis:7px;width:7px;height:7px}
+${MURO}[data-compatto="1"] .mu-modi-area{padding:3px;gap:3px;border-radius:11px}
+${MURO}[data-compatto="1"] .mu-modi-area>button,${MURO}[data-compatto="1"] .mu-aree[data-quante] .mu-modi-area>button{height:40px;font-size:13px;padding:0 3px;border-radius:9px}
 /* Le letture e i comandi dell'ingresso: le pastiglie della Musica. */
 ${MURO} .mu-ing-altro{display:flex;flex-direction:column;gap:8px;flex:0 0 auto;min-width:0}
 ${MURO} .mu-ing-letture,${MURO} .mu-ing-comandi{display:flex;flex-wrap:wrap;gap:8px}
@@ -115064,7 +115173,7 @@ ${MURO}[data-compatto="1"] .mu-card .mu-disco{width:44px;height:44px}
 ${MURO}[data-compatto="1"] .mu-card .mu-disco svg{width:22px;height:22px}
 ${MURO}[data-compatto="1"] .mu-card .mu-chip{--c:44px!important}
 ${MURO}[data-compatto="1"] .mu-card .mu-chip .dm-oggetto{width:26px!important;height:26px!important}
-${MURO}[data-compatto="1"] .mu-card .mu-giu,${MURO}[data-compatto="1"] .mu-card .mu-bar,${MURO}[data-compatto="1"] .mu-card .mu-seg,${MURO}[data-compatto="1"] .mu-card .mu-comandi,${MURO}[data-compatto="1"] .mu-card .mu-tag,${MURO}[data-compatto="1"] .mu-card .mu-inter,${MURO}[data-compatto="1"] .mu-card .mu-target .mu-et,${MURO}[data-compatto="1"] .mu-tessera .mu-sotto:empty{display:none}
+${MURO}[data-compatto="1"] :not(.mu-ampia)>.mu-card .mu-giu,${MURO}[data-compatto="1"] :not(.mu-ampia)>.mu-card .mu-bar,${MURO}[data-compatto="1"] :not(.mu-ampia)>.mu-card .mu-seg,${MURO}[data-compatto="1"] :not(.mu-ampia)>.mu-card .mu-comandi,${MURO}[data-compatto="1"] :not(.mu-ampia)>.mu-card .mu-tag,${MURO}[data-compatto="1"] :not(.mu-ampia)>.mu-card .mu-inter,${MURO}[data-compatto="1"] :not(.mu-ampia)>.mu-card .mu-target .mu-et,${MURO}[data-compatto="1"] .mu-tessera .mu-sotto:empty{display:none}
 ${MURO}[data-compatto="1"] .mu-card .mu-target{margin-top:auto}
 ${MURO}[data-compatto="1"] .mu-card .mu-grande{font-size:34px}
 ${MURO}[data-compatto="1"] .mu-card .mu-riga1>.mu-pasti{display:none}
@@ -115102,6 +115211,11 @@ ${MURO}[data-verso="verticale"] .mu-meteo,${MURO}[data-verso="verticale"] .mu-se
 ${MURO}[data-verso="verticale"] .mu-ora{margin-left:auto}
 ${MURO}[data-verso="verticale"] .mu-ingresso{grid-template-columns:1fr;grid-template-rows:auto 1fr auto}
 ${MURO}[data-verso="verticale"] .mu-ingresso.mu-con-striscia{grid-template-rows:auto minmax(0,1fr) auto auto}
+/* Senza citofono l'antifurto e' la prima riga, e quella che cresce: in
+ * verticale restava alto quanto il suo contenuto, col resto della pagina
+ * vuoto sotto. */
+${MURO}[data-verso="verticale"] .mu-ingresso.mu-senza-citofono{grid-template-rows:minmax(0,1fr) auto}
+${MURO}[data-verso="verticale"] .mu-ingresso.mu-senza-citofono.mu-con-striscia{grid-template-rows:minmax(0,1fr) auto auto}
 ${MURO}[data-verso="verticale"] .mu-piede{grid-template-columns:1fr 1fr}
 ${MURO}[data-verso="verticale"] .mu-piede.mu-piede-uno{grid-template-columns:1fr}
 ${MURO}[data-verso="verticale"] .mu-fin-luce{grid-template-columns:1fr}
@@ -129992,17 +130106,25 @@ function elencoMarkup2(p, i) {
       "It fills itself with the source dashboard's climate, split into the Cooling and Heating tabs like the Climate section: air conditioners in cooling, radiators and thermostats in heating, heat pumps in both."
     )
   }[p.modello];
-  const nomi2 = (p.modello === "clima" ? [
-    ...comandiDellaPagina(p, state133.fonte || {}, "freddo"),
-    ...comandiDellaPagina(p, state133.fonte || {}, "caldo")
-  ] : comandi).map((c) => nomeDi12(c.entita)).filter((n, k, tutti) => tutti.indexOf(n) === k);
+  const aCoppia2 = (id) => eUnTermostatoACoppia(allStates()?.[id]?.attributes);
+  const nomi2 = (p.modello === "clima" ? ["freddo", "caldo", "termostato"].flatMap(
+    (zona) => comandiDellaPagina(p, state133.fonte || {}, zona, { aCoppia: aCoppia2 })
+  ) : comandi).map((c) => nomeDi12(c.entita)).filter((n, k, tutti) => tutti.indexOf(n) === k);
   return `<div class="mu-ed-nota">${esc(spiega)}</div>
     ${p.modello === "clima" ? riga4(
     t("Si apre su", "Opens on"),
-    "",
+    /* «Mettici anche termostato come scelta, manca.» La terza
+     * linguetta del tablet e' quella dei termostati col caldo e il
+     * freddo; se in casa non ce ne sono, la pagina si apre su Freddo,
+     * e la riga lo dice. */
+    p.zona === "termostato" && !comandiDellaPagina(p, state133.fonte || {}, "termostato", { aCoppia: aCoppia2 }).length ? t(
+      "In casa non c'è ancora un termostato col caldo e il freddo: finché non c'è, si apre su Freddo.",
+      "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling."
+    ) : "",
     scelte4(`pagine.${i}.zona`, p.zona, [
       ["freddo", `❄️ ${t("Freddo", "Cooling")}`],
-      ["caldo", `🔥 ${t("Caldo", "Heating")}`]
+      ["caldo", `🔥 ${t("Caldo", "Heating")}`],
+      ["termostato", `🌡️ ${t("Termostato", "Thermostat")}`]
     ])
   ) : ""}
     ${p.modello === "clima" ? riga4(
