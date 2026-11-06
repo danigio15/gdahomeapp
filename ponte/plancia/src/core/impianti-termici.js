@@ -35,7 +35,7 @@ import {
   normalizzaVoce,
   overridesPerScelto,
 } from "./piu-di-uno.js";
-import { passoDellUnita, scalaDellUnita } from "./scala-clima.js";
+import { PASSO_DEL_CLIMA, passoDelClima, scalaDellUnita } from "./scala-clima.js";
 
 /** La chiave in cui vive la scelta. */
 export const CHIAVE_IMPIANTI = "cd_impianti_termici";
@@ -1269,11 +1269,11 @@ export function comandoLivello(livello, verso) {
   return null;
 }
 
-/* Il passo dell'obiettivo quando la stufa non lo dichiara: mezzo grado, come
- * fa la scheda del termostato di Home Assistant con i gradi Celsius. Un grado
- * intero sarebbe troppo per una stanza sola — fra venti e ventuno c'e' la
+/* Il passo dell'obiettivo quando la stufa non lo dichiara: mezzo grado, la
+ * regola di tutti i climi della plancia (`passoDelClima`). Un grado intero
+ * sarebbe troppo per una stanza sola — fra venti e ventuno c'e' la
  * differenza fra un maglione e l'altro. */
-const PASSO_STUFA = 0.5;
+const PASSO_STUFA = PASSO_DEL_CLIMA;
 
 /**
  * L'obiettivo un passo piu' su o piu' giu', dentro la scala della stufa.
@@ -1462,7 +1462,7 @@ export function letturaStufa(config, states = {}, resolve = (value) => value) {
       (climaVivo ? numero(attributi.current_temperature) : null),
     obiettivo: climaVivo ? numero(attributi.temperature) : null,
     scala: scalaDellUnita(attributi),
-    passoObiettivo: passoDellUnita(attributi, PASSO_STUFA),
+    passoObiettivo: passoDelClima(attributi),
     potenza: livelloDa(dato.potenza, leggi(dato.potenza)),
     /* Il ventilatore e' la sua entita' se c'e'; altrimenti i modi del
      * termostato, se ne ha. */

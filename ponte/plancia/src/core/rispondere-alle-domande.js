@@ -37,6 +37,7 @@ import {
   stessaStanza,
 } from "./capire-le-domande.js";
 import { contattiDellaCasa, eUnCancello } from "./sapere-della-casa.js";
+import { passoDelClima } from "./scala-clima.js";
 
 const pulito = (valore) => String(valore ?? "").trim();
 const elenco = (valore) => (Array.isArray(valore) ? valore.filter(Boolean) : []);
@@ -1959,7 +1960,7 @@ RISPOSTE.clima_imposta = (c, s, m) => {
   const e = voci[0];
   const a = e.attributi || {};
   const attuale = numero(a.temperature);
-  const passo = numero(a.target_temp_step) || (u === "°F" ? 1 : 0.5);
+  const passo = passoDelClima(a, u);
   let nuovo = c.gradi ?? null;
   if (nuovo === null && c.direzione) {
     if (attuale === null)

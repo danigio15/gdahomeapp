@@ -18,6 +18,7 @@
  */
 
 import { coppiaCon, estremoDiPartenza, obiettiviDelClima } from "./i-due-obiettivi-del-clima.js";
+import { passoDelClima } from "./scala-clima.js";
 
 export const QUICK_CLIMATE_KEY = "cd_clima_rapido";
 
@@ -187,12 +188,12 @@ function temperaturaDelPreset(scelta, attributi, zona) {
         : estremoDiPartenza({ zona });
   const minimo = gradi(attributi.min_temp);
   const massimo = gradi(attributi.max_temp);
-  const passo = gradi(attributi.target_temp_step) > 0 ? gradi(attributi.target_temp_step) : null;
-  let voluto = scelta.temperature;
-  if (passo) {
-    const origine = minimo ?? 0;
-    voluto = origine + Math.round((voluto - origine) / passo) * passo;
-  }
+  /* Il passo e' quello di tutta la plancia (`passoDelClima`), lo stesso del
+   * meno e del piu'. */
+  const passo = passoDelClima(attributi);
+  const origine = minimo ?? 0;
+  const scatti = Math.round((scelta.temperature - origine) / passo);
+  const voluto = Math.round((origine + scatti * passo) * 1000) / 1000;
   return coppiaCon(lettura, quale, voluto, { scala: [minimo, massimo] });
 }
 

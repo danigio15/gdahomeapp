@@ -15,6 +15,7 @@
 import { registraFinestra, tastoServizio } from "../finestre-dei-widget.js";
 import { clean, esc, formatNumber, root, section, siComanda, t } from "../shared.js";
 import { quantoTempoInParole } from "../../core/da-quanto.js";
+import { passoDelClima } from "../../core/scala-clima.js";
 import { importRateEntity, resolveRate } from "../../core/energy-calculations.js";
 import { casellaDellaPressione, storiaDellaPressione } from "./la-pressione.js";
 
@@ -155,7 +156,12 @@ function passiDellObiettivo(lettura, states) {
   if (!entity || lettura.obiettivo == null || !siComanda(entity)) return "";
   if (!comandoDellObiettivo(entity, 0)) return "";
   const attributi = states?.[entity]?.attributes || {};
-  const passo = num(attributi.target_temp_step) ?? num(attributi.step) ?? 1;
+  /* Un clima va col passo di tutti i climi della plancia (`passoDelClima`);
+   * un numero o un boiler col loro. */
+  const passo =
+    clean(entity).startsWith("climate.")
+      ? passoDelClima(attributi)
+      : (num(attributi.target_temp_step) ?? num(attributi.step) ?? 1);
   const minimo = num(attributi.min_temp) ?? num(attributi.min) ?? -Infinity;
   const massimo = num(attributi.max_temp) ?? num(attributi.max) ?? Infinity;
   const tasto = (verso, segno, nome) => {

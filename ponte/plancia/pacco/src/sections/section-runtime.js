@@ -69,6 +69,7 @@ import {
   NOTA_DI_SCHEDA,
   ORDINE_IMPOSTAZIONI,
   PANNELLO,
+  PASSO_DEL_CLIMA,
   PAUSA_DENTRO_UN_CICLO_MS,
   PERIOD_SOURCES,
   PIANI_FIELD,
@@ -398,7 +399,7 @@ import {
   parseDurationSeconds,
   parseTimestampMs,
   partiDelComando,
-  passoDellUnita,
+  passoDelClima,
   pausaDentroUnCiclo,
   pelletScarso,
   periodConsumption,
@@ -568,7 +569,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-LHVHSDO3.js";
+} from "../../chunk-4ZDQHZKN.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -60065,7 +60066,7 @@ RISPOSTE.clima_imposta = (c, s, m) => {
   const e = voci4[0];
   const a = e.attributi || {};
   const attuale = numero39(a.temperature);
-  const passo = numero39(a.target_temp_step) || (u === "°F" ? 1 : 0.5);
+  const passo = passoDelClima(a, u);
   let nuovo = c.gradi ?? null;
   if (nuovo === null && c.direzione) {
     if (attuale === null)
@@ -65710,7 +65711,7 @@ function passiDellObiettivo(lettura4, states) {
   if (!entity2 || lettura4.obiettivo == null || !siComanda(entity2)) return "";
   if (!comandoDellObiettivo(entity2, 0)) return "";
   const attributi2 = states?.[entity2]?.attributes || {};
-  const passo = num3(attributi2.target_temp_step) ?? num3(attributi2.step) ?? 1;
+  const passo = clean(entity2).startsWith("climate.") ? passoDelClima(attributi2) : num3(attributi2.target_temp_step) ?? num3(attributi2.step) ?? 1;
   const minimo = num3(attributi2.min_temp) ?? num3(attributi2.min) ?? -Infinity;
   const massimo = num3(attributi2.max_temp) ?? num3(attributi2.max) ?? Infinity;
   const tasto5 = (verso2, segno5, nome) => {
@@ -76371,7 +76372,7 @@ function rigaClima(states, unit) {
      * ne dichiara settanta (#252). */
     minima: scala2[0],
     massima: scala2[1],
-    passo: passoDellUnita(attributi2, 0.5),
+    passo: passoDelClima(attributi2),
     umidita: numero66(attributi2.current_humidity),
     azione: clean(attributi2.hvac_action),
     /* Che macchina e', non solo cosa sta facendo adesso: un termosifone
@@ -76444,7 +76445,7 @@ function obiettivoSpostato(riga5, verso2, base) {
   const scritto3 = base === null || base === void 0 || base === "" ? NaN : Number(base);
   const partenza = Number.isFinite(scritto3) ? scritto3 : riga5.target;
   if (partenza === null || partenza === void 0 || !Number.isFinite(Number(partenza))) return void 0;
-  const passo = Number(riga5.passo) > 0 ? Number(riga5.passo) : 0.5;
+  const passo = Number(riga5.passo) > 0 ? Number(riga5.passo) : PASSO_DEL_CLIMA;
   const minima = Number.isFinite(Number(riga5.minima)) ? Number(riga5.minima) : -Infinity;
   const massima = Number.isFinite(Number(riga5.massima)) ? Number(riga5.massima) : Infinity;
   const segno5 = Number(verso2) < 0 ? -1 : 1;
@@ -84609,7 +84610,11 @@ function climateReading(entity2, states = allStates(), unita3 = unitaDellEntita(
      * evento di stato, e andarli a ripescare vorrebbe dire risolvere di nuovo
      * la stessa entita' che si e' appena letta. */
     attributi: attributes,
-    passo: passoDellUnita(attributes)
+    /* Il passo e' quello di tutta la plancia (`passoDelClima`): mezzo grado
+     * per chi non ne dichiara uno, come il popup. Prima qui ripiegava su un
+     * grado intero, e la card e il popup della stessa unita' si muovevano
+     * di due misure diverse. */
+    passo: passoDelClima(attributes)
   };
 }
 function scalaDellaCard(reading, zone) {
@@ -85037,8 +85042,9 @@ function paintCard(card2, unit, reading, labels) {
     return;
   }
   const invertita = cartaInvertita();
-  const grande = invertita ? reading.ambient : reading.target;
-  const piccolo = invertita ? reading.target : reading.ambient;
+  const obiettivo2 = obiettivoDaMostrare({ entity: unit.entity, target: reading.target });
+  const grande = invertita ? reading.ambient : obiettivo2;
+  const piccolo = invertita ? obiettivo2 : reading.ambient;
   const target = card2.querySelector("[data-dm-cl-target]");
   if (target) {
     target.innerHTML = grande === null ? `--<span class="dm-cl-deg">°</span>` : `${Math.round(grande * 10) / 10}<span class="dm-cl-deg">°</span>`;
@@ -85059,7 +85065,7 @@ function paintCard(card2, unit, reading, labels) {
   if (estremoBasso) estremoBasso.textContent = `${gradoScritto(scala2[0])}°`;
   const estremoAlto = card2.querySelector("[data-dm-cl-high]");
   if (estremoAlto) estremoAlto.textContent = `${gradoScritto(scala2[1])}°`;
-  const targetRatio = ratio(reading.target, scala2);
+  const targetRatio = ratio(obiettivo2, scala2);
   const fill = card2.querySelector("[data-dm-cl-fill]");
   const knob = card2.querySelector("[data-dm-cl-knob]");
   if (fill) fill.style.width = targetRatio === null ? "0%" : `${(targetRatio * 100).toFixed(1)}%`;
@@ -85586,12 +85592,20 @@ function apriIlTimer(event) {
   if (entita4) apriLaFinestraDelTimer(entita4, unita3, pastiglia5.dataset.dmClTimerOn === "true");
   return true;
 }
-function wholeDegreeDelta(shown, delta) {
-  const down = Number(delta) < 0;
-  const current = Number(shown);
-  if (!Number.isFinite(current)) return down ? -1 : 1;
-  const next = down ? Math.ceil(current) - 1 : Math.floor(current) + 1;
-  return next - current;
+function gradoDopoIlPasso(attributi2, verso2, base) {
+  const scritto3 = base === null || base === void 0 || base === "" ? NaN : Number(base);
+  const partenza = Number.isFinite(scritto3) ? scritto3 : Number(attributi2?.temperature);
+  if (!Number.isFinite(partenza)) return null;
+  const passo = passoDelClima(attributi2);
+  const segno5 = Number(verso2) < 0 ? -1 : 1;
+  const sulPasso = Math.round((partenza + segno5 * passo) / passo) * passo;
+  const minima = Number(attributi2?.min_temp);
+  const massima = Number(attributi2?.max_temp);
+  const dentro3 = Math.min(
+    Number.isFinite(massima) ? massima : Infinity,
+    Math.max(Number.isFinite(minima) ? minima : -Infinity, sulPasso)
+  );
+  return Math.round(dentro3 * 100) / 100;
 }
 function gradoScritto(valore3) {
   const numero66 = Number(valore3);
@@ -85680,7 +85694,13 @@ function installTemperatureStep() {
       if (voluta !== null && casella7) scriviSeCambia(casella7, esc(gradiScritti(voluta)));
       return void 0;
     }
-    return current.call(this, wholeDegreeDelta(shown, delta));
+    const attributi2 = allStates()?.[aperta2]?.attributes;
+    const prossimo = attributi2 ? gradoDopoIlPasso(attributi2, verso2, Number.isFinite(shown) ? shown : void 0) : null;
+    if (prossimo === null) return current.call(this, delta);
+    root.navigator?.vibrate?.(8);
+    chiamaClima(aperta2, "set_temperature", { temperature: prossimo });
+    if (casella7) scriviSeCambia(casella7, esc(gradiScritti(prossimo)));
+    return void 0;
   }
   cpSetTempThermal.__dmClimateThermal = true;
   cpSetTempThermal.__dmPrevious = current;
@@ -85716,8 +85736,22 @@ function installPassoDellaCard() {
   const current = root.setTemp;
   if (typeof current !== "function" || current.__dmClimateThermal) return;
   function setTempThermal(entity2, direction, zona) {
-    if (muoviIlClimaDoppio(entity2, direction === "up" ? 1 : -1, zona)) return void 0;
-    return current.call(this, entity2, direction);
+    const verso2 = direction === "up" ? 1 : -1;
+    if (muoviIlClimaDoppio(entity2, verso2, zona)) return void 0;
+    const chiave2 = clean(entity2);
+    const voluta = passoDellObiettivo(chiave2, verso2);
+    if (voluta !== void 0) {
+      root.navigator?.vibrate?.(10);
+      if (voluta !== null) renderClimate();
+      return void 0;
+    }
+    const attributi2 = allStates()?.[chiave2]?.attributes;
+    const prossimo = attributi2 ? gradoDopoIlPasso(attributi2, verso2) : null;
+    if (prossimo === null) return current.call(this, entity2, direction);
+    root.navigator?.vibrate?.(10);
+    if (prossimo !== Number(attributi2.temperature))
+      chiamaClima(chiave2, "set_temperature", { temperature: prossimo });
+    return void 0;
   }
   setTempThermal.__dmClimateThermal = true;
   setTempThermal.__dmPrevious = current;
@@ -101669,12 +101703,10 @@ function temperaturaDelPreset(scelta3, attributi2, zona) {
   const quale = scelta3.mode === "heat" ? "basso" : RAFFRESCANO.has(scelta3.mode) ? "alto" : estremoDiPartenza({ zona });
   const minimo = gradi10(attributi2.min_temp);
   const massimo = gradi10(attributi2.max_temp);
-  const passo = gradi10(attributi2.target_temp_step) > 0 ? gradi10(attributi2.target_temp_step) : null;
-  let voluto = scelta3.temperature;
-  if (passo) {
-    const origine = minimo ?? 0;
-    voluto = origine + Math.round((voluto - origine) / passo) * passo;
-  }
+  const passo = passoDelClima(attributi2);
+  const origine = minimo ?? 0;
+  const scatti = Math.round((scelta3.temperature - origine) / passo);
+  const voluto = Math.round((origine + scatti * passo) * 1e3) / 1e3;
   return coppiaCon(lettura4, quale, voluto, { scala: [minimo, massimo] });
 }
 function quickClimatePresetOf(entity2, zona, perUnita, globale) {
@@ -110728,7 +110760,7 @@ var SEGNI_DEL_TERMOSTATO = Object.freeze({
 function righeDelTermostato(id) {
   const coppia2 = coppiaDelMuro(id);
   const a = attributi(id);
-  const passo = numero52(a.target_temp_step) || 0.5;
+  const passo = passoDelClima(a);
   const scala2 = [numero52(a.min_temp) ?? 7, numero52(a.max_temp) ?? 35];
   return [
     [
@@ -110761,7 +110793,7 @@ var menoGradiPiu = (id, gradi13, estremo = "", fermo = () => "") => {
 function righeDiVetro(id) {
   const coppia2 = coppiaDelMuro(id);
   const a = attributi(id);
-  const passo = numero52(a.target_temp_step) || 0.5;
+  const passo = passoDelClima(a);
   const scala2 = [numero52(a.min_temp) ?? 7, numero52(a.max_temp) ?? 35];
   return [
     ["basso", t("Caldo", "Heating"), "#f97316"],
@@ -113271,7 +113303,7 @@ function cambiaTemperatura(id, verso2, estremo = "") {
   const lettura4 = coppiaVista || obiettiviDelMuro(id);
   if (lettura4.doppio) {
     const quale = coppiaVista ? estremo : estremoDelMuro(id, lettura4);
-    const passo2 = numero52(a.target_temp_step) || 0.5;
+    const passo2 = passoDelClima(a);
     const scala2 = [numero52(a.min_temp) ?? 7, numero52(a.max_temp) ?? 35];
     const coppia2 = quale ? coppiaSpostata(lettura4, quale, verso2, { passo: passo2, scala: scala2 }) : null;
     if (!coppia2) return;
@@ -113284,7 +113316,7 @@ function cambiaTemperatura(id, verso2, estremo = "") {
     );
     return;
   }
-  const passo = numero52(a.target_temp_step) || 0.5;
+  const passo = passoDelClima(a);
   const min = numero52(a.min_temp) ?? 7;
   const max = numero52(a.max_temp) ?? 35;
   const ora8 = obiettivo(id) ?? numero52(a.current_temperature) ?? 20;

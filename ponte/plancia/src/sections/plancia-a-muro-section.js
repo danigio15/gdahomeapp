@@ -21,6 +21,7 @@
  * solo se il ponte dice che gdahome e' Premium. Con Base la plancia resta
  * quella di sempre, e il config a muro resta scritto per il giorno dopo. */
 import { quickClimatePresetOf, quickClimateSteps } from "../core/quick-climate.js";
+import { passoDelClima } from "../core/scala-clima.js";
 import {
   coppiaDelTermostato,
   coppiaSpostata,
@@ -1460,7 +1461,7 @@ const SEGNI_DEL_TERMOSTATO = Object.freeze({
 function righeDelTermostato(id) {
   const coppia = coppiaDelMuro(id);
   const a = attributi(id);
-  const passo = numero(a.target_temp_step) || 0.5;
+  const passo = passoDelClima(a);
   const scala = [numero(a.min_temp) ?? 7, numero(a.max_temp) ?? 35];
   return [
     [
@@ -1502,7 +1503,7 @@ const menoGradiPiu = (id, gradi, estremo = "", fermo = () => "") => {
 function righeDiVetro(id) {
   const coppia = coppiaDelMuro(id);
   const a = attributi(id);
-  const passo = numero(a.target_temp_step) || 0.5;
+  const passo = passoDelClima(a);
   const scala = [numero(a.min_temp) ?? 7, numero(a.max_temp) ?? 35];
   return [
     ["basso", t("Caldo", "Heating"), "#f97316"],
@@ -5150,7 +5151,7 @@ function cambiaTemperatura(id, verso, estremo = "") {
   const lettura = coppiaVista || obiettiviDelMuro(id);
   if (lettura.doppio) {
     const quale = coppiaVista ? estremo : estremoDelMuro(id, lettura);
-    const passo = numero(a.target_temp_step) || 0.5;
+    const passo = passoDelClima(a);
     const scala = [numero(a.min_temp) ?? 7, numero(a.max_temp) ?? 35];
     const coppia = quale ? coppiaSpostata(lettura, quale, verso, { passo, scala }) : null;
     if (!coppia) return;
@@ -5163,7 +5164,7 @@ function cambiaTemperatura(id, verso, estremo = "") {
     );
     return;
   }
-  const passo = numero(a.target_temp_step) || 0.5;
+  const passo = passoDelClima(a);
   const min = numero(a.min_temp) ?? 7;
   const max = numero(a.max_temp) ?? 35;
   const ora = obiettivo(id) ?? numero(a.current_temperature) ?? 20;
