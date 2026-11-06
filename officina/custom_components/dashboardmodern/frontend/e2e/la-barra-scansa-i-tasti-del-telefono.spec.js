@@ -12,6 +12,7 @@
  * quanto vale.
  */
 import { expect, test } from "@playwright/test";
+import { fingiLaFasciaDiSistema } from "./helpers/fascia-di-sistema.js";
 import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
 
 const SEME = {
@@ -42,26 +43,22 @@ const altezzaDalFondo = (page, selettore) =>
     return Math.round(window.innerHeight - riquadro.bottom);
   }, selettore);
 
+/* I tasti di Android si fingono dove la plancia li misura
+ * (`helpers/fascia-di-sistema`), non nella variabile che la misura scrive.
+ *
+ * Scritta la variabile, la plancia la riscriveva con lo zero del browser a
+ * ogni sua misura: a 400 e a 1500 millisecondi dall'avvio, e da quando segue
+ * lo schermo anche a tre e a sei secondi e a ogni «resize». Una prova che
+ * aspettava la misura dei 1500 e poi fingeva si ritrovava, a meta', un
+ * telefono senza tasti, e accusava la barra di non essersi mossa. Finto dove
+ * si misura, ogni misura dice lo stesso numero. */
 async function fingiIlFondoDiSistema(page, pixel) {
-  await page.evaluate((quanti) => {
-    document.documentElement.style.setProperty("--dm-fondo-di-sistema", `${quanti}px`);
-  }, pixel);
-  await page.waitForTimeout(600);
+  await fingiLaFasciaDiSistema(page, "bottom", pixel, { attesa: 600 });
 }
 
-/* La plancia rimisura la fascia poco dopo l'avvio — a 400 e a 1500
- * millisecondi, perche' il pannello di Home Assistant finisce di impaginarsi
- * dopo di noi e una misura presa troppo presto e' uno zero. Quella seconda
- * passata riscrive la stessa variabile che qui si finge: se cade in mezzo alla
- * prova, il telefono coi tasti torna un telefono senza, e la prova accusa la
- * barra di non essersi mossa.
- *
- * Non e' un difetto della plancia ed e' sempre stato li' dentro: si vedeva
- * come un rosso che va e viene, e i tentativi automatici lo rimettevano in
- * piedi. Si aspetta che l'ultima misura sia passata, e da quel momento la
- * variabile e' della prova. */
+/* Le misure dell'avvio sono passate: da qui in poi la fascia e' quella finta. */
 async function laMisuraSiFerma(page) {
-  await page.waitForTimeout(1800);
+  await page.waitForTimeout(400);
 }
 
 /* La misura quando ha smesso di muoversi, non a un'ora stabilita.

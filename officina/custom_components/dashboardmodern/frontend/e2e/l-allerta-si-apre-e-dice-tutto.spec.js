@@ -104,7 +104,9 @@ test("la tessera dell'allerta si apre e dice tutto", async ({ page }, testInfo) 
   /* Dentro c'e' per intero, e c'e' anche quello che fuori non compariva. */
   await expect(finestra).toContainText("frequente attivita' elettrica");
   await expect(finestra).toContainText("Bacini Costieri");
-  await expect(finestra).toContainText(ENTITA);
+  /* Il nome dell'entita' no: «non voglio vedere il nome entita'», nelle
+   * finestre come nelle pagine. Chi configura lo trova nella sua scheda. */
+  await expect(finestra).not.toContainText(ENTITA);
   /* La veste e' quella di tutte le altre finestre della plancia. */
   await expect(finestra).toHaveClass(/modal-wrapper/);
   await expect(finestra.locator(".modal-card")).toBeVisible();

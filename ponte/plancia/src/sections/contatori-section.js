@@ -712,8 +712,10 @@ function schedaDelGas(come) {
  * serve sapere cosa chiudere, non quanto è costato settembre. */
 function semaforoMarkup(come, adesso) {
   const voci = [];
-  const voce = ({ stato, icona, nome, sotto, valore }) =>
-    `<article class="dm-cont-voce" data-stato="${esc(stato)}">
+  /* `data-dm-blocco`: l'entita', perche' nella disposizione ogni riga resti
+   * la stessa anche quando cambia quali righe ci sono. */
+  const voce = ({ stato, icona, nome, sotto, valore, entity }) =>
+    `<article class="dm-cont-voce" data-stato="${esc(stato)}"${entity ? ` data-dm-blocco="${esc(entity)}"` : ""}>
       <span class="dm-cont-voce-ic" aria-hidden="true">${disegnoDiCasa(icona, { misura: 30, ripiego: "meter" })}</span>
       <div class="dm-cont-voce-testo"><strong>${esc(nome)}</strong>${sotto ? `<small>${esc(sotto)}</small>` : ""}</div>
       <b class="dm-cont-voce-stato">${esc(valore)}</b>
@@ -725,6 +727,7 @@ function semaforoMarkup(come, adesso) {
       voce({
         stato: colpevole ? "allarme" : "bene",
         icona: lettura.icon,
+        entity: lettura.entity,
         nome: lettura.name,
         sotto: colpevole ? t("Mai ferma in 24 ore", "Never still in 24 hours") : t("Oggi", "Today"),
         valore: volumeInParole(come.acqua.perContatore[lettura.entity]?.oggi ?? null),
@@ -736,6 +739,7 @@ function semaforoMarkup(come, adesso) {
       voce({
         stato: una.lettura.muto ? "muto" : una.perdita?.perdita ? "allarme" : "bene",
         icona: una.lettura.icon,
+        entity: una.lettura.entity,
         nome: una.lettura.name,
         sotto: parolaDellaPortata(una, adesso),
         valore: portataInParole(una.lettura),
@@ -746,6 +750,7 @@ function semaforoMarkup(come, adesso) {
       voce({
         stato: una.bar === null ? "muto" : una.verdetto === "ok" ? "bene" : "attenzione",
         icona: una.lettura.icon,
+        entity: una.lettura.entity,
         nome: una.lettura.name,
         sotto:
           una.bar === null
@@ -763,6 +768,7 @@ function semaforoMarkup(come, adesso) {
       voce({
         stato: una.lettura.muto ? "muto" : una.basso ? "attenzione" : "bene",
         icona: una.lettura.icon,
+        entity: una.lettura.entity,
         nome: una.lettura.name,
         sotto: parolaDelSale(una),
         valore: valoreDelSale(una),
@@ -773,6 +779,7 @@ function semaforoMarkup(come, adesso) {
       voce({
         stato: "bene",
         icona: lettura.icon,
+        entity: lettura.entity,
         nome: lettura.name,
         sotto: t("Oggi", "Today"),
         valore: metriCubiInParole(come.gas.perContatore[lettura.entity]?.oggi ?? null),

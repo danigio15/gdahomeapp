@@ -183,6 +183,12 @@ export const LE_ECCEZIONI = Object.freeze([
       "la stessa coppia di prova di `docs/LICENZE.md` e di `le-licenze.test.js`: firma l'elenco delle licenze tolte che il centralino di prova verifica. Non vale in nessuna casa",
   },
   {
+    file: "quadro/test/la-revoca-arriva-subito-alla-casa.test.js",
+    segno: "chiave-ed25519-grezza",
+    perche:
+      "la stessa coppia di prova di `docs/LICENZE.md` e di `le-licenze.test.js`: il quadro di prova ci firma i gettoni e l'elenco delle tolte, e il centralino e la casa di prova li verificano con la pubblica. Non vale in nessuna casa",
+  },
+  {
     file: "quadro/test/le-licenze.test.js",
     segno: "chiave-privata",
     perche:

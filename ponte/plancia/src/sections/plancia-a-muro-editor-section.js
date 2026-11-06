@@ -383,8 +383,8 @@ function postoMarkup(i, lista, k, c, posti = 6) {
     lista === "comandi"
       ? `<label class="mu-ed-voce"><span>${esc(t("Tipo", "Type"))}</span>${tendina(`${via}.tipo`, due ? "duetasti" : "", TIPI_DEL_POSTO(), null)}</label>`
       : "";
-  return `<div class="mu-ed-posto${pieno || due ? " pieno" : ""}" data-mu-ed-posto="${esc(via)}">
-    <div class="mu-ed-posto-testa"><span class="mu-ed-num">${k + 1}</span>
+  return `<div class="mu-ed-posto${pieno || due ? " pieno" : ""}" data-mu-ed-posto="${esc(via)}" data-dm-riordina-riga="${k}">
+    <div class="mu-ed-posto-testa">${maniglia(`${t("Posto", "Slot")} ${k + 1}`)}<span class="mu-ed-num">${k + 1}</span>
       <span class="mu-ed-frecce"><button type="button" data-mu-ed-posto-su="${i}.${k}" data-mu-ed-lista="${lista}"${k === 0 ? " disabled" : ""} aria-label="▲">▲</button><button type="button" data-mu-ed-posto-giu="${i}.${k}" data-mu-ed-lista="${lista}"${k === posti - 1 ? " disabled" : ""} aria-label="▼">▼</button></span>
       <b class="mu-ed-cosa">${esc(descrizione)}</b>
       ${pieno || due ? `<button type="button" class="mu-ed-svuota" data-mu-ed-svuota="${esc(via)}" aria-label="${esc(t("Svuota il posto", "Clear the slot"))}">✕</button>` : ""}</div>
@@ -410,8 +410,17 @@ function postoMarkup(i, lista, k, c, posti = 6) {
     </div></div>`;
 }
 
+/* La maniglia per trascinare (#379): le frecce restano, e chi preferisce
+ * prende la riga e la porta dove vuole — col dito, col mouse o dalle frecce
+ * della tastiera sulla maniglia. */
+function maniglia(nome) {
+  return `<button type="button" class="mu-ed-maniglia" data-dm-maniglia aria-label="${esc(
+    `${nome}: ${t("trascina, o usa le frecce su e giù", "drag, or use the up and down arrows")}`,
+  )}" title="${esc(t("Trascina per spostare", "Drag to move"))}">⠿</button>`;
+}
+
 function postiMarkup(i, lista, posti, quanti = 6) {
-  return `<div class="mu-ed-posti">${Array.from({ length: quanti }, (_, k) =>
+  return `<div class="mu-ed-posti" data-dm-riordina data-mu-ed-elenco="${i}.${lista}">${Array.from({ length: quanti }, (_, k) =>
     postoMarkup(i, lista, k, posti[k], quanti),
   ).join("")}</div>`;
 }
@@ -831,13 +840,13 @@ function paginaMarkup(p, i, tutte) {
   const nomeDiSerie = (p.modello === "stanza" && clean(p.stanza)) || NOME_DEL_MODELLO(p.modello);
   const aperta = state.aperta === i;
   /* Una riga per pagina: il disegno, il nome, il tipo. Un tocco la apre. */
-  const testa = `<div class="mu-ed-pagina-testa">
+  const testa = `<div class="mu-ed-pagina-testa">${maniglia(clean(p.titolo) || nomeDiSerie)}
       <button type="button" class="mu-ed-apri" data-mu-ed-apri="${i}" aria-expanded="${aperta}">${disegno(clean(p.disegno) || DISEGNO_DI_SERIE[p.modello], 26, `pag-${i}`)}<span class="mu-ed-apri-tx"><b>${esc(clean(p.titolo) || nomeDiSerie)}</b><small>${esc(t("Pagina", "Page"))} ${i + 1} · ${esc(NOME_DEL_MODELLO(p.modello))}</small></span><span class="mu-ed-freccia" aria-hidden="true">${aperta ? "▾" : "▸"}</span></button>
       <span class="mu-ed-frecce"><button type="button" data-mu-ed-pagina-su="${i}"${i === 0 ? " disabled" : ""} aria-label="▲">▲</button><button type="button" data-mu-ed-pagina-giu="${i}"${i === tutte - 1 ? " disabled" : ""} aria-label="▼">▼</button></span>
       ${tutte < PAGINE_AL_MASSIMO ? `<button type="button" class="mu-ed-copia" data-mu-ed-copia="${i}" aria-label="${esc(t("Duplica la pagina", "Duplicate page"))}" title="${esc(t("Duplica", "Duplicate"))}">⧉</button>` : ""}
       <button type="button" class="mu-ed-svuota" data-mu-ed-togli="${i}" aria-label="${esc(t("Togli la pagina", "Remove page"))}">🗑</button></div>`;
-  if (!aperta) return `<div class="mu-ed-pagina chiusa" data-mu-ed-pagina="${i}">${testa}</div>`;
-  return `<div class="mu-ed-pagina" data-mu-ed-pagina="${i}">${testa}
+  if (!aperta) return `<div class="mu-ed-pagina chiusa" data-mu-ed-pagina="${i}" data-dm-riordina-riga="${i}">${testa}</div>`;
+  return `<div class="mu-ed-pagina" data-mu-ed-pagina="${i}" data-dm-riordina-riga="${i}">${testa}
     ${riga(t("Nome sul tablet", "Name on the tablet"), t("Si legge sulla linguetta in alto", "Shown on the tab at the top"), campo(`${via}.titolo`, p.titolo, nomeDiSerie))}
     ${riga(t("Icona", "Icon"), "", tendina(`${via}.disegno`, p.disegno, DISEGNI(), null))}
     ${riga(t("Tipo di pagina", "Page type"), "", tendina(`${via}.modello`, p.modello, MODELLI(), null))}
@@ -1337,7 +1346,11 @@ function corpoMarkup() {
   <div class="ed-sec-title">${esc(t("Le pagine di questo tablet", "This tablet's pages"))}</div>
   ${
     state.fonte
-      ? m.pagine.map((p, i) => paginaMarkup(p, i, m.pagine.length)).join("") ||
+      ? (m.pagine.length
+          ? `<div class="mu-ed-pagine" data-dm-riordina data-mu-ed-elenco="pagine">${m.pagine
+              .map((p, i) => paginaMarkup(p, i, m.pagine.length))
+              .join("")}</div>`
+          : "") ||
         `<div class="mu-ed-nota">${esc(t("Ancora nessuna pagina: aggiungine una qui sotto.", "No pages yet: add one below."))}</div>`
       : `<div class="mu-ed-nota">${esc(t("Leggo la plancia di origine…", "Reading the source dashboard…"))}</div>`
   }
@@ -1792,6 +1805,57 @@ function sposta(elenco, da, a) {
   return copia;
 }
 
+/* La pagina aperta resta aperta anche spostata, e quelle in mezzo scalano. */
+function spostaLaPagina(da, a) {
+  const m = structuredClone(bozza());
+  if (!m.pagine[da] || a < 0 || a >= m.pagine.length) return;
+  m.pagine = sposta(m.pagine, da, a);
+  state.dueTasti = {};
+  const aperta = state.aperta;
+  if (aperta === da) state.aperta = a;
+  else if (da < aperta && a >= aperta) state.aperta = aperta - 1;
+  else if (da > aperta && a <= aperta) state.aperta = aperta + 1;
+  state.bozza = muroPulito(m);
+}
+
+function spostaIlPosto(i, quale, da, a) {
+  const m = structuredClone(bozza());
+  const p = m.pagine[i];
+  if (!p) return;
+  const lista = quale === "scene" ? "scene" : "comandi";
+  /* I due tasti ancora a meta' stanno per posto: spostando i posti non
+   * saprebbero piu' di chi sono, e si lasciano. */
+  state.dueTasti = {};
+  /* Anche i posti vuoti si spostano: «il quinto lo voglio libero». */
+  const posti = Array.from({ length: postiDellaPagina(p) }, (_, n) => p[lista][n] || { tipo: "vuoto" });
+  p[lista] = sposta(posti, da, a);
+  if (lista === "comandi") p.scelti = true;
+  state.bozza = muroPulito(m);
+}
+
+/* Una pagina o un posto trascinati dalla maniglia: come le frecce, ma da
+ * qualunque posto a qualunque posto. */
+function onRiordina(event) {
+  const elenco = event.target?.getAttribute?.("data-mu-ed-elenco");
+  if (!elenco) return;
+  const { da, a } = event.detail || {};
+  if (!Number.isInteger(da) || !Number.isInteger(a)) return;
+  if (elenco === "pagine") spostaLaPagina(da, a);
+  else {
+    const [i, lista] = elenco.split(".");
+    spostaIlPosto(Number(i), lista, da, a);
+  }
+  ridisegna();
+  /* Dalla tastiera si continua a premere la freccia: il fuoco torna sulla
+   * maniglia di chi si e' spostato, nel posto nuovo. */
+  root.setTimeout?.(() => {
+    const css = root.CSS?.escape ? root.CSS.escape(elenco) : elenco;
+    doc
+      .querySelector(`[data-mu-ed-elenco="${css}"] > [data-dm-riordina-riga="${a}"] [data-dm-maniglia]`)
+      ?.focus?.();
+  }, 0);
+}
+
 function onClick(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva() !== MURO_EDITOR_TAB || !body.contains(event.target)) return;
@@ -1908,31 +1972,13 @@ function onClick(event) {
     state.bozza = muroPulito(m);
     state.aperta = -1;
   } else if (d.muEdPaginaSu !== undefined || d.muEdPaginaGiu !== undefined) {
-    const m = structuredClone(bozza());
     const i = Number(d.muEdPaginaSu ?? d.muEdPaginaGiu);
-    const verso = d.muEdPaginaSu !== undefined ? i - 1 : i + 1;
-    m.pagine = sposta(m.pagine, i, verso);
-    state.dueTasti = {};
-    if (state.aperta === i) state.aperta = verso;
-    state.bozza = muroPulito(m);
+    spostaLaPagina(i, d.muEdPaginaSu !== undefined ? i - 1 : i + 1);
   } else if (d.muEdPostoSu !== undefined || d.muEdPostoGiu !== undefined) {
     const [i, k] = String(d.muEdPostoSu ?? d.muEdPostoGiu)
       .split(".")
       .map(Number);
-    const m = structuredClone(bozza());
-    const p = m.pagine[i];
-    const lista = d.muEdLista === "scene" ? "scene" : "comandi";
-    /* I due tasti ancora a meta' stanno per posto: spostando i posti non
-     * saprebbero piu' di chi sono, e si lasciano. */
-    state.dueTasti = {};
-    /* Anche i posti vuoti si spostano: «il quinto lo voglio libero». */
-    const posti = Array.from(
-      { length: postiDellaPagina(p) },
-      (_, n) => p[lista][n] || { tipo: "vuoto" },
-    );
-    p[lista] = sposta(posti, k, d.muEdPostoSu !== undefined ? k - 1 : k + 1);
-    if (lista === "comandi") p.scelti = true;
-    state.bozza = muroPulito(m);
+    spostaIlPosto(i, d.muEdLista, k, d.muEdPostoSu !== undefined ? k - 1 : k + 1);
   } else if (d.muEdSalva !== undefined) {
     salva();
     return;
@@ -2086,6 +2132,9 @@ html[data-theme="dark"] #ed-body .mu-ed-prova{color:#7dd3fc}
 #ed-body .mu-ed-altro .mu-ed-freccia{grid-row:1/span 2;grid-column:2}
 #ed-body .mu-ed-pagina-testa .ed-del{margin-left:6px}
 #ed-body .mu-ed-frecce{display:inline-flex;gap:4px;margin-left:auto}
+#ed-body .mu-ed-maniglia{flex:0 0 28px;width:28px;height:34px;padding:0;border:0;border-radius:9px;background:transparent;color:var(--text-dim,#94a3b8);font-size:17px;line-height:1;cursor:grab;display:inline-flex;align-items:center;justify-content:center;touch-action:none;user-select:none;-webkit-user-select:none}
+#ed-body .mu-ed-maniglia:hover{color:var(--text,#0f172a);background:color-mix(in srgb,var(--text-dim,#94a3b8) 14%,transparent)}
+#ed-body .mu-ed-maniglia:focus-visible{outline:2px solid var(--accent,#3b82f6);outline-offset:1px}
 #ed-body .mu-ed-posto .mu-ed-frecce{margin-left:0}
 #ed-body .mu-ed-frecce button{width:28px;height:28px;border-radius:50%;border:1px solid var(--divider-color,#dbe4ee);background:none;color:var(--text-dim,#64748b);font-size:10px;cursor:pointer}
 #ed-body .mu-ed-frecce button[disabled]{opacity:.35;cursor:default}
@@ -2181,6 +2230,7 @@ export function installPlanciaAMuroEditor() {
   state.installed = true;
   stili();
   doc.addEventListener("click", onClick);
+  doc.addEventListener("dm-riordina", onRiordina);
   doc.addEventListener("change", onChange);
   doc.addEventListener(EVENTO_IMMAGINE, onImmagine);
   doc.addEventListener("input", (event) => {

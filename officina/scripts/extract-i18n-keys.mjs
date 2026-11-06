@@ -136,6 +136,8 @@ function codePairs() {
  * arguments are not literals and whose module is not named below.
  */
 const SECTION_TABLES = Object.freeze([
+  /* I riquadri dichiarati della disposizione (#379): pagina, dove, id, it, en. */
+  { file: "disposizione-section.js", name: "DICHIARATI", rows: "items", at: [3, 4] },
   { file: "alerts-section.js", name: "GROUPS", rows: "items", at: [2, 3] },
   /* Le famiglie di notifiche che gli Echo possono dire. */
   { file: "alexa-editor-section.js", name: "NOMI_DELLE_FAMIGLIE", rows: "values", at: [0, 1] },

@@ -143,6 +143,9 @@ const SHARED_ACROSS_LANGUAGES = new Set([
   "Radio (TuneIn)",
   /* La radio della pagina Musica: «Radio» si scrive cosi' in mezza Europa. */
   "Radio",
+  /* «Telefono / Tablet / Computer» in testa all'anteprima del Config (#379):
+   * «Tablet» si scrive cosi' in tedesco, olandese, portoghese, polacco, turco. */
+  "Tablet",
   /* Lo sport: «Sprint» e' il nome della gara corta, in F1 e in MotoGP, e si
    * dice cosi' in tutte le lingue che ce l'hanno. */
   "Sprint",
@@ -431,6 +434,8 @@ const LOCALE_IDENTITIES = {
     "Boiler",
     "Browser",
     "Computer",
+    /* Lo schermo dell'anteprima del Config (#379), con la sua figura. */
+    "🖥️ Computer",
     "Cyan",
     "DETAILS",
     "DIMMER",
@@ -563,6 +568,8 @@ const LOCALE_IDENTITIES = {
     "Browser",
     "Camera",
     "Computer",
+    /* Lo schermo dell'anteprima del Config (#379), con la sua figura. */
+    "🖥️ Computer",
     "Console",
     "December",
     "DETAILS",

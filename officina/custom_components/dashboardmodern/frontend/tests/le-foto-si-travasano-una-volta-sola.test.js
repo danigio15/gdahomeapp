@@ -283,7 +283,11 @@ test("togliere una chiave non alza la revisione", async () => {
    * casa, uguali dal telefono e dal tablet. */
   /* E la 75 con la Casa 3D (`cd_casa3d`): la casa in tre dimensioni e i suoi
    * dispositivi collegati sono della casa, non del vetro da cui la si guarda. */
-  assert.equal(CONFIG_KEYS_REVISION, 75);
+  /* La 76 con la disposizione delle sezioni (`cd_disposizione`), la 77 con
+   * le posizioni dentro i disegni (`cd_disegni`): dove sta la pompa nel
+   * disegno del solare termico e' una scelta della casa. */
+  assert.equal(CONFIG_KEYS_REVISION, 77);
+  assert.ok(CONFIG_KEYS.includes("cd_disegni"));
   assert.ok(CONFIG_KEYS.includes("cd_salute"));
   assert.ok(CONFIG_KEYS.includes("cd_alexa"));
   assert.ok(CONFIG_KEYS.includes("cd_occhio"));

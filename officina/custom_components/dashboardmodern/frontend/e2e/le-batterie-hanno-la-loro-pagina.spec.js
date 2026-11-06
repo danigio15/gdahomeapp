@@ -124,13 +124,19 @@ test("una batteria tolta dalla scheda sparisce anche dalla pagina", async ({ pag
 
   await page.evaluate(() => window.apriConfigEntita?.());
   await page.locator('#editor-modal .ed-tab[data-tab="batterie"]').click();
-  await expect(page.locator("#ed-body .dm-batt-ed-riga")).toHaveCount(3, { timeout: 15_000 });
+  /* Dal #74 la scheda e' un elenco dichiarato, come Varchi e Presenza: le
+   * righe sono `.dm-dich-riga` e una si toglie col cestino. */
+  const righe = page.locator("#ed-body .dm-dich-riga");
+  await expect(righe).toHaveCount(3, { timeout: 15_000 });
 
   /* La batteria del telefono è una percentuale ma non è una pila da comprare:
    * si toglie, e deve sparire da tutte le parti — se la pagina continuasse a
    * contarla, chi l'ha tolta penserebbe che la plancia non l'ha sentito. */
-  await page.locator('[data-dm-batt-escludi="sensor.telecomando_batteria"]').click();
-  await expect(page.locator("#ed-body .dm-batt-ed-riga")).toHaveCount(2);
+  await righe
+    .filter({ hasText: "sensor.telecomando_batteria" })
+    .locator("[data-dm-dich-elimina]")
+    .click();
+  await expect(righe).toHaveCount(2);
 
   await chiudiIlConfig(page);
   await page.locator('.tab[data-tab="batterie"]').click();

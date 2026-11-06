@@ -43,6 +43,11 @@
  * la licenza non l'ha mai detta: il suo add-on e' di prima, e li' Premium non
  * si puo' nemmeno comprare.
  *
+ * Accanto al gettone gdahome la casa dice anche quello della sua gdanav, se ne
+ * ha una sua (`"gdanav": "…"`). Non apre e non chiude niente: serve solo a
+ * sapere a quale casa dire di ricontrollare quando il quadro dice tolta quella
+ * gdanav (`licenzeAppenaTolte`). Un centralino di prima il campo non lo legge.
+ *
  * Chi compra Premium fuori casa ha la casa chiusa proprio da qui: la sua
  * ricevuta la porta `POST /licenza/<casa>` (`portaLaRicevuta`), che la gira
  * alla casa sul suo filo e aspetta la risposta.
@@ -248,7 +253,7 @@ export class Centralino {
     this.chiaveLicenze = String(chiaveLicenze || "");
     this.revoche = revoche;
     /* Una licenza appena tolta chiude subito, non al giro di controllo. */
-    if (revoche) revoche.alleNuove = (lic) => this.licenzeAppenaTolte(lic);
+    if (revoche) revoche.alleNuove = (lic, gdanav) => this.licenzeAppenaTolte(lic, gdanav);
     this.vitaDelCanaleDiAbbinamento = vitaDelCanaleDiAbbinamento;
     /** Fino a quando una casa e' gdahome Premium, per identificativo.
      *
@@ -260,6 +265,9 @@ export class Centralino {
     this.premiumFino = new Map();
     /** E di quale licenza era il gettone, per le licenze tolte. */
     this.licenzaDi = new Map();
+    /** E la licenza gdanav della casa, se ne ha una sua: solo per dirle di
+     * ricontrollare quando il quadro la dice tolta. Non apre niente. */
+    this.gdanavDi = new Map();
     /* Quando si e' chiesto l'ultima volta a una casa di ricontrollare la
      * licenza per un telefono fermato da fuori (`accogliUnTelefono`). */
     this.ricontrolloChiesto = new Map();
@@ -653,7 +661,7 @@ export class Centralino {
    * Vuoto o storto: la casa non e' (piu') Premium, e chi era gia' entrato da
    * fuori esce — un telefono non resta dentro per il solo fatto d'essere
    * entrato prima. Torna se la casa e' Premium adesso. */
-  laLicenzaDi(casa, gettone) {
+  laLicenzaDi(casa, gettone, gdanav) {
     /* Che la casa il gettone lo dica si segna **sempre**, anche a controllo
      * spento, e prima di guardarlo: e' l'unico modo di sapere quante case
      * hanno gia' l'add-on che le licenze le conosce. Un add-on vecchio questo
@@ -662,6 +670,7 @@ export class Centralino {
      * guarda `quantePronteAllaLicenza` contro `quanteCase`. */
     if (casa) casa.dicelaLicenza = true;
     if (this.modoLicenze === "spento" || !casa?.id) return true;
+    this._laGdanavDi(casa, gdanav);
     const detto = verificaGettone(String(gettone ?? ""), {
       chiave: this.chiaveLicenze,
       sog: casa.id,
@@ -682,18 +691,47 @@ export class Centralino {
     return false;
   }
 
+  /* Il gettone gdanav che la casa ha detto accanto a quello gdahome. Ci si
+   * ricorda soltanto di quale licenza e': un gettone gdahome qui non conta
+   * (gdanav e' gia' compreso, e la sua licenza e' gia' in `licenzaDi`), e
+   * uno che non vale o che manca toglie quello di prima. */
+  _laGdanavDi(casa, gettone) {
+    const detto =
+      typeof gettone === "string" && gettone
+        ? verificaGettone(gettone, {
+            chiave: this.chiaveLicenze,
+            sog: casa.id,
+            app: "gdanav",
+            adesso: this.adesso(),
+          })
+        : null;
+    if (detto?.app === "gdanav" && typeof detto.lic === "string") {
+      this.gdanavDi.set(casa.id, detto.lic);
+    } else {
+      this.gdanavDi.delete(casa.id);
+    }
+  }
+
   /* Il quadro ha appena detto tolte queste licenze. Le case collegate col
    * gettone di una di queste si sentono dire di richiedere la loro licenza
    * al quadro (`ricontrolla-licenza`): cosi' il Premium se ne va anche in
    * casa adesso, non al giro delle sei ore. E con `impone` i loro telefoni da
    * fuori escono subito. La casa non si fida di questo messaggio: richiede e
-   * basta, e a decidere e' il quadro con la sua firma. */
-  licenzeAppenaTolte(lic) {
+   * basta, e a decidere e' il quadro con la sua firma.
+   *
+   * Le gdanav tolte (`gdanav`) fanno ricontrollare e basta: il fuori casa e'
+   * di gdahome, e una casa che ha ancora il suo gdahome non perde niente. */
+  licenzeAppenaTolte(lic, gdanav = []) {
     const tolte = new Set(lic);
+    const tolteGdanav = new Set(gdanav);
     for (const casa of [...this.collegate.values()]) {
-      if (!casa.id || !tolte.has(this.licenzaDi.get(casa.id))) continue;
-      casa.ricontrollaLaLicenza();
-      if (this.impone) casa.chiudiITelefoni(PREMIUM_RICHIESTO.codice, PREMIUM_RICHIESTO.motivo);
+      if (!casa.id) continue;
+      if (tolte.has(this.licenzaDi.get(casa.id))) {
+        casa.ricontrollaLaLicenza();
+        if (this.impone) casa.chiudiITelefoni(PREMIUM_RICHIESTO.codice, PREMIUM_RICHIESTO.motivo);
+      } else if (tolteGdanav.has(this.gdanavDi.get(casa.id))) {
+        casa.ricontrollaLaLicenza();
+      }
     }
   }
 
@@ -879,7 +917,7 @@ class CasaCollegata {
         this._chiudiIlCanale(detto.c, "la casa ha chiuso");
         return;
       case "licenza":
-        this.centralino.laLicenzaDi(this, detto.gettone);
+        this.centralino.laLicenzaDi(this, detto.gettone, detto.gdanav);
         return;
       case "ricevuta":
         this._laRispostaAllaRicevuta(detto);
@@ -910,7 +948,8 @@ class CasaCollegata {
       default:
         /* Il contratto chiama il campo `tipo`: una casa scritta leggendo solo
          * quello manda `tipo` e basta, e va capita lo stesso. */
-        if (detto.tipo === "licenza") this.centralino.laLicenzaDi(this, detto.gettone);
+        if (detto.tipo === "licenza")
+          this.centralino.laLicenzaDi(this, detto.gettone, detto.gdanav);
         /* Roba che non si conosce si lascia perdere: una casa piu' nuova del
          * centralino puo' dire cose che qui non si sanno ancora, e non e' un
          * motivo per buttarla fuori. */
@@ -957,7 +996,7 @@ class CasaCollegata {
      * «aggiorna l'add-on» per sbaglio. Se non c'e' affatto, non si dimentica
      * quello di prima: la casa lo ridice appena entrata. */
     if (typeof detto.gettone === "string") {
-      this.centralino.laLicenzaDi(this, detto.gettone);
+      this.centralino.laLicenzaDi(this, detto.gettone, detto.gdanav);
     }
     this._manda(JSON.stringify({ t: "bene" }));
     this.centralino.registro.info(`casa collegata da ${this.da}`);

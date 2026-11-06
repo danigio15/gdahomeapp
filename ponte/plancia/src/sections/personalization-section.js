@@ -451,7 +451,12 @@ function ensureSectionRenamer() {
   if (!intro) return;
   const keys = typeof root.cdNavKeys === "function" ? root.cdNavKeys() : [];
   if (!Array.isArray(keys) || !keys.length) return;
-  let row = intro.nextElementSibling;
+  /* Le righe possono stare dentro l'elenco che si trascina
+   * (`disposizione-nel-config-section.js` le raccoglie li', subito dopo
+   * l'intestazione): si cercano li' dentro, o nessuna avrebbe la sua chiave
+   * e il suo ✏️. */
+  const elenco = intro.nextElementSibling?.matches?.("[data-dm-ordine-barra]") ? intro.nextElementSibling : null;
+  let row = elenco ? elenco.firstElementChild : intro.nextElementSibling;
   for (const key of keys) {
     while (row && !row.classList.contains("ed-row")) row = row.nextElementSibling;
     if (!row) break;

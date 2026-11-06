@@ -124,15 +124,18 @@ test("le stanze per piano", async ({ page }, testInfo) => {
   await expect(page.locator("#page-stanze .dm-stanze-tessera")).toHaveCount(6);
   await expect(page.locator("#page-stanze .dm-stanze-indice-testa")).toContainText("2 piani");
 
-  /* Le pastiglie della cucina: tre luci accese, i gradi della sua sonda, una
-   * finestra aperta. E niente prese, che in cucina non ce ne sono accese. */
+  /* Le pastiglie della cucina: tre luci accese e i gradi della sua sonda. E
+   * niente prese, che in cucina non ce ne sono accese. Niente finestre: la
+   * «Finestra cucina» della prova e' una tapparella su, e dalla #162 le
+   * finestre aperte sono i soli contatti dell'anta — una tapparella su non e'
+   * una notizia (#442). La prova chiedeva ancora il conto di prima. */
   const pastiglie = (stanza) =>
     page
       .locator(`#page-stanze .dm-stanze-tessera[data-dm-stanza="${stanza}"] .dm-stanze-pill`)
       .evaluateAll((nodi) =>
         nodi.map((nodo) => `${nodo.dataset.dmStanzaPill}=${nodo.querySelector("b").textContent}`),
       );
-  await expect.poll(() => pastiglie("room-cucina")).toEqual(["luci=3", "gradi=21°", "finestre=1"]);
+  await expect.poll(() => pastiglie("room-cucina")).toEqual(["luci=3", "gradi=21°"]);
   await expect.poll(() => pastiglie("room-salotto")).toEqual(["luci=2", "prese=1", "gradi=22°"]);
   /* Una stanza senza sonda non dice «0°»: `Number(null)` fa zero, e una
    * pastiglia a zero gradi non è una misura mancante, è una misura sbagliata. */

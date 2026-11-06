@@ -61,6 +61,9 @@ test("dal computer si arriva anche all'ultima stanza", async ({ page }, testInfo
   await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
   /* La voce «Stanze» se lo gestisce da se', il tocco: si preme la sua. */
   await page.locator('.tab[data-tab="stanze"]').click();
+  /* La pagina si apre sull'elenco delle stanze (#17): il nastro delle
+   * linguette sta dentro una stanza aperta, per saltare alla successiva. */
+  await page.locator('#page-stanze .dm-stanze-tessera[data-dm-stanza="r1"]').click();
   const nastro = page.locator("#page-stanze .dm-stanze-tabs");
   await expect(nastro).toBeVisible();
 

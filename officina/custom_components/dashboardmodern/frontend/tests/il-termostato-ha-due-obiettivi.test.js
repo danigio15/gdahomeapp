@@ -447,9 +447,9 @@ test("il pannello della tessera ha un passo per estremo e manda la coppia", asyn
     sorgente,
     /callHa\("climate", "set_temperature", \{ entity_id: entity, \.\.\.dati \}\)/,
   );
-  // Il singolo resta quello di sempre.
+  // Il singolo passa dal passo dell'unita' (passo, scala, arrotondamento).
   assert.match(
     sorgente,
-    /callHa\("climate", "set_temperature", \{ entity_id: entity, temperature: voluta \}\)/,
+    /callHa\("climate", "set_temperature", \{ entity_id: riga\.entity, temperature: voluta \}\)/,
   );
 });

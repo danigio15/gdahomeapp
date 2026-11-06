@@ -91,6 +91,9 @@ test("ogni famiglia ha la sua insegna, davanti al suo gruppo", async ({ page }, 
     "casa",
     "sicurezza",
     "avvisi",
+    /* Gli Echo: le notifiche dette ad alta voce, gli avvisi su misura e la
+     * musica, una famiglia loro da quando sono tre schede. */
+    "alexa",
     "macchine",
   ]);
   /* L'insegna non è una linguetta: non ha `data-tab`, quindi chi cerca una

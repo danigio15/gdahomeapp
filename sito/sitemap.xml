@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Due pagine: quella che racconta, con la plancia che ci gira dentro, e
-     l'informativa — che e' l'indirizzo che il Play Store tiene da parte. -->
+<!-- Tre pagine: quella che racconta, con la plancia che ci gira dentro,
+     l'informativa e i termini di servizio — che sono i due indirizzi che il
+     Play Store tiene da parte. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://gdahome.org/</loc>
@@ -9,6 +10,11 @@
   </url>
   <url>
     <loc>https://gdahome.org/privacy.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://gdahome.org/termini.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>

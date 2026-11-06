@@ -42,6 +42,7 @@ import {
   segnaContenuto,
 } from "./shared.js";
 import { laMisuraDallUnita } from "../core/le-unita-della-corrente.js";
+import { dopoLeSceneUps } from "./le-macchine-che-si-spostano-section.js";
 
 const KEY = "__DASHBOARDMODERN_UPS_SECTION__";
 const state = (root[KEY] ||= { installed: false, frame: 0, firma: "" });
@@ -197,7 +198,7 @@ function targhetta(posto, etichetta, valore, unita, colore, cifre = 1) {
   const salita = laMisuraDallUnita(valore, unita, { decimali: cifre });
   const numero = salita ? salita.numero : NUMERO(valore, cifre);
   const sigla = salita ? ` ${salita.unita}` : unita;
-  return `<div class="dm-ups-nodo dm-ups-nodo-plate" data-dm-ups-posto="${esc(posto)}" style="${POSTI[posto]}">
+  return `<div class="dm-ups-nodo dm-ups-nodo-plate" data-dm-ups-posto="${esc(posto)}" data-dm-pezzo="${esc(posto)}" style="${POSTI[posto]}">
     <div class="dm-ups-plate">
       <span class="dm-ups-plate-lbl">${esc(etichetta)}</span>
       <b class="dm-ups-plate-val" style="color:${colore}">${esc(numero)}<i>${esc(sigla)}</i></b>
@@ -225,15 +226,15 @@ function scena(dato, da) {
   return `<div class="dm-ups-scena" data-rete="${rete}" data-buio="${buio}"
       data-carica="${conCarica}" data-bassa="${bassa}">
     <svg class="dm-ups-cavi" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true">
-      <path class="dm-ups-cavo" d="M 176 300 L 420 300"/>
-      <path class="dm-ups-cavo-int" d="M 176 300 L 420 300"/>
-      <path class="dm-ups-corrente dm-ups-corrente-rete" d="M 176 300 L 420 300"/>
-      <path class="dm-ups-cavo" d="M 580 300 L 828 300"/>
-      <path class="dm-ups-cavo-int" d="M 580 300 L 828 300"/>
-      <path class="dm-ups-corrente dm-ups-corrente-uscita" d="M 580 300 L 828 300"/>
+      <path class="dm-ups-cavo" data-dm-tubo="rete" d="M 176 300 L 420 300"/>
+      <path class="dm-ups-cavo-int" data-dm-tubo="rete" d="M 176 300 L 420 300"/>
+      <path class="dm-ups-corrente dm-ups-corrente-rete" data-dm-tubo="rete" d="M 176 300 L 420 300"/>
+      <path class="dm-ups-cavo" data-dm-tubo="uscita" d="M 580 300 L 828 300"/>
+      <path class="dm-ups-cavo-int" data-dm-tubo="uscita" d="M 580 300 L 828 300"/>
+      <path class="dm-ups-corrente dm-ups-corrente-uscita" data-dm-tubo="uscita" d="M 580 300 L 828 300"/>
     </svg>
 
-    <div class="dm-ups-nodo" data-dm-ups-posto="rete" style="${POSTI.rete}">
+    <div class="dm-ups-nodo" data-dm-ups-posto="rete" data-dm-pezzo="rete" style="${POSTI.rete}">
       <div class="dm-ups-traliccio" aria-hidden="true">
         <svg viewBox="0 0 120 180" class="dm-ups-pilone">
           <g class="dm-ups-pilone-tratti">
@@ -252,7 +253,7 @@ function scena(dato, da) {
       <span class="dm-ups-nome">${esc(t("Rete elettrica", "Mains power"))}</span>
     </div>
 
-    <div class="dm-ups-nodo dm-ups-nodo-box" data-dm-ups-posto="scatola" style="${POSTI.scatola}">
+    <div class="dm-ups-nodo dm-ups-nodo-box" data-dm-ups-posto="scatola" data-dm-pezzo="scatola" style="${POSTI.scatola}">
       <div class="dm-ups-box" aria-hidden="true">
         <span class="dm-ups-lcd">
           <span class="dm-ups-cella"><i style="height:${quota}%"></i></span>
@@ -267,7 +268,7 @@ function scena(dato, da) {
       <span class="dm-ups-nome">${esc(clean(dato.name) || t("UPS", "UPS"))}</span>
     </div>
 
-    <div class="dm-ups-nodo" data-dm-ups-posto="casa" style="${POSTI.casa}">
+    <div class="dm-ups-nodo" data-dm-ups-posto="casa" data-dm-pezzo="casa" style="${POSTI.casa}">
       <div class="dm-ups-casa" aria-hidden="true">
         <span class="dm-ups-tetto"></span>
         <span class="dm-ups-muro"><i></i><i></i></span>
@@ -290,7 +291,7 @@ function scena(dato, da) {
       ${targhetta("temperatura", t("Temperatura", "Temperature"), dato.temperatura, "°C", "#f59e0b")}
     </div>
 
-    <div class="dm-ups-nodo dm-ups-nodo-verdetto" data-dm-ups-posto="verdetto" style="${POSTI.verdetto}">
+    <div class="dm-ups-nodo dm-ups-nodo-verdetto" data-dm-ups-posto="verdetto" data-dm-pezzo="verdetto" style="${POSTI.verdetto}">
       <span class="dm-ups-verdetto">${esc(riassunto(dato, da))}</span>
     </div>
   </div>`;
@@ -360,6 +361,8 @@ function dipingi() {
         `${elenco.length > 1 ? `<h3 class="dm-ups-titolo">${esc(voce.nome)}</h3>` : ""}<div class="dm-ups-stage">${scena(voce.dato, voce.da)}</div>`,
     )
     .join("");
+  /* I pezzi che l'utente ha spostato (e le maniglie, se sta modificando). */
+  dopoLeSceneUps();
 }
 
 function schedule() {

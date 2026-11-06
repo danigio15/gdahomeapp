@@ -143,17 +143,23 @@ async function cifreFerme(page) {
 test("nessun nome e nessuna scritta della tessera esce tagliata", async ({ page }, testInfo) => {
   test.setTimeout(120_000);
   await avvia(page, testInfo);
-  const tagliate = await page.evaluate(() => {
-    const fuori = [];
-    for (const nodo of document.querySelectorAll(
-      "#dm-widgets .dm-tile-label, #dm-widgets .dm-tile-value, #dm-widgets .dm-tile-unit",
-    )) {
-      if (nodo.scrollWidth > nodo.clientWidth + 1 || nodo.scrollHeight > nodo.clientHeight + 1)
-        fuori.push(`${nodo.className}: ${nodo.textContent.trim()}`);
-    }
-    return fuori;
-  });
-  expect(tagliate, `scritte tagliate: ${tagliate.join(" | ")}`).toEqual([]);
+  /* Le cifre arrivano rotolando dal basso: mentre scorrono la casella e' piu'
+   * alta di quella che si vede, e guardata in quel momento sembrava tagliata
+   * — e possono ripartire quando arriva uno stato nuovo. Si guarda finche' le
+   * cifre si posano: una scritta tagliata davvero resta tagliata, e la prova
+   * la trova lo stesso. */
+  const tagliate = () =>
+    page.evaluate(() => {
+      const fuori = [];
+      for (const nodo of document.querySelectorAll(
+        "#dm-widgets .dm-tile-label, #dm-widgets .dm-tile-value, #dm-widgets .dm-tile-unit",
+      )) {
+        if (nodo.scrollWidth > nodo.clientWidth + 1 || nodo.scrollHeight > nodo.clientHeight + 1)
+          fuori.push(`${nodo.className}: ${nodo.textContent.trim()}`);
+      }
+      return fuori;
+    });
+  await expect.poll(tagliate, { message: "scritte tagliate", timeout: 8_000 }).toEqual([]);
 });
 
 test("niente esce dai bordi della propria tessera", async ({ page }, testInfo) => {

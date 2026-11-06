@@ -46,7 +46,14 @@ const misuratori = (page) =>
   page.evaluate(() => {
     const numero = (id) => {
       const nodo = document.getElementById(id);
-      return nodo ? (nodo.textContent || "").replace(/[^0-9]/g, "") : "";
+      /* In watt, comunque sia scritto: dal migliaio in su la bolla dice
+       * «2,10 kW» e non «2100 W» (le unita' della corrente, «al migliaio si
+       * sale»). Togliere tutto quello che non e' una cifra leggeva «210». */
+      const testo = nodo ? nodo.textContent || "" : "";
+      const trovato = testo.match(/(\d[\d.]*(?:,\d+)?)\s*(kW|W)\b/);
+      if (!trovato) return testo.replace(/[^0-9]/g, "");
+      const valore = Number(trovato[1].replace(/\./g, "").replace(",", "."));
+      return String(Math.round(valore * (trovato[2] === "kW" ? 1000 : 1)));
     };
     return { rete: numero("v-grid"), solare: numero("v-solar"), casa: numero("v-home") };
   });

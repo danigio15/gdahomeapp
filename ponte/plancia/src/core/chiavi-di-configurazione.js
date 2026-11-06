@@ -360,7 +360,16 @@
  * dimensioni, coi suoi piani, le stanze, gli arredi, i colori e i
  * dispositivi collegati alle loro entita'. Le foto da cui nasce non ci sono:
  * restano sul dispositivo che le ha caricate. */
-export const CONFIG_KEYS_REVISION = 75;
+/* La revisione 76 aggiunge la disposizione delle sezioni (`cd_disposizione`,
+ * #379): in che ordine stanno i riquadri di ogni pagina e gli elementi dentro
+ * i suoi elenchi, quali non si vedono, quali stanno larghi. E' una scelta
+ * della casa come l'ordine delle tessere: fatta dal computer, si vede uguale
+ * dal telefono e dall'app. */
+/* La revisione 77 aggiunge le posizioni dentro i disegni (`cd_disegni`,
+ * #379): dove stanno il collettore, l'accumulo, la pompa nel disegno del
+ * solare termico, una scelta per il computer e una per il telefono. E' della
+ * casa come la disposizione delle sezioni, e si fonde disegno per disegno. */
+export const CONFIG_KEYS_REVISION = 77;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -687,4 +696,10 @@ export const CONFIG_KEYS = Object.freeze([
   /* Lo sport: la ragione per cui sta qui è scritta accanto alla revisione
    * 70. */
   "cd_sport",
+  /* La disposizione delle sezioni: la ragione per cui sta qui è scritta
+   * accanto alla revisione 76. */
+  "cd_disposizione",
+  /* Le posizioni dentro i disegni: la ragione per cui sta qui è scritta
+   * accanto alla revisione 77. */
+  "cd_disegni",
 ]);

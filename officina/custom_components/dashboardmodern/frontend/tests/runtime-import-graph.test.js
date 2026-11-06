@@ -1650,8 +1650,35 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // e le statistiche a lungo termine).
   // 531 con `core/consumo-trovato-del-clima.js`: i watt che uno split pubblica
   // da se', trovati sul suo dispositivo per le ore dei mesi passati.
+  // 532 con `sections/trascina-per-riordinare.js`: le righe che si spostano
+  // trascinandole dalla maniglia, col mouse e col dito (#379).
+  // 534 con l'anteprima modificabile del Config (#379): `core/anteprima-
+  // modificabile.js` (la bozza) e `sections/anteprima-modificabile-section.js`
+  // (il riquadro con le voci vere, Salva, Annulla e Ripristina).
+  // 536 con la disposizione delle sezioni (#379): `core/disposizione.js` (la
+  // casella `cd_disposizione` e i suoi conti) e `sections/disposizione-
+  // section.js` (il tasto ✏️ sulle pagine e la disposizione rimessa a ogni
+  // ridisegno).
+  // 537 con `sections/disposizione-nel-config-section.js`: l'«Ordine navbar»
+  // del Config che si trascina e le «Disposizioni salvate» con «Ripristina».
+  // 540 con i pezzi che si spostano dentro i disegni (#379): `core/posizioni-
+  // nei-disegni.js` (la casella `cd_disegni`, la griglia, le guide, i tubi
+  // ridisegnati), `core/il-disegno-del-solare.js` (dove sta ogni pezzo del
+  // solare termico, il primo disegno che si sposta) e `sections/disegni-che-
+  // si-spostano-section.js` (le maniglie con ✏️).
+  // 541 con `sections/il-flusso-che-si-sposta-section.js`: i cerchi del Flusso
+  // energetico che si spostano, e le linee che li seguono.
+  // 542 con `sections/le-macchine-che-si-spostano-section.js`: i pezzi e i
+  // tubi dello scaldabagno, della caldaia, della stufa e dell'UPS.
+  // 543 con `sections/il-prato-che-si-sposta-section.js`: le zone sul prato
+  // dell'irrigazione.
+  // 545 con l'anteprima della plancia nel Config (#379): `core/anteprima-
+  // della-plancia.js` (gli schermi, la scala, il documento della cornice) e
+  // `sections/anteprima-della-plancia-section.js` (la cornice nella scheda,
+  // la barra, e la modifica sempre accesa dentro la cornice). Sulla plancia
+  // non c'e' piu' nessuna matita.
   assert.ok(
-    relative.length <= 531,
+    relative.length <= 545,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);
@@ -1868,7 +1895,11 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // il clima, le tapparelle, le stanze… le disegnano il guscio e le sue
   // sezioni, ognuna a modo suo e senza un nome comune da avvolgere, e la foto
   // va rimessa sotto ogni card appena rifatta.
-  assert.ok(observers.length <= 14, `too many production observers: ${observers.length}`);
+  // Il quindicesimo e' della disposizione delle sezioni (#379), e guarda le
+  // pagine una per una (`section.page`), mai il documento: la disposizione
+  // salvata va rimessa dopo ogni ridisegno di una sezione, e le sezioni sono
+  // decine, ognuna col suo modo di disegnare e nessun nome comune da avvolgere.
+  assert.ok(observers.length <= 15, `too many production observers: ${observers.length}`);
   for (const [file, source] of observers) {
     assert.doesNotMatch(
       source,

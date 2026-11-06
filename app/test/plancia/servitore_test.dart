@@ -126,9 +126,17 @@ void main() {
       /* Tutto a posto: non c'e' niente da rifare. */
       expect(await suo.rimettiInPiedi(), isFalse);
 
+      final pagina = suo.paginaDi(_pannelloDiProva);
       await suo.perdiLaPorta();
       await Future<void>.delayed(const Duration(milliseconds: 50));
       expect(await risponde(porta), isFalse);
+      /* Fra la porta persa e quella rialzata l'indirizzo resta quello vero:
+       * mai `127.0.0.1:0`. «La notifica del movimento mi ha aperto Safari:
+       * porta rete limitata» — l'indirizzo con la porta zero finiva nel
+       * browser del telefono. */
+      expect(suo.porta, porta);
+      expect(suo.radice.port, porta);
+      expect(suo.paginaDi(_pannelloDiProva).origin, pagina.origin);
 
       expect(
         await suo.rimettiInPiedi(),
@@ -1286,3 +1294,13 @@ Future<void> _finoA(
   }
   throw StateError('l\'attesa è scaduta');
 }
+
+const _pannelloDiProva = PannelloDellaPlancia(
+  percorso: 'dashboardmodern',
+  titolo: 'DashboardModern',
+  base: _base,
+  istanza: 'e1',
+  profilo: 'primary',
+  primario: true,
+  varianti: ['dashboard.html'],
+);

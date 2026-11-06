@@ -346,8 +346,13 @@ function installStyles() {
        * perche' l'attributo data-dm-tavolozza sulla radice c'e' solo allora.
        * Chi tiene il tema scuro di sempre, senza sceglierne nessuna, non vede
        * cambiare un pixel — e non deve: non ha chiesto niente. */
-      html[data-dm-tavolozza] nav.tabs.bottom-nav-bar.bottom-nav-bar{
+      html[data-dm-tavolozza] nav.tabs.bottom-nav-bar.bottom-nav-bar,
+      html[data-dm-tavolozza] body.cd-nav-fixed nav.tabs.bottom-nav-bar.bottom-nav-bar{
         background:var(--card-glass)!important;border-color:var(--card-border)!important}
+      /* E la barra ferma: il fondo pieno qui sopra la nomina col corpo
+       * davanti (body.cd-nav-fixed), che pesa un elemento in piu' di una
+       * classe doppia — e col Grafite scelto la barra ferma restava sul blu
+       * di serie. La stessa barra, nominata allo stesso modo, torna sua. */
       html[data-dm-tavolozza] nav.tabs.bottom-nav-bar.bottom-nav-bar .tab{
         color:var(--text-dim)!important}
       html[data-dm-tavolozza] nav.tabs.bottom-nav-bar.bottom-nav-bar .tab .text{

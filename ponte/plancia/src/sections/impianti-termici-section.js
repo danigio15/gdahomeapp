@@ -58,6 +58,7 @@ import {
   tabAttiva,
   verdettoPressione,
 } from "../core/impianti-termici.js";
+import { dopoLaScenaTermica } from "./le-macchine-che-si-spostano-section.js";
 import { laMisuraDallUnita } from "../core/le-unita-della-corrente.js";
 import { parolaDiStato } from "./le-parole-di-home-assistant.js";
 import {
@@ -136,7 +137,7 @@ export function impiantiDiCasa() {
 function stripMarkup(scelti, attiva) {
   return scelti
     .map(
-      (tipo) => `<button type="button" class="dm-it-tab" data-dm-it-tab="${esc(tipo)}"
+      (tipo) => `<button type="button" class="dm-it-tab" data-dm-naviga data-dm-it-tab="${esc(tipo)}"
         aria-pressed="${tipo === attiva}"${tipo === attiva ? ' data-on="true"' : ""}>
         <span class="dm-it-tab-ic" aria-hidden="true">${ICONE[tipo] || ""}</span>
         <span>${esc(t(...ETICHETTE_TERMICHE[tipo]))}</span>
@@ -188,6 +189,7 @@ function nodoTarghetta(
   cifre = 1,
   extra = "",
   classe = "",
+  pezzo = "",
 ) {
   if (valore == null) return "";
   /* Watt e wattora salgono di scala al migliaio, come in tutta la plancia: una
@@ -198,7 +200,10 @@ function nodoTarghetta(
   /* Il nome in coda serve al telefono: le posizioni sono scritte in linea, e
    * per spostare un nodo su uno schermo stretto ci vuole qualcosa che il
    * vestito sappia chiamare per nome. */
-  return `<div class="dm-it-nodo dm-it-nodo-plate ${classe}" style="${posizione}">
+  /* Il nome del pezzo serve a spostarlo dentro il disegno (`le macchine che
+   * si spostano`): senza una scelta non cambia niente. */
+  const nome = pezzo ? ` data-dm-pezzo="${pezzo}"` : "";
+  return `<div class="dm-it-nodo dm-it-nodo-plate ${classe}"${nome} style="${posizione}">
     ${targhetta(
       etichetta,
       salita ? salita.numero : NUMERO(valore, cifre),
@@ -230,15 +235,15 @@ function scenaScaldabagno(letture) {
   return `<div class="dm-it-scena" data-dm-it-scena="scaldabagno" data-acceso="${acceso}"
       data-sonde="${conSonde}">
     <svg class="dm-it-tubi" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true">
-      <path class="dm-it-tubo" d="M 548 244 L 640 244 L 700 214 L 700 58"/>
-      <path class="dm-it-tubo-int" d="M 548 244 L 640 244 L 700 214 L 700 58"/>
-      <path class="dm-it-flusso dm-it-flusso-caldo" d="M 548 244 L 640 244 L 700 214 L 700 58"/>
-      <path class="dm-it-tubo" d="M 486 386 L 400 386 L 340 416 L 340 552"/>
-      <path class="dm-it-tubo-int" d="M 486 386 L 400 386 L 340 416 L 340 552"/>
-      <path class="dm-it-flusso dm-it-flusso-freddo" d="M 340 552 L 340 416 L 400 386 L 486 386"/>
+      <path class="dm-it-tubo" data-dm-tubo="caldo" d="M 548 244 L 640 244 L 700 214 L 700 58"/>
+      <path class="dm-it-tubo-int" data-dm-tubo="caldo" d="M 548 244 L 640 244 L 700 214 L 700 58"/>
+      <path class="dm-it-flusso dm-it-flusso-caldo" data-dm-tubo="caldo" d="M 548 244 L 640 244 L 700 214 L 700 58"/>
+      <path class="dm-it-tubo" data-dm-tubo="freddo" d="M 486 386 L 400 386 L 340 416 L 340 552"/>
+      <path class="dm-it-tubo-int" data-dm-tubo="freddo" d="M 486 386 L 400 386 L 340 416 L 340 552"/>
+      <path class="dm-it-flusso dm-it-flusso-freddo" data-dm-tubo="freddo" data-dm-contro="" d="M 340 552 L 340 416 L 400 386 L 486 386"/>
     </svg>
 
-    <div class="dm-it-nodo" style="left:52%;top:52%">
+    <div class="dm-it-nodo" data-dm-pezzo="serbatoio" style="left:52%;top:52%">
       <div class="dm-it-tank">
         <span class="dm-it-tank-cap" aria-hidden="true"></span>
         <span class="dm-it-tank-acqua" style="height:${quota}%"></span>
@@ -249,12 +254,12 @@ function scenaScaldabagno(letture) {
       <span class="dm-it-nome">${esc(unita.name || t("Scaldabagno", "Water heater"))}</span>
     </div>
 
-    ${nodoTarghetta("left:16%;top:28%", t("Acqua adesso", "Water now"), unita.temperatura, "°C", "#f97316")}
-    ${nodoTarghetta("left:16%;top:64%", t("Obiettivo", "Target"), unita.obiettivo, "°C", "#38bdf8")}
-    ${nodoTarghetta("left:85%;top:28%", t("Consumo", "Power"), unita.potenza, " W", "#a78bfa", 0)}
-    ${nodoTarghetta("left:85%;top:64%", t("Oggi", "Today"), unita.energia, " kWh", "#34d399")}
+    ${nodoTarghetta("left:16%;top:28%", t("Acqua adesso", "Water now"), unita.temperatura, "°C", "#f97316", 1, "", "", "acqua")}
+    ${nodoTarghetta("left:16%;top:64%", t("Obiettivo", "Target"), unita.obiettivo, "°C", "#38bdf8", 1, "", "", "obiettivo")}
+    ${nodoTarghetta("left:85%;top:28%", t("Consumo", "Power"), unita.potenza, " W", "#a78bfa", 0, "", "", "consumo")}
+    ${nodoTarghetta("left:85%;top:64%", t("Oggi", "Today"), unita.energia, " kWh", "#34d399", 1, "", "", "oggi")}
 
-    <div class="dm-it-nodo" style="left:52%;top:88%">
+    <div class="dm-it-nodo" data-dm-pezzo="resistenza" style="left:52%;top:88%">
       ${
         comando && siComanda(comando)
           ? `<button type="button" class="dm-it-interruttore" data-dm-it-toggle="${esc(comando)}"
@@ -359,7 +364,7 @@ function valvoleMarkup(lettura) {
   const posti = ["left:50%;top:62%", "left:50%;top:24%"];
   return valvole
     .map(
-      (valvola, indice) => `<div class="dm-it-nodo" style="${posti[indice] || posti[0]}">
+      (valvola, indice) => `<div class="dm-it-nodo" data-dm-pezzo="valvola${indice + 1}" style="${posti[indice] || posti[0]}">
       <span class="dm-it-valvola" data-aperta="${valvola.acceso === true}" aria-hidden="true"><i></i></span>
       <span class="dm-it-nome">${esc(
         indice === 0
@@ -413,7 +418,7 @@ function combustioneMarkup(lettura) {
     [t("Ventilatore", "Fan"), soffio],
   ].filter(([, valore]) => valore != null);
   if (!righe.length) return "";
-  return `<div class="dm-it-nodo dm-it-nodo-fuoco" style="left:11%;top:46%">
+  return `<div class="dm-it-nodo dm-it-nodo-fuoco" data-dm-pezzo="fuoco" style="left:11%;top:46%">
     <div class="dm-it-fuoco">${righe
       .map(
         ([etichetta, valore]) => `<span class="dm-it-fuoco-riga">
@@ -451,10 +456,11 @@ function pelletMarkup(lettura) {
       0,
       "",
       "dm-it-nodo-pellet",
+      "pellet",
     );
   const pieno = Math.max(0, Math.min(100, quota));
   const scritta = `${t("Pellet", "Pellet")} ${NUMERO(quota, 0)}%`;
-  return `<div class="dm-it-nodo dm-it-nodo-pellet" style="left:11%;top:80%">
+  return `<div class="dm-it-nodo dm-it-nodo-pellet" data-dm-pezzo="pellet" style="left:11%;top:80%">
     <div class="dm-it-pellet" data-scarso="${pelletScarso(quota) === true}" role="img"
       aria-label="${esc(scritta)}">
       <span class="dm-it-pellet-liv" style="height:${pieno}%"></span>
@@ -493,7 +499,7 @@ function dueSerbatoiMarkup(serbatoi) {
       <span class="dm-it-nome" data-scarso="${serbatoio.scarso}">${esc(nome)}</span>
     </div>`;
   });
-  return `<div class="dm-it-nodo dm-it-nodo-serbatoi" style="left:12%;top:79%">
+  return `<div class="dm-it-nodo dm-it-nodo-serbatoi" data-dm-pezzo="pellet" style="left:12%;top:79%">
     <div class="dm-it-serbatoi">${disegni.join("")}</div>
   </div>`;
 }
@@ -573,15 +579,15 @@ function scenaCaldaia(lettura) {
   return `<div class="dm-it-scena" data-dm-it-scena="caldaia" data-acceso="${acceso}"
       data-fiamma="${brucia}" data-sonde="${conSonde}">
     <svg class="dm-it-tubi" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true">
-      <path class="dm-it-tubo" d="M 300 296 L 640 296 L 720 336 L 800 336"/>
-      <path class="dm-it-tubo-int" d="M 300 296 L 640 296 L 720 336 L 800 336"/>
-      <path class="dm-it-flusso dm-it-flusso-caldo" d="M 300 296 L 640 296 L 720 336 L 800 336"/>
-      <path class="dm-it-tubo" d="M 300 384 L 660 384 L 700 364 L 800 364"/>
-      <path class="dm-it-tubo-int" d="M 300 384 L 660 384 L 700 364 L 800 364"/>
-      <path class="dm-it-flusso dm-it-flusso-freddo" d="M 800 364 L 700 364 L 660 384 L 300 384"/>
+      <path class="dm-it-tubo" data-dm-tubo="mandata" d="M 300 296 L 640 296 L 720 336 L 800 336"/>
+      <path class="dm-it-tubo-int" data-dm-tubo="mandata" d="M 300 296 L 640 296 L 720 336 L 800 336"/>
+      <path class="dm-it-flusso dm-it-flusso-caldo" data-dm-tubo="mandata" d="M 300 296 L 640 296 L 720 336 L 800 336"/>
+      <path class="dm-it-tubo" data-dm-tubo="ritorno" d="M 300 384 L 660 384 L 700 364 L 800 364"/>
+      <path class="dm-it-tubo-int" data-dm-tubo="ritorno" d="M 300 384 L 660 384 L 700 364 L 800 364"/>
+      <path class="dm-it-flusso dm-it-flusso-freddo" data-dm-tubo="ritorno" data-dm-contro="" d="M 800 364 L 700 364 L 660 384 L 300 384"/>
     </svg>
 
-    <div class="dm-it-nodo" style="left:26%;top:48%">
+    <div class="dm-it-nodo" data-dm-pezzo="caldaia" style="left:26%;top:48%">
       <div class="dm-it-caldaia">
         <span class="dm-it-caldaia-testa" aria-hidden="true"></span>
         <span class="dm-it-oblo" aria-hidden="true"><i class="dm-it-fiamma"></i></span>
@@ -595,7 +601,7 @@ function scenaCaldaia(lettura) {
       <span class="dm-it-nome">${esc(lettura.name || t("Caldaia", "Boiler"))}</span>
     </div>
 
-    <div class="dm-it-nodo" style="left:84%;top:59%">
+    <div class="dm-it-nodo" data-dm-pezzo="impianto" style="left:84%;top:59%">
       ${
         /* «Richiesta di visualizzare o radiatore o boiler» (#274): la scena
          * disegnava sempre un radiatore, e chi ha una caldaia che serve solo
@@ -613,8 +619,8 @@ function scenaCaldaia(lettura) {
     ${valvoleMarkup(lettura)}
     ${interruttoreMarkup(lettura)}
 
-    ${nodoTarghetta("left:64%;top:20%", t("Mandata", "Flow"), lettura.mandata, "°C", "#f43f5e")}
-    ${nodoTarghetta("left:64%;top:80%", t("Ritorno", "Return"), lettura.ritorno, "°C", "#38bdf8")}
+    ${nodoTarghetta("left:64%;top:20%", t("Mandata", "Flow"), lettura.mandata, "°C", "#f43f5e", 1, "", "", "mandata")}
+    ${nodoTarghetta("left:64%;top:80%", t("Ritorno", "Return"), lettura.ritorno, "°C", "#38bdf8", 1, "", "", "ritorno")}
     ${nodoTarghetta(
       "left:26%;top:14%",
       t("Pressione", "Pressure"),
@@ -623,8 +629,10 @@ function scenaCaldaia(lettura) {
       pressione === "bassa" ? "#f43f5e" : pressione === "alta" ? "#f59e0b" : "#34d399",
       1,
       pressione ? ` data-dm-it-pressione="${pressione}"` : "",
+      "",
+      "pressione",
     )}
-    ${nodoTarghetta("left:26%;top:84%", t("Acqua calda", "Hot water"), lettura.acquaCalda, "°C", "#fb923c")}
+    ${nodoTarghetta("left:26%;top:84%", t("Acqua calda", "Hot water"), lettura.acquaCalda, "°C", "#fb923c", 1, "", "", "acquacalda")}
 
     ${nodoTarghetta(
       "left:44%;top:12%",
@@ -635,6 +643,7 @@ function scenaCaldaia(lettura) {
       0,
       "",
       "dm-it-nodo-corpo",
+      "corpo",
     )}
     ${combustioneMarkup(lettura)}
     ${pelletMarkup(lettura)}
@@ -644,7 +653,7 @@ function scenaCaldaia(lettura) {
        * arrivando. */
       lettura.mandataCalcolata == null
         ? ""
-        : `<div class="dm-it-nodo" style="left:64%;top:31%">
+        : `<div class="dm-it-nodo" data-dm-pezzo="calcolata" style="left:64%;top:31%">
             <span class="dm-it-obiettivo">${esc(t("Calcolata", "Calculated"))}
               <b>${esc(NUMERO(lettura.mandataCalcolata, 0))}°</b>
             </span>
@@ -654,7 +663,7 @@ function scenaCaldaia(lettura) {
     ${
       salto == null
         ? ""
-        : `<div class="dm-it-nodo" style="left:57%;top:41%">
+        : `<div class="dm-it-nodo" data-dm-pezzo="salto" style="left:57%;top:41%">
             <span class="dm-it-salto" data-cede="${salto >= 3}">
               ${esc(t("Salto", "Delta"))} <b>${esc(NUMERO(salto))}°</b>
             </span>
@@ -775,7 +784,7 @@ function pelletDellaStufaMarkup(lettura) {
     const scritta = scarso
       ? t("Pellet in esaurimento", "Pellet running low")
       : t("Pellet a posto", "Pellet OK");
-    return `<div class="${classe}" style="${posto}">
+    return `<div class="${classe}" data-dm-pezzo="pellet" style="${posto}">
       <div class="dm-it-pellet dm-it-pellet-avviso" data-scarso="${scarso}" role="img"
         aria-label="${esc(scritta)}"><span class="dm-it-pellet-liv" style="height:${scarso ? 14 : 100}%"></span></div>
       <span class="dm-it-nome" data-scarso="${scarso}">${esc(scritta)}</span>
@@ -791,11 +800,12 @@ function pelletDellaStufaMarkup(lettura) {
       0,
       "",
       "dm-it-nodo-pellet-stufa",
+      "pellet",
     );
   const scarso = pelletScarso(lettura.pellet) === true;
   const pieno = Math.max(0, Math.min(100, lettura.pellet));
   const scritta = `${t("Pellet", "Pellet")} ${NUMERO(lettura.pellet, 0)}%`;
-  return `<div class="${classe}" style="${posto}">
+  return `<div class="${classe}" data-dm-pezzo="pellet" style="${posto}">
     <div class="dm-it-pellet" data-scarso="${scarso}" role="img" aria-label="${esc(scritta)}">
       <span class="dm-it-pellet-liv" style="height:${pieno}%"></span>
     </div>
@@ -982,8 +992,8 @@ function scenaStufa(lettura) {
           ["telefono", "M 300 216 C 450 216 640 228 750 228"],
         ]
           .map(
-            ([dove, strada]) => `<path class="dm-it-aria-scia dm-it-aria-${dove}" d="${strada}"/>
-          <path class="dm-it-aria-calda dm-it-aria-${dove}" d="${strada}"/>`,
+            ([dove, strada]) => `<path class="dm-it-aria-scia dm-it-aria-${dove}" data-dm-tubo="aria" d="${strada}"/>
+          <path class="dm-it-aria-calda dm-it-aria-${dove}" data-dm-tubo="aria" d="${strada}"/>`,
           )
           .join("");
   return `${allarmeDellaStufaMarkup(lettura)}<div class="dm-it-scena" data-dm-it-scena="stufa"
@@ -992,20 +1002,20 @@ function scenaStufa(lettura) {
       data-aria="${vento.gira}" data-allarme="${lettura.allarme?.attivo === true}"
       style="--dm-it-fuoco:${altezzaDelFuoco(lettura)};--dm-it-aria:${vento.durata}s">
     <svg class="dm-it-tubi" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true">
-      <path class="dm-it-canna" d="${canna}"/>
-      <path class="dm-it-canna-int" d="${canna}"/>
-      <path class="dm-it-flusso dm-it-flusso-fumo" d="${canna}"/>
+      <path class="dm-it-canna" data-dm-tubo="canna" d="${canna}"/>
+      <path class="dm-it-canna-int" data-dm-tubo="canna" d="${canna}"/>
+      <path class="dm-it-flusso dm-it-flusso-fumo" data-dm-tubo="canna" d="${canna}"/>
       ${aria}
     </svg>
 
-    <div class="dm-it-nodo dm-it-nodo-stufa" style="left:30%;top:55%">
+    <div class="dm-it-nodo dm-it-nodo-stufa" data-dm-pezzo="stufa" style="left:30%;top:55%">
       ${disegnoStufa(lettura)}
       <span class="dm-it-nome">${esc(lettura.name || t("Stufa a pellet", "Pellet stove"))}</span>
     </div>
 
     ${pelletDellaStufaMarkup(lettura)}
-    ${nodoTarghetta("left:46%;top:17%", t("Fumi", "Flue gas"), lettura.fumi, "°C", "#f97316", 0, "", "dm-it-nodo-fumi")}
-    ${nodoTarghetta("left:55%;top:50%", t("Stanza", "Room"), lettura.temperatura, "°C", "#fbbf24", 1, "", "dm-it-nodo-stanza")}
+    ${nodoTarghetta("left:46%;top:17%", t("Fumi", "Flue gas"), lettura.fumi, "°C", "#f97316", 0, "", "dm-it-nodo-fumi", "fumi")}
+    ${nodoTarghetta("left:55%;top:50%", t("Stanza", "Room"), lettura.temperatura, "°C", "#fbbf24", 1, "", "dm-it-nodo-stanza", "stanza")}
   </div>${quadroDellaStufa(lettura)}`;
 }
 
@@ -1221,9 +1231,11 @@ export function renderImpiantiTermici() {
           ? scenaStufa(dentro)
           : scenaScaldabagno(dentro ? [dentro] : []);
     const markup = filaDelleMacchine(quali, scelta) + scena;
+    let riscritta = false;
     if (mia.dataset.dmItTipo !== attiva || mia.innerHTML !== markup) {
       mia.dataset.dmItTipo = attiva;
       mia.innerHTML = markup;
+      riscritta = true;
     }
     /* Due serbatoi (#182) sul telefono chiedono una mensola in fondo al
      * palco, e a dirlo e' il palco, perche' e' lui che si allunga. Con un
@@ -1233,6 +1245,9 @@ export function renderImpiantiTermici() {
       if (mensola) mia.dataset.dmItSerbatoi = mensola;
       else delete mia.dataset.dmItSerbatoi;
     }
+    /* I pezzi che l'utente ha spostato (e le maniglie, se sta modificando):
+     * la scena appena scritta e' quella di serie. */
+    if (riscritta) dopoLaScenaTermica(attiva);
   } else if (mia) {
     mia.hidden = true;
   }

@@ -462,8 +462,12 @@ export function conLeModificheInSospeso(remoti = {}, locali = {}, daTenere = [],
  * qui sono cambiate da allora sono modifiche di questo dispositivo e vincono;
  * tutte le altre le decide la copia condivisa. Senza base — un dispositivo che
  * non e' mai stato allineato — si tiene la copia condivisa e ci si aggiungono
- * sopra quelle di qui, che e' gia' meglio di buttarla via tutta. */
-export const CHIAVI_A_CASELLE = ["cd_entity_overrides"];
+ * sopra quelle di qui, che e' gia' meglio di buttarla via tutta.
+ *
+ * `cd_disposizione` e' fatta allo stesso modo: una mappa con un elenco per
+ * casella (`auto:…`, `ev@dm-na`, `energia>…`). Riordinare l'Auto dal telefono
+ * non deve rimettere com'era la Home sistemata dal PC. */
+export const CHIAVI_A_CASELLE = ["cd_entity_overrides", "cd_disposizione", "cd_disegni"];
 
 function mappaDa(testo) {
   if (testo === undefined || testo === null) return null;
@@ -1422,6 +1426,18 @@ function disableLegacySyncState() {
 }
 
 export function installConfigPersistenceSection() {
+  /* L'anteprima del Config (#379) legge la configurazione che la plancia di
+   * fuori ha gia' portato a casa, e non ne manda nessuna: quello che si salva
+   * li' dentro lo scrive chi la ospita. Due plance che spingono la stessa
+   * configurazione sarebbero due padroni dello stesso formato. */
+  if (root.__DASHBOARDMODERN_ANTEPRIMA__) {
+    state.installed = true;
+    disableLegacySyncState();
+    root.cdMarkDirty = () => false;
+    root.cdSyncPush = () => Promise.resolve(false);
+    root.cdSyncPull = () => Promise.resolve(false);
+    return;
+  }
   if (state.installed) {
     disableLegacySyncState();
     installResetOwner();

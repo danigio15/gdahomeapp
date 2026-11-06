@@ -42,7 +42,9 @@ test("su una plancia azzerata l'elenco accende solo la Home", async ({ page }, t
         (n) => n.dataset.dmSezioneInt,
       ),
     );
-  await expect.poll(accese).toEqual(["home"]);
+  /* GdANav non e' una sezione della casa ma il pianificatore dell'app gdanav:
+   * il primo viaggio si crea da li', anche su una plancia vuota. */
+  await expect.poll(async () => (await accese()).filter((c) => c !== "gdanav")).toEqual(["home"]);
   /* Le quattro della segnalazione, una per una. */
   for (const chiave of ["ups", "piante", "contatori", "mie"])
     await expect(
@@ -54,5 +56,5 @@ test("su una plancia azzerata l'elenco accende solo la Home", async ({ page }, t
       .filter((n) => getComputedStyle(n).display !== "none")
       .map((n) => n.dataset.tab),
   );
-  expect(voci.sort()).toEqual(["config", "home"]);
+  expect(voci.filter((voce) => voce !== "gdanav").sort()).toEqual(["config", "home"]);
 });

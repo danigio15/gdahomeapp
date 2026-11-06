@@ -297,10 +297,10 @@ for (const variant of PRIMARY) {
     const segmented = page.locator("#page-clima .clima-page-mode-switch");
     await expect(segmented).toBeVisible();
     await expect(segmented).toHaveCSS("display", "grid");
-    await expect(page.locator("#clima-page-mode-freddo")).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator("#clima-page-mode-freddo")).toHaveAttribute("aria-selected", "true");
     await page.locator("#clima-page-mode-caldo").click();
     await expect(page.locator("#clima-page-mode-caldo")).toHaveClass(/active-caldo/);
-    await expect(page.locator("#clima-page-mode-caldo")).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator("#clima-page-mode-caldo")).toHaveAttribute("aria-selected", "true");
     await expect(page.locator("#page-clima .clima-zone-caldo")).toHaveClass(/show/);
     await expect(page.locator("#page-clima .clima-zone-freddo")).not.toHaveClass(/show/);
   });

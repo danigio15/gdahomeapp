@@ -109,7 +109,8 @@ test("dicendo da che parte scrive, la batteria smette di alimentare la casa", as
   /* E adesso la batteria si carica, e tutt'e due lo dicono: la freccia entra,
    * la linea verso casa si spegne e si accende quella dal sole. */
   await expect(bolla(page)).toHaveText(/▼/, { timeout: 20_000 });
-  await expect(bolla(page)).toContainText("1500");
+  /* 1500 W si scrivono «1,50 kW»: dal migliaio la bolla sale di unita'. */
+  await expect(bolla(page)).toContainText("1,50 kW");
   await expect(inCarica(page)).toHaveClass(/\bactive\b/, { timeout: 20_000 });
   await expect(versoCasa(page)).not.toHaveClass(/\bactive\b/);
 });

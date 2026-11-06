@@ -339,8 +339,6 @@ class SchermataPremium extends StatefulWidget {
   /// L'informativa sulla privacy, sul sito.
   static const privacy = 'https://gdahome.org/privacy.html';
 
-  /// Le condizioni d'uso: quelle standard di Apple (EULA), come in gdanav,
-  /// valide anche per Google Play finche' gdahome non ne ha di sue sul sito.
   /// Dove si gestisce l'abbonamento: disdire, riattivare il rinnovo,
   /// cambiare piano. Lo fa il negozio, non l'app.
   static String gestioneDelNegozio(TargetPlatform piattaforma) =>
@@ -349,8 +347,14 @@ class SchermataPremium extends StatefulWidget {
       : 'https://play.google.com/store/account/subscriptions'
             '?sku=$idPremiumGdahome&package=com.gdahome.gdahome';
 
-  static const condizioni =
-      'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
+  /// Le condizioni d'uso. Sull'iPhone quelle standard di Apple (EULA), come
+  /// in gdanav: sono quelle che l'App Store applica all'app. Altrove i
+  /// termini di gdahome sul sito: Google Play li vuole accanto
+  /// all'abbonamento da quando chi vende si e' dichiarato commerciante (DSA).
+  static String condizioni(TargetPlatform piattaforma) =>
+      piattaforma == TargetPlatform.iOS
+      ? 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/'
+      : 'https://gdahome.org/termini.html';
 
   @override
   State<SchermataPremium> createState() => _SchermataPremiumState();
@@ -626,7 +630,7 @@ class _SchermataPremiumState extends State<SchermataPremium> {
               children: [
                 link(
                   inLingua(it: 'Termini d\'uso', en: 'Terms of Use'),
-                  SchermataPremium.condizioni,
+                  SchermataPremium.condizioni(defaultTargetPlatform),
                 ),
                 Text(
                   '·',

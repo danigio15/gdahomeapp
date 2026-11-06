@@ -17,7 +17,20 @@
  * che ci sono scritte. Quando la scheda si ridisegna — e si ridisegna a ogni
  * spostamento — la passata rimette le frecce dov'erano.
  */
-import { clean, doc, installStyle, onEditorRedraw, readJson, root, t, writeJsonIfChanged } from "./shared.js";
+import { anteprimaMarkup, dimenticaLaBozza, registraAnteprima } from "./anteprima-modificabile-section.js";
+import {
+  allStates,
+  clean,
+  doc,
+  esc,
+  iconGlyphHtml,
+  installStyle,
+  onEditorRedraw,
+  readJson,
+  root,
+  t,
+  writeJsonIfChanged,
+} from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_ROOMS_ORDER__";
 const STYLE_ID = "dm-rooms-order-style";
@@ -56,6 +69,7 @@ function freccia(direzione, posizione, disabilitata) {
 /** Attacca le due frecce a ogni riga della scheda Stanze. */
 export function ensureRoomsOrder() {
   if (!schedaStanze()) return false;
+  ensureAnteprimaStanze();
   const elenco = righe();
   const quante = stanze().length;
   /* Se le righe non sono tante quante le stanze si e' capitati su un'altra
@@ -128,6 +142,95 @@ export function spostaStanza(posizione, direzione) {
   return true;
 }
 
+/* ── l'anteprima delle stanze (#379) ──────────────────────────────────
+ *
+ * Le stanze come riquadri, nell'ordine in cui le linguette della pagina
+ * Stanze e le pagine per stanza — Luci, Tapparelle, Clima — le mettono: col
+ * loro disegno e la temperatura di adesso, da trascinare dove si vuole. Lo
+ * stesso ordine delle frecce, scritto nello stesso modo. */
+const chiaveDellaStanza = (stanza, posizione) => clean(stanza?.id) || `#${posizione}`;
+
+function gradiDellaStanza(stanza) {
+  const entita = clean(stanza?.temp);
+  if (!entita) return "";
+  const stato = allStates()?.[entita];
+  const valore = Number.parseFloat(stato?.state);
+  if (!Number.isFinite(valore)) return "";
+  return `${valore.toLocaleString(doc?.documentElement?.lang || undefined, { maximumFractionDigits: 1 })}°`;
+}
+
+function stanzaInMiniatura(stanza) {
+  const gradi = gradiDellaStanza(stanza);
+  return `<div class="dm-stanza-mini">
+    <span class="dm-stanza-mini-icona" aria-hidden="true">${iconGlyphHtml(clean(stanza?.icon) || "mdi:door", {
+      size: 24,
+      fallback: "🚪",
+      kind: "room",
+    })}</span>
+    <b>${esc(clean(stanza?.name) || t("Stanza", "Room"))}</b>
+    ${gradi ? `<small>${esc(gradi)}</small>` : ""}
+  </div>`;
+}
+
+registraAnteprima("stanze", {
+  titolo: () => t("Anteprima: l'ordine delle stanze", "Preview: the order of the rooms"),
+  spiega: () =>
+    t(
+      "Come le trovi nella pagina Stanze e in Luci, Tapparelle e Clima. Trascina una stanza dove la vuoi (sul telefono tieni premuto un attimo) e premi Applica.",
+      "As you find them on the Rooms page and in Lights, Shutters and Climate. Drag a room where you want it (on a phone, press and hold a moment) and press Apply.",
+    ),
+  classeGriglia: "dm-stanze-mini",
+  siNasconde: false,
+  leggi: () => ({ ordine: stanze().map(chiaveDellaStanza), nascoste: [] }),
+  /* Le stanze non hanno un ordine «di fabbrica»: quello di partenza e'
+   * quello in cui sono state aggiunte, e chi le ha riordinate non lo ha piu'.
+   * Ripristina rimette quello salvato. */
+  predefinito: () => ({ ordine: stanze().map(chiaveDellaStanza), nascoste: [] }),
+  voci: () =>
+    new Map(
+      stanze().map((stanza, posizione) => [
+        chiaveDellaStanza(stanza, posizione),
+        { nome: clean(stanza?.name) || t("Stanza", "Room"), html: stanzaInMiniatura(stanza) },
+      ]),
+    ),
+  salva: (bozza) => {
+    const elenco = stanze();
+    const perChiave = new Map(elenco.map((stanza, posizione) => [chiaveDellaStanza(stanza, posizione), stanza]));
+    const prossimo = bozza.ordine.map((chiave) => perChiave.get(chiave)).filter(Boolean);
+    if (prossimo.length !== elenco.length) return;
+    writeJsonIfChanged(ROOMS_KEY, numerate(prossimo));
+    ridisegnaLeStanze();
+  },
+});
+
+/* La scheda e le pagine che leggono le stanze si ridisegnano con l'ordine
+ * nuovo, come dopo una freccia. */
+function ridisegnaLeStanze() {
+  try {
+    root.editorSwitch?.("stanze");
+  } catch (_error) {}
+  try {
+    root.buildTempCards?.();
+  } catch (_error) {}
+  try {
+    root.render?.();
+  } catch (_error) {}
+  root.setTimeout?.(ensureRoomsOrder, 0);
+}
+
+/** L'anteprima in cima alla scheda Stanze, quando ci sono almeno due stanze. */
+export function ensureAnteprimaStanze() {
+  if (!schedaStanze()) return false;
+  const body = doc?.getElementById?.("ed-body");
+  if (!body || stanze().length < 2) return false;
+  if (body.querySelector(":scope > [data-dm-anteprima-stanze]")) return false;
+  const posto = doc.createElement("div");
+  posto.dataset.dmAnteprimaStanze = "true";
+  posto.innerHTML = anteprimaMarkup("stanze");
+  body.prepend(posto);
+  return true;
+}
+
 function onClick(event) {
   const freccia = event.target?.closest?.("[data-dm-room-move]");
   if (!freccia || freccia.disabled) return;
@@ -135,6 +238,7 @@ function onClick(event) {
   const posizione = Number(freccia.dataset.dmRoomAt);
   const direzione = Number(freccia.dataset.dmRoomMove);
   if (!spostaStanza(posizione, direzione)) return;
+  dimenticaLaBozza("stanze");
   /* Si ridisegna la scheda con la stessa chiamata che usa il documento quando
    * si aggiunge o si toglie una stanza: le righe tornano nell'ordine nuovo, e
    * le frecce ci si riattaccano da sole. E le pagine che leggono le stanze si
@@ -157,6 +261,14 @@ export function installRoomsOrderEditor() {
   installStyle(
     STYLE_ID,
     `
+.dm-stanze-mini{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.dm-stanza-mini{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:10px;row-gap:2px;
+  align-items:center;min-height:72px;padding:12px 14px;border-radius:18px;background:var(--card-bg,#fff);
+  border:1px solid var(--card-border,#e2e8f0);box-shadow:0 8px 18px -14px rgba(15,23,42,.45)}
+.dm-stanza-mini-icona{grid-row:1 / span 2;width:38px;height:38px;border-radius:12px;display:inline-flex;align-items:center;
+  justify-content:center;background:var(--surface-3,#f1f5f9);font-size:20px}
+.dm-stanza-mini b{font-size:13.5px;font-weight:800;color:var(--text,#0f172a);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dm-stanza-mini small{font-size:12px;font-weight:800;color:var(--text-dim,#64748b)}
 #ed-body .ed-row .dm-room-move{
   flex:0 0 30px;width:30px;height:30px;display:grid;place-items:center;
   font-size:12px;line-height:1;cursor:pointer;opacity:.75}

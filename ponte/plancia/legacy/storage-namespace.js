@@ -16,6 +16,138 @@
  * plancia and an integration-hosted copy always differ. Keys without the cd_/dm_
  * prefix (other apps on the same origin) are left completely alone.
  */
+
+/*
+ * L'anteprima del Config (#379).
+ *
+ * «Il drag e drop non deve essere sulla plancia: ti avevo detto di creare
+ * un'anteprima nel Config dove si fa questa cosa.» Il Config mostra la sezione
+ * vera dentro una cornice larga quanto il telefono o quanto il computer — e'
+ * l'unico modo perche' la pagina si disponga come si disporrebbe li', con le
+ * sue regole per lo schermo stretto e il disegno del telefono. Dentro la
+ * cornice gira questa stessa plancia: la cornice porta scritto
+ * `data-dm-anteprima="<pagina>:<dispositivo>"`, e questo pezzo, che e' il
+ * primo a girare, la rende un'anteprima prima che parta qualunque altra cosa:
+ *
+ *  - legge quello che legge la plancia di fuori (la configurazione, gli stati
+ *    della casa), ma quello che scrive resta in memoria: una plancia di prova
+ *    non deve cambiare niente di vero. Quello che si salva lo passa a chi la
+ *    ospita, che lo scrive per davvero (`dmScriviDallAnteprima`);
+ *  - parla con Home Assistant dallo stesso filo della plancia di fuori, ma
+ *    senza comandi: un tocco nell'anteprima non accende una luce, non apre il
+ *    cancello e non salva niente in Home Assistant. Un messaggio che comanda o
+ *    scrive diventa un `ping`, che non fa niente a nessuno.
+ */
+(function () {
+  "use strict";
+  var cornice = null;
+  try {
+    cornice = window.frameElement;
+  } catch (e) {}
+  var segno = cornice && cornice.getAttribute ? cornice.getAttribute("data-dm-anteprima") : "";
+  if (!segno || window.__DASHBOARDMODERN_ANTEPRIMA__) return;
+  var su = window.parent;
+  var parti = String(segno).split(":");
+  window.__DASHBOARDMODERN_ANTEPRIMA__ = { pagina: parti[0] || "", dispositivo: parti[1] || "" };
+  [
+    "__DASHBOARDMODERN_INSTANCE__",
+    "__DASHBOARDMODERN_PROFILE__",
+    "__DASHBOARDMODERN_PRIMARY__",
+    "__DASHBOARDMODERN_HOSTED__",
+    "__DASHBOARDMODERN_LOCALE__",
+    "__DASHBOARDMODERN_UTENTE__",
+    "__GDAHOME__",
+    "__GDAHOME_CONFIGURATA__",
+  ].forEach(function (k) {
+    try {
+      if (window[k] === undefined && su[k] !== undefined) window[k] = su[k];
+    } catch (e) {}
+  });
+
+  /* Quello che si scrive resta qui: si legge prima la memoria, poi il vero. */
+  function inMemoria(vera) {
+    var scritte = {};
+    var TOLTA = {};
+    var ha = function (k) {
+      return Object.prototype.hasOwnProperty.call(scritte, k);
+    };
+    return {
+      getItem: function (k) {
+        k = String(k);
+        if (ha(k)) return scritte[k] === TOLTA ? null : scritte[k];
+        return vera.getItem(k);
+      },
+      setItem: function (k, v) {
+        scritte[String(k)] = String(v);
+      },
+      removeItem: function (k) {
+        scritte[String(k)] = TOLTA;
+      },
+      clear: function () {
+        for (var i = 0; i < vera.length; i += 1) scritte[vera.key(i)] = TOLTA;
+      },
+      key: function (i) {
+        return vera.key(i);
+      },
+      get length() {
+        return vera.length;
+      },
+    };
+  }
+  ["localStorage", "sessionStorage"].forEach(function (nome) {
+    try {
+      var finta = inMemoria(window[nome]);
+      Object.defineProperty(window, nome, {
+        configurable: true,
+        get: function () {
+          return finta;
+        },
+      });
+    } catch (e) {}
+  });
+
+  var COMANDI = /^(call_service|execute_script|fire_event)$/;
+  var SCRITTURE = /(^|[\/_])(save|set|update|create|delete|remove|write|reset|import|upload)([\/_]|$)/;
+  function senzaComandi(Base) {
+    function Anteprima(url, protocolli) {
+      var presa = protocolli === undefined ? new Base(url) : new Base(url, protocolli);
+      var manda = presa.send;
+      presa.send = function (dato) {
+        try {
+          var m = typeof dato === "string" ? JSON.parse(dato) : null;
+          var tipo = m && typeof m.type === "string" ? m.type : "";
+          if (tipo && tipo !== "auth" && (COMANDI.test(tipo) || SCRITTURE.test(tipo)))
+            dato = JSON.stringify({ id: m.id, type: "ping" });
+        } catch (e) {}
+        return manda.call(presa, dato);
+      };
+      return presa;
+    }
+    try {
+      Object.keys(Base).forEach(function (k) {
+        Anteprima[k] = Base[k];
+      });
+    } catch (e) {}
+    Anteprima.CONNECTING = 0;
+    Anteprima.OPEN = 1;
+    Anteprima.CLOSING = 2;
+    Anteprima.CLOSED = 3;
+    Anteprima.prototype = Base.prototype;
+    return Anteprima;
+  }
+  try {
+    var ponte = su.__DASHBOARDMODERN_BRIDGE_WS__;
+    if (typeof ponte === "function") {
+      var filo = senzaComandi(ponte);
+      window.__DASHBOARDMODERN_BRIDGE_WS__ = filo;
+      window.__DASHBOARDMODERN_BRIDGED__ = true;
+      window.WebSocket = filo;
+    } else if (typeof su.WebSocket === "function") {
+      window.WebSocket = senzaComandi(su.WebSocket);
+    }
+  } catch (e) {}
+})();
+
 (function () {
   "use strict";
 

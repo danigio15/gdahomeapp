@@ -130,6 +130,12 @@ const OGGETTO_DELLA_SCHEDA = Object.freeze({
   meteo: "meteo",
   /* Lo sport: il pallone della sua tessera. */
   sport: "sport",
+  /* La Radio della Musica e le tre schede di Alexa (#137, #139): sono
+   * arrivate dopo, e la prova ha trovato di nuovo quattro voci nude. */
+  media_radio: "media",
+  alexa: "media",
+  alexa_avvisi: "avvisi",
+  alexa_musica: "media",
 });
 
 const FLOW_LOADS = Object.freeze({

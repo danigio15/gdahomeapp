@@ -231,6 +231,10 @@ for (const tel of TELEFONI) {
       const prima = await finestra.evaluate((f) => f.scrollTop);
       const box = await finestra.boundingBox();
       await page.mouse.move(box.x + box.width / 2, box.y + box.height * 0.7);
+      /* Due giri di rotella: la finestra rifatta, con le fasce su due righe
+       * sul telefono, e' piu' lunga di duemila punti. */
+      await page.mouse.wheel(0, 2000);
+      await page.waitForTimeout(200);
       await page.mouse.wheel(0, 2000);
       await page.waitForTimeout(300);
       const dopo = await finestra.evaluate((f) => f.scrollTop);

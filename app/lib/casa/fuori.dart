@@ -45,6 +45,20 @@ bool eUnQuadroSicuro(Uri quale) {
 bool _eQui(String casa) =>
     casa == 'localhost' || casa == '127.0.0.1' || casa == '::1';
 
+/// Un indirizzo del telefono stesso: `localhost`, `127.0.0.1` (o un altro
+/// `127.x`), `::1`.
+///
+/// Fuori dall'app non si apre mai. Il browser del telefono non e' l'app: li'
+/// dietro non c'e' la plancia, e ci si trova davanti «Safari non può aprire
+/// la pagina». Se il riquadro chiede di andarci e non e' la pagina che sta
+/// servendo, e' la plancia con un indirizzo vecchio — una porta che il
+/// sistema aveva chiuso — e la cosa giusta e' riaprire la pagina vera,
+/// dentro l'app.
+bool eDelTelefono(Uri quale) {
+  final casa = quale.host.toLowerCase();
+  return _eQui(casa) || casa == '[::1]' || casa.startsWith('127.');
+}
+
 /// Una cornice che la plancia puo' tenere dentro di se': solo la mappa di
 /// Windy (`embed.windy.com`), in `https`, senza porte ne' credenziali.
 ///
@@ -59,3 +73,37 @@ bool eUnaCorniceAmmessa(Uri quale) =>
     quale.host == 'embed.windy.com' &&
     !quale.hasPort &&
     quale.userInfo.isEmpty;
+
+/// Dove va il riquadro della plancia quando chiede di andare a un indirizzo.
+enum StradaDelRiquadro {
+  /// Ci va: e' la pagina servita, o una cornice ammessa.
+  vai,
+
+  /// Non ci va, e si riapre la pagina vera: un indirizzo del telefono che
+  /// non e' quello servito, cioe' la plancia con una porta vecchia.
+  riapri,
+
+  /// Non ci va, e basta: un riquadro interno verso il telefono stesso.
+  resta,
+
+  /// Si apre nel browser del telefono: un collegamento che porta fuori.
+  fuori,
+}
+
+/// La decisione del riquadro, senza WebView: `riquadro/sul_telefono.dart`
+/// la segue e basta.
+StradaDelRiquadro laStradaDelRiquadro(
+  String indirizzo, {
+  required bool paginaIntera,
+  required bool Function(String indirizzo) siPuoAndare,
+}) {
+  if (siPuoAndare(indirizzo)) return StradaDelRiquadro.vai;
+  final quale = Uri.tryParse(indirizzo);
+  if (!paginaIntera && quale != null && eUnaCorniceAmmessa(quale)) {
+    return StradaDelRiquadro.vai;
+  }
+  if (quale != null && eDelTelefono(quale)) {
+    return paginaIntera ? StradaDelRiquadro.riapri : StradaDelRiquadro.resta;
+  }
+  return StradaDelRiquadro.fuori;
+}

@@ -1,9 +1,17 @@
 import {
+  conLePosizioni,
   flowPeriodEntity,
   flowRecorderEntity,
   flowStageModel,
   fonteDiRipiego,
 } from "../core/energy-flow-topology.js";
+import {
+  misureDelFlusso,
+  posaLeLinee,
+  posizioniDelFlusso,
+  ricordaIlModello,
+  registraIlFlusso,
+} from "./il-flusso-che-si-sposta-section.js";
 import {
   allocateSourceFlows,
   batteryReadout,
@@ -686,7 +694,33 @@ function stageModel(period) {
     wallbox: vehiclePopupTarget(),
   });
   ricordaINumeri(period, model);
-  return model;
+  return conLePosizioniDelFlusso(period, model);
+}
+
+/* I cerchi dove li ha messi l'utente (✏️, `cd_disegni`): senza scelta e' lo
+ * stesso modello. Quello di serie si ricorda, per ridisegnare mentre un
+ * cerchio si trascina senza rileggere gli stati. */
+function conLePosizioniDelFlusso(period, diSerie) {
+  state.modelliDiSerie = { ...state.modelliDiSerie, [period]: diSerie };
+  const disegnato = conLePosizioni(diSerie, posizioniDelFlusso(), misureDelFlusso());
+  ricordaIlModello(period, diSerie, disegnato);
+  return disegnato;
+}
+
+/* Mentre un cerchio si trascina: i carichi dal modello ricordato, le linee
+ * fra i principali, e i binari sotto le linee. */
+function ridisegnaIlDisegno() {
+  if (!doc) return;
+  ensureGridBatteryPaths();
+  for (const view of FLOW_VIEWS) {
+    const diSerie = state.modelliDiSerie?.[view.period];
+    if (diSerie) renderDynamicFlowLoads(view.period, conLePosizioniDelFlusso(view.period, diSerie));
+  }
+  posaLeLinee();
+  for (const view of FLOW_VIEWS) {
+    const period = view.period === "instant" ? "" : view.period;
+    mirrorLegacyMainFlows(scopeFor(period), period);
+  }
 }
 
 function letturePerLaScena(voci, period) {
@@ -948,6 +982,10 @@ function ensureBubble(stage, node, period, scale) {
    * la configurazione, e passandoci sopra lo dice. */
   scriviDatoSeCambia(element, "dmFlowWaiting", node.waiting ? "true" : "false");
   scriviDatoSeCambia(element, "dmFlowSensore", node.sensore === false ? "false" : "true");
+  /* Un carico arrivato dopo una disposizione, messo al posto libero. Senza
+   * disposizione il cerchio resta com'era, senza un attributo in piu'. */
+  if (node.nuovo) scriviDatoSeCambia(element, "dmFlowNuovo", "true");
+  else if (element.dataset && "dmFlowNuovo" in element.dataset) delete element.dataset.dmFlowNuovo;
   const suggerimento =
     node.sensore === false
       ? t("Nessun sensore collegato.", "No sensor linked.")
@@ -1461,6 +1499,8 @@ export function refreshEnergyFlows() {
   if (!doc) return false;
   beginVisibilityPass();
   ensureGridBatteryPaths();
+  /* Le linee fra i cerchi spostati, prima che il binario ne copi la strada. */
+  posaLeLinee();
   let touched = false;
   for (const view of FLOW_VIEWS) {
     const period = view.period === "instant" ? "" : view.period;
@@ -2077,6 +2117,8 @@ export function installEnergyFlowSection() {
   );
   bindStore();
   rivendicaLeBolleDellaBatteria();
+  /* I cerchi si spostano con ✏️ («i cerchi nel Flusso energetico»). */
+  registraIlFlusso({ ridisegna: ridisegnaIlDisegno });
   scheduleSettled();
 }
 

@@ -170,6 +170,12 @@ async function avvia(page, testInfo) {
   test.setTimeout(150_000);
   await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
   await bootNamespacedDashboard(page, "dashboard.html", testInfo, SEME);
+  /* A plancia accesa davvero: scrivere prima che il guscio abbia finito di
+   * partire finiva, ogni tanto, nel mezzo del suo caricamento («Execution
+   * context was destroyed»). */
+  await page.waitForFunction(() => window.__DASHBOARDMODERN_RUNTIME_ROOT__?.ready === true, null, {
+    timeout: 60_000,
+  });
   await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
   await page.evaluate(
     async ({ stati, finestre, prese, porte, lettori, citofono }) => {

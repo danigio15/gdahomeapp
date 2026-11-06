@@ -588,8 +588,12 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   /* Il gettone al centralino: appena entrati, e a ogni rinnovo. Con le
    * licenze spente non si dice niente, e il filo e' quello di sempre. */
   if (licenze.attive) {
-    chiamata.diLaLicenza(licenze.gettonePerIlCentralino);
-    licenze.on("cambio", () => chiamata.diLaLicenza(licenze.gettonePerIlCentralino));
+    /* E accanto quello della gdanav della casa: il centralino lo tiene solo
+     * per dire di ricontrollare quando il quadro la toglie. */
+    const diLaLicenza = () =>
+      chiamata.diLaLicenza(licenze.gettonePerIlCentralino, licenze.gettoneGdanavPerIlCentralino);
+    diLaLicenza();
+    licenze.on("cambio", diLaLicenza);
     /* Una licenza tolta: il centralino lo sa dal quadro e lo dice qui, e la
      * casa richiede subito la sua licenza (`chiamata.js`). */
     chiamata.alRicontrollo = () => licenze.richiamata();

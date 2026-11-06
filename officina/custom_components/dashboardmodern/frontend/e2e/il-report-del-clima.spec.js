@@ -494,8 +494,6 @@ async function avvia(
   return tasto;
 }
 
-const foglio = (page) => page.locator("#dm-rcl .dm-rcl-foglio");
-
 async function attendiIlReport(page) {
   await expect(page.locator("#dm-rcl .dm-rcl-tessere")).toBeVisible({ timeout: 15_000 });
 }
@@ -511,21 +509,19 @@ async function scegli(page, { impianto = "", vista = "", indietro = 0 } = {}) {
   await attendiIlReport(page);
 }
 
-/* La foto del foglio intero: sul telefono il foglio e' alto quanto lo
+/* La foto della pagina intera, col report aperto: sul telefono e' alta piu' dello
  * schermo e scorre, e la foto lo vuole tutto. */
 async function foto(page, nome) {
   if (!process.env.DM_FOTO) return;
   await page.waitForTimeout(250);
+  /* Il report e' una scheda della pagina Clima: la foto prende la scheda
+   * intera, anche la parte sotto lo schermo. */
   await page.addStyleTag({
-    content:
-      "#dm-rcl{position:absolute!important;inset:0 auto auto 0!important;width:100%!important;min-height:100vh}#dm-rcl .dm-rcl-foglio{max-height:none!important;height:auto!important;overflow:visible!important}",
+    content: "nav.tabs.bottom-nav-bar,.dm-assist-tasto{visibility:hidden!important}",
   });
-  await foglio(page).screenshot({ path: `${process.env.DM_FOTO}/${nome}.png` });
-  await page.evaluate(() =>
-    document
-      .querySelectorAll("style")
-      .forEach((s) => s.textContent.startsWith("#dm-rcl{position:absolute") && s.remove()),
-  );
+  await page
+    .locator("#page-clima .dm-cl-shell")
+    .screenshot({ path: `${process.env.DM_FOTO}/${nome}.png` });
 }
 
 const TELEFONO = { width: 390, height: 844 };
@@ -561,12 +557,12 @@ for (const [schermo, misura] of [
       await expect(page.locator("#dm-rcl .dm-rcl-nota").last()).toContainText(
         "Un'unità non ha mai lavorato",
       );
-      /* Sotto la barra il valore della richiesta, e la temperatura confrontata
-       * con l'obiettivo nelle stesse ore di comfort. */
+      /* Le ore della richiesta una volta sola, a destra; sotto la barra da
+       * dove vengono, e la temperatura confrontata con l'obiettivo nelle
+       * stesse ore di comfort. */
       const sala = page.locator('#dm-rcl [data-dm-rcl-stanza="climate.sala"]');
-      await expect(sala.locator("[data-dm-rcl-richiesta]")).toHaveText(
-        /^\d+ h( \d+ min)? di richiesta$/,
-      );
+      await expect(sala.locator("[data-dm-rcl-ore]")).toHaveText(/^\d+ h( \d+ min)?$/);
+      await expect(sala.locator("[data-dm-rcl-richiesta]")).toHaveText("richiesta dal termostato");
       await expect(sala.locator("[data-dm-rcl-temperatura]")).toContainText(/su 21,0° in comfort/);
       await expect(page.locator('#dm-rcl [data-dm-rcl-tessera="temperatura"]')).toContainText(
         "obiettivo in comfort",
@@ -797,8 +793,8 @@ for (const [schermo, misura] of [
       /* La Sala la sa l'archivio: la richiesta c'e', anche se di tre giorni
        * su sette. */
       await expect(
-        page.locator('#dm-rcl [data-dm-rcl-stanza="climate.sala"] [data-dm-rcl-richiesta]'),
-      ).toHaveText(/^\d+ h( \d+ min)? di richiesta$/);
+        page.locator('#dm-rcl [data-dm-rcl-stanza="climate.sala"] [data-dm-rcl-ore]'),
+      ).toHaveText(/^\d+ h( \d+ min)?$/);
       await foto(page, `03-riscaldamento-settimana-archivio-e-statistiche-${schermo}-${luce}`);
     });
   }

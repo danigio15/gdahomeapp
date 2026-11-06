@@ -757,6 +757,119 @@ test("una licenza appena tolta: il telefono esce subito e la casa richiede la su
   }
 });
 
+/* ─── 4b. Le gdanav tolte alle case ───────────────────────────────────── */
+
+const UNA_GDANAV = "lic_00aa11bb22cc33dd";
+
+test("l'elenco porta le gdanav a parte, e uno di prima senza gdanav si legge come prima", () => {
+  const nuovo = unElenco({ lic: [UNA_LICENZA], gdanav: [UNA_GDANAV, "non-una-licenza"] });
+  assert.deepEqual(leggiLElenco(nuovo, PUBBLICA_DI_PROVA), {
+    emesso: leggiLElenco(nuovo, PUBBLICA_DI_PROVA).emesso,
+    lic: [UNA_LICENZA],
+    gdanav: [UNA_GDANAV],
+  });
+  /* Di prima: niente `gdanav`, nessuna gdanav tolta. */
+  assert.deepEqual(leggiLElenco(unElenco({ lic: [UNA_LICENZA] }), PUBBLICA_DI_PROVA).gdanav, []);
+  /* Storto: come se non ci fosse, e `lic` resta quello che e'. */
+  const storto = leggiLElenco(unElenco({ lic: [UNA_LICENZA], gdanav: "x" }), PUBBLICA_DI_PROVA);
+  assert.deepEqual(storto.lic, [UNA_LICENZA]);
+  assert.deepEqual(storto.gdanav, []);
+
+  /* Una gdanav tolta non e' una gdahome tolta, ne' il contrario. */
+  const revoche = new Revoche({ dove: "x", chiave: PUBBLICA_DI_PROVA });
+  const nuove = [];
+  revoche.alleNuove = (lic, gdanav) => nuove.push([lic, gdanav]);
+  assert.equal(revoche.tieni(unElenco({ lic: [], gdanav: [UNA_GDANAV] })), true);
+  assert.equal(revoche.toltaGdanav(UNA_GDANAV), true);
+  assert.equal(revoche.tolta(UNA_GDANAV), false);
+  assert.equal(revoche.quante(), 0);
+  assert.deepEqual(nuove, [[[], [UNA_GDANAV]]]);
+  /* Lo stesso elenco di nuovo non ridice niente. */
+  revoche.tieni(unElenco({ lic: [], gdanav: [UNA_GDANAV] }));
+  assert.equal(nuove.length, 1);
+});
+
+test("una gdanav appena tolta: la casa ricontrolla, e il fuori casa resta aperto", async () => {
+  const revoche = new Revoche({ dove: "x", chiave: PUBBLICA_DI_PROVA });
+  const b = await banco({ modoLicenze: "impone", revoche });
+  try {
+    /* Una casa con gdahome e la sua gdanav, una con la gdanav di un'altra. */
+    const casa = unaCasa(b.dove);
+    await casa.entra({ gettone: unGettone({ sog: casa.id, lic: UNA_LICENZA }) });
+    casa.manda({
+      t: "licenza",
+      tipo: "licenza",
+      gettone: unGettone({ sog: casa.id, lic: UNA_LICENZA }),
+      gdanav: unGettone({ sog: casa.id, app: "gdanav", lic: UNA_GDANAV }),
+    });
+    await attendi(() => b.centralino.gdanavDi.get(casa.id) === UNA_GDANAV);
+    const altra = unaCasa(b.dove);
+    await altra.entra({ gettone: unGettone({ sog: altra.id, lic: UN_ALTRA }) });
+    const telefono = unTelefono(b.dove, `/telefono/${casa.id}`);
+    await attendi(() => casa.canali().length === 1);
+
+    revoche.tieni(unElenco({ lic: [], gdanav: [UNA_GDANAV] }));
+    await attendi(() => casa.detti.some((uno) => uno.t === "ricontrolla-licenza"));
+    /* gdahome non c'entra: il telefono resta dentro, la casa resta Premium,
+     * e nemmeno il giro di controllo la chiude. */
+    b.centralino._giroDiControllo();
+    await new Promise((ok) => setTimeout(ok, 50));
+    assert.equal(telefono.eChiuso(), false);
+    assert.equal(b.centralino.ePremium(casa.id), true);
+    assert.equal(
+      altra.detti.some((uno) => uno.t === "ricontrolla-licenza"),
+      false,
+    );
+    telefono.chiudi();
+    casa.chiudi();
+    altra.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("la gdanav detta dalla casa: solo un gettone gdanav buono e suo, e una casa di prima non la dice", async () => {
+  const revoche = new Revoche({ dove: "x", chiave: PUBBLICA_DI_PROVA });
+  const b = await banco({ modoLicenze: "impone", revoche });
+  try {
+    const casa = unaCasa(b.dove);
+    /* Dentro la presentazione, come fa il ponte. */
+    await casa.entra({
+      gettone: unGettone({ sog: casa.id, lic: UNA_LICENZA }),
+      gdanav: unGettone({ sog: casa.id, app: "gdanav", lic: UNA_GDANAV }),
+    });
+    assert.equal(b.centralino.gdanavDi.get(casa.id), UNA_GDANAV);
+    /* Un gettone gdahome al posto della gdanav non conta: la gdahome si
+     * guarda gia' da se'. Uno di un'altra casa nemmeno. E una casa di prima,
+     * che il campo non lo manda, non ha una gdanav da ricontrollare. */
+    for (const gdanav of [
+      unGettone({ sog: casa.id, lic: UN_ALTRA }),
+      unGettone({ sog: unaCasaNuova(), app: "gdanav", lic: UN_ALTRA }),
+      "",
+      undefined,
+    ]) {
+      casa.manda({ t: "licenza", gettone: unGettone({ sog: casa.id, lic: UNA_LICENZA }), gdanav });
+      await attendi(() => !b.centralino.gdanavDi.has(casa.id));
+      casa.manda({
+        t: "licenza",
+        gettone: unGettone({ sog: casa.id, lic: UNA_LICENZA }),
+        gdanav: unGettone({ sog: casa.id, app: "gdanav", lic: UNA_GDANAV }),
+      });
+      await attendi(() => b.centralino.gdanavDi.get(casa.id) === UNA_GDANAV);
+    }
+    /* Una gdahome tolta, con la gdanav buona: si chiude il fuori casa, e la
+     * gdanav resta quella che era (la casa la richiede e la riavra'). */
+    const telefono = unTelefono(b.dove, `/telefono/${casa.id}`);
+    await attendi(() => casa.canali().length === 1);
+    revoche.tieni(unElenco({ lic: [UNA_LICENZA], gdanav: [] }));
+    assert.deepEqual(await telefono.chiusa, PREMIUM_RICHIESTO);
+    assert.equal(b.centralino.gdanavDi.get(casa.id), UNA_GDANAV);
+    casa.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});
+
 test("le licenze tolte si chiedono ogni minuto al quadro vero, senza scrivere niente", async () => {
   assert.equal(OGNI_QUANTO, 60 * 1000);
   assert.equal(REVOCHE_DI_SERIE, "https://quadro.gdahome.org/v1/licenze/revocate");

@@ -1,4 +1,4 @@
-/* Il sito su gdahome.org: due pagine ferme, e due promesse da tenere.
+/* Il sito su gdahome.org: tre pagine ferme, e due promesse da tenere.
  *
  * Le prove stanno qui, e non e' un caso: sono quelle che la macchina gira
  * prima di scambiare una versione con un'altra (`scarica.sh`). Una pagina
@@ -14,7 +14,8 @@
  *  - **l'informativa pubblicata e' quella scritta**. `docs/PRIVACY.md` e
  *    `sito/privacy.html` sono la stessa cosa detta due volte: quello che il
  *    Play Store legge e' la seconda, ma quella che si corregge, quando si
- *    corregge, e' quasi sempre la prima.
+ *    corregge, e' quasi sempre la prima. Lo stesso per i termini di servizio,
+ *    `docs/TERMINI.md` e `sito/termini.html`.
  */
 
 import { test } from "node:test";
@@ -28,7 +29,14 @@ import { fileURLToPath } from "node:url";
 const RADICE = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const leggi = (dove) => readFileSync(join(RADICE, dove), "utf8");
 
-const PAGINE = ["sito/index.html", "sito/privacy.html"];
+const PAGINE = ["sito/index.html", "sito/privacy.html", "sito/termini.html"];
+
+/* Le pagine che hanno una gemella nel codice: quella scritta, che si corregge,
+ * e quella pubblicata, che il Play Store legge. */
+const GEMELLE = [
+  { scritta: "docs/PRIVACY.md", pubblicata: "sito/privacy.html", almeno: 8 },
+  { scritta: "docs/TERMINI.md", pubblicata: "sito/termini.html", almeno: 10 },
+];
 
 test("le pagine ci sono, e hanno un nome", () => {
   for (const quale of PAGINE) {
@@ -73,27 +81,69 @@ test("niente viene da fuori: nessun carattere, nessuna libreria, nessun contator
   }
 });
 
-test("l'informativa pubblicata dice quello che dice quella scritta", () => {
-  const scritta = leggi("docs/PRIVACY.md");
-  const pubblicata = leggi("sito/privacy.html");
+test("l'informativa e i termini pubblicati dicono quello che dicono quelli scritti", () => {
+  for (const gemella of GEMELLE) {
+    const scritta = leggi(gemella.scritta);
+    const pubblicata = leggi(gemella.pubblicata);
 
-  /* Ogni sezione dell'una sta anche nell'altra. Aggiungerne una sola da una
-   * parte — «Cosa fa l'assistente vocale», un domani — e dimenticarla
-   * dall'altra vuol dire pubblicare un'informativa che non e' quella vera. */
-  const sezioni = [...scritta.matchAll(/^## (.+)$/gm)].map((una) => una[1]);
-  assert.ok(sezioni.length >= 8, `mi aspettavo piu' sezioni, ne ho trovate ${sezioni.length}`);
-  for (const titolo of sezioni) {
+    /* Ogni sezione dell'una sta anche nell'altra. Aggiungerne una sola da una
+     * parte — «Cosa fa l'assistente vocale», un domani — e dimenticarla
+     * dall'altra vuol dire pubblicare un'informativa che non e' quella vera. */
+    const sezioni = [...scritta.matchAll(/^## (.+)$/gm)].map((una) => una[1]);
     assert.ok(
-      pubblicata.includes(titolo),
-      `la sezione «${titolo}» c'e' in docs/PRIVACY.md e non su gdahome.org`,
+      sezioni.length >= gemella.almeno,
+      `in ${gemella.scritta} mi aspettavo piu' sezioni, ne ho trovate ${sezioni.length}`,
+    );
+    for (const titolo of sezioni) {
+      assert.ok(
+        pubblicata.includes(titolo),
+        `la sezione «${titolo}» c'e' in ${gemella.scritta} e non su gdahome.org`,
+      );
+    }
+
+    /* E la data: un'informativa cambiata che porta la data di prima e' peggio
+     * di una non cambiata, perche' dice a chi la legge che non e' successo
+     * niente. */
+    const quando = /^Ultimo aggiornamento: (.+)$/m.exec(scritta);
+    assert.ok(quando, `${gemella.scritta} non dice di quando e'`);
+    assert.ok(
+      pubblicata.includes(quando[1]),
+      `${gemella.pubblicata} porta una data diversa da «${quando[1]}»`,
     );
   }
+});
 
-  /* E la data: un'informativa cambiata che porta la data di prima e' peggio di
-   * una non cambiata, perche' dice a chi la legge che non e' successo niente. */
-  const quando = /^Ultimo aggiornamento: (.+)$/m.exec(scritta);
-  assert.ok(quando, "docs/PRIVACY.md non dice di quando e'");
-  assert.ok(pubblicata.includes(quando[1]), `la pagina porta una data diversa da «${quando[1]}»`);
+test("i termini sono gli stessi di pagina in pagina", () => {
+  /* Le sezioni dei termini si contano anche dall'altra parte: una sezione
+   * aggiunta solo alla pagina pubblicata e' una promessa che nel codice non
+   * c'e'. (L'informativa ha gia' la sua prova sopra; i termini, che sono
+   * nuovi, la tengono da subito tutte e due le direzioni.) */
+  const scritta = leggi("docs/TERMINI.md");
+  const sezioni = [...scritta.matchAll(/^## (.+)$/gm)].map((una) => una[1]);
+  const pubblicate = [...leggi("sito/termini.html").matchAll(/<h2[^>]*>\s*([^<]+?)\s*<\/h2>/g)].map(
+    (t) => t[1],
+  );
+  assert.deepEqual(
+    pubblicate,
+    sezioni,
+    "le sezioni dei termini non sono le stesse, o non in ordine",
+  );
+
+  /* Il prezzo e la prova li dice l'app (`app/lib/licenza/negozio.dart`): i
+   * termini non devono raccontarne altri. */
+  const negozio = readFileSync(join(RADICE, "app/lib/licenza/negozio.dart"), "utf8");
+  const giorni = /const giorniDiProva = (\d+);/.exec(negozio)?.[1];
+  const mese = /it: '([\d,]+) €\/mese'/.exec(negozio)?.[1];
+  const anno = /it: '([\d,]+) €\/anno'/.exec(negozio)?.[1];
+  assert.ok(giorni && mese && anno, "in negozio.dart non trovo piu' la prova e i prezzi");
+  for (const [dove, testo] of [
+    ["docs/TERMINI.md", scritta],
+    ["sito/termini.html", leggi("sito/termini.html")],
+  ]) {
+    assert.ok(testo.includes(`${giorni} giorni`), `${dove} non dice i ${giorni} giorni di prova`);
+    assert.ok(testo.includes(`${mese} €`), `${dove} non dice ${mese} € al mese`);
+    assert.ok(testo.includes(`${anno} €`), `${dove} non dice ${anno} € all'anno`);
+  }
 });
 
 test("dall'indice ci si arriva, e senza passare da GitHub", () => {
@@ -102,12 +152,38 @@ test("dall'indice ci si arriva, e senza passare da GitHub", () => {
    * quella che la gente trova non sarebbero piu' la stessa. */
   const indice = leggi("sito/index.html");
   assert.match(indice, /href="privacy\.html"/, "l'indice non manda all'informativa di casa");
+  assert.match(indice, /href="termini\.html"/, "l'indice non manda ai termini di servizio");
+  /* E le due pagine da leggere si chiamano fra loro: chi arriva sui termini
+   * dal Play Store trova l'informativa, e viceversa. */
+  assert.match(
+    leggi("sito/privacy.html"),
+    /href="termini\.html"/,
+    "l'informativa non manda ai termini",
+  );
+  assert.match(
+    leggi("sito/termini.html"),
+    /href="privacy\.html"/,
+    "i termini non mandano all'informativa",
+  );
+});
+
+test("la mappa del sito ha tutte le pagine", () => {
+  /* Una pagina che la mappa non nomina Google la trova tardi, o non la trova:
+   * e i termini sono un indirizzo che il Play Store va a guardare. */
+  const mappa = leggi("sito/sitemap.xml");
+  for (const quale of PAGINE) {
+    const nome = quale.replace(/^sito\//, "").replace(/^index\.html$/, "");
+    assert.ok(
+      mappa.includes(`<loc>https://gdahome.org/${nome}</loc>`),
+      `«${quale}» non sta in sito/sitemap.xml`,
+    );
+  }
 });
 
 /* ─── La lingua ──────────────────────────────────────────────────────────── */
 
-test("le due pagine hanno i tasti della lingua, e le sigle non si traducono", () => {
-  /* Il selettore sta in cima a tutte e due le pagine: chi arriva
+test("le pagine hanno i tasti della lingua, e le sigle non si traducono", () => {
+  /* Il selettore sta in cima a tutte le pagine: chi arriva
      sull'informativa da un link del Play Store deve poterla leggere nella sua
      lingua senza tornare all'indice.
 

@@ -61,6 +61,28 @@ function regole(css) {
   return raccolte;
 }
 
+/* I selettori di una regola, divisi alle virgole di primo livello: quelle
+ * dentro `:is(...)`, `:not(...)`, `:where(...)` non separano due selettori.
+ * Dividendo a ogni virgola, «:is(#dm-widget-popup,#dm-casa-popup) .riga» e
+ * «:is(#dm-widget-popup,#dm-casa-popup) .altra» diventavano entrambe
+ * «:is(#dm-widget-popup»: due regole su elementi diversi sembravano la stessa
+ * decisione con due padroni. */
+function selettoriDi(testo) {
+  const pezzi = [];
+  let profondita = 0;
+  let pezzo = "";
+  for (const carattere of testo) {
+    if (carattere === "(" || carattere === "[") profondita += 1;
+    else if (carattere === ")" || carattere === "]") profondita -= 1;
+    if (carattere === "," && profondita === 0) {
+      pezzi.push(pezzo);
+      pezzo = "";
+    } else pezzo += carattere;
+  }
+  pezzi.push(pezzo);
+  return pezzi.map((uno) => uno.trim().replace(/\s+/g, " ")).filter(Boolean);
+}
+
 /* Il conto grezzo della forza di un selettore: quanti identificativi, quante
  * classi o attributi, quanti nomi di elemento. Serve solo a distinguere «due
  * regole ugualmente forti» da «una piu' precisa dell'altra». */
@@ -104,10 +126,7 @@ test("una regola, un padrone", async ({ page }, testInfo) => {
         ...regola.corpo.matchAll(/([-a-z]+)\s*:\s*([^;]*?)\s*(!important)?\s*(?:;|$)/g),
       ].filter((d) => d[3]);
       if (!dichiarazioni.length) return;
-      for (const selettore of regola.selettori
-        .split(",")
-        .map((pezzo) => pezzo.trim().replace(/\s+/g, " "))
-        .filter(Boolean)) {
+      for (const selettore of selettoriDi(regola.selettori)) {
         for (const dichiarazione of dichiarazioni) {
           const chiave = `${regola.ramo}||${selettore}||${dichiarazione[1]}`;
           if (!decisioni.has(chiave)) decisioni.set(chiave, []);

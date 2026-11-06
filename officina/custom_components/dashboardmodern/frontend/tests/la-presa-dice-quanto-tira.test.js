@@ -126,5 +126,5 @@ test("le prese stanno in griglia come le luci, non una per riga (#474)", async (
     new URL("../src/sections/lights-page-section.js", import.meta.url),
     "utf8",
   );
-  assert.ok(luci.includes('<div class="dm-lucip-grid">'), "la griglia delle luci e' cambiata nome");
+  assert.ok(luci.includes('<div class="dm-lucip-grid"'), "la griglia delle luci e' cambiata nome");
 });

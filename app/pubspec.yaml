@@ -13,7 +13,7 @@ publish_to: "none"
 # sempre**. Si ricava dalla versione invece di batterlo a mano:
 # 1.4.24 → 1 × 10000 + 4 × 100 + 24 = 10424. Finche' il minore e la patch
 # stanno sotto cento, cresce insieme alla versione e non si sbaglia.
-version: 1.18.10+1181000
+version: 1.18.11+1181100
 
 environment:
   sdk: ^3.13.0
@@ -114,7 +114,7 @@ dependencies:
   # (`docs/LICENZE.md`).
   in_app_purchase: ^3.3.1
   in_app_purchase_android: ^0.5.5
-  in_app_purchase_storekit: ^0.4.13
+  in_app_purchase_storekit: ^0.4.16
 
   # Il navigatore: gdanav, dentro l'app come una sua sezione (solo sul
   # telefono: nella webapp non c'e'). Viene dalla sua repository, dove lo

@@ -65,9 +65,24 @@ import {
 } from "./shared.js";
 import { PRESSIONE_NORMA, comeStaLaPressione } from "./finestre/la-pressione.js";
 import { ilMotoDelSolare, lettureDelMoto } from "../core/il-solare-in-movimento.js";
+import {
+  ARTE_DEL_NODO,
+  DISEGNO_DEL_SOLARE,
+  LANDSCAPE,
+  PLACES,
+  PORTRAIT,
+  VARIANTE_DEL_LAYOUT,
+  centroAdesso,
+  centroInPercento,
+  layoutConLePosizioni,
+  misureDelLayout,
+  nodiDelLayout,
+} from "../core/il-disegno-del-solare.js";
+import { posizioniInUso, registraIlDisegno } from "./disegni-che-si-spostano-section.js";
 
 const KEY = "__DASHBOARDMODERN_SOLAR_THERMAL_DESIGN__";
 const STYLE_ID = "dm-solar-thermal-design";
+const POSIZIONI_ID = "dm-st-posizioni";
 const SVG_NS = "http://www.w3.org/2000/svg";
 const PORTRAIT_QUERY = "(max-width: 600px)";
 const state = (root[KEY] ||= { installed: false, frame: 0, query: null });
@@ -78,89 +93,10 @@ const RUNS = Object.freeze({
   "flow-ricircolo": "loop",
 });
 
-/* Both layouts, in drawing units. Pipe runs start and end under a piece of
- * hardware, and they run in the direction the water goes, so the light in
- * them travels the right way. */
-const LANDSCAPE = Object.freeze({
-  name: "landscape",
-  w: 1100,
-  h: 430,
-  panel: { x: 110, y: 110, w: 270, h: 150, s: 40, d: 18 },
-  tank: { cx: 700, top: 66, w: 150, h: 300 },
-  sun: [320, 70, 150],
-  tap: [1040, 120],
-  routes: {
-    "flow-sol-hot": "M 378 116 C 470 116, 520 116, 560 130 C 600 144, 608 168, 625 168",
-    "flow-sol-cold": "M 625 330 C 560 330, 520 372, 440 372 L 250 372 C 170 372, 140 350, 130 300",
-    "flow-ricircolo":
-      "M 775 120 L 1000 120 C 1030 120, 1040 130, 1040 160 L 1040 320 C 1040 350, 1030 360, 1000 360 L 775 360",
-  },
-  leaders: {
-    collector: [330, 66, 300, 122],
-    alto: [818, 180, 739, 140],
-    basso: [818, 294, 739, 318],
-  },
-});
-
-const PORTRAIT = Object.freeze({
-  name: "portrait",
-  w: 400,
-  h: 600,
-  panel: { x: 24, y: 64, w: 196, h: 112, s: 24, d: 12 },
-  tank: { cx: 222, top: 262, w: 104, h: 168 },
-  sun: [170, 40, 90],
-  tap: null,
-  routes: {
-    "flow-sol-hot":
-      "M 216 70 C 300 70, 352 76, 352 130 L 352 196 C 352 222, 340 236, 300 236 L 250 236 C 234 236, 226 246, 224 262",
-    "flow-sol-cold":
-      "M 200 420 C 190 452, 170 458, 140 458 L 60 458 C 30 458, 18 440, 18 410 L 18 230 C 18 210, 26 202, 38 198",
-    "flow-ricircolo":
-      "M 270 300 L 340 300 C 364 300, 374 310, 374 334 L 374 396 C 374 420, 364 430, 340 430 L 270 430",
-  },
-  leaders: {
-    collector: [254, 34, 196, 74],
-    alto: [156, 291, 197, 300],
-    basso: [156, 375, 197, 396],
-  },
-});
-
-/* Where the HTML pieces sit, in drawing units: [x, y] of the anchor. Pumps and
- * the valve are centred on their point; chips hang from their top-left. */
-const PLACES = Object.freeze({
-  landscape: {
-    pump: [400, 372],
-    valve: [520, 120],
-    rpump: [1040, 250],
-    collectorHit: [110, 110, 288, 190],
-    /* The safety valve, on the tank's left wall near the top: the right
-     * wall carries the hot water line and the «Accumulo alto» chip. */
-    tankNode: [625, 76],
-    chipCollector: [285, 12],
-    chipAlto: [818, 152],
-    chipBasso: [818, 266],
-    delta: [470, 236],
-    press: [792, 10],
-    power: [942, 10],
-    tapTag: [1012, 120],
-  },
-  portrait: {
-    pump: [92, 458],
-    valve: [352, 150],
-    rpump: [374, 366],
-    collectorHit: [24, 64, 208, 136],
-    /* Upright, the left wall has the probe chips: the right wall, above the
-     * recirculation line. */
-    tankNode: [274, 264],
-    chipCollector: [254, 6],
-    chipAlto: [28, 268],
-    chipBasso: [28, 352],
-    delta: [80, 24],
-    press: [16, 500],
-    power: [206, 500],
-    tapTag: [0, 0],
-  },
-});
+/* The two layouts (LANDSCAPE, PORTRAIT) and where the HTML pieces sit
+ * (PLACES) live in `core/il-disegno-del-solare.js`, next to the pieces the
+ * owner can move (`cd_disegni`): without a choice the layout is the very same
+ * object, so the drawing is the one drawn by hand. */
 
 const PUMP_LABELS = [
   ["syn-p-solare", () => t("Pompa solare", "Solar pump")],
@@ -514,6 +450,9 @@ function stylesheet() {
     text-align:left;
     transform:none;
     overflow:visible;
+    /* The legacy cards ease every property: a moved reading would slide
+       across the drawing, and lag behind the hand while dragged. */
+    transition-property:background-color, border-color, box-shadow, color, opacity;
   }
   #page-boiler .dm-st-plant > .syn-solar-content::before,
   #page-boiler .dm-st-plant .probe::before,
@@ -1095,21 +1034,31 @@ function panelCorners(L) {
 
 const f1 = (n) => n.toFixed(1);
 
+/* The three beams from the sun to the glass; when the collector has been
+ * moved (`d`), to where it is now. */
+function beamPoints(L, d) {
+  const [x, y] = L.sun;
+  const [gTL, gTR, gBR, gBL] = panelCorners(L).glass;
+  const by = (p) => (d ? [p[0] + d[0], p[1] + d[1]] : p);
+  return [
+    [gTL, gBL],
+    [gTL, gTR],
+    [gTR, gBR],
+  ].map(([a, b]) => {
+    const p = by(lerp(a, b, 0.25));
+    const q = by(lerp(a, b, 0.75));
+    return `${x},${y} ${f1(p[0])},${f1(p[1])} ${f1(q[0])},${f1(q[1])}`;
+  });
+}
+
 function backMarkup(L) {
   const [x, y, r] = L.sun;
   let out = `<circle class="dm-st-sun" cx="${x}" cy="${y}" r="${r}" fill="url(#dm-st-sun)"/>`;
   /* While it charges, beams fall from the sun on the glass and rays turn
    * slowly around it. */
-  const [gTL, gTR, gBR, gBL] = panelCorners(L).glass;
   out += `<g class="dmx dmx-beams">`;
-  [
-    [gTL, gBL],
-    [gTL, gTR],
-    [gTR, gBR],
-  ].forEach(([a, b], i) => {
-    const p = lerp(a, b, 0.25);
-    const q = lerp(a, b, 0.75);
-    out += `<polygon class="dmx-beam" points="${x},${y} ${f1(p[0])},${f1(p[1])} ${f1(q[0])},${f1(q[1])}" style="animation-delay:${((-i * 4) / 3).toFixed(3)}s"/>`;
+  beamPoints(L).forEach((points, i) => {
+    out += `<polygon class="dmx-beam" points="${points}" style="animation-delay:${((-i * 4) / 3).toFixed(3)}s"/>`;
   });
   const r0 = r * 0.23;
   out += `<g class="dmx-rays" style="transform-origin:${x}px ${y}px">`;
@@ -1236,10 +1185,133 @@ function drawArt(svg, layout) {
   if (back.previousElementSibling !== defs) defs.after(back);
   const front = svgGroup(svg, "dm-st-front", "end");
   if (svg.lastElementChild !== front) svg.append(front);
-  if (svg.dataset.dmStLayout === layout.name && front.firstChild) return;
-  svg.dataset.dmStLayout = layout.name;
-  back.innerHTML = backMarkup(layout);
-  front.innerHTML = frontMarkup(layout);
+  if (svg.dataset.dmStLayout !== layout.name || !front.firstChild) {
+    svg.dataset.dmStLayout = layout.name;
+    delete svg.dataset.dmStPosizioni;
+    back.innerHTML = backMarkup(layout);
+    front.innerHTML = frontMarkup(layout);
+  }
+  moveArt(svg, layout);
+}
+
+/* The pieces the owner moved (`cd_disegni`): the artwork is always drawn
+ * where it was drawn by hand and moved with a transform, so its animations
+ * keep running while a piece is dragged, and the beams follow the
+ * collector. Without a choice nothing here touches the drawing. */
+function moveArt(svg, layout) {
+  const signature = `${layout.name}|${layout.firma || ""}`;
+  if ((svg.dataset.dmStPosizioni || `${layout.name}|`) === signature) return;
+  svg.dataset.dmStPosizioni = signature;
+  const moved = layout.spostati || {};
+  for (const group of svg.querySelectorAll("[data-dm-st-art]")) {
+    const art = group.getAttribute("data-dm-st-art");
+    /* A leader runs from its reading to its piece: both ends can move. */
+    const leader = art.startsWith("lead-") ? layout.leaders?.[art.slice(5)] : null;
+    if (leader) {
+      const [x1, y1, x2, y2] = leader;
+      const d = `M ${x1} ${y1} L ${x2} ${y2}`;
+      const line = group.querySelector(".dm-st-lead");
+      if (line && line.getAttribute("d") !== d) line.setAttribute("d", d);
+      const dot = group.querySelector(".dm-st-lead-dot");
+      if (dot && dot.getAttribute("cx") !== String(x2)) dot.setAttribute("cx", String(x2));
+      if (dot && dot.getAttribute("cy") !== String(y2)) dot.setAttribute("cy", String(y2));
+      group.removeAttribute("transform");
+      continue;
+    }
+    const d = moved[ARTE_DEL_NODO[art]];
+    if (d) group.setAttribute("transform", `translate(${d[0]} ${d[1]})`);
+    else group.removeAttribute("transform");
+  }
+  const beams = svg.querySelectorAll(".dm-st-back .dmx-beam");
+  beamPoints(layout, moved.collettore).forEach((points, i) =>
+    beams[i]?.setAttribute("points", points),
+  );
+}
+
+/* Where the moved HTML pieces go, for both drawings, in a sheet of its own:
+ * the main sheet stays the one drawn by hand. */
+function movedPlaceRules(layout) {
+  const base = PLACES[layout.name];
+  const at = (sel, [x, y]) =>
+    `html #page-boiler ${sel}{left:${pct(x, layout.w)} !important;top:${pct(y, layout.h)} !important}`;
+  const SELECTORS = {
+    pump: "#syn-p-solare",
+    valve: "#syn-v-chiave",
+    rpump: "#syn-p-ricircolo",
+    tankNode: ".dm-st-node-tank",
+    chipCollector: ".dm-st-plant > .syn-solar-content",
+    chipAlto: '.dm-st-plant .probe[data-dm-st-probe="alto"]',
+    chipBasso: '.dm-st-plant .probe[data-dm-st-probe="basso"]',
+    delta: '.dm-st-plant > [data-dm-st-kpi="delta"]',
+    press: '.dm-st-plant > [data-dm-st-kpi="press"]',
+    power: '.dm-st-plant > [data-dm-st-kpi="power"]',
+    tapTag: ".dm-st-tap-tag",
+    collectorHit: ".dm-st-node-collector",
+  };
+  const rules = [];
+  for (const [name, sel] of Object.entries(SELECTORS)) {
+    const place = layout.places?.[name];
+    if (place && place !== base[name]) rules.push(at(sel, place));
+  }
+  return rules.join("\n");
+}
+
+/* The live pill sits in the scene, over a corner of the drawing. Moved, it
+ * goes to its point of the drawing, which is centred in the scene. */
+const PILL = "stato";
+const PILL_SERIE = Object.freeze({ computer: { x: 3.3, y: 6.3 }, telefono: { x: 50, y: 95.2 } });
+
+function movedPillRule(base) {
+  const q = posizioniInUso(DISEGNO_DEL_SOLARE, VARIANTE_DEL_LAYOUT[base.name])[PILL];
+  if (!q) return "";
+  const pw = `min(100cqw, 100cqh * ${base.w} / ${base.h})`;
+  const ph = `min(100cqh, 100cqw * ${base.h} / ${base.w})`;
+  return `html #page-boiler .dm-st-scene > .dm-st-live{left:calc((100cqw - ${pw}) / 2 + ${pw} * ${q.x / 100}) !important;top:calc((100cqh - ${ph}) / 2 + ${ph} * ${q.y / 100}) !important;right:auto !important;bottom:auto !important;transform:translate(-50%, -50%)}`;
+}
+
+/** Where the pill stands now, in percent of the drawing. */
+function pillCentre() {
+  const plant = doc.querySelector("#page-boiler .dm-st-plant")?.getBoundingClientRect?.();
+  const pill = doc.querySelector("#page-boiler .dm-st-live")?.getBoundingClientRect?.();
+  if (!plant || !pill || plant.width < 1 || plant.height < 1 || pill.width < 1) return null;
+  const at = (v) => Math.round(v * 100) / 100;
+  return {
+    x: at(((pill.left + pill.width / 2 - plant.left) / plant.width) * 100),
+    y: at(((pill.top + pill.height / 2 - plant.top) / plant.height) * 100),
+  };
+}
+
+function positionsOf(base) {
+  return layoutConLePosizioni(
+    base,
+    posizioniInUso(DISEGNO_DEL_SOLARE, VARIANTE_DEL_LAYOUT[base.name]),
+  );
+}
+
+function placeMovedPieces() {
+  const css = [
+    [LANDSCAPE, `not all and ${PORTRAIT_QUERY}`],
+    [PORTRAIT, PORTRAIT_QUERY],
+  ]
+    .map(([base, media]) => {
+      const rules = [movedPlaceRules(positionsOf(base)), movedPillRule(base)]
+        .filter(Boolean)
+        .join("\n");
+      return rules ? `@media ${media} {\n${rules}\n}` : "";
+    })
+    .filter(Boolean)
+    .join("\n");
+  let sheet = doc.getElementById(POSIZIONI_ID);
+  if (!css) {
+    sheet?.remove();
+    return;
+  }
+  if (!sheet) {
+    sheet = doc.createElement("style");
+    sheet.id = POSIZIONI_ID;
+    doc.head?.append(sheet);
+  }
+  if (sheet.textContent !== css) sheet.textContent = css;
 }
 
 /* ───────── DOM wiring ───────── */
@@ -1507,8 +1579,125 @@ function mirrorRuntimeVisibility() {
   if (readout && reading) readout.style.display = hidden(reading) ? "none" : "";
 }
 
-function currentLayout() {
+function baseLayout() {
   return state.query?.matches ? PORTRAIT : LANDSCAPE;
+}
+
+function currentLayout() {
+  return positionsOf(baseLayout());
+}
+
+/* Only the drawing: the pipes, the artwork, the moved pieces. A piece being
+ * dragged redraws this at every step, not the whole page. */
+function redrawPositions() {
+  if (!doc?.getElementById("page-boiler")) return;
+  placeMovedPieces();
+  routePipes(currentLayout());
+}
+
+const NODE_NAMES = {
+  collettore: () => t("Collettore", "Collector"),
+  accumulo: () => t("Accumulo", "Storage tank"),
+  pompa: () => t("Pompa solare", "Solar pump"),
+  valvola: () => t("Valvola", "Valve"),
+  ricircolo: () => t("Pompa di ricircolo", "Recirculation pump"),
+  rubinetto: () => t("Rubinetto", "Tap"),
+  lettura: () => t("Lettura del pannello", "Panel reading"),
+  alto: () => t("Accumulo alto", "Tank top"),
+  basso: () => t("Accumulo basso", "Tank bottom"),
+  delta: () => t("ΔT solare", "Solar ΔT"),
+  pressione: () => t("Pressione", "Pressure"),
+  potenza: () => t("Potenza boiler", "Heater power"),
+  [PILL]: () => t("Stato dell'impianto", "System state"),
+};
+
+/* What moves with each piece, to measure it and outline it. The readings are
+ * pieces of their own: they follow their piece until moved on their own. */
+const NODE_PIECES = {
+  /* The still parts only: the light sweeping the glass is clipped to it but
+   * its box runs off the panel, and would make the piece look twice as big. */
+  collettore: [
+    '[data-dm-st-art="collector"] .dm-st-frame',
+    '[data-dm-st-art="collector"] .dm-st-stand',
+  ],
+  accumulo: [
+    '[data-dm-st-art="tank"] .dm-st-tank-body',
+    '[data-dm-st-art="tank"] .dm-st-tank-cap',
+    ".dm-st-node-tank",
+  ],
+  /* With their names: a reading dropped there would cover them. */
+  pompa: ["#syn-p-solare", "#syn-p-solare .lbl"],
+  valvola: ["#syn-v-chiave", "#syn-v-chiave .lbl"],
+  ricircolo: ["#syn-p-ricircolo", "#syn-p-ricircolo .lbl"],
+  rubinetto: ['[data-dm-st-art="tap"]', ".dm-st-tap-tag"],
+  lettura: [".dm-st-plant > .syn-solar-content"],
+  alto: ['.dm-st-plant .probe[data-dm-st-probe="alto"]'],
+  basso: ['.dm-st-plant .probe[data-dm-st-probe="basso"]'],
+  delta: ['.dm-st-plant > [data-dm-st-kpi="delta"]'],
+  pressione: ['.dm-st-plant > [data-dm-st-kpi="press"]'],
+  potenza: ['.dm-st-plant > [data-dm-st-kpi="power"]'],
+  [PILL]: ["#page-boiler .dm-st-scene > .dm-st-live"],
+};
+
+function piecesOf(id) {
+  const plant = doc.querySelector("#page-boiler .dm-st-plant");
+  return (NODE_PIECES[id] || [])
+    .map((sel) => (sel.startsWith("#page-boiler") ? doc.querySelector(sel) : plant?.querySelector(sel)))
+    .filter(visiblePiece);
+}
+
+function registerTheDrawing() {
+  registraIlDisegno({
+    id: DISEGNO_DEL_SOLARE,
+    pagina: "boiler",
+    nome: () => t("Solare termico", "Solar thermal"),
+    scatola: () => doc.querySelector("#page-boiler .dm-st-plant"),
+    variante: () => VARIANTE_DEL_LAYOUT[baseLayout().name],
+    nodi: () => {
+      const base = baseLayout();
+      const variante = VARIANTE_DEL_LAYOUT[base.name];
+      const misure = new Set(misureDelLayout(base));
+      const nodi = nodiDelLayout(base)
+        .filter((id) => piecesOf(id).length)
+        .map((id) => ({
+          id,
+          nome: NODE_NAMES[id]?.() || id,
+          centro: centroInPercento(base, id),
+          /* A reading that follows its piece is where the piece took it. */
+          adesso: () =>
+            centroAdesso(base, posizioniInUso(DISEGNO_DEL_SOLARE, variante), id),
+          /* A reading steps aside when a piece is dropped on it. */
+          cede: misure.has(id),
+          pezzi: () => piecesOf(id),
+        }));
+      if (piecesOf(PILL).length) {
+        /* Where it stands by the sheet, measured while it is there (it sits in
+         * pixels from the scene's corner); once moved, the last measure, or
+         * about where the sheet puts it. */
+        const centro = posizioniInUso(DISEGNO_DEL_SOLARE, variante)[PILL]
+          ? state.pillSerie?.[variante] || PILL_SERIE[variante]
+          : pillCentre();
+        if (centro) {
+          state.pillSerie = { ...state.pillSerie, [variante]: centro };
+          nodi.push({
+            id: PILL,
+            nome: NODE_NAMES[PILL](),
+            centro,
+            cede: true,
+            pezzi: () => piecesOf(PILL),
+          });
+        }
+      }
+      return nodi;
+    },
+    ridisegna: redrawPositions,
+  });
+}
+
+function visiblePiece(el) {
+  if (!el) return false;
+  const r = el.getBoundingClientRect?.();
+  return Boolean(r && (r.width > 0 || r.height > 0));
 }
 
 function decorate() {
@@ -1520,6 +1709,7 @@ function decorate() {
   nameValve();
   captionProbes();
   pressureGauge();
+  placeMovedPieces();
   routePipes(currentLayout());
   nameButtons();
   mirrorRuntimeVisibility();
@@ -1556,5 +1746,7 @@ export function installSolarThermalDesignSection() {
    * nessun guscio — sono due nomi che il registro delle sezioni legacy prova,
    * non due funzioni — e avvolgerli non agganciava niente. */
   wrapFunction("render", "__dmSolarThermalDesign_render", schedule);
+  /* Its pieces move with ✏️ («spostare le cose anche nei disegni»). */
+  registerTheDrawing();
   return true;
 }

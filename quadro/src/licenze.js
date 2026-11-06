@@ -26,9 +26,11 @@
  * Un gettone vale al massimo **otto giorni** dalla firma, e mai oltre la
  * scadenza della licenza. La casa lo rinnova ogni sei ore: una licenza tolta
  * smette di valere entro otto giorni anche su una casa che non risponde, e una
- * casa senza internet resta Premium per otto giorni. Per il fuori casa si fa
- * prima: il centralino chiede qui le licenze tolte («Le licenze tolte, per il
- * centralino»), e chiude entro qualche minuto.
+ * casa senza internet resta Premium per otto giorni. Una casa collegata invece
+ * la perde subito: il centralino chiede qui le licenze tolte ogni minuto («Le
+ * licenze tolte, per il centralino»), chiude il fuori casa e dice alla casa di
+ * ricontrollare, e qui la casa non trova piu' il gettone
+ * (`test/la-revoca-arriva-subito-alla-casa.test.js`).
  *
  * ─── Il pacchetto ────────────────────────────────────────────────────────
  *
@@ -845,13 +847,13 @@ export class Licenze {
    * internet — e allora il centralino, in piu', chiede qui quali licenze sono
    * state tolte (`centralino/src/revoche.js`), e chiude prima.
    *
-   * Nell'elenco va una licenza gdahome di una casa:
+   * Nell'elenco va una licenza di una casa, app per app:
    *
    *  - tolta (`revocata`) negli ultimi otto giorni: prima, ogni suo gettone e'
    *    gia' scaduto da se';
-   *  - di una casa che **non** ha un'altra licenza gdahome buona. Chi ne ha
-   *    due e se ne vede togliere una non deve restare fuori nelle ore che gli
-   *    servono a farsi dare il gettone dell'altra.
+   *  - di una casa che **non** ha un'altra licenza buona **della stessa app**.
+   *    Chi ne ha due e se ne vede togliere una non deve restare fuori nelle
+   *    ore che gli servono a farsi dare il gettone dell'altra.
    *
    * E ci va un abbonamento che non si rinnova piu' (rinnovo automatico spento,
    * o rimborsato: `finitaDavvero`) a periodo pagato finito, finche' il gettone
@@ -859,17 +861,28 @@ export class Licenze {
    * scade una licenza non deve aspettare». Se il cliente lo riaccende e il
    * negozio lo rinnova, la scadenza va avanti e dall'elenco esce da se'. Le licenze a tempo
    * dei regali e degli installatori non ci vanno: il loro gettone porta gia'
-   * la scadenza vera, e il centralino chiude all'ora giusta. */
-  tolte(ora = this.adesso()) {
+   * la scadenza vera, e il centralino chiude all'ora giusta.
+   *
+   * Le gdahome stanno in `lic`, com'e' sempre stato: sono quelle che chiudono
+   * il fuori casa. Le gdanav di una casa stanno a parte, in `gdanav`: al
+   * centralino servono solo per dire alla casa di ricontrollare
+   * (`ricontrolla-licenza`), e non chiudono niente. Tenerle fuori da `lic` e'
+   * quello che fa andare d'accordo i centralini di prima e quelli di adesso:
+   * uno di prima legge `lic` e basta, e chiude quello che chiudeva; uno di
+   * adesso che legge un elenco di prima non trova `gdanav`, e non ricontrolla
+   * nessuno in piu'. E una gdahome tolta non porta via la gdanav buona della
+   * stessa casa, ne' il contrario: ognuna si guarda con le sue.
+   *
+   * Le gdanav dei telefoni non ci vanno: GdANav le richiede qui da se', ogni
+   * quarto d'ora e ogni volta che torna aperta. */
+  tolte(ora = this.adesso(), app = "gdahome") {
     const conAltre = new Set(
-      this.licenze
-        .filter((una) => una.app === "gdahome" && this.vale(una, ora))
-        .map((una) => una.sog),
+      this.licenze.filter((una) => una.app === app && this.vale(una, ora)).map((una) => una.sog),
     );
     return this.licenze
       .filter(
         (una) =>
-          una.app === "gdahome" &&
+          una.app === app &&
           CASA.test(String(una.sog)) &&
           (tolta(una, ora) || this._finitaNelMargine(una, ora)) &&
           !conAltre.has(una.sog),
@@ -885,14 +898,16 @@ export class Licenze {
     return this.fineDi(una) <= ora && ora < una.scade + MARGINE_DEL_RINNOVO;
   }
 
-  /** L'elenco delle licenze tolte, firmato come un gettone (`tipo: "revoche"`). */
+  /** L'elenco delle licenze tolte, firmato come un gettone (`tipo: "revoche"`):
+   * le gdahome in `lic`, le gdanav delle case in `gdanav`. */
   elencoDelleTolte(ora = this.adesso()) {
     if (!this.accese) throw new NoLicenza(503, "licenze-non-configurate");
     return firmaIlGettone(this.privata, {
       v: 1,
       tipo: "revoche",
       emesso: ora,
-      lic: this.tolte(ora),
+      lic: this.tolte(ora, "gdahome"),
+      gdanav: this.tolte(ora, "gdanav"),
     });
   }
 

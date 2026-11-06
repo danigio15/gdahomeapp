@@ -23,6 +23,7 @@ import {
   cosaFaLAuto,
   energiaDiOggi,
   istanteDetto,
+  laBatteriaDellaCasella,
   laSettimana,
   letturaTermica,
   linkDellaMappa,
@@ -43,6 +44,7 @@ import {
   giorniDalleOre,
   kmAllaPercentuale,
   kmDeiGiorni,
+  kmDeiGiorniDallaStoria,
   kmDiOggi,
   laPercentuale,
   leScorciatoie,
@@ -188,7 +190,17 @@ function letturaDellAuto(car, inUso) {
   const mappa = car?.ov || {};
   const resolve = inUso ? (ref) => risolvi(ref) || ref : null;
   const dati = letturaTermica(mappa, l.stati, resolve);
-  const batteria = l.numero("dm.ev_batteria_auto");
+  /* La casella della batteria di trazione puo' tenere una 12 V (in volt):
+   * quella non e' la carica dell'auto, e si mostra dove sta la 12 V. */
+  const casella = laBatteriaDellaCasella(
+    l.vivo("dm.ev_batteria_auto"),
+    l.entita("dm.ev_batteria_auto"),
+  );
+  const batteria = casella.soc;
+  if (casella.servizio && (dati.batteriaServizio === null || dati.batteriaServizio === undefined)) {
+    dati.batteriaServizio = casella.servizio.valore;
+    dati.batteriaServizioUnita = casella.servizio.unita;
+  }
   const autonomia = l.numero("dm.ev_autonomia");
   const potenzaLetta = PRIMA_CHE_C_E(l, [
     "dm.ev_potenza_wallbox",
@@ -304,12 +316,19 @@ function titoloDellAuto(car, indice) {
 function logoDellAuto(car, misura) {
   const marca = clean(car?.brand);
   if (marca) return carBrandVisual(marca, misura);
+  /* Senza marca, il simbolo. Un'icona `mdi:` la disegna `<ha-icon>`, che
+   * esiste solo dentro Home Assistant: nella plancia servita dal ponte e
+   * nell'app restava un riquadro vuoto, e la copertina senza foto pure. */
+  const icona = clean(car?.icon) || "mdi:car-electric";
+  const simbolo = (testo) =>
+    `<span class="dm-na-simbolo" style="font-size:${Math.round(misura * 0.7)}px">${esc(testo)}</span>`;
+  const disegno = simbolo("🚗");
+  if (!/^mdi:/i.test(icona)) return simbolo(icona);
   try {
-    return (
-      root.cdIconMarkup?.(clean(car?.icon) || "mdi:car-electric", Math.round(misura * 0.8)) || "🚗"
-    );
+    if (!root.customElements?.get?.("ha-icon")) return disegno;
+    return root.cdIconMarkup?.(icona, Math.round(misura * 0.8)) || disegno;
   } catch (_errore) {
-    return "🚗";
+    return disegno;
   }
 }
 
@@ -413,17 +432,36 @@ function eroe(l, indice) {
   const kmTarget = l.termica ? null : kmAllaPercentuale(l.autonomia, l.batteria, target);
   const aggiornata = l.dati.ultimoAggiornamento;
   const quando = Number.isFinite(aggiornata) ? istanteDetto(aggiornata, { lingua: locale() }) : "";
-  const pila = livello === null ? "" : Math.max(0, Math.min(100, livello));
+  const tessera = (quanto, tipo, nome) =>
+    `<div class="dm-na-dato" data-tipo="${tipo}">
+      <span>${esc(nome)}</span>
+      <div class="dm-na-livello"><b>${Math.round(quanto)}<small>%</small></b>
+        <span class="dm-na-pila"><i style="width:${Math.max(0, Math.min(100, quanto))}%"></i></span></div></div>`;
+  /* Un'auto «termica» con la batteria di trazione mappata e' un'ibrida detta
+   * a meta': la carica si mostra lo stesso, accanto al serbatoio. Un dato
+   * scelto nella scheda non sparisce perche' il motore dice altro. */
+  const batteriaInPiu = l.termica && l.batteria !== null;
+  /* Senza autonomia mappata il primo numero e' il contachilometri, se c'e':
+   * «— km» non dice niente a chi ha scelto i km e non l'autonomia. */
+  const odometro = l.dati.odometro;
+  const alPostoDellAutonomia =
+    !l.lettore.entita("dm.ev_autonomia") && odometro !== null && odometro !== undefined;
   const dati = [
-    `<div class="dm-na-dato dm-na-dato-km" data-dm-storico="${esc(l.lettore.entita("dm.ev_autonomia"))}">
+    alPostoDellAutonomia
+      ? `<div class="dm-na-dato dm-na-dato-km" data-tipo="odometro" data-dm-storico="${esc(l.lettore.entita("dm.ev_odometro"))}">
+      <span>${esc(t("Contachilometri", "Odometer"))}</span>
+      <div class="dm-na-autonomia"><b>${intero(odometro)}</b><small>${esc(l.dati.odometroUnita || "km")}</small></div></div>`
+      : `<div class="dm-na-dato dm-na-dato-km" data-dm-storico="${esc(l.lettore.entita("dm.ev_autonomia"))}">
       <span>${esc(t("Autonomia", "Range"))}</span>
       <div class="dm-na-autonomia"><b>${intero(l.autonomia)}</b><small>km</small></div></div>`,
     livello === null
       ? ""
-      : `<div class="dm-na-dato" data-tipo="${l.termica ? "carburante" : "batteria"}">
-      <span>${esc(l.termica ? t("Carburante", "Fuel") : t("Batteria", "Battery"))}</span>
-      <div class="dm-na-livello"><b>${Math.round(livello)}<small>%</small></b>
-        <span class="dm-na-pila"><i style="width:${pila}%"></i></span></div></div>`,
+      : tessera(
+          livello,
+          l.termica ? "carburante" : "batteria",
+          l.termica ? t("Carburante", "Fuel") : t("Batteria", "Battery"),
+        ),
+    batteriaInPiu ? tessera(l.batteria, "batteria", t("Batteria", "Battery")) : "",
     kmTarget === null
       ? ""
       : `<div class="dm-na-dato">
@@ -711,7 +749,7 @@ function selettoreDelPeriodo(vista, { mese, dal, al }, gruppo) {
         ? `<div class="dm-na-date"><label>${esc(t("Dal", "From"))}<input type="date" data-na-dal value="${esc(dal)}" max="${giornoScritto(Date.now())}"></label>
         <label>${esc(t("Al", "To"))}<input type="date" data-na-al value="${esc(al)}" max="${giornoScritto(Date.now())}"></label></div>`
         : "";
-  return `<div class="dm-na-periodo"><div class="dm-na-segmenti">${viste
+  return `<div class="dm-na-periodo" data-dm-naviga><div class="dm-na-segmenti">${viste
     .map(
       ([id, nome]) =>
         `<button type="button" data-na-vista="${id}" data-na-gruppo="${gruppo}" aria-pressed="${id === vista}">${esc(nome)}</button>`,
@@ -1053,7 +1091,11 @@ function pannelloStato(l) {
     typeof d.batteriaServizio === "number"
       ? [
           t("Batteria 12 V", "12 V battery"),
-          `${formatNumber(d.batteriaServizio, 1)} ${d.batteriaServizioUnita}`,
+          d.batteriaServizioUnita === "%"
+            ? `${formatNumber(d.batteriaServizio, 0)}%`
+            : d.batteriaServizioUnita
+              ? `${formatNumber(d.batteriaServizio, 1)} ${d.batteriaServizioUnita}`
+              : `${t("Livello", "Level")} ${formatNumber(d.batteriaServizio, 0)}`,
         ]
       : null,
     Number.isFinite(d.ultimoAggiornamento)
@@ -1222,6 +1264,16 @@ function iKmDiOggi(l) {
   return kmDiOggi(state.oggiKm.righe, l.dati.odometro);
 }
 
+/* La storia di un'entita' fra due istanti, con lo stato al bordo: e' la
+ * lettura da cui si parte per contare la prima crescita. */
+function domandaDellaStoria(entity, inizio, fine) {
+  return {
+    ...domandaDellAvvio(entity, fine, (fine - inizio) / 3_600_000),
+    start_time: new Date(inizio).toISOString(),
+    end_time: new Date(Math.min(fine, Date.now())).toISOString(),
+  };
+}
+
 function caricaIKm(l) {
   const odo = l.lettore.entita("dm.ev_odometro");
   if (!odo) return;
@@ -1247,15 +1299,21 @@ function caricaIKm(l) {
       ),
     )
     .then((righe) => {
+      const statistiche = righe?.["dm.ev_odometro"] || righe?.[odo] || [];
+      if (statistiche.length)
+        return kmDeiGiorni(statistiche, finestra.inizio, finestra.fine);
+      /* Niente statistiche: il contachilometri non ha `state_class`. Si
+       * contano i km dalla storia degli stati, che c'e' sempre. */
+      return chiediAHomeAssistant(
+        domandaDellaStoria(odo, finestra.inizio, finestra.fine),
+        15_000,
+      ).then((risposta) =>
+        kmDeiGiorniDallaStoria(righeDellaStoria(risposta, odo), finestra.inizio, finestra.fine),
+      );
+    })
+    .then((giorni) => {
       if (state.km.chiave !== chiave) return;
-      state.km = {
-        chiave,
-        stato: "pronto",
-        alle: Date.now(),
-        dati: {
-          giorni: kmDeiGiorni(righe["dm.ev_odometro"] || [], finestra.inizio, finestra.fine),
-        },
-      };
+      state.km = { chiave, stato: "pronto", alle: Date.now(), dati: { giorni } };
       ridisegna();
     })
     .catch(() => {
@@ -1595,6 +1653,7 @@ function stile() {
   ${P} [data-tipo="termica"] .dm-na-minibarra i{background:var(--na-sole)}
   ${P} .dm-na-logo{display:inline-grid;place-items:center;flex:0 0 auto;line-height:0}
   ${P} .dm-na-logo svg,${P} .dm-na-logo img{max-width:100%;height:auto}
+  ${P} .dm-na-simbolo{line-height:1}
 
   /* l'eroe */
   ${P} .dm-na-eroe{display:grid;gap:0;padding:0;overflow:hidden}

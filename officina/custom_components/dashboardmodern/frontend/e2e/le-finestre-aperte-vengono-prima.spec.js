@@ -75,7 +75,8 @@ test("nella finestra delle Finestre l'aperta sta in cima", async ({ page }, test
    * delle misure c'e' «Finestre aperte 1 · Camera da letto». */
   const eroe = finestra.locator(".dm-f-tapparelle-eroe").first();
   await expect(eroe).toContainText("Finestre aperte");
-  await expect(eroe.locator(".dm-f-num")).toHaveText("1");
+  /* Il numero dice anche su quante: «1 su 3». */
+  await expect(eroe.locator(".dm-f-num")).toHaveText(/^1\s*su\s*3$/);
   await expect(eroe).toContainText("Camera da letto");
   await page.screenshot({ path: testInfo.outputPath("finestre-aperte-prima.png") });
 });

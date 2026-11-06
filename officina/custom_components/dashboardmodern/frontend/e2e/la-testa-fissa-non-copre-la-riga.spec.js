@@ -69,6 +69,30 @@ test("con la testa ferma la card resta al suo posto e la riga sotto il meteo si 
   await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.locator("#dm-casa-fascia")).toBeVisible();
+  /* Il metro si prende a pagina ferma. Appena girato il telefono la testata
+   * si restringe con una transizione, mezzo pixel per volta: preso a meta',
+   * la riga sotto stava ancora uno o due pixel piu' giu', e la prova accusava
+   * la testa ferma di uno spostamento che non era suo. Si aspetta che i
+   * numeri veri — non arrotondati — smettano di muoversi. */
+  const crudo = () =>
+    page.evaluate(() =>
+      [
+        document.querySelector("body > header").getBoundingClientRect().bottom,
+        document.getElementById("dm-casa-fascia").getBoundingClientRect().top,
+      ].join(","),
+    );
+  let ultimo = await crudo();
+  await expect
+    .poll(
+      async () => {
+        const adesso = await crudo();
+        const fermo = adesso === ultimo;
+        ultimo = adesso;
+        return fermo;
+      },
+      { intervals: [400], timeout: 10_000 },
+    )
+    .toBe(true);
   const prima = await misure(page);
 
   /* Si accende, come dal Config. */

@@ -247,18 +247,14 @@ async function giugno(page, tasto) {
 async function foto(page, nome) {
   if (!process.env.DM_FOTO) return;
   await page.waitForTimeout(250);
+  /* Il report e' una scheda della pagina Clima: la foto prende la scheda
+   * intera, anche la parte sotto lo schermo. */
   await page.addStyleTag({
-    content:
-      "#dm-rcl{position:absolute!important;inset:0 auto auto 0!important;width:100%!important;min-height:100vh}#dm-rcl .dm-rcl-foglio{max-height:none!important;height:auto!important;overflow:visible!important}",
+    content: "nav.tabs.bottom-nav-bar,.dm-assist-tasto{visibility:hidden!important}",
   });
   await page
-    .locator("#dm-rcl .dm-rcl-foglio")
+    .locator("#page-clima .dm-cl-shell")
     .screenshot({ path: `${process.env.DM_FOTO}/${nome}.png` });
-  await page.evaluate(() =>
-    document
-      .querySelectorAll("style")
-      .forEach((s) => s.textContent.startsWith("#dm-rcl{position:absolute") && s.remove()),
-  );
 }
 
 const ultimo = (page) => page.evaluate(() => window.__DM_REPORT_CLIMA_ULTIMO__);

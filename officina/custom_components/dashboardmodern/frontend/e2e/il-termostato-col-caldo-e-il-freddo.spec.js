@@ -197,8 +197,8 @@ test("tre linguette, e i termostati a coppia stanno solo nella terza", async ({
 
   /* Il tocco sulla terza linguetta la accende, e spegne le altre due. */
   await linguetta(page, "termostato").click();
-  await expect(linguetta(page, "termostato")).toHaveAttribute("aria-pressed", "true");
-  await expect(linguetta(page, "freddo")).toHaveAttribute("aria-pressed", "false");
+  await expect(linguetta(page, "termostato")).toHaveAttribute("aria-selected", "true");
+  await expect(linguetta(page, "freddo")).toHaveAttribute("aria-selected", "false");
   await expect(page.locator("#page-clima .clima-zone-termostato")).toBeVisible();
   await expect(page.locator("#page-clima .clima-zone-freddo")).toBeHidden();
   await expect(page.locator("#page-clima .clima-zone-caldo")).toBeHidden();
@@ -207,7 +207,7 @@ test("tre linguette, e i termostati a coppia stanno solo nella terza", async ({
   await linguetta(page, "caldo").click();
   await expect(page.locator("#page-clima .clima-zone-caldo")).toBeVisible();
   await expect(page.locator("#page-clima .clima-zone-termostato")).toBeHidden();
-  await expect(linguetta(page, "termostato")).toHaveAttribute("aria-pressed", "false");
+  await expect(linguetta(page, "termostato")).toHaveAttribute("aria-selected", "false");
 });
 
 test("la card del termostato: «Caldo 22°» e «Freddo 40°», ognuno coi suoi tasti", async ({
@@ -312,7 +312,7 @@ test("senza termostati a coppia la terza linguetta non c'e', e la pagina torna i
   await expect(linguetta(page, "termostato")).toBeHidden();
   await expect(page.locator("#page-clima .clima-zone-termostato")).toBeHidden();
   await expect(page.locator("#page-clima .clima-zone-freddo")).toBeVisible();
-  await expect(linguetta(page, "freddo")).toHaveAttribute("aria-pressed", "true");
+  await expect(linguetta(page, "freddo")).toHaveAttribute("aria-selected", "true");
   await expect(griglia(page, "caldo").locator('[data-dm-cl="climate.living"]')).toHaveCount(1);
 });
 
@@ -324,22 +324,27 @@ test("la finestra del Clima e la tessera della Home sanno dei due obiettivi", as
   await page.evaluate(() => window.apriClimaPopup?.("climate.living", null));
   const gradi = page.locator("#cp-temp-val");
   await expect(gradi).toHaveAttribute("data-dm-cl-doppio", "entrambi");
-  await expect(gradi.locator('[data-dm-cl-obj="basso"]')).toHaveText("22°");
-  await expect(gradi.locator('[data-dm-cl-obj="alto"]')).toHaveText("40°");
   // Il meno e il piu' del guscio, che non dicono quale numero muovono, via.
   await expect(page.locator("#clima-popup-overlay .clima-temp-btn").first()).toBeHidden();
-  // Il pannello della finestra: un passo per il caldo e uno per il freddo.
-  const pannello = page.locator("#clima-popup-overlay [data-dm-cl-panel]");
-  await expect(pannello.locator('[data-dm-w-obiettivo="basso"] b')).toHaveText("22,0°");
-  await expect(pannello.locator('[data-dm-w-obiettivo="alto"] b')).toHaveText("40,0°");
-  await pannello.locator('[data-dm-w-obj="alto"][data-dm-w-temp="-1"]').click();
+  /* La coppia sta una volta sola, nella testata: «Minima (caldo)» e «Massima
+   * (freddo)», ognuna col suo meno e il suo piu' — e nel pannello sotto non
+   * si ripete. */
+  const coppia = page.locator("#clima-popup-overlay [data-dm-cpf-coppia]");
+  await expect(coppia.locator('[data-dm-w-obiettivo="basso"] b')).toHaveText("22°");
+  await expect(coppia.locator('[data-dm-w-obiettivo="alto"] b')).toHaveText("40°");
+  await expect(coppia).toContainText("Minima (caldo)");
+  await expect(coppia).toContainText("Massima (freddo)");
+  await expect(
+    page.locator("#clima-popup-overlay [data-dm-cl-panel] [data-dm-w-obiettivo]"),
+  ).toHaveCount(0);
+  await coppia.locator('[data-dm-w-obj="alto"][data-dm-w-temp="-1"]').click();
   await expect.poll(() => temperature(page), { timeout: 10000 }).toHaveLength(1);
   expect((await temperature(page))[0]).toEqual({
     entity_id: "climate.living",
     target_temp_low: 22,
     target_temp_high: 39.5,
   });
-  await pannello.locator('[data-dm-w-obj="basso"][data-dm-w-temp="1"]').click();
+  await coppia.locator('[data-dm-w-obj="basso"][data-dm-w-temp="1"]').click();
   await expect.poll(() => temperature(page), { timeout: 10000 }).toHaveLength(2);
   expect((await temperature(page))[1]).toEqual({
     entity_id: "climate.living",

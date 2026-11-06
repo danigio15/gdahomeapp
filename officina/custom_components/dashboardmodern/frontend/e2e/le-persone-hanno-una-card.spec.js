@@ -50,7 +50,8 @@ test("le card compaiono in Home e l'editor le elenca", async ({ page }, testInfo
   // Le card, sotto le pillole di stato e prima del Quadro Avvisi.
   const cards = page.locator("#dm-people .dm-person-card");
   await expect(cards).toHaveCount(2);
-  await expect(cards.first()).toContainText("GD"); // le iniziali, senza foto ne' emoji
+  // Le iniziali di «Persona 1», senza foto ne' emoji.
+  await expect(cards.first().locator(".dm-person-portrait")).toContainText("P1");
   await expect(cards.nth(1)).toContainText("👩"); // l'emoji scelta come avatar
   await expect(page.locator("#dm-people .dm-people-title")).toHaveText("Persone");
 
