@@ -7478,6 +7478,9 @@ export default Object.freeze({
   "Urgent ones are said anyway.": "ज़रूरी सूचनाएँ फिर भी बोली जाती हैं।",
   "Voice": "आवाज़",
   "Which Echos": "कौन से Echo",
+  "Which notifications": "कौन-सी सूचनाएँ",
+  "Only those turned on in the app's Notifications: an item turned off on every phone is not said by the Echos.":
+    "केवल ऐप की सूचनाओं में चालू वाली: जो आइटम हर फ़ोन पर बंद है, उसे Echo नहीं बोलते।",
   "Urgent: alarm, sensors, doorbell, blackout": "ज़रूरी: अलार्म, सेंसर, डोरबेल, बिजली गुल",
   "Security: arming, openings, motion": "सुरक्षा: आर्म करना, खुलना, गतिविधि",
   "Home: appliances, fridge, rain, pets": "घर: उपकरण, फ्रिज, बारिश, पालतू",

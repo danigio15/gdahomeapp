@@ -7359,6 +7359,9 @@ export default Object.freeze({
   "Urgent ones are said anyway.": "紧急通知仍会播报。",
   "Voice": "语音",
   "Which Echos": "哪些 Echo",
+  "Which notifications": "哪些通知",
+  "Only those turned on in the app's Notifications: an item turned off on every phone is not said by the Echos.":
+    "仅限在应用“通知”中开启的：在所有手机上都关闭的项目，Echo 不会播报。",
   "Urgent: alarm, sensors, doorbell, blackout": "紧急：警报、传感器、门铃、停电",
   "Security: arming, openings, motion": "安全：布防、开启、移动",
   "Home: appliances, fridge, rain, pets": "家：家电、冰箱、下雨、宠物",

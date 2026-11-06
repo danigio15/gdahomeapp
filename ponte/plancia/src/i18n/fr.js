@@ -7575,6 +7575,9 @@ export default Object.freeze({
   "Urgent ones are said anyway.": "Les urgentes sont dites quand même.",
   "Voice": "Voix",
   "Which Echos": "Quels Echo",
+  "Which notifications": "Quelles notifications",
+  "Only those turned on in the app's Notifications: an item turned off on every phone is not said by the Echos.":
+    "Seulement celles activées dans les Notifications de l'app : un élément désactivé sur tous les téléphones n'est pas dit par les Echo.",
   "Urgent: alarm, sensors, doorbell, blackout": "Urgentes : alarme, capteurs, sonnette, coupure de courant",
   "Security: arming, openings, motion": "Sécurité : armements, ouvertures, mouvement",
   "Home: appliances, fridge, rain, pets": "Maison : électroménager, frigo, pluie, animaux",

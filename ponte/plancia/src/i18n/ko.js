@@ -7469,6 +7469,9 @@ export default Object.freeze({
   "Urgent ones are said anyway.": "긴급 알림은 그래도 말합니다.",
   "Voice": "음성",
   "Which Echos": "어떤 Echo",
+  "Which notifications": "어떤 알림",
+  "Only those turned on in the app's Notifications: an item turned off on every phone is not said by the Echos.":
+    "앱의 알림에서 켜 둔 것만: 모든 휴대폰에서 꺼진 항목은 Echo가 말하지 않습니다.",
   "Urgent: alarm, sensors, doorbell, blackout": "긴급: 경보, 센서, 초인종, 정전",
   "Security: arming, openings, motion": "보안: 경계 설정, 열림, 움직임",
   "Home: appliances, fridge, rain, pets": "집: 가전, 냉장고, 비, 반려동물",

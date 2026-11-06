@@ -7495,6 +7495,9 @@ export default Object.freeze({
   "Urgent ones are said anyway.": "Acil olanlar yine de söylenir.",
   "Voice": "Ses",
   "Which Echos": "Hangi Echo'lar",
+  "Which notifications": "Hangi bildirimler",
+  "Only those turned on in the app's Notifications: an item turned off on every phone is not said by the Echos.":
+    "Yalnızca uygulamanın Bildirimler bölümünde açık olanlar: her telefonda kapalı olan bir öğeyi Echo'lar söylemez.",
   "Urgent: alarm, sensors, doorbell, blackout": "Acil: alarm, sensörler, kapı zili, elektrik kesintisi",
   "Security: arming, openings, motion": "Güvenlik: kurma, açılmalar, hareket",
   "Home: appliances, fridge, rain, pets": "Ev: cihazlar, buzdolabı, yağmur, evcil hayvanlar",

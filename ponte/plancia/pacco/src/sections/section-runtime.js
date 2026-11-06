@@ -569,7 +569,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-NBG3EGG5.js";
+} from "../../chunk-X7DJZD6W.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -6857,6 +6857,7 @@ var SOURCE_INDEX = Object.freeze({
   "Quale voce": "Which option",
   "Quale voce dell'elenco": "Which option",
   "Quali Echo": "Which Echos",
+  "Quali notifiche": "Which notifications",
   "Quali sezioni si vedono": "Which sections are visible",
   "Quali stanze si vedono in Home, con la temperatura e quante cose sono accese: un tocco porta dentro la stanza. Quante ne vuoi; nessuna spuntata vuol dire nessun blocco.": "Which rooms show up on Home, with the temperature and how many things are on: one tap takes you into the room. As many as you like; none ticked means no block at all.",
   "Qualifica 1": "Qualifying 1",
@@ -7759,6 +7760,7 @@ var SOURCE_INDEX = Object.freeze({
   "Solo perimetro": "Perimeter only",
   "Solo quando qualcosa è acceso": "Only while something is on",
   "Solo quando uno è in funzione": "Only while one is running",
+  "Solo quelle accese nelle Notifiche dell'app: una voce spenta su tutti i telefoni gli Echo non la dicono.": "Only those turned on in the app's Notifications: an item turned off on every phone is not said by the Echos.",
   "Solo sblocca": "Unlock only",
   "Solo se": "Only if",
   "Solo se hai già un helper che misura il periodo. Senza, il periodo viene dal contatore totale.": "Only if you already have a helper measuring the period. Without one, the period comes from the total meter.",
@@ -103979,6 +103981,19 @@ function corpoMarkup5() {
       ${echoMarkup(config, echo)}
     </div>
     <div class="mu-ed-blocco${dis}">
+      ${riga2(
+    esc(t("Quali notifiche", "Which notifications")),
+    /* Gli Echo dicono solo le voci che un telefono riceve
+     * (`notifiche.js`, `_qualcunoLaVuole`): una famiglia accesa qui non
+     * riaccende la voce spenta nell'app. */
+    esc(
+      t(
+        "Solo quelle accese nelle Notifiche dell'app: una voce spenta su tutti i telefoni gli Echo non la dicono.",
+        "Only those turned on in the app's Notifications: an item turned off on every phone is not said by the Echos."
+      )
+    ),
+    ""
+  )}
       ${CATEGORIE_ALEXA.map(
     (voce3) => riga2(
       esc(nomeDellaFamiglia2(voce3)),

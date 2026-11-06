@@ -7497,6 +7497,9 @@ export default Object.freeze({
   "Urgent ones are said anyway.": "緊急のものはそれでも読み上げます。",
   "Voice": "音声",
   "Which Echos": "どの Echo",
+  "Which notifications": "どの通知",
+  "Only those turned on in the app's Notifications: an item turned off on every phone is not said by the Echos.":
+    "アプリの通知でオンになっているものだけ：すべてのスマートフォンでオフの項目は Echo が読み上げません。",
   "Urgent: alarm, sensors, doorbell, blackout": "緊急：警報、センサー、ドアベル、停電",
   "Security: arming, openings, motion": "セキュリティ：警戒、開放、動き",
   "Home: appliances, fridge, rain, pets": "家：家電、冷蔵庫、雨、ペット",

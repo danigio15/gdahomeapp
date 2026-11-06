@@ -845,6 +845,19 @@ function corpoMarkup() {
       ${echoMarkup(config, echo)}
     </div>
     <div class="mu-ed-blocco${dis}">
+      ${riga(
+        esc(t("Quali notifiche", "Which notifications")),
+        /* Gli Echo dicono solo le voci che un telefono riceve
+         * (`notifiche.js`, `_qualcunoLaVuole`): una famiglia accesa qui non
+         * riaccende la voce spenta nell'app. */
+        esc(
+          t(
+            "Solo quelle accese nelle Notifiche dell'app: una voce spenta su tutti i telefoni gli Echo non la dicono.",
+            "Only those turned on in the app's Notifications: an item turned off on every phone is not said by the Echos.",
+          ),
+        ),
+        "",
+      )}
       ${CATEGORIE_ALEXA.map((voce) =>
         riga(
           esc(nomeDellaFamiglia(voce)),

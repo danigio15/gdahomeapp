@@ -7512,6 +7512,9 @@ export default Object.freeze({
   "Urgent ones are said anyway.": "Срочные всё равно произносятся.",
   "Voice": "Голос",
   "Which Echos": "Какие Echo",
+  "Which notifications": "Какие уведомления",
+  "Only those turned on in the app's Notifications: an item turned off on every phone is not said by the Echos.":
+    "Только включённые в Уведомлениях приложения: пункт, выключенный на всех телефонах, Echo не произносят.",
   "Urgent: alarm, sensors, doorbell, blackout": "Срочные: сигнализация, датчики, звонок, отключение питания",
   "Security: arming, openings, motion": "Безопасность: постановка на охрану, открытия, движение",
   "Home: appliances, fridge, rain, pets": "Дом: техника, холодильник, дождь, питомцы",

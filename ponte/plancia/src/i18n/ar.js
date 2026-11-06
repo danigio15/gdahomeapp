@@ -7442,6 +7442,9 @@ export default Object.freeze({
   "Urgent ones are said anyway.": "العاجلة تُنطق على أي حال.",
   "Voice": "صوت",
   "Which Echos": "أي أجهزة Echo",
+  "Which notifications": "أي إشعارات",
+  "Only those turned on in the app's Notifications: an item turned off on every phone is not said by the Echos.":
+    "فقط المفعّلة في إشعارات التطبيق: البند المعطّل على كل الهواتف لا تقوله أجهزة Echo.",
   "Urgent: alarm, sensors, doorbell, blackout": "عاجلة: الإنذار، المستشعرات، الجرس، انقطاع الكهرباء",
   "Security: arming, openings, motion": "الأمان: التفعيل، الفتح، الحركة",
   "Home: appliances, fridge, rain, pets": "المنزل: الأجهزة، الثلاجة، المطر، الحيوانات الأليفة",
