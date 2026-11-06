@@ -43,6 +43,7 @@ import {
 } from "./sentinella.js";
 import { nomePulito } from "./capire-la-casa.js";
 import { carichiDellaPlancia } from "./l-energia-di-casa.js";
+import { batteriaDellAutoInUso, risolutoreDellaRicarica } from "./ricarica-di-notte.js";
 import {
   elettrodomesticoDellaPlancia,
   tipoDellElettrodomestico,
@@ -580,7 +581,12 @@ function entitaDellaCasella(vista, casella) {
  */
 export function soleAuto(vista) {
   const { ora, data, memoria } = vista;
-  const entita = entitaDellaRicarica(vista.risolvi);
+  /* La batteria e' quella dell'auto in uso, la stessa della pagina Auto:
+   * quella di evcc solo se l'auto non la dice. */
+  const entita = entitaDellaRicarica(
+    vista.valori ? risolutoreDellaRicarica(vista.valori) : vista.risolvi,
+    { batteria: batteriaDellAutoInUso(vista.valori) },
+  );
   const leggi = (id) => vista.stati.get(id) || null;
   /* Senza la modalita', il cavo o lo stato della ricarica non c'e' un'auto
    * da guardare: `letturaDellAuto` la direbbe collegata per non lasciarla a

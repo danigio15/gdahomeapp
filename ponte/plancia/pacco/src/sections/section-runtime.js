@@ -569,7 +569,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-BLZTQ7YJ.js";
+} from "../../chunk-VXWJAUXS.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -29144,7 +29144,7 @@ function entitaDellaRicarica(risolvi5, { batteria = "" } = {}) {
   const p = prefissoDiEvcc(modo);
   const diEvcc = (...nomi2) => p ? nomi2.map((nome) => nome.replace("@", p)) : [];
   const limiteScritto = leggi4(RIFERIMENTI.limite);
-  const soc = [...diEvcc("sensor.@vehicle_soc"), pulito24(batteria), ...RIFERIMENTI.soc.map(leggi4)];
+  const soc = [pulito24(batteria), ...RIFERIMENTI.soc.map(leggi4), ...diEvcc("sensor.@vehicle_soc")];
   const limite = [
     ...limiteScritto.includes("evcc") ? [limiteScritto] : [],
     ...diEvcc("sensor.@effective_limit_soc", "number.@limit_soc", "select.@limit_soc"),
@@ -29162,6 +29162,11 @@ function entitaDellaRicarica(risolvi5, { batteria = "" } = {}) {
       ...diEvcc("sensor.@charged_energy", "sensor.@session_energy")
     ])
   };
+}
+function batteriaDellAuto(auto) {
+  const sue = auto?.ov || auto?.overrides;
+  const id = pulito24(sue && typeof sue === "object" ? sue[RIFERIMENTI.soc[0]] : "");
+  return ENTITA.test(id) && !id.startsWith("dm.") ? id : "";
 }
 var MUTO3 = /^(unavailable|unknown|none|)$/i;
 function percentuale2(stato3) {
@@ -29329,8 +29334,18 @@ function laPotenzaDiEvcc() {
     return null;
   }
 }
+function laBatteriaDellAuto() {
+  try {
+    return batteriaDellAuto(activeVehicle());
+  } catch (_errore) {
+    return "";
+  }
+}
 function laLettura() {
-  return letturaDellAuto(entitaDellaRicarica(risolvi), allStates());
+  return letturaDellAuto(
+    entitaDellaRicarica(risolvi, { batteria: laBatteriaDellAuto() }),
+    allStates()
+  );
 }
 function costoScritto() {
   let costo = null;

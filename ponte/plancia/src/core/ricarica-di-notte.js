@@ -267,9 +267,15 @@ export function prefissoDiEvcc(modo) {
  * Prima quello che chi configura ha scritto nella pagina Auto, poi i fratelli
  * che evcc pubblica accanto alla modalita' — il limite del punto di ricarica,
  * la batteria dell'auto collegata, il cavo, l'energia della sessione — cosi'
- * chi ha collegato solo la modalita' ha lo stesso tutto. Per la batteria e il
- * limite vengono prima quelli di evcc: e' evcc che sa quale auto c'e' attaccata
- * stanotte, e quale limite sta usando davvero.
+ * chi ha collegato solo la modalita' ha lo stesso tutto. Per il limite viene
+ * prima quello di evcc: e' evcc che sa quale limite sta usando davvero.
+ *
+ * La batteria no. «Perche' dice dal 60 se ho la batteria al 19%?» evcc, con
+ * un'auto che non ha il suo collegamento, la batteria non la sa: la stima, o
+ * tiene l'ultima che ha visto, e quel 60% copriva il 19% vero che la pagina
+ * Auto mostrava due righe sopra. Allora viene prima il sensore dell'auto —
+ * `batteria`, quello dell'auto in uso, lo stesso della pagina Auto — poi le
+ * caselle della batteria, e quella di evcc solo se l'auto non dice niente.
  *
  * `risolvi(rif)` torna l'entita' scritta in quella casella, o vuoto.
  */
@@ -287,7 +293,7 @@ export function entitaDellaRicarica(risolvi, { batteria = "" } = {}) {
   const p = prefissoDiEvcc(modo);
   const diEvcc = (...nomi) => (p ? nomi.map((nome) => nome.replace("@", p)) : []);
   const limiteScritto = leggi(RIFERIMENTI.limite);
-  const soc = [...diEvcc("sensor.@vehicle_soc"), pulito(batteria), ...RIFERIMENTI.soc.map(leggi)];
+  const soc = [pulito(batteria), ...RIFERIMENTI.soc.map(leggi), ...diEvcc("sensor.@vehicle_soc")];
   const limite = [
     ...(limiteScritto.includes("evcc") ? [limiteScritto] : []),
     ...diEvcc("sensor.@effective_limit_soc", "number.@limit_soc", "select.@limit_soc"),
@@ -306,6 +312,17 @@ export function entitaDellaRicarica(risolvi, { batteria = "" } = {}) {
       ...diEvcc("sensor.@charged_energy", "sensor.@session_energy"),
     ]),
   };
+}
+
+/**
+ * Il sensore della batteria di un'auto della plancia: quello scritto nel suo
+ * profilo, la stessa casella che la pagina Auto legge per l'auto in uso. Vuoto
+ * se il profilo non lo dice.
+ */
+export function batteriaDellAuto(auto) {
+  const sue = auto?.ov || auto?.overrides;
+  const id = pulito(sue && typeof sue === "object" ? sue[RIFERIMENTI.soc[0]] : "");
+  return ENTITA.test(id) && !id.startsWith("dm.") ? id : "";
 }
 
 /** Tutte le entita' che la regola guarda, in un elenco. */
@@ -372,10 +389,10 @@ export function letturaDellAuto(entita, stati) {
     }
     return null;
   };
-  /* «Come fa a dire di no se ora sta al 46%?» evcc, quando non sa quanto
-   * e' carica l'auto (un'auto senza collegamento), dice 0%: uno zero di uno
-   * non vale se un altro sensore della batteria (quello dell'auto, lo stesso
-   * della pagina Auto) dice di piu'. */
+  /* La prima batteria che si legge, nell'ordine di `entitaDellaRicarica`:
+   * l'auto, poi evcc. «Come fa a dire di no se ora sta al 46%?» evcc, quando
+   * non sa quanto e' carica l'auto (un'auto senza collegamento), dice 0%: uno
+   * zero non vale se un altro sensore della batteria dice di piu'. */
   const laBatteria = (elenco) => {
     const valori = (elenco || [])
       .map((id) => percentuale(di(id)))

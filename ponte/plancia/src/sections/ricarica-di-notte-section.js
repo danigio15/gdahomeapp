@@ -24,6 +24,7 @@ import { capacitaDellaBatteria } from "../core/vehicle-model.js";
 import { activeVehicle } from "./ev-section.js";
 import {
   CHIAVE_RICARICA_NOTTE,
+  batteriaDellAuto,
   ciArriva,
   potenzaMassimaDiEvcc,
   entitaDellaRicarica,
@@ -90,9 +91,22 @@ function laPotenzaDiEvcc() {
   }
 }
 
-/** L'auto adesso, letta dagli stati che la plancia ha gia'. */
+/** Il sensore della batteria dell'auto in uso: quello della pagina Auto. */
+function laBatteriaDellAuto() {
+  try {
+    return batteriaDellAuto(activeVehicle());
+  } catch (_errore) {
+    return "";
+  }
+}
+
+/** L'auto adesso, letta dagli stati che la plancia ha gia'. La batteria e'
+ * quella che la pagina Auto mostra, non la stima di evcc. */
 function laLettura() {
-  return letturaDellAuto(entitaDellaRicarica(risolvi), allStates());
+  return letturaDellAuto(
+    entitaDellaRicarica(risolvi, { batteria: laBatteriaDellAuto() }),
+    allStates(),
+  );
 }
 
 /** Il costo unico, scritto nella casella o in quella di questo dispositivo. */
