@@ -233,8 +233,8 @@ class PonteVero {
         richiesta.write(jsonEncode(corpo));
       }
       final risposta = await richiesta.close();
-      final corpo = await risposta.transform(utf8.decoder).join();
-      final letto = jsonDecode(corpo);
+      final testo = await risposta.transform(utf8.decoder).join();
+      final letto = jsonDecode(testo);
       return letto is Map<String, dynamic> ? letto : {};
     } finally {
       cliente.close(force: true);
