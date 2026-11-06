@@ -7,7 +7,8 @@
  * nell'app, regalata dal gestore, data da un installatore — con in cima i
  * numeri che contano (ognuno con la sua «i»), le case per piano, le entrate,
  * quello che arriva nei prossimi trenta giorni, «Come funziona», e una
- * tabella: casa, origine, stato, scade o rinnova, importo, e il menu «⋯».
+ * tabella: casa, origine, stato, inizio, scade o rinnova, importo, e il menu
+ * «⋯».
  *
  * I conti li fa il quadro e li provano le prove delle licenze
  * (`le-licenze.test.js`, «Gli abbonamenti»), e qui sotto `contaGliAbbonamenti`
@@ -92,6 +93,7 @@ function laFabbrica() {
     ...[
       "const LO_STATO_DELLE_LICENZE",
       "const LE_ICONE",
+      "const ilGiorno",
       "const ilGiornoCorto",
       "function conLArticolo",
       "function iSoldi",
@@ -157,6 +159,7 @@ function laFabbrica() {
        laLicenzaDellaCasa: (matricola) =>
          laLicenzaDellaCasa(matricola, CONTI.tutte.find((una) => una.matricola === matricola)?.licenza),
        conLArticolo,
+       ilGiorno,
        ilGiornoCorto,
        ilMeseDetto,
      };`,
@@ -219,6 +222,7 @@ const NEGOZIO = {
   }),
   "Casa Bianchi": riga({
     sog: casa(2),
+    inizio: ORA - 120 * GIORNO,
     piattaforma: "android",
     piano: "annuale",
     prezzo: 49.99,
@@ -300,6 +304,7 @@ const REGALI = [
     sog: casa(9),
     origine: "regalo",
     scade: ORA + 300 * GIORNO,
+    creata: ORA - 65 * GIORNO,
     revocata: null,
     vale: true,
     nota: "per la signora Marino",
@@ -311,6 +316,7 @@ const REGALI = [
     origine: "installatore",
     installatore: ROSSI,
     scade: ORA + 10 * GIORNO,
+    creata: ORA - 20 * GIORNO,
     revocata: null,
     vale: true,
     nota: "",
@@ -331,6 +337,7 @@ const REGALI = [
     sog: casa(12),
     origine: "regalo",
     scade: null,
+    creata: ORA - 5 * GIORNO,
     revocata: null,
     vale: true,
     nota: "",
@@ -464,6 +471,112 @@ test("aperta, ogni riga dice in una frase perche' e' in quello stato", () => {
   assert.ok(soloTesto(PAGINA.gliAbbonamenti()).includes("Ha disdetto: il periodo è già pagato"));
 });
 
+/* ─── Da quando ───────────────────────────────────────────────────────────
+ *
+ * «Non mi piace perche' non vedo piu' la data di inizio»: la Gestione di
+ * prima scriveva «dal 6 nov» sotto ogni abbonamento, la tabella nuova solo
+ * «Scade o rinnova». Adesso c'e' la colonna «Inizio», con la parola giusta
+ * per ogni fonte; sulla carta del telefono «dal 6 nov → 20 nov»; aperta, la
+ * frase dice la data intera. */
+
+test("ogni licenza dice da quando: comprato, prova, regalato, dato, riscattato", () => {
+  const inizio = (nome) => {
+    const una = laRigaDi(nome);
+    return `${una.inizioVerbo} ${PAGINA.ilGiornoCorto(una.inizio)}`;
+  };
+  const corto = (giorni) => PAGINA.ilGiornoCorto(ORA - giorni * GIORNO);
+  /* Dal negozio: quello che dice lui (`inizio`), l'acquisto o il primo
+   * giorno della prova. */
+  assert.equal(inizio("Casa Bianchi"), `comprato il ${corto(120)}`);
+  assert.equal(inizio("Casa Rossi"), `comprato il ${corto(3)}`);
+  assert.equal(inizio("Casa Ferrari"), `prova dal ${corto(3)}`);
+  assert.equal(inizio("Casa Esposito"), `prova dal ${corto(3)}`, "disdetta in prova");
+  /* Cominciato con la prova e poi pagato: non «comprato», da quando c'e'. */
+  assert.equal(inizio("Casa Romano"), `dal ${corto(3)}`);
+  /* I regali e gli installatori: quando la licenza e' fatta. */
+  assert.equal(inizio("Casa Marino"), `regalato il ${corto(65)}`);
+  assert.equal(inizio("Casa Greco"), `dato il ${corto(20)}`);
+  assert.equal(inizio("Casa Bruno"), `riscattato il ${corto(5)}`);
+  /* Senza data non si inventa: la colonna dice «—». */
+  const telefono = laRigaDi("Telefono · 11111111");
+  assert.equal(telefono.inizio, null);
+  assert.equal(telefono.inizioDetto, "");
+
+  /* La frase intera, con l'anno, e l'articolo che si elide. */
+  const intero = (prep, giorni) =>
+    PAGINA.conLArticolo(prep, ORA - giorni * GIORNO, PAGINA.ilGiorno);
+  assert.equal(laRigaDi("Casa Bianchi").inizioDetto, `Comprato ${intero("il", 120)}`);
+  assert.equal(
+    laRigaDi("Casa Romano").inizioDetto,
+    `Abbonato ${intero("dal", 3)}, cominciando con la prova gratuita`,
+  );
+  assert.equal(laRigaDi("Casa Marino").inizioDetto, `Regalata ${intero("il", 65)}`);
+  assert.equal(laRigaDi("Casa Greco").inizioDetto, `Data da Impianti Rossi ${intero("il", 20)}`);
+  assert.equal(laRigaDi("Casa Bruno").inizioDetto, `Codice riscattato ${intero("il", 5)}`);
+  assert.match(intero("il", 3), /\d{4}$/, "la data intera ha l'anno");
+});
+
+test("l'inizio si vede: in colonna, «dal … →» sulla carta, e intero nella riga aperta", () => {
+  prepara();
+  const html = PAGINA.gliAbbonamenti();
+  const bianchi = NEGOZIO["Casa Bianchi"];
+  const suaRiga = html.match(
+    new RegExp(`<li class="lic-riga[^"]*"[^>]*data-lic="${bianchi.lic}"[\\s\\S]*?</li>`),
+  )[0];
+  const giorno = PAGINA.ilGiornoCorto(ORA - 120 * GIORNO);
+  /* La colonna, prima di «Scade o rinnova». */
+  assert.ok(
+    suaRiga.indexOf('class="lic-c-inizio"') < suaRiga.indexOf('class="lic-c-data'),
+    "«Inizio» sta prima di «Scade o rinnova»",
+  );
+  assert.match(soloTesto(suaRiga), new RegExp(`comprato il ${giorno} `));
+  /* La carta del telefono: «dal 6 nov → 2 dic» (la freccia la mette il CSS). */
+  assert.match(suaRiga, /class="lic-c-data con-inizio con-data"/);
+  assert.match(
+    soloTesto(suaRiga),
+    new RegExp(`${PAGINA.conLArticolo("dal", ORA - 120 * GIORNO)} rinnova`),
+  );
+  assert.match(GESTORE, /\.lic-c-data\.con-inizio\.con-data > b::before,/);
+  /* Senza data d'inizio: «—», e niente «dal». */
+  const tel = html.match(/<li class="lic-riga[^"]*"[^>]*data-lic="lic_r5"[\s\S]*?<\/li>/)[0];
+  assert.match(tel, /<span class="lic-c-inizio"><b class="nessuna">—<\/b><\/span>/);
+  assert.ok(!tel.includes("lic-dal"));
+  /* Aperta: la frase dice anche da quando, con l'anno. */
+  PAGINA.stato.espanse.add(bianchi.lic);
+  assert.ok(
+    soloTesto(PAGINA.gliAbbonamenti()).includes(
+      `Comprato ${PAGINA.conLArticolo("il", ORA - 120 * GIORNO, PAGINA.ilGiorno)}.`,
+    ),
+  );
+  /* Nella scheda della casa la riga e' la stessa, con il suo «dal». */
+  assert.match(PAGINA.laLicenzaDellaCasa(casa(2)), /class="lic-dal"/);
+});
+
+test("in ogni gruppo l'ordine che serve: attive dalle ultime cominciate, prove e disdette da chi finisce prima", () => {
+  prepara();
+  const html = disegna("tutte", { aperti: new Set(["finita"]) });
+  const nomi = (quale) => {
+    const dentro = html.match(new RegExp(`data-gruppo="${quale}">([\\s\\S]*?)</section>`))[1];
+    return [...dentro.matchAll(/<span class="lic-c-casa"><b>([^<]+)<\/b>/g)].map(([, n]) => n);
+  };
+  /* Attive: chi ha appena comprato o ricevuto il regalo in cima; senza data
+   * in fondo. */
+  assert.deepEqual(nomi("attiva"), [
+    "Casa Rossi",
+    "Casa Bruno",
+    "Casa Greco",
+    "Casa Marino",
+    "Casa Bianchi",
+    "Telefono · 11111111",
+  ]);
+  /* Chi non rinnova: prima chi torna Base prima. */
+  assert.deepEqual(nomi("nonrinnova"), ["Casa Esposito", "Casa Romano"]);
+  /* Le finite: prima le finite da poco (la revocata ieri, poi la scaduta
+   * dodici giorni fa). */
+  const finite = nomi("finita");
+  assert.ok(finite.indexOf("Casa Conti") < finite.indexOf("Casa Colombo"), finite.join(", "));
+});
+
 /* I gruppi dell'elenco, in ordine, con quante righe si vedono. */
 const iGruppi = (html) =>
   [
@@ -481,7 +594,7 @@ test("la tabella e' a gruppi di stato: finite e test chiusi, e un filtro apre il
   ]);
   assert.match(html, /data-apri-gruppo="finita" aria-expanded="false"/);
   /* Le colonne della tabella. */
-  assert.match(soloTesto(html), /Casa Origine Stato Scade o rinnova Importo/);
+  assert.match(soloTesto(html), /Casa Origine Stato Inizio Scade o rinnova Importo/);
   assert.deepEqual(iGruppi(disegna("finita")), ["finita: 4"]);
   /* I nomi di prima portano ancora al posto giusto. */
   for (const diPrima of ["disdetto", "disdetti", "nonrinnovano"])
