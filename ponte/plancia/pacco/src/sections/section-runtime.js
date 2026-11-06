@@ -569,7 +569,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-T6NL6STM.js";
+} from "../../chunk-NBG3EGG5.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -107521,6 +107521,33 @@ function grigliaDellaPagina(pagina3, versoScelto = "orizzontale") {
   const g = GRIGLIE[postiDellaPagina(pagina3)];
   return versoScelto === "verticale" ? { colonne: g.righe, righe: g.colonne } : { colonne: g.colonne, righe: g.righe };
 }
+var FORME_PER_QUANTI = Object.freeze([
+  [1, 1],
+  [2, 1],
+  [2, 2],
+  [3, 2],
+  [4, 2],
+  [3, 3],
+  [4, 3],
+  [4, 4],
+  [5, 4],
+  [6, 4]
+]);
+function grigliaPerQuanti(quanti4, griglia3) {
+  const colonne = Math.max(1, Math.floor(Number(griglia3?.colonne)) || 1);
+  const righe4 = Math.max(1, Math.floor(Number(griglia3?.righe)) || 1);
+  const n = Math.floor(Number(quanti4));
+  const scelta3 = { colonne, righe: righe4, larga: 1, adatta: false };
+  if (!(n >= 1) || n >= colonne * righe4) return scelta3;
+  const verticale = righe4 > colonne;
+  for (const [orizzontali, verticali] of FORME_PER_QUANTI) {
+    const c = verticale ? verticali : orizzontali;
+    const r = verticale ? orizzontali : verticali;
+    if (c * r < n || c > colonne || r > righe4) continue;
+    return { colonne: c, righe: r, larga: Math.min(c, c * r - n + 1), adatta: true };
+  }
+  return scelta3;
+}
 var COLORI_DELLE_PAGINE = Object.freeze([
   "#f59e0b",
   "#ef4444",
@@ -111223,9 +111250,9 @@ function paginaStanza(pagina3) {
     ([z, d, parola2, acc]) => `<button type="button" role="tab" class="${z === zona ? "si" : ""}" style="--acc:${acc}" data-mu-zona="${z}" aria-selected="${z === zona}">${disegno(d, 22, `zona-${z}`)}${esc(parola2)}</button>`
   ).join("")}</div>` : "";
   const posti = postiDellaPagina(pagina3);
-  const quante3 = elenco18 ? Math.max(comandi.length, 1) : posti;
+  const quante3 = elenco18 ? Math.max(comandi.length, 1) : comandi.length ? Math.min(comandi.length, posti) : posti;
   if (elenco18 && !comandi.length)
-    return `${linguette4}<div class="mu-g6" style="${stileDellaGriglia(pagina3)}">${vuoto3(0, t("Niente da mostrare qui", "Nothing to show here"))}</div>`;
+    return `${linguette4}${griglia2(pagina3, [vuoto3(0, t("Niente da mostrare qui", "Nothing to show here"))])}`;
   const carte = Array.from({ length: quante3 }, (_, i) => cardDelPosto(comandi[i], i, zona));
   const riga5 = pagina3.modello === "stanza" ? pillole(pagina3) : linguette4;
   return `${riga5}${griglia2(pagina3, carte, quante3)}`;
@@ -111234,21 +111261,22 @@ function misureDellaGriglia(pagina3) {
   const g = grigliaDellaPagina(pagina3, state112.verso || "orizzontale");
   return state112.compatto ? { colonne: Math.min(g.colonne, 3), righe: Math.min(g.righe, 3) } : g;
 }
-var stileDellaGriglia = (pagina3) => {
-  const g = misureDellaGriglia(pagina3);
-  return `--mu-col:${g.colonne};--mu-righe:${g.righe}`;
-};
 var CARD_STRETTA = 340;
 function griglia2(pagina3, carte, quante3 = carte.length) {
-  const g = misureDellaGriglia(pagina3);
+  const scelta3 = misureDellaGriglia(pagina3);
+  const forma2 = grigliaPerQuanti(quante3, scelta3);
+  const g = forma2.adatta ? forma2 : scelta3;
   const scorre = quante3 > g.colonne * g.righe ? " mu-scorre" : "";
   const base = (state112.verso === "verticale" ? 800 : 1280) / g.colonne;
   const fitta = !state112.compatto && base < CARD_STRETTA ? " mu-fitta" : "";
-  return `<div class="mu-g6${scorre}${fitta}" style="${stileDellaGriglia(pagina3)}">${carte.join("")}</div>`;
+  const adatta2 = forma2.adatta ? ` mu-adatta${state112.compatto && g.colonne * g.righe <= 2 ? " mu-ampia" : ""}` : "";
+  const stile8 = `--mu-col:${g.colonne};--mu-righe:${g.righe}${forma2.adatta ? `;--mu-larga:${forma2.larga}` : ""}`;
+  return `<div class="mu-g6${scorre}${fitta}${adatta2}" style="${stile8}">${carte.join("")}</div>`;
 }
 function paginaScene(pagina3) {
   const scene = pagina3.scene.length ? pagina3.scene : [];
-  const carte = Array.from({ length: postiDellaPagina(pagina3) }, (_, i) => {
+  const quante3 = scene.length ? Math.min(scene.length, postiDellaPagina(pagina3)) : postiDellaPagina(pagina3);
+  const carte = Array.from({ length: quante3 }, (_, i) => {
     const c = scene[i];
     return cardDelPosto(c, i, "", { scena: true });
   });
@@ -111919,6 +111947,13 @@ function finestraDellaLettura(f) {
       <div class="mu-ing-righe">${righe4 || `<div class="mu-sotto">${esc(t("Niente da mostrare qui", "Nothing to show here"))}</div>`}</div></div>`;
 }
 function paginaIngressoCompatta(pagina3) {
+  return griglia2(pagina3, tessereDellIngressoCompatto(pagina3));
+}
+function soloLAntifurto(pagina3) {
+  const tessere2 = tessereDellIngressoCompatto(pagina3);
+  return tessere2.length === 1 && tessere2[0].includes('data-mu-fa="finestra-antifurto"');
+}
+function tessereDellIngressoCompatto(pagina3) {
   const ing = pagina3.ingresso;
   const aree2 = areeDellaPagina(pagina3);
   const centrale = centraleDelMuro(pagina3);
@@ -112003,10 +112038,10 @@ function paginaIngressoCompatta(pagina3) {
       immagine: immagineDellaTessera("letture")
     }) : ""
   ].filter(Boolean).slice(0, 6);
-  return `<div class="mu-g6">${tessere2.join("")}</div>`;
+  return tessere2;
 }
 function paginaIngresso(pagina3) {
-  if (state112.compatto) return paginaIngressoCompatta(pagina3);
+  if (state112.compatto && !soloLAntifurto(pagina3)) return paginaIngressoCompatta(pagina3);
   const ing = pagina3.ingresso;
   const aree2 = areeDellaPagina(pagina3);
   const contoProprio = Boolean(lettureDellIngresso2(ing.letture, allStates() || {}).gruppo);
@@ -114685,6 +114720,12 @@ ${MURO} .mu-g6.mu-scorre>*{scroll-snap-align:start}
 /* Sul telefono i riquadri non si allungano a riempire lo schermo: «li trovo
    troppo grandi». Hanno un'altezza loro, e la pagina scorre se servono. */
 ${MURO}[data-compatto="1"][data-verso="verticale"] .mu-g6{grid-template-rows:none!important;grid-auto-rows:var(--mu-alto,150px)!important;align-content:start;overflow-y:auto;scrollbar-width:none}
+/* Meno riquadri dei posti (\`grigliaPerQuanti\`): la griglia ha gia' la forma
+   di quelli che ci sono, e l'ultimo di una riga corta si allarga fino in
+   fondo. Sul telefono le righe partono dalla loro altezza e crescono fino a
+   riempire la pagina: un riquadro solo non resta una striscia in cima. */
+${MURO} .mu-g6.mu-adatta>:last-child{grid-column:span var(--mu-larga,1)}
+${MURO}[data-compatto="1"][data-verso="verticale"] .mu-g6.mu-adatta{grid-template-rows:repeat(var(--mu-righe),minmax(var(--mu-alto,150px),1fr))!important;grid-auto-rows:var(--mu-alto,150px)!important;align-content:stretch}
 ${MURO} .mu-card{padding:22px;display:flex;flex-direction:column;gap:14px;min-height:0;width:100%}
 ${MURO} .mu-tessera{text-align:left}
 ${MURO} .mu-tessera .mu-osw{margin-top:auto}
@@ -114928,6 +114969,25 @@ ${MURO} .mu-aree[data-quante="4"]{gap:6px}
 ${MURO} .mu-aree[data-quante="4"] .mu-area{padding-top:5px;padding-bottom:5px}
 ${MURO} .mu-aree[data-quante="4"] .mu-modi-area>button{height:40px;font-size:14px}
 ${MURO} .mu-aree[data-quante="4"] .mu-area-nome{font-size:16px}
+/* L'antifurto da solo sul pannello piccolo (\`soloLAntifurto\`): la card dei
+ * tablet grandi, nella misura di quattro pollici. Il disegno e lo stato si
+ * stringono, e ogni area tiene la sua riga coi suoi tasti: tre aree ci stanno
+ * senza scorrere. */
+${MURO}[data-compatto="1"] .mu-allarme{padding:14px;gap:10px;border-radius:20px}
+${MURO}[data-compatto="1"] .mu-allarme .mu-riga1{gap:12px;flex-wrap:nowrap}
+${MURO}[data-compatto="1"] .mu-allarme .mu-riga1>.mu-chip{--c:64px!important}
+${MURO}[data-compatto="1"] .mu-allarme .mu-riga1>.mu-chip .dm-oggetto,${MURO}[data-compatto="1"] .mu-allarme .mu-riga1>.mu-chip svg{width:38px!important;height:38px!important}
+${MURO}[data-compatto="1"] .mu-allarme .mu-stato-allarme{font-size:40px;margin-top:2px}
+${MURO}[data-compatto="1"] .mu-allarme-aree .mu-stato-allarme{font-size:28px}
+${MURO}[data-compatto="1"] .mu-allarme>.mu-modi>button{height:56px;font-size:15px}
+${MURO}[data-compatto="1"] .mu-aree{gap:6px}
+${MURO}[data-compatto="1"] .mu-area{gap:8px;padding:5px 5px 5px 10px;border-radius:14px}
+${MURO}[data-compatto="1"] .mu-area-dice{flex:0 1 28%}
+${MURO}[data-compatto="1"] .mu-area-nome{font-size:15px}
+${MURO}[data-compatto="1"] .mu-area-stato{font-size:10px;gap:5px;letter-spacing:.02em}
+${MURO}[data-compatto="1"] .mu-area-stato i{flex-basis:7px;width:7px;height:7px}
+${MURO}[data-compatto="1"] .mu-modi-area{padding:3px;gap:3px;border-radius:11px}
+${MURO}[data-compatto="1"] .mu-modi-area>button,${MURO}[data-compatto="1"] .mu-aree[data-quante] .mu-modi-area>button{height:40px;font-size:13px;padding:0 3px;border-radius:9px}
 /* Le letture e i comandi dell'ingresso: le pastiglie della Musica. */
 ${MURO} .mu-ing-altro{display:flex;flex-direction:column;gap:8px;flex:0 0 auto;min-width:0}
 ${MURO} .mu-ing-letture,${MURO} .mu-ing-comandi{display:flex;flex-wrap:wrap;gap:8px}
@@ -115098,7 +115158,7 @@ ${MURO}[data-compatto="1"] .mu-card .mu-disco{width:44px;height:44px}
 ${MURO}[data-compatto="1"] .mu-card .mu-disco svg{width:22px;height:22px}
 ${MURO}[data-compatto="1"] .mu-card .mu-chip{--c:44px!important}
 ${MURO}[data-compatto="1"] .mu-card .mu-chip .dm-oggetto{width:26px!important;height:26px!important}
-${MURO}[data-compatto="1"] .mu-card .mu-giu,${MURO}[data-compatto="1"] .mu-card .mu-bar,${MURO}[data-compatto="1"] .mu-card .mu-seg,${MURO}[data-compatto="1"] .mu-card .mu-comandi,${MURO}[data-compatto="1"] .mu-card .mu-tag,${MURO}[data-compatto="1"] .mu-card .mu-inter,${MURO}[data-compatto="1"] .mu-card .mu-target .mu-et,${MURO}[data-compatto="1"] .mu-tessera .mu-sotto:empty{display:none}
+${MURO}[data-compatto="1"] :not(.mu-ampia)>.mu-card .mu-giu,${MURO}[data-compatto="1"] :not(.mu-ampia)>.mu-card .mu-bar,${MURO}[data-compatto="1"] :not(.mu-ampia)>.mu-card .mu-seg,${MURO}[data-compatto="1"] :not(.mu-ampia)>.mu-card .mu-comandi,${MURO}[data-compatto="1"] :not(.mu-ampia)>.mu-card .mu-tag,${MURO}[data-compatto="1"] :not(.mu-ampia)>.mu-card .mu-inter,${MURO}[data-compatto="1"] :not(.mu-ampia)>.mu-card .mu-target .mu-et,${MURO}[data-compatto="1"] .mu-tessera .mu-sotto:empty{display:none}
 ${MURO}[data-compatto="1"] .mu-card .mu-target{margin-top:auto}
 ${MURO}[data-compatto="1"] .mu-card .mu-grande{font-size:34px}
 ${MURO}[data-compatto="1"] .mu-card .mu-riga1>.mu-pasti{display:none}
@@ -115136,6 +115196,11 @@ ${MURO}[data-verso="verticale"] .mu-meteo,${MURO}[data-verso="verticale"] .mu-se
 ${MURO}[data-verso="verticale"] .mu-ora{margin-left:auto}
 ${MURO}[data-verso="verticale"] .mu-ingresso{grid-template-columns:1fr;grid-template-rows:auto 1fr auto}
 ${MURO}[data-verso="verticale"] .mu-ingresso.mu-con-striscia{grid-template-rows:auto minmax(0,1fr) auto auto}
+/* Senza citofono l'antifurto e' la prima riga, e quella che cresce: in
+ * verticale restava alto quanto il suo contenuto, col resto della pagina
+ * vuoto sotto. */
+${MURO}[data-verso="verticale"] .mu-ingresso.mu-senza-citofono{grid-template-rows:minmax(0,1fr) auto}
+${MURO}[data-verso="verticale"] .mu-ingresso.mu-senza-citofono.mu-con-striscia{grid-template-rows:minmax(0,1fr) auto auto}
 ${MURO}[data-verso="verticale"] .mu-piede{grid-template-columns:1fr 1fr}
 ${MURO}[data-verso="verticale"] .mu-piede.mu-piede-uno{grid-template-columns:1fr}
 ${MURO}[data-verso="verticale"] .mu-fin-luce{grid-template-columns:1fr}

@@ -139,6 +139,59 @@ export function grigliaDellaPagina(pagina, versoScelto = "orizzontale") {
     : { colonne: g.colonne, righe: g.righe };
 }
 
+/* Le forme della griglia quando i riquadri sono meno dei posti, in
+ * orizzontale e dalla piu' piccola: uno prende tutto, due a meta', tre e
+ * quattro in quattro, e cosi' via fino alla griglia piu' grande. In verticale
+ * colonne e righe si scambiano. */
+const FORME_PER_QUANTI = Object.freeze([
+  [1, 1],
+  [2, 1],
+  [2, 2],
+  [3, 2],
+  [4, 2],
+  [3, 3],
+  [4, 3],
+  [4, 4],
+  [5, 4],
+  [6, 4],
+]);
+
+/**
+ * La griglia per quanti riquadri ci sono davvero.
+ *
+ * «In questa paginetta ho lasciato solo il predefinito dell'antifurto, ma pur
+ * togliendo tutto rimane piccolo e non si espande pur essendoci spazio.» La
+ * griglia scelta nel config — sei, otto, dodici posti — era la misura di ogni
+ * casella: un riquadro solo restava un sesto della pagina, e il resto vuoto.
+ * Adesso la griglia scelta e' il tetto: con meno riquadri la pagina prende la
+ * forma piu' piccola che li contiene, senza mai superare le colonne e le righe
+ * scelte. Un riquadro prende tutta la pagina, due la dividono a meta', tre e
+ * quattro stanno in quattro caselle.
+ *
+ * Se l'ultima riga resta corta, l'ultimo riquadro si allarga fin dove finisce
+ * (`larga`, quante colonne prende): tre riquadri sono due sopra e uno largo
+ * sotto, non tre e un buco.
+ *
+ * `griglia` sono le colonne e le righe di adesso (gia' girate per il verso del
+ * tablet). Con tanti riquadri quanti i posti, o piu', o nessuno, la griglia
+ * resta quella scelta (`adatta` falso).
+ */
+export function grigliaPerQuanti(quanti, griglia) {
+  const colonne = Math.max(1, Math.floor(Number(griglia?.colonne)) || 1);
+  const righe = Math.max(1, Math.floor(Number(griglia?.righe)) || 1);
+  const n = Math.floor(Number(quanti));
+  const scelta = { colonne, righe, larga: 1, adatta: false };
+  if (!(n >= 1) || n >= colonne * righe) return scelta;
+  const verticale = righe > colonne;
+  for (const [orizzontali, verticali] of FORME_PER_QUANTI) {
+    const c = verticale ? verticali : orizzontali;
+    const r = verticale ? orizzontali : verticali;
+    if (c * r < n || c > colonne || r > righe) continue;
+    return { colonne: c, righe: r, larga: Math.min(c, c * r - n + 1), adatta: true };
+  }
+  return scelta;
+}
+
 /* Il colore della pagina: quello del suo tipo, o uno di questi. */
 export const COLORI_DELLE_PAGINE = Object.freeze([
   "#f59e0b",
