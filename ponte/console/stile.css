@@ -1,44 +1,135 @@
-/* La pagina di gdahome dentro Home Assistant.
+/* La pagina di GdAHome dentro Home Assistant.
  *
- * Sta dietro l'ingress e prende i colori dal tema di chi guarda: le variabili
- * `--primary-text-color` e compagne le mette Home Assistant sul documento che
- * ci sta intorno. Quando non ci sono — perche' la pagina e' aperta da sola —
- * valgono i ripieghi scritti qui di fianco.
+ * Della stessa famiglia della Gestione (`quadro/gestore/index.html`): un fondo
+ * di un colore, schede bianche con un filo intorno e un'ombra corta, un
+ * carattere solo — Manrope, servito da questa cartella — e un colore solo per
+ * le cose da premere. Verde, giallo e rosso dicono come sta qualcosa, e non
+ * stanno mai senza la parola: un pallino da solo non lo legge nessuno.
  *
- * Com'e' fatta, e perche'. Prima era una pagina sola con quindici schede in
- * fila: per sapere se la casa stava bene bisognava leggere tre pastiglie in
- * cima, una scheda a meta' e un cassetto in fondo. Adesso le sezioni sono sei,
- * una per volta, scelte dalle linguette in cima:
+ * Le misure stanno su una griglia di otto (con il quattro per i ritocchi), e
+ * le scritte su una scala corta: 12, 13, 14, 15, 17, 20, 24, 28.
  *
- *   1. la TESTATA: il marchio, il nome, la versione, e le linguette;
- *   2. la SEZIONE: un titolo, una riga che dice a cosa serve, e le sue schede;
- *   3. nella Panoramica, le RIGHE: una per ogni cosa che conta, con la sua
- *      parola colorata, e sotto — solo quando qualcosa non va — il rimedio.
+ * Il tema. Questa pagina sta in un telaio di Home Assistant, e le variabili
+ * del suo tema li' dentro non arrivano: un telaio e' un altro documento. Il
+ * programma guarda il fondo di Home Assistant — l'ingress sta sullo stesso
+ * indirizzo, e si puo' — e scrive `data-theme` qui; dove non ci riesce vale
+ * il tema del browser.
  */
 
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("carattere/manrope-latin.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("carattere/manrope-latin-ext.woff2") format("woff2");
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+
 :root {
-  color-scheme: light dark;
-  --testo: var(--primary-text-color, #101317);
-  --tenue: var(--secondary-text-color, #5b6471);
-  --carta: var(--card-background-color, #ffffff);
-  --fondo: var(--primary-background-color, #f2f4f7);
-  --bordo: var(--divider-color, #e4e7ec);
-  --acceso: var(--primary-color, #0b8ee0);
-  --male: var(--error-color, #d5232c);
-  --bene: var(--success-color, #1a9c53);
-  --giallo: var(--warning-color, #cf8000);
-  --ombra: 0 1px 2px rgba(16, 24, 40, 0.05);
+  color-scheme: light;
+  --fondo: #f5f6f9;
+  --carta: #ffffff;
+  --velo: #f6f7fa;
+  --bordo: rgba(16, 24, 40, 0.09);
+  --linea: rgba(16, 24, 40, 0.07);
+  --linea-forte: rgba(16, 24, 40, 0.15);
+
+  --testo: #101828;
+  --tenue: #475467;
+  --terzo: #7a8299;
+
+  --acceso: #2f7cf6;
+  --acceso-soft: rgba(47, 124, 246, 0.11);
+  --acceso-forte: #1f6ae0;
+  --pieno: #2f7cf6;
+
+  --bene: #128a68;
+  --bene-soft: rgba(22, 163, 122, 0.13);
+  --giallo: #b26c00;
+  --giallo-soft: rgba(217, 138, 15, 0.15);
+  --male: #d12f52;
+  --male-soft: rgba(228, 64, 95, 0.11);
+  --viola: #7a52e0;
+  --viola-soft: rgba(122, 82, 224, 0.11);
+
+  --ombra: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.05);
+  --ombra-alta: 0 6px 20px rgba(16, 24, 40, 0.1), 0 1px 3px rgba(16, 24, 40, 0.06);
+
+  --r-grande: 16px;
+  --r: 12px;
+  --r-piccolo: 10px;
+  --molla: cubic-bezier(0.22, 1, 0.36, 1);
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --testo: var(--primary-text-color, #e8ebf0);
-    --tenue: var(--secondary-text-color, #9aa4b2);
-    --carta: var(--card-background-color, #1a1f27);
-    --fondo: var(--primary-background-color, #10141a);
-    --bordo: var(--divider-color, #2a3139);
-    --ombra: 0 1px 2px rgba(0, 0, 0, 0.35);
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --fondo: #0b0e18;
+    --carta: #141827;
+    --velo: #1a1f31;
+    --bordo: rgba(255, 255, 255, 0.09);
+    --linea: rgba(255, 255, 255, 0.08);
+    --linea-forte: rgba(255, 255, 255, 0.17);
+    --testo: #eef0f7;
+    --tenue: #a8adc3;
+    --terzo: #7c839d;
+    --acceso: #5aa0ff;
+    --acceso-soft: rgba(90, 160, 255, 0.16);
+    --acceso-forte: #1f5fd0;
+    --pieno: #2563d6;
+    --bene: #34c08f;
+    --bene-soft: rgba(31, 168, 119, 0.17);
+    --giallo: #e0a63a;
+    --giallo-soft: rgba(189, 133, 26, 0.2);
+    --male: #f0698a;
+    --male-soft: rgba(224, 70, 106, 0.17);
+    --viola: #a88bff;
+    --viola-soft: rgba(168, 139, 255, 0.15);
+    --ombra: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --ombra-alta: 0 6px 20px rgba(0, 0, 0, 0.5);
   }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --fondo: #0b0e18;
+  --carta: #141827;
+  --velo: #1a1f31;
+  --bordo: rgba(255, 255, 255, 0.09);
+  --linea: rgba(255, 255, 255, 0.08);
+  --linea-forte: rgba(255, 255, 255, 0.17);
+  --testo: #eef0f7;
+  --tenue: #a8adc3;
+  --terzo: #7c839d;
+  --acceso: #5aa0ff;
+  --acceso-soft: rgba(90, 160, 255, 0.16);
+  --acceso-forte: #1f5fd0;
+  --pieno: #2563d6;
+  --bene: #34c08f;
+  --bene-soft: rgba(31, 168, 119, 0.17);
+  --giallo: #e0a63a;
+  --giallo-soft: rgba(189, 133, 26, 0.2);
+  --male: #f0698a;
+  --male-soft: rgba(224, 70, 106, 0.17);
+  --viola: #a88bff;
+  --viola-soft: rgba(168, 139, 255, 0.15);
+  --ombra: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --ombra-alta: 0 6px 20px rgba(0, 0, 0, 0.5);
 }
 
 * {
@@ -54,43 +145,43 @@
   display: none !important;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
-  padding: 0 16px 40px;
   background: var(--fondo);
   color: var(--testo);
   font:
-    14px/1.5 system-ui,
+    500 15px/1.5 "Manrope",
+    system-ui,
     -apple-system,
     "Segoe UI",
     Roboto,
     sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
 }
 
-main {
-  max-width: 1040px;
+.pagina {
+  max-width: 960px;
   margin: 0 auto;
+  padding: 0 16px 48px;
+}
+
+a {
+  color: var(--acceso);
+}
+
+p {
+  margin: 0;
 }
 
 /* ─── La testata e le linguette ──────────────────────────────────────────── */
 
 .testata {
-  max-width: 1040px;
-  margin: 0 auto;
-  padding: 16px 0 10px;
-  background: var(--fondo);
-}
-
-/* Su uno schermo largo la testata resta in cima mentre si scorre: le
-   linguette sono il modo di cambiare sezione, e devono stare a portata. Sul
-   telefono no — due file di linguette ferme in cima si mangerebbero un quarto
-   dello schermo. */
-@media (min-width: 761px) {
-  .testata {
-    position: sticky;
-    top: 0;
-    z-index: 5;
-  }
+  padding: 16px 0 8px;
 }
 
 .riga-testata {
@@ -100,12 +191,12 @@ main {
 }
 
 .marchio {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 12px;
   display: block;
-  flex: 0 0 auto;
-  box-shadow: 0 4px 14px rgba(16, 24, 40, 0.18);
+  flex: none;
+  box-shadow: var(--ombra-alta);
 }
 
 .chi {
@@ -114,122 +205,160 @@ main {
 }
 
 h1 {
-  font-size: 1.3rem;
-  font-weight: 750;
-  letter-spacing: -0.01em;
   margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
 }
 
 .sottotitolo {
-  margin: 0;
   color: var(--tenue);
-  font-size: 0.88rem;
+  font-size: 13px;
 }
 
 .targhetta {
-  flex: 0 0 auto;
-  margin-left: auto;
-  padding: 3px 10px;
-  border: 1px solid var(--bordo);
+  flex: none;
+  padding: 4px 10px;
   border-radius: 999px;
+  border: 1px solid var(--bordo);
   background: var(--carta);
   color: var(--tenue);
-  font-size: 0.78rem;
+  font-size: 12px;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
+/* Le linguette: solo su uno schermo largo. Sul telefono la Casa e' il punto
+   da cui si parte, e ogni sezione ha il suo «Indietro»: sei parole in due
+   file in cima si mangiavano un quarto dello schermo. */
 .sezioni {
   display: flex;
   gap: 4px;
-  margin-top: 14px;
+  margin-top: 16px;
   padding: 4px;
-  border-radius: 14px;
+  border-radius: var(--r);
   background: var(--carta);
   border: 1px solid var(--bordo);
   box-shadow: var(--ombra);
-  /* Fra il telefono e lo schermo largo le sei parole possono non starci: la
-     fila scorre di lato invece di uscire dalla scheda. */
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.sezioni::-webkit-scrollbar {
-  display: none;
+  position: sticky;
+  top: 8px;
+  z-index: 5;
 }
 
 .sezioni button {
-  flex: 1 0 auto;
+  flex: 1 1 auto;
   min-height: 40px;
-  gap: 7px;
-  padding: 9px 12px;
+  padding: 8px 12px;
+  gap: 8px;
   border: 0;
-  border-radius: 10px;
+  border-radius: 8px;
   background: transparent;
   color: var(--tenue);
-  font-weight: 650;
-  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 700;
   box-shadow: none;
-}
-
-.sezioni button .ic {
-  color: currentColor;
 }
 
 @media (hover: hover) {
   .sezioni button:hover:not([aria-current="page"]) {
-    background: color-mix(in srgb, var(--testo) 5%, transparent);
+    background: var(--velo);
     color: var(--testo);
   }
 }
 
 .sezioni button[aria-current="page"] {
-  background: color-mix(in srgb, var(--acceso) 12%, transparent);
+  background: var(--acceso-soft);
   color: var(--acceso);
 }
 
+.sezioni button .ic {
+  width: 17px;
+  height: 17px;
+}
+
 /* Il numerino accanto alla parola: quanti telefoni, quante plance, e sulla
-   Panoramica quante cose non vanno — quello in giallo. */
+   Casa quante cose non vanno — quello in giallo. */
 .quanti {
-  min-width: 19px;
-  height: 19px;
-  padding: 0 5px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
   border-radius: 999px;
   display: inline-grid;
   place-items: center;
-  background: color-mix(in srgb, var(--testo) 8%, transparent);
+  background: var(--linea);
   color: var(--tenue);
-  font-size: 0.74rem;
-  font-weight: 750;
+  font-size: 12px;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
 
 .quanti.giallo {
-  background: var(--giallo);
+  background: #b26c00;
   color: #fff;
 }
 
 /* ─── La sezione ─────────────────────────────────────────────────────────── */
 
+main {
+  margin-top: 16px;
+}
+
 .sezione {
   display: grid;
-  gap: 14px;
+  gap: 16px;
 }
 
 .capo-sezione {
-  margin: 12px 2px 0;
+  margin: 8px 4px 0;
 }
 
 .capo-sezione h2 {
   margin: 0;
-  font-size: 1.35rem;
-  font-weight: 750;
-  letter-spacing: -0.01em;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
 }
 
 .capo-sezione p {
-  margin: 2px 0 0;
+  margin-top: 4px;
   color: var(--tenue);
-  max-width: 640px;
+  max-width: 60ch;
+}
+
+.capo-riga {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+/* «Indietro»: un tasto leggero, in cima a ogni sezione. Su uno schermo largo
+   ci sono le linguette, e non serve. */
+button.indietro {
+  min-height: 36px;
+  margin: 0 0 8px -8px;
+  padding: 4px 12px 4px 4px;
+  gap: 2px;
+  background: transparent;
+  color: var(--acceso);
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+@media (min-width: 761px) {
+  button.indietro {
+    display: none;
+  }
+}
+
+.nota-fondo {
+  margin: 0 4px;
+  color: var(--terzo);
+  font-size: 13px;
 }
 
 /* ─── Le schede ──────────────────────────────────────────────────────────── */
@@ -237,28 +366,15 @@ h1 {
 .scheda {
   background: var(--carta);
   border: 1px solid var(--bordo);
-  border-radius: 16px;
-  padding: 18px 20px;
+  border-radius: var(--r-grande);
+  padding: 24px;
   box-shadow: var(--ombra);
   min-width: 0;
 }
 
+/* Una luce che cade dall'angolo, per la scheda che conta di piu'. */
 .grossa {
-  /* Una luce che cade dall'angolo, non una fascia: un gradiente lineare su una
-     scheda larga lascia una riga visibile dove finisce, e si vede. */
-  background:
-    radial-gradient(
-      120% 90% at 0% 0%,
-      color-mix(in srgb, var(--acceso) 9%, transparent),
-      transparent 62%
-    ),
-    var(--carta);
-}
-
-#fabbrica {
-  padding: 12px 22px;
-  font-size: 0.96rem;
-  box-shadow: 0 6px 16px color-mix(in srgb, var(--acceso) 28%, transparent);
+  background: radial-gradient(120% 90% at 0% 0%, var(--acceso-soft), transparent 60%), var(--carta);
 }
 
 .testa-di-scheda {
@@ -268,81 +384,161 @@ h1 {
   /* A capo, non stretti: su un telefono il titolo e il conteggio non ci stanno
      in riga, e schiacciati diventano due colonne di parole spezzate. */
   flex-wrap: wrap;
-  gap: 2px 10px;
-  margin-bottom: 12px;
+  gap: 4px 12px;
+  margin-bottom: 16px;
 }
 
 h3 {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   margin: 0;
-  font-size: 1.02rem;
-  font-weight: 750;
-  letter-spacing: -0.01em;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
 }
 
 /* Il disegno in testa a un titolo sta in una piastrella: e' la targhetta della
-   scheda, e si vede da lontano a cosa appartiene quello che si legge. */
+   scheda. */
 h3 > .ic {
-  box-sizing: border-box;
   width: 32px;
   height: 32px;
   padding: 7px;
   border-radius: 10px;
-  background: color-mix(in srgb, var(--acceso) 11%, transparent);
+  background: var(--acceso-soft);
 }
 
 .conta {
-  color: var(--tenue);
-  font-size: 0.8rem;
+  color: var(--terzo);
+  font-size: 13px;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
-.sotto {
-  margin: 4px 0 0;
-  color: var(--tenue);
-  font-size: 0.86rem;
-}
-
 .spiegazione,
-.minuta {
+.minuta,
+.nota {
   color: var(--tenue);
-  margin: 0 0 10px;
+  margin: 0 0 12px;
 }
 
 .minuta {
-  font-size: 0.82rem;
-  line-height: 1.45;
+  font-size: 13px;
+}
+
+.nota {
+  font-size: 14px;
 }
 
 .spiegazione:last-child,
-.minuta:last-child {
+.minuta:last-child,
+.nota:last-child {
   margin-bottom: 0;
+}
+
+.sopratitolo {
+  color: var(--tenue);
+  font-size: 13px;
+  font-weight: 700;
 }
 
 /* Due schede affiancate, quando c'e' spazio; una sotto l'altra quando no. */
 .griglia {
   display: grid;
-  gap: 14px;
+  gap: 16px;
 }
 
 .griglia.due {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-/* Dentro una scheda, due riquadri piu' vicini fra loro. */
 .griglia.stretta {
-  gap: 10px;
-  margin: 12px 0;
+  gap: 8px;
+  margin: 16px 0;
 }
 
-/* ─── Le righe della Panoramica ──────────────────────────────────────────────
+/* ─── Come sta la casa ───────────────────────────────────────────────────────
+ *
+ * La prima scheda della Casa: un segno grande, una frase grande, e sotto i
+ * controlli che la fanno. Il colore della luce nell'angolo e' quello della
+ * risposta — verde, rosso, o grigio mentre si guarda. */
+.eroe {
+  --tinta: var(--linea);
+  --segno: var(--tenue);
+  background: radial-gradient(110% 120% at 0% 0%, var(--tinta), transparent 55%), var(--carta);
+}
+
+.eroe[data-come="bene"] {
+  --tinta: var(--bene-soft);
+  --segno: var(--bene);
+}
+
+.eroe[data-come="male"] {
+  --tinta: var(--male-soft);
+  --segno: var(--male);
+}
+
+.eroe-testa {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.eroe-segno {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--carta);
+  color: var(--segno);
+  box-shadow:
+    0 0 0 6px var(--tinta),
+    var(--ombra);
+}
+
+.eroe-segno .ic {
+  width: 28px;
+  height: 28px;
+  color: currentColor;
+  stroke-width: 2.2;
+}
+
+.eroe-parole {
+  min-width: 0;
+}
+
+.eroe-parole h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.eroe-parole p:not(.sopratitolo) {
+  margin-top: 4px;
+  color: var(--tenue);
+  font-size: 15px;
+}
+
+.eroe-azione {
+  margin-top: 16px;
+}
+
+.righe.controlli {
+  margin-top: 24px;
+  padding-top: 8px;
+  border-top: 1px solid var(--linea);
+}
+
+/* ─── Le righe ───────────────────────────────────────────────────────────────
  *
  * Una riga e' una griglia di tre colonne — la faccia, le parole, lo stato — e
  * una seconda fila sotto le parole per il rimedio, che c'e' solo quando
- * qualcosa non va. Il rimedio sta nella riga, non sotto la scheda: si legge
- * accanto alla cosa che non va, e non altrove. */
+ * qualcosa non va: si legge accanto alla cosa che non va, e non altrove. */
 .righe {
   list-style: none;
   margin: 0;
@@ -355,15 +551,22 @@ h3 > .ic {
   align-items: center;
   gap: 4px 12px;
   padding: 12px 0;
-  border-top: 1px solid var(--bordo);
+  border-top: 1px solid var(--linea);
 }
 
 .righe > li:first-child {
   border-top: 0;
+}
+
+.altro > li:first-child {
   padding-top: 0;
 }
 
-.riepilogo > li:last-child {
+.altro > li:last-child {
+  padding-bottom: 0;
+}
+
+.controlli > li:last-child {
   padding-bottom: 0;
 }
 
@@ -373,74 +576,65 @@ h3 > .ic {
 
 .testo strong {
   display: block;
-  font-weight: 650;
+  font-weight: 700;
 }
 
 .testo span {
   display: block;
   color: var(--tenue);
-  font-size: 0.86rem;
+  font-size: 14px;
 }
 
 .fine {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .rimedio {
   grid-column: 2 / -1;
-  margin: 6px 0 0;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--male) 7%, transparent);
+  margin-top: 4px;
+  padding: 12px 16px;
+  border-radius: var(--r);
+  background: var(--male-soft);
   color: var(--testo);
-  font-size: 0.86rem;
+  font-size: 14px;
 }
 
 /* Le righe che portano a una sezione si toccano tutte, non solo la freccia. */
 .si-tocca {
   cursor: pointer;
+  border-radius: var(--r);
 }
 
-/* Col mouse la riga si accende sotto il puntatore. Tutte le righe escono di
-   dieci punti per parte, non solo quelle che si toccano: se no le linee fra
-   una riga e l'altra sarebbero lunghe in due modi diversi. */
 @media (hover: hover) {
-  .riepilogo > li {
-    margin-inline: -10px;
-    padding-inline: 10px;
-    border-radius: 12px;
+  .altro > li {
+    margin-inline: -12px;
+    padding-inline: 12px;
+    border-radius: var(--r);
     transition: background 0.15s ease;
   }
 
-  .riepilogo > li.si-tocca:hover {
-    background: color-mix(in srgb, var(--acceso) 5%, transparent);
+  .altro > li.si-tocca:hover {
+    background: var(--velo);
   }
 }
 
-.si-tocca:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--acceso) 40%, transparent);
-  outline-offset: 2px;
-  border-radius: 12px;
-}
-
 .ic.freccia {
-  color: var(--tenue);
+  color: var(--terzo);
 }
 
-/* La parola colorata di una riga: un pallino e una parola, sempre insieme —
-   il colore da solo non lo legge chi i colori non li distingue. */
+/* La parola colorata di una riga: un pallino e una parola, sempre insieme. */
 .stato {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 2px 10px;
+  padding: 4px 10px;
   border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 650;
+  font-size: 13px;
+  font-weight: 700;
   white-space: nowrap;
-  background: color-mix(in srgb, var(--testo) 7%, transparent);
+  background: var(--linea);
   color: var(--tenue);
 }
 
@@ -448,23 +642,23 @@ h3 > .ic {
   content: "";
   width: 7px;
   height: 7px;
-  flex: 0 0 auto;
+  flex: none;
   border-radius: 50%;
   background: currentColor;
 }
 
 .stato[data-come="bene"] {
-  background: color-mix(in srgb, var(--bene) 12%, transparent);
+  background: var(--bene-soft);
   color: var(--bene);
 }
 
 .stato[data-come="male"] {
-  background: color-mix(in srgb, var(--male) 11%, transparent);
+  background: var(--male-soft);
   color: var(--male);
 }
 
 .stato[data-come="attesa"] {
-  background: color-mix(in srgb, var(--giallo) 14%, transparent);
+  background: var(--giallo-soft);
   color: var(--giallo);
 }
 
@@ -487,17 +681,16 @@ h3 > .ic {
 /* ─── Le facce ───────────────────────────────────────────────────────────────
  *
  * Il riquadro col disegno in testa a una riga: dice che roba e' (un telefono,
- * una plancia) e, col colore, come sta. Lo stesso verde, rosso e giallo delle
- * parole colorate, cosi' «collegato» e' lo stesso colore in tutta la pagina. */
+ * una plancia) e, col colore, come sta. */
 .faccia {
   display: grid;
   place-items: center;
-  flex: 0 0 auto;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r);
   color: var(--acceso);
-  background: color-mix(in srgb, var(--acceso) 11%, transparent);
+  background: var(--acceso-soft);
 }
 
 .faccia .ic {
@@ -506,22 +699,22 @@ h3 > .ic {
 
 .faccia.bene {
   color: var(--bene);
-  background: color-mix(in srgb, var(--bene) 12%, transparent);
+  background: var(--bene-soft);
 }
 
 .faccia.male {
   color: var(--male);
-  background: color-mix(in srgb, var(--male) 11%, transparent);
+  background: var(--male-soft);
 }
 
 .faccia.attesa {
   color: var(--giallo);
-  background: color-mix(in srgb, var(--giallo) 13%, transparent);
+  background: var(--giallo-soft);
 }
 
 .faccia.spenta {
   color: var(--tenue);
-  background: color-mix(in srgb, var(--testo) 6%, transparent);
+  background: var(--linea);
 }
 
 .faccia.grande {
@@ -535,28 +728,97 @@ h3 > .ic {
   height: 24px;
 }
 
-/* ─── Le due scorciatoie della Panoramica ───────────────────────────────── */
+/* ─── Le mattonelle della Casa ───────────────────────────────────────────── */
 
-.azione {
+.mattonelle {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 16px;
+}
+
+button.mattonella {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 152px;
+  padding: 20px;
+  border: 1px solid var(--bordo);
+  border-radius: var(--r-grande);
+  background: var(--carta);
+  color: var(--testo);
+  box-shadow: var(--ombra);
+  text-align: left;
+  white-space: normal;
+  transition:
+    transform 0.2s var(--molla),
+    box-shadow 0.2s,
+    border-color 0.2s;
+}
+
+@media (hover: hover) {
+  button.mattonella:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--ombra-alta);
+    border-color: var(--linea-forte);
+  }
+}
+
+button.mattonella:active {
+  transform: scale(0.98);
+}
+
+.mattonella-parole {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.mattonella-parole > strong {
   display: flex;
   align-items: center;
-  gap: 14px;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
 }
 
-.azione .testo strong {
-  font-size: 1.02rem;
+.mattonella-parole > span {
+  color: var(--tenue);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
 }
 
-/* ─── Abbinare un telefono ───────────────────────────────────────────────── */
+/* La prima: quella per cui la pagina si apre piu' spesso. */
+button.mattonella.forte {
+  background: linear-gradient(160deg, var(--pieno), var(--acceso-forte));
+  border-color: transparent;
+  color: #fff;
+}
+
+.mattonella.forte .faccia {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.mattonella.forte .mattonella-parole > span {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+/* ─── Aggiungere un telefono ─────────────────────────────────────────────── */
 
 .abbinamento {
   display: grid;
-  gap: 18px;
+  gap: 24px;
 }
 
 @media (min-width: 620px) {
   .abbinamento {
-    grid-template-columns: 220px minmax(0, 1fr);
+    grid-template-columns: 240px minmax(0, 1fr);
     align-items: start;
   }
 }
@@ -567,86 +829,86 @@ h3 > .ic {
   display: grid;
   place-items: center;
   align-content: center;
-  gap: 10px;
-  min-height: 200px;
+  gap: 8px;
+  min-height: 240px;
   padding: 16px;
-  border: 1.5px dashed var(--bordo);
-  border-radius: 14px;
-  color: var(--tenue);
+  border: 1.5px dashed var(--linea-forte);
+  border-radius: var(--r-grande);
+  background: var(--carta);
+  color: var(--terzo);
   text-align: center;
 }
 
 .sagoma-segno {
-  width: 42px;
-  height: 42px;
+  width: 48px;
+  height: 48px;
   stroke: currentColor;
   fill: none;
   stroke-width: 1.2;
-  opacity: 0.5;
+  opacity: 0.6;
 }
 
 /* Il QR code.
  *
  * Sfondo bianco sempre, anche col tema scuro: un QR chiaro su fondo scuro
- * molti lettori non lo prendono, e chi guarda non ha modo di capire perche'.
- * La cornice bianca intorno non e' estetica — e' la «zona tranquilla», e senza
- * quella il codice non si legge nemmeno se e' perfetto. */
+ * molti lettori non lo prendono. La cornice bianca intorno e' la «zona
+ * tranquilla», e senza quella il codice non si legge nemmeno se e' perfetto. */
 .qr {
   display: block;
   width: 100%;
-  max-width: 220px;
+  max-width: 240px;
   margin: 0 auto;
   background: #fff;
   border: 1px solid var(--bordo);
-  border-radius: 14px;
+  border-radius: var(--r-grande);
+  box-shadow: var(--ombra-alta);
 }
 
 .scadenza {
-  margin: 8px 0 0;
+  margin-top: 8px;
   color: var(--tenue);
-  font-size: 0.8rem;
+  font-size: 13px;
+  font-weight: 600;
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
 
-/* I due passi, numerati: sono una sequenza vera, non un elenco che si legge
-   in qualunque ordine. */
+/* I passi, numerati: sono una sequenza vera. */
 .passi {
   counter-reset: passo;
   list-style: none;
-  margin: 0 0 14px;
+  margin: 0 0 24px;
   padding: 0;
   display: grid;
-  gap: 8px;
+  gap: 12px;
 }
 
 .passi li {
   counter-increment: passo;
   display: grid;
-  grid-template-columns: 22px minmax(0, 1fr);
-  gap: 10px;
-  align-items: baseline;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  font-size: 15px;
 }
 
 .passi li::before {
   content: counter(passo);
   display: grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--acceso) 14%, transparent);
+  background: var(--acceso-soft);
   color: var(--acceso);
-  font-size: 0.76rem;
+  font-size: 13px;
   font-weight: 800;
 }
 
-/* «Per chi è», e «Quanto dura» nella casa di prova: l'etichetta sopra, la
-   casella sotto, e una riga che dice cosa vuol dire la scelta. */
 .scelta-in-colonna {
   display: grid;
-  gap: 6px;
-  margin: 0 0 12px;
+  gap: 8px;
+  margin: 0 0 16px;
   max-width: 28em;
 }
 
@@ -660,86 +922,101 @@ h3 > .ic {
   min-width: 0;
   min-height: 44px;
   padding: 10px 12px;
-  border: 1px solid var(--bordo);
-  border-radius: 12px;
+  border: 1px solid var(--linea-forte);
+  border-radius: var(--r-piccolo);
   background: var(--carta);
   color: inherit;
 }
 
-/* ─── Tasti, caselle, elenchi ────────────────────────────────────────────── */
+/* ─── Tasti e caselle ────────────────────────────────────────────────────── */
 
 .bottoni {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  align-items: center;
 }
 
-/* La riga piccola sotto un gruppo di tasti, o sotto una casella col suo
-   tasto, ne sta staccata quanto basta per leggersi da sola. */
 .bottoni + .minuta,
 .riga-di-tasti + .minuta {
-  margin-top: 10px;
-}
-
-/* Un gruppo di tasti staccato da quello che gli sta sopra. */
-.bottoni.staccati {
   margin-top: 12px;
 }
 
+.bottoni.staccati {
+  margin-top: 16px;
+}
+
+/* Il tasto di serie e' «il» tasto della scheda: pieno, del colore acceso. */
 button,
 a.bottone,
 a.tenue {
   font: inherit;
-  min-height: 42px;
-  padding: 9px 18px;
-  border: 0;
-  border-radius: 12px;
-  background: var(--acceso);
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid transparent;
+  border-radius: var(--r-piccolo);
+  background: var(--pieno);
   color: #fff;
   cursor: pointer;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  font-weight: 650;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
   white-space: nowrap;
+  transition:
+    transform 0.2s var(--molla),
+    background 0.2s,
+    box-shadow 0.2s;
 }
 
-/* Un disegno dentro un tasto prende il colore delle parole del tasto: blu su
-   blu non si vedrebbe. */
+button:active:not(:disabled),
+a.bottone:active,
+a.tenue:active {
+  transform: scale(0.97);
+}
+
 button .ic,
 a.bottone .ic {
   color: currentColor;
 }
 
-/* I tasti che non sono «il» tasto della scheda. Un ripieno appena accennato:
-   trasparenti col solo filo intorno, su un tema dove il filo e' quasi del
-   colore della carta, non si capiva che fossero tasti. */
+button.grande {
+  min-height: 52px;
+  padding: 14px 24px;
+  font-size: 16px;
+  box-shadow: 0 6px 16px var(--acceso-soft);
+}
+
+/* I tasti che non sono «il» tasto della scheda. */
 button.tenue,
 a.tenue {
-  background: color-mix(in srgb, var(--testo) 4%, transparent);
+  background: var(--carta);
   color: var(--testo);
-  border: 1px solid color-mix(in srgb, var(--testo) 10%, transparent);
-  font-weight: 550;
+  border-color: var(--linea-forte);
 }
 
 @media (hover: hover) {
   button.tenue:hover:not(:disabled),
   a.tenue:hover {
-    background: color-mix(in srgb, var(--testo) 8%, transparent);
+    background: var(--velo);
   }
 }
 
+/* Il tasto che toglie qualcosa: rosso, ma piano. Quello della conferma, che
+   lo toglie davvero, e' pieno. */
 button.toglie {
-  background: transparent;
+  background: var(--male-soft);
   color: var(--male);
-  border: 1px solid color-mix(in srgb, var(--male) 40%, transparent);
-  font-weight: 550;
 }
 
-button.toglie:hover:not(:disabled) {
-  border-color: var(--male);
+button.pericolo {
+  /* Fisso, e non `--male`: nel tema scuro quel rosso e' chiaro, e la scritta
+     bianca non ci si legge. */
+  background: #d12f52;
+  color: #fff;
 }
 
 button:disabled {
@@ -751,39 +1028,54 @@ button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 select:focus-visible,
-summary:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--acceso) 40%, transparent);
+summary:focus-visible,
+.si-tocca:focus-visible {
+  outline: 3px solid var(--acceso-soft);
   outline-offset: 2px;
 }
 
-/* Una casella e il suo tasto, in fila e a capo quando lo schermo e' stretto.
-   La casella si veste come i tasti che le stanno accanto. */
+/* Una casella e il suo tasto, in fila e a capo quando lo schermo e' stretto. */
 .riga-di-tasti {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   align-items: center;
-  margin-top: 12px;
+  margin-top: 16px;
 }
 
-.riga-di-tasti input[type="text"],
+.casella,
 .rinomina input[type="text"] {
   font: inherit;
-  flex: 1 1 13em;
+  width: 100%;
   min-width: 0;
-  min-height: 42px;
-  padding: 9px 14px;
-  border: 1px solid var(--bordo);
-  border-radius: 12px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--linea-forte);
+  border-radius: var(--r-piccolo);
   background: var(--carta);
   color: inherit;
 }
 
+.riga-di-tasti .casella,
+.rinomina input[type="text"] {
+  flex: 1 1 12em;
+  width: auto;
+}
+
+.casella:focus,
+.rinomina input[type="text"]:focus {
+  outline: none;
+  border-color: var(--acceso);
+  box-shadow: 0 0 0 3px var(--acceso-soft);
+}
+
 #codice-regalo {
-  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-family: var(--mono);
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
+
+/* ─── Gli elenchi: telefoni, plance ──────────────────────────────────────── */
 
 .elenco {
   list-style: none;
@@ -791,20 +1083,24 @@ summary:focus-visible {
   padding: 0;
 }
 
-.elenco li {
+.elenco > li {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 11px 0;
-  border-top: 1px solid var(--bordo);
+  padding: 16px 0;
+  border-top: 1px solid var(--linea);
   /* Su uno schermo stretto i tasti vanno a capo invece di mangiarsi il nome:
      il nome e' la cosa per cui si guarda l'elenco. */
   flex-wrap: wrap;
 }
 
-.elenco li:first-child {
+.elenco > li:first-child {
   border-top: 0;
   padding-top: 0;
+}
+
+.elenco > li:last-child {
+  padding-bottom: 0;
 }
 
 .elenco .nome {
@@ -817,27 +1113,41 @@ summary:focus-visible {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-weight: 650;
+  font-size: 15px;
+  font-weight: 700;
 }
 
-.elenco .nome span {
+.elenco .nome > span {
   display: block;
   color: var(--tenue);
-  font-size: 0.82rem;
+  font-size: 13px;
 }
 
 .elenco .tasti {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .elenco .tasti button,
 .elenco .tasti a,
-.rinomina button {
+.rinomina button,
+.pannello button {
   min-height: 36px;
-  padding: 6px 12px;
-  font-size: 0.86rem;
+  padding: 6px 14px;
+  font-size: 14px;
+}
+
+/* L'elenco piccolo, sotto lo stato della licenza: una riga sola, piu' fitta. */
+.elenco.piccolo {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--linea);
+}
+
+.elenco.piccolo > li {
+  padding: 4px 0;
+  border: 0;
 }
 
 /* Il nome che si sta cambiando: la casella prende il posto del nome e dei
@@ -845,23 +1155,45 @@ summary:focus-visible {
 .rinomina {
   flex: 1 1 18em;
   display: flex;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
   align-items: center;
   min-width: 0;
 }
 
-.vuoto {
+/* Un elenco vuoto: non una riga grigia, ma cosa fare. */
+.elenco > li.vuoto {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 24px 8px;
+  text-align: center;
   color: var(--tenue);
-  padding: 6px 0;
 }
 
-/* Il nome di un telefono di prova e il suo bollino, sulla stessa riga: il
-   nome si accorcia coi puntini se non ci sta, il bollino no. */
+.vuoto .faccia {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+}
+
+.vuoto .faccia .ic {
+  width: 26px;
+  height: 26px;
+}
+
+.vuoto strong {
+  color: var(--testo);
+  font-size: 17px;
+}
+
+/* Il nome e le sue etichette sulla stessa riga: il nome si accorcia coi
+   puntini se non ci sta, le etichette no. */
 .elenco .nome .riga-del-nome {
   display: flex;
   align-items: center;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: 4px 8px;
   min-width: 0;
 }
 
@@ -869,30 +1201,96 @@ summary:focus-visible {
   min-width: 0;
 }
 
-/* «di prova · fino al 6 ott», accanto al nome di un telefono entrato con la
-   casa di prova: del giallo degli avvisi, perche' e' una cosa a tempo. Col
-   selettore lungo apposta: quello delle righe sotto il nome
-   (`.elenco .nome span`) lo vestirebbe di grigio. */
-.elenco .nome .etichetta-prova {
+/* Le etichette accanto a un nome: di chi e' un telefono, che tipo e' una
+   plancia, fino a quando vale un telefono di prova. */
+.chip,
+.elenco .nome .etichetta-prova,
+.elenco .nome .etichetta-muro {
   flex: none;
   display: inline-block;
-  padding: 1px 8px;
+  padding: 2px 8px;
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
-  color: var(--giallo);
-  background: color-mix(in srgb, var(--giallo) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--giallo) 35%, transparent);
+  color: var(--tenue);
+  background: var(--linea);
 }
 
-/* La barra della quota, sotto il nome di un'entita' chiacchierona. Sottile:
-   deve far confrontare tre righe di sfuggita, non diventare un grafico. */
+.elenco .nome .etichetta-muro {
+  color: var(--acceso);
+  background: var(--acceso-soft);
+}
+
+.elenco .nome .etichetta-prova,
+.chip.giallo {
+  color: var(--giallo);
+  background: var(--giallo-soft);
+}
+
+/* «Gestisci» una plancia: il pannello sotto la riga, con chi la vede, il nome
+   e il tasto per toglierla. Prende la riga intera (`flex-basis: 100%`). */
+.pannello {
+  flex: 1 1 100%;
+  display: grid;
+  gap: 16px;
+  margin-top: 4px;
+  padding: 16px;
+  border-radius: var(--r);
+  background: var(--velo);
+  border: 1px solid var(--linea);
+}
+
+.pannello .bottoni {
+  padding-top: 16px;
+  border-top: 1px solid var(--linea);
+}
+
+.chi-la-vede .minuta:first-child {
+  margin-top: 0;
+}
+
+/* Un utente per riga: la casella e il nome, e tutta la riga si tocca. */
+.spunta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+  padding: 2px 0;
+  cursor: pointer;
+}
+
+.spunta input {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  accent-color: var(--acceso);
+  cursor: pointer;
+}
+
+.spunta input:disabled {
+  cursor: default;
+}
+
+/* L'interruttore degli amministratori: pesa piu' delle spunte, perche' vale
+   per chiunque — anche per chi arrivera' domani. */
+.spunta.capo {
+  font-weight: 700;
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--linea);
+}
+
+.chi-la-vede .etichetta {
+  margin: 12px 0 4px;
+}
+
+/* La barra della quota, sotto il nome di un'entita' chiacchierona. */
 .quota {
   height: 4px;
-  margin-top: 6px;
+  margin-top: 8px;
   border-radius: 3px;
-  background: color-mix(in srgb, var(--testo) 8%, transparent);
+  background: var(--linea);
   overflow: hidden;
   max-width: 320px;
 }
@@ -904,62 +1302,173 @@ summary:focus-visible {
   background: var(--acceso);
 }
 
-/* «Chi la vede»: il cassetto delle spunte, sotto la riga di una plancia.
- *
- * Prende la riga intera (`flex-basis: 100%`) perche' la riga e' una flex che
- * va a capo: senza, il cassetto si metterebbe di fianco ai tasti e verrebbe
- * schiacciato in una colonna di tre centimetri. */
-.chi-la-vede {
-  flex: 1 1 100%;
-  margin-top: 4px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--testo) 4%, transparent);
-  border: 1px solid color-mix(in srgb, var(--testo) 8%, transparent);
+/* ─── Una plancia nuova ──────────────────────────────────────────────────── */
+
+.nuova-plancia {
+  margin-top: 8px;
 }
 
-.chi-la-vede .minuta:first-child {
-  margin-top: 0;
+.nuova-plancia > .etichetta,
+.partenza-plancia > .etichetta {
+  margin: 16px 0 8px;
 }
 
-/* Un utente per riga: la casella e il nome, e tutta la riga si tocca. Su un
-   tablet in cucina una casella di tredici punti non si prende col pollice. */
-.spunta {
+.modelli {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.modello {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 16px;
+  border-radius: var(--r);
+  border: 1px solid var(--linea-forte);
+  background: var(--carta);
+  cursor: pointer;
+}
+
+.modello:has(input:checked) {
+  border-color: var(--acceso);
+  background: var(--acceso-soft);
+}
+
+.modello input {
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  flex: none;
+  accent-color: var(--acceso);
+}
+
+.modello span {
+  display: grid;
+  gap: 2px;
+}
+
+.modello small {
+  color: var(--tenue);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.chi-la-vede-nuova {
+  padding: 8px 16px;
+  border-radius: var(--r);
+  background: var(--velo);
+  border: 1px solid var(--linea);
+  margin-bottom: 24px;
+}
+
+.chi-la-vede-nuova .minuta {
+  margin: 8px 0;
+}
+
+/* ─── La licenza ─────────────────────────────────────────────────────────── */
+
+/* Lo stato in grande: Premium nel viola dei regali, Base nel grigio — Base
+   non e' un guasto, e non si scrive come tale. */
+.eroe-licenza {
+  --tinta: var(--linea);
+  --segno: var(--tenue);
+  background: radial-gradient(110% 120% at 0% 0%, var(--tinta), transparent 55%), var(--carta);
+}
+
+.eroe-licenza[data-premium="si"] {
+  --tinta: var(--viola-soft);
+  --segno: var(--viola);
+}
+
+.eroe-licenza[data-premium="si"] .eroe-segno .ic {
+  fill: currentColor;
+}
+
+.vantaggi {
+  list-style: none;
+  margin: 16px 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.vantaggi li {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 38px;
-  padding: 2px 0;
-  cursor: pointer;
+  gap: 12px;
 }
 
-.spunta input {
-  width: 19px;
-  height: 19px;
-  flex: 0 0 auto;
-  accent-color: var(--acceso);
-  cursor: pointer;
+.vantaggi .ic {
+  width: 24px;
+  height: 24px;
+  padding: 4px;
+  border-radius: 50%;
+  background: var(--bene-soft);
+  color: var(--bene);
+  stroke-width: 2.4;
 }
 
-.spunta input:disabled {
-  cursor: default;
+.due-vie {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
 }
 
-/* L'interruttore degli amministratori: sta in cima al cassetto e pesa piu'
-   delle spunte, perche' e' una scelta che vale per chiunque — anche per chi
-   arrivera' domani — e non per tre nomi. */
-.spunta.capo {
-  font-weight: 600;
-  padding-bottom: 4px;
-  margin-bottom: 4px;
-  border-bottom: 1px solid color-mix(in srgb, var(--testo) 8%, transparent);
+.via {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 16px;
+  border-radius: var(--r);
+  background: var(--velo);
+  border: 1px solid var(--linea);
 }
 
-.chi-la-vede .etichetta {
-  margin: 10px 0 2px;
+.via > strong {
+  font-size: 15px;
+  font-weight: 800;
 }
 
-/* «gdahome nel browser»: le parole a sinistra, il tasto a destra. */
+.via .nota,
+.via .riga-di-tasti,
+.via .avviso {
+  margin: 0;
+}
+
+/* Il bollino: «Premium» o «Base», in una parola. */
+.bollino {
+  flex: none;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--linea);
+  color: var(--tenue);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  letter-spacing: 0;
+}
+
+.bollino:empty {
+  display: none;
+}
+
+.bollino.premium {
+  color: var(--viola);
+  background: var(--viola-soft);
+}
+
+.matricola-riga .codice {
+  flex: 1 1 16em;
+  margin: 0;
+  text-align: left;
+  user-select: all;
+  color: var(--testo);
+}
+
+/* ─── Il resto ───────────────────────────────────────────────────────────── */
+
 .che-cosa {
   flex: 1 1 15em;
   min-width: 0;
@@ -972,73 +1481,59 @@ summary:focus-visible {
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
+  padding-top: 0;
 }
 
 code {
-  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
-  font-size: 0.82rem;
+  font-family: var(--mono);
+  font-size: 13px;
   color: var(--tenue);
   overflow-wrap: anywhere;
 }
 
 /* Le sedici lettere, per chi non puo' inquadrare. */
 .codice {
-  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
-  font-size: 1.3rem;
+  font-family: var(--mono);
+  font-size: 20px;
   letter-spacing: 0.1em;
-  margin: 10px 0 0;
-  padding: 12px 14px;
-  border: 1.5px dashed var(--bordo);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--acceso) 4%, transparent);
+  margin: 12px 0 0;
+  padding: 12px 16px;
+  border: 1.5px dashed var(--linea-forte);
+  border-radius: var(--r);
+  background: var(--acceso-soft);
   text-align: center;
   overflow-wrap: anywhere;
 }
 
 .codice.piccolo {
-  font-size: 0.8rem;
+  font-size: 13px;
   letter-spacing: 0;
   white-space: pre-wrap;
   color: var(--tenue);
+  background: var(--velo);
 }
 
-/* La matricola della casa, da copiare per chi regala Premium: una parola sola
-   di 37 lettere, che va a capo dove capita. */
-.matricola-riga .codice {
-  flex: 1 1 16em;
-  margin: 0;
-  text-align: left;
-  user-select: all;
-  color: var(--testo);
-}
-
-/* Il rapporto in chiaro: il testo che parte da questa casa, per intero.
- *
- * Non si accorcia e non si riassume. Il senso di questa scheda e' che chi ci
- * abita possa **leggere** quello che esce, e un riassunto di quello che esce
- * e' esattamente la cosa di cui ci si dovrebbe fidare. Scorre nel suo
- * riquadro, che e' l'unico modo di tenerlo intero senza allargare la pagina. */
+/* Il rapporto in chiaro: il testo che parte da questa casa, per intero, che
+   scorre nel suo riquadro invece di allargare la pagina. */
 .rapporto {
-  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
-  font-size: 0.78rem;
+  font-family: var(--mono);
+  font-size: 12px;
   line-height: 1.6;
-  margin: 10px 0 0;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: var(--fondo);
+  margin: 12px 0 0;
+  padding: 12px 16px;
+  border-radius: var(--r);
+  background: var(--velo);
   color: var(--tenue);
   max-height: 22rem;
   overflow: auto;
   white-space: pre;
 }
 
-/* «Cosa vede» e «Cosa non vede»: due riquadri appena tinti, uno accanto
-   all'altro. */
 .riquadro-tenue {
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--testo) 4%, transparent);
-  font-size: 0.86rem;
+  padding: 16px;
+  border-radius: var(--r);
+  background: var(--velo);
+  font-size: 14px;
   color: var(--tenue);
 }
 
@@ -1047,19 +1542,20 @@ code {
 }
 
 .elenco-semplice {
-  margin: 6px 0 0;
+  margin: 8px 0 0;
   padding-left: 1.2em;
   color: var(--testo);
 }
 
 .elenco-semplice li {
-  margin: 3px 0;
+  margin: 4px 0;
 }
 
 .avviso {
   color: var(--male);
   margin: 12px 0 0;
-  font-size: 0.88rem;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .avviso.giallo {
@@ -1070,17 +1566,15 @@ code {
   color: var(--bene);
 }
 
-/* ─── Le cose che si aprono ──────────────────────────────────────────────── */
-
 .apribile {
-  margin-top: 12px;
+  margin-top: 16px;
 }
 
 .apribile > summary {
   cursor: pointer;
   color: var(--acceso);
-  font-size: 0.86rem;
-  font-weight: 650;
+  font-size: 14px;
+  font-weight: 700;
   list-style: none;
 }
 
@@ -1111,33 +1605,45 @@ code {
   display: none;
 }
 
+/* Il titolo sopra, la riga piccola sotto, e la freccia sempre a destra:
+   anche sul telefono, dove in riga non ci stanno. */
 .cassetto > summary .testa-di-scheda {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   margin-bottom: 0;
+}
+
+.cassetto > summary .testa-di-scheda > * {
+  grid-column: 1;
 }
 
 .cassetto > summary .testa-di-scheda::after {
   content: "▸";
-  color: var(--tenue);
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  color: var(--terzo);
 }
 
 .cassetto[open] > summary .testa-di-scheda::after {
   content: "▾";
 }
 
-.blocco {
-  padding: 14px 0 0;
-  margin-top: 14px;
-  border-top: 1px solid var(--bordo);
+.cassetto[open] > summary {
+  margin-bottom: 16px;
 }
 
-/* Su uno schermo largo l'etichetta del blocco si sposta nel margine e le
-   spiegazioni si incolonnano tutte allo stesso punto. Stretto, torna in
-   colonna da sola. */
+.blocco {
+  padding: 16px 0 0;
+  margin-top: 16px;
+  border-top: 1px solid var(--linea);
+}
+
 @media (min-width: 760px) {
   .blocco {
     display: grid;
     grid-template-columns: 148px minmax(0, 72ch);
-    gap: 0 22px;
+    gap: 0 24px;
     align-items: start;
   }
 
@@ -1154,17 +1660,18 @@ code {
 
 /* Le etichette: in tondo e piccole, mai in maiuscolo. */
 .etichetta {
-  margin: 0 0 6px;
+  display: block;
+  margin: 0 0 8px;
   color: var(--tenue);
-  font-size: 0.82rem;
-  font-weight: 650;
+  font-size: 13px;
+  font-weight: 700;
 }
 
-/* Le schede di chi risponde alle segnalazioni: si vedono solo dove c'e' la
-   chiave della console, e si distinguono da tutto il resto. */
+/* Le schede di chi risponde alle segnalazioni: si distinguono da tutto il
+   resto. */
 .di-chi-risponde {
-  background: color-mix(in srgb, var(--acceso) 5%, var(--carta));
-  border-color: color-mix(in srgb, var(--acceso) 22%, var(--bordo));
+  background: var(--velo);
+  border-style: dashed;
 }
 
 .di-chi-risponde .etichetta {
@@ -1178,24 +1685,52 @@ code {
 .di-chi-risponde h3 > .ic,
 .cassetto h3 > .ic {
   color: var(--tenue);
-  background: color-mix(in srgb, var(--testo) 6%, transparent);
+  background: var(--linea);
+}
+
+/* ─── La domanda prima di togliere ───────────────────────────────────────── */
+
+.conferma {
+  width: min(420px, calc(100% - 32px));
+  padding: 24px;
+  border: 1px solid var(--bordo);
+  border-radius: var(--r-grande);
+  background: var(--carta);
+  color: var(--testo);
+  box-shadow: var(--ombra-alta);
+}
+
+.conferma::backdrop {
+  background: rgba(8, 12, 24, 0.5);
+}
+
+.conferma h3 {
+  margin-bottom: 8px;
+}
+
+.conferma p {
+  color: var(--tenue);
+  margin-bottom: 24px;
+}
+
+.conferma .bottoni {
+  justify-content: flex-end;
 }
 
 /* ─── Le icone ───────────────────────────────────────────────────────────────
  *
  * Disegni fatti con un tratto solo e definiti nella pagina: questa console
- * non si porta dentro niente da fuori — nessun carattere, nessuna libreria di
- * icone. Prendono il colore del testo che gli sta accanto, quindi non ce n'e'
- * una copia per tema. */
+ * non si porta dentro niente da fuori. Prendono il colore del testo che gli
+ * sta accanto, quindi non ce n'e' una copia per tema. */
 
 .simboli {
   display: none;
 }
 
 .ic {
-  width: 18px;
-  height: 18px;
-  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  flex: none;
   color: var(--acceso);
   stroke: currentColor;
   fill: none;
@@ -1204,157 +1739,119 @@ code {
   stroke-linejoin: round;
 }
 
-/* ─── La licenza ─────────────────────────────────────────────────────────── */
-
-/* Il bollino in fondo alla riga: «Premium» o «Base», in una parola. Premium
-   prende il colore dell'accento, che e' quello dei tasti: e' la cosa che si
-   e' comprata, e deve vedersi senza leggere. Base resta tenue — non e' un
-   guasto, e non si scrive come tale. */
-.bollino {
-  flex: 0 0 auto;
-  padding: 2px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--bordo);
-  color: var(--tenue);
-  font-size: 0.8rem;
-  font-weight: 650;
-  white-space: nowrap;
-}
-
-.bollino.premium {
-  color: var(--acceso);
-  border-color: color-mix(in srgb, var(--acceso) 30%, transparent);
-  background: color-mix(in srgb, var(--acceso) 10%, transparent);
-}
-
 /* ─── Sul telefono ───────────────────────────────────────────────────────── */
 
 @media (max-width: 760px) {
-  body {
-    padding: 0 12px 32px;
-  }
-
+  .sezioni,
   .sottotitolo {
     display: none;
   }
 
-  /* Le linguette in tre colonne: sei parole in fila non ci stanno, e una
-     fila che scorre di lato nasconde proprio quelle che servono. */
-  .sezioni {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .sezioni button {
-    padding: 8px 4px;
-    font-size: 0.86rem;
-  }
-
-  .sezioni button .ic {
-    display: none;
-  }
-
-  .griglia.due {
-    grid-template-columns: minmax(0, 1fr);
+  main {
+    margin-top: 8px;
   }
 
   .scheda {
     padding: 16px;
   }
 
+  .capo-sezione h2 {
+    font-size: 24px;
+  }
+
+  .eroe-parole h2 {
+    font-size: 20px;
+  }
+
+  .eroe-segno {
+    width: 48px;
+    height: 48px;
+  }
+
+  .eroe-segno .ic {
+    width: 24px;
+    height: 24px;
+  }
+
+  .mattonelle {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  button.mattonella {
+    min-height: 136px;
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .mattonella-parole > strong {
+    font-size: 16px;
+  }
+
+  .mattonella-parole > span {
+    font-size: 13px;
+  }
+
+  .griglia.due {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .capo-riga > button {
+    width: 100%;
+  }
+
   .qr {
-    max-width: 200px;
+    max-width: 240px;
+  }
+
+  .sagoma {
+    min-height: 160px;
   }
 
   /* I tasti di un telefono o di una plancia vanno sotto il nome, allineati
      alle parole e non alla faccia. */
-  .elenco li > .tasti {
+  .elenco > li > .tasti {
     width: 100%;
-    padding-left: 48px;
+    padding-left: 52px;
   }
-}
 
-/* ─── Una plancia nuova: il modello e chi la vede ─────────────────────────
- *
- * Due carte e non una tendina: le due plance sono due cose diverse, e la riga
- * sotto il nome dice quale. Si toccano intere, come le spunte. */
-.nuova-plancia {
-  margin-top: 14px;
-}
+  .rimedio {
+    grid-column: 1 / -1;
+  }
 
-.nuova-plancia > .etichetta {
-  margin: 12px 0 6px;
-}
+  /* Le righe dello stato: la parola colorata va sotto il titolo, e la frase
+     sotto di lei prende tutta la larghezza. In fila a destra, «solo con
+     Premium» lasciava alla frase una colonna di due parole per riga. */
+  .righe.controlli > li {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    row-gap: 4px;
+  }
 
-/* «Parte da»: solo per i modelli che possono prendere dalla principale. */
-.partenza-plancia {
-  margin-top: 14px;
-}
+  .controlli .faccia {
+    grid-row: 1 / span 3;
+  }
 
-.modelli {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 10px;
-}
+  .controlli .testo {
+    display: contents;
+  }
 
-.modello {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1px solid var(--bordo);
-  background: var(--carta);
-  cursor: pointer;
-}
+  .controlli .testo strong {
+    grid-column: 2;
+    grid-row: 1;
+  }
 
-.modello:has(input:checked) {
-  border-color: var(--acceso);
-  background: color-mix(in srgb, var(--acceso) 8%, var(--carta));
-}
+  .controlli .fine {
+    grid-column: 2;
+    grid-row: 2;
+  }
 
-.modello input {
-  width: 19px;
-  height: 19px;
-  margin-top: 2px;
-  flex: none;
-  accent-color: var(--acceso);
-}
+  .controlli .testo span {
+    grid-column: 2;
+    grid-row: 3;
+  }
 
-.modello span {
-  display: grid;
-  gap: 3px;
-}
-
-.modello small {
-  font-size: 0.84rem;
-  line-height: 1.4;
-  opacity: 0.8;
-}
-
-.chi-la-vede-nuova {
-  padding: 8px 14px;
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--testo) 4%, transparent);
-  border: 1px solid color-mix(in srgb, var(--testo) 8%, transparent);
-  margin-bottom: 12px;
-}
-
-.chi-la-vede-nuova .minuta {
-  margin: 6px 0;
-}
-
-/* «a muro», accanto al nome di una plancia: dell'azzurro del tasto acceso,
-   perche' e' una cosa che la plancia fa, non un avviso. */
-.elenco .nome .etichetta-muro {
-  flex: none;
-  display: inline-block;
-  padding: 1px 8px;
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  white-space: nowrap;
-  color: var(--acceso);
-  background: color-mix(in srgb, var(--acceso) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--acceso) 35%, transparent);
+  .controlli .rimedio {
+    grid-row: 4;
+  }
 }
