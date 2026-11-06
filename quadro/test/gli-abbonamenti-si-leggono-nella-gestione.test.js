@@ -7,8 +7,8 @@
  * nell'app, regalata dal gestore, data da un installatore — con in cima i
  * numeri che contano (ognuno con la sua «i»), le case per piano, le entrate,
  * quello che arriva nei prossimi trenta giorni, «Come funziona», e una
- * tabella: casa, origine, stato, inizio, scade o rinnova, importo, e il menu
- * «⋯».
+ * tabella: casa, origine (col piano), stato, inizio, scade o rinnova,
+ * importo previsto, importo reale, e il menu «⋯»; e i totali.
  *
  * I conti li fa il quadro e li provano le prove delle licenze
  * (`le-licenze.test.js`, «Gli abbonamenti»), e qui sotto `contaGliAbbonamenti`
@@ -33,6 +33,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import {
   contaGliAbbonamenti,
+  ilGiornoDelPagamento,
   ilGruppoDellAbbonamento,
   loStatoDellAbbonamento,
   nonRinnova,
@@ -105,14 +106,24 @@ function laFabbrica() {
       "const I_FILTRI_DI_PRIMA",
       "const TRENTA_GIORNI",
       "function laScadenzaDellaRiga",
+      "function gliImportiDelNegozio",
       "function laLicenzaInRiga",
       "function tutteLeLicenze",
       "function leLicenzeFiltrate",
       "const inOrdineDiData",
       "const ilSegnoDellaFonte",
       "const laFonteInChip",
+      "const laCellaDellImporto",
+      "function gliImportiInUnaRiga",
       "const laBolla",
       "function laRigaDellaLicenza",
+      "function leSommeDelleLicenze",
+      "const iSoldiInTutte",
+      "const leVociDelPrevisto",
+      "function ilPrevistoDetto",
+      "function laRigaDelleSomme",
+      "function ilTotaleDelGruppo",
+      "function ilTotaleDelleLicenze",
       "function leRigheDelleLicenze",
       "function scegliIlFiltroDelleLicenze",
       "function iContiDeiNegozi",
@@ -198,6 +209,7 @@ const riga = (fatta) => {
   uno.stato = loStatoDellAbbonamento(uno);
   uno.gruppo = ilGruppoDellAbbonamento(uno);
   uno.nonRinnova = nonRinnova(uno);
+  uno.pagatoIl = ilGiornoDelPagamento(uno, ORA);
   return uno;
 };
 const soloTesto = (html) =>
@@ -557,7 +569,7 @@ test("in ogni gruppo l'ordine che serve: attive dalle ultime cominciate, prove e
   const html = disegna("tutte", { aperti: new Set(["finita"]) });
   const nomi = (quale) => {
     const dentro = html.match(new RegExp(`data-gruppo="${quale}">([\\s\\S]*?)</section>`))[1];
-    return [...dentro.matchAll(/<span class="lic-c-casa"><b>([^<]+)<\/b>/g)].map(([, n]) => n);
+    return [...dentro.matchAll(/<span class="lic-c-casa"><b[^>]*>([^<]+)<\/b>/g)].map(([, n]) => n);
   };
   /* Attive: chi ha appena comprato o ricevuto il regalo in cima; senza data
    * in fondo. */
@@ -577,6 +589,265 @@ test("in ogni gruppo l'ordine che serve: attive dalle ultime cominciate, prove e
   assert.ok(finite.indexOf("Casa Conti") < finite.indexOf("Casa Colombo"), finite.join(", "));
 });
 
+/* ─── Previsto, reale, e il totale ────────────────────────────────────────
+ *
+ * «Non vedo che tipo di abbonamento hanno, e voglio l'importo previsto, e
+ * poi quando pagano sara' l'importo reale», e «alla fine voglio il totale
+ * anche». Ogni abbonamento dice il piano; due colonne di soldi, previsto (dal
+ * prezzo del piano) e reale (l'ultimo pagamento, col suo giorno); i totali
+ * per gruppo e in fondo, che sono i numeri in cima. */
+
+const ADESSO_PAGATO = ORA - 60 * 1000;
+const PRIMA = ORA - 40 * GIORNO;
+const SOLDI = {
+  "Mensile Apple": riga({
+    sog: casa(21),
+    prezzo: 4.99,
+    valuta: "EUR",
+    periodo: ADESSO_PAGATO,
+    pagato: ORA + 29 * GIORNO,
+  }),
+  "Annuale Uno": riga({
+    sog: casa(22),
+    piano: "annuale",
+    prezzo: 49.99,
+    valuta: "EUR",
+    periodo: PRIMA,
+    pagato: ORA + 325 * GIORNO,
+  }),
+  "Annuale Due": riga({
+    sog: casa(23),
+    piattaforma: "android",
+    piano: "annuale",
+    prezzo: 49.99,
+    valuta: "EUR",
+    periodo: PRIMA - 10 * GIORNO,
+    pagato: ORA + 315 * GIORNO,
+  }),
+  "Prova Google": riga({
+    sog: casa(24),
+    piattaforma: "android",
+    prova: true,
+    fuInProva: true,
+    prezzo: 4.99,
+    valuta: "EUR",
+    pagato: ORA + 5 * GIORNO,
+  }),
+  "Prova Apple": riga({
+    sog: casa(25),
+    piano: "",
+    prova: true,
+    fuInProva: true,
+    pagato: ORA + 9 * GIORNO,
+  }),
+  "Disdetta Pagata": riga({
+    sog: casa(26),
+    rinnovo: false,
+    prezzo: 4.99,
+    valuta: "EUR",
+    periodo: ADESSO_PAGATO,
+    pagato: ORA + 29 * GIORNO,
+  }),
+  Rimborsata: riga({
+    sog: casa(27),
+    vale: false,
+    prezzo: 4.99,
+    valuta: "EUR",
+    finito: "acquisto-rimborsato",
+  }),
+  "Di Test": riga({
+    sog: casa(28),
+    sandbox: true,
+    prezzo: 4.99,
+    valuta: "EUR",
+    periodo: ADESSO_PAGATO,
+  }),
+};
+const UN_REGALO = {
+  lic: "lic_soldi_regalo",
+  app: "gdahome",
+  sog: casa(29),
+  origine: "regalo",
+  scade: ORA + 300 * GIORNO,
+  creata: ORA - GIORNO,
+  revocata: null,
+  vale: true,
+  nota: "",
+};
+const coiSoldi = (piu = {}) => {
+  const elenco = Object.values(SOLDI);
+  PAGINA.prepara({
+    abbonamenti: risposta(elenco),
+    licenze: [...elenco.map((uno) => dalNegozio(uno)), UN_REGALO],
+    case: [...Object.entries(SOLDI).map(([nome, uno]) => [uno.sog, nome]), [casa(29), "Il Regalo"]],
+  });
+  Object.assign(PAGINA.stato, piu);
+};
+const laSuaRigaDiSoldi = (nome) => {
+  coiSoldi();
+  return PAGINA.tutteLeLicenze().find((riga) => riga.nome === nome);
+};
+const euro = (n) => `${n.toFixed(2).replace(".", ",")} €`;
+
+test("ogni abbonamento dice il piano, anche in prova; se non si sa, lo dice", () => {
+  assert.equal(laSuaRigaDiSoldi("Mensile Apple").pianoDetto, "Mensile");
+  assert.equal(laSuaRigaDiSoldi("Annuale Uno").pianoDetto, "Annuale");
+  assert.equal(laSuaRigaDiSoldi("Prova Google").pianoDetto, "Mensile");
+  assert.equal(laSuaRigaDiSoldi("Prova Apple").pianoDetto, "piano non ancora noto");
+  /* Nella cella dell'origine, sotto il negozio. */
+  coiSoldi();
+  const html = PAGINA.gliAbbonamenti();
+  assert.match(
+    html,
+    /<span class="origine-nome">App Store<\/span><small class="origine-piano">Annuale<\/small>/,
+  );
+  assert.match(html, /<small class="origine-piano ignoto">piano non ancora noto<\/small>/);
+  /* Un regalo non ha piano. */
+  assert.equal(laSuaRigaDiSoldi("Il Regalo").pianoDetto, undefined);
+});
+
+test("importo previsto e importo reale, stato per stato, senza inventare prezzi", () => {
+  const due = (nome) => {
+    const una = laSuaRigaDiSoldi(nome);
+    return [una.previsto.testo, una.previsto.sotto, una.reale.testo, una.reale.sotto]
+      .join(" | ")
+      .replace(/ /g, " ");
+  };
+  const il = (q) => PAGINA.conLArticolo("il", q);
+  /* Paga e rinnova: il previsto dal piano, il reale col giorno. */
+  assert.equal(due("Mensile Apple"), `4,99 €/mese |  | 4,99 € | pagato ${il(ADESSO_PAGATO)}`);
+  assert.equal(
+    due("Annuale Uno"),
+    `49,99 €/anno | ≈ 4,17 € al mese | 49,99 € | pagato ${il(PRIMA)}`,
+  );
+  /* In prova: il previsto e' futuro, il reale non c'e'. */
+  const prova = laSuaRigaDiSoldi("Prova Google");
+  assert.equal(prova.previsto.futuro, true);
+  assert.equal(
+    due("Prova Google"),
+    `4,99 €/mese | ${PAGINA.conLArticolo("dal", ORA + 5 * GIORNO)} | — | in prova`.replace(
+      / /g,
+      " ",
+    ),
+  );
+  /* Apple in prova non dice il prezzo: non si indovina. */
+  assert.equal(due("Prova Apple"), "— | prezzo non ancora noto | — | in prova");
+  /* Disdetta: non paghera' piu', ma ha pagato. */
+  assert.equal(due("Disdetta Pagata"), `— | non rinnova | 4,99 € | pagato ${il(ADESSO_PAGATO)}`);
+  assert.equal(due("Rimborsata"), "— |  | rimborsato | 4,99 € restituiti");
+  assert.equal(due("Di Test"), "— | non conta | — | acquisto di test");
+  assert.equal(due("Il Regalo"), "Gratis |  | — | ");
+  /* Le due colonne nella tabella, e sulla carta in una riga sola. */
+  coiSoldi();
+  const html = PAGINA.gliAbbonamenti();
+  assert.match(html, /<span class="lic-c-previsto futuro"><b>4,99 €\/mese<\/b>/);
+  assert.match(
+    soloTesto(html),
+    /previsto 4,99 €\/mese dal(?: |l')\d+ \S+ · reale — /,
+    "«previsto 4,99 €/mese · reale —» sulla carta",
+  );
+});
+
+/* Il testo di una riga di totali. */
+const ilTotale = (html, gruppo = null) => {
+  const pezzo = gruppo
+    ? html.match(new RegExp(`<div class="lic-somma" data-somma="${gruppo}">([\\s\\S]*?)</div>`))
+    : html.match(/<div class="lic-somma lic-totale">([\s\S]*?)<\/div>/);
+  assert.ok(pezzo, `nessun totale ${gruppo || "in fondo"}`);
+  return soloTesto(pezzo[1]).trim();
+};
+
+test("i totali: il previsto e' il «Ricorrente» in cima, il reale l'«Incassato»", () => {
+  const elenco = Object.values(SOLDI);
+  const conti = contaGliAbbonamenti(elenco, ORA);
+  /* Il quadro somma intero e arrotonda alla fine: 4,99 + 2 × 49,99/12. */
+  assert.deepEqual(conti.alMese, { EUR: 13.32 });
+  assert.deepEqual(conti.incassato, { EUR: 9.98 });
+  coiSoldi();
+  const html = PAGINA.gliAbbonamenti();
+  const mese = PAGINA.ilMeseDetto(conti.inizioDelMese);
+  const totale = ilTotale(html);
+  /* Le somme vere, e al mese: lo stesso numero del Ricorrente. */
+  assert.ok(
+    totale.includes(
+      `Previsto: 1 × 4,99 €/mese + 2 × 49,99 €/anno ≈ ${euro(13.32)}/mese, come il «Ricorrente» in cima.`.replace(
+        / /g,
+        " ",
+      ),
+    ),
+    totale,
+  );
+  assert.match(totale, /≈ 13,32 € al mese/);
+  /* Le prove a parte, e quella senza prezzo detta. */
+  assert.match(
+    totale,
+    /Le prove, se pagano alla fine: 1 × 4,99 €\/mese ≈ 4,99 €\/mese; 1 abbonamento senza prezzo detto dal negozio, non contato\./,
+  );
+  /* Il reale: il mese, come l'Incassato; e la somma degli ultimi pagamenti. */
+  assert.ok(totale.includes(`Reale: 9,98 € pagati a ${mese}, come l'«Incassato» in cima.`), totale);
+  assert.match(totale, /Ultimi pagamenti in elenco: 109,96 €/);
+  assert.match(totale, new RegExp(`9,98 € a ${mese}$`));
+  /* Il test non entra da nessuna parte. */
+  assert.ok(!totale.includes("114,95"));
+});
+
+test("i totali per gruppo: attive, in prova, non rinnovano", () => {
+  coiSoldi();
+  const html = PAGINA.gliAbbonamenti();
+  const mese = PAGINA.ilMeseDetto(contaGliAbbonamenti(Object.values(SOLDI), ORA).inizioDelMese);
+  const attive = ilTotale(html, "attiva");
+  assert.match(attive, /^Totale Attive 1 × 4,99 €\/mese \+ 2 × 49,99 €\/anno ≈ 13,32 €\/mese\./);
+  assert.match(
+    attive,
+    new RegExp(`Ultimi pagamenti in elenco: 104,97 €, di cui a ${mese} 4,99 €\\.`),
+  );
+  const prova = ilTotale(html, "prova");
+  assert.match(
+    prova,
+    /^Totale In prova Se pagano alla fine della prova: 1 × 4,99 €\/mese ≈ 4,99 €\/mese/,
+  );
+  assert.match(prova, /≈ 4,99 € al mese, dopo la prova — non hanno pagato/);
+  const disdette = ilTotale(html, "nonrinnova");
+  assert.match(disdette, /Non pagheranno più: niente previsto\./);
+  assert.match(disdette, new RegExp(`— 4,99 € a ${mese}`));
+  /* Le finite e i test non hanno totale. */
+  assert.ok(!/data-somma="finita"|data-somma="test"/.test(html));
+});
+
+test("i totali seguono i filtri e la ricerca", () => {
+  coiSoldi({ fonte: "regalo" });
+  let totale = ilTotale(PAGINA.gliAbbonamenti());
+  assert.match(totale, /^Totale delle licenze filtrate Previsto: nessuno che paga e rinnova\./);
+  assert.ok(!totale.includes("Ricorrente"), "filtrato non e' il Ricorrente");
+  coiSoldi({ cerca: "annuale uno" });
+  totale = ilTotale(PAGINA.gliAbbonamenti());
+  assert.match(totale, /Previsto: 1 × 49,99 €\/anno ≈ 4,17 €\/mese\./);
+  assert.match(totale, /Ultimi pagamenti in elenco: 49,99 €/);
+  coiSoldi();
+  PAGINA.scegliIlFiltroDelleLicenze("nonrinnova");
+  totale = ilTotale(PAGINA.gliAbbonamenti());
+  assert.match(totale, /Previsto: nessuno che paga e rinnova\./);
+  assert.match(totale, /Reale: 4,99 € pagati/);
+});
+
+test("il ricorrente si somma intero: due annuali sono 8,33 € al mese, non 8,34", () => {
+  const due = [
+    riga({ piano: "annuale", prezzo: 49.99, valuta: "EUR" }),
+    riga({ piano: "annuale", prezzo: 49.99, valuta: "EUR" }),
+  ];
+  assert.deepEqual(contaGliAbbonamenti(due, ORA).alMese, { EUR: 8.33 });
+  /* Il giorno del pagamento: niente in prova, rimborsato o di test. */
+  assert.equal(ilGiornoDelPagamento(riga({ prova: true, periodo: ORA }), ORA), null);
+  assert.equal(
+    ilGiornoDelPagamento(riga({ finito: "acquisto-rimborsato", periodo: ORA }), ORA),
+    null,
+  );
+  assert.equal(ilGiornoDelPagamento(riga({ sandbox: true, periodo: ORA }), ORA), null);
+  assert.equal(ilGiornoDelPagamento(riga({ periodo: ORA - GIORNO }), ORA), ORA - GIORNO);
+  /* Mai dopo adesso. */
+  assert.equal(ilGiornoDelPagamento(riga({ periodo: ORA + GIORNO }), ORA), ORA);
+});
+
 /* I gruppi dell'elenco, in ordine, con quante righe si vedono. */
 const iGruppi = (html) =>
   [
@@ -594,7 +865,10 @@ test("la tabella e' a gruppi di stato: finite e test chiusi, e un filtro apre il
   ]);
   assert.match(html, /data-apri-gruppo="finita" aria-expanded="false"/);
   /* Le colonne della tabella. */
-  assert.match(soloTesto(html), /Casa Origine Stato Inizio Scade o rinnova Importo/);
+  assert.match(
+    soloTesto(html),
+    /Casa Origine Stato Inizio Scade o rinnova Importo previsto Importo reale/,
+  );
   assert.deepEqual(iGruppi(disegna("finita")), ["finita: 4"]);
   /* I nomi di prima portano ancora al posto giusto. */
   for (const diPrima of ["disdetto", "disdetti", "nonrinnovano"])
