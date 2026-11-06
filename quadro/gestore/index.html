@@ -4669,13 +4669,17 @@
         margin: 0 0 8px;
       }
 
+      /* Casa | Origine (col piano) | Stato | Inizio | Scade o rinnova |
+         Importo previsto | Importo reale | ⋯ — e le righe dei totali sulle
+         stesse colonne. */
       .lic-testata,
-      .elenco > li.lic-riga {
+      .elenco > li.lic-riga,
+      .lic-somma {
         display: grid;
         grid-template-columns:
-          minmax(0, 1.7fr) minmax(0, 1.3fr) 8.6rem 8rem minmax(6.5rem, 0.7fr)
-          36px;
-        column-gap: 16px;
+          minmax(0, 1fr) 7.2rem 6.4rem 5.4rem 6.2rem 6.6rem 5.6rem
+          32px;
+        column-gap: 10px;
         align-items: center;
       }
 
@@ -4688,8 +4692,8 @@
         font-weight: 750;
       }
 
-      .lic-testata > span:nth-child(5),
-      .lic-c-importo {
+      .lic-testata > span:nth-child(6),
+      .lic-testata > span:nth-child(7) {
         text-align: right;
       }
 
@@ -4756,10 +4760,27 @@
         font-weight: 650;
       }
 
-      .origine > span:last-child {
+      .origine-testo {
+        min-width: 0;
+        display: grid;
+        line-height: 1.25;
+      }
+
+      .origine-nome,
+      .origine-piano {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+
+      .origine-piano {
+        color: var(--ink-3);
+        font-size: 0.74rem;
+        font-weight: 650;
+      }
+
+      .origine-piano.ignoto {
+        font-style: italic;
       }
 
       .lic-segno {
@@ -4803,34 +4824,159 @@
         font-size: 0.86rem;
       }
 
+      .lic-c-inizio,
       .lic-c-data {
         display: grid;
         line-height: 1.3;
       }
 
-      .lic-c-data small {
+      .lic-c-inizio small,
+      .lic-c-data small,
+      .lic-dal {
         color: var(--ink-3);
         font-size: 0.72rem;
         font-weight: 650;
       }
 
+      .lic-c-inizio b,
       .lic-c-data b {
         font-size: 0.88rem;
         font-weight: 750;
         white-space: nowrap;
       }
 
-      .lic-c-importo {
-        font-size: 0.9rem;
+      /* L'inizio e' il contesto, la fine e' quello che conta: piu' chiaro. */
+      .lic-c-inizio b {
+        color: var(--ink-2);
+        font-weight: 650;
+      }
+
+      .lic-c-inizio b.nessuna {
+        color: var(--ink-3);
+      }
+
+      /* «dal 6 nov →»: solo sulla carta stretta, dove la colonna non c'e'. */
+      .lic-dal {
+        display: none;
+      }
+
+      /* Le due colonne dei soldi: il numero, e sotto la sua parola. Il
+         previsto di una prova e' futuro: piu' chiaro, in corsivo. */
+      .lic-c-previsto,
+      .lic-c-reale,
+      .lic-s-previsto,
+      .lic-s-reale {
+        display: grid;
+        justify-items: end;
+        text-align: right;
+        line-height: 1.3;
+        min-width: 0;
+      }
+
+      .lic-c-previsto b,
+      .lic-c-reale b,
+      .lic-s-previsto b,
+      .lic-s-reale b {
+        font-size: 0.88rem;
         font-weight: 800;
         white-space: nowrap;
       }
 
+      .lic-c-previsto small,
+      .lic-c-reale small,
+      .lic-s-previsto small,
+      .lic-s-reale small {
+        color: var(--ink-3);
+        font-size: 0.72rem;
+        font-weight: 650;
+      }
+
+      .lic-c-previsto.futuro b,
+      .lic-s-previsto.futuro b,
+      .lic-c-importi b.futuro,
+      .lic-s-importi b.futuro {
+        color: var(--ink-2);
+        font-weight: 650;
+        font-style: italic;
+      }
+
+      .lic-c-previsto.senza b,
+      .lic-c-reale.senza b,
+      .lic-s-previsto.senza b,
+      .lic-s-reale.senza b,
+      .lic-c-previsto.spento b,
+      .lic-s-previsto.spento b,
+      .lic-c-importi b.spento,
+      .lic-s-importi b.spento {
+        color: var(--ink-3);
+        font-weight: 650;
+      }
+
+      /* La riga sola della carta stretta: qui no. */
+      .lic-c-importi,
+      .lic-s-importi {
+        display: none;
+      }
+
       .lic-riga[data-stato="finita"] .lic-c-casa b,
       .lic-riga[data-stato="test"] .lic-c-casa b,
-      .lic-riga[data-stato="finita"] .lic-c-importo,
-      .lic-riga[data-stato="test"] .lic-c-importo {
+      .lic-riga[data-stato="finita"] .lic-c-previsto b,
+      .lic-riga[data-stato="finita"] .lic-c-reale b,
+      .lic-riga[data-stato="test"] .lic-c-previsto b,
+      .lic-riga[data-stato="test"] .lic-c-reale b {
         color: var(--ink-3);
+      }
+
+      /* I totali: sotto ogni gruppo, e in fondo, sulle colonne dei soldi. */
+      .lic-somma {
+        margin: 0 -12px 10px;
+        padding: 10px 12px;
+        border-top: 1px dashed var(--linea-forte);
+      }
+
+      .lic-s-cosa {
+        grid-column: 1 / 6;
+        min-width: 0;
+        display: grid;
+        gap: 2px;
+        line-height: 1.35;
+      }
+
+      .lic-s-cosa b {
+        font-size: 0.82rem;
+        font-weight: 750;
+      }
+
+      .lic-s-cosa small {
+        color: var(--ink-3);
+        font-size: 0.76rem;
+        font-weight: 600;
+      }
+
+      .lic-s-previsto {
+        grid-column: 6;
+      }
+
+      .lic-s-reale {
+        grid-column: 7;
+      }
+
+      .lic-totale {
+        margin: 8px -12px 0;
+        padding: 14px 12px;
+        border-top: 2px solid var(--linea-forte);
+        border-radius: 0 0 10px 10px;
+        background: var(--linea);
+      }
+
+      .lic-totale .lic-s-cosa b {
+        font-size: 0.95rem;
+        font-weight: 800;
+      }
+
+      .lic-totale .lic-s-previsto b,
+      .lic-totale .lic-s-reale b {
+        font-size: 1rem;
       }
 
       .lic-c-menu {
@@ -4959,10 +5105,11 @@
         }
 
         .elenco > li.lic-riga {
-          grid-template-columns: minmax(0, 1fr) auto auto 32px;
+          grid-template-columns: auto minmax(0, 1fr) auto 32px;
           grid-template-areas:
             "casa casa stato menu"
-            "origine data importo menu";
+            "origine data data menu"
+            "importi importi importi menu";
           row-gap: 8px;
           column-gap: 12px;
         }
@@ -4980,15 +5127,102 @@
           grid-area: origine;
         }
 
+        .lic-c-inizio {
+          display: none;
+        }
+
         .lic-c-data {
           grid-area: data;
           display: flex;
+          flex-wrap: wrap;
           align-items: baseline;
-          gap: 4px;
+          gap: 0 4px;
+          min-width: 0;
         }
 
-        .lic-c-importo {
-          grid-area: importo;
+        .lic-dal {
+          display: inline;
+          white-space: nowrap;
+        }
+
+        .lic-dal b {
+          color: var(--ink-2);
+          font-weight: 650;
+        }
+
+        /* Con la data della fine, «dal 6 nov → 20 nov»: la parola della
+           fine la dice gia' la pastiglia. Senza («per sempre»,
+           «rimborsata»), la parola resta. */
+        .lic-c-data.con-inizio.con-data > small {
+          display: none;
+        }
+
+        /* La freccia va a capo con la fine, non resta sola in fondo. */
+        .lic-c-data.con-inizio.con-data > b::before,
+        .lic-c-data.con-inizio:not(.con-data) > small::before {
+          content: "→ " / "";
+          color: var(--ink-3);
+          font-weight: 650;
+        }
+
+        /* I due importi in una riga: «previsto 4,99 €/mese · reale —». */
+        .lic-c-previsto,
+        .lic-c-reale {
+          display: none;
+        }
+
+        .lic-c-importi,
+        .lic-s-importi {
+          grid-area: importi;
+          display: block;
+          color: var(--ink-2);
+          font-size: 0.84rem;
+          line-height: 1.45;
+        }
+
+        .lic-c-importi small,
+        .lic-s-importi small {
+          color: var(--ink-3);
+          font-size: 0.76rem;
+          font-weight: 650;
+          white-space: nowrap;
+        }
+
+        .lic-c-importi b,
+        .lic-s-importi b {
+          color: var(--ink);
+          font-weight: 800;
+          white-space: nowrap;
+        }
+
+        /* I totali: una carta, con la riga dei due importi in fondo. */
+        .lic-somma {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr);
+          row-gap: 6px;
+          margin: 0 0 10px;
+          padding: 10px 12px;
+          border: 1px dashed var(--linea-forte);
+          border-radius: 10px;
+        }
+
+        .lic-s-cosa {
+          grid-column: 1;
+        }
+
+        .lic-s-previsto,
+        .lic-s-reale {
+          display: none;
+        }
+
+        .lic-s-importi {
+          grid-area: auto;
+        }
+
+        .lic-totale {
+          margin: 12px 0 0;
+          border: 0;
+          border-radius: 12px;
         }
 
         .lic-c-menu {
@@ -5005,14 +5239,11 @@
          nome intero sta nel suggerimento e nella riga aperta. */
       @container (max-width: 420px) {
         .elenco > li.lic-riga {
-          grid-template-columns: auto minmax(0, 1fr) auto 32px;
-          grid-template-areas:
-            "casa casa stato menu"
-            "origine data importo menu";
           column-gap: 8px;
         }
 
-        .origine > span:last-child {
+        /* Il piano resta accanto al segno: «A Annuale». */
+        .origine-nome {
           display: none;
         }
       }
@@ -8302,8 +8533,9 @@
       };
 
       /* «il 4 ott», ma «l'8 ott»: davanti a 1, 8 e 11 l'articolo si elide, e
-       * con lui la preposizione (al/all', dal/dall'). */
-      function conLArticolo(preposizione, quando) {
+       * con lui la preposizione (al/all', dal/dall'). Con `scrivi = ilGiorno`
+       * la data e' intera: «l'8 novembre 2026». */
+      function conLArticolo(preposizione, quando, scrivi = ilGiornoCorto) {
         const giorno = new Date(quando).getDate();
         const elisa = giorno === 1 || giorno === 8 || giorno === 11;
         const [piena, apostrofo] = {
@@ -8311,7 +8543,7 @@
           al: ["al ", "all'"],
           dal: ["dal ", "dall'"],
         }[preposizione];
-        return `${elisa ? apostrofo : piena}${ilGiornoCorto(quando)}`;
+        return `${elisa ? apostrofo : piena}${scrivi(quando)}`;
       }
 
       /* «4,99 €»: i soldi come si scrivono in Italia, nella valuta del negozio. */
@@ -8431,6 +8663,178 @@
         return q === null ? { verbo: "per sempre", quando: null } : { verbo: "scade", quando: q };
       }
 
+      /* Il prezzo di listino di GdAHome Premium, lo stesso che l'app scrive
+       * quando il negozio non risponde (`prezzoDiRiserva`). */
+      const LISTINO_GDAHOME = { mensile: 4.99, annuale: 49.99 };
+
+      /* Il prezzo di un piano quando il negozio non l'ha detto (Apple, in
+       * prova, non lo manda): quello che paga, adesso, un altro abbonamento
+       * dello stesso prodotto — o della stessa app e dello stesso piano — e
+       * se non c'e' nessuno il listino di GdAHome. Torna `null` quando non si
+       * sa nemmeno il piano: un prezzo senza piano sarebbe inventato. */
+      function ilPrezzoDelPiano(uno) {
+        const piano = uno.piano === "annuale" || uno.piano === "mensile" ? uno.piano : "";
+        if (!piano) return null;
+        const app = uno.app || "gdahome";
+        const altri = (ABBONAMENTI?.elenco || []).filter(
+          (altro) =>
+            altro !== uno &&
+            altro.prezzo > 0 &&
+            !altro.sandbox &&
+            altro.piano === piano &&
+            (altro.app || "gdahome") === app,
+        );
+        const piuRecente = (elenco) =>
+          elenco
+            .slice()
+            .sort(
+              (a, b) =>
+                (Number(b.pagatoIl ?? b.inizio ?? 0) || 0) -
+                (Number(a.pagatoIl ?? a.inizio ?? 0) || 0),
+            )[0];
+        const simile =
+          piuRecente(altri.filter((altro) => uno.prodotto && altro.prodotto === uno.prodotto)) ||
+          piuRecente(altri);
+        if (simile) return { prezzo: Number(simile.prezzo), valuta: simile.valuta || "EUR", piano };
+        if (app === "gdahome") return { prezzo: LISTINO_GDAHOME[piano], valuta: "EUR", piano };
+        return null;
+      }
+
+      /* I due importi di un abbonamento del negozio, colonna per colonna.
+       *
+       * «Importo previsto» e' quello che l'abbonamento fara' pagare, col suo
+       * piano: «4,99 €/mese», «49,99 €/anno». C'e' per chi paga e rinnova
+       * (e la loro somma al mese e' il «Ricorrente» in cima: `conta:
+       * "ricorrente"`) e per chi e' in prova e paghera' alla fine (`conta:
+       * "prova"`, fuori dal Ricorrente finche' non paga). Chi non rinnova non
+       * paghera' piu': «—».
+       *
+       * «Importo reale» e' l'ultimo pagamento vero, col suo giorno
+       * (`pagatoIl`, lo stesso che conta «Incassato»). In prova, o in un
+       * acquisto di test: «—». Rimborsato: «rimborsato».
+       *
+       * Il prezzo e' quello che sa il quadro: su App Store l'ultima
+       * transazione, su Google Play il prezzo del piano. In prova Apple non
+       * lo dice: allora vale il prezzo dello stesso piano (`ilPrezzoDelPiano`),
+       * e sotto c'e' scritto «di listino». Ogni riga ha il suo importo, anche
+       * chi non rinnova o e' finito: li', in grigio, e fuori dai totali. */
+      function gliImportiDelNegozio(riga, uno) {
+        const ios = uno.piattaforma === "ios";
+        const detto = uno.prezzo > 0 ? Number(uno.prezzo) : null;
+        const diListino = detto === null ? ilPrezzoDelPiano(uno) : null;
+        const valuta = diListino?.valuta || uno.valuta || "EUR";
+        const prezzo = detto ?? diListino?.prezzo ?? null;
+        const piano = riga.piano;
+        const unita = piano === "annuale" ? "/anno" : piano === "mensile" ? "/mese" : "";
+        const alMese =
+          prezzo === null
+            ? null
+            : piano === "annuale"
+              ? prezzo / 12
+              : piano === "mensile"
+                ? prezzo
+                : null;
+        const vuoto = (sotto = "") => ({
+          testo: "—",
+          sotto,
+          importo: null,
+          alMese: null,
+          conta: null,
+        });
+        const previsto = (conta, sotto) =>
+          prezzo === null
+            ? {
+                ...vuoto(conta === "prova" ? "prezzo non ancora noto" : "prezzo non detto"),
+                conta,
+                valuta,
+              }
+            : {
+                testo: `${iSoldi(prezzo, valuta)}${unita}`,
+                sotto: diListino ? [sotto, "di listino"].filter(Boolean).join(" · ") : sotto,
+                listino: Boolean(diListino),
+                importo: prezzo,
+                valuta,
+                piano,
+                alMese,
+                conta,
+              };
+        const pagatoIl =
+          typeof uno.pagatoIl === "number"
+            ? uno.pagatoIl
+            : !uno.prova && typeof uno.periodo === "number"
+              ? uno.periodo
+              : null;
+        /* Quello che e' stato pagato davvero: un importo di listino qui non
+         * va, perche' «reale» vuol dire detto dal negozio. */
+        const pagato = () =>
+          detto === null
+            ? { testo: "—", sotto: "importo non detto", importo: null, valuta, quando: pagatoIl }
+            : {
+                testo: iSoldi(detto, valuta),
+                sotto: pagatoIl ? `pagato ${conLArticolo("il", pagatoIl)}` : "pagato",
+                importo: detto,
+                valuta,
+                quando: pagatoIl,
+              };
+        const nessuno = (sotto) => ({ testo: "—", sotto, importo: null, valuta, quando: null });
+        /* Il prezzo del piano, in grigio e fuori dai totali: chi non rinnova,
+         * chi e' finito, un acquisto di test. */
+        const spento = (sotto) =>
+          prezzo === null
+            ? vuoto(sotto)
+            : {
+                ...previsto(null, ""),
+                sotto: diListino ? [sotto, "di listino"].filter(Boolean).join(" · ") : sotto,
+                conta: null,
+                alMese: null,
+                spento: true,
+              };
+        const haPagato = !uno.sandbox && !uno.prova && uno.finito !== "acquisto-rimborsato";
+
+        if (riga.stato === "test") {
+          riga.previsto = spento("non conta");
+          riga.reale = nessuno("acquisto di test");
+        } else if (riga.pastiglia === "Rimborsata") {
+          riga.previsto = spento("rimborsato");
+          riga.reale = {
+            testo: "rimborsato",
+            sotto: detto === null ? "" : `${iSoldi(detto, valuta)} restituiti`,
+            importo: null,
+            valuta,
+            quando: null,
+          };
+        } else if (riga.stato === "finita") {
+          riga.previsto = spento("finito");
+          riga.reale = haPagato ? pagato() : nessuno("non ha mai pagato");
+        } else if (riga.stato === "prova") {
+          riga.previsto = previsto(
+            "prova",
+            typeof uno.pagato === "number" ? conLArticolo("dal", uno.pagato) : "dopo la prova",
+          );
+          riga.previsto.futuro = true;
+          riga.reale = nessuno("in prova");
+        } else if (riga.stato === "nonrinnova") {
+          riga.previsto = spento("non rinnova");
+          riga.reale = haPagato ? pagato() : nessuno("non pagherà");
+        } else {
+          riga.previsto = previsto(
+            "ricorrente",
+            piano === "annuale" && prezzo !== null
+              ? `≈ ${iSoldi(prezzo / 12, valuta)} al mese`
+              : "",
+          );
+          riga.reale = haPagato ? pagato() : nessuno("");
+        }
+        riga.importoDi =
+          prezzo === null
+            ? ""
+            : diListino
+              ? `${ios ? "App Store" : "Google Play"} non ha ancora detto il prezzo: è quello di listino del piano`
+              : ios
+                ? "importo dall'ultima transazione di App Store"
+                : "importo dal prezzo del piano su Google Play";
+      }
+
       /* Una licenza, come si legge in una riga. `una` e' la licenza
        * (`/gestore/licenze`), `uno` il suo abbonamento (`/gestore/abbonamenti`)
        * se viene dal negozio: l'abbonamento sa il piano, il prezzo, la prova
@@ -8455,6 +8859,20 @@
         };
         const metti = (stato, pastiglia, tinta, frase, soldi, soldiSotto = "") =>
           Object.assign(riga, { stato, pastiglia, tinta, frase, soldi, soldiSotto });
+        /* Da quando: la parola piccola della colonna «Inizio» («comprato
+         * il», «prova dal», «regalato il»…) e la frase intera della riga
+         * aperta («Comprato il 6 novembre 2026»). Senza data, niente. */
+        const lInizio = (quando, parola, prima = "", preposizione = "il", dopo = "") => {
+          const buono = typeof quando === "number" && quando > 0;
+          Object.assign(riga, {
+            inizio: buono ? quando : null,
+            inizioVerbo: buono ? parola : "",
+            inizioDetto: buono
+              ? `${prima} ${conLArticolo(preposizione, quando, ilGiorno)}${dopo}`
+              : "",
+          });
+        };
+        lInizio(null);
 
         /* La data che conta, per la colonna «Scade o rinnova», e la fonte in
          * una parola, per la colonna «Origine». */
@@ -8478,7 +8896,7 @@
           const piano = uno.piano === "annuale" || uno.piano === "mensile" ? uno.piano : "";
           const prezzo =
             uno.prezzo > 0
-              ? `${iSoldi(uno.prezzo, uno.valuta)}/${piano === "annuale" ? "anno" : "mese"}`
+              ? `${iSoldi(uno.prezzo, uno.valuta)}${piano === "annuale" ? "/anno" : piano === "mensile" ? "/mese" : ""}`
               : "";
           const il = uno.pagato ? conLArticolo("il", uno.pagato) : "";
           const al = uno.pagato ? conLArticolo("al", uno.pagato) : "";
@@ -8489,6 +8907,26 @@
           riga.fonteDetta = `${ios ? "App Store" : "Google Play"} · abbonamento${piano ? ` ${piano}` : ""}`;
           riga.quando = typeof uno.pagato === "number" ? uno.pagato : null;
           riga.sandbox = Boolean(uno.sandbox);
+          /* Il piano, sempre detto: anche in prova. Se il negozio non l'ha
+           * ancora detto non si indovina. */
+          const pianoDetto = String(uno.piano || "").trim();
+          riga.piano = pianoDetto;
+          riga.pianoDetto =
+            pianoDetto === "mensile"
+              ? "Mensile"
+              : pianoDetto === "annuale"
+                ? "Annuale"
+                : pianoDetto || "piano non ancora noto";
+          riga.prodotto = String(uno.prodotto || "");
+          /* L'inizio e' quello che dice il negozio (l'acquisto, o il primo
+           * giorno della prova), o se non lo dice quando il quadro ha visto
+           * la ricevuta la prima volta. */
+          const daQuando = typeof uno.inizio === "number" ? uno.inizio : (una?.creata ?? null);
+          if (uno.prova || (uno.fuInProva && !uno.pagatoDopoLaProva))
+            lInizio(daQuando, "prova dal", "Prova gratuita cominciata", "il");
+          else if (uno.fuInProva)
+            lInizio(daQuando, "dal", "Abbonato", "dal", ", cominciando con la prova gratuita");
+          else lInizio(daQuando, "comprato il", "Comprato", "il");
           if (uno.sandbox)
             metti(
               "test",
@@ -8575,6 +9013,7 @@
                 ? `≈ ${iSoldi(uno.prezzo / 12, uno.valuta)} al mese`
                 : "si rinnova",
             );
+          gliImportiDelNegozio(riga, uno);
           return finisci();
         }
 
@@ -8597,9 +9036,22 @@
           .filter(Boolean)
           .join(" · ");
         riga.quando = una.revocata || una.scade;
+        /* Una licenza regalata comincia quando e' fatta: col codice, quando
+         * lo si riscatta (la durata parte da li'). */
+        if (una.codice)
+          lInizio(
+            una.creata,
+            "riscattato il",
+            `Codice${diInstallatore ? ` di ${chiLaDa}` : ""} riscattato`,
+            "il",
+          );
+        else if (diInstallatore) lInizio(una.creata, "dato il", `Data da ${chiLaDa}`, "il");
+        else lInizio(una.creata, "regalato il", "Regalata", "il");
         const torna = diUnaCasa ? "la casa torna Base" : "il telefono torna Base";
         const tornata = diUnaCasa ? "la casa è tornata Base" : "il telefono è tornato Base";
         const soldi = ["Gratis", diInstallatore ? "il cliente non paga" : "non incassi niente"];
+        riga.previsto = { testo: "Gratis", sotto: "", importo: null, alMese: null, conta: null };
+        riga.reale = { testo: "—", sotto: "", importo: null, quando: null };
         if (una.revocata)
           metti(
             "finita",
@@ -8674,6 +9126,7 @@
                   vale: una.vale,
                   prova: una.prova,
                   pagato: una.scade,
+                  inizio: una.creata,
                 },
               }),
             );
@@ -8699,11 +9152,25 @@
         );
       }
 
-      /* Prima chi finisce prima; fra le finite, prima le piu' recenti. */
-      const inOrdineDiData = (a, b) =>
-        a.stato === "finita" || a.stato === "test"
-          ? (b.quando ?? 0) - (a.quando ?? 0)
-          : (a.quando ?? Infinity) - (b.quando ?? Infinity) || a.nome.localeCompare(b.nome, "it");
+      /* L'ordine dentro un gruppo. Le attive e i test: prima le ultime
+       * cominciate, cosi' chi ha appena comprato o ricevuto un regalo sta in
+       * cima. In prova e chi non rinnova: prima chi finisce prima, perche' e'
+       * quella data che decide (paga o torna Base). Le finite: prima quelle
+       * finite da poco. Stati diversi (la scheda di una casa) nell'ordine dei
+       * gruppi; a pari data, per nome. */
+      const inOrdineDiData = (a, b) => {
+        if (a.stato !== b.stato) {
+          const fila = Object.keys(GLI_STATI_DELLE_LICENZE);
+          return fila.indexOf(a.stato) - fila.indexOf(b.stato);
+        }
+        const fra =
+          a.stato === "prova" || a.stato === "nonrinnova"
+            ? (a.quando ?? Infinity) - (b.quando ?? Infinity)
+            : a.stato === "finita"
+              ? (b.quando ?? 0) - (a.quando ?? 0)
+              : (b.inizio ?? 0) - (a.inizio ?? 0);
+        return fra || a.nome.localeCompare(b.nome, "it");
+      };
 
       /* Il segno della fonte: la lettera del negozio, o il disegno del regalo
        * e dell'installatore. */
@@ -8713,10 +9180,27 @@
           : `<span class="lic-segno ${riga.fonte === "regalo" ? "fonte-regalo" : "fonte-installatore"}" aria-hidden="true">${LE_ICONE[riga.icona]}</span>`;
 
       /* L'origine in una pastiglia col suo segno: «App Store», «Google
-       * Play», «Regalo», «Installatore». Il nome lungo sta nel suggerimento,
-       * e nella riga aperta. */
+       * Play», «Regalo», «Installatore»; sotto, per il negozio, il piano
+       * («Annuale», «Mensile», o «piano non ancora noto»). Il nome lungo sta
+       * nel suggerimento, e nella riga aperta. */
       const laFonteInChip = (riga) =>
-        `<span class="origine" title="${testo(riga.fonteDetta)}">${/* già HTML */ ilSegnoDellaFonte(riga)}<span>${testo(riga.origine)}</span></span>`;
+        `<span class="origine" title="${testo(riga.fonteDetta)}">${/* già HTML */ ilSegnoDellaFonte(riga)}<span class="origine-testo"><span class="origine-nome">${testo(riga.origine)}</span>${riga.pianoDetto ? `<small class="origine-piano${riga.piano ? "" : " ignoto"}">${testo(riga.pianoDetto)}</small>` : ""}</span></span>`;
+
+      /* Una cella d'importo: il numero, e sotto la sua parola piccola. */
+      const laCellaDellImporto = (classe, importo) =>
+        `<span class="${testo(classe)}${importo?.futuro ? " futuro" : ""}${importo?.spento ? " spento" : ""}${importo?.importo == null && importo?.testo === "—" ? " senza" : ""}"><b>${testo(importo?.testo ?? "—")}</b>${importo?.sotto ? `<small>${testo(importo.sotto)}</small>` : ""}</span>`;
+
+      /* Sulla carta stretta i due importi stanno in una riga sola:
+       * «previsto 4,99 €/mese · reale —». Un regalo e' «Gratis» e basta. */
+      function gliImportiInUnaRiga(riga) {
+        const p = riga.previsto || {};
+        const r = riga.reale || {};
+        if (!riga.negozio)
+          return `<span class="lic-c-importi"><b>${testo(p.testo || "Gratis")}</b></span>`;
+        const pezzo = (parola, importo, conSotto) =>
+          `<small>${testo(parola)}</small> <b class="${importo.futuro ? "futuro" : importo.spento ? "spento" : ""}">${testo(importo.testo ?? "—")}</b>${conSotto && importo.sotto ? ` <small>${testo(importo.sotto)}</small>` : ""}`;
+        return `<span class="lic-c-importi">${/* già HTML */ pezzo("previsto", p, Boolean(p.futuro || p.spento || p.listino))}<small aria-hidden="true"> · </small>${/* già HTML */ pezzo("reale", r, r.importo != null)}</span>`;
+      }
 
       /* Il punto interrogativo gentile: una «i» che, toccata o sorvolata,
        * dice cosa vuol dire un numero. La spiegazione lunga sta qui, non
@@ -8755,20 +9239,219 @@
         /* Nella scheda della casa il nome e' quello della app, e sotto c'e'
          * il perche': la casa la si sta gia' guardando. */
         const sotto = nellaCasa ? una.frase : una.sotto;
+        /* L'inizio: in colonna sulla tabella larga («comprato il / 6 nov»);
+         * sulla carta stretta sta davanti alla fine, «dal 6 nov → 20 nov». */
+        const inizio = una.inizio
+          ? `<small>${testo(una.inizioVerbo)}</small><b>${testo(ilGiornoCorto(una.inizio))}</b>`
+          : `<b class="nessuna">—</b>`;
+        const giornoDInizio = una.inizio ? ilGiornoCorto(una.inizio) : "";
+        const dal = una.inizio
+          ? `<span class="lic-dal">${testo(conLArticolo("dal", una.inizio).slice(0, -giornoDInizio.length))}<b>${testo(giornoDInizio)}</b></span>`
+          : "";
         return `
           <li class="lic-riga${aperta ? " aperta" : ""}" data-stato="${testo(una.stato)}" data-lic="${testo(una.lic)}" tabindex="0" aria-expanded="${aperta ? "true" : "false"}">
-            <span class="lic-c-casa"><b>${testo(nome)}</b><small>${testo(sotto)}</small></span>
+            <span class="lic-c-casa"><b title="${testo(nome)}">${testo(nome)}</b><small>${testo(sotto)}</small></span>
             <span class="lic-c-origine">${/* già HTML */ laFonteInChip(una)}</span>
             <span class="lic-c-stato"><span class="stato ${testo(una.tinta)}">${testo(pillola)}</span></span>
-            <span class="lic-c-data"><small>${testo(una.data.verbo)}</small>${quando ? `<b>${testo(quando)}</b>` : ""}</span>
-            <span class="lic-c-importo">${testo(una.soldi)}</span>
+            <span class="lic-c-inizio">${/* già HTML */ inizio}</span>
+            <span class="lic-c-data${dal ? " con-inizio" : ""}${quando ? " con-data" : ""}">${/* già HTML */ dal}<small>${testo(una.data.verbo)}</small>${quando ? `<b>${testo(quando)}</b>` : ""}</span>
+            ${/* già HTML */ laCellaDellImporto("lic-c-previsto", una.previsto)}
+            ${/* già HTML */ laCellaDellImporto("lic-c-reale", una.reale)}
+            ${/* già HTML */ gliImportiInUnaRiga(una)}
             <span class="lic-c-menu">${/* già HTML */ menu}</span>
             ${
               aperta
-                ? `<span class="lic-dettaglio"><span class="lic-frase">${testo(una.frase)}</span><span class="lic-fatti">${testo(una.fonteDetta)}${una.soldiSotto ? ` · ${testo(una.soldiSotto)}` : ""}</span></span>`
+                ? `<span class="lic-dettaglio"><span class="lic-frase">${testo(una.frase)}${una.inizioDetto ? ` ${testo(una.inizioDetto)}.` : ""}</span><span class="lic-fatti">${testo([una.fonteDetta, una.prodotto ? "prodotto " + una.prodotto : "", una.importoDi, una.soldiSotto].filter(Boolean).join(" · "))}</span></span>`
                 : ""
             }
           </li>`;
+      }
+
+      /* ─── I totali della tabella ─────────────────────────────────────
+       *
+       * «Alla fine voglio il totale»: le due colonne sommate, per gruppo e
+       * in fondo, sulle righe che si vedono (filtri e ricerca compresi).
+       *
+       * - Il **previsto** mescola mensili e annuali: si dice al mese (un
+       *   annuale conta un dodicesimo, «≈ al mese»), e accanto le somme vere,
+       *   «3 × 4,99 €/mese + 1 × 49,99 €/anno ≈ 19,13 €/mese». Nel totale
+       *   entrano solo quelli che pagano e rinnovano: e' il «Ricorrente» in
+       *   cima, sommato allo stesso modo (`contaGliAbbonamenti`, intero e
+       *   arrotondato alla fine). Le prove, che pagheranno se non disdicono,
+       *   si dicono a parte.
+       * - Il **reale** e' la somma dei pagamenti del mese, dal loro giorno
+       *   («pagato il …»): e' l'«Incassato» in cima. Il quadro tiene solo
+       *   l'ultimo pagamento di ogni abbonamento: la somma di tutti quelli in
+       *   elenco si dice, col suo nome, e non e' un «da sempre».
+       * Gli acquisti di test non entrano, come nei numeri in cima. */
+      function leSommeDelleLicenze(righe) {
+        const inizioDelMese =
+          typeof ABBONAMENTI?.conti?.inizioDelMese === "number"
+            ? ABBONAMENTI.conti.inizioDelMese
+            : new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime();
+        const vuote = () => ({ alMese: {}, voci: new Map(), quante: 0, senzaPrezzo: 0 });
+        const somme = {
+          ricorrente: vuote(),
+          prova: vuote(),
+          reale: { mese: {}, tutti: {}, quanti: 0, nelMese: 0 },
+          inizioDelMese,
+        };
+        const piu = (dove, valuta, quanto) => {
+          dove[valuta] = (dove[valuta] || 0) + quanto;
+        };
+        for (const riga of righe) {
+          if (riga.stato === "test") continue;
+          const p = riga.previsto;
+          if (p?.conta === "ricorrente" || p?.conta === "prova") {
+            const qui = somme[p.conta];
+            qui.quante += 1;
+            if (p.alMese === null || p.alMese === undefined) qui.senzaPrezzo += 1;
+            else {
+              piu(qui.alMese, p.valuta, p.alMese);
+              const chiave = `${p.piano}|${p.importo}|${p.valuta}`;
+              const voce = qui.voci.get(chiave) || {
+                n: 0,
+                piano: p.piano,
+                importo: p.importo,
+                valuta: p.valuta,
+              };
+              voce.n += 1;
+              qui.voci.set(chiave, voce);
+            }
+          }
+          const r = riga.reale;
+          if (r?.importo > 0) {
+            somme.reale.quanti += 1;
+            piu(somme.reale.tutti, r.valuta, r.importo);
+            if (typeof r.quando === "number" && r.quando >= inizioDelMese) {
+              somme.reale.nelMese += 1;
+              piu(somme.reale.mese, r.valuta, r.importo);
+            }
+          }
+        }
+        const arrotonda = (mappa) =>
+          Object.fromEntries(
+            Object.entries(mappa).map(([valuta, valore]) => [
+              valuta,
+              Math.round(valore * 100) / 100,
+            ]),
+          );
+        somme.ricorrente.alMese = arrotonda(somme.ricorrente.alMese);
+        somme.prova.alMese = arrotonda(somme.prova.alMese);
+        somme.reale.mese = arrotonda(somme.reale.mese);
+        somme.reale.tutti = arrotonda(somme.reale.tutti);
+        return somme;
+      }
+
+      /* «4,99 €», «4,99 € + 5,99 $», o «0 €». */
+      const iSoldiInTutte = (mappa) => {
+        const voci = Object.entries(mappa || {}).filter(([, valore]) => valore > 0);
+        return voci.length
+          ? voci.map(([valuta, valore]) => iSoldi(valore, valuta)).join(" + ")
+          : "0 €";
+      };
+
+      /* Le somme vere: «3 × 4,99 €/mese + 1 × 49,99 €/anno», mensili prima. */
+      const leVociDelPrevisto = (parte) =>
+        [...parte.voci.values()]
+          .sort(
+            (a, b) =>
+              (a.piano === "annuale") - (b.piano === "annuale") ||
+              a.valuta.localeCompare(b.valuta) ||
+              a.importo - b.importo,
+          )
+          .map(
+            (voce) =>
+              `${numero(voce.n)} × ${iSoldi(voce.importo, voce.valuta)}/${voce.piano === "annuale" ? "anno" : "mese"}`,
+          )
+          .join(" + ");
+
+      /* Il previsto in una frase: «3 × 4,99 €/mese + 1 × 49,99 €/anno ≈
+       * 19,13 €/mese», e quanti non hanno il prezzo. */
+      function ilPrevistoDetto(parte) {
+        const voci = leVociDelPrevisto(parte);
+        const senza = parte.senzaPrezzo
+          ? `${plurale(parte.senzaPrezzo, "abbonamento", "abbonamenti")} senza prezzo detto dal negozio, non ${parte.senzaPrezzo === 1 ? "contato" : "contati"}`
+          : "";
+        return [voci ? `${voci} ≈ ${iSoldiInTutte(parte.alMese)}/mese` : "", senza]
+          .filter(Boolean)
+          .join("; ");
+      }
+
+      /* Una riga di somme, sulle colonne della tabella: cosa e', il
+       * previsto, il reale; sulla carta stretta, tutto in fila. */
+      function laRigaDelleSomme({ classe, gruppo = "", titolo, spiega = [], previsto, reale }) {
+        return `
+          <div class="${testo(classe)}"${gruppo ? ` data-somma="${testo(gruppo)}"` : ""}>
+            <span class="lic-s-cosa"><b>${testo(titolo)}</b>${spiega
+              .filter(Boolean)
+              .map((riga) => `<small>${testo(riga)}</small>`)
+              .join("")}</span>
+            ${/* già HTML */ laCellaDellImporto("lic-s-previsto", previsto)}
+            ${/* già HTML */ laCellaDellImporto("lic-s-reale", reale)}
+            <span class="lic-s-importi"><small>previsto</small> <b${previsto.futuro ? ' class="futuro"' : ""}>${testo(previsto.testo)}${previsto.testo === "—" ? "" : "/mese"}</b>${previsto.futuro ? " <small>dopo la prova</small>" : ""}<small aria-hidden="true"> · </small><small>reale</small> <b>${testo(reale.testo)}</b>${reale.sotto ? ` <small>${testo(reale.sotto)}</small>` : ""}</span>
+          </div>`;
+      }
+
+      /* Il totale di un gruppo, sotto le sue righe: Attive, In prova, Non
+       * rinnovano. Le finite e i test non portano soldi da sommare. */
+      function ilTotaleDelGruppo(quale, stato, righe) {
+        if (!["attiva", "prova", "nonrinnova"].includes(quale)) return "";
+        const somme = leSommeDelleLicenze(righe);
+        const mese = ilMeseDetto(somme.inizioDelMese);
+        const parte = quale === "prova" ? somme.prova : somme.ricorrente;
+        const conPrevisto = quale !== "nonrinnova" && parte.voci.size > 0;
+        const reale = somme.reale.quanti
+          ? { testo: iSoldiInTutte(somme.reale.mese), sotto: `a ${mese}` }
+          : { testo: "—", sotto: quale === "prova" ? "non hanno pagato" : "" };
+        return laRigaDelleSomme({
+          classe: "lic-somma",
+          gruppo: quale,
+          titolo: `Totale ${stato.nome}`,
+          spiega: [
+            quale === "nonrinnova"
+              ? "Non pagheranno più: niente previsto."
+              : ilPrevistoDetto(parte)
+                ? `${quale === "prova" ? "Se pagano alla fine della prova: " : ""}${ilPrevistoDetto(parte)}.`
+                : quale === "attiva"
+                  ? "Nessuno che paga e rinnova: i regali sono gratis."
+                  : "",
+            somme.reale.quanti
+              ? `Ultimi pagamenti in elenco: ${iSoldiInTutte(somme.reale.tutti)}, di cui a ${mese} ${iSoldiInTutte(somme.reale.mese)}.`
+              : "",
+          ],
+          previsto: conPrevisto
+            ? {
+                testo: `≈ ${iSoldiInTutte(parte.alMese)}`,
+                sotto: quale === "prova" ? "al mese, dopo la prova" : "al mese",
+                futuro: quale === "prova",
+              }
+            : { testo: "—", sotto: "" },
+          reale,
+        });
+      }
+
+      /* Il totale in fondo: il previsto e' il «Ricorrente» in cima, il reale
+       * l'«Incassato» del mese, coi numeri da cui vengono. Con un filtro o una
+       * ricerca e' il totale di quello che si vede, e lo dice. */
+      function ilTotaleDelleLicenze(righe, { filtrate = false } = {}) {
+        const somme = leSommeDelleLicenze(righe);
+        const mese = ilMeseDetto(somme.inizioDelMese);
+        const previstoDetto = ilPrevistoDetto(somme.ricorrente);
+        const proveDette = ilPrevistoDetto(somme.prova);
+        return laRigaDelleSomme({
+          classe: "lic-somma lic-totale",
+          titolo: filtrate ? "Totale delle licenze filtrate" : "Totale",
+          spiega: [
+            `Previsto: ${previstoDetto || "nessuno che paga e rinnova"}${filtrate ? "." : ", come il «Ricorrente» in cima."}`,
+            proveDette ? `Le prove, se pagano alla fine: ${proveDette}.` : "",
+            `Reale: ${iSoldiInTutte(somme.reale.mese)} pagati a ${mese}${filtrate ? "" : ", come l'«Incassato» in cima"}. Ultimi pagamenti in elenco: ${iSoldiInTutte(somme.reale.tutti)} (il quadro tiene l'ultimo pagamento di ogni abbonamento).`,
+          ],
+          previsto: somme.ricorrente.voci.size
+            ? { testo: `≈ ${iSoldiInTutte(somme.ricorrente.alMese)}`, sotto: "al mese" }
+            : { testo: "—", sotto: "" },
+          reale: { testo: iSoldiInTutte(somme.reale.mese), sotto: `a ${mese}` },
+        });
       }
 
       /* L'elenco, a gruppi di stato: attive, in prova, non rinnovano,
@@ -8820,16 +9503,17 @@
                       sue.length > qui.length
                         ? `<button type="button" class="lic-altre" data-tutte-gruppo="${testo(quale)}">Mostra tutte e ${numero(sue.length)}<span class="minuta"> · altre ${numero(sue.length - qui.length)}</span></button>`
                         : ""
-                    }`
+                    }${/* già HTML */ ilTotaleDelGruppo(quale, stato, sue)}`
               }
             </section>`;
           })
           .join("");
         return `
           <div class="lic-testata" aria-hidden="true">
-            <span>Casa</span><span>Origine</span><span>Stato</span><span>Scade o rinnova</span><span>Importo</span><span></span>
+            <span>Casa</span><span>Origine</span><span>Stato</span><span>Inizio</span><span>Scade o rinnova</span><span>Importo previsto</span><span>Importo reale</span><span></span>
           </div>
-          ${/* già HTML */ gruppi}`;
+          ${/* già HTML */ gruppi}
+          ${/* già HTML */ ilTotaleDelleLicenze(viste, { filtrate: cercando || S.filtro !== "tutte" || S.fonte !== "tutte" })}`;
       }
 
       /* Un filtro di stato: si guarda quello, e il suo gruppo si apre. */

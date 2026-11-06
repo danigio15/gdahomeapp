@@ -10,6 +10,32 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.11.2
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Il campanello arriva sempre**: «le notifiche del Ring prima arrivavano
+  ogni tanto, adesso non arrivano più». Ogni telefono riceve al massimo trenta
+  notifiche all'ora, e il campanello contava fra quelle: in una casa con tante
+  telecamere i movimenti riempivano l'ora, e dopo il campanello si perdeva
+  senza dirlo. Adesso campanello, antifurto, allarmi e blackout passano
+  sempre. Il campanello scelto nel Citofono suona anche la prima volta,
+  l'apertura della Ring Intercom non suona più come un campanello, e lo
+  stesso campanello visto da due entità suona una volta sola.
+- **Il registro dice perché**: per ogni campanello il registro dell'add-on
+  scrive da dove è arrivato, a quanti telefoni è partito e, telefono per
+  telefono, perché no (voce spenta, telefono senza utente, già detta…).
+- **Collega l'app GdAHome**: nella console il QR serve all'app, e la pagina
+  adesso lo dice. Prima si sceglie per chi è, e solo dopo si genera il QR:
+  senza una persona il codice non nasce, anche se lo si chiede all'add-on
+  per altre strade. La console è più ordinata: i telefoni con la loro icona e
+  «Collegato adesso», il menu ⋯ per rinominare o togliere, Base e Premium
+  affiancati.
+- **Flusso energetico: i cerchi scrivono uguale**: «Locale tecnico» aveva i
+  caratteri più grandi degli altri, perché il nome va su due righe. Adesso i
+  cerchi della stessa fila hanno numeri e nomi della stessa misura, su
+  telefono, tablet e computer.
+
 ## 1.18.11.1
 
 _Solo Home Assistant: l'app sul telefono non cambia._

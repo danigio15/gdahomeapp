@@ -2139,6 +2139,12 @@ test("la prova passa a pagamento, e chi disdice a meta' periodo si sa il giorno 
     assert.equal(detto.elenco[0].stato, "attivo");
     /* Un annuale conta un dodicesimo al mese. */
     assert.deepEqual(detto.conti.alMese, { EUR: 4.17 });
+    /* Il giorno del pagamento, quello che conta «Incassato» e che la
+     * Gestione scrive («pagato il …»): Google non lo dice, e' la scadenza
+     * meno un anno, mai dopo adesso. */
+    assert.equal(typeof detto.elenco[0].pagatoIl, "number");
+    assert.ok(detto.elenco[0].pagatoIl <= Date.now());
+    assert.ok(Math.abs(detto.elenco[0].pagatoIl - lInizioDelPeriodo(detto.elenco[0])) < 2 * GIORNO);
 
     /* Il giorno dopo non si richiede di nuovo prima che passi il giorno. */
     const quante = chiesti.length;

@@ -569,7 +569,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-JKKHDTBV.js";
+} from "../../chunk-BLZTQ7YJ.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -91101,7 +91101,6 @@ function bindNodeClick(element5, node, period) {
   } : null;
   if (click) element5.dataset.dmFlowClickPeriod = period;
 }
-var NOME_PIU_PICCOLO = 8;
 function adattaIlNome(cerchio, nome) {
   const largo = cerchio?.clientWidth || 0;
   if (!nome || !largo) return;
@@ -91110,13 +91109,9 @@ function adattaIlNome(cerchio, nome) {
   nome.style.removeProperty("font-size");
   delete nome.dataset.dmNomeLungo;
   const stile8 = doc.defaultView?.getComputedStyle?.(nome);
-  let misura8 = Number.parseFloat(stile8?.fontSize) || 0;
-  const troppo = () => nome.scrollWidth > nome.clientWidth + 1 || nome.scrollHeight > misura8 * 1.1 * 2 + 1;
-  while (misura8 > NOME_PIU_PICCOLO && troppo()) {
-    misura8 -= 0.5;
-    nome.style.setProperty("font-size", `${misura8}px`, "important");
-  }
-  if (troppo()) nome.dataset.dmNomeLungo = "true";
+  const misura8 = Number.parseFloat(stile8?.fontSize) || 0;
+  const troppo = nome.scrollWidth > nome.clientWidth + 1 || nome.scrollHeight > misura8 * 1.1 * 2 + 1;
+  if (troppo) nome.dataset.dmNomeLungo = "true";
   nome.dataset.dmAdattato = chiave2;
 }
 function ensureBubble(stage, node, period, scale) {
@@ -91204,6 +91199,7 @@ var SOGLIE = Object.freeze([
   { quando: "(max-width: 480px)", bolla: 96, stretto: true },
   { quando: "(max-width: 768px)", bolla: 104, stretto: true }
 ]);
+var BOLLA_LARGA = 130;
 function comeSiamoMessi() {
   for (const soglia3 of SOGLIE) {
     try {
@@ -91211,7 +91207,28 @@ function comeSiamoMessi() {
     } catch (_errore) {
     }
   }
-  return { bolla: 130, stretto: false };
+  return { bolla: BOLLA_LARGA, stretto: false };
+}
+function misureDelCarico(lato) {
+  const misura8 = Number(lato) > 0 ? Number(lato) : BOLLA_LARGA;
+  const aMezzoPunto = (valore3) => Math.round(valore3 * 2) / 2;
+  const fra2 = (valore3, minimo, massimo) => Math.min(massimo, Math.max(minimo, valore3));
+  return Object.freeze({
+    numero: fra2(aMezzoPunto(misura8 * 0.155), 11, 20),
+    nome: fra2(aMezzoPunto(misura8 * 0.099), 8, 11.5),
+    icona: fra2(Math.round(misura8 * 0.22), 16, 26),
+    disegno: fra2(Math.round(misura8 * 0.22), 18, 28)
+  });
+}
+function regoleDelCarico(lato) {
+  const { numero: numero66, nome, icona: icona3, disegno: disegno8 } = misureDelCarico(lato);
+  return [
+    `#page-energy .n-load{width:${lato}px!important;height:${lato}px!important}`,
+    `#page-energy .n-load .node-label{font-size:${nome}px!important;letter-spacing:0!important}`,
+    `#page-energy :is(#view-ist,#view-day,#view-month) .n-load span:not(.dual-val){font-size:${numero66}px!important}`,
+    `#page-energy .n-load .node-icon{font-size:${icona3}px!important}`,
+    `#page-energy .n-load .node-icon svg{width:${disegno8}px!important;height:${disegno8}px!important}`
+  ].join("\n    ");
 }
 function quanteInFila(nodes, stretto) {
   const perFila = /* @__PURE__ */ new Map();
@@ -91549,12 +91566,14 @@ var I_NUMERI_DELLE_BOLLE = "#page-energy .node span, #page-energy .dm-flow-value
 function stringiIlNumero(nodo3, misuraDelCarattere) {
   if (!nodo3) return false;
   const testo5 = String(nodo3.textContent ?? "");
-  if (nodo3[FIRMA_DELLA_STRETTA] === testo5) return false;
+  const firma2 = `${testo5}|${ilPostoDelNumero(nodo3)}`;
+  if (nodo3[FIRMA_DELLA_STRETTA] === firma2) return false;
   nodo3.style?.removeProperty?.("font-size");
   const largo = Number(nodo3.scrollWidth) || 0;
-  const spazio = Math.min(Number(nodo3.clientWidth) || 0, cordaDelCerchio(nodo3) ?? Infinity);
-  if (!spazio) return false;
-  nodo3[FIRMA_DELLA_STRETTA] = testo5;
+  const scatola2 = Number(nodo3.clientWidth) || 0;
+  if (!scatola2) return false;
+  const spazio = Math.min(scatola2, cordaDelCerchio(nodo3) ?? Infinity);
+  nodo3[FIRMA_DELLA_STRETTA] = firma2;
   nodo3[MISURA_SUA] = 0;
   if (!testo5.trim()) return false;
   const base = Number(misuraDelCarattere?.(nodo3)) || 0;
@@ -91572,43 +91591,59 @@ function stringiIlNumero(nodo3, misuraDelCarattere) {
 }
 var MISURA_SUA = "__dmMisuraSua";
 var MISURA_DEL_FOGLIO = "__dmMisuraDelFoglio";
-function stessaMisuraPerIcarichi(nodi2) {
+function stessaMisuraPerFascia(nodi2) {
   const gruppi2 = /* @__PURE__ */ new Map();
   for (const nodo3 of nodi2) {
-    const bolla = nodo3?.closest?.(".n-load");
+    const bolla = nodo3?.closest?.(".node");
     const misura8 = Number(nodo3?.[MISURA_SUA]) || 0;
     if (!bolla || !misura8) continue;
     if (!/[\d—–]/.test(String(nodo3.textContent ?? ""))) continue;
+    if (eUnContenitore(nodo3)) continue;
     const vista2 = bolla.closest?.("[id^='view-']") || bolla.parentElement;
-    if (!gruppi2.has(vista2)) gruppi2.set(vista2, []);
-    gruppi2.get(vista2).push({ nodo: nodo3, misura: misura8 });
+    const fascia2 = bolla.classList?.contains?.("n-load") ? "carichi" : "cerchioni";
+    if (!gruppi2.has(vista2)) gruppi2.set(vista2, /* @__PURE__ */ new Map());
+    const perFascia = gruppi2.get(vista2);
+    if (!perFascia.has(fascia2)) perFascia.set(fascia2, []);
+    perFascia.get(fascia2).push({ nodo: nodo3, misura: misura8 });
   }
   let tocchi = 0;
-  for (const voci4 of gruppi2.values()) {
-    const minima = Math.min(...voci4.map((voce3) => voce3.misura));
-    for (const { nodo: nodo3 } of voci4) {
-      const voluta = minima >= (Number(nodo3[MISURA_DEL_FOGLIO]) || 0) ? "" : `${minima}px`;
-      const adesso2 = nodo3.style?.getPropertyValue?.("font-size") || "";
-      if (voluta === adesso2) continue;
-      if (voluta) nodo3.style.setProperty("font-size", voluta, "important");
-      else nodo3.style.removeProperty("font-size");
-      tocchi += 1;
+  for (const perFascia of gruppi2.values()) {
+    for (const voci4 of perFascia.values()) {
+      const minima = Math.min(...voci4.map((voce3) => voce3.misura));
+      for (const { nodo: nodo3 } of voci4) {
+        const voluta = minima >= (Number(nodo3[MISURA_DEL_FOGLIO]) || 0) ? "" : `${minima}px`;
+        const adesso2 = nodo3.style?.getPropertyValue?.("font-size") || "";
+        if (voluta === adesso2) continue;
+        if (voluta) nodo3.style.setProperty("font-size", voluta, "important");
+        else nodo3.style.removeProperty("font-size");
+        tocchi += 1;
+      }
     }
   }
   return tocchi;
 }
-var BORDO_E_ARIA = 9;
+function eUnContenitore(nodo3) {
+  return Boolean(nodo3?.querySelector?.("span"));
+}
+function ilPostoDelNumero(nodo3) {
+  const bolla = nodo3?.closest?.(".node");
+  if (!bolla) return "";
+  const nome = bolla.querySelector?.(".node-label");
+  return `${bolla.offsetWidth || 0}x${nome?.offsetHeight || 0}`;
+}
+var BORDO_E_ARIA = 8;
 function cordaDelCerchio(nodo3) {
   const bolla = nodo3?.closest?.(".node");
   if (!bolla?.getBoundingClientRect || !nodo3.getBoundingClientRect) return null;
   const b2 = bolla.getBoundingClientRect();
   const t2 = nodo3.getBoundingClientRect();
   if (!b2.width || !t2.height) return null;
-  const r = b2.width / 2 - BORDO_E_ARIA;
+  const scala2 = bolla.offsetWidth > 0 ? b2.width / bolla.offsetWidth : 1;
+  const r = b2.width / 2 - BORDO_E_ARIA * scala2;
   const cy = b2.top + b2.height / 2;
   const dy = Math.max(Math.abs(t2.top - cy), Math.abs(t2.bottom - cy));
   if (r <= 0) return null;
-  return dy >= r ? 0 : 2 * Math.sqrt(r * r - dy * dy);
+  return dy >= r ? 0 : 2 * Math.sqrt(r * r - dy * dy) / scala2;
 }
 function misuraDalFoglio(nodo3) {
   const vista2 = root.getComputedStyle?.(nodo3);
@@ -91618,8 +91653,11 @@ function adattaINumeriDelleBolle(targetDocument = doc) {
   const nodi2 = targetDocument?.querySelectorAll?.(I_NUMERI_DELLE_BOLLE);
   if (!nodi2) return 0;
   let tocchi = 0;
-  for (const nodo3 of nodi2) if (stringiIlNumero(nodo3, misuraDalFoglio)) tocchi += 1;
-  tocchi += stessaMisuraPerIcarichi(nodi2);
+  for (const nodo3 of nodi2) {
+    if (eUnContenitore(nodo3)) continue;
+    if (stringiIlNumero(nodo3, misuraDalFoglio)) tocchi += 1;
+  }
+  tocchi += stessaMisuraPerFascia(nodi2);
   return tocchi;
 }
 function mostraBolleDellImpianto(impianto) {
@@ -91775,7 +91813,7 @@ function installStyles30() {
     .flow-stage .node.dm-flow-node[data-dm-flow-active="false"]{opacity:.62!important}
     /* Il nome sta dentro il cerchio: largo quanto la corda in cima, al massimo
        due righe; la misura la stringe adattaIlNome. */
-    .flow-stage .node.dm-flow-node .node-label{width:72%!important;white-space:normal!important;overflow:hidden!important;text-overflow:clip!important;line-height:1.1!important;max-height:2.25em;flex:0 0 auto!important;overflow-wrap:normal!important;word-break:normal!important}
+    .flow-stage .node.dm-flow-node .node-label{width:78%!important;white-space:normal!important;overflow:hidden!important;text-overflow:clip!important;line-height:1.1!important;max-height:2.25em;flex:0 0 auto!important;overflow-wrap:normal!important;word-break:normal!important}
     .flow-stage .node.dm-flow-node .node-label[data-dm-nome-lungo]{white-space:nowrap!important;text-overflow:ellipsis!important}
     .flow-stage path.dm-flow-arc{stroke-width:var(--dm-flow-width,3px)!important;fill:none!important}
     /* La soglia e' quella del guscio, 768, e non una nostra.
@@ -91798,6 +91836,10 @@ function installStyles30() {
     @media(max-width:768px){
       .flow-stage .node.dm-flow-node{left:var(--dm-flow-mobile-left,50%)!important;top:var(--dm-flow-mobile-top,83%)!important}
     }
+    /* E la Casa un poco piu' piccola: «riesci a fare un po' piu' piccolo
+     * quello della casa». Resta il cerchio piu' grande, ma non schiaccia piu'
+     * la fila di sotto. */
+    #page-energy .n-home{width:145px!important;height:145px!important}
     /* I cerchi sotto la Casa, che si leggono.
      *
      * «I dati dentro entrano a mala pena e sono troppo piccoli, il testo
@@ -91807,31 +91849,25 @@ function installStyles30() {
      * loro, coi loro nomi e numeri; Solare, Rete, Batteria e Casa restano come
      * sono. Le misure sono le stesse che legge \`comeSiamoMessi\`, cosi' il
      * conto di quante bolle stanno in fila resta giusto: sul telefono tre per
-     * fila si prendono tutto lo spazio che c'e', e non di piu'. */
-    #page-energy .n-load{width:130px!important;height:130px!important}
-    /* E la Casa un poco piu' piccola: «riesci a fare un po' piu' piccolo
-     * quello della casa». Resta il cerchio piu' grande, ma non schiaccia piu'
-     * la fila di sotto. */
-    #page-energy .n-home{width:145px!important;height:145px!important}
-    #page-energy .n-load .node-label{font-size:11.5px!important;letter-spacing:0!important}
-    /* Anche nel giorno e nel mese: «i valori dei carichi sotto casa si
-     * leggono per la parte istantanea, ma sono piu' piccoli per giornaliera
-     * e mensile». La misura c'era solo per l'istantanea; «206,6 kWh» ci sta
-     * lo stesso, e se non ci sta lo stringe \`stringiIlNumero\`. */
-    #page-energy :is(#view-ist,#view-day,#view-month) .n-load span:not(.dual-val){font-size:20px!important}
-    #page-energy .n-load .node-icon{font-size:26px!important}
+     * fila si prendono tutto lo spazio che c'e', e non di piu'.
+     *
+     * Dentro il cerchio, nome numero e icona vengono dal lato del cerchio
+     * (\`misureDelCarico\`), uguali per tutta la fila: anche nel giorno e nel
+     * mese, «i valori dei carichi sotto casa si leggono per la parte
+     * istantanea, ma sono piu' piccoli per giornaliera e mensile». */
+    ${regoleDelCarico(BOLLA_LARGA)}
     @media(max-width:768px){
       #page-energy .flow-stage{height:800px!important}
       #page-energy .n-home{width:110px!important;height:110px!important}
-      #page-energy .n-load{width:104px!important;height:104px!important}
-      #page-energy .n-load .node-label{font-size:10.5px!important;letter-spacing:0!important}
-      #page-energy :is(#view-ist,#view-day,#view-month) .n-load span:not(.dual-val){font-size:18px!important}
-      #page-energy .n-load .node-icon{font-size:23px!important}
+      ${regoleDelCarico(SOGLIE[1].bolla)}
+      /* Il guscio scriveva «BATTERIA» a 7 e gli altri tre a 8: i cerchioni
+       * sono una fascia sola, col nome della stessa misura. */
+      #page-energy .node:not(.n-load) .node-label{font-size:8px!important}
     }
     @media(max-width:480px){
       #page-energy .flow-stage{height:720px!important}
       #page-energy .n-home{width:96px!important;height:96px!important}
-      #page-energy .n-load{width:96px!important;height:96px!important}
+      ${regoleDelCarico(SOGLIE[0].bolla)}
     }
   `
   );

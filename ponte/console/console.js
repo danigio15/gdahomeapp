@@ -78,6 +78,61 @@
    * e «Smetti di mandarlo» tornava in italiano a chi leggeva in inglese. */
   laPaginaNellaSuaLingua();
 
+  /* Il tema chiaro o scuro, quello di Home Assistant.
+   *
+   * Questa pagina sta in un telaio dentro Home Assistant, e il suo tema li'
+   * dentro non arriva: un telaio e' un altro documento, e le variabili di
+   * Home Assistant restano fuori. Ma l'ingress sta sullo stesso indirizzo di
+   * Home Assistant, e allora il fondo della pagina che ci contiene si puo'
+   * leggere: chiaro o scuro, lo si scrive qui in `data-theme` — chi tiene
+   * Home Assistant scuro su un telefono chiaro vede la console scura, come il
+   * resto. Dove non si legge — la pagina aperta da sola, un telaio di un
+   * altro sito — vale il tema del browser (`prefers-color-scheme`). */
+  function laLuce(colore) {
+    var detto = String(colore || "").trim();
+    var r;
+    var g;
+    var b;
+    var corto = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i.exec(detto);
+    var lungo = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i.exec(detto);
+    var rgb = /^rgba?\(\s*(\d+)[\s,]+(\d+)[\s,]+(\d+)/i.exec(detto);
+    if (corto) {
+      r = parseInt(corto[1] + corto[1], 16);
+      g = parseInt(corto[2] + corto[2], 16);
+      b = parseInt(corto[3] + corto[3], 16);
+    } else if (lungo) {
+      r = parseInt(lungo[1], 16);
+      g = parseInt(lungo[2], 16);
+      b = parseInt(lungo[3], 16);
+    } else if (rgb) {
+      r = Number(rgb[1]);
+      g = Number(rgb[2]);
+      b = Number(rgb[3]);
+    } else {
+      return null;
+    }
+    return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  }
+
+  function ilTemaDiCasa() {
+    var radice = vediPagina.documentElement;
+    var fondo = "";
+    try {
+      if (window.parent && window.parent !== window) {
+        fondo = window.parent
+          .getComputedStyle(window.parent.document.documentElement)
+          .getPropertyValue("--primary-background-color");
+      }
+    } catch (_altroSito) {
+      fondo = "";
+    }
+    var luce = laLuce(fondo);
+    if (luce === null) radice.removeAttribute("data-theme");
+    else radice.setAttribute("data-theme", luce < 0.5 ? "dark" : "light");
+  }
+
+  ilTemaDiCasa();
+
   /* Quante plance si tengono: lo stesso numero che ha il ponte
    * (`plance.js`). Qui serve solo a spegnere il tasto quando si e' arrivati
    * al tetto, invece di farlo premere per sentirsi dire di no. */
@@ -127,6 +182,14 @@
       "Non riesco a chiedere a Home Assistant chi c'è in casa: riprova fra poco.",
       "I can't ask Home Assistant who lives here: try again shortly.",
     ],
+    utente_richiesto: [
+      "Scegli per chi è l'app, poi genera il QR code.",
+      "Choose who the app is for, then generate the QR code.",
+    ],
+    utente_sconosciuto: [
+      "Quella persona non c'è più fra gli utenti di Home Assistant: ricarica la pagina e scegline un'altra.",
+      "That person is no longer among Home Assistant's users: reload the page and choose another.",
+    ],
     "licenze-spente": [
       "Le licenze in questo add-on sono spente.",
       "Licences are turned off in this add-on.",
@@ -162,17 +225,30 @@
 
   /* ─── Le sezioni ────────────────────────────────────────────────────────────
    *
-   * Sei sezioni, una per volta. Le linguette in cima le scelgono, e cosi' le
-   * righe della Panoramica e i tasti che portano altrove (`data-vai`). La
-   * sezione scelta resta scritta nell'indirizzo — `#telefoni` — con
-   * `replaceState`, che non aggiunge un passo alla storia del browser: il
-   * tasto «indietro» continua a portare fuori dalla pagina, come prima.
+   * Una sezione per volta. La Casa e' il punto da cui si parte: i suoi tasti
+   * grandi, le righe che si toccano e — sugli schermi larghi — le linguette in
+   * cima portano altrove (`data-vai`). La sezione scelta resta scritta
+   * nell'indirizzo — `#telefoni` — con `replaceState`, che non aggiunge un
+   * passo alla storia del browser: il tasto «indietro» del browser continua a
+   * portare fuori dalla pagina, come prima. Quello della pagina,
+   * `data-vai="indietro"`, torna da dove si e' venuti.
    *
-   * Due linguette arrivano dopo, quando si sa se servono: la licenza, e
+   * Due sezioni arrivano dopo, quando si sa se servono: la licenza, e
    * l'installatore. Se l'indirizzo chiedeva una di quelle, ci si va appena
-   * compare. */
-  var LE_SEZIONI = ["panoramica", "telefoni", "plance", "licenza", "installatore", "avanzate"];
+   * compare. «Abbina» non ha una linguetta sua: si accende quella dei
+   * telefoni, che e' la stessa faccenda. */
+  var LE_SEZIONI = [
+    "panoramica",
+    "abbina",
+    "telefoni",
+    "plance",
+    "licenza",
+    "installatore",
+    "avanzate",
+  ];
+  var LINGUETTA_DI = { abbina: "telefoni" };
   var laSezione = "panoramica";
+  var sezionePrima = "";
   var richiesta = (function () {
     var detta = String(window.location.hash || "").replace(/^#/, "");
     return LE_SEZIONI.indexOf(detta) >= 0 ? detta : "";
@@ -183,15 +259,27 @@
   }
 
   function vaiA(nome, comeSiArriva) {
+    if (nome === "indietro")
+      nome = sezionePrima && sezionePrima !== laSezione ? sezionePrima : "panoramica";
     var linguetta = laLinguetta(nome);
-    if (!linguetta || linguetta.hidden) nome = "panoramica";
+    if (LE_SEZIONI.indexOf(nome) < 0 || (linguetta && linguetta.hidden)) nome = "panoramica";
+    /* Da dove si viene, per «Indietro»: la Casa, o la sezione da cui si e'
+     * partiti (dai telefoni a «Collega l'app», e ritorno). */
+    if (nome !== laSezione) sezionePrima = nome === "panoramica" ? "" : laSezione;
     laSezione = nome;
+    /* Sul telefono la testata dice dove si e': il marchio nella Casa, «‹» e
+     * il nome della sezione altrove (`data-sezione` lo legge il foglio). */
+    vediPagina.documentElement.setAttribute("data-sezione", nome);
+    var suoTitolo = trova("sezione-" + nome);
+    suoTitolo = suoTitolo && suoTitolo.querySelector("h2");
+    trova("titolo-testata").textContent = suoTitolo ? suoTitolo.textContent.trim() : "";
+    var accesa = LINGUETTA_DI[nome] || nome;
     LE_SEZIONI.forEach(function (una) {
       var sezione = trova("sezione-" + una);
       if (sezione) sezione.hidden = una !== nome;
       var sua = laLinguetta(una);
       if (!sua) return;
-      if (una === nome) sua.setAttribute("aria-current", "page");
+      if (una === accesa) sua.setAttribute("aria-current", "page");
       else sua.removeAttribute("aria-current");
     });
     try {
@@ -211,11 +299,17 @@
     if (!si && laSezione === nome) vaiA("panoramica", "da-sola");
   }
 
+  /* Un tocco su un `data-vai`: la sezione voluta resta la richiesta, anche se
+   * la sua linguetta non c'e' ancora — ci si va appena compare. */
+  function vaiDove(voluta) {
+    vaiA(voluta);
+    richiesta = voluta === "indietro" ? laSezione : voluta;
+  }
+
   vediPagina.addEventListener("click", function (evento) {
     var dove = evento.target && evento.target.closest ? evento.target.closest("[data-vai]") : null;
     if (!dove) return;
-    richiesta = dove.getAttribute("data-vai");
-    vaiA(richiesta);
+    vaiDove(dove.getAttribute("data-vai"));
   });
 
   /* E se l'indirizzo cambia da fuori — un link con `#licenza`, la sezione
@@ -235,8 +329,7 @@
     var dove = evento.target;
     if (!dove || !dove.classList || !dove.classList.contains("si-tocca")) return;
     evento.preventDefault();
-    richiesta = dove.getAttribute("data-vai");
-    vaiA(richiesta);
+    vaiDove(dove.getAttribute("data-vai"));
   });
 
   /* ─── I pezzi che si ripetono ───────────────────────────────────────────── */
@@ -305,6 +398,34 @@
     return tasto;
   }
 
+  /* La domanda prima di una cosa che non si disfa: togliere un telefono, una
+   * plancia, revocare la casa di prova, smettere di mandare il rapporto.
+   *
+   * Una finestra della pagina e non quella del browser: dentro Home Assistant
+   * quella del browser porta in cima l'indirizzo dell'ingress e sembra un
+   * errore, e sul telefono copre tutto senza dire di chi e'. Il tasto pronto
+   * sotto il dito e' «Annulla»: chi ha toccato per sbaglio non perde niente.
+   * Dove `<dialog>` non c'e', si torna alla finestra del browser. */
+  function chiediConferma(titolo, testo, siParola) {
+    var finestra = trova("conferma");
+    if (!finestra || typeof finestra.showModal !== "function") {
+      return Promise.resolve(window.confirm(titolo + "\n\n" + testo));
+    }
+    trova("conferma-titolo").textContent = titolo;
+    trova("conferma-testo").textContent = testo;
+    trova("conferma-si").textContent = siParola;
+    return new Promise(function (risolvi) {
+      var chiusa = function () {
+        finestra.removeEventListener("close", chiusa);
+        risolvi(finestra.returnValue === "si");
+      };
+      finestra.returnValue = "";
+      finestra.addEventListener("close", chiusa);
+      finestra.showModal();
+      trova("conferma-no").focus();
+    });
+  }
+
   function avvisa(testo) {
     var avviso = trova("avviso");
     avviso.textContent = testo || "";
@@ -319,11 +440,11 @@
 
   function quandoIlTempoDice(scadeIl) {
     var mancano = Math.max(0, Math.round((scadeIl - Date.now()) / 1000));
-    if (!mancano) return due("scaduto", "expired");
+    if (!mancano) return due("Scaduto", "Expired");
     var minuti = Math.floor(mancano / 60);
     var secondi = mancano % 60;
-    var quanto = (minuti ? minuti + " min " : "") + secondi + " s";
-    return due("vale ancora " + quanto, "good for another " + quanto);
+    var quanto = minuti + ":" + (secondi < 10 ? "0" : "") + secondi;
+    return due("Vale ancora " + quanto, "Good for another " + quanto);
   }
 
   /* I nomi che un dispositivo si da' da se' e che non vogliono dire niente.
@@ -382,29 +503,6 @@
     return pezzi.join(" · ");
   }
 
-  /* Quando si e' visto un telefono, come lo direbbe una persona.
-   *
-   * `toLocaleString()` scrive «13/09/2026, 14:40:49»: una riga di numeri che
-   * va a capo dove lo spazio e' stretto, e non risponde alla domanda vera —
-   * che e' «adesso, poco fa, o l'altro giorno?». */
-  function dataLeggibile(quando) {
-    if (!quando) return due("mai", "never");
-    try {
-      var q = new Date(quando);
-      var ora = q.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      var oggi = new Date();
-      var ieri = new Date(oggi.getTime() - 24 * 60 * 60 * 1000);
-      if (q.toDateString() === oggi.toDateString())
-        return due("oggi alle " + ora, "today at " + ora);
-      if (q.toDateString() === ieri.toDateString())
-        return due("ieri alle " + ora, "yesterday at " + ora);
-      var giorno = q.toLocaleDateString([], { day: "numeric", month: "long" });
-      return due(giorno + " alle " + ora, giorno + " at " + ora);
-    } catch (_errore) {
-      return "—";
-    }
-  }
-
   /* Sedici lettere di fila non le copia nessuno senza perdere il segno:
    * quattro gruppi da quattro si copiano un gruppo per volta. */
   function aGruppi(codice) {
@@ -421,6 +519,7 @@
     trova("senza-codice").hidden = true;
     trova("a-mano").hidden = false;
     trova("annulla").hidden = false;
+    disegnaLeTappe();
     if (quandoScade) clearInterval(quandoScade);
     var aggiorna = function () {
       trova("scadenza").textContent = quandoIlTempoDice(scadeIl);
@@ -441,6 +540,7 @@
     trova("annulla").hidden = true;
     if (quandoScade) clearInterval(quandoScade);
     quandoScade = null;
+    disegnaLeTappe();
   }
 
   /* ─── Come sta la casa ──────────────────────────────────────────────────── */
@@ -719,18 +819,25 @@
    * Con gdahome Base il filo c'e' — e' da li' che passa l'abbinamento — ma da
    * fuori l'app non entra: il verde direbbe il contrario. Grigio, e non
    * rosso: non e' un guasto. */
+  /* Perche' da fuori non si entra quando non e' un guasto: «opzioni» se e'
+   * spento nell'add-on, «premium» se la casa ha Base. Lo legge la frase in
+   * cima alla Casa. */
+  var fuoriSpento = "";
+
   function disegnaIlFuori(centralino) {
     var come;
     var corto;
     var riga;
     var perche = "";
     var cosaFare = "";
+    fuoriSpento = "";
     var soloInCasa = due(
       "Adesso l'app entra solo quando sei sulla rete di casa.",
       "Right now the app gets in only on your home network.",
     );
     if (!centralino || !centralino.configurato) {
       come = "spento";
+      fuoriSpento = "opzioni";
       corto = due("spento", "off");
       riga = due(
         "Da fuori casa l'app non entra: è spento nelle opzioni di questo add-on, alla voce «da fuori casa».",
@@ -761,10 +868,13 @@
       );
     } else if (premium === false) {
       come = "spento";
+      fuoriSpento = "premium";
       corto = due("solo con Premium", "Premium only");
+      /* Corta: che da fuori serve Premium lo dicono gia' la parola colorata
+       * e la frase in cima alla Casa. */
       riga = due(
-        "Il collegamento c'è, ma da fuori casa l'app entra solo con GdAHome Premium. Sulla rete di casa entra sempre.",
-        "The connection is there, but from away the app gets in only with GdAHome Premium. On your home network it always gets in.",
+        "Sulla rete di casa l'app entra sempre.",
+        "On your home network the app always gets in.",
       );
     } else {
       come = "bene";
@@ -795,6 +905,8 @@
     if (!scheda) return;
     if (!plancia) {
       scheda.hidden = true;
+      trova("voce-plancia").hidden = true;
+      trova("plancia-riga").hidden = true;
       trova("pas-plancia").hidden = true;
       trova("faccia-versione").className = "faccia spenta";
       scriviIlRimedio("rimedio-plancia", "", "");
@@ -842,6 +954,11 @@
             : plancia.perche || "";
     scriviIlRimedio("rimedio-plancia", "", acceso ? "" : spiega.textContent);
     trova("faccia-versione").className = "faccia " + (acceso ? "spenta" : "male");
+    /* Nella Casa la riga c'e' solo quando non va; accanto alla versione, nelle
+     * Avanzate, c'e' sempre. */
+    trova("voce-plancia").hidden = acceso;
+    trova("plancia-riga").textContent = spiega.textContent;
+    trova("plancia-riga").hidden = !spiega.textContent;
     var elenco = plancia.quali || [];
     quali.hidden = elenco.length === 0;
     if (elenco.length) {
@@ -856,15 +973,12 @@
     }
   }
 
-  /* La riga «Versione» della Panoramica, e la targhetta accanto al nome. */
+  /* La versione, nella targhetta accanto al nome. Il resto — da dove
+   * arrivano gli aggiornamenti — sta nelle Avanzate. */
   function disegnaLaVersione(versione) {
     if (!versione) return;
     trova("targhetta").textContent = versione;
     trova("targhetta").hidden = false;
-    trova("riepilogo-versione").textContent = due(
-      "GdAHome " + versione + " · gli aggiornamenti arrivano da Home Assistant",
-      "GdAHome " + versione + " · updates come from Home Assistant",
-    );
   }
 
   /* ─── «Serve riavviare Home Assistant», nella Panoramica ──────────────────
@@ -918,6 +1032,100 @@
       if (una && !una.hidden && una.dataset.come === "male") quanti += 1;
     });
     scriviIlNumerino("quanti-panoramica", quanti);
+    disegnaLEroe();
+  }
+
+  /* ─── La frase in cima alla Casa ──────────────────────────────────────────
+   *
+   * «Tutto a posto», o cosa non va — in parole di chi ci abita — e, quando
+   * c'e', il tasto che lo aggiusta. Si legge dalle righe qui sotto, che sono
+   * gia' disegnate: la frase e le righe non possono dire due cose diverse. */
+  function disegnaLEroe() {
+    var eroe = trova("eroe");
+    if (!eroe) return;
+    var casa = trova("pas-casa").dataset.come;
+    var fuori = trova("pas-fuori").dataset.come;
+    var plancia = trova("pas-plancia");
+    var riavvio = !trova("voce-riavvio").hidden;
+    var guai = [];
+    if (casa === "male")
+      guai.push(
+        due(
+          "GdAHome adesso non riesce a parlare con Home Assistant.",
+          "GdAHome can't talk to Home Assistant right now.",
+        ),
+      );
+    if (riavvio)
+      guai.push(
+        due(
+          "Home Assistant va riavviato una volta: poi la plancia compare da sola.",
+          "Home Assistant needs one restart: then the dashboard shows up by itself.",
+        ),
+      );
+    if (fuori === "male")
+      guai.push(
+        due(
+          "Da fuori casa l'app adesso non entra: la casa riprova da sola.",
+          "Right now the app can't get in from away: the home keeps retrying by itself.",
+        ),
+      );
+    if (!plancia.hidden && plancia.dataset.come === "male")
+      guai.push(
+        due("La plancia non è quella pubblicata.", "The dashboard isn't the published one."),
+      );
+    var come;
+    var titolo;
+    var riga;
+    if (guai.length) {
+      come = "male";
+      titolo =
+        guai.length === 1
+          ? due("C'è una cosa da sistemare", "One thing needs fixing")
+          : due(
+              "Ci sono " + guai.length + " cose da sistemare",
+              guai.length + " things need fixing",
+            );
+      riga = guai.join(" ");
+    } else if (casa === "attesa") {
+      come = "attesa";
+      titolo = due("Sto guardando come sta la casa…", "Checking how your home is doing…");
+      riga = "";
+    } else {
+      come = "bene";
+      titolo = due("Tutto a posto", "All good");
+      if (fuori === "bene")
+        riga = due(
+          "La casa risponde, ed è raggiungibile anche da fuori.",
+          "Your home answers, and you can reach it from away too.",
+        );
+      else if (fuori === "attesa")
+        riga = due(
+          "La casa risponde. Si sta collegando per entrare anche da fuori…",
+          "Your home answers. It is connecting so you can get in from away too…",
+        );
+      else if (fuoriSpento === "premium")
+        riga = due(
+          "La casa risponde dal Wi-Fi di casa. Da fuori si entra con Premium.",
+          "Your home answers on its own Wi-Fi. From away you get in with Premium.",
+        );
+      else
+        riga = due(
+          "La casa risponde dal Wi-Fi di casa. L'accesso da fuori è spento nelle opzioni.",
+          "Your home answers on its own Wi-Fi. Access from away is off in the options.",
+        );
+    }
+    eroe.dataset.come = come;
+    trova("eroe-titolo").textContent = titolo;
+    trova("eroe-riga").textContent = riga;
+    trova("eroe-riga").hidden = !riga;
+    trova("eroe-disegno").setAttribute(
+      "href",
+      come === "bene" ? "#ic-spunta" : come === "male" ? "#ic-attenzione" : "#ic-casa",
+    );
+    /* Il tasto c'e' quando c'e' qualcosa che si aggiusta da qui: il riavvio,
+     * che si fa dalle Impostazioni di Home Assistant. Il resto passa da solo,
+     * e un tasto che non fa niente sarebbe una promessa falsa. */
+    trova("eroe-azione").hidden = !riavvio;
   }
 
   function scriviIlNumerino(id, quanti) {
@@ -991,18 +1199,22 @@
     }).length;
     scriviIlNumerino("quanti-telefoni", quanti);
     trova("riepilogo-telefoni").textContent = !quanti
-      ? due("Nessun telefono abbinato", "No phone paired")
+      ? due("Nessuno, per ora", "None yet")
       : due(
           (quanti === 1 ? "1 abbinato" : quanti + " abbinati") +
             " · " +
-            (collegati === 1 ? "1 collegato adesso" : collegati + " collegati adesso"),
-          quanti + " paired · " + collegati + " connected right now",
+            (collegati === 1 ? "1 collegato" : collegati + " collegati"),
+          quanti + " paired · " + collegati + " connected",
         );
+    disegnaLAnteprima(
+      "anteprima-telefoni",
+      dispositivi.map(function (uno) {
+        return comeSiChiama(uno);
+      }),
+    );
     trova("telefoni-spiega").textContent = due(
-      "I telefoni e i tablet che usano GdAHome per questa casa. Ne puoi abbinare fino a " +
-        massimi +
-        ".",
-      "The phones and tablets that use GdAHome for this home. You can pair up to " + massimi + ".",
+      "I telefoni e i tablet che entrano in questa casa. Puoi abbinarne fino a " + massimi + ".",
+      "The phones and tablets that get into this home. You can pair up to " + massimi + ".",
     );
     /* «3 di 10»: era «1 di 10 telefono», con la parola che si accordava col
      * numero sbagliato. Il numero da solo si legge meglio, e non sbaglia.
@@ -1024,14 +1236,22 @@
     var elenco = trova("elenco");
     elenco.textContent = "";
 
+    /* Con l'elenco vuoto il tasto sta al centro, dove si guarda: due tasti
+     * uguali nella stessa schermata farebbero chiedere quale premere. */
+    trova("aggiungi-dall-elenco").hidden = !quanti;
     if (!quanti) {
-      var vuoto = vediPagina.createElement("li");
-      vuoto.className = "vuoto";
-      vuoto.textContent = due(
-        "Nessun telefono abbinato: genera il QR code qui sopra e inquadralo con l'app.",
-        "No phone paired: generate the QR code above and scan it with the app.",
+      elenco.appendChild(
+        unVuoto(
+          "ic-telefono",
+          due("Nessun telefono, per ora", "No phones yet"),
+          due(
+            "Abbina il primo con un QR code: ci vuole un minuto.",
+            "Pair the first one with a QR code: it takes a minute.",
+          ),
+          due("Collega l'app", "Connect the app"),
+          "abbina",
+        ),
       );
-      elenco.appendChild(vuoto);
       return;
     }
 
@@ -1039,57 +1259,99 @@
       var riga = vediPagina.createElement("li");
 
       /* La faccia della riga: un riquadro tondo col disegno di un telefono,
-       * verde quando quel telefono e' collegato adesso. Si legge anche sul
-       * telefono, dove un `title` col mouse fermo sopra non c'e'. */
-      riga.appendChild(unaFaccia("ic-telefono", uno.collegati ? "bene" : "spenta"));
+       * verde quando quel telefono e' collegato adesso. */
+      var sistema = String(uno.sistema || "").toLowerCase();
+      riga.appendChild(
+        unaFaccia(
+          sistema === "ios"
+            ? "ic-mela"
+            : sistema === "android"
+              ? "ic-robot"
+              : sistema === "web"
+                ? "ic-browser"
+                : "ic-telefono",
+          uno.collegati ? "bene" : "spenta",
+        ),
+      );
 
       var nome = vediPagina.createElement("div");
       nome.className = "nome";
+      var rigaDelNome = vediPagina.createElement("div");
+      rigaDelNome.className = "riga-del-nome";
       var forte = vediPagina.createElement("strong");
       /* `textContent`, mai `innerHTML`: il nome lo scrive chi si abbina, e
        * arriva dalla porta esposta. */
       forte.textContent = comeSiChiama(uno);
-      var sotto = vediPagina.createElement("span");
+      rigaDelNome.appendChild(forte);
       /* Di chi e' questo telefono. Va detto: un telefono senza padrone vede
        * **tutte** le plance, comprese quelle riservate a qualcuno, ed e'
-       * esattamente quello di cui bisogna accorgersi guardando l'elenco. */
-      var diChi = nomeDellUtente(uno.utente);
-      /* Chi ha scritto di chi e' il telefono («Di chi e' questo telefono?»
-       * nell'app) ce l'ha gia' nel nome: qui resta solo l'avviso di chi vede
-       * tutte le plance. */
-      if (uno.proprietario && uno.utente) diChi = "";
-      sotto.textContent =
-        comEFattoAPieno(uno) +
-        " · " +
-        (uno.collegati
-          ? due("collegato adesso", "connected right now")
-          : due("visto ", "seen ") + dataLeggibile(uno.vistoIl)) +
-        (diChi ? " · " + diChi : "");
+       * esattamente quello di cui bisogna accorgersi guardando l'elenco —
+       * per questo quell'etichetta e' gialla. Chi ha scritto di chi e' il
+       * telefono («Di chi e' questo telefono?» nell'app) ce l'ha gia' nel
+       * nome. */
+      var diChi = uno.proprietario && uno.utente ? "" : nomeDellUtente(uno.utente);
+      /* «Tablet ingresso · di Tablet ingresso»: se il nome dice gia' di chi
+       * e', l'etichetta sarebbe un'eco. */
+      var suoNome = ilNomeDellUtente(uno.utente);
+      if (suoNome && comeSiChiama(uno).toLowerCase().indexOf(suoNome.toLowerCase()) >= 0)
+        diChi = "";
+      if (diChi) {
+        var suo = vediPagina.createElement("span");
+        suo.className = "chip" + (uno.utente ? "" : " giallo");
+        suo.textContent = diChi;
+        rigaDelNome.appendChild(suo);
+      }
       /* Un telefono entrato con la casa di prova lo dice accanto al nome, con
        * la sua scadenza: e' l'ora in cui uscira' da solo. */
       if (uno.finoA) {
-        var rigaDelNome = vediPagina.createElement("div");
-        rigaDelNome.className = "riga-del-nome";
         var aTempo = vediPagina.createElement("span");
         aTempo.className = "etichetta-prova";
         aTempo.textContent = due(
           "di prova · fino al " + unGiornoCorto(uno.finoA),
           "test · until " + unGiornoCorto(uno.finoA),
         );
-        rigaDelNome.appendChild(forte);
         rigaDelNome.appendChild(aTempo);
-        nome.appendChild(rigaDelNome);
-      } else {
-        nome.appendChild(forte);
       }
+      nome.appendChild(rigaDelNome);
+      /* Quando si e' visto, come lo direbbe una persona: «adesso», «2 ore
+       * fa», «ieri». Il verde vuol dire collegato in questo momento. */
+      var sotto = vediPagina.createElement("span");
+      var quando = vediPagina.createElement("b");
+      quando.className = uno.collegati ? "vivo" : "";
+      quando.textContent = uno.collegati
+        ? due("Collegato adesso", "Connected now")
+        : due("Visto ", "Seen ") + quantoTempoFa(uno.vistoIl);
+      sotto.appendChild(quando);
+      sotto.appendChild(vediPagina.createTextNode(" · " + comEFattoAPieno(uno)));
       nome.appendChild(sotto);
       riga.appendChild(nome);
 
+      /* «⋯»: Rinomina e Togli in un menu. Sono cose di una volta ogni tanto,
+       * e due tasti per ogni riga facevano dell'elenco un muro di tasti. Il
+       * menu resta aperto mentre la pagina si ridisegna (`menuAperto`). */
       var tasti = vediPagina.createElement("div");
-      tasti.className = "tasti";
+      tasti.className = "tasti stretti";
+      var aperto = menuAperto === uno.id;
+      var treSegni = unTasto("", "tenue tre-punti");
+      treSegni.appendChild(unDisegno("ic-altro"));
+      treSegni.setAttribute("aria-label", due("Altro", "More"));
+      treSegni.setAttribute("aria-haspopup", "menu");
+      treSegni.setAttribute("aria-expanded", aperto ? "true" : "false");
+      treSegni.addEventListener("click", function () {
+        menuAperto = menuAperto === uno.id ? "" : uno.id;
+        if (lUltimoStato) disegnaIDispositivi(lUltimoStato.dispositivi, lUltimoStato.massimi);
+      });
+      tasti.appendChild(treSegni);
+      var menu = vediPagina.createElement("div");
+      menu.className = "menu";
+      menu.setAttribute("role", "menu");
+      menu.hidden = !aperto;
+      tasti.appendChild(menu);
 
-      var rinomina = unTasto(due("Rinomina", "Rename"), "tenue");
+      var rinomina = unTasto(due("Rinomina", "Rename"), "voce-menu");
+      rinomina.setAttribute("role", "menuitem");
       rinomina.addEventListener("click", function () {
+        menuAperto = "";
         rinominaQui(
           riga,
           "telefono:" + uno.id,
@@ -1104,54 +1366,151 @@
           avvisaITelefoni,
         );
       });
-      tasti.appendChild(rinomina);
+      menu.appendChild(rinomina);
 
-      var stacca = unTasto(due("Togli", "Unpair"), "toglie");
+      var stacca = unTasto(
+        due("Togli da questa casa", "Remove from this home"),
+        "voce-menu toglie",
+      );
+      stacca.setAttribute("role", "menuitem");
       stacca.addEventListener("click", function () {
-        if (
-          !window.confirm(
-            due(
-              "Togliere «" +
-                comeSiChiama(uno) +
-                "»? Esce subito da questa casa, e per rientrare dovrà riabbinarsi da capo.",
-              "Unpair “" +
-                comeSiChiama(uno) +
-                "”? It leaves this home right away, and to get back in it will have to pair again from scratch.",
-            ),
-          )
-        )
-          return;
-        stacca.disabled = true;
-        avvisaITelefoni("");
-        chiedi("api/dispositivi/" + encodeURIComponent(uno.id), { method: "DELETE" })
-          .then(aggiornaTutto)
-          .catch(function (errore) {
-            stacca.disabled = false;
-            avvisaITelefoni(errore.message);
-          });
+        menuAperto = "";
+        menu.hidden = true;
+        chiediConferma(
+          due("Togliere «" + comeSiChiama(uno) + "»?", "Remove “" + comeSiChiama(uno) + "”?"),
+          due(
+            "Esce subito da questa casa. Per rientrare dovrà abbinarsi di nuovo, con un QR code nuovo.",
+            "It leaves this home right away. To get back in it will have to pair again, with a new QR code.",
+          ),
+          due("Togli", "Remove"),
+        ).then(function (si) {
+          if (!si) return;
+          stacca.disabled = true;
+          avvisaITelefoni("");
+          chiedi("api/dispositivi/" + encodeURIComponent(uno.id), { method: "DELETE" })
+            .then(aggiornaTutto)
+            .catch(function (errore) {
+              stacca.disabled = false;
+              avvisaITelefoni(errore.message);
+            });
+        });
       });
-      tasti.appendChild(stacca);
+      menu.appendChild(stacca);
       riga.appendChild(tasti);
 
       elenco.appendChild(riga);
     });
   }
 
+  /* I primi nomi in piccolo, sulla mattonella della Casa: tre al massimo, e
+   * «+2» per gli altri. Si capisce cosa c'e' dentro senza aprirla. */
+  function disegnaLAnteprima(id, nomi) {
+    var dove = trova(id);
+    if (!dove) return;
+    dove.textContent = "";
+    nomi.slice(0, 3).forEach(function (nome) {
+      var uno = vediPagina.createElement("span");
+      uno.className = "chip";
+      /* `textContent`: i nomi li ha scritti una persona. */
+      uno.textContent = nome;
+      dove.appendChild(uno);
+    });
+    if (nomi.length > 3) {
+      var altri = vediPagina.createElement("span");
+      altri.className = "chip";
+      altri.textContent = "+" + (nomi.length - 3);
+      dove.appendChild(altri);
+    }
+    dove.hidden = !nomi.length;
+  }
+
+  /* Il menu «⋯» aperto, se ce n'e' uno: l'id del telefono. Un tocco fuori
+   * lo chiude, come Escape. */
+  var menuAperto = "";
+
+  function chiudiIlMenu() {
+    if (!menuAperto) return;
+    menuAperto = "";
+    if (lUltimoStato) disegnaIDispositivi(lUltimoStato.dispositivi, lUltimoStato.massimi);
+  }
+
+  vediPagina.addEventListener("click", function (evento) {
+    var dove = evento.target;
+    if (dove && dove.closest && dove.closest(".tre-punti, .menu")) return;
+    chiudiIlMenu();
+  });
+  vediPagina.addEventListener("keydown", function (evento) {
+    if (evento.key === "Escape") chiudiIlMenu();
+  });
+
+  /* Un disegno del foglio dei simboli, da mettere in un tasto. */
+  function unDisegno(quale) {
+    var disegno = vediPagina.createElementNS("http://www.w3.org/2000/svg", "svg");
+    disegno.setAttribute("class", "ic");
+    disegno.setAttribute("aria-hidden", "true");
+    var uso = vediPagina.createElementNS("http://www.w3.org/2000/svg", "use");
+    uso.setAttribute("href", "#" + quale);
+    disegno.appendChild(uso);
+    return disegno;
+  }
+
+  /* «adesso», «5 min fa», «2 ore fa», «ieri», «3 giorni fa», poi la data. */
+  function quantoTempoFa(quando) {
+    if (!quando) return due("mai", "never");
+    var minuti = Math.round((Date.now() - quando) / 60000);
+    if (minuti < 1) return due("adesso", "just now");
+    if (minuti < 60) return due(minuti + " min fa", minuti + " min ago");
+    var ore = Math.round(minuti / 60);
+    if (ore < 24)
+      return ore === 1 ? due("un'ora fa", "an hour ago") : due(ore + " ore fa", ore + " hours ago");
+    var giorni = Math.round(ore / 24);
+    if (giorni === 1) return due("ieri", "yesterday");
+    if (giorni < 7) return due(giorni + " giorni fa", giorni + " days ago");
+    return unGiornoCorto(quando);
+  }
+
+  /* Un elenco vuoto: non una riga grigia, ma cosa fare — il disegno, due
+   * parole, e il tasto che porta dove si comincia. */
+  function unVuoto(disegno, titolo, testo, tasto, vai) {
+    var vuoto = vediPagina.createElement("li");
+    vuoto.className = "vuoto";
+    vuoto.appendChild(unaFaccia(disegno, ""));
+    var forte = vediPagina.createElement("strong");
+    forte.textContent = titolo;
+    vuoto.appendChild(forte);
+    var riga = vediPagina.createElement("p");
+    riga.textContent = testo;
+    vuoto.appendChild(riga);
+    if (tasto) {
+      var vaiLi = unTasto(tasto, "");
+      vaiLi.setAttribute("data-vai", vai);
+      vuoto.appendChild(vaiLi);
+    }
+    return vuoto;
+  }
+
   /* ─── Le plance ─────────────────────────────────────────────────────────────
    *
-   * Una riga per plancia: come si chiama, chi la vede, e i tasti — «Apri»,
-   * «Rinomina», «Chi la vede», e per quelle che non sono la prima «Togli».
+   * Una riga per plancia: come si chiama, che tipo e', chi la vede, e due
+   * tasti — «Apri», e «Gestisci», che apre sotto la riga chi la vede, il nome
+   * e, per quelle che non sono la prima, «Togli». Prima erano quattro tasti in
+   * fila per ogni riga, e sul telefono l'elenco diventava un muro di tasti.
    *
    * La prima non si toglie, e il tasto non c'e': un tasto che c'e' e che
    * risponde «questa no» e' peggio di un tasto che non c'e'. */
+  var nuovaAperta = false;
+
   function disegnaLePlance(plance) {
     var elenco = trova("elenco-plance");
     if (!elenco) return;
     var quante = plance ? plance.length : 0;
-    trova("aggiungi-plancia").disabled = quante >= PLANCE_AL_MASSIMO || soloBase;
-    /* Modello e utenti servono solo a chi puo' aggiungerne una. */
-    trova("nuova-plancia").hidden = quante >= PLANCE_AL_MASSIMO || soloBase;
-    if (!trova("nuova-plancia").hidden) riempiGliUtentiDellaNuova();
+    var siPuo = quante < PLANCE_AL_MASSIMO && !soloBase;
+    trova("apri-nuova-plancia").disabled = !siPuo;
+    trova("aggiungi-plancia").disabled = !siPuo;
+    if (!siPuo) nuovaAperta = false;
+    /* Modello e utenti servono solo a chi ne sta aggiungendo una. */
+    trova("scheda-nuova-plancia").hidden = !nuovaAperta;
+    if (nuovaAperta) riempiGliUtentiDellaNuova();
     scriviIlNumerino("quanti-plance", quante);
     trova("plance-conta").textContent = due(
       quante + " di " + PLANCE_AL_MASSIMO,
@@ -1159,14 +1518,15 @@
     );
     trova("riepilogo-plance").textContent = !quante
       ? due("Nessuna plancia", "No dashboard")
-      : (quante === 1
-          ? due("1 plancia: ", "1 dashboard: ")
-          : quante + due(" plance: ", " dashboards: ")) +
-        iNomiInFila(
-          plance.map(function (una) {
-            return una.titolo;
-          }),
-        );
+      : quante === 1
+        ? due("1 plancia", "1 dashboard")
+        : due(quante + " plance", quante + " dashboards");
+    disegnaLAnteprima(
+      "anteprima-plance",
+      (plance || []).map(function (una) {
+        return una.titolo;
+      }),
+    );
 
     if (inModifica.indexOf("plancia:") === 0) return;
     elenco.textContent = "";
@@ -1177,9 +1537,25 @@
 
       var nome = vediPagina.createElement("div");
       nome.className = "nome";
+      var rigaDelTitolo = vediPagina.createElement("div");
+      rigaDelTitolo.className = "riga-del-nome";
       var forte = vediPagina.createElement("strong");
       /* `textContent`, mai `innerHTML`: il titolo l'ha scritto una persona. */
       forte.textContent = una.titolo;
+      rigaDelTitolo.appendChild(forte);
+      /* Una plancia a muro lo dice accanto al nome: chi la apre sul telefono
+       * e trova un pannello invece della plancia deve poterlo leggere qui. */
+      if (una.a_muro || una.a_occhio || una.a_casa3d) {
+        var aMuro = vediPagina.createElement("span");
+        aMuro.className = "etichetta-muro";
+        aMuro.textContent = una.a_muro
+          ? due("📟 a muro", "📟 on the wall")
+          : una.a_casa3d
+            ? due("🧊 casa 3D", "🧊 3D home")
+            : due("👁️ colpo d'occhio", "👁️ at a glance");
+        rigaDelTitolo.appendChild(aMuro);
+      }
+      nome.appendChild(rigaDelTitolo);
       var sotto = vediPagina.createElement("span");
       var suoi = Array.isArray(una.utenti) ? una.utenti.filter(Boolean) : [];
       /* Le due restrizioni si sommano, e la riga le dice tutte e due: chi
@@ -1193,26 +1569,10 @@
       if (chi.length === 0) chi.push(due("la vedono tutti", "everyone sees it"));
       sotto.textContent =
         (una.primaria
-          ? due("la principale", "the main one")
-          : due("aggiunta da te", "added by you")) +
+          ? due("La principale", "The main one")
+          : due("Aggiunta da te", "Added by you")) +
         " · " +
         chi.join(" · ");
-      /* Una plancia a muro lo dice accanto al nome: chi la apre sul telefono
-       * e trova un pannello invece della plancia deve poterlo leggere qui. */
-      if (una.a_muro || una.a_occhio || una.a_casa3d) {
-        var rigaDelTitolo = vediPagina.createElement("div");
-        rigaDelTitolo.className = "riga-del-nome";
-        var aMuro = vediPagina.createElement("span");
-        aMuro.className = "etichetta-muro";
-        aMuro.textContent = una.a_muro
-          ? due("📟 a muro", "📟 on the wall")
-          : una.a_casa3d
-            ? due("🧊 casa 3D", "🧊 3D home")
-            : due("👁️ colpo d'occhio", "👁️ at a glance");
-        rigaDelTitolo.appendChild(forte);
-        rigaDelTitolo.appendChild(aMuro);
-        nome.appendChild(rigaDelTitolo);
-      } else nome.appendChild(forte);
       nome.appendChild(sotto);
       riga.appendChild(nome);
 
@@ -1221,15 +1581,10 @@
 
       /* «Apri»: la voce della plancia fra le «Plance» di Home Assistant
        * (`gdahome-<profilo>`, la scrive `src/plance-in-casa.js`), nella stessa
-       * finestra.
-       *
-       * Prima apriva l'indirizzo dell'ingress in una scheda nuova. Ma l'ingress
-       * vuole una sessione, e la sessione c'e' solo dentro la pagina di Home
-       * Assistant: nell'app di Home Assistant sul telefono una scheda nuova si
-       * apre nel browser, senza sessione, e Home Assistant rispondeva
-       * «401: Unauthorized» — «ho creato una plancia e mi da' errore 401». La
-       * voce della barra laterale invece la sessione la chiede da se'
-       * (`carta/accompagna.js`), e si apre dove si e' gia'. */
+       * finestra. Una scheda nuova, nell'app di Home Assistant sul telefono,
+       * si apre nel browser senza la sessione dell'ingress, e Home Assistant
+       * rispondeva «401: Unauthorized»; la voce della barra laterale invece la
+       * sessione la chiede da se' (`carta/accompagna.js`). */
       var apri = vediPagina.createElement("a");
       apri.className = "tenue";
       apri.textContent = due("Apri", "Open");
@@ -1237,88 +1592,104 @@
       apri.href = "/gdahome-" + encodeURIComponent(una.profilo);
       tasti.appendChild(apri);
 
-      var rinomina = unTasto(due("Rinomina", "Rename"), "tenue");
-      rinomina.addEventListener("click", function () {
-        rinominaQui(
-          riga,
-          "plancia:" + una.profilo,
-          una.titolo,
-          40,
-          function (nuovo) {
-            return chiedi("api/plance", {
-              method: "PATCH",
-              body: JSON.stringify({ profilo: una.profilo, titolo: nuovo }),
-            });
-          },
-          avvisaLePlance,
-        );
-      });
-      tasti.appendChild(rinomina);
-
-      /* «Chi la vede»: le spunte, sotto la riga.
-       *
-       * Sotto e non in una finestra: le spunte sono poche — quanti utenti ha
-       * una casa — e una finestra per tre caselle e' una finestra da chiudere.
-       * Si apre una riga per volta: aprirne un'altra chiude quella di prima,
-       * se no l'elenco delle plance diventa un muro di caselle. */
-      var chiLaVede = unTasto(due("Chi la vede", "Who sees it"), "tenue");
-      chiLaVede.setAttribute("aria-expanded", "false");
-      tasti.appendChild(chiLaVede);
-
-      if (!una.primaria) {
-        var togli = unTasto(due("Togli", "Remove"), "toglie");
-        togli.addEventListener("click", function () {
-          if (
-            !window.confirm(
-              due(
-                "Togliere «" +
-                  una.titolo +
-                  "»? Va via anche come l'hai configurata: sezioni, tessere, stanze. Non si rimette a posto.",
-                "Remove “" +
-                  una.titolo +
-                  "”? The way you configured it goes too: sections, cards, rooms. There is no putting it back.",
-              ),
-            )
-          )
-            return;
-          togli.disabled = true;
-          avvisaLePlance("");
-          chiedi("api/plance", {
-            method: "DELETE",
-            body: JSON.stringify({ profilo: una.profilo }),
-          })
-            .then(aggiornaTutto)
-            .catch(function (errore) {
-              togli.disabled = false;
-              avvisaLePlance(errore.message);
-            });
-        });
-        tasti.appendChild(togli);
-      }
-
-      riga.appendChild(tasti);
-
-      var spunte = vediPagina.createElement("div");
-      spunte.className = "chi-la-vede";
-      spunte.hidden = true;
-      riga.appendChild(spunte);
-
-      chiLaVede.addEventListener("click", function () {
-        /* Aprirne uno chiude l'altro: una per volta, se no l'elenco delle
-         * plance diventa un muro di caselle. */
+      /* «Gestisci»: il pannello sotto la riga. Uno per volta — aprirne un
+       * altro chiude quello di prima — e resta aperto mentre la pagina si
+       * ridisegna da sola ogni dieci secondi (`cassettoAperto`). */
+      var aperto = cassettoAperto === una.profilo;
+      var gestisci = unTasto(aperto ? due("Chiudi", "Close") : due("Gestisci", "Manage"), "tenue");
+      gestisci.setAttribute("aria-expanded", aperto ? "true" : "false");
+      gestisci.addEventListener("click", function () {
         cassettoAperto = cassettoAperto === una.profilo ? "" : una.profilo;
         disegnaLePlance(plance);
       });
+      tasti.appendChild(gestisci);
+      riga.appendChild(tasti);
 
-      if (cassettoAperto === una.profilo) {
-        spunte.hidden = false;
-        chiLaVede.setAttribute("aria-expanded", "true");
+      if (aperto) {
+        var pannello = vediPagina.createElement("div");
+        pannello.className = "pannello";
+
+        /* «Chi la vede»: le spunte, nel pannello. Sotto la riga e non in una
+         * finestra: le spunte sono poche — quanti utenti ha una casa. */
+        var spunte = vediPagina.createElement("div");
+        spunte.className = "chi-la-vede";
+        pannello.appendChild(spunte);
         riempiLeSpunte(spunte, una);
+
+        var suoiTasti = vediPagina.createElement("div");
+        suoiTasti.className = "bottoni";
+        var rinomina = unTasto(due("Rinomina", "Rename"), "tenue");
+        rinomina.addEventListener("click", function () {
+          rinominaQui(
+            riga,
+            "plancia:" + una.profilo,
+            una.titolo,
+            40,
+            function (nuovo) {
+              return chiedi("api/plance", {
+                method: "PATCH",
+                body: JSON.stringify({ profilo: una.profilo, titolo: nuovo }),
+              });
+            },
+            avvisaLePlance,
+          );
+        });
+        suoiTasti.appendChild(rinomina);
+
+        if (!una.primaria) {
+          var togli = unTasto(due("Togli la plancia", "Remove the dashboard"), "toglie");
+          togli.addEventListener("click", function () {
+            chiediConferma(
+              due("Togliere «" + una.titolo + "»?", "Remove “" + una.titolo + "”?"),
+              due(
+                "Va via anche come l'hai preparata: sezioni, tessere, stanze. Non si rimette a posto.",
+                "The way you set it up goes too: sections, cards, rooms. There is no putting it back.",
+              ),
+              due("Togli", "Remove"),
+            ).then(function (si) {
+              if (!si) return;
+              togli.disabled = true;
+              avvisaLePlance("");
+              chiedi("api/plance", {
+                method: "DELETE",
+                body: JSON.stringify({ profilo: una.profilo }),
+              })
+                .then(function () {
+                  cassettoAperto = "";
+                  return aggiornaTutto();
+                })
+                .catch(function (errore) {
+                  togli.disabled = false;
+                  avvisaLePlance(errore.message);
+                });
+            });
+          });
+          suoiTasti.appendChild(togli);
+        }
+        pannello.appendChild(suoiTasti);
+        riga.appendChild(pannello);
       }
 
       elenco.appendChild(riga);
     });
   }
+
+  /* La scheda della plancia nuova si apre col tasto in cima alla sezione, e
+   * si richiude con «Annulla» o quando la plancia e' fatta. */
+  function apriLaNuova(si) {
+    nuovaAperta = si;
+    trova("scheda-nuova-plancia").hidden = !si;
+    if (!si) return;
+    riempiGliUtentiDellaNuova();
+    trova("titolo-plancia").focus();
+  }
+
+  trova("apri-nuova-plancia").addEventListener("click", function () {
+    apriLaNuova(true);
+  });
+  trova("chiudi-nuova-plancia").addEventListener("click", function () {
+    apriLaNuova(false);
+  });
 
   /* «Casa e Ospiti», «Casa, Ospiti e Mare», «Casa, Ospiti, Mare e altre 2»:
    * una riga sola, anche con trenta plance. */
@@ -1390,6 +1761,16 @@
     return uno ? due("di " + uno.nome, uno.nome + "'s") : "";
   }
 
+  /* Il nome nudo di un utente, senza «di»: `""` se non si sa. */
+  function ilNomeDellUtente(chi) {
+    var cercato = String(chi || "").trim();
+    var nome = "";
+    (gliUtenti || []).forEach(function (uno) {
+      if (uno.id === cercato) nome = String(uno.nome || "");
+    });
+    return nome;
+  }
+
   function chiediGliUtenti() {
     if (gliUtenti) return Promise.resolve(gliUtenti);
     return chiedi("api/utenti").then(function (detto) {
@@ -1456,6 +1837,10 @@
               "Turn everything off to reopen it to everyone.",
           );
         }
+        var capo = vediPagina.createElement("p");
+        capo.className = "etichetta";
+        capo.textContent = due("Chi la vede", "Who sees it");
+        dove.appendChild(capo);
         dove.appendChild(spiega);
 
         /* «Solo gli amministratori»: l'altra meta', e sta nello stesso
@@ -2094,6 +2479,9 @@
   var lUltimoStato = null;
 
   function aggiornaTutto() {
+    /* Il tema di Home Assistant si cambia senza ricaricare questa pagina: lo
+     * si riguarda a ogni giro, e costa una lettura. */
+    ilTemaDiCasa();
     return chiedi("api/stato")
       .then(function (stato) {
         lUltimoStato = stato;
@@ -2152,9 +2540,27 @@
           disegnaIlRiavvio(stato.plance_in_casa);
         });
         contaIGuai();
-        trova("fabbrica").disabled = stato.dispositivi.length >= stato.massimi;
+        /* Al tetto il tasto si spegne, e si dice perche' accanto: un tasto
+         * grigio senza una parola fa pensare a un guasto. I telefoni della
+         * casa di prova non contano. */
+        var diCasa = stato.dispositivi.filter(function (uno) {
+          return !uno.finoA;
+        }).length;
+        pieno = diCasa >= stato.massimi;
+        trova("abbina-pieno").hidden = !pieno;
+        trova("abbina-pieno").textContent = due(
+          "Hai già " +
+            stato.massimi +
+            " telefoni abbinati: per aggiungerne uno, prima togline un altro da «I tuoi telefoni».",
+          "You already have " +
+            stato.massimi +
+            " phones paired: to add one, first remove another from “Your phones”.",
+        );
         if (!stato.abbinamento.attivo) nascondiIlCodice();
-        avvisa("");
+        /* Gli utenti, se all'apertura Home Assistant non li ha dati: senza, la
+         * tappa 1 resta vuota e il QR non si puo' generare. */
+        if (!gliUtenti) riempiIlPerChi();
+        disegnaLeTappe();
         /* Un codice ancora buono si rimette a schermo da solo.
          *
          * Serve a un caso che capita davvero: la pagina si ricarica — un tocco
@@ -2187,94 +2593,202 @@
 
   /* ─── Abbinare un telefono ──────────────────────────────────────────────── */
 
+  /* Se si e' arrivati al tetto dei telefoni: lo dice lo stato. */
+  var pieno = false;
+
   function riprendiIlCodice() {
     return chiedi("api/codice")
       .then(function (vivo) {
-        if (vivo.attivo) disegnaIlCodice(vivo.codice, vivo.scadeIl);
+        if (!vivo.attivo) return;
+        /* La tappa 1 torna su chi era: il codice e' suo. */
+        if (vivo.utente) trova("per-chi").value = vivo.utente;
+        codicePer = trova("per-chi").value;
+        spiegaIlPerChi();
+        disegnaIlCodice(vivo.codice, vivo.scadeIl);
       })
       .catch(function () {
         /* Se non si riesce a riprenderlo si resta senza: il bottone e' li'. */
       });
   }
 
-  /* Sotto «Per chi è», chi vedrà cosa: il telefono eredita le plance di
-   * quella persona, ed e' meglio leggerlo prima di inquadrare. */
+  /* Per chi e' il codice a schermo: se la tappa 1 cambia, quel codice non va
+   * piu' bene. */
+  var codicePer = "";
+
+  /* Le tre tappe, in una funzione che non tocca la pagina: dice a che punto
+   * si e', e se il tasto si puo' premere. La pagina la disegna, e la prova
+   * `il-qr-chiede-per-chi` la compila e la interroga. */
+  function leTappe(scelto, vivo, alTetto) {
+    return {
+      chi: scelto ? "fatto" : "adesso",
+      genera: vivo ? "fatto" : scelto ? "adesso" : "dopo",
+      qr: vivo ? "adesso" : "dopo",
+      /* Il QR non si genera senza sapere per chi e', ne' oltre il tetto. */
+      siPuoGenerare: Boolean(scelto) && !alTetto,
+      spiega: alTetto
+        ? ""
+        : !scelto
+          ? due("Prima scegli per chi è.", "First choose who it is for.")
+          : vivo
+            ? due(
+                "Fatto. Se è scaduto, o devi collegare un'altra app, generane uno nuovo.",
+                "Done. If it has expired, or you need to connect another app, generate a new one.",
+              )
+            : due(
+                "Vale una volta sola, per pochi minuti.",
+                "It works once only, for a few minutes.",
+              ),
+    };
+  }
+
+  function disegnaLeTappe() {
+    var scelto = trova("per-chi").value;
+    var vivo = !trova("codice-vivo").hidden;
+    var tappe = leTappe(scelto, vivo, pieno);
+    trova("tappa-chi").dataset.stato = tappe.chi;
+    trova("tappa-genera").dataset.stato = tappe.genera;
+    trova("tappa-qr").dataset.stato = tappe.qr;
+    trova("fabbrica").disabled = !tappe.siPuoGenerare;
+    /* Col QR a schermo il tasto non e' piu' «il» tasto: ne fa un altro. */
+    trova("fabbrica").className = vivo ? "tenue" : "";
+    trova("fabbrica-parole").textContent = vivo
+      ? due("Un QR code nuovo", "A new QR code")
+      : due("Genera il QR code", "Generate the QR code");
+    if (!cambiato) trova("genera-spiega").textContent = tappe.spiega;
+    trova("genera-spiega").hidden = !trova("genera-spiega").textContent;
+  }
+
+  /* Le plance che una persona vedra': quelle senza restrizioni, quelle dove
+   * c'e' il suo nome, e quelle «solo amministratori» se amministra. Le stesse
+   * regole di `plance.js`, dette qui per leggerle prima di inquadrare. */
+  function lePlanceDi(utente) {
+    var plance = (lUltimoStato && lUltimoStato.plance) || [];
+    return plance.filter(function (una) {
+      var suoi = Array.isArray(una.utenti) ? una.utenti.filter(Boolean) : [];
+      if (suoi.length && suoi.indexOf(utente.id) < 0) return false;
+      if (una.solo_admin && !utente.amministratore) return false;
+      return true;
+    });
+  }
+
+  /* Sotto «Per chi è», cosa vedra': il telefono eredita le plance di quella
+   * persona, ed e' meglio leggerlo prima di inquadrare. */
   function spiegaIlPerChi() {
     var scelta = trova("per-chi");
     var spiega = trova("per-chi-spiega");
-    if (!scelta || !spiega) return;
-    var nome = "";
+    var utente = null;
     (gliUtenti || []).forEach(function (uno) {
-      if (uno.id === scelta.value) nome = uno.nome;
+      if (uno.id === scelta.value) utente = uno;
     });
-    spiega.textContent = nome
+    spiega.hidden = !utente;
+    if (!utente) return;
+    var sue = lePlanceDi(utente).map(function (una) {
+      return una.titolo;
+    });
+    spiega.textContent = !sue.length
       ? due(
-          "Il telefono vedrà le plance che vede " + nome + ".",
-          "The phone will see the dashboards " + nome + " sees.",
+          "Non vedrà nessuna plancia: in «Le plance» scegli cosa può vedere.",
+          "It won't see any dashboard: choose what it can see in “Dashboards”.",
         )
-      : due(
-          "Il telefono vedrà le plance che vedi tu.",
-          "The phone will see the dashboards you see.",
-        );
+      : sue.length === 1
+        ? due("Vedrà la plancia «", "It will see the “") + sue[0] + due("».", "” dashboard.")
+        : due("Vedrà " + sue.length + " plance: ", "It will see " + sue.length + " dashboards: ") +
+          iNomiInFila(sue) +
+          ".";
   }
 
-  /* «Per chi e'» il codice: si riempie con gli utenti della casa.
-   *
-   * Compare solo se ce n'e' piu' di uno: in una casa con un utente solo non
-   * c'e' niente da scegliere, e una casella con una voce sola fa una domanda
-   * inutile. Di serie resta su «chi sta usando questa pagina», che e' quello
-   * che serve quasi sempre. */
+  /* «Per chi e'» il codice: gli utenti attivi della casa, e nessuno scelto
+   * di serie — anche dove l'utente e' uno solo. Una scelta gia' fatta e'
+   * proprio quella che non si guarda, e un telefono intestato alla persona
+   * sbagliata vede le plance sbagliate. */
   function riempiIlPerChi() {
-    var riga = trova("per-chi-riga");
     var scelta = trova("per-chi");
-    if (!riga || !scelta) return;
     chiediGliUtenti()
       .then(function (utenti) {
-        if (utenti.length < 2) {
-          riga.hidden = true;
-          return;
-        }
         var prima = scelta.value;
         scelta.textContent = "";
-        var chiPreme = vediPagina.createElement("option");
-        chiPreme.value = "";
-        chiPreme.textContent = due("chi sta usando questa pagina", "whoever is using this page");
-        scelta.appendChild(chiPreme);
-        utenti.forEach(function (uno) {
-          var voce = vediPagina.createElement("option");
-          voce.value = uno.id;
-          /* `textContent`: il nome di un utente l'ha scritto una persona. */
-          voce.textContent = uno.nome;
-          scelta.appendChild(voce);
-        });
+        var nessuno = vediPagina.createElement("option");
+        nessuno.value = "";
+        nessuno.disabled = true;
+        nessuno.textContent = due("Scegli una persona…", "Choose a person…");
+        scelta.appendChild(nessuno);
+        utenti
+          .filter(function (uno) {
+            return uno.attivo !== false;
+          })
+          .forEach(function (uno) {
+            var voce = vediPagina.createElement("option");
+            voce.value = uno.id;
+            /* `textContent`: il nome di un utente l'ha scritto una persona. */
+            voce.textContent =
+              uno.nome + (uno.amministratore ? due(" · amministratore", " · admin") : "");
+            scelta.appendChild(voce);
+          });
         scelta.value = prima || "";
-        riga.hidden = false;
+        if (scelta.value !== prima) scelta.value = "";
         spiegaIlPerChi();
+        disegnaLeTappe();
       })
       .catch(function () {
-        /* Senza l'elenco non si puo' scegliere, e non e' un guaio: il codice
-         * si fabbrica comunque, intestato a chi sta premendo. */
-        riga.hidden = true;
+        /* Senza l'elenco non si puo' scegliere, e il QR resta spento: lo si
+         * dice, e si riprova al giro dopo. */
+        var spiega = trova("per-chi-spiega");
+        spiega.hidden = false;
+        spiega.textContent = due(
+          "Non riesco a chiedere a Home Assistant chi c'è in casa: riprovo fra poco.",
+          "I can't ask Home Assistant who lives here: trying again shortly.",
+        );
       });
   }
 
+  /* Cambiare persona col QR a schermo lo annulla: quel codice e' intestato a
+   * chi era scelto prima. Si dice, e si chiede di generarne un altro. */
+  var cambiato = false;
+  trova("per-chi").addEventListener("change", function () {
+    spiegaIlPerChi();
+    var vivo = !trova("codice-vivo").hidden;
+    if (vivo && trova("per-chi").value !== codicePer) {
+      cambiato = true;
+      trova("genera-spiega").textContent = due(
+        "Hai cambiato persona: il QR code di prima non vale più. Generane uno nuovo.",
+        "You changed the person: the previous QR code no longer works. Generate a new one.",
+      );
+      chiedi("api/codice", { method: "DELETE" })
+        .catch(function () {
+          /* Se il ponte non risponde, il codice scade da solo fra pochi minuti. */
+        })
+        .then(function () {
+          /* La frase resta finche' non se ne genera uno nuovo (`cambiato`). */
+          nascondiIlCodice();
+        });
+      return;
+    }
+    disegnaLeTappe();
+  });
+
   riempiIlPerChi();
-  trova("per-chi").addEventListener("change", spiegaIlPerChi);
 
   trova("fabbrica").addEventListener("click", function () {
     avvisa("");
-    var scelta = trova("per-chi");
-    var riga = trova("per-chi-riga");
-    var voluto = scelta && riga && !riga.hidden ? scelta.value : "";
+    /* Sempre per qualcuno: il ponte un codice senza nessuno lo rifiuta. */
+    var voluto = trova("per-chi").value;
+    cambiato = false;
+    if (!voluto) {
+      disegnaLeTappe();
+      return;
+    }
+    trova("fabbrica").disabled = true;
     chiedi("api/codice", {
       method: "POST",
-      body: JSON.stringify(voluto ? { utente: voluto } : {}),
+      body: JSON.stringify({ utente: voluto }),
     })
       .then(function (fatto) {
+        codicePer = voluto;
         disegnaIlCodice(fatto.codice, fatto.scadeIl);
       })
       .catch(function (errore) {
         avvisa(errore.message);
+        disegnaLeTappe();
       });
   });
 
@@ -2313,6 +2827,7 @@
             caselle[i].type === "radio" &&
             (caselle[i].value === "muro" || caselle[i].value === "principale");
         mostraLaPartenza();
+        apriLaNuova(false);
         return aggiornaTutto();
       })
       .catch(function (errore) {
@@ -2681,17 +3196,19 @@
   });
 
   trova("prova-revoca").addEventListener("click", function () {
-    if (
-      !window.confirm(
-        due(
-          "Revocare la casa di prova? Il codice smette di valere e i telefoni entrati con lui " +
-            "escono subito.",
-          "Revoke the test home? The code stops working and the phones that came in with it " +
-            "leave right away.",
-        ),
-      )
-    )
-      return;
+    chiediConferma(
+      due("Revocare la casa di prova?", "Revoke the test home?"),
+      due(
+        "Il codice smette di valere e i telefoni entrati con lui escono subito.",
+        "The code stops working and the phones that came in with it leave right away.",
+      ),
+      due("Revoca", "Revoke"),
+    ).then(function (si) {
+      if (si) revocaLaProva();
+    });
+  });
+
+  function revocaLaProva() {
     var tasto = trova("prova-revoca");
     tasto.disabled = true;
     chiedi("api/prova", { method: "DELETE" })
@@ -2704,7 +3221,7 @@
         tasto.disabled = false;
         avvisaLaProva(errore.message);
       });
-  });
+  }
 
   /* ─── L'installatore ─────────────────────────────────────────────────────
    *
@@ -2870,37 +3387,28 @@
       });
   }
 
-  /* «Smetti», in due tempi.
+  /* «Smetti».
    *
-   * Il primo tocco chiede conferma e il secondo fa. Non e' una finestra che si
-   * mette in mezzo: e' lo stesso tasto che cambia parola, e chi non voleva
-   * premerlo se ne va senza dover chiudere niente.
+   * Prima si chiede, con la stessa finestra che chiede prima di togliere un
+   * telefono: chi non voleva premerlo se ne va con «Annulla».
    *
    * E smettere vuol dire smettere: si ferma adesso **e** si svuota la casella
    * nella scheda dell'add-on, se no al primo riavvio ricomincerebbe. Dove il
    * Supervisor non lascia scrivere si dice cosa fare a mano, invece di dire
    * che e' andata. */
-  (function () {
+  trova("quadro-smetti").addEventListener("click", function () {
     var tasto = trova("quadro-smetti");
-    /* La parola si scrive qui e non si legge dal tasto: letta dal tasto
-     * prima della traduzione tornava in italiano a chi leggeva in inglese. */
-    var parola = due("Smetti di mandarlo", "Stop sending it");
-    var sicuro = false;
-    var orologio = null;
-
-    tasto.addEventListener("click", function () {
-      if (!sicuro) {
-        sicuro = true;
-        tasto.textContent = due("Sicuro? Premi di nuovo", "Sure? Press again");
-        orologio = setTimeout(function () {
-          sicuro = false;
-          tasto.textContent = parola;
-        }, 6000);
-        return;
-      }
-      if (orologio) clearTimeout(orologio);
-      sicuro = false;
-      tasto.textContent = parola;
+    chiediConferma(
+      due("Smettere di mandare il rapporto?", "Stop sending the report?"),
+      due(
+        (chiHaFattoLImpianto || "Chi ti ha fatto l'impianto") +
+          " non vedrà più come sta l'impianto, né se va aggiornato.",
+        (chiHaFattoLImpianto || "Whoever installed your home") +
+          " will no longer see how the system is doing, or whether it needs updating.",
+      ),
+      due("Smetti", "Stop"),
+    ).then(function (si) {
+      if (!si) return;
       tasto.disabled = true;
       chiedi("api/quadro", { method: "DELETE" })
         .then(function (esito) {
@@ -2930,7 +3438,7 @@
           tasto.disabled = false;
         });
     });
-  })();
+  });
 
   /* ─── La licenza ────────────────────────────────────────────────────────── */
 
@@ -3008,10 +3516,26 @@
     return riga;
   }
 
-  function perBaseGdahome() {
+  /* Fino a quando vale, detto senza «Premium» davanti: per lo stato in
+   * grande, dove «Premium» e' gia' il titolo, e per la mattonella della Casa,
+   * dove c'e' gia' il bollino. Stessa regola di `comEMessa` per gli
+   * abbonamenti nei giorni del margine. */
+  function finoAQuando(sua) {
+    var nelMargine = sua.pagato != null && sua.pagato <= Date.now();
+    var finoAl = sua.pagato != null && !nelMargine ? sua.pagato : sua.scade;
+    var pezzi = [
+      finoAl == null ? due("Per sempre", "For good") : due("Fino al ", "Until ") + unGiorno(finoAl),
+    ];
+    if (daDove(sua.origine)) pezzi.push(daDove(sua.origine));
+    if (nelMargine) pezzi.push(due("rinnovo in attesa", "renewal pending"));
+    return pezzi.join(" · ");
+  }
+
+  /* Base e Premium in una riga sola: cosa hai, e cosa aggiungerebbe. */
+  function laRigaDiBase() {
     return due(
-      "Base: una sola plancia nell'app e nel browser, e accesso solo dalla rete di casa",
-      "Base: one dashboard in the app and the browser, and access only from the home network",
+      "Usi la casa dal Wi-Fi di casa, con la plancia principale. Premium aggiunge l'accesso da fuori e tutte le plance.",
+      "You use your home on its own Wi-Fi, with the main dashboard. Premium adds access from away and every dashboard.",
     );
   }
 
@@ -3036,9 +3560,28 @@
      * `limitata` non la mandava, limitava con Base. */
     soloBase = stato.limitata === undefined ? !gdahome.attiva : stato.limitata === true;
     premium = Boolean(gdahome.attiva);
+    /* Lo stato in grande: «Premium attivo», fino a quando e da dove; o «Base»
+     * e, in una riga, cosa aggiungerebbe Premium. */
+    trova("scheda-licenza").dataset.premium = gdahome.attiva ? "si" : "no";
+    trova("licenza-titolo").textContent = gdahome.attiva
+      ? due("Premium attivo", "Premium is on")
+      : "Base";
+    trova("licenza-riga").textContent = gdahome.attiva ? finoAQuando(gdahome) : laRigaDiBase();
+    /* Chi ha gia' Premium non deve leggere come comprarlo: gli resta il
+     * codice, che allunga o regala. */
+    trova("attiva-titolo").textContent = gdahome.attiva
+      ? due("Hai un codice regalo?", "Have a gift code?")
+      : due("Come si attiva", "How to activate it");
+    trova("via-negozio").hidden = Boolean(gdahome.attiva);
+    trova("via-codice").hidden = Boolean(gdahome.attiva);
+    /* Con Base quella riga l'ha gia' detta lo stato in grande. */
+    /* Il confronto: la colonna di questa casa e' evidenziata. */
+    trova("scheda-vantaggi").dataset.premium = gdahome.attiva ? "si" : "no";
+    trova("tuo-base").hidden = Boolean(gdahome.attiva);
+    trova("tuo-premium").hidden = !gdahome.attiva;
+    /* Sotto, l'altra app della casa: GdANav, che dentro Premium e' compreso. */
     var elenco = trova("elenco-licenze");
     elenco.textContent = "";
-    elenco.appendChild(unaRigaDiLicenza("GdAHome", gdahome, perBaseGdahome()));
     elenco.appendChild(
       unaRigaDiLicenza(
         "GdANav",
@@ -3049,8 +3592,10 @@
         ),
       ),
     );
-    /* La riga della Panoramica: gdahome, che e' la licenza della casa. */
-    trova("riepilogo-licenza").textContent = comEMessa(gdahome, perBaseGdahome());
+    /* La mattonella della Casa: il bollino, e fino a quando. */
+    trova("riepilogo-licenza").textContent = gdahome.attiva
+      ? finoAQuando(gdahome)
+      : due("Scopri cosa aggiunge Premium", "See what Premium adds");
     var bollino = trova("bollino-licenza");
     bollino.textContent = gdahome.attiva ? "Premium" : "Base";
     bollino.className = "bollino" + (gdahome.attiva ? " premium" : "");
@@ -3064,7 +3609,7 @@
     trova("licenza-quando").textContent = !ultima
       ? ""
       : ultima.andata
-        ? due("controllata ", "checked ") + quantoFa(ultima.quando)
+        ? due("Controllata ", "Checked ") + quantoFa(ultima.quando)
         : due("il quadro non risponde", "the licence server isn't answering");
     ridisegnaQuelloCheDipendeDallaLicenza();
   }

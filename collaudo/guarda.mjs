@@ -488,7 +488,12 @@ async function main() {
       await fetch(`http://127.0.0.1:${portaDellaConsole}/api/codice`, {
         method: "POST",
         /* Quello che l'ingress aggiunge: chi e' entrato in Home Assistant. */
-        headers: { "x-remote-user-id": AMMINISTRATORE_DEL_COLLAUDO },
+        headers: {
+          "x-remote-user-id": AMMINISTRATORE_DEL_COLLAUDO,
+          "content-type": "application/json",
+        },
+        /* Per chi e' il telefono: senza, la console il codice non lo fa. */
+        body: JSON.stringify({ utente: AMMINISTRATORE_DEL_COLLAUDO }),
       })
     ).json()
   ).codice;
@@ -504,7 +509,11 @@ async function main() {
     await fetch(`http://127.0.0.1:${portaDellaConsole}/api/codice`, {
       method: "POST",
       /* Quello che l'ingress aggiunge: chi e' entrato in Home Assistant. */
-      headers: { "x-remote-user-id": AMMINISTRATORE_DEL_COLLAUDO },
+      headers: {
+        "x-remote-user-id": AMMINISTRATORE_DEL_COLLAUDO,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ utente: AMMINISTRATORE_DEL_COLLAUDO }),
     })
   ).json();
   racconta(`codice di abbinamento: ${codice}`);

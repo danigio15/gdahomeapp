@@ -247,6 +247,36 @@ test("il freno per casa: oltre il tetto al minuto le spinte si fermano", async (
   }
 });
 
+test("il freno delle urgenti: un minuto pieno di movimenti non ferma il campanello", async () => {
+  const cartella = mkdtempSync(join(tmpdir(), "spinte-"));
+  try {
+    let mandate = 0;
+    const spinte = new Spinte({
+      cartella,
+      perCasaAlMinuto: 3,
+      urgentiPerCasaAlMinuto: 2,
+      postino: { manda: async () => ((mandate += 1), "partita") },
+    });
+    const casa = `casa_${randomBytes(16).toString("hex")}`;
+    const telefono = unTelefono();
+    spinte.elenco(casa, [{ telefono, gettone: unGettone() }]);
+    const esiti = [];
+    for (let i = 0; i < 4; i += 1)
+      esiti.push(await spinte.spingi(casa, { telefono, busta: unaBusta() }));
+    assert.deepEqual(esiti, ["partita", "partita", "partita", "troppe"]);
+    /* Le urgenti hanno il loro freno: passano, ma un tetto lo hanno. */
+    const urgente = () => spinte.spingi(casa, { telefono, busta: unaBusta(), urgente: true });
+    assert.equal(await urgente(), "partita");
+    assert.equal(await urgente(), "partita");
+    assert.equal(await urgente(), "troppe");
+    assert.equal(mandate, 5);
+    /* E contano fra tutte: le normali restano ferme. */
+    assert.equal(await spinte.spingi(casa, { telefono, busta: unaBusta() }), "troppe");
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
 test("dal filo della casa: l'elenco, la spinta, e il gettone morto detto alla casa", async () => {
   const cartella = mkdtempSync(join(tmpdir(), "centralino-"));
   const morto = unGettone();
