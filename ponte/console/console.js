@@ -183,8 +183,8 @@
       "I can't ask Home Assistant who lives here: try again shortly.",
     ],
     utente_richiesto: [
-      "Scegli per chi è il telefono, poi genera il QR code.",
-      "Choose who the phone is for, then generate the QR code.",
+      "Scegli per chi è l'app, poi genera il QR code.",
+      "Choose who the app is for, then generate the QR code.",
     ],
     utente_sconosciuto: [
       "Quella persona non c'è più fra gli utenti di Home Assistant: ricarica la pagina e scegline un'altra.",
@@ -264,7 +264,7 @@
     var linguetta = laLinguetta(nome);
     if (LE_SEZIONI.indexOf(nome) < 0 || (linguetta && linguetta.hidden)) nome = "panoramica";
     /* Da dove si viene, per «Indietro»: la Casa, o la sezione da cui si e'
-     * partiti (dai telefoni ad «Aggiungi un telefono», e ritorno). */
+     * partiti (dai telefoni a «Collega l'app», e ritorno). */
     if (nome !== laSezione) sezionePrima = nome === "panoramica" ? "" : laSezione;
     laSezione = nome;
     /* Sul telefono la testata dice dove si e': il marchio nella Casa, «‹» e
@@ -1248,7 +1248,7 @@
             "Abbina il primo con un QR code: ci vuole un minuto.",
             "Pair the first one with a QR code: it takes a minute.",
           ),
-          due("Aggiungi un telefono", "Add a phone"),
+          due("Collega l'app", "Connect the app"),
           "abbina",
         ),
       );
@@ -2631,8 +2631,8 @@
           ? due("Prima scegli per chi è.", "First choose who it is for.")
           : vivo
             ? due(
-                "Fatto. Se è scaduto, o serve a un altro telefono, generane uno nuovo.",
-                "Done. If it has expired, or another phone needs it, generate a new one.",
+                "Fatto. Se è scaduto, o devi collegare un'altra app, generane uno nuovo.",
+                "Done. If it has expired, or you need to connect another app, generate a new one.",
               )
             : due(
                 "Vale una volta sola, per pochi minuti.",

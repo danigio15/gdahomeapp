@@ -316,7 +316,7 @@
                 ><svg class="ic" aria-hidden="true"><use href="#ic-qr" /></svg
               ></span>
               <span class="mattonella-parole">
-                <strong data-en="Add a phone">Aggiungi un telefono</strong>
+                <strong data-en="Connect the app">Collega l'app</strong>
                 <span data-en="With a QR code, in a minute">Con un QR code, in un minuto</span>
               </span>
             </button>
@@ -413,13 +413,15 @@
           </section>
         </section>
 
-        <!-- ─── Aggiungi un telefono ────────────────────────────────────────────
+        <!-- ─── Collega l'app ──────────────────────────────────────────────────
              Una cosa sola per pagina: i passi, il tasto, il QR. -->
         <section class="sezione" id="sezione-abbina" data-sezione="abbina" hidden>
           <div class="capo-sezione">
-            <h2 data-en="Add a phone">Aggiungi un telefono</h2>
-            <p data-en="Pair a phone or a tablet with this home using a QR code.">
-              Abbina un telefono o un tablet a questa casa con un QR code.
+            <h2 data-en="Connect the GdAHome app">Collega l'app GdAHome</h2>
+            <p
+              data-en="Connect the GdAHome app to this home with a QR code, on a phone or a tablet."
+            >
+              Collega l'app GdAHome a questa casa con un QR code, su un telefono o un tablet.
             </p>
           </div>
 
@@ -443,14 +445,14 @@
                   ><b>1</b><svg class="ic" aria-hidden="true"><use href="#ic-spunta" /></svg
                 ></span>
                 <div class="tappa-corpo">
-                  <label class="tappa-titolo" for="per-chi" data-en="Who is this phone for?"
-                    >Per chi è questo telefono?</label
+                  <label class="tappa-titolo" for="per-chi" data-en="Who is the app for?"
+                    >Per chi è l'app?</label
                   >
                   <p
                     class="nota"
-                    data-en="The phone will see what this person sees in Home Assistant."
+                    data-en="The app will see what this person sees in Home Assistant."
                   >
-                    Il telefono vedrà quello che vede questa persona in Home Assistant.
+                    L'app vedrà quello che vede questa persona in Home Assistant.
                   </p>
                   <select id="per-chi" class="scelta" required>
                     <option value="" disabled selected data-en="Choose a person…">
@@ -490,8 +492,8 @@
                 ></span>
                 <div class="tappa-corpo">
                   <p class="tappa-titolo" data-en="Scan it with the app">Inquadralo con l'app</p>
-                  <p class="nota" data-en="Open GdAHome on the phone and point it at the code.">
-                    Apri GdAHome sul telefono e inquadra il codice.
+                  <p class="nota" data-en="Open the GdAHome app and point it at the code.">
+                    Apri l'app GdAHome e inquadra il codice.
                   </p>
                   <div class="qr-suo" id="codice-vivo" hidden>
                     <!-- Il disegno lo fa GdAHome: la console non scarica niente da
@@ -543,7 +545,7 @@
               </div>
               <button type="button" data-vai="abbina" id="aggiungi-dall-elenco">
                 <svg class="ic" aria-hidden="true"><use href="#ic-piu" /></svg
-                ><span data-en="Add a phone">Aggiungi un telefono</span>
+                ><span data-en="Connect the app">Collega l'app</span>
               </button>
             </div>
           </div>

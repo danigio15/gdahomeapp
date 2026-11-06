@@ -21,7 +21,7 @@ Nella barra laterale di Home Assistant compare **GdAHome**: è la sua pagina, ed
 
 1. Apri **GdAHome** dalla barra laterale.
 2. Premi **Genera QR code**: compare il QR code.
-3. Apri GdAHome sul telefono e inquadralo.
+3. Apri l'app GdAHome e inquadralo.
 
 Fatto: il telefono è dentro, e da quel momento entra da solo. Il codice vale
 **cinque minuti e una volta sola**; sotto al QR code ci sono le stesse cose in
