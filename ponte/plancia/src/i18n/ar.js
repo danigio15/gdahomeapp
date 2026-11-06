@@ -8131,4 +8131,5 @@ export default Object.freeze({
   "🖥️ Computer": "🖥️ الحاسوب",
   "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "الصفحات التي غُيّرت في معاينة تبويبها — ترتيب المربعات والمخفية منها. «إعادة الضبط» تعيدها كما كانت.",
   "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.": "الرسومات التي نقلتَ أجزاءها في المعاينة، على الحاسوب وعلى الهاتف. «إعادة الضبط» تعيدها كما كانت.",
+  "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.": "لا يوجد بعد منظم حرارة للتدفئة والتبريد: إلى أن يوجد، تُفتح على التبريد.",
 });

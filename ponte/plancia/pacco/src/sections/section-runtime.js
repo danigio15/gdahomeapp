@@ -569,7 +569,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-4ZDQHZKN.js";
+} from "../../chunk-T6NL6STM.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -4899,6 +4899,7 @@ var SOURCE_INDEX = Object.freeze({
   "in casa ci sono persone e luci: nessuna resta accesa per niente.": "the home knows its people and lights: none stays on for nothing.",
   "In casa ci sono questi — un tocco lo sceglie:": "These are in the house — one tap picks it:",
   "In casa è tutto in ordine.": "Everything is fine at home.",
+  "In casa non c'è ancora un termostato col caldo e il freddo: finché non c'è, si apre su Freddo.": "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.",
   "in certi giorni": "on certain days",
   "In che ordine si vedono in Home. Le prime due — la striscia col menù e il riquadro col meteo — finché stanno in cima restano sopra la pagina, dove sono sempre state; spostandole più in basso scendono in pagina insieme agli altri blocchi. La striscia col menù scende solo qui: sulle altre pagine torna in alto da sola, o l'hamburger sparirebbe. Dentro ogni blocco l'ordine si fa dove si configura quel blocco: le persone nella loro scheda, le tessere in Widget, le azioni rapide nella loro.": "The order they appear in on Home. The first two — the strip with the menu and the weather box — stay above the page as long as they are on top, where they have always been; move them further down and they come into the page with the other blocks. The menu strip only comes down here: on the other pages it goes back up by itself, or the hamburger would disappear. Inside each block the order is set where that block is configured: people in their own tab, tiles in Widgets, quick actions in theirs.",
   "In chiusura": "Closing",
@@ -107493,7 +107494,8 @@ var MODELLI = Object.freeze([
   "comandi"
 ]);
 var MODELLI_ELENCO = Object.freeze(["luci", "clima", "tapparelle"]);
-var ZONE_DEL_CLIMA2 = Object.freeze(["freddo", "caldo"]);
+var PAGINE_CLIMA_DI_UNA_VOLTA = Object.freeze(["freddo", "caldo"]);
+var ZONE_DEL_CLIMA2 = Object.freeze(["freddo", "caldo", "termostato"]);
 var PAGINE_AL_MASSIMO = 8;
 var POSTI = 6;
 var GRIGLIE = Object.freeze({
@@ -107787,7 +107789,7 @@ var contatore = 0;
 var nuovoId2 = () => `p${Date.now().toString(36)}${(contatore++).toString(36)}`;
 function paginaPulita(input, indice = 0) {
   const dentro3 = input && typeof input === "object" ? input : {};
-  const vecchia = ZONE_DEL_CLIMA2.includes(dentro3.modello) ? dentro3.modello : "";
+  const vecchia = PAGINE_CLIMA_DI_UNA_VOLTA.includes(dentro3.modello) ? dentro3.modello : "";
   const modello2 = vecchia ? "clima" : scelta(dentro3.modello, MODELLI, "stanza");
   const id = /^[a-z0-9-]{1,24}$/.test(String(dentro3.id || "")) ? dentro3.id : `p${indice + 1}`;
   const scritta = Number(dentro3.griglia ?? dentro3.posti);
@@ -130024,17 +130026,25 @@ function elencoMarkup2(p, i) {
       "It fills itself with the source dashboard's climate, split into the Cooling and Heating tabs like the Climate section: air conditioners in cooling, radiators and thermostats in heating, heat pumps in both."
     )
   }[p.modello];
-  const nomi2 = (p.modello === "clima" ? [
-    ...comandiDellaPagina(p, state133.fonte || {}, "freddo"),
-    ...comandiDellaPagina(p, state133.fonte || {}, "caldo")
-  ] : comandi).map((c) => nomeDi12(c.entita)).filter((n, k, tutti) => tutti.indexOf(n) === k);
+  const aCoppia2 = (id) => eUnTermostatoACoppia(allStates()?.[id]?.attributes);
+  const nomi2 = (p.modello === "clima" ? ["freddo", "caldo", "termostato"].flatMap(
+    (zona) => comandiDellaPagina(p, state133.fonte || {}, zona, { aCoppia: aCoppia2 })
+  ) : comandi).map((c) => nomeDi12(c.entita)).filter((n, k, tutti) => tutti.indexOf(n) === k);
   return `<div class="mu-ed-nota">${esc(spiega)}</div>
     ${p.modello === "clima" ? riga4(
     t("Si apre su", "Opens on"),
-    "",
+    /* «Mettici anche termostato come scelta, manca.» La terza
+     * linguetta del tablet e' quella dei termostati col caldo e il
+     * freddo; se in casa non ce ne sono, la pagina si apre su Freddo,
+     * e la riga lo dice. */
+    p.zona === "termostato" && !comandiDellaPagina(p, state133.fonte || {}, "termostato", { aCoppia: aCoppia2 }).length ? t(
+      "In casa non c'è ancora un termostato col caldo e il freddo: finché non c'è, si apre su Freddo.",
+      "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling."
+    ) : "",
     scelte4(`pagine.${i}.zona`, p.zona, [
       ["freddo", `❄️ ${t("Freddo", "Cooling")}`],
-      ["caldo", `🔥 ${t("Caldo", "Heating")}`]
+      ["caldo", `🔥 ${t("Caldo", "Heating")}`],
+      ["termostato", `🌡️ ${t("Termostato", "Thermostat")}`]
     ])
   ) : ""}
     ${p.modello === "clima" ? riga4(

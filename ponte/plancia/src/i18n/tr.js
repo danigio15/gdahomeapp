@@ -8184,4 +8184,5 @@ export default Object.freeze({
   "🖥️ Computer": "🖥️ Bilgisayar",
   "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "sekmelerinin önizlemesinde değiştirilen sayfalar — blokların sırası ve gizlenenler. «Sıfırla» eski haline getirir.",
   "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.": "önizlemede parçalarını taşıdığın çizimler, bilgisayarda ve telefonda. «Sıfırla» onları eski haline getirir.",
+  "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.": "Henüz ısıtma ve soğutma yapan bir termostat yok: olana kadar Soğutma'da açılır.",
 });

@@ -6313,6 +6313,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "There is another schedule for this thermostat in Automations: it changes the temperature too. Remove it there.",
   "there is motion",
   "There is no reading for this load right now.",
+  "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.",
   "Thermal",
   "Thermal comfort",
   "Thermal discomfort",

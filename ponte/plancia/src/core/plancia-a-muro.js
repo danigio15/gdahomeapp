@@ -88,7 +88,13 @@ export const MODELLI_ELENCO = Object.freeze(["luci", "clima", "tapparelle"]);
  * clima e dentro due tab caldo freddo, come la sezione clima.» Le pagine
  * nate come «freddo» o «caldo» diventano una pagina Clima che si apre su
  * quella linguetta. */
-export const ZONE_DEL_CLIMA = Object.freeze(["freddo", "caldo"]);
+const PAGINE_CLIMA_DI_UNA_VOLTA = Object.freeze(["freddo", "caldo"]);
+/* Le linguette su cui una pagina Clima si puo' aprire. La terza,
+ * «Termostato», e' quella dei termostati col caldo e il freddo (i due
+ * numeri), come nella sezione Clima: «mettici anche termostato come scelta,
+ * manca». Chi non l'ha mai scelta — `zona` assente, «freddo» o «caldo» —
+ * resta com'era. */
+export const ZONE_DEL_CLIMA = Object.freeze(["freddo", "caldo", "termostato"]);
 /* Otto pagine: quattro bastavano per una stanza, non per la cucina che e'
  * anche l'ingresso e il posto da cui si guarda il giardino. Con piu' di
  * quattro, le linguette mostrano solo il disegno e il nome di quella aperta. */
@@ -563,7 +569,7 @@ const nuovoId = () => `p${Date.now().toString(36)}${(contatore++).toString(36)}`
 /** Una pagina del tablet. */
 export function paginaPulita(input, indice = 0) {
   const dentro = input && typeof input === "object" ? input : {};
-  const vecchia = ZONE_DEL_CLIMA.includes(dentro.modello) ? dentro.modello : "";
+  const vecchia = PAGINE_CLIMA_DI_UNA_VOLTA.includes(dentro.modello) ? dentro.modello : "";
   const modello = vecchia ? "clima" : scelta(dentro.modello, MODELLI, "stanza");
   const id = /^[a-z0-9-]{1,24}$/.test(String(dentro.id || "")) ? dentro.id : `p${indice + 1}`;
   /* `posti` e' come la chiamavano le plance della 1.11.1: vale lo stesso. */

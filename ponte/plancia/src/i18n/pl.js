@@ -8206,4 +8206,5 @@ export default Object.freeze({
   "🖥️ Computer": "🖥️ Komputer",
   "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "strony zmienione w podglądzie ich karty — kolejność bloków i te ukryte. «Przywróć» przywraca je do poprzedniego stanu.",
   "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.": "rysunki, których części przeniesiono w podglądzie, na komputerze i na telefonie. «Przywróć» przywraca je do poprzedniego stanu.",
+  "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.": "Nie ma jeszcze termostatu z grzaniem i chłodzeniem: dopóki go nie będzie, otwiera się na Chłodzeniu.",
 });
