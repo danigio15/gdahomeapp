@@ -4903,7 +4903,11 @@
       .lic-c-previsto.senza b,
       .lic-c-reale.senza b,
       .lic-s-previsto.senza b,
-      .lic-s-reale.senza b {
+      .lic-s-reale.senza b,
+      .lic-c-previsto.spento b,
+      .lic-s-previsto.spento b,
+      .lic-c-importi b.spento,
+      .lic-s-importi b.spento {
         color: var(--ink-3);
         font-weight: 650;
       }
@@ -8659,6 +8663,43 @@
         return q === null ? { verbo: "per sempre", quando: null } : { verbo: "scade", quando: q };
       }
 
+      /* Il prezzo di listino di GdAHome Premium, lo stesso che l'app scrive
+       * quando il negozio non risponde (`prezzoDiRiserva`). */
+      const LISTINO_GDAHOME = { mensile: 4.99, annuale: 49.99 };
+
+      /* Il prezzo di un piano quando il negozio non l'ha detto (Apple, in
+       * prova, non lo manda): quello che paga, adesso, un altro abbonamento
+       * dello stesso prodotto — o della stessa app e dello stesso piano — e
+       * se non c'e' nessuno il listino di GdAHome. Torna `null` quando non si
+       * sa nemmeno il piano: un prezzo senza piano sarebbe inventato. */
+      function ilPrezzoDelPiano(uno) {
+        const piano = uno.piano === "annuale" || uno.piano === "mensile" ? uno.piano : "";
+        if (!piano) return null;
+        const app = uno.app || "gdahome";
+        const altri = (ABBONAMENTI?.elenco || []).filter(
+          (altro) =>
+            altro !== uno &&
+            altro.prezzo > 0 &&
+            !altro.sandbox &&
+            altro.piano === piano &&
+            (altro.app || "gdahome") === app,
+        );
+        const piuRecente = (elenco) =>
+          elenco
+            .slice()
+            .sort(
+              (a, b) =>
+                (Number(b.pagatoIl ?? b.inizio ?? 0) || 0) -
+                (Number(a.pagatoIl ?? a.inizio ?? 0) || 0),
+            )[0];
+        const simile =
+          piuRecente(altri.filter((altro) => uno.prodotto && altro.prodotto === uno.prodotto)) ||
+          piuRecente(altri);
+        if (simile) return { prezzo: Number(simile.prezzo), valuta: simile.valuta || "EUR", piano };
+        if (app === "gdahome") return { prezzo: LISTINO_GDAHOME[piano], valuta: "EUR", piano };
+        return null;
+      }
+
       /* I due importi di un abbonamento del negozio, colonna per colonna.
        *
        * «Importo previsto» e' quello che l'abbonamento fara' pagare, col suo
@@ -8672,13 +8713,17 @@
        * (`pagatoIl`, lo stesso che conta «Incassato»). In prova, o in un
        * acquisto di test: «—». Rimborsato: «rimborsato».
        *
-       * Il prezzo e' quello che sa il quadro e niente di piu': su App Store
-       * l'ultima transazione (in prova Apple non lo dice), su Google Play il
-       * prezzo del piano. Senza, «—», mai un numero inventato. */
+       * Il prezzo e' quello che sa il quadro: su App Store l'ultima
+       * transazione, su Google Play il prezzo del piano. In prova Apple non
+       * lo dice: allora vale il prezzo dello stesso piano (`ilPrezzoDelPiano`),
+       * e sotto c'e' scritto «di listino». Ogni riga ha il suo importo, anche
+       * chi non rinnova o e' finito: li', in grigio, e fuori dai totali. */
       function gliImportiDelNegozio(riga, uno) {
         const ios = uno.piattaforma === "ios";
-        const valuta = uno.valuta || "EUR";
-        const prezzo = uno.prezzo > 0 ? Number(uno.prezzo) : null;
+        const detto = uno.prezzo > 0 ? Number(uno.prezzo) : null;
+        const diListino = detto === null ? ilPrezzoDelPiano(uno) : null;
+        const valuta = diListino?.valuta || uno.valuta || "EUR";
+        const prezzo = detto ?? diListino?.prezzo ?? null;
         const piano = riga.piano;
         const unita = piano === "annuale" ? "/anno" : piano === "mensile" ? "/mese" : "";
         const alMese =
@@ -8705,7 +8750,8 @@
               }
             : {
                 testo: `${iSoldi(prezzo, valuta)}${unita}`,
-                sotto,
+                sotto: diListino ? [sotto, "di listino"].filter(Boolean).join(" · ") : sotto,
+                listino: Boolean(diListino),
                 importo: prezzo,
                 valuta,
                 piano,
@@ -8718,33 +8764,47 @@
             : !uno.prova && typeof uno.periodo === "number"
               ? uno.periodo
               : null;
+        /* Quello che e' stato pagato davvero: un importo di listino qui non
+         * va, perche' «reale» vuol dire detto dal negozio. */
         const pagato = () =>
-          prezzo === null
+          detto === null
             ? { testo: "—", sotto: "importo non detto", importo: null, valuta, quando: pagatoIl }
             : {
-                testo: iSoldi(prezzo, valuta),
+                testo: iSoldi(detto, valuta),
                 sotto: pagatoIl ? `pagato ${conLArticolo("il", pagatoIl)}` : "pagato",
-                importo: prezzo,
+                importo: detto,
                 valuta,
                 quando: pagatoIl,
               };
         const nessuno = (sotto) => ({ testo: "—", sotto, importo: null, valuta, quando: null });
+        /* Il prezzo del piano, in grigio e fuori dai totali: chi non rinnova,
+         * chi e' finito, un acquisto di test. */
+        const spento = (sotto) =>
+          prezzo === null
+            ? vuoto(sotto)
+            : {
+                ...previsto(null, ""),
+                sotto: diListino ? [sotto, "di listino"].filter(Boolean).join(" · ") : sotto,
+                conta: null,
+                alMese: null,
+                spento: true,
+              };
         const haPagato = !uno.sandbox && !uno.prova && uno.finito !== "acquisto-rimborsato";
 
         if (riga.stato === "test") {
-          riga.previsto = vuoto("non conta");
+          riga.previsto = spento("non conta");
           riga.reale = nessuno("acquisto di test");
         } else if (riga.pastiglia === "Rimborsata") {
-          riga.previsto = vuoto();
+          riga.previsto = spento("rimborsato");
           riga.reale = {
             testo: "rimborsato",
-            sotto: prezzo === null ? "" : `${iSoldi(prezzo, valuta)} restituiti`,
+            sotto: detto === null ? "" : `${iSoldi(detto, valuta)} restituiti`,
             importo: null,
             valuta,
             quando: null,
           };
         } else if (riga.stato === "finita") {
-          riga.previsto = vuoto();
+          riga.previsto = spento("finito");
           riga.reale = haPagato ? pagato() : nessuno("non ha mai pagato");
         } else if (riga.stato === "prova") {
           riga.previsto = previsto(
@@ -8754,7 +8814,7 @@
           riga.previsto.futuro = true;
           riga.reale = nessuno("in prova");
         } else if (riga.stato === "nonrinnova") {
-          riga.previsto = vuoto("non rinnova");
+          riga.previsto = spento("non rinnova");
           riga.reale = haPagato ? pagato() : nessuno("non pagherà");
         } else {
           riga.previsto = previsto(
@@ -8768,9 +8828,11 @@
         riga.importoDi =
           prezzo === null
             ? ""
-            : ios
-              ? "importo dall'ultima transazione di App Store"
-              : "importo dal prezzo del piano su Google Play";
+            : diListino
+              ? `${ios ? "App Store" : "Google Play"} non ha ancora detto il prezzo: è quello di listino del piano`
+              : ios
+                ? "importo dall'ultima transazione di App Store"
+                : "importo dal prezzo del piano su Google Play";
       }
 
       /* Una licenza, come si legge in una riga. `una` e' la licenza
@@ -9126,7 +9188,7 @@
 
       /* Una cella d'importo: il numero, e sotto la sua parola piccola. */
       const laCellaDellImporto = (classe, importo) =>
-        `<span class="${testo(classe)}${importo?.futuro ? " futuro" : ""}${importo?.importo == null && importo?.testo === "—" ? " senza" : ""}"><b>${testo(importo?.testo ?? "—")}</b>${importo?.sotto ? `<small>${testo(importo.sotto)}</small>` : ""}</span>`;
+        `<span class="${testo(classe)}${importo?.futuro ? " futuro" : ""}${importo?.spento ? " spento" : ""}${importo?.importo == null && importo?.testo === "—" ? " senza" : ""}"><b>${testo(importo?.testo ?? "—")}</b>${importo?.sotto ? `<small>${testo(importo.sotto)}</small>` : ""}</span>`;
 
       /* Sulla carta stretta i due importi stanno in una riga sola:
        * «previsto 4,99 €/mese · reale —». Un regalo e' «Gratis» e basta. */
@@ -9136,8 +9198,8 @@
         if (!riga.negozio)
           return `<span class="lic-c-importi"><b>${testo(p.testo || "Gratis")}</b></span>`;
         const pezzo = (parola, importo, conSotto) =>
-          `<small>${testo(parola)}</small> <b class="${importo.futuro ? "futuro" : ""}">${testo(importo.testo ?? "—")}</b>${conSotto && importo.sotto ? ` <small>${testo(importo.sotto)}</small>` : ""}`;
-        return `<span class="lic-c-importi">${/* già HTML */ pezzo("previsto", p, Boolean(p.futuro))}<small aria-hidden="true"> · </small>${/* già HTML */ pezzo("reale", r, r.importo != null)}</span>`;
+          `<small>${testo(parola)}</small> <b class="${importo.futuro ? "futuro" : importo.spento ? "spento" : ""}">${testo(importo.testo ?? "—")}</b>${conSotto && importo.sotto ? ` <small>${testo(importo.sotto)}</small>` : ""}`;
+        return `<span class="lic-c-importi">${/* già HTML */ pezzo("previsto", p, Boolean(p.futuro || p.spento || p.listino))}<small aria-hidden="true"> · </small>${/* già HTML */ pezzo("reale", r, r.importo != null)}</span>`;
       }
 
       /* Il punto interrogativo gentile: una «i» che, toccata o sorvolata,

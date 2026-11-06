@@ -106,6 +106,8 @@ function laFabbrica() {
       "const I_FILTRI_DI_PRIMA",
       "const TRENTA_GIORNI",
       "function laScadenzaDellaRiga",
+      "const LISTINO_GDAHOME",
+      "function ilPrezzoDelPiano",
       "function gliImportiDelNegozio",
       "function laLicenzaInRiga",
       "function tutteLeLicenze",
@@ -730,12 +732,19 @@ test("importo previsto e importo reale, stato per stato, senza inventare prezzi"
       " ",
     ),
   );
-  /* Apple in prova non dice il prezzo: non si indovina. */
+  /* Apple in prova senza prezzo e senza piano: un prezzo senza piano
+   * sarebbe inventato. */
   assert.equal(due("Prova Apple"), "— | prezzo non ancora noto | — | in prova");
-  /* Disdetta: non paghera' piu', ma ha pagato. */
-  assert.equal(due("Disdetta Pagata"), `— | non rinnova | 4,99 € | pagato ${il(ADESSO_PAGATO)}`);
-  assert.equal(due("Rimborsata"), "— |  | rimborsato | 4,99 € restituiti");
-  assert.equal(due("Di Test"), "— | non conta | — | acquisto di test");
+  /* Disdetta: il prezzo del piano, in grigio; non paghera' piu', ma ha pagato. */
+  const disdetta = laSuaRigaDiSoldi("Disdetta Pagata");
+  assert.equal(disdetta.previsto.spento, true);
+  assert.equal(disdetta.previsto.conta, null);
+  assert.equal(
+    due("Disdetta Pagata"),
+    `4,99 €/mese | non rinnova | 4,99 € | pagato ${il(ADESSO_PAGATO)}`,
+  );
+  assert.equal(due("Rimborsata"), "4,99 €/mese | rimborsato | rimborsato | 4,99 € restituiti");
+  assert.equal(due("Di Test"), "4,99 €/mese | non conta | — | acquisto di test");
   assert.equal(due("Il Regalo"), "Gratis |  | — | ");
   /* Le due colonne nella tabella, e sulla carta in una riga sola. */
   coiSoldi();
@@ -746,6 +755,62 @@ test("importo previsto e importo reale, stato per stato, senza inventare prezzi"
     /previsto 4,99 €\/mese dal(?: |l')\d+ \S+ · reale — /,
     "«previsto 4,99 €/mese · reale —» sulla carta",
   );
+});
+
+test("in prova con il piano ma senza prezzo: quello dello stesso piano, o il listino", () => {
+  const conPrezzo = riga({
+    sog: casa(41),
+    piano: "annuale",
+    prodotto: "gdahome_premium_annuale",
+    prezzo: 47.99,
+    valuta: "EUR",
+    periodo: PRIMA,
+    pagato: ORA + 300 * GIORNO,
+  });
+  const provaAnnuale = riga({
+    sog: casa(42),
+    piano: "annuale",
+    prodotto: "gdahome_premium_annuale",
+    prova: true,
+    fuInProva: true,
+    pagato: ORA + 9 * GIORNO,
+  });
+  const provaMensile = riga({
+    sog: casa(43),
+    piano: "mensile",
+    prodotto: "gdahome_premium_mensile",
+    prova: true,
+    fuInProva: true,
+    pagato: ORA + 9 * GIORNO,
+  });
+  const elenco = [conPrezzo, provaAnnuale, provaMensile];
+  PAGINA.prepara({
+    abbonamenti: risposta(elenco),
+    licenze: elenco.map((uno) => dalNegozio(uno)),
+    case: [
+      [casa(41), "Paga"],
+      [casa(42), "Prova Annuale"],
+      [casa(43), "Prova Mensile"],
+    ],
+  });
+  const righe = PAGINA.tutteLeLicenze();
+  const di = (nome) => righe.find((una) => una.nome === nome);
+  const dal = PAGINA.conLArticolo("dal", ORA + 9 * GIORNO);
+  /* Lo stesso prodotto paga 47,99 €: quello. */
+  assert.equal(di("Prova Annuale").previsto.testo.replace(/\s/g, " "), "47,99 €/anno");
+  assert.equal(
+    di("Prova Annuale").previsto.sotto.replace(/\s/g, " "),
+    `${dal} · di listino`.replace(/\s/g, " "),
+  );
+  assert.equal(di("Prova Annuale").previsto.conta, "prova");
+  /* Nessun mensile che paga: il listino di GdAHome. */
+  assert.equal(di("Prova Mensile").previsto.testo.replace(/\s/g, " "), "4,99 €/mese");
+  assert.equal(di("Prova Mensile").previsto.alMese, 4.99);
+  /* Il reale resta quello del negozio: in prova non ha pagato. */
+  assert.equal(di("Prova Mensile").reale.testo, "—");
+  /* E nel totale delle prove conta, senza «senza prezzo». */
+  const html = PAGINA.gliAbbonamenti();
+  assert.doesNotMatch(soloTesto(html), /senza prezzo detto dal negozio/);
 });
 
 /* Il testo di una riga di totali. */
