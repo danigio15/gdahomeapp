@@ -122,6 +122,7 @@ function laFabbrica() {
       "function leSommeDelleLicenze",
       "const iSoldiInTutte",
       "const leVociDelPrevisto",
+      "function leScadenzeDette",
       "function ilPrevistoDetto",
       "function laRigaDelleSomme",
       "function ilTotaleDelGruppo",
@@ -689,7 +690,6 @@ const laSuaRigaDiSoldi = (nome) => {
   coiSoldi();
   return PAGINA.tutteLeLicenze().find((riga) => riga.nome === nome);
 };
-const euro = (n) => `${n.toFixed(2).replace(".", ",")} €`;
 
 test("ogni abbonamento dice il piano, anche in prova; se non si sa, lo dice", () => {
   assert.equal(laSuaRigaDiSoldi("Mensile Apple").pianoDetto, "Mensile");
@@ -718,10 +718,7 @@ test("importo previsto e importo reale, stato per stato, senza inventare prezzi"
   const il = (q) => PAGINA.conLArticolo("il", q);
   /* Paga e rinnova: il previsto dal piano, il reale col giorno. */
   assert.equal(due("Mensile Apple"), `4,99 €/mese |  | 4,99 € | pagato ${il(ADESSO_PAGATO)}`);
-  assert.equal(
-    due("Annuale Uno"),
-    `49,99 €/anno | ≈ 4,17 € al mese | 49,99 € | pagato ${il(PRIMA)}`,
-  );
+  assert.equal(due("Annuale Uno"), `49,99 €/anno |  | 49,99 € | pagato ${il(PRIMA)}`);
   /* In prova: il previsto e' futuro, il reale non c'e'. */
   const prova = laSuaRigaDiSoldi("Prova Google");
   assert.equal(prova.previsto.futuro, true);
@@ -822,32 +819,31 @@ const ilTotale = (html, gruppo = null) => {
   return soloTesto(pezzo[1]).trim();
 };
 
-test("i totali: il previsto e' il «Ricorrente» in cima, il reale l'«Incassato»", () => {
+/* I totali con gli spazi normali: i soldi si scrivono con lo spazio fisso. */
+const piano = (testo) => testo.replace(/\s/g, " ");
+
+test("i totali: il previsto e' quello che entra alle scadenze, il reale l'«Incassato»", () => {
   const elenco = Object.values(SOLDI);
   const conti = contaGliAbbonamenti(elenco, ORA);
-  /* Il quadro somma intero e arrotonda alla fine: 4,99 + 2 × 49,99/12. */
-  assert.deepEqual(conti.alMese, { EUR: 13.32 });
   assert.deepEqual(conti.incassato, { EUR: 9.98 });
   coiSoldi();
   const html = PAGINA.gliAbbonamenti();
   const mese = PAGINA.ilMeseDetto(conti.inizioDelMese);
-  const totale = ilTotale(html);
-  /* Le somme vere, e al mese: lo stesso numero del Ricorrente. */
-  assert.ok(
-    totale.includes(
-      `Previsto: 1 × 4,99 €/mese + 2 × 49,99 €/anno ≈ ${euro(13.32)}/mese, come il «Ricorrente» in cima.`.replace(
-        / /g,
-        " ",
-      ),
-    ),
+  const totale = piano(ilTotale(html));
+  /* A scadenza ogni abbonamento col prezzo intero del suo piano: un annuale
+   * porta 49,99 €, non 4,17 al mese. */
+  assert.match(
     totale,
+    /Previsto alle prossime scadenze: 1 mensile × 4,99 € \+ 2 annuali × 49,99 € = 104,97 €, dal .+ al .+?\./,
   );
-  assert.match(totale, /≈ 13,32 € al mese/);
+  assert.doesNotMatch(totale, /al mese|\/mese|Ricorrente/);
   /* Le prove a parte, e quella senza prezzo detta. */
   assert.match(
     totale,
-    /Le prove, se pagano alla fine: 1 × 4,99 €\/mese ≈ 4,99 €\/mese; 1 abbonamento senza prezzo detto dal negozio, non contato\./,
+    /Le prove, se pagano alla fine: 1 mensile × 4,99 € = 4,99 €, .+; 1 abbonamento senza prezzo detto dal negozio, non contato\./,
   );
+  /* Nella colonna: tutto quello che entra alle scadenze, prove comprese. */
+  assert.match(totale, /109,96 € alle scadenze, prove comprese/);
   /* Il reale: il mese, come l'Incassato; e la somma degli ultimi pagamenti. */
   assert.ok(totale.includes(`Reale: 9,98 € pagati a ${mese}, come l'«Incassato» in cima.`), totale);
   assert.match(totale, /Ultimi pagamenti in elenco: 109,96 €/);
@@ -860,19 +856,23 @@ test("i totali per gruppo: attive, in prova, non rinnovano", () => {
   coiSoldi();
   const html = PAGINA.gliAbbonamenti();
   const mese = PAGINA.ilMeseDetto(contaGliAbbonamenti(Object.values(SOLDI), ORA).inizioDelMese);
-  const attive = ilTotale(html, "attiva");
-  assert.match(attive, /^Totale Attive 1 × 4,99 €\/mese \+ 2 × 49,99 €\/anno ≈ 13,32 €\/mese\./);
+  const attive = piano(ilTotale(html, "attiva"));
+  assert.match(
+    attive,
+    /^Totale Attive Alle prossime scadenze: 1 mensile × 4,99 € \+ 2 annuali × 49,99 € = 104,97 €, dal /,
+  );
+  assert.match(attive, /104,97 € alle scadenze/);
   assert.match(
     attive,
     new RegExp(`Ultimi pagamenti in elenco: 104,97 €, di cui a ${mese} 4,99 €\\.`),
   );
-  const prova = ilTotale(html, "prova");
+  const prova = piano(ilTotale(html, "prova"));
   assert.match(
     prova,
-    /^Totale In prova Se pagano alla fine della prova: 1 × 4,99 €\/mese ≈ 4,99 €\/mese/,
+    /^Totale In prova Se pagano alla fine della prova: 1 mensile × 4,99 € = 4,99 €/,
   );
-  assert.match(prova, /≈ 4,99 € al mese, dopo la prova — non hanno pagato/);
-  const disdette = ilTotale(html, "nonrinnova");
+  assert.match(prova, /4,99 € a fine prova — non hanno pagato/);
+  const disdette = piano(ilTotale(html, "nonrinnova"));
   assert.match(disdette, /Non pagheranno più: niente previsto\./);
   assert.match(disdette, new RegExp(`— 4,99 € a ${mese}`));
   /* Le finite e i test non hanno totale. */
@@ -881,17 +881,19 @@ test("i totali per gruppo: attive, in prova, non rinnovano", () => {
 
 test("i totali seguono i filtri e la ricerca", () => {
   coiSoldi({ fonte: "regalo" });
-  let totale = ilTotale(PAGINA.gliAbbonamenti());
-  assert.match(totale, /^Totale delle licenze filtrate Previsto: nessuno che paga e rinnova\./);
-  assert.ok(!totale.includes("Ricorrente"), "filtrato non e' il Ricorrente");
+  let totale = piano(ilTotale(PAGINA.gliAbbonamenti()));
+  assert.match(
+    totale,
+    /^Totale delle licenze filtrate Previsto alle prossime scadenze: nessuno che paga e rinnova\./,
+  );
   coiSoldi({ cerca: "annuale uno" });
-  totale = ilTotale(PAGINA.gliAbbonamenti());
-  assert.match(totale, /Previsto: 1 × 49,99 €\/anno ≈ 4,17 €\/mese\./);
+  totale = piano(ilTotale(PAGINA.gliAbbonamenti()));
+  assert.match(totale, /Previsto alle prossime scadenze: 1 annuale × 49,99 € = 49,99 €, il /);
   assert.match(totale, /Ultimi pagamenti in elenco: 49,99 €/);
   coiSoldi();
   PAGINA.scegliIlFiltroDelleLicenze("nonrinnova");
-  totale = ilTotale(PAGINA.gliAbbonamenti());
-  assert.match(totale, /Previsto: nessuno che paga e rinnova\./);
+  totale = piano(ilTotale(PAGINA.gliAbbonamenti()));
+  assert.match(totale, /Previsto alle prossime scadenze: nessuno che paga e rinnova\./);
   assert.match(totale, /Reale: 4,99 € pagati/);
 });
 

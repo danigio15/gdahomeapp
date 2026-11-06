@@ -63,12 +63,6 @@ _Solo Home Assistant: l'app sul telefono non cambia._
   dividono, tre o quattro fanno 2×2, e i posti vuoti in fondo non si
   disegnano più. Sul 4" l'antifurto da solo mostra la card intera, con lo
   stato, «2 di 3 inserite» e i tasti di ogni area.
-- **Quadro: la gestione rifatta**: «Abbonamenti e licenze» in un posto solo,
-  con i numeri grandi (paganti, in prova, non rinnovano, ricorrente,
-  incassato, case Premium), le case divise per piano, le scadenze dei
-  prossimi 30 giorni su una linea del tempo, «Come funziona» in cinque righe
-  e la tabella delle licenze con origine, stato, scadenza e importo. Menu a
-  lato sul computer, barra in basso sul telefono, anche al buio.
 
 ## 1.18.11
 
@@ -111,10 +105,6 @@ _App GdAHome e Home Assistant._
   giorno dalla cronologia anche senza statistiche, la temperatura esterna e
   l'ora in cui l'auto ha mandato i dati. Nel Config il campo dice «Batteria
   di trazione (%), non la 12 V».
-- **La revoca di una licenza è subito**: nel quadro una licenza revocata
-  chiude il fuori casa entro un minuto e la casa torna Base appena
-  ricontrolla, anche per GdANav, senza toccare l'altra app. La riga della
-  revoca si legge, anche sul telefono.
 - Una pagina personalizzata si apre già disposta, senza mostrare per un
   attimo quella di serie; nel Config torna il ✏️ per rinominare le voci della
   barra; con una tavolozza scelta anche la barra in basso prende i suoi colori.
@@ -246,19 +236,11 @@ _App GdAHome e Home Assistant._
   - Chiudendo la finestra con modifiche non salvate la prima volta avvisa
     «Hai modifiche non salvate», la seconda le scarta: riaprendo si vede
     quello che ha Home Assistant, non una bozza dimenticata.
-- **Le versioni dell'app arrivano da tutte le case accese:** «continuo a non
-  vedere le app installate dagli utenti». Il quadro le sapeva solo dal
-  rapporto, che parte spento: su 178 case accese contava sei telefoni.
-  Adesso l'add-on dice anche al tramite — appena collegato e poi ogni ora —
-  quanti telefoni ha visto nella settimana per negozio e versione dell'app.
-  Solo numeri, senza nomi, modelli o identificativi; il tramite li tiene in
-  memoria e al quadro passa solo la somma di tutte le case. Una casa col
-  rapporto acceso la conta il rapporto e non il tramite; un rapporto più
-  vecchio di una settimana non si conta più (la casa che l'ha spento la
-  somma il tramite). Nella settimana in cui una casa lo spegne può
-  comparire in tutte e due, e la gestione lo scrive. Nella gestione il riquadro
-  «Versione non detta» dice quante case accese hanno ancora l'add-on di
-  prima. L'informativa lo scrive.
+- **Quanti telefoni, per versione dell'app:** l'add-on dice al tramite —
+  appena collegato e poi ogni ora — quanti telefoni ha visto nella settimana,
+  per negozio e versione dell'app. Solo numeri, senza nomi, modelli o
+  identificativi, e il tramite li tiene solo in memoria. L'informativa lo
+  scrive.
 - **Report del clima: i climatizzatori senza valvola né presa.** «Continua a
   non funzionare, i dati storici non mi da il valore»: quattro split, giugno,
   «Impianto 0 min» e barre vuote, come se non avessero mai lavorato.
@@ -464,7 +446,7 @@ quello della 1.18.7.30 con quattro correzioni.
   rilettura, non toglie la plancia che si sta guardando.
 - **Premium legato alla casa:** l'abbonamento comprato dall'app porta con sé
   un'impronta della casa per cui si compra (non il suo nome), e il negozio la
-  ridice al quadro: chi conosce il numero di un acquisto altrui non se lo
+  ridice a GdAHome: chi conosce il numero di un acquisto altrui non se lo
   porta sulla propria casa.
 - **Gettone più robusto:** rimettere indietro l'orologio del telefono non
   allunga più un gettone già scaduto.
@@ -2303,14 +2285,6 @@ ai lati della coda si vede bene.
 **iPhone:** l'app con l'Apple Watch dentro si costruisce di nuovo per
 TestFlight.
 
-**La casa di prova si allunga, con lo stesso codice.** Nella scheda «Casa di
-prova» della console c'è «Allunga di 7 giorni»: il codice resta quello, e vale
-per altri sette giorni da adesso. I telefoni già entrati restano dentro fino
-alla nuova scadenza. Serve quando una revisione dura più del codice: il codice
-sta nelle note per Apple e per Google, e cambiarlo lì fa ripartire la
-revisione. Si può allungare più volte, e solo dall'Home Assistant del gestore,
-come farla.
-
 ## 1.11.0
 
 **GdAHome anche al polso, su Apple Watch e Wear OS.** I comandi rapidi scelti
@@ -2411,10 +2385,6 @@ sul telefono non si è mai aperta «Comandi rapidi in auto».
 
 ## 1.10.7
 
-**I codici arrivano ai cruscotti.** Dall'app, «Gestione installatore» e
-«Gestione GdAHome» si aprono di nuovo senza chiedere la chiave: l'app la
-scrive dentro la pagina, e i cruscotti adesso la prendono.
-
 **Le persone, scritte bene.** Sotto il nome non compare più «home» né lo
 stato grezzo del tracker: solo un indirizzo vero, accorciato a via, numero e
 città, oppure niente.
@@ -2436,42 +2406,9 @@ Avanzate, scelte dalle linguette in cima. La Panoramica dice «Come sta la
 casa», una riga per ogni cosa che conta, e sotto quello che non va c'è il
 perché. Telefoni e plance si rinominano dentro la riga.
 
-**«Ricontrolla adesso» nella Licenza.** Un regalo fatto dalla Gestione o un
+**«Ricontrolla adesso» nella Licenza.** Un regalo o un
 rinnovo si vedono subito, senza aspettare il giro delle sei ore. Nei giorni di
 margine la riga dice fino a quando resta Premium, non una data già passata.
-
-**La casa di prova si fa solo dal gestore.** Una casa di prova già fatta si
-vede e si revoca da qualunque casa.
-
-**In casa con l'indirizzo di fuori.** Aperta in casa con l'indirizzo esterno,
-la web app non dice più «Fuori casa serve Premium»: è l'add-on a dire se la
-connessione arriva dalla rete di casa, anche dietro un proxy (NGINX, Caddy,
-Cloudflare). Al contrario, un QR fatto con un indirizzo https pubblico non apre
-più una casa Base da fuori: l'abbinamento si fa da ovunque, poi da fuori serve
-Premium. Una VPN come Tailscale conta come fuori casa.
-
-**Il clima fuori stagione.** A ottobre, coi condizionatori di maggio-settembre,
-la pagina Clima diceva «Nessun condizionatore configurato». Adesso dice che
-sono fuori stagione, quando si vedono, e ha il tasto «Mostrali lo stesso»
-(#196).
-
-**Il volume un punto alla volta.** Nella Musica, accanto al cursore del volume,
-il meno e il più spostano il volume dell'1% a ogni tocco.
-
-**«Apri in mappa» porta dalla persona.** Nell'app, sulla scheda di una
-persona, «Apri in mappa» apre il navigatore con la strada fino a lei. Nel
-browser, o senza una posizione GPS, resta la mappa di Home Assistant.
-
-**In auto.**
-
-- I comandi della casa premuti in macchina — il cancello, le luci — partono
-  dal collegamento che l'app ha già aperto, invece di aprirne un altro da
-  capo: prima, se non ci riusciva in tempo, il comando si perdeva.
-- Da «Dispositivi» si torna al navigatore con la freccia indietro.
-- Senza una casa abbinata il navigatore in Android Auto parte, in versione
-  base; da quando c'è una casa vale il suo abbonamento.
-- Gli svincoli: il disegno dello svincolo esce dalla stessa parte della
-  freccia, del cartello e delle corsie.
 
 ## 1.10.5
 
@@ -2511,7 +2448,7 @@ spiega come attivarlo.
   nessuna di queste cose, e così un telefono perso non diventa una chiave della
   casa. Riavviare Home Assistant e installare gli aggiornamenti dall'app si
   può come prima.
-- Il tasto «smetti» della scheda «Il quadro» adesso toglie davvero il codice
+- Il tasto «smetti» della scheda dell'installatore adesso toglie davvero il codice
   dell'installatore: prima la modifica veniva rifiutata, e al riavvio il
   rapporto ripartiva.
 - L'add-on non chiede più la cartella degli add-on in scrittura: serviva solo
@@ -2637,8 +2574,8 @@ casa e la rinnova da solo. Con un add-on più vecchio la casa resta Base, e la
 pagina Premium dell'app dice di aggiornarlo invece di proporre l'abbonamento:
 nessuno paga per una casa che non può diventare Premium.
 
-**Le licenze regalate valgono.** Quelle date dalla Gestione o
-dall'installatore arrivano alla casa da sole. Un codice regalo si riscatta
+**Le licenze regalate valgono.** I regali e le licenze
+dell'installatore arrivano alla casa da sole. Un codice regalo si riscatta
 dall'app per Android, dal browser o dalla console dell'add-on. Sull'iPhone il
 codice non si inserisce, per le regole dell'App Store, ma Premium arriva anche
 lì, perché è della casa.
@@ -2653,20 +2590,6 @@ meteo, nelle stanze e negli editor tornano le icone di prima. Restano tutte le
 novità della 1.9.0 e della 1.9.2, con le icone della 1.8.0: la stanza come
 tavola di comandi, le batterie di accumulo, la cottura e i varchi da escludere
 dall'antifurto.
-
-**Nella Gestione GdAHome ci sono gli abbonamenti.** Una pagina nuova,
-«Abbonamenti», dice quanti abbonamenti ci sono su App Store e su Google Play,
-quanti mensili e quanti annuali, quanti in prova gratuita e quanti disdetti,
-quanti sono finiti negli ultimi 30 giorni e quante prove sono passate a
-pagamento. Sotto c'è l'elenco, un abbonamento per riga, con la casa, il piano,
-il prezzo e cosa succede dopo. Gli acquisti di prova (TestFlight e tester di
-Google) si vedono, ma non entrano nei conti. Una volta al giorno il quadro
-richiede ogni abbonamento al negozio, così chi disdice si vede il giorno dopo.
-
-**Regalare Premium a una casa è più semplice.** In «Licenze» la casa si sceglie
-da un elenco con tutte le case degli installatori, col loro nome. Per una casa
-che non è di nessun installatore resta la casella della matricola, e nella
-scheda di un impianto la matricola è intera, con «Copia».
 
 ## 1.9.2
 
