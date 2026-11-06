@@ -56,11 +56,17 @@ const PERMESSO = "https://www.googleapis.com/auth/firebase.messaging";
 export const GETTONI_PER_CASA = 20;
 
 /* Quante notifiche per casa, all'ora e al minuto. Il ponte ne manda al piu'
- * trenta all'ora per telefono; una casa che va oltre questi numeri ha
+ * trenta all'ora per telefono, oltre le urgenti; una casa che va oltre questi numeri ha
  * qualcosa che non va, e Firebase non e' il posto dove scoprirlo. */
 export const SPINTE_PER_CASA_ALL_ORA = 300;
 export const SPINTE_PER_CASA_AL_MINUTO = 30;
 export const SPINTE_IN_TUTTO_ALL_ORA = 200_000;
+/* Le urgenti (il campanello, l'antifurto, gli allarmi, il blackout) hanno un
+ * freno loro, e non restano fuori perche' i movimenti delle telecamere hanno
+ * riempito quello di tutte: contano anche li', ma passano. Un tetto lo hanno
+ * lo stesso, perche' «urgente» lo dice la casa. */
+export const URGENTI_PER_CASA_ALL_ORA = 120;
+export const URGENTI_PER_CASA_AL_MINUTO = 20;
 
 /* La frase che vede chi non ha la chiave: Apple, e l'iPhone prima che l'app
  * apra la busta. */
@@ -266,6 +272,8 @@ export class Spinte {
     fetch: prendi = globalThis.fetch,
     perCasaAllOra = SPINTE_PER_CASA_ALL_ORA,
     perCasaAlMinuto = SPINTE_PER_CASA_AL_MINUTO,
+    urgentiPerCasaAllOra = URGENTI_PER_CASA_ALL_ORA,
+    urgentiPerCasaAlMinuto = URGENTI_PER_CASA_AL_MINUTO,
   } = {}) {
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
     this.adesso = adesso;
@@ -276,6 +284,12 @@ export class Spinte {
       this.archivio.dati.case = {};
     this.allOra = new Freno({ perChi: perCasaAllOra, inTutto: SPINTE_IN_TUTTO_ALL_ORA, adesso });
     this.alMinuto = new Freno({ perChi: perCasaAlMinuto, finestra: MINUTO, adesso });
+    this.urgentiAllOra = new Freno({
+      perChi: urgentiPerCasaAllOra,
+      inTutto: SPINTE_IN_TUTTO_ALL_ORA,
+      adesso,
+    });
+    this.urgentiAlMinuto = new Freno({ perChi: urgentiPerCasaAlMinuto, finestra: MINUTO, adesso });
     this.conti = { partite: 0, morte: 0, frenate: 0, errori: 0 };
     this._dettoLErrore = false;
   }
@@ -338,12 +352,18 @@ export class Spinte {
       return "rifiutata";
     const gettone = this.archivio.dati.case[casa]?.[telefono];
     if (!gettone) return "senza-gettone";
-    if (!this.alMinuto.cePosto(casa) || !this.allOra.cePosto(casa)) {
+    const freni =
+      urgente === true ? [this.urgentiAlMinuto, this.urgentiAllOra] : [this.alMinuto, this.allOra];
+    if (!freni.every((freno) => freno.cePosto(casa))) {
       this.conti.frenate += 1;
       return "troppe";
     }
     this.alMinuto.conta(casa);
     this.allOra.conta(casa);
+    if (urgente === true) {
+      this.urgentiAlMinuto.conta(casa);
+      this.urgentiAllOra.conta(casa);
+    }
     try {
       const esito = await this.postino.manda({
         gettone,

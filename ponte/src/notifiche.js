@@ -125,9 +125,10 @@ const TASTI_TENUTI_AL_PIU = 500;
  * telefono: mezza giornata, «fino a domani». «Più tardi» e' un'ora. */
 const BASTA_PER = 12 * ORA;
 
-/* Quante notifiche per telefono in un'ora, al massimo, comprese le urgenti.
- * Una casa che ne vuole mandare di piu' ha un sensore impazzito, e trenta
- * notifiche in un'ora sono gia' un telefono da buttare dalla finestra. */
+/* Quante notifiche per telefono in un'ora, al massimo. Una casa che ne vuole
+ * mandare di piu' ha un sensore impazzito, e trenta notifiche in un'ora sono
+ * gia' un telefono da buttare dalla finestra. Le urgenti contano, ma passano
+ * sempre (`_cePosto`). */
 const PER_TELEFONO_ALL_ORA = 30;
 
 /* I tasti del riepilogo della sera: «Apri la giornata» apre la pagina
@@ -1181,14 +1182,16 @@ export class Notifiche {
     }
   }
 
-  /* Se questo evento questo telefono lo vuole. */
-  _lovuole(imp, evento, utente) {
-    if (!imp.acceso) return false;
-    if (evento.tipo === "prova") return true;
-    if (!vuoleLaVoce(imp, evento)) return false;
-    if (evento.solo?.length && !evento.solo.includes(utente)) return false;
+  /* Se questo evento questo telefono lo vuole: vuoto se si', e se no il
+   * perche', in poche parole per il registro. */
+  _percheNo(imp, evento, utente) {
+    if (!imp.acceso) return "notifiche spente sul telefono";
+    if (evento.tipo === "prova") return "";
+    if (!vuoleLaVoce(imp, evento))
+      return `voce «${evento.tipo}» spenta (o non scelta) sul telefono`;
+    if (evento.solo?.length && !evento.solo.includes(utente)) return "non e' per questo utente";
     /* Un messaggio dalla Home non torna a chi l'ha scritto. */
-    if (evento.tranne && evento.tranne === utente) return false;
+    if (evento.tranne && evento.tranne === utente) return "l'ha scritto lui";
     /* Un viaggio pianificato l'ha messo chi lo riceve, a quell'ora: passa le
      * ore di silenzio come le urgenti (la sveglia per partire alle sei). */
     if (
@@ -1196,13 +1199,20 @@ export class Notifiche {
       !evento.oltreIlSilenzio &&
       inSilenzio(imp, new Date(this.adesso()))
     )
-      return false;
+      return "ore di silenzio";
     const categoria = categoriaDi(evento.tipo);
     if (imp.soloFuori && (categoria === "casa" || categoria === "assistente")) {
-      if (this.sentinella.aCasa(utente) === true) return false;
+      if (this.sentinella.aCasa(utente) === true) return "solo fuori casa, ed e' in casa";
     }
-    if (!dentroLeOre(suDi(imp, evento.tipo).orari, new Date(this.adesso()))) return false;
-    return true;
+    /* «In che ore» l'app non lo offre per le urgenti (`notifiche_su_misura.dart`,
+     * `conOrari`): una scelta rimasta scritta li' non si vede e non si puo'
+     * togliere, e non deve zittire il campanello. */
+    if (
+      categoria !== "urgenti" &&
+      !dentroLeOre(suDi(imp, evento.tipo).orari, new Date(this.adesso()))
+    )
+      return "fuori dalle ore scelte per questa voce";
+    return "";
   }
 
   _cePosto(telefono, evento) {
@@ -1212,7 +1222,14 @@ export class Notifiche {
      * «non deve esserci alcun limite». Le preme a mano chi le vuole, e
      * provare le voci non deve zittire le notifiche vere. */
     if (evento.tipo === "prova") return true;
-    if (volte.length >= PER_TELEFONO_ALL_ORA) return false;
+    /* Le urgenti — campanello, antifurto, allarmi, blackout — contano fra le
+     * trenta, ma non restano mai fuori: dal campo, «le notifiche del Ring non
+     * arrivano piu'». Una casa con tante telecamere riempiva l'ora coi
+     * movimenti, e il campanello dopo la trentesima si perdeva senza dire
+     * niente. Ognuna ha gia' la sua pausa (mezzo minuto il campanello), che
+     * un sensore impazzito non la ripete a raffica. */
+    const urgente = categoriaDi(evento.tipo) === "urgenti";
+    if (!urgente && volte.length >= PER_TELEFONO_ALL_ORA) return false;
     volte.push(ora);
     this._conti.set(telefono, volte);
     return true;
@@ -1245,6 +1262,21 @@ export class Notifiche {
     const chiCe = await this._chiCe();
     const ora = this.adesso();
     let quanti = 0;
+    /* Le urgenti si raccontano nel registro dell'add-on: che sono arrivate, a
+     * quanti telefoni sono partite e, telefono per telefono, perche' a uno
+     * no. «Le notifiche del Ring non arrivano piu'», e senza il registro non
+     * si sapeva se il ponte il campanello l'avesse visto. Solo l'entita' e
+     * l'identificativo del telefono, come nel resto del registro. */
+    const traccia = !soloA && categoriaDi(evento?.tipo) === "urgenti";
+    const no = (telefono, perche) => {
+      if (traccia) this.registro.info(`${evento.tipo}: non va a ${telefono} (${perche})`);
+    };
+    if (traccia) {
+      this.registro.info(
+        `${evento.tipo} da ${evento.entita || evento.chiave || "?"}: ${elenco.length} dispositivi abbinati`,
+      );
+      if (!chiCe) no("nessun telefono", "gli utenti di Home Assistant non si leggono");
+    }
     /* E per le case che hanno gia' due abbinamenti con lo stesso indirizzo
      * (prima della regola qui sopra): a ogni indirizzo una busta sola, quella
      * dell'abbinamento aggiornato per ultimo. */
@@ -1260,19 +1292,39 @@ export class Notifiche {
     for (const dispositivo of elenco) {
       if (soloA && dispositivo.id !== soloA) continue;
       const voce = this.archivio.dati.telefoni[dispositivo.id];
-      if (!voce?.gettone) continue;
-      if (ultimoPer.get(voce.gettone)?.id !== dispositivo.id) continue;
+      if (!voce?.gettone) {
+        no(dispositivo.id, "il telefono non ha registrato le notifiche");
+        continue;
+      }
+      if (ultimoPer.get(voce.gettone)?.id !== dispositivo.id) {
+        no(dispositivo.id, "abbinamento vecchio dello stesso telefono");
+        continue;
+      }
       /* Solo telefoni di utenti veri, attivi adesso. Un telefono senza
        * utente — abbinato prima che i telefoni si intestassero — non riceve:
        * non si sa di chi sia, e allora non si sa cosa possa vedere. */
       const utente = dispositivo.utente;
-      if (!utente || !chiCe) continue;
+      if (!utente) {
+        no(dispositivo.id, "telefono senza utente: va riabbinato");
+        continue;
+      }
+      if (!chiCe) continue;
       const chi = chiCe.find((uno) => uno.id === utente);
-      if (!chi || chi.attivo === false) continue;
+      if (!chi || chi.attivo === false) {
+        no(dispositivo.id, "l'utente di Home Assistant non c'e' o e' disattivato");
+        continue;
+      }
       const amministra = chi.amministratore === true;
-      if (!this._vedeLaCasa(utente, amministra)) continue;
+      if (!this._vedeLaCasa(utente, amministra)) {
+        no(dispositivo.id, "l'utente non vede nessuna plancia");
+        continue;
+      }
       const imp = impostazioniPulite(voce.impostazioni);
-      if (!this._lovuole(imp, evento, utente)) continue;
+      const percheNo = this._percheNo(imp, evento, utente);
+      if (percheNo) {
+        no(dispositivo.id, percheNo);
+        continue;
+      }
       const su = suDi(imp, evento.tipo);
       /* «Nel riepilogo della sera»: non parte adesso, si mette da parte una
        * riga. L'urgente parte sempre — una cosa urgente la sera non serve.
@@ -1295,26 +1347,38 @@ export class Notifiche {
        * telefono non si e' detto non si dice nemmeno lui. */
       if (evento.tipo === "blackout" && su.soglia) {
         if (evento.misura?.fase === "torna") {
-          if ((evento.misura?.durata || 0) < su.soglia) continue;
+          if ((evento.misura?.durata || 0) < su.soglia) {
+            no(dispositivo.id, "il blackout e' durato meno della soglia");
+            continue;
+          }
         } else if (!evento.attesa) {
           const dopo = (evento.misura?.dal ?? ora) + su.soglia * MINUTO;
           if (dopo > ora) {
+            no(dispositivo.id, "aspetta la soglia del blackout");
             this._attese.push({ telefono: dispositivo.id, evento, dopo });
             continue;
           }
         }
       }
       const chiave = `${dispositivo.id}|${evento.chiave}`;
-      if ((this._rimandati.get(chiave) || 0) > ora) continue;
+      if ((this._rimandati.get(chiave) || 0) > ora) {
+        no(dispositivo.id, "rimandata dal tasto della notifica");
+        continue;
+      }
       if (
         evento.tipo !== "prova" &&
         evento.pausa &&
         ora - (this._detto.get(chiave) || 0) < evento.pausa
-      )
+      ) {
+        no(dispositivo.id, `gia' detta ${Math.round((ora - this._detto.get(chiave)) / 1000)} s fa`);
         continue;
+      }
       if (!this._cePosto(dispositivo.id, evento)) continue;
       const chiaveDelFilo = this.dispositivi.chiaveDi(dispositivo.id);
-      if (!chiaveDelFilo) continue;
+      if (!chiaveDelFilo) {
+        no(dispositivo.id, "il telefono non ha la chiave del filo");
+        continue;
+      }
       const camera = this._vedeLaTelecamera(utente, amministra, evento.camera)
         ? evento.camera
         : null;
@@ -1368,6 +1432,10 @@ export class Notifiche {
         this.registro.attenzione(`una notifica non si chiude: ${errore?.message || errore}`);
         continue;
       }
+      /* Col filo del centralino giu' parte quando torna: e' un ritardo, e si
+       * dice. */
+      if (traccia && this.postino && this.postino.pronto === false)
+        this.registro.info(`${evento.tipo}: a ${dispositivo.id} aspetta il filo del centralino`);
       const partita = this.postino?.spingi?.({
         telefono: dispositivo.id,
         gettone: voce.gettone,
@@ -1378,12 +1446,16 @@ export class Notifiche {
          * che non e' partita. */
         aspetta: evento.tipo !== "prova",
       });
-      if (!partita) continue;
+      if (!partita) {
+        no(dispositivo.id, "il centralino non c'e' o non l'ha presa");
+        continue;
+      }
       this._detto.set(chiave, ora);
       this._ricordaITasti(contenuto.id, dispositivo.id, evento);
       quanti += 1;
     }
-    if (quanti) this.registro.debug?.(`notifica «${evento.tipo}» a ${quanti} telefoni`);
+    if (traccia) this.registro.info(`${evento.tipo}: partita a ${quanti} telefoni`);
+    else if (quanti) this.registro.debug?.(`notifica «${evento.tipo}» a ${quanti} telefoni`);
     return quanti;
   }
 
@@ -1875,7 +1947,13 @@ export class Notifiche {
       quando: evento.quando ?? this.adesso(),
       scade: (evento.quando ?? this.adesso()) + VITA_DEI_TASTI,
       stile: stile === "elaborata" ? "e" : "s",
-      ...(su && su.suono !== "normale" ? { suono: su.suono } : {}),
+      /* «Muta» l'app non la offre alle urgenti (`notifiche_su_misura.dart`):
+       * una rimasta scritta non fa arrivare il campanello senza suono. */
+      ...(su &&
+      su.suono !== "normale" &&
+      !(su.suono === "muta" && (categoriaDi(evento.tipo) ?? evento.categoria) === "urgenti")
+        ? { suono: su.suono }
+        : {}),
       ...(evento.entita ? { entita: evento.entita } : {}),
       ...(camera ? { camera } : {}),
       ...(evento.chiamata ? { chiamata: true } : {}),

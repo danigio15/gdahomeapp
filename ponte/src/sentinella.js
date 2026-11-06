@@ -134,6 +134,21 @@ const MOVIMENTO = new Set(["motion", "occupancy", "presence"]);
 const NOME_DEL_CAMPANELLO = /campanell|doorbell|citofon|ding|visitor|chime|suoneria/i;
 /* Per gli eventi la parola intera: «ding» dentro «building» non e' un campanello. */
 const EVENTO_DEL_CAMPANELLO = /campanell|doorbell|citofon|intercom|(^|[._])ding([._]|$)/i;
+/* Un evento che dice solo «aperto»: la Ring Intercom ha accanto al suo
+ * `event.<nome>_ding` anche `event.<nome>_intercom_unlock` (classe «button»,
+ * `event_types: ["intercom_unlock"]`), e «intercom» nel nome lo faceva
+ * passare per il campanello: si apriva la porta e suonava il telefono. */
+const SOLO_APERTURA = /unlock|sblocc|open|apert|apri/i;
+function eSoloUnApertura(id, attributi = {}) {
+  const tipi = [
+    ...(Array.isArray(attributi.event_types) ? attributi.event_types : []),
+    attributi.event_type,
+  ]
+    .map((uno) => String(uno ?? "").trim())
+    .filter(Boolean);
+  if (tipi.length) return tipi.every((uno) => SOLO_APERTURA.test(uno));
+  return /unlock|sblocc/i.test(id);
+}
 const NOME_DEL_CANCELLO = /cancell|gate|portone|cancel/i;
 const NOME_DELLA_PIOGGIA = /pioggia|piove|rain/i;
 const NOME_ELETTRODOMESTICO =
@@ -325,19 +340,26 @@ export function paroleDelCampanello(nome) {
   };
 }
 
+/* Gli eventi e i pulsanti: lo stato e' l'ora dell'ultima pressione. */
+const COME_UN_PULSANTE = new Set(["event", "button", "input_button"]);
+
 /**
  * Se il campanello scelto nel Citofono ha suonato, da com'era a com'e': un
  * evento o un pulsante che cambia (l'ora dell'ultima pressione), un sensore
  * che si accende, o che dice «ring». Mai da o verso «unavailable».
+ *
+ * Un evento o un pulsante che non ha mai suonato e' «unknown», e la sua prima
+ * pressione e' «unknown» → l'ora: e' una pressione vera, la prima dopo
+ * l'installazione (o dopo che Home Assistant ha perso quella di prima). Il
+ * Ring di un cliente non suonava al primo squillo. Per un sensore invece
+ * «unknown» → «on» e' Home Assistant che si accende, e non si dice.
  */
 export function suonaIlCitofono(dominio, era, adesso) {
   if (era === adesso || !adesso) return false;
-  if (
-    ["unavailable", "unknown"].includes(adesso) ||
-    ["unavailable", "unknown", undefined].includes(era)
-  )
+  if (["unavailable", "unknown"].includes(adesso) || [undefined, "unavailable"].includes(era))
     return false;
-  if (["event", "button", "input_button"].includes(dominio)) return true;
+  if (COME_UN_PULSANTE.has(dominio)) return true;
+  if (era === "unknown") return false;
   if (["binary_sensor", "switch", "input_boolean"].includes(dominio))
     return adesso === "on" && era === "off";
   if (dominio === "sensor")
@@ -1106,6 +1128,16 @@ export class Sentinella {
     return trovati;
   }
 
+  /* La chiave di uno squillo: il dispositivo, quando i registri lo dicono, e
+   * se no l'entita'. Lo stesso campanello che suona da due entita' — il Ring
+   * di prima aveva il sensore `…_ding` accanto all'evento, e il Citofono puo'
+   * averne scelta una mentre l'altra suona coi nomi — e' uno squillo solo:
+   * la pausa di mezzo minuto di `notifiche.js` tiene la seconda. */
+  _chiaveDelCampanello(id) {
+    const dispositivo = this.dispositivoDi?.[id];
+    return `campanello:${dispositivo ? `dispositivo:${dispositivo}` : id}`;
+  }
+
   /* Il cancello da aprire dal campanello: una serratura, una copertura o un
    * tasto che si chiama cancello. */
   cancello() {
@@ -1376,7 +1408,7 @@ export class Sentinella {
       this._dici({
         tipo: "campanello",
         urgenza: "urgente",
-        chiave: `campanello:${id}`,
+        chiave: this._chiaveDelCampanello(id),
         pausa: 30 * 1000,
         entita: id,
         camera: dalCitofono.telecamera || this.telecameraPer(id),
@@ -1386,19 +1418,26 @@ export class Sentinella {
       });
       return;
     }
+    /* Ring oggi: `event.<nome>_ding`, classe «doorbell», `event_types:
+     * ["ring"]`, lo stato e' l'ora dell'ultima pressione («unknown» se non
+     * ha mai suonato). Il movimento e' `event.<nome>_motion`, classe
+     * «motion», e l'apertura della Intercom non e' uno squillo. */
     const eUnCampanello =
-      classe === "doorbell" ||
-      (classe !== "motion" &&
-        (EVENTO_DEL_CAMPANELLO.test(id) ||
-          /^(ding|intercom_ding|ring|doorbell)$/.test(tipoDiEvento)));
+      !MOVIMENTO.has(classe) &&
+      !eSoloUnApertura(id, dopo.attributes) &&
+      (classe === "doorbell" ||
+        EVENTO_DEL_CAMPANELLO.test(id) ||
+        /^(ding|intercom_ding|ring|doorbell)$/.test(tipoDiEvento));
     const suona =
       (dominio === "event" &&
         eUnCampanello &&
         prima &&
-        era !== dopo.state &&
-        era !== "unavailable" &&
-        dopo.state !== "unavailable") ||
+        suonaIlCitofono(dominio, era, dopo.state)) ||
+      /* I sensori di una volta (`binary_sensor.<nome>_ding` del Ring di
+       * prima): si accendono. Non il movimento dello stesso campanello,
+       * `binary_sensor.campanello_motion`, che col nome passava. */
       (dominio === "binary_sensor" &&
+        !MOVIMENTO.has(classe) &&
         NOME_DEL_CAMPANELLO.test(id) &&
         dopo.state === "on" &&
         era === "off");
@@ -1406,7 +1445,7 @@ export class Sentinella {
       this._dici({
         tipo: "campanello",
         urgenza: "urgente",
-        chiave: `campanello:${id}`,
+        chiave: this._chiaveDelCampanello(id),
         pausa: 30 * 1000,
         entita: id,
         camera: this.telecameraPer(id),
