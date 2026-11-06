@@ -920,28 +920,32 @@ function bindNodeClick(element, node, period) {
 
 /* Il nome dentro il cerchio: «il testo non entra, deve essere adattato».
  * In cima un cerchio e' piu' stretto che al centro, e «LOCALE TECNICO» usciva
- * dai bordi anche coi puntini. Il nome va su due righe se serve, e la scritta
- * scende di mezzo pixel alla volta finche' non entra — non sotto i 6 px. Si
- * rifa' solo quando cambiano il nome o la misura del cerchio. */
-const NOME_PIU_PICCOLO = 8;
-
+ * dai bordi anche coi puntini. Il nome va su due righe se serve.
+ *
+ * La misura del carattere pero' non la decide il nome: la decide il cerchio
+ * (`misureDelCarico`), ed e' la stessa per tutti i carichi della fila.
+ * «Perche' il locale tecnico sembra avere una dimensione dei caratteri
+ * differente rispetto agli altri»: qui prima la scritta scendeva di mezzo
+ * pixel alla volta finche' non entrava, cerchio per cerchio — «LAVANDERIA» a
+ * 9, «WALLBOX» a 10,5, nella stessa fila. Adesso un nome che non entra
+ * nemmeno su due righe resta della misura dei suoi vicini e finisce coi
+ * puntini. Si rifa' solo quando cambiano il nome o la misura del cerchio. */
 function adattaIlNome(cerchio, nome) {
   const largo = cerchio?.clientWidth || 0;
   if (!nome || !largo) return;
   const chiave = `${nome.textContent}|${largo}`;
   if (nome.dataset.dmAdattato === chiave) return;
+  /* Una misura scritta in linea dalle versioni di prima si toglie: vale
+   * quella del foglio, che viene dal cerchio. */
   nome.style.removeProperty("font-size");
   delete nome.dataset.dmNomeLungo;
   const stile = doc.defaultView?.getComputedStyle?.(nome);
-  let misura = Number.parseFloat(stile?.fontSize) || 0;
-  const troppo = () =>
+  const misura = Number.parseFloat(stile?.fontSize) || 0;
+  const troppo =
     nome.scrollWidth > nome.clientWidth + 1 || nome.scrollHeight > misura * 1.1 * 2 + 1;
-  while (misura > NOME_PIU_PICCOLO && troppo()) {
-    misura -= 0.5;
-    nome.style.setProperty("font-size", `${misura}px`, "important");
-  }
-  /* Una parola sola che non entra nemmeno cosi': una riga, coi puntini. */
-  if (troppo()) nome.dataset.dmNomeLungo = "true";
+  /* Una parola che non entra, o un nome da tre righe: una riga, coi puntini,
+   * alla stessa misura degli altri. */
+  if (troppo) nome.dataset.dmNomeLungo = "true";
   nome.dataset.dmAdattato = chiave;
 }
 
@@ -1085,13 +1089,57 @@ const SOGLIE = Object.freeze([
   { quando: "(max-width: 768px)", bolla: 104, stretto: true },
 ]);
 
+const BOLLA_LARGA = 130;
+
 function comeSiamoMessi() {
   for (const soglia of SOGLIE) {
     try {
       if (root.matchMedia?.(soglia.quando)?.matches) return soglia;
     } catch (_errore) {}
   }
-  return { bolla: 130, stretto: false };
+  return { bolla: BOLLA_LARGA, stretto: false };
+}
+
+/* Le scritte di un cerchio dei carichi le decide il cerchio.
+ *
+ * «Perche' il locale tecnico sembra avere una dimensione dei caratteri
+ * differente rispetto agli altri.» Sul telefono il foglio dava ai numeri dei
+ * carichi 18 punti in un cerchio da 96: non ci stavano mai, e ognuno si
+ * stringeva per conto suo fin dove poteva. «LOCALE TECNICO» va su due righe,
+ * il suo numero scende dove il cerchio e' gia' finito, la misura diceva
+ * «spazio zero» — che e' anche quello che dice una pagina chiusa — e quel
+ * numero restava ai 18 del foglio, accanto agli altri a 11.
+ *
+ * Qui la misura viene solo dal lato del cerchio, mai dalla lunghezza del
+ * testo: tutti i carichi della fila hanno lo stesso cerchio, e quindi lo
+ * stesso numero, lo stesso nome, la stessa icona. Le proporzioni sono quelle
+ * che sul cerchio largo (130) danno le misure di sempre — 20 il numero, 11,5
+ * il nome, 26 l'icona, 28 il disegno — e sul telefono lasciano posto al nome
+ * su due righe senza spingere il numero contro il bordo. Il mezzo punto e'
+ * per non scrivere «14.88px». */
+export function misureDelCarico(lato) {
+  const misura = Number(lato) > 0 ? Number(lato) : BOLLA_LARGA;
+  const aMezzoPunto = (valore) => Math.round(valore * 2) / 2;
+  const fra = (valore, minimo, massimo) => Math.min(massimo, Math.max(minimo, valore));
+  return Object.freeze({
+    numero: fra(aMezzoPunto(misura * 0.155), 11, 20),
+    nome: fra(aMezzoPunto(misura * 0.099), 8, 11.5),
+    icona: fra(Math.round(misura * 0.22), 16, 26),
+    disegno: fra(Math.round(misura * 0.22), 18, 28),
+  });
+}
+
+/* Il foglio dei carichi per un lato: il cerchio e tutto quello che ci sta
+ * dentro, dalla stessa misura. */
+function regoleDelCarico(lato) {
+  const { numero, nome, icona, disegno } = misureDelCarico(lato);
+  return [
+    `#page-energy .n-load{width:${lato}px!important;height:${lato}px!important}`,
+    `#page-energy .n-load .node-label{font-size:${nome}px!important;letter-spacing:0!important}`,
+    `#page-energy :is(#view-ist,#view-day,#view-month) .n-load span:not(.dual-val){font-size:${numero}px!important}`,
+    `#page-energy .n-load .node-icon{font-size:${icona}px!important}`,
+    `#page-energy .n-load .node-icon svg{width:${disegno}px!important;height:${disegno}px!important}`,
+  ].join("\n    ");
 }
 
 /* Quante bolle stanno nella fila piu' affollata. Sul largo e' una riga sola;
@@ -1646,12 +1694,16 @@ export const I_NUMERI_DELLE_BOLLE = "#page-energy .node span, #page-energy .dm-f
 export function stringiIlNumero(nodo, misuraDelCarattere) {
   if (!nodo) return false;
   const testo = String(nodo.textContent ?? "");
-  if (nodo[FIRMA_DELLA_STRETTA] === testo) return false;
+  /* La firma e' il testo e il posto: lo stesso numero in un cerchio cambiato
+   * di misura, o sotto un nome passato da una riga a due, sta in un'altra
+   * corda e va rimisurato. */
+  const firma = `${testo}|${ilPostoDelNumero(nodo)}`;
+  if (nodo[FIRMA_DELLA_STRETTA] === firma) return false;
   /* Si riparte sempre dalla misura del foglio: un numero corto dopo uno lungo
    * deve tornare grande, o la bolla resterebbe rimpicciolita per sempre. */
   nodo.style?.removeProperty?.("font-size");
   const largo = Number(nodo.scrollWidth) || 0;
-  const spazio = Math.min(Number(nodo.clientWidth) || 0, cordaDelCerchio(nodo) ?? Infinity);
+  const scatola = Number(nodo.clientWidth) || 0;
   /* La firma si mette solo dopo aver misurato davvero.
    *
    * Una pagina che non e' in vista non ha larghezze: tutto zero. Il primo giro
@@ -1659,12 +1711,18 @@ export function stringiIlNumero(nodo, misuraDelCarattere) {
    * ricordarsi «questo testo l'ho gia' guardato» avrebbe voluto dire non
    * guardarlo mai piu', perche' quando la pagina si apre il testo e' lo stesso
    * di prima. La bolla della batteria restava a due righe fino al primo numero
-   * nuovo. */
-  if (!spazio) return false;
-  nodo[FIRMA_DELLA_STRETTA] = testo;
-  /* La misura sua — quella che gli servirebbe da solo — si ricorda: le bolle
-   * dei carichi poi si mettono tutte d'accordo sulla piu' piccola
-   * (`stessaMisuraPerIcarichi`). */
+   * nuovo.
+   *
+   * Ma «non in vista» lo dice la scatola, non la corda. Una corda a zero in una
+   * pagina aperta e' un numero sceso fin sul bordo del cerchio — il locale
+   * tecnico, col nome su due righe — e scambiarla per una pagina chiusa lo
+   * lasciava fuori dal conto dei vicini, alla misura piena del foglio. */
+  if (!scatola) return false;
+  const spazio = Math.min(scatola, cordaDelCerchio(nodo) ?? Infinity);
+  nodo[FIRMA_DELLA_STRETTA] = firma;
+  /* La misura sua — quella che gli servirebbe da solo — si ricorda, ma da sola
+   * non si vede mai: i numeri della stessa fascia poi si mettono d'accordo
+   * sulla piu' piccola (`stessaMisuraPerFascia`). */
   nodo[MISURA_SUA] = 0;
   if (!testo.trim()) return false;
   const base = Number(misuraDelCarattere?.(nodo)) || 0;
@@ -1693,34 +1751,66 @@ const MISURA_DEL_FOGLIO = "__dmMisuraDelFoglio";
 /* «Secondo quale logica un cerchio solitario e' diverso come dimensione
  * testo.» Ognuno si stringeva per conto suo: «4,7 kWh» e' corto e restava
  * grande, «206,6 kWh» accanto si stringeva, e la fila sembrava scritta con
- * due caratteri. Le bolle dei carichi della stessa vista si mettono
- * d'accordo: tutte alla misura della piu' stretta. */
-export function stessaMisuraPerIcarichi(nodi) {
+ * due caratteri. I numeri della stessa fascia nella stessa vista si mettono
+ * d'accordo: tutti alla misura del piu' stretto.
+ *
+ * Le fasce sono due: i carichi e le stanze sotto la Casa, e i quattro
+ * cerchioni — Solare, Rete, Batteria, Casa — che hanno un cerchio loro e un
+ * carattere loro. Nell'istantanea «0 W» della rete accanto a «4,20 kW» del
+ * sole: anche li' una misura sola.
+ *
+ * Di solito non si stringe niente — la misura del foglio viene dal cerchio,
+ * ed e' scelta perche' ci stiano i numeri di ogni giorno — e qui si passa
+ * senza toccare. Serve per il numero fuori misura, «1.234,5 kWh» nella vista
+ * del mese: allora scende tutta la fascia insieme, mai un cerchio da solo. */
+export function stessaMisuraPerFascia(nodi) {
   const gruppi = new Map();
   for (const nodo of nodi) {
-    const bolla = nodo?.closest?.(".n-load");
+    const bolla = nodo?.closest?.(".node");
     const misura = Number(nodo?.[MISURA_SUA]) || 0;
     if (!bolla || !misura) continue;
     /* Solo i numeri (e il trattino di chi non ne ha): le icone no. */
     if (!/[\d—–]/.test(String(nodo.textContent ?? ""))) continue;
+    if (eUnContenitore(nodo)) continue;
     const vista = bolla.closest?.("[id^='view-']") || bolla.parentElement;
-    if (!gruppi.has(vista)) gruppi.set(vista, []);
-    gruppi.get(vista).push({ nodo, misura });
+    const fascia = bolla.classList?.contains?.("n-load") ? "carichi" : "cerchioni";
+    if (!gruppi.has(vista)) gruppi.set(vista, new Map());
+    const perFascia = gruppi.get(vista);
+    if (!perFascia.has(fascia)) perFascia.set(fascia, []);
+    perFascia.get(fascia).push({ nodo, misura });
   }
   let tocchi = 0;
-  for (const voci of gruppi.values()) {
-    const minima = Math.min(...voci.map((voce) => voce.misura));
-    for (const { nodo } of voci) {
-      /* Alla misura del foglio non serve scriverla: si toglie. */
-      const voluta = minima >= (Number(nodo[MISURA_DEL_FOGLIO]) || 0) ? "" : `${minima}px`;
-      const adesso = nodo.style?.getPropertyValue?.("font-size") || "";
-      if (voluta === adesso) continue;
-      if (voluta) nodo.style.setProperty("font-size", voluta, "important");
-      else nodo.style.removeProperty("font-size");
-      tocchi += 1;
+  for (const perFascia of gruppi.values()) {
+    for (const voci of perFascia.values()) {
+      const minima = Math.min(...voci.map((voce) => voce.misura));
+      for (const { nodo } of voci) {
+        /* Alla misura del foglio non serve scriverla: si toglie. */
+        const voluta = minima >= (Number(nodo[MISURA_DEL_FOGLIO]) || 0) ? "" : `${minima}px`;
+        const adesso = nodo.style?.getPropertyValue?.("font-size") || "";
+        if (voluta === adesso) continue;
+        if (voluta) nodo.style.setProperty("font-size", voluta, "important");
+        else nodo.style.removeProperty("font-size");
+        tocchi += 1;
+      }
     }
   }
   return tocchi;
+}
+
+/* Il doppio numero della rete e della batteria nel giorno e nel mese
+ * («↓ 86,6 kWh / ↑ 6,7 kWh») e' una scatola con due numeri dentro: si
+ * misurano i due numeri, non la scatola, che di suo non scrive niente. */
+function eUnContenitore(nodo) {
+  return Boolean(nodo?.querySelector?.("span"));
+}
+
+/* Dove sta il numero: quanto e' largo il suo cerchio e quanto e' alto il
+ * nome sopra (una riga o due). Se cambia, cambia la corda. */
+function ilPostoDelNumero(nodo) {
+  const bolla = nodo?.closest?.(".node");
+  if (!bolla) return "";
+  const nome = bolla.querySelector?.(".node-label");
+  return `${bolla.offsetWidth || 0}x${nome?.offsetHeight || 0}`;
 }
 
 /* Quanto e' largo il cerchio all'altezza del numero.
@@ -1731,19 +1821,31 @@ export function stessaMisuraPerIcarichi(nodi) {
  * «206,6 kWh» ci stava nel quadrato e toccava il bordo. Qui si prende la riga
  * del numero piu' lontana dal centro e si misura la corda li', tolto il bordo
  * e un filo d'aria. `null` quando non c'e' una bolla da misurare: allora vale
- * la scatola, come prima. */
-const BORDO_E_ARIA = 9;
+ * la scatola, come prima.
+ *
+ * Il bordo piu' l'aria fanno 8: l'anello e' di pochi punti, e la riga del
+ * numero porta gia' sopra e sotto l'aria della sua interlinea. Con 9 un nome su due
+ * righe bastava a mandare il numero «fuori dal cerchio» anche quando a vederlo
+ * ci stava largo.
+ *
+ * E la corda torna nella misura della pagina. Quando i carichi sono tanti il
+ * cerchio si rimpicciolisce con una scala (`--dm-flow-scale`): le scatole
+ * restano quelle del foglio, ma `getBoundingClientRect` le vede gia'
+ * rimpicciolite, e confrontare le une con le altre stringeva il numero due
+ * volte. */
+const BORDO_E_ARIA = 8;
 function cordaDelCerchio(nodo) {
   const bolla = nodo?.closest?.(".node");
   if (!bolla?.getBoundingClientRect || !nodo.getBoundingClientRect) return null;
   const b = bolla.getBoundingClientRect();
   const t = nodo.getBoundingClientRect();
   if (!b.width || !t.height) return null;
-  const r = b.width / 2 - BORDO_E_ARIA;
+  const scala = bolla.offsetWidth > 0 ? b.width / bolla.offsetWidth : 1;
+  const r = b.width / 2 - BORDO_E_ARIA * scala;
   const cy = b.top + b.height / 2;
   const dy = Math.max(Math.abs(t.top - cy), Math.abs(t.bottom - cy));
   if (r <= 0) return null;
-  return dy >= r ? 0 : 2 * Math.sqrt(r * r - dy * dy);
+  return dy >= r ? 0 : (2 * Math.sqrt(r * r - dy * dy)) / scala;
 }
 
 /* La misura del carattere che il foglio ha dato a questo nodo. */
@@ -1757,8 +1859,11 @@ export function adattaINumeriDelleBolle(targetDocument = doc) {
   const nodi = targetDocument?.querySelectorAll?.(I_NUMERI_DELLE_BOLLE);
   if (!nodi) return 0;
   let tocchi = 0;
-  for (const nodo of nodi) if (stringiIlNumero(nodo, misuraDalFoglio)) tocchi += 1;
-  tocchi += stessaMisuraPerIcarichi(nodi);
+  for (const nodo of nodi) {
+    if (eUnContenitore(nodo)) continue;
+    if (stringiIlNumero(nodo, misuraDalFoglio)) tocchi += 1;
+  }
+  tocchi += stessaMisuraPerFascia(nodi);
   return tocchi;
 }
 
@@ -1984,7 +2089,7 @@ function installStyles() {
     .flow-stage .node.dm-flow-node[data-dm-flow-active="false"]{opacity:.62!important}
     /* Il nome sta dentro il cerchio: largo quanto la corda in cima, al massimo
        due righe; la misura la stringe adattaIlNome. */
-    .flow-stage .node.dm-flow-node .node-label{width:72%!important;white-space:normal!important;overflow:hidden!important;text-overflow:clip!important;line-height:1.1!important;max-height:2.25em;flex:0 0 auto!important;overflow-wrap:normal!important;word-break:normal!important}
+    .flow-stage .node.dm-flow-node .node-label{width:78%!important;white-space:normal!important;overflow:hidden!important;text-overflow:clip!important;line-height:1.1!important;max-height:2.25em;flex:0 0 auto!important;overflow-wrap:normal!important;word-break:normal!important}
     .flow-stage .node.dm-flow-node .node-label[data-dm-nome-lungo]{white-space:nowrap!important;text-overflow:ellipsis!important}
     .flow-stage path.dm-flow-arc{stroke-width:var(--dm-flow-width,3px)!important;fill:none!important}
     /* La soglia e' quella del guscio, 768, e non una nostra.
@@ -2007,6 +2112,10 @@ function installStyles() {
     @media(max-width:768px){
       .flow-stage .node.dm-flow-node{left:var(--dm-flow-mobile-left,50%)!important;top:var(--dm-flow-mobile-top,83%)!important}
     }
+    /* E la Casa un poco piu' piccola: «riesci a fare un po' piu' piccolo
+     * quello della casa». Resta il cerchio piu' grande, ma non schiaccia piu'
+     * la fila di sotto. */
+    #page-energy .n-home{width:145px!important;height:145px!important}
     /* I cerchi sotto la Casa, che si leggono.
      *
      * «I dati dentro entrano a mala pena e sono troppo piccoli, il testo
@@ -2016,31 +2125,25 @@ function installStyles() {
      * loro, coi loro nomi e numeri; Solare, Rete, Batteria e Casa restano come
      * sono. Le misure sono le stesse che legge \`comeSiamoMessi\`, cosi' il
      * conto di quante bolle stanno in fila resta giusto: sul telefono tre per
-     * fila si prendono tutto lo spazio che c'e', e non di piu'. */
-    #page-energy .n-load{width:130px!important;height:130px!important}
-    /* E la Casa un poco piu' piccola: «riesci a fare un po' piu' piccolo
-     * quello della casa». Resta il cerchio piu' grande, ma non schiaccia piu'
-     * la fila di sotto. */
-    #page-energy .n-home{width:145px!important;height:145px!important}
-    #page-energy .n-load .node-label{font-size:11.5px!important;letter-spacing:0!important}
-    /* Anche nel giorno e nel mese: «i valori dei carichi sotto casa si
-     * leggono per la parte istantanea, ma sono piu' piccoli per giornaliera
-     * e mensile». La misura c'era solo per l'istantanea; «206,6 kWh» ci sta
-     * lo stesso, e se non ci sta lo stringe \`stringiIlNumero\`. */
-    #page-energy :is(#view-ist,#view-day,#view-month) .n-load span:not(.dual-val){font-size:20px!important}
-    #page-energy .n-load .node-icon{font-size:26px!important}
+     * fila si prendono tutto lo spazio che c'e', e non di piu'.
+     *
+     * Dentro il cerchio, nome numero e icona vengono dal lato del cerchio
+     * (\`misureDelCarico\`), uguali per tutta la fila: anche nel giorno e nel
+     * mese, «i valori dei carichi sotto casa si leggono per la parte
+     * istantanea, ma sono piu' piccoli per giornaliera e mensile». */
+    ${regoleDelCarico(BOLLA_LARGA)}
     @media(max-width:768px){
       #page-energy .flow-stage{height:800px!important}
       #page-energy .n-home{width:110px!important;height:110px!important}
-      #page-energy .n-load{width:104px!important;height:104px!important}
-      #page-energy .n-load .node-label{font-size:10.5px!important;letter-spacing:0!important}
-      #page-energy :is(#view-ist,#view-day,#view-month) .n-load span:not(.dual-val){font-size:18px!important}
-      #page-energy .n-load .node-icon{font-size:23px!important}
+      ${regoleDelCarico(SOGLIE[1].bolla)}
+      /* Il guscio scriveva «BATTERIA» a 7 e gli altri tre a 8: i cerchioni
+       * sono una fascia sola, col nome della stessa misura. */
+      #page-energy .node:not(.n-load) .node-label{font-size:8px!important}
     }
     @media(max-width:480px){
       #page-energy .flow-stage{height:720px!important}
       #page-energy .n-home{width:96px!important;height:96px!important}
-      #page-energy .n-load{width:96px!important;height:96px!important}
+      ${regoleDelCarico(SOGLIE[0].bolla)}
     }
   `,
   );
