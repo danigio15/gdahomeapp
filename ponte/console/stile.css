@@ -176,6 +176,14 @@ a {
 
 p {
   margin: 0;
+  /* Niente parola sola sull'ultima riga. */
+  text-wrap: pretty;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
 }
 
 /* ─── La testata e le linguette ──────────────────────────────────────────── */
@@ -335,24 +343,34 @@ main {
   gap: 16px;
 }
 
-/* «Indietro»: un tasto leggero, in cima a ogni sezione. Su uno schermo largo
-   ci sono le linguette, e non serve. */
+/* «‹»: nella testata, solo sul telefono e fuori dalla Casa (vedi in fondo). */
 button.indietro {
-  min-height: 36px;
-  margin: 0 0 8px -8px;
-  padding: 4px 12px 4px 4px;
-  gap: 2px;
+  display: none;
+  flex: none;
+  width: 40px;
+  min-height: 40px;
+  margin-left: -8px;
+  padding: 0;
   background: transparent;
   color: var(--acceso);
-  font-size: 15px;
-  font-weight: 700;
   box-shadow: none;
 }
 
-@media (min-width: 761px) {
-  button.indietro {
-    display: none;
-  }
+button.indietro .ic {
+  width: 24px;
+  height: 24px;
+  stroke-width: 2.2;
+}
+
+/* Il nome della sezione, nella testata del telefono. */
+.titolo-testata {
+  display: none;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .nota-fondo {
@@ -465,8 +483,14 @@ h3 > .ic {
  * risposta — verde, rosso, o grigio mentre si guarda. */
 .eroe {
   --tinta: var(--linea);
-  --segno: var(--tenue);
+  --segno: var(--terzo);
+  padding-top: 20px;
+  padding-bottom: 20px;
   background: radial-gradient(110% 120% at 0% 0%, var(--tinta), transparent 55%), var(--carta);
+  /* Una riga del colore della risposta, sul bordo sinistro. */
+  box-shadow:
+    inset 4px 0 0 var(--segno),
+    var(--ombra);
 }
 
 .eroe[data-come="bene"] {
@@ -487,8 +511,8 @@ h3 > .ic {
 
 .eroe-segno {
   flex: none;
-  width: 56px;
-  height: 56px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -529,8 +553,8 @@ h3 > .ic {
 }
 
 .righe.controlli {
-  margin-top: 24px;
-  padding-top: 8px;
+  margin-top: 16px;
+  padding-top: 4px;
   border-top: 1px solid var(--linea);
 }
 
@@ -740,9 +764,10 @@ button.mattonella {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 16px;
-  min-height: 152px;
+  height: 100%;
+  min-height: 168px;
   padding: 20px;
   border: 1px solid var(--bordo);
   border-radius: var(--r-grande);
@@ -807,6 +832,22 @@ button.mattonella.forte {
 
 .mattonella.forte .mattonella-parole > span {
   color: rgba(255, 255, 255, 0.86);
+}
+
+/* I primi nomi, in piccolo, in fondo alla mattonella. */
+.anteprima {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 100%;
+  overflow: hidden;
+  max-height: 52px;
+}
+
+.anteprima .chip {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ─── Aggiungere un telefono ─────────────────────────────────────────────── */
@@ -981,13 +1022,6 @@ a.tenue:active {
 button .ic,
 a.bottone .ic {
   color: currentColor;
-}
-
-button.grande {
-  min-height: 52px;
-  padding: 14px 24px;
-  font-size: 16px;
-  box-shadow: 0 6px 16px var(--acceso-soft);
 }
 
 /* I tasti che non sono «il» tasto della scheda. */
@@ -1364,6 +1398,297 @@ summary:focus-visible,
 
 .chi-la-vede-nuova .minuta {
   margin: 8px 0;
+}
+
+/* ─── Le tre tappe dell'abbinamento ────────────────────────────────────────
+ *
+ * Un numero per tappa, e la linea che le unisce. Una tappa fatta prende la
+ * spunta verde; quella da fare adesso il colore acceso; quelle dopo stanno
+ * piu' in ombra, ma si leggono — si deve capire dove si arrivera'. Su uno
+ * schermo largo la tappa del QR sta a destra delle altre due. */
+.abbina {
+  padding-top: 24px;
+  padding-bottom: 24px;
+}
+
+.tappe {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+}
+
+@media (min-width: 761px) {
+  .tappe {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 32px;
+  }
+
+  #tappa-qr {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    padding: 0 0 0 32px;
+    border-left: 1px solid var(--linea);
+  }
+
+  #tappa-qr::before {
+    display: none;
+  }
+}
+
+.tappa {
+  position: relative;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 16px;
+  padding-bottom: 24px;
+}
+
+.tappa:last-child {
+  padding-bottom: 0;
+}
+
+/* La linea che porta alla tappa dopo. */
+.tappa:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 15px;
+  top: 40px;
+  bottom: 8px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--linea);
+}
+
+.tappa-numero {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--linea);
+  color: var(--tenue);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.tappa-numero .ic {
+  display: none;
+  width: 18px;
+  height: 18px;
+  color: currentColor;
+  stroke-width: 2.6;
+}
+
+.tappa[data-stato="adesso"] .tappa-numero {
+  background: var(--pieno);
+  color: #fff;
+}
+
+.tappa[data-stato="fatto"] .tappa-numero {
+  background: var(--bene-soft);
+  color: var(--bene);
+}
+
+.tappa[data-stato="fatto"] .tappa-numero b {
+  display: none;
+}
+
+.tappa[data-stato="fatto"] .tappa-numero .ic {
+  display: block;
+}
+
+.tappa-corpo {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding-top: 4px;
+}
+
+.tappa-titolo {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.tappa[data-stato="dopo"] .tappa-titolo,
+.tappa[data-stato="dopo"] .nota {
+  color: var(--terzo);
+}
+
+.tappa-corpo .bottoni {
+  margin-top: 4px;
+}
+
+.tappa-corpo .avviso {
+  margin: 0;
+}
+
+.tappa-corpo .qr-suo {
+  margin-top: 8px;
+}
+
+.tappa-corpo .scelta {
+  max-width: 360px;
+}
+
+/* Cosa vedra' il telefono: una riga appena tinta sotto la scelta. */
+.vedra {
+  max-width: 360px;
+  padding: 8px 12px;
+  border-radius: var(--r-piccolo);
+  background: var(--acceso-soft);
+  color: var(--testo);
+  font-size: 14px;
+}
+
+/* ─── Il menu «⋯» di un telefono ─────────────────────────────────────────── */
+
+.elenco > li {
+  position: relative;
+}
+
+.tasti.stretti {
+  margin-left: auto;
+}
+
+button.tre-punti {
+  width: 40px;
+  min-height: 40px;
+  padding: 0;
+}
+
+.menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% - 8px);
+  z-index: 10;
+  display: grid;
+  min-width: 220px;
+  padding: 4px;
+  border: 1px solid var(--bordo);
+  border-radius: var(--r);
+  background: var(--carta);
+  box-shadow: var(--ombra-alta);
+}
+
+button.voce-menu {
+  justify-content: flex-start;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--testo);
+  font-weight: 600;
+}
+
+@media (hover: hover) {
+  button.voce-menu:hover {
+    background: var(--velo);
+  }
+}
+
+button.voce-menu.toglie {
+  color: var(--male);
+}
+
+/* «Collegato adesso»: il verde, col suo pallino. */
+.elenco .nome b {
+  font-weight: 600;
+}
+
+.elenco .nome b.vivo {
+  color: var(--bene);
+}
+
+.elenco .nome b.vivo::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  vertical-align: 1px;
+}
+
+/* ─── Base e Premium, uno accanto all'altro ──────────────────────────────── */
+
+.confronto {
+  margin-top: 16px;
+  display: grid;
+}
+
+.confronto-riga {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 88px 88px;
+  align-items: center;
+  border-top: 1px solid var(--linea);
+}
+
+.confronto-riga > span {
+  padding: 12px 0;
+  font-size: 15px;
+}
+
+.confronto-riga > span:not(:first-child) {
+  display: grid;
+  justify-items: center;
+  align-self: stretch;
+  align-content: center;
+}
+
+.confronto-riga.testa {
+  border-top: 0;
+}
+
+.confronto-riga.testa > span {
+  padding-top: 8px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.col-base,
+.col-premium {
+  text-align: center;
+  line-height: 1.2;
+}
+
+.confronto-riga.testa small {
+  color: var(--acceso);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* La colonna di questa casa: appena tinta, dall'alto in basso. */
+#scheda-vantaggi[data-premium="no"] .confronto-riga > span:nth-child(2),
+#scheda-vantaggi[data-premium="si"] .confronto-riga > span:nth-child(3) {
+  background: var(--acceso-soft);
+}
+
+.confronto-riga.testa > span:nth-child(n + 2) {
+  border-radius: 10px 10px 0 0;
+}
+
+.confronto-riga:last-child > span:nth-child(n + 2) {
+  border-radius: 0 0 10px 10px;
+}
+
+.confronto .si .ic {
+  width: 24px;
+  height: 24px;
+  padding: 4px;
+  border-radius: 50%;
+  background: var(--bene-soft);
+  color: var(--bene);
+  stroke-width: 2.6;
+}
+
+.confronto .no .ic {
+  color: var(--terzo);
+  stroke-width: 2.4;
 }
 
 /* ─── La licenza ─────────────────────────────────────────────────────────── */
@@ -1747,8 +2072,73 @@ code {
     display: none;
   }
 
+  /* La testata resta in cima: il marchio nella Casa, «‹» e il nome della
+     sezione altrove. */
+  .testata {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    margin: 0 -16px;
+    padding: 8px 16px;
+    background: color-mix(in srgb, var(--fondo) 88%, transparent);
+    backdrop-filter: saturate(1.4) blur(12px);
+    -webkit-backdrop-filter: saturate(1.4) blur(12px);
+    border-bottom: 1px solid var(--linea);
+  }
+
+  .riga-testata {
+    min-height: 40px;
+  }
+
+  .marchio {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+  }
+
+  h1 {
+    font-size: 17px;
+  }
+
+  :root[data-sezione]:not([data-sezione="panoramica"]) button.indietro {
+    display: inline-flex;
+  }
+
+  :root[data-sezione]:not([data-sezione="panoramica"]) .marchio,
+  :root[data-sezione]:not([data-sezione="panoramica"]) h1,
+  :root[data-sezione]:not([data-sezione="panoramica"]) .targhetta {
+    display: none;
+  }
+
+  :root[data-sezione]:not([data-sezione="panoramica"]) .titolo-testata {
+    display: block;
+  }
+
+  /* Il titolo grande della sezione lo dice gia' la testata: sotto resta la
+     riga che spiega a cosa serve. */
+  :root[data-sezione]:not([data-sezione="panoramica"]) .capo-sezione h2 {
+    display: none;
+  }
+
+  .capo-sezione p {
+    margin-top: 0;
+  }
+
   main {
-    margin-top: 8px;
+    margin-top: 16px;
+  }
+
+  .tasti.stretti {
+    width: auto !important;
+    padding-left: 0 !important;
+  }
+
+  .confronto-riga {
+    grid-template-columns: minmax(0, 1fr) 64px 72px;
+  }
+
+  .confronto-riga > span {
+    font-size: 14px;
   }
 
   .scheda {
@@ -1779,7 +2169,7 @@ code {
   }
 
   button.mattonella {
-    min-height: 136px;
+    min-height: 168px;
     padding: 16px;
     gap: 12px;
   }

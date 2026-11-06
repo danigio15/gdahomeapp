@@ -176,7 +176,11 @@ class PonteVero {
   /// Fabbrica un codice di abbinamento **dalla console**, che e' l'unico posto
   /// da cui puo' nascere. Nel mondo vero e' un dito che preme un bottone.
   Future<String> codiceDiAbbinamento() async {
-    final detto = await _chiedi('$console/api/codice', metodo: 'POST');
+    final detto = await _chiedi(
+      '$console/api/codice',
+      metodo: 'POST',
+      corpo: _perChi,
+    );
     final codice = detto['codice'];
     if (codice is! String) {
       throw StateError('la console non ha dato un codice: $detto');
@@ -191,7 +195,11 @@ class PonteVero {
   /// **quale centralino chiama questa casa**, ed e' proprio quella la parte
   /// che si vuole vedere arrivare fino in fondo.
   Future<String> invitoDiAbbinamento() async {
-    final detto = await _chiedi('$console/api/codice', metodo: 'POST');
+    final detto = await _chiedi(
+      '$console/api/codice',
+      metodo: 'POST',
+      corpo: _perChi,
+    );
     final scritto = detto['invito'];
     if (scritto is! String) {
       throw StateError('la console non ha dato un invito: $detto');
@@ -202,9 +210,17 @@ class PonteVero {
   Future<Map<String, dynamic>> statoDellaConsole() =>
       _chiedi('$console/api/stato');
 
+  /// Per chi e' il telefono: la console non fabbrica piu' un codice senza
+  /// dirlo (`/api/codice` risponde «utente_richiesto»). Qui e' l'unico
+  /// utente della casa finta.
+  static const Map<String, dynamic> _perChi = {
+    'utente': amministratoreDellaProva,
+  };
+
   Future<Map<String, dynamic>> _chiedi(
     String dove, {
     String metodo = 'GET',
+    Map<String, dynamic>? corpo,
   }) async {
     final cliente = HttpClient();
     try {
@@ -212,6 +228,10 @@ class PonteVero {
       /* Quello che l'ingress aggiunge a ogni richiesta: chi e' entrato in
        * Home Assistant. Sulla porta dell'app non conta niente. */
       richiesta.headers.set('X-Remote-User-Id', amministratoreDellaProva);
+      if (corpo != null) {
+        richiesta.headers.contentType = ContentType.json;
+        richiesta.write(jsonEncode(corpo));
+      }
       final risposta = await richiesta.close();
       final corpo = await risposta.transform(utf8.decoder).join();
       final letto = jsonDecode(corpo);

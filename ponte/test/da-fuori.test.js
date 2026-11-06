@@ -275,13 +275,17 @@ test("il codice fabbricato dalla console arriva al centralino da solo", async ()
       cartellaDellaConsole: fileURLToPath(new URL("../console", import.meta.url)),
       /* La prova bussa da qui, e chi preme il tasto amministra. */
       proxyDellIngress: ["127.0.0.1"],
-      utenti: { amministratore: async (chi) => chi === "chi-amministra" },
+      utenti: {
+        amministratore: async (chi) => chi === "chi-amministra",
+        eVivo: async (chi) => chi === "chi-amministra",
+      },
     });
     await new Promise((ok) => console_.listen(0, "127.0.0.1", ok));
 
     const risposta = await fetch(`http://127.0.0.1:${console_.address().port}/api/codice`, {
       method: "POST",
-      headers: { "x-remote-user-id": "chi-amministra" },
+      headers: { "x-remote-user-id": "chi-amministra", "content-type": "application/json" },
+      body: JSON.stringify({ utente: "chi-amministra" }),
     });
     const { codice } = await risposta.json();
     assert.match(codice, /^[0-9A-Z]{16}$/);

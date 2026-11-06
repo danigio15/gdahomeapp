@@ -182,6 +182,14 @@
       "Non riesco a chiedere a Home Assistant chi c'è in casa: riprova fra poco.",
       "I can't ask Home Assistant who lives here: try again shortly.",
     ],
+    utente_richiesto: [
+      "Scegli per chi è il telefono, poi genera il QR code.",
+      "Choose who the phone is for, then generate the QR code.",
+    ],
+    utente_sconosciuto: [
+      "Quella persona non c'è più fra gli utenti di Home Assistant: ricarica la pagina e scegline un'altra.",
+      "That person is no longer among Home Assistant's users: reload the page and choose another.",
+    ],
     "licenze-spente": [
       "Le licenze in questo add-on sono spente.",
       "Licences are turned off in this add-on.",
@@ -259,6 +267,12 @@
      * partiti (dai telefoni ad «Aggiungi un telefono», e ritorno). */
     if (nome !== laSezione) sezionePrima = nome === "panoramica" ? "" : laSezione;
     laSezione = nome;
+    /* Sul telefono la testata dice dove si e': il marchio nella Casa, «‹» e
+     * il nome della sezione altrove (`data-sezione` lo legge il foglio). */
+    vediPagina.documentElement.setAttribute("data-sezione", nome);
+    var suoTitolo = trova("sezione-" + nome);
+    suoTitolo = suoTitolo && suoTitolo.querySelector("h2");
+    trova("titolo-testata").textContent = suoTitolo ? suoTitolo.textContent.trim() : "";
     var accesa = LINGUETTA_DI[nome] || nome;
     LE_SEZIONI.forEach(function (una) {
       var sezione = trova("sezione-" + una);
@@ -426,11 +440,11 @@
 
   function quandoIlTempoDice(scadeIl) {
     var mancano = Math.max(0, Math.round((scadeIl - Date.now()) / 1000));
-    if (!mancano) return due("scaduto", "expired");
+    if (!mancano) return due("Scaduto", "Expired");
     var minuti = Math.floor(mancano / 60);
     var secondi = mancano % 60;
-    var quanto = (minuti ? minuti + " min " : "") + secondi + " s";
-    return due("vale ancora " + quanto, "good for another " + quanto);
+    var quanto = minuti + ":" + (secondi < 10 ? "0" : "") + secondi;
+    return due("Vale ancora " + quanto, "Good for another " + quanto);
   }
 
   /* I nomi che un dispositivo si da' da se' e che non vogliono dire niente.
@@ -489,29 +503,6 @@
     return pezzi.join(" · ");
   }
 
-  /* Quando si e' visto un telefono, come lo direbbe una persona.
-   *
-   * `toLocaleString()` scrive «13/09/2026, 14:40:49»: una riga di numeri che
-   * va a capo dove lo spazio e' stretto, e non risponde alla domanda vera —
-   * che e' «adesso, poco fa, o l'altro giorno?». */
-  function dataLeggibile(quando) {
-    if (!quando) return due("mai", "never");
-    try {
-      var q = new Date(quando);
-      var ora = q.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      var oggi = new Date();
-      var ieri = new Date(oggi.getTime() - 24 * 60 * 60 * 1000);
-      if (q.toDateString() === oggi.toDateString())
-        return due("oggi alle " + ora, "today at " + ora);
-      if (q.toDateString() === ieri.toDateString())
-        return due("ieri alle " + ora, "yesterday at " + ora);
-      var giorno = q.toLocaleDateString([], { day: "numeric", month: "long" });
-      return due(giorno + " alle " + ora, giorno + " at " + ora);
-    } catch (_errore) {
-      return "—";
-    }
-  }
-
   /* Sedici lettere di fila non le copia nessuno senza perdere il segno:
    * quattro gruppi da quattro si copiano un gruppo per volta. */
   function aGruppi(codice) {
@@ -528,10 +519,7 @@
     trova("senza-codice").hidden = true;
     trova("a-mano").hidden = false;
     trova("annulla").hidden = false;
-    /* Col QR a schermo il tasto non e' piu' «il» tasto: ne fa un altro, se
-     * questo e' scaduto o e' andato a qualcun altro. */
-    trova("fabbrica").className = "tenue";
-    trova("fabbrica-parole").textContent = due("Un QR code nuovo", "A new QR code");
+    disegnaLeTappe();
     if (quandoScade) clearInterval(quandoScade);
     var aggiorna = function () {
       trova("scadenza").textContent = quandoIlTempoDice(scadeIl);
@@ -550,10 +538,9 @@
     trova("senza-codice").hidden = false;
     trova("a-mano").hidden = true;
     trova("annulla").hidden = true;
-    trova("fabbrica").className = "grande";
-    trova("fabbrica-parole").textContent = due("Genera il QR code", "Generate the QR code");
     if (quandoScade) clearInterval(quandoScade);
     quandoScade = null;
+    disegnaLeTappe();
   }
 
   /* ─── Come sta la casa ──────────────────────────────────────────────────── */
@@ -1216,9 +1203,15 @@
       : due(
           (quanti === 1 ? "1 abbinato" : quanti + " abbinati") +
             " · " +
-            (collegati === 1 ? "1 collegato adesso" : collegati + " collegati adesso"),
-          quanti + " paired · " + collegati + " connected right now",
+            (collegati === 1 ? "1 collegato" : collegati + " collegati"),
+          quanti + " paired · " + collegati + " connected",
         );
+    disegnaLAnteprima(
+      "anteprima-telefoni",
+      dispositivi.map(function (uno) {
+        return comeSiChiama(uno);
+      }),
+    );
     trova("telefoni-spiega").textContent = due(
       "I telefoni e i tablet che entrano in questa casa. Puoi abbinarne fino a " + massimi + ".",
       "The phones and tablets that get into this home. You can pair up to " + massimi + ".",
@@ -1267,7 +1260,19 @@
 
       /* La faccia della riga: un riquadro tondo col disegno di un telefono,
        * verde quando quel telefono e' collegato adesso. */
-      riga.appendChild(unaFaccia("ic-telefono", uno.collegati ? "bene" : "spenta"));
+      var sistema = String(uno.sistema || "").toLowerCase();
+      riga.appendChild(
+        unaFaccia(
+          sistema === "ios"
+            ? "ic-mela"
+            : sistema === "android"
+              ? "ic-robot"
+              : sistema === "web"
+                ? "ic-browser"
+                : "ic-telefono",
+          uno.collegati ? "bene" : "spenta",
+        ),
+      );
 
       var nome = vediPagina.createElement("div");
       nome.className = "nome";
@@ -1308,21 +1313,45 @@
         rigaDelNome.appendChild(aTempo);
       }
       nome.appendChild(rigaDelNome);
+      /* Quando si e' visto, come lo direbbe una persona: «adesso», «2 ore
+       * fa», «ieri». Il verde vuol dire collegato in questo momento. */
       var sotto = vediPagina.createElement("span");
-      sotto.textContent =
-        (uno.collegati
-          ? due("Collegato adesso", "Connected right now")
-          : due("Visto ", "Seen ") + dataLeggibile(uno.vistoIl)) +
-        " · " +
-        comEFattoAPieno(uno);
+      var quando = vediPagina.createElement("b");
+      quando.className = uno.collegati ? "vivo" : "";
+      quando.textContent = uno.collegati
+        ? due("Collegato adesso", "Connected now")
+        : due("Visto ", "Seen ") + quantoTempoFa(uno.vistoIl);
+      sotto.appendChild(quando);
+      sotto.appendChild(vediPagina.createTextNode(" · " + comEFattoAPieno(uno)));
       nome.appendChild(sotto);
       riga.appendChild(nome);
 
+      /* «⋯»: Rinomina e Togli in un menu. Sono cose di una volta ogni tanto,
+       * e due tasti per ogni riga facevano dell'elenco un muro di tasti. Il
+       * menu resta aperto mentre la pagina si ridisegna (`menuAperto`). */
       var tasti = vediPagina.createElement("div");
-      tasti.className = "tasti";
+      tasti.className = "tasti stretti";
+      var aperto = menuAperto === uno.id;
+      var treSegni = unTasto("", "tenue tre-punti");
+      treSegni.appendChild(unDisegno("ic-altro"));
+      treSegni.setAttribute("aria-label", due("Altro", "More"));
+      treSegni.setAttribute("aria-haspopup", "menu");
+      treSegni.setAttribute("aria-expanded", aperto ? "true" : "false");
+      treSegni.addEventListener("click", function () {
+        menuAperto = menuAperto === uno.id ? "" : uno.id;
+        if (lUltimoStato) disegnaIDispositivi(lUltimoStato.dispositivi, lUltimoStato.massimi);
+      });
+      tasti.appendChild(treSegni);
+      var menu = vediPagina.createElement("div");
+      menu.className = "menu";
+      menu.setAttribute("role", "menu");
+      menu.hidden = !aperto;
+      tasti.appendChild(menu);
 
-      var rinomina = unTasto(due("Rinomina", "Rename"), "tenue");
+      var rinomina = unTasto(due("Rinomina", "Rename"), "voce-menu");
+      rinomina.setAttribute("role", "menuitem");
       rinomina.addEventListener("click", function () {
+        menuAperto = "";
         rinominaQui(
           riga,
           "telefono:" + uno.id,
@@ -1337,10 +1366,16 @@
           avvisaITelefoni,
         );
       });
-      tasti.appendChild(rinomina);
+      menu.appendChild(rinomina);
 
-      var stacca = unTasto(due("Togli", "Remove"), "toglie");
+      var stacca = unTasto(
+        due("Togli da questa casa", "Remove from this home"),
+        "voce-menu toglie",
+      );
+      stacca.setAttribute("role", "menuitem");
       stacca.addEventListener("click", function () {
+        menuAperto = "";
+        menu.hidden = true;
         chiediConferma(
           due("Togliere «" + comeSiChiama(uno) + "»?", "Remove “" + comeSiChiama(uno) + "”?"),
           due(
@@ -1360,11 +1395,78 @@
             });
         });
       });
-      tasti.appendChild(stacca);
+      menu.appendChild(stacca);
       riga.appendChild(tasti);
 
       elenco.appendChild(riga);
     });
+  }
+
+  /* I primi nomi in piccolo, sulla mattonella della Casa: tre al massimo, e
+   * «+2» per gli altri. Si capisce cosa c'e' dentro senza aprirla. */
+  function disegnaLAnteprima(id, nomi) {
+    var dove = trova(id);
+    if (!dove) return;
+    dove.textContent = "";
+    nomi.slice(0, 3).forEach(function (nome) {
+      var uno = vediPagina.createElement("span");
+      uno.className = "chip";
+      /* `textContent`: i nomi li ha scritti una persona. */
+      uno.textContent = nome;
+      dove.appendChild(uno);
+    });
+    if (nomi.length > 3) {
+      var altri = vediPagina.createElement("span");
+      altri.className = "chip";
+      altri.textContent = "+" + (nomi.length - 3);
+      dove.appendChild(altri);
+    }
+    dove.hidden = !nomi.length;
+  }
+
+  /* Il menu «⋯» aperto, se ce n'e' uno: l'id del telefono. Un tocco fuori
+   * lo chiude, come Escape. */
+  var menuAperto = "";
+
+  function chiudiIlMenu() {
+    if (!menuAperto) return;
+    menuAperto = "";
+    if (lUltimoStato) disegnaIDispositivi(lUltimoStato.dispositivi, lUltimoStato.massimi);
+  }
+
+  vediPagina.addEventListener("click", function (evento) {
+    var dove = evento.target;
+    if (dove && dove.closest && dove.closest(".tre-punti, .menu")) return;
+    chiudiIlMenu();
+  });
+  vediPagina.addEventListener("keydown", function (evento) {
+    if (evento.key === "Escape") chiudiIlMenu();
+  });
+
+  /* Un disegno del foglio dei simboli, da mettere in un tasto. */
+  function unDisegno(quale) {
+    var disegno = vediPagina.createElementNS("http://www.w3.org/2000/svg", "svg");
+    disegno.setAttribute("class", "ic");
+    disegno.setAttribute("aria-hidden", "true");
+    var uso = vediPagina.createElementNS("http://www.w3.org/2000/svg", "use");
+    uso.setAttribute("href", "#" + quale);
+    disegno.appendChild(uso);
+    return disegno;
+  }
+
+  /* «adesso», «5 min fa», «2 ore fa», «ieri», «3 giorni fa», poi la data. */
+  function quantoTempoFa(quando) {
+    if (!quando) return due("mai", "never");
+    var minuti = Math.round((Date.now() - quando) / 60000);
+    if (minuti < 1) return due("adesso", "just now");
+    if (minuti < 60) return due(minuti + " min fa", minuti + " min ago");
+    var ore = Math.round(minuti / 60);
+    if (ore < 24)
+      return ore === 1 ? due("un'ora fa", "an hour ago") : due(ore + " ore fa", ore + " hours ago");
+    var giorni = Math.round(ore / 24);
+    if (giorni === 1) return due("ieri", "yesterday");
+    if (giorni < 7) return due(giorni + " giorni fa", giorni + " days ago");
+    return unGiornoCorto(quando);
   }
 
   /* Un elenco vuoto: non una riga grigia, ma cosa fare — il disegno, due
@@ -1416,11 +1518,15 @@
     );
     trova("riepilogo-plance").textContent = !quante
       ? due("Nessuna plancia", "No dashboard")
-      : iNomiInFila(
-          plance.map(function (una) {
-            return una.titolo;
-          }),
-        );
+      : quante === 1
+        ? due("1 plancia", "1 dashboard")
+        : due(quante + " plance", quante + " dashboards");
+    disegnaLAnteprima(
+      "anteprima-plance",
+      (plance || []).map(function (una) {
+        return una.titolo;
+      }),
+    );
 
     if (inModifica.indexOf("plancia:") === 0) return;
     elenco.textContent = "";
@@ -2440,8 +2546,7 @@
         var diCasa = stato.dispositivi.filter(function (uno) {
           return !uno.finoA;
         }).length;
-        var pieno = diCasa >= stato.massimi;
-        trova("fabbrica").disabled = pieno;
+        pieno = diCasa >= stato.massimi;
         trova("abbina-pieno").hidden = !pieno;
         trova("abbina-pieno").textContent = due(
           "Hai già " +
@@ -2452,7 +2557,10 @@
             " phones paired: to add one, first remove another from “Your phones”.",
         );
         if (!stato.abbinamento.attivo) nascondiIlCodice();
-        avvisa("");
+        /* Gli utenti, se all'apertura Home Assistant non li ha dati: senza, la
+         * tappa 1 resta vuota e il QR non si puo' generare. */
+        if (!gliUtenti) riempiIlPerChi();
+        disegnaLeTappe();
         /* Un codice ancora buono si rimette a schermo da solo.
          *
          * Serve a un caso che capita davvero: la pagina si ricarica — un tocco
@@ -2485,94 +2593,202 @@
 
   /* ─── Abbinare un telefono ──────────────────────────────────────────────── */
 
+  /* Se si e' arrivati al tetto dei telefoni: lo dice lo stato. */
+  var pieno = false;
+
   function riprendiIlCodice() {
     return chiedi("api/codice")
       .then(function (vivo) {
-        if (vivo.attivo) disegnaIlCodice(vivo.codice, vivo.scadeIl);
+        if (!vivo.attivo) return;
+        /* La tappa 1 torna su chi era: il codice e' suo. */
+        if (vivo.utente) trova("per-chi").value = vivo.utente;
+        codicePer = trova("per-chi").value;
+        spiegaIlPerChi();
+        disegnaIlCodice(vivo.codice, vivo.scadeIl);
       })
       .catch(function () {
         /* Se non si riesce a riprenderlo si resta senza: il bottone e' li'. */
       });
   }
 
-  /* Sotto «Per chi è», chi vedrà cosa: il telefono eredita le plance di
-   * quella persona, ed e' meglio leggerlo prima di inquadrare. */
+  /* Per chi e' il codice a schermo: se la tappa 1 cambia, quel codice non va
+   * piu' bene. */
+  var codicePer = "";
+
+  /* Le tre tappe, in una funzione che non tocca la pagina: dice a che punto
+   * si e', e se il tasto si puo' premere. La pagina la disegna, e la prova
+   * `il-qr-chiede-per-chi` la compila e la interroga. */
+  function leTappe(scelto, vivo, alTetto) {
+    return {
+      chi: scelto ? "fatto" : "adesso",
+      genera: vivo ? "fatto" : scelto ? "adesso" : "dopo",
+      qr: vivo ? "adesso" : "dopo",
+      /* Il QR non si genera senza sapere per chi e', ne' oltre il tetto. */
+      siPuoGenerare: Boolean(scelto) && !alTetto,
+      spiega: alTetto
+        ? ""
+        : !scelto
+          ? due("Prima scegli per chi è.", "First choose who it is for.")
+          : vivo
+            ? due(
+                "Fatto. Se è scaduto, o serve a un altro telefono, generane uno nuovo.",
+                "Done. If it has expired, or another phone needs it, generate a new one.",
+              )
+            : due(
+                "Vale una volta sola, per pochi minuti.",
+                "It works once only, for a few minutes.",
+              ),
+    };
+  }
+
+  function disegnaLeTappe() {
+    var scelto = trova("per-chi").value;
+    var vivo = !trova("codice-vivo").hidden;
+    var tappe = leTappe(scelto, vivo, pieno);
+    trova("tappa-chi").dataset.stato = tappe.chi;
+    trova("tappa-genera").dataset.stato = tappe.genera;
+    trova("tappa-qr").dataset.stato = tappe.qr;
+    trova("fabbrica").disabled = !tappe.siPuoGenerare;
+    /* Col QR a schermo il tasto non e' piu' «il» tasto: ne fa un altro. */
+    trova("fabbrica").className = vivo ? "tenue" : "";
+    trova("fabbrica-parole").textContent = vivo
+      ? due("Un QR code nuovo", "A new QR code")
+      : due("Genera il QR code", "Generate the QR code");
+    if (!cambiato) trova("genera-spiega").textContent = tappe.spiega;
+    trova("genera-spiega").hidden = !trova("genera-spiega").textContent;
+  }
+
+  /* Le plance che una persona vedra': quelle senza restrizioni, quelle dove
+   * c'e' il suo nome, e quelle «solo amministratori» se amministra. Le stesse
+   * regole di `plance.js`, dette qui per leggerle prima di inquadrare. */
+  function lePlanceDi(utente) {
+    var plance = (lUltimoStato && lUltimoStato.plance) || [];
+    return plance.filter(function (una) {
+      var suoi = Array.isArray(una.utenti) ? una.utenti.filter(Boolean) : [];
+      if (suoi.length && suoi.indexOf(utente.id) < 0) return false;
+      if (una.solo_admin && !utente.amministratore) return false;
+      return true;
+    });
+  }
+
+  /* Sotto «Per chi è», cosa vedra': il telefono eredita le plance di quella
+   * persona, ed e' meglio leggerlo prima di inquadrare. */
   function spiegaIlPerChi() {
     var scelta = trova("per-chi");
     var spiega = trova("per-chi-spiega");
-    if (!scelta || !spiega) return;
-    var nome = "";
+    var utente = null;
     (gliUtenti || []).forEach(function (uno) {
-      if (uno.id === scelta.value) nome = uno.nome;
+      if (uno.id === scelta.value) utente = uno;
     });
-    spiega.textContent = nome
+    spiega.hidden = !utente;
+    if (!utente) return;
+    var sue = lePlanceDi(utente).map(function (una) {
+      return una.titolo;
+    });
+    spiega.textContent = !sue.length
       ? due(
-          "Il telefono vedrà le plance che vede " + nome + ".",
-          "The phone will see the dashboards " + nome + " sees.",
+          "Non vedrà nessuna plancia: in «Le plance» scegli cosa può vedere.",
+          "It won't see any dashboard: choose what it can see in “Dashboards”.",
         )
-      : due(
-          "Il telefono vedrà le plance che vedi tu.",
-          "The phone will see the dashboards you see.",
-        );
+      : sue.length === 1
+        ? due("Vedrà la plancia «", "It will see the “") + sue[0] + due("».", "” dashboard.")
+        : due("Vedrà " + sue.length + " plance: ", "It will see " + sue.length + " dashboards: ") +
+          iNomiInFila(sue) +
+          ".";
   }
 
-  /* «Per chi e'» il codice: si riempie con gli utenti della casa.
-   *
-   * Compare solo se ce n'e' piu' di uno: in una casa con un utente solo non
-   * c'e' niente da scegliere, e una casella con una voce sola fa una domanda
-   * inutile. Di serie resta su «chi sta usando questa pagina», che e' quello
-   * che serve quasi sempre. */
+  /* «Per chi e'» il codice: gli utenti attivi della casa, e nessuno scelto
+   * di serie — anche dove l'utente e' uno solo. Una scelta gia' fatta e'
+   * proprio quella che non si guarda, e un telefono intestato alla persona
+   * sbagliata vede le plance sbagliate. */
   function riempiIlPerChi() {
-    var riga = trova("per-chi-riga");
     var scelta = trova("per-chi");
-    if (!riga || !scelta) return;
     chiediGliUtenti()
       .then(function (utenti) {
-        if (utenti.length < 2) {
-          riga.hidden = true;
-          return;
-        }
         var prima = scelta.value;
         scelta.textContent = "";
-        var chiPreme = vediPagina.createElement("option");
-        chiPreme.value = "";
-        chiPreme.textContent = due("chi sta usando questa pagina", "whoever is using this page");
-        scelta.appendChild(chiPreme);
-        utenti.forEach(function (uno) {
-          var voce = vediPagina.createElement("option");
-          voce.value = uno.id;
-          /* `textContent`: il nome di un utente l'ha scritto una persona. */
-          voce.textContent = uno.nome;
-          scelta.appendChild(voce);
-        });
+        var nessuno = vediPagina.createElement("option");
+        nessuno.value = "";
+        nessuno.disabled = true;
+        nessuno.textContent = due("Scegli una persona…", "Choose a person…");
+        scelta.appendChild(nessuno);
+        utenti
+          .filter(function (uno) {
+            return uno.attivo !== false;
+          })
+          .forEach(function (uno) {
+            var voce = vediPagina.createElement("option");
+            voce.value = uno.id;
+            /* `textContent`: il nome di un utente l'ha scritto una persona. */
+            voce.textContent =
+              uno.nome + (uno.amministratore ? due(" · amministratore", " · admin") : "");
+            scelta.appendChild(voce);
+          });
         scelta.value = prima || "";
-        riga.hidden = false;
+        if (scelta.value !== prima) scelta.value = "";
         spiegaIlPerChi();
+        disegnaLeTappe();
       })
       .catch(function () {
-        /* Senza l'elenco non si puo' scegliere, e non e' un guaio: il codice
-         * si fabbrica comunque, intestato a chi sta premendo. */
-        riga.hidden = true;
+        /* Senza l'elenco non si puo' scegliere, e il QR resta spento: lo si
+         * dice, e si riprova al giro dopo. */
+        var spiega = trova("per-chi-spiega");
+        spiega.hidden = false;
+        spiega.textContent = due(
+          "Non riesco a chiedere a Home Assistant chi c'è in casa: riprovo fra poco.",
+          "I can't ask Home Assistant who lives here: trying again shortly.",
+        );
       });
   }
 
+  /* Cambiare persona col QR a schermo lo annulla: quel codice e' intestato a
+   * chi era scelto prima. Si dice, e si chiede di generarne un altro. */
+  var cambiato = false;
+  trova("per-chi").addEventListener("change", function () {
+    spiegaIlPerChi();
+    var vivo = !trova("codice-vivo").hidden;
+    if (vivo && trova("per-chi").value !== codicePer) {
+      cambiato = true;
+      trova("genera-spiega").textContent = due(
+        "Hai cambiato persona: il QR code di prima non vale più. Generane uno nuovo.",
+        "You changed the person: the previous QR code no longer works. Generate a new one.",
+      );
+      chiedi("api/codice", { method: "DELETE" })
+        .catch(function () {
+          /* Se il ponte non risponde, il codice scade da solo fra pochi minuti. */
+        })
+        .then(function () {
+          /* La frase resta finche' non se ne genera uno nuovo (`cambiato`). */
+          nascondiIlCodice();
+        });
+      return;
+    }
+    disegnaLeTappe();
+  });
+
   riempiIlPerChi();
-  trova("per-chi").addEventListener("change", spiegaIlPerChi);
 
   trova("fabbrica").addEventListener("click", function () {
     avvisa("");
-    var scelta = trova("per-chi");
-    var riga = trova("per-chi-riga");
-    var voluto = scelta && riga && !riga.hidden ? scelta.value : "";
+    /* Sempre per qualcuno: il ponte un codice senza nessuno lo rifiuta. */
+    var voluto = trova("per-chi").value;
+    cambiato = false;
+    if (!voluto) {
+      disegnaLeTappe();
+      return;
+    }
+    trova("fabbrica").disabled = true;
     chiedi("api/codice", {
       method: "POST",
-      body: JSON.stringify(voluto ? { utente: voluto } : {}),
+      body: JSON.stringify({ utente: voluto }),
     })
       .then(function (fatto) {
+        codicePer = voluto;
         disegnaIlCodice(fatto.codice, fatto.scadeIl);
       })
       .catch(function (errore) {
         avvisa(errore.message);
+        disegnaLeTappe();
       });
   });
 
@@ -3351,9 +3567,6 @@
       ? due("Premium attivo", "Premium is on")
       : "Base";
     trova("licenza-riga").textContent = gdahome.attiva ? finoAQuando(gdahome) : laRigaDiBase();
-    trova("vantaggi-titolo").textContent = gdahome.attiva
-      ? due("Cosa hai con Premium", "What you get with Premium")
-      : due("Cosa aggiunge Premium", "What Premium adds");
     /* Chi ha gia' Premium non deve leggere come comprarlo: gli resta il
      * codice, che allunga o regala. */
     trova("attiva-titolo").textContent = gdahome.attiva
@@ -3362,7 +3575,10 @@
     trova("via-negozio").hidden = Boolean(gdahome.attiva);
     trova("via-codice").hidden = Boolean(gdahome.attiva);
     /* Con Base quella riga l'ha gia' detta lo stato in grande. */
-    trova("vantaggi-base").hidden = !gdahome.attiva;
+    /* Il confronto: la colonna di questa casa e' evidenziata. */
+    trova("scheda-vantaggi").dataset.premium = gdahome.attiva ? "si" : "no";
+    trova("tuo-base").hidden = Boolean(gdahome.attiva);
+    trova("tuo-premium").hidden = !gdahome.attiva;
     /* Sotto, l'altra app della casa: GdANav, che dentro Premium e' compreso. */
     var elenco = trova("elenco-licenze");
     elenco.textContent = "";

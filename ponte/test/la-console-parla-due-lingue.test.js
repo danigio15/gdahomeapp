@@ -19,7 +19,7 @@ const QUI = dirname(fileURLToPath(import.meta.url));
 const pagina = readFileSync(join(QUI, "..", "console", "index.html"), "utf8");
 
 /* Le parole che non si traducono: nomi di cose, e i segnaposto. */
-const UGUALI = new Set(["GdAHome", "Home Assistant", "Zigbee", "Base", "GdANav", "…"]);
+const UGUALI = new Set(["GdAHome", "Home Assistant", "Zigbee", "Base", "Premium", "GdANav", "…"]);
 
 const VUOTI = new Set(["img", "input", "meta", "link", "br", "hr", "source"]);
 const DA_TRADURRE = ["placeholder", "aria-label", "alt", "title"];

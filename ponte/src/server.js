@@ -1365,38 +1365,67 @@ async function api({
       male(risposta, 409, `sono gia' abbinati ${opzioni.dispositiviMassimi} dispositivi`);
       return;
     }
-    /* **Per chi** e' questo codice.
+    /* **Per chi** e' questo codice — e va detto, sempre.
      *
      * E' la riga che fa valere «chi vede quale plancia» anche nell'app: il
      * telefono che usera' questo codice sara' intestato a quest'utente, e
-     * vedra' le plance che vede lui. Senza, il QR abbinerebbe un telefono che
-     * poi chiede l'elenco e se lo prende tutto.
+     * vedra' le plance che vede lui.
      *
-     * Di serie e' **chi sta premendo il tasto**, che l'ingress ci dice. Ma chi
-     * genera un codice spesso lo genera **per un altro** — lo fa
-     * l'amministratore, e passa il telefono a chi ci abita — e allora lo puo'
-     * dire (`utente` nel corpo). Si accetta solo un utente che in questa casa
-     * esiste davvero: un identificativo inventato diventerebbe un telefono
-     * intestato a un fantasma, che non vede nessuna plancia riservata e nessuno
-     * capisce perche'. */
-    let perChi = chiGuarda(richiesta);
-    if (metodo === "POST") {
-      let detto = {};
-      try {
-        detto = await corpoDiJson(richiesta);
-      } catch (_errore) {
-        detto = {};
-      }
-      const voluto = String(detto?.utente || "").trim();
-      if (voluto && utenti) {
-        try {
-          const casa = await utenti.elenco();
-          if (casa.some((uno) => uno.id === voluto)) perChi = voluto;
-        } catch (_errore) {
-          /* Home Assistant non risponde: si tiene chi sta premendo. Meglio un
-           * codice intestato a chi lo fabbrica che uno intestato a nessuno. */
-        }
-      }
+     * Prima, senza `utente` nel corpo, il codice si intestava da solo a **chi
+     * stava premendo il tasto** (l'ingress ce lo dice). Ma chi genera il
+     * codice e' quasi sempre chi amministra, e lo genera per un altro: il
+     * telefono della moglie, il tablet in cucina, finivano intestati a lui e
+     * vedevano tutto quello che vede lui. Adesso la scelta e' obbligatoria —
+     * «per chi e' questo telefono?» — e un codice senza nessuno non nasce:
+     * si risponde con un no che dice cosa manca.
+     *
+     * E si accetta solo un utente che in questa casa esiste davvero, ed e'
+     * attivo: un identificativo inventato diventerebbe un telefono intestato a
+     * un fantasma. Se Home Assistant non sa dire chi c'e', il codice non nasce
+     * nemmeno: meglio riprovare fra un attimo che indovinare. */
+    let detto = {};
+    try {
+      detto = await corpoDiJson(richiesta);
+    } catch (_errore) {
+      detto = {};
+    }
+    const perChi = String(detto?.utente || "").trim();
+    if (!perChi) {
+      json(
+        risposta,
+        {
+          errore: "utente_richiesto",
+          spiegazione: "scegli per chi e' il telefono: un utente di Home Assistant",
+        },
+        400,
+      );
+      return;
+    }
+    if (!utenti) {
+      json(risposta, { errore: "senza_utenti" }, 404);
+      return;
+    }
+    let cE = false;
+    try {
+      cE = await utenti.eVivo(perChi);
+    } catch (errore) {
+      json(
+        risposta,
+        { errore: "senza_utenti", spiegazione: String(errore?.message || errore).slice(0, 120) },
+        502,
+      );
+      return;
+    }
+    if (!cE) {
+      json(
+        risposta,
+        {
+          errore: "utente_sconosciuto",
+          spiegazione: "quell'utente non c'e' fra quelli attivi di Home Assistant",
+        },
+        400,
+      );
+      return;
     }
     const { codice, scadeIl, utente } = abbinamento.nuovo(perChi);
     /* Al centralino ne va detta l'**impronta**, perche' possa instradare chi
