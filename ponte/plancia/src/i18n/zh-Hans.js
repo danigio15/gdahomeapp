@@ -8052,4 +8052,5 @@ export default Object.freeze({
   "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "在其选项卡预览中更改过的页面——方框的顺序和隐藏的方框。「重置」会恢复原样。",
   "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.": "在预览中移动过部件的图，分别针对电脑和手机。「重置」会恢复原样。",
   "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.": "还没有同时制热和制冷的恒温器：在有之前，打开时显示制冷。",
+  "First open the Marketplace from the Home Assistant menu, read the warning and accept it: after that, updates install from here too.": "请先在 Home Assistant 菜单中打开 Marketplace，阅读并接受警告：之后也可以从这里安装更新。",
 });

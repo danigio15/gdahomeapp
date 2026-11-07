@@ -8188,4 +8188,5 @@ export default Object.freeze({
   "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "sekmelerinin önizlemesinde değiştirilen sayfalar — blokların sırası ve gizlenenler. «Sıfırla» eski haline getirir.",
   "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.": "önizlemede parçalarını taşıdığın çizimler, bilgisayarda ve telefonda. «Sıfırla» onları eski haline getirir.",
   "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.": "Henüz ısıtma ve soğutma yapan bir termostat yok: olana kadar Soğutma'da açılır.",
+  "First open the Marketplace from the Home Assistant menu, read the warning and accept it: after that, updates install from here too.": "Önce Home Assistant menüsünden Marketplace'i aç, uyarıyı oku ve kabul et: bundan sonra güncellemeler buradan da yüklenir.",
 });

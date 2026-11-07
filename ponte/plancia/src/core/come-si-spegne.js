@@ -116,3 +116,22 @@ export function comandoPerSpegnere(entity, stato = null) {
   /* Un contatto, un sensore: si guarda. */
   return null;
 }
+
+/*
+ * Perche' Home Assistant non installa un aggiornamento, detto in una parola.
+ *
+ * «In tutti gli aggiornamenti fa cosi' ora»: gli aggiornamenti delle
+ * integrazioni scaricate (HACS) passano dal Marketplace di Home Assistant, e
+ * finche' nel Marketplace non si accetta l'avviso ogni `update.install` torna
+ * con «Open the Marketplace and read the warning first, installing and
+ * updating work once it is accepted». In inglese, e senza dire dove: la
+ * plancia lo riconosce e lo dice in parole sue.
+ *
+ * Torna «marketplace» per quel rifiuto, «» per tutti gli altri (che si
+ * scrivono come li manda Home Assistant).
+ */
+export function perchéNonSiInstalla(errore) {
+  const detto = String(errore?.message ?? errore ?? "");
+  if (/marketplace/i.test(detto) && /(warning|accept)/i.test(detto)) return "marketplace";
+  return "";
+}

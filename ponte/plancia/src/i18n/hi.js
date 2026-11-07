@@ -8171,4 +8171,5 @@ export default Object.freeze({
   "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "अपने टैब के पूर्वावलोकन में बदले गए पेज — बॉक्स का क्रम और छिपे हुए बॉक्स। «रीसेट» उसे पहले जैसा कर देता है।",
   "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.": "वे ड्रॉइंग जिनके हिस्से आपने पूर्वावलोकन में हिलाए, कंप्यूटर और फ़ोन पर। «रीसेट» उन्हें पहले जैसा कर देता है।",
   "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.": "अभी गर्म और ठंडा करने वाला कोई थर्मोस्टैट नहीं है: जब तक नहीं होता, यह ठंडा पर खुलता है।",
+  "First open the Marketplace from the Home Assistant menu, read the warning and accept it: after that, updates install from here too.": "पहले Home Assistant के मेनू से Marketplace खोलें, चेतावनी पढ़ें और उसे स्वीकार करें: उसके बाद अपडेट यहाँ से भी इंस्टॉल होंगे।",
 });

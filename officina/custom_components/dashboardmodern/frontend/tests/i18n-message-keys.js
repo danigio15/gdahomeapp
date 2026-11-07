@@ -2478,6 +2478,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "Fireplace pump",
   "fires the ${evento} event",
   "First configure the circles connected to Home. Each circle can use a direct power sensor or automatically sum every child of a load group. Then create the appliances inside each group. Empty or disabled nodes are not forced into the flow.",
+  "First open the Marketplace from the Home Assistant menu, read the warning and accept it: after that, updates install from here too.",
   "First select your lights in the Lights step (or wizard).",
   "Fixed",
   "Fixed cycle duration (minutes)",

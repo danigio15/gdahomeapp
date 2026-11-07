@@ -5092,6 +5092,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Prezzo in fascia": "Price in the window",
   "Prezzo non impostato": "Price not set",
   "prezzo unico": "single rate",
+  "Prima apri il Marketplace dal menu di Home Assistant, leggi l'avviso e accettalo: dopo gli aggiornamenti si installano anche da qui.": "First open the Marketplace from the Home Assistant menu, read the warning and accept it: after that, updates install from here too.",
   "Prima configura i cerchi collegati a Casa. Ogni cerchio può usare un sensore di potenza diretto oppure sommare automaticamente tutti i carichi del gruppo collegato. Poi inserisci forno, frigo, lavastoviglie e gli altri dispositivi dentro il gruppo. I nodi vuoti o disabilitati non vengono forzati nel flow.": "First configure the circles connected to Home. Each circle can use a direct power sensor or automatically sum every child of a load group. Then create the appliances inside each group. Empty or disabled nodes are not forced into the flow.",
   "Prima scegli l'entità della persona": "Choose the person entity first",
   "Prima seleziona le luci nello step Luci (o nel wizard).": "First select your lights in the Lights step (or wizard).",

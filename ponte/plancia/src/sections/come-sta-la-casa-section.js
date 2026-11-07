@@ -36,7 +36,7 @@ import {
   pastiglieDellaCasa,
   postaRitirata,
 } from "../core/come-sta-la-casa.js";
-import { comandoPerSpegnere } from "../core/come-si-spegne.js";
+import { comandoPerSpegnere, perchéNonSiInstalla } from "../core/come-si-spegne.js";
 import {
   VELO_DELLA_FASCIA,
   durataDellaDeriva,
@@ -1072,14 +1072,24 @@ function installaLAggiornamento(tasto) {
       tasto.disabled = false;
       tasto.textContent = parola;
       try {
-        root.edToast?.(
-          `${t("Home Assistant ha rifiutato", "Home Assistant refused")}: ${clean(
-            errore?.message || errore,
-          )}`,
-        );
+        root.edToast?.(ilRifiutoDetto(errore));
       } catch (_ignora) {}
     });
   return true;
+}
+
+/* Il no di Home Assistant a un aggiornamento, in parole che si capiscono. Il
+ * Marketplace che chiede di accettare l'avviso lo si dice con cosa fare; gli
+ * altri come li manda Home Assistant. */
+export function ilRifiutoDetto(errore) {
+  if (perchéNonSiInstalla(errore) === "marketplace")
+    return t(
+      "Prima apri il Marketplace dal menu di Home Assistant, leggi l'avviso e accettalo: dopo gli aggiornamenti si installano anche da qui.",
+      "First open the Marketplace from the Home Assistant menu, read the warning and accept it: after that, updates install from here too.",
+    );
+  return `${t("Home Assistant ha rifiutato", "Home Assistant refused")}: ${clean(
+    errore?.message || errore,
+  )}`;
 }
 
 function onClickElenco(event) {

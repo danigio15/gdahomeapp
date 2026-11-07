@@ -8250,4 +8250,5 @@ export default Object.freeze({
   "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "die in der Vorschau ihres Tabs geänderten Seiten — die Reihenfolge der Blöcke und die ausgeblendeten. «Zurücksetzen» stellt sie wieder her.",
   "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.": "die Zeichnungen, deren Teile du in der Vorschau verschoben hast, auf dem Computer und auf dem Telefon. «Zurücksetzen» stellt sie wieder her.",
   "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.": "Es gibt noch kein Thermostat mit Heizen und Kühlen: bis dahin öffnet sie auf Kühlen.",
+  "First open the Marketplace from the Home Assistant menu, read the warning and accept it: after that, updates install from here too.": "Öffne zuerst den Marketplace im Home-Assistant-Menü, lies den Hinweis und akzeptiere ihn: danach lassen sich Updates auch von hier installieren.",
 });

@@ -569,7 +569,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-VXWJAUXS.js";
+} from "../../chunk-EXVPCX2Z.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -6753,6 +6753,7 @@ var SOURCE_INDEX = Object.freeze({
   "Prezzo in fascia": "Price in the window",
   "Prezzo non impostato": "Price not set",
   "prezzo unico": "single rate",
+  "Prima apri il Marketplace dal menu di Home Assistant, leggi l'avviso e accettalo: dopo gli aggiornamenti si installano anche da qui.": "First open the Marketplace from the Home Assistant menu, read the warning and accept it: after that, updates install from here too.",
   "Prima configura i cerchi collegati a Casa. Ogni cerchio può usare un sensore di potenza diretto oppure sommare automaticamente tutti i carichi del gruppo collegato. Poi inserisci forno, frigo, lavastoviglie e gli altri dispositivi dentro il gruppo. I nodi vuoti o disabilitati non vengono forzati nel flow.": "First configure the circles connected to Home. Each circle can use a direct power sensor or automatically sum every child of a load group. Then create the appliances inside each group. Empty or disabled nodes are not forced into the flow.",
   "Prima scegli l'entità della persona": "Choose the person entity first",
   "Prima seleziona le luci nello step Luci (o nel wizard).": "First select your lights in the Lights step (or wizard).",
@@ -39302,6 +39303,11 @@ function comandoPerSpegnere(entity2, stato3 = null) {
     return { dominio: "homeassistant", servizio: "turn_off", parola: "spegni" };
   return null;
 }
+function perchéNonSiInstalla(errore) {
+  const detto3 = String(errore?.message ?? errore ?? "");
+  if (/marketplace/i.test(detto3) && /(warning|accept)/i.test(detto3)) return "marketplace";
+  return "";
+}
 
 // src/core/la-fascia-deriva.js
 var numero27 = (valore3) => {
@@ -39934,15 +39940,21 @@ function installaLAggiornamento(tasto5) {
     tasto5.disabled = false;
     tasto5.textContent = parola2;
     try {
-      root.edToast?.(
-        `${t("Home Assistant ha rifiutato", "Home Assistant refused")}: ${clean(
-          errore?.message || errore
-        )}`
-      );
+      root.edToast?.(ilRifiutoDetto(errore));
     } catch (_ignora) {
     }
   });
   return true;
+}
+function ilRifiutoDetto(errore) {
+  if (perchéNonSiInstalla(errore) === "marketplace")
+    return t(
+      "Prima apri il Marketplace dal menu di Home Assistant, leggi l'avviso e accettalo: dopo gli aggiornamenti si installano anche da qui.",
+      "First open the Marketplace from the Home Assistant menu, read the warning and accept it: after that, updates install from here too."
+    );
+  return `${t("Home Assistant ha rifiutato", "Home Assistant refused")}: ${clean(
+    errore?.message || errore
+  )}`;
 }
 function onClickElenco(event) {
   const nodo3 = doc?.getElementById?.(POPUP2);
@@ -82537,13 +82549,18 @@ function onClick12(event) {
     const parola2 = aggiornamento.textContent;
     aggiornamento.disabled = true;
     aggiornamento.textContent = t("In corso", "Installing");
-    callHa("update", "install", { entity_id: quale }).then((esito2) => {
-      if (esito2 !== void 0) {
-        guardaIlRiavvioDopoLInstallazione();
-        return;
-      }
+    const installa = typeof root.dmCallHaService === "function" ? Promise.resolve(root.dmCallHaService("update", "install", { entity_id: quale })) : callHa("update", "install", { entity_id: quale }).then((esito2) => {
+      if (esito2 === void 0) throw new Error("");
+      return esito2;
+    });
+    installa.then(() => guardaIlRiavvioDopoLInstallazione()).catch((errore) => {
       aggiornamento.disabled = false;
       aggiornamento.textContent = parola2;
+      if (clean(errore?.message || errore))
+        try {
+          root.edToast?.(ilRifiutoDetto(errore));
+        } catch (_ignora) {
+        }
     });
     return;
   }

@@ -8135,4 +8135,5 @@ export default Object.freeze({
   "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "الصفحات التي غُيّرت في معاينة تبويبها — ترتيب المربعات والمخفية منها. «إعادة الضبط» تعيدها كما كانت.",
   "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.": "الرسومات التي نقلتَ أجزاءها في المعاينة، على الحاسوب وعلى الهاتف. «إعادة الضبط» تعيدها كما كانت.",
   "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.": "لا يوجد بعد منظم حرارة للتدفئة والتبريد: إلى أن يوجد، تُفتح على التبريد.",
+  "First open the Marketplace from the Home Assistant menu, read the warning and accept it: after that, updates install from here too.": "افتح أولاً Marketplace من قائمة Home Assistant، واقرأ التحذير ووافق عليه: بعد ذلك تُثبَّت التحديثات من هنا أيضًا.",
 });
