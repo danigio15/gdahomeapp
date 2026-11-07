@@ -810,6 +810,52 @@ test("in prova con il piano ma senza prezzo: quello dello stesso piano, o il lis
   assert.doesNotMatch(soloTesto(html), /senza prezzo detto dal negozio/);
 });
 
+test("una prova Apple non prende il prezzo da Google, ne' da un'altra valuta", () => {
+  /* «Perche' App Store e' 54,99 USD?»: la prova Apple prendeva il prezzo
+   * dall'ultimo annuale qualunque, anche un Google Play pagato in dollari. */
+  const googleUsd = riga({
+    sog: casa(51),
+    piattaforma: "android",
+    piano: "annuale",
+    prodotto: "gdahome_premium",
+    prezzo: 54.99,
+    valuta: "USD",
+    periodo: ADESSO_PAGATO,
+    pagato: ORA + 300 * GIORNO,
+  });
+  const appleUsd = riga({
+    sog: casa(52),
+    piano: "annuale",
+    prodotto: "gdahome_premium_annuale",
+    prezzo: 54.99,
+    valuta: "USD",
+    periodo: ADESSO_PAGATO,
+    pagato: ORA + 300 * GIORNO,
+  });
+  const provaApple = riga({
+    sog: casa(53),
+    piano: "annuale",
+    prodotto: "gdahome_premium_annuale",
+    prova: true,
+    fuInProva: true,
+    pagato: ORA + 9 * GIORNO,
+  });
+  const elenco = [googleUsd, appleUsd, provaApple];
+  PAGINA.prepara({
+    abbonamenti: risposta(elenco),
+    licenze: elenco.map((uno) => dalNegozio(uno)),
+    case: [
+      [casa(51), "Google Usd"],
+      [casa(52), "Apple Usd"],
+      [casa(53), "Prova Apple Italia"],
+    ],
+  });
+  const prova = PAGINA.tutteLeLicenze().find((una) => una.nome === "Prova Apple Italia");
+  assert.equal(prova.previsto.testo.replace(/\s/g, " "), "49,99 €/anno");
+  assert.equal(prova.previsto.valuta, "EUR");
+  assert.match(prova.previsto.sotto, /di listino/);
+});
+
 /* Il testo di una riga di totali. */
 const ilTotale = (html, gruppo = null) => {
   const pezzo = gruppo

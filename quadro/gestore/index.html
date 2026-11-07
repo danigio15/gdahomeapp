@@ -8676,13 +8676,19 @@
         const piano = uno.piano === "annuale" || uno.piano === "mensile" ? uno.piano : "";
         if (!piano) return null;
         const app = uno.app || "gdahome";
+        /* Solo dallo stesso negozio, e nella stessa valuta se la si sa: un
+         * annuale di Google pagato in dollari da un cliente americano non e'
+         * il prezzo di una prova Apple italiana («perche' App Store e' 54,99
+         * USD?»). Senza nessuno cosi', il listino. */
         const altri = (ABBONAMENTI?.elenco || []).filter(
           (altro) =>
             altro !== uno &&
             altro.prezzo > 0 &&
             !altro.sandbox &&
             altro.piano === piano &&
-            (altro.app || "gdahome") === app,
+            (altro.app || "gdahome") === app &&
+            altro.piattaforma === uno.piattaforma &&
+            (altro.valuta || "EUR") === (uno.valuta || "EUR"),
         );
         const piuRecente = (elenco) =>
           elenco
