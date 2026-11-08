@@ -345,7 +345,9 @@ export function impostazioniPulite(dette, prima = impostazioniDiSerie()) {
   if (Array.isArray(dette.persone))
     nuove.persone = [
       ...new Set(
-        dette.persone.filter((una) => typeof una === "string" && /^person\.[a-z0-9_]+$/.test(una)),
+        dette.persone.filter(
+          (una) => typeof una === "string" && /^(person|device_tracker)\.[a-z0-9_]+$/.test(una),
+        ),
       ),
     ].slice(0, 30);
   if (dette.assistente === "importanti" || dette.assistente === "tutti")
@@ -390,7 +392,11 @@ export function vuoleLaVoce(imp, evento) {
   if (imp.eventi?.[evento.tipo] === false && !evento.sempre) return false;
   if (evento.tipo === "suggerimenti" && imp.assistente === "importanti" && !evento.importante)
     return false;
-  if (evento.tipo === "arrivi" && !imp.persone?.includes(evento.persona)) return false;
+  if (
+    evento.tipo === "arrivi" &&
+    ![evento.persona, evento.entita].some((uno) => uno && imp.persone?.includes(uno))
+  )
+    return false;
   /* Su misura, voce per voce. */
   const su = suDi(imp, evento.tipo);
   if (su.quali.length && ![evento.entita, evento.camera].some((uno) => su.quali.includes(uno)))
@@ -881,12 +887,48 @@ export class Notifiche {
     void disdici?.();
   }
 
+  /* Le persone scelte su ogni telefono per gli arrivi, rimesse in pari con
+   * quelle di adesso. «Non mi da' piu' le notifiche quando lei esce o
+   * rientra»: Home Assistant aveva rinominato la sua `person.*`
+   * (`person.giulia` → `person.giulia_2`), e la scelta salvata non era piu'
+   * di nessuno. Quella che si ritrova si riscrive; quella che non c'e' piu'
+   * si dice una volta nel registro, e resta scritta: puo' tornare. */
+  _lePersoneScelte() {
+    if (!this.sentinella.lePersone().length) return;
+    this._personeSparite ??= new Set();
+    let cambiate = false;
+    for (const [telefono, voce] of Object.entries(this.archivio.dati.telefoni)) {
+      const scelte = voce?.impostazioni?.persone;
+      if (!Array.isArray(scelte) || !scelte.length) continue;
+      const nuove = scelte.map((una) => {
+        const adesso = this.sentinella.laPersonaPer(una);
+        if (adesso) return adesso;
+        if (!this._personeSparite.has(una)) {
+          this._personeSparite.add(una);
+          this.registro.attenzione(
+            `la persona ${una} scelta per arrivi e uscite su un telefono non c'e' piu' in Home Assistant: quel telefono non sapra' quando arriva o esce`,
+          );
+        }
+        return una;
+      });
+      const pulite = [...new Set(nuove)];
+      if (pulite.join("|") === scelte.join("|")) continue;
+      for (const [prima, dopo] of scelte.map((una, i) => [una, nuove[i]]))
+        if (prima !== dopo)
+          this.registro.info(`arrivi e uscite: ${prima} adesso e' ${dopo} (${telefono})`);
+      voce.impostazioni.persone = pulite;
+      cambiate = true;
+    }
+    if (cambiate) this.archivio.salva();
+  }
+
   async _battito() {
     if (!this._disdici) await this._abbonati();
     this.sentinella.movimentoSempre = Object.values(this.archivio.dati.telefoni).some(
       (voce) => suDi(impostazioniPulite(voce?.impostazioni), "movimento").quando === "sempre",
     );
     void this._leTelecamereDaTenere();
+    this._lePersoneScelte();
     this.sentinella.battito();
     await this._gliAvvisiDiAlexa();
     this._campionaIlDiario();
@@ -2445,9 +2487,11 @@ export class Notifiche {
 
   async _stato(telefono, utente, amministra) {
     const voce = this.archivio.dati.telefoni[telefono];
-    const persone = this.sentinella.persone().map(([id, stato]) => ({
-      id,
-      nome: String(stato.attributes?.friendly_name || id).slice(0, 60),
+    /* Le stesse persone della plancia, coi suoi nomi: quelle di cui dire chi
+     * arriva e chi esce. */
+    const persone = this.sentinella.lePersone().map((v) => ({
+      id: v.persona,
+      nome: String(v.nome || v.persona).slice(0, 60),
     }));
     const chiCe = (await this._chiCe()) ?? [];
     return {

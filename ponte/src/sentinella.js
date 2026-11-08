@@ -53,6 +53,12 @@ import { laPappa, normalizzaAnimali } from "../plancia/src/core/animali-model.js
 import { CHIAVE_CITOFONO, normalizzaIngresso } from "../plancia/src/core/citofono-e-posta.js";
 import { accesoPerIlConsumo } from "../plancia/src/core/consumo-del-clima.js";
 import { eUnTermostato, termostatoCheScalda } from "../plancia/src/core/il-termostato.js";
+import {
+  isPersonEntity,
+  normalizePeople,
+  personViewModel,
+} from "../plancia/src/core/person-model.js";
+import { chiEInCasa } from "../plancia/src/core/assistente-di-casa.js";
 import { righeDichiarate } from "../plancia/src/core/elenco-dichiarato.js";
 import {
   CAMPI_IN_PIU,
@@ -844,6 +850,9 @@ export class Sentinella {
       if (!uno?.entity_id) continue;
       this.stati.set(uno.entity_id, this._stato(uno));
     }
+    /* Dove sta ognuno adesso: e' il punto da cui si contano arrivi e uscite. */
+    this._forma = null;
+    this._dove = new Map(this.lePersone().map((v) => [v.persona, v]));
   }
 
   _stato(uno) {
@@ -1081,28 +1090,204 @@ export class Sentinella {
 
   /* ─── Chi c'e' in casa ─────────────────────────────────────────────── */
 
+  /* Le `person.*` di Home Assistant, coi loro stati: per i nomi da non
+   * scrivere nelle notifiche. Chi e' in casa lo dice `lePersone`. */
   persone() {
     return [...this.stati].filter(([id]) => dominioDi(id) === "person");
   }
 
-  /* Vuota, piena, o non si sa (`null`): senza persone in Home Assistant non
-   * c'e' modo di dirlo, e non lo si indovina. */
+  /* Chi abita la casa, come lo disegna la plancia: le persone della
+   * configurazione (`cd_people`, non nascoste), ognuna con l'entita' scelta
+   * li' — `person.*` o il `device_tracker.*` del telefono — e il suo Wi‑Fi.
+   * Dal campo: «mi da' casa vuota anche quando mia moglie e' a casa […] il
+   * suo segnalino, sia da browser che da app, e' corretto». La plancia
+   * guardava il telefono di lei, il ponte la sua `person.*`, che diceva un
+   * altra cosa. Una persona della plancia che segue un telefono si lega alla
+   * sua `person.*` (che ha quel telefono fra i suoi, o lo stesso nome): e'
+   * quella che i telefoni scelgono per gli arrivi. Le `person.*` che la
+   * plancia non nomina contano lo stesso, quando si sa dove sono.
+   *
+   * La forma (chi, con quale entita') si rifa' ogni minuto o quando cambia
+   * la plancia; dove sta ognuno si guarda ogni volta. */
+  _formaDellePersone() {
+    const ora = this.adesso();
+    const scritte = this._valori().cd_people;
+    const firma = typeof scritte === "string" ? scritte : JSON.stringify(scritte ?? null);
+    const prima = this._forma;
+    if (
+      prima &&
+      prima.firma === firma &&
+      prima.quante === this.stati.size &&
+      ora - prima.il < MINUTO
+    )
+      return prima.voci;
+    let dichiarate = [];
+    try {
+      dichiarate = normalizePeople(typeof scritte === "string" ? JSON.parse(scritte) : scritte);
+    } catch (_errore) {
+      dichiarate = [];
+    }
+    const nascoste = new Set(dichiarate.filter((p) => p.nascosta).map((p) => p.entity));
+    const diHomeAssistant = this.persone();
+    const stessoNome = (a, b) =>
+      Boolean(a) &&
+      String(a).trim().toLowerCase() ===
+        String(b || "")
+          .trim()
+          .toLowerCase();
+    const prese = new Set();
+    const voci = [];
+    for (const p of dichiarate) {
+      if (p.nascosta || !isPersonEntity(p.entity)) continue;
+      let persona = dominioDi(p.entity) === "person" ? p.entity : "";
+      if (!persona) {
+        const sua =
+          diHomeAssistant.find(([, st]) =>
+            [].concat(st.attributes?.device_trackers || []).includes(p.entity),
+          ) || diHomeAssistant.find(([, st]) => stessoNome(p.name, st.attributes?.friendly_name));
+        persona = sua?.[0] || "";
+      }
+      if (persona) prese.add(persona);
+      voci.push({ persona: persona || p.entity, entita: p.entity, dichiarata: true, scheda: p });
+    }
+    for (const [id] of diHomeAssistant) {
+      if (prese.has(id) || nascoste.has(id)) continue;
+      voci.push({
+        persona: id,
+        entita: id,
+        dichiarata: false,
+        scheda: normalizePeople([{ entity: id }])[0],
+      });
+    }
+    this._forma = { firma, quante: this.stati.size, il: ora, voci };
+    return voci;
+  }
+
+  /**
+   * Le persone, e dove sono: `casa`, `fuori`, o `incerta` quando non si sa.
+   * La regola e' quella della plancia (`chiEInCasa`): a casa, in una zona
+   * che si chiama casa («Casa», «Home»), o sullo stesso Wi‑Fi di chi e' a
+   * casa. `{persona, entita, nome, dove, dichiarata}`.
+   */
+  lePersone() {
+    const stati = this.statiComeOggetto();
+    const ora = this.adesso();
+    const viste = this._formaDellePersone().map((voce) => ({
+      ...voce,
+      vista: personViewModel(voce.scheda, stati, ora),
+    }));
+    const aCasa = (v) => chiEInCasa([v.vista]).inCasa === 1;
+    const reti = new Set(
+      viste
+        .filter(aCasa)
+        .map((v) => v.vista.wifi)
+        .filter(Boolean),
+    );
+    return viste.map((v) => ({
+      persona: v.persona,
+      entita: v.entita,
+      wifi: v.scheda.wifi || "",
+      nome: v.vista.name || nomeDi(this.stati.get(v.entita), v.entita),
+      dichiarata: v.dichiarata,
+      dove:
+        aCasa(v) || (v.vista.wifi && reti.has(v.vista.wifi))
+          ? "casa"
+          : v.vista.known
+            ? "fuori"
+            : "incerta",
+    }));
+  }
+
+  /* Quelle che contano per dire se la casa e' vuota: tutte quelle della
+   * plancia (chi non si sa dove sia e' «incerto», come li'), e le altre solo
+   * quando si sa dove sono — una `person.*` senza telefono resta `unknown`
+   * per sempre, e non deve tenere la casa piena. */
+  _personeCheContano() {
+    return this.lePersone().filter((v) => v.dichiarata || v.dove !== "incerta");
+  }
+
+  /* Vuota, piena, o non si sa (`null`): senza persone non c'e' modo di
+   * dirlo, e non lo si indovina; e nemmeno se qualcuno della plancia non si
+   * sa dove sia (un riavvio, un telefono spento). */
   casaVuota() {
-    const persone = this.persone();
+    const persone = this._personeCheContano();
     if (!persone.length) return null;
-    return persone.every(([, stato]) => stato.state !== "home");
+    if (persone.some((v) => v.dove === "casa")) return false;
+    if (persone.some((v) => v.dove === "incerta")) return null;
+    return true;
   }
 
   /* L'entita' `person.*` di un utente di Home Assistant. */
   personaDi(utente) {
+    return this._laVoceDi(utente)?.persona ?? null;
+  }
+
+  _laVoceDi(utente) {
     if (!utente) return null;
-    for (const [id, stato] of this.persone()) if (stato.attributes?.user_id === utente) return id;
-    return null;
+    return (
+      this.lePersone().find((v) => this.stati.get(v.persona)?.attributes?.user_id === utente) ??
+      null
+    );
   }
 
   aCasa(utente) {
-    const persona = this.personaDi(utente);
-    return persona ? this.stati.get(persona)?.state === "home" : null;
+    const voce = this._laVoceDi(utente);
+    if (!voce || voce.dove === "incerta") return null;
+    return voce.dove === "casa";
+  }
+
+  /**
+   * La persona di adesso per una scelta salvata su un telefono («dimmi
+   * quando arriva»): la stessa, o quella che Home Assistant ha rinominato
+   * (`person.giulia` → `person.giulia_2`), o quella della plancia che si
+   * chiama cosi'. `null` se non c'e' piu', o se le candidate sono due.
+   */
+  laPersonaPer(salvata) {
+    const voci = this.lePersone();
+    const id = String(salvata || "");
+    const uguale = voci.find((v) => v.persona === id || v.entita === id);
+    if (uguale) return uguale.persona;
+    const base = (entita) =>
+      String(entita || "")
+        .split(".")[1]
+        ?.replace(/_\d+$/, "") || "";
+    const slug = (testo) =>
+      String(testo || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_|_$/g, "");
+    const cercata = base(id);
+    if (!cercata) return null;
+    const candidate = [
+      ...new Set(
+        voci
+          .filter(
+            (v) =>
+              base(v.persona) === cercata || base(v.entita) === cercata || slug(v.nome) === cercata,
+          )
+          .map((v) => v.persona),
+      ),
+    ];
+    return candidate.length === 1 ? candidate[0] : null;
+  }
+
+  /* Chi arriva e chi esce: dove stava ognuno al giro prima, e dove sta
+   * adesso. Un cambio fra casa e fuori e' un arrivo o un'uscita; chi passa
+   * da o per «non si sa» (un riavvio, un telefono che si spegne) no. */
+  _chiSiSposta() {
+    const prima = this._dove;
+    const adesso = new Map(this.lePersone().map((v) => [v.persona, v]));
+    this._dove = adesso;
+    if (!prima) return [];
+    const mossi = [];
+    for (const [persona, v] of adesso) {
+      const era = prima.get(persona)?.dove;
+      if (!era || era === v.dove || era === "incerta" || v.dove === "incerta") continue;
+      mossi.push({ ...v, arriva: v.dove === "casa" });
+    }
+    return mossi;
   }
 
   /* ─── Le telecamere e i cancelli vicini ────────────────────────────── */
@@ -1573,26 +1758,31 @@ export class Sentinella {
       return;
     }
 
-    /* Le persone: chi arriva e chi esce, e la casa che si svuota. */
-    if (dominio === "person" && prima && era !== dopo.state) {
-      const arriva = dopo.state === "home" && era !== "home";
-      const esce = era === "home" && dopo.state !== "home";
-      if (arriva || esce) {
+    /* Le persone: chi arriva e chi esce, e la casa che si svuota. Dove sta
+     * una persona lo dice la sua entita' (una `person.*` o il telefono che la
+     * plancia segue) o il suo Wi‑Fi: si guarda quando cambia una di quelle. */
+    const diUnaPersona =
+      dominio === "person" ||
+      dominio === "device_tracker" ||
+      this._formaDellePersone().some((v) => v.scheda.wifi === id);
+    if (diUnaPersona && prima && era !== dopo.state) {
+      const mossi = this._chiSiSposta();
+      for (const v of mossi)
         this._dici({
           tipo: "arrivi",
           urgenza: "bassa",
-          chiave: `arrivi:${id}:${arriva ? "su" : "giu"}`,
+          chiave: `arrivi:${v.persona}:${v.arriva ? "su" : "giu"}`,
           pausa: 5 * MINUTO,
-          entita: id,
-          persona: id,
-          parole: paroleDellArrivo(nome, arriva),
+          entita: v.entita,
+          persona: v.persona,
+          parole: paroleDellArrivo(v.nome, v.arriva),
         });
-      }
-      if (vuotaPrima === false && this.casaVuota() === true) this._casaAppenaVuota(nome);
+      if (vuotaPrima === false && this.casaVuota() === true)
+        this._casaAppenaVuota(mossi.find((v) => !v.arriva)?.nome || nome);
       /* Torna qualcuno: l'assenza e' finita, e con lei quello che il
        * movimento si ricordava. */
       if (this.casaVuota() !== true) this._movimento = null;
-      return;
+      if (dominio === "person" || dominio === "device_tracker") return;
     }
 
     /* Il movimento: con la casa vuota, o di notte quando la casa dorme. Se
@@ -1909,9 +2099,9 @@ export class Sentinella {
 
   /* L'ora in cui e' uscita l'ultima persona, se si sa: «alle 9:12». */
   _uscitaUltima() {
-    const fuori = this.persone()
-      .filter(([, stato]) => stato.state !== "home")
-      .map(([, stato]) => stato.dal)
+    const fuori = this._personeCheContano()
+      .filter((v) => v.dove === "fuori")
+      .map((v) => this.stati.get(v.entita)?.dal)
       .filter(Number.isFinite);
     if (!fuori.length) return null;
     const d = new Date(Math.max(...fuori));
@@ -2264,7 +2454,10 @@ export class Sentinella {
   /* Da quando la casa e' vuota: l'ultima persona uscita. */
   _vuotaDa(vuota) {
     if (vuota !== true) return Infinity;
-    return Math.max(...this.persone().map(([, stato]) => stato.dal));
+    const da = this._personeCheContano()
+      .map((v) => this.stati.get(v.entita)?.dal)
+      .filter(Number.isFinite);
+    return da.length ? Math.max(...da) : Infinity;
   }
 
   /* ─── Il riepilogo della sera ──────────────────────────────────────── */
