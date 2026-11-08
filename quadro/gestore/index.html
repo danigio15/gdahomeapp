@@ -8726,6 +8726,11 @@
        * chi non rinnova o e' finito: li', in grigio, e fuori dai totali. */
       function gliImportiDelNegozio(riga, uno) {
         const ios = uno.piattaforma === "ios";
+        /* «Ancora sto USD»: il prezzo e' quello che paga il cliente, nella
+         * valuta del suo negozio. Un account Google o Apple negli Stati Uniti
+         * paga in dollari, ed e' giusto cosi'; ma senza il paese accanto
+         * sembrava un errore. Una valuta che non e' l'euro dice da dove. */
+        const estero = (uno.valuta || "EUR") !== "EUR" ? ilPaeseDelNegozio(uno.paese) : "";
         const detto = uno.prezzo > 0 ? Number(uno.prezzo) : null;
         const diListino = detto === null ? ilPrezzoDelPiano(uno) : null;
         const valuta = diListino?.valuta || uno.valuta || "EUR";
@@ -8756,7 +8761,9 @@
               }
             : {
                 testo: `${iSoldi(prezzo, valuta)}${unita}`,
-                sotto: diListino ? [sotto, "di listino"].filter(Boolean).join(" · ") : sotto,
+                sotto: [sotto, diListino ? "di listino" : "", valuta !== "EUR" ? estero : ""]
+                  .filter(Boolean)
+                  .join(" · "),
                 listino: Boolean(diListino),
                 importo: prezzo,
                 valuta,
@@ -8834,6 +8841,52 @@
               : ios
                 ? "importo dall'ultima transazione di App Store"
                 : "importo dal prezzo del piano su Google Play";
+        if (riga.importoDi && valuta !== "EUR")
+          riga.importoDi += ` · paga in ${valuta}, la valuta del suo account ${ios ? "Apple" : "Google"}${estero ? ` (${estero})` : ""}`;
+      }
+
+      /* Il paese del negozio, in parole: Google lo dice in due lettere
+       * («US»), Apple in tre («USA»). */
+      const DUE_LETTERE = {
+        USA: "US",
+        GBR: "GB",
+        CHE: "CH",
+        CAN: "CA",
+        AUS: "AU",
+        ITA: "IT",
+        SMR: "SM",
+        DEU: "DE",
+        FRA: "FR",
+        ESP: "ES",
+        NLD: "NL",
+        BEL: "BE",
+        AUT: "AT",
+        PRT: "PT",
+        IRL: "IE",
+        POL: "PL",
+        SWE: "SE",
+        NOR: "NO",
+        DNK: "DK",
+        ROU: "RO",
+        ALB: "AL",
+        BRA: "BR",
+        MEX: "MX",
+        ARG: "AR",
+        JPN: "JP",
+        CHN: "CN",
+        IND: "IN",
+        ARE: "AE",
+      };
+      function ilPaeseDelNegozio(paese) {
+        const detto = String(paese || "")
+          .trim()
+          .toUpperCase();
+        if (!detto) return "";
+        const codice = detto.length === 3 ? DUE_LETTERE[detto] || "" : detto;
+        try {
+          if (codice) return new Intl.DisplayNames(["it"], { type: "region" }).of(codice) || detto;
+        } catch (_paeseStrano) {}
+        return detto;
       }
 
       /* Una licenza, come si legge in una riga. `una` e' la licenza

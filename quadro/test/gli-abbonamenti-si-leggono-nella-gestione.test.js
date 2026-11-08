@@ -141,6 +141,8 @@ function laFabbrica() {
       "const PRIMA_LA_LICENZA",
       "function laLicenza",
       "function laLicenzaDellaCasa",
+      "const DUE_LETTERE",
+      "function ilPaeseDelNegozio",
     ].map(ilPezzo),
     `return {
        /* Le case, le licenze e gli abbonamenti come li manderebbe il quadro;
@@ -856,6 +858,64 @@ test("una prova Apple non prende il prezzo da Google, ne' da un'altra valuta", (
   assert.equal(prova.previsto.testo.replace(/\s/g, " "), "49,99 €/anno");
   assert.equal(prova.previsto.valuta, "EUR");
   assert.match(prova.previsto.sotto, /di listino/);
+});
+
+test("«Ancora sto USD»: una valuta che non e' l'euro dice il paese del negozio", () => {
+  /* Una prova Google in un account americano: Google dice il prezzo che il
+   * cliente paghera', in dollari. E' giusto; senza il paese pareva un errore. */
+  const provaUsa = riga({
+    sog: casa(61),
+    piattaforma: "android",
+    piano: "annuale",
+    prodotto: "gdahome_premium",
+    prezzo: 54.99,
+    valuta: "USD",
+    paese: "US",
+    prova: true,
+    fuInProva: true,
+    pagato: ORA + 9 * GIORNO,
+  });
+  const appleUk = riga({
+    sog: casa(62),
+    piano: "mensile",
+    prodotto: "gdahome_premium_mensile",
+    prezzo: 4.99,
+    valuta: "GBP",
+    paese: "GBR",
+    periodo: ADESSO_PAGATO,
+    pagato: ORA + 20 * GIORNO,
+  });
+  const italia = riga({
+    sog: casa(63),
+    piattaforma: "android",
+    piano: "annuale",
+    prodotto: "gdahome_premium",
+    prezzo: 49.99,
+    valuta: "EUR",
+    paese: "IT",
+    periodo: ADESSO_PAGATO,
+    pagato: ORA + 300 * GIORNO,
+  });
+  const elenco = [provaUsa, appleUk, italia];
+  PAGINA.prepara({
+    abbonamenti: risposta(elenco),
+    licenze: elenco.map((uno) => dalNegozio(uno)),
+    case: [
+      [casa(61), "Prova Usa"],
+      [casa(62), "Apple Regno Unito"],
+      [casa(63), "Google Italia"],
+    ],
+  });
+  const tutte = PAGINA.tutteLeLicenze();
+  const usa = tutte.find((una) => una.nome === "Prova Usa");
+  assert.match(usa.previsto.sotto, /Stati Uniti/);
+  assert.match(usa.importoDi, /paga in USD, la valuta del suo account Google \(Stati Uniti\)/);
+  const uk = tutte.find((una) => una.nome === "Apple Regno Unito");
+  assert.match(uk.importoDi, /account Apple \(Regno Unito\)/);
+  /* In euro non si dice niente: e' la valuta di casa. */
+  const it = tutte.find((una) => una.nome === "Google Italia");
+  assert.doesNotMatch(it.previsto.sotto, /Italia/);
+  assert.doesNotMatch(it.importoDi, /paga in/);
 });
 
 /* Il testo di una riga di totali. */
