@@ -25,6 +25,10 @@ _App GdAHome e Home Assistant._
   segnalazioni, soste e tappe stanno sul viadotto e si toccano anche lì. Se
   il telefono non ce la fa, il navigatore torna da solo alla visuale di
   prima. Su Android Auto e CarPlay la mappa prende lo stesso aspetto.
+- **Chi è di casa, sulla mappa dell'auto**: le persone che condividono la
+  posizione compaiono con il loro segnalino anche su Android Auto e CarPlay,
+  e in «3D aumentato», così mentre guidi vedi dove sono senza prendere il
+  telefono.
 - **Il navigatore in orizzontale**: il cruscotto di guida sta in un pannello
   a sinistra e non esce più dallo schermo, su telefoni e tablet.
 - **Le notifiche sono di GdAHome Premium**: senza, al telefono arrivano solo
