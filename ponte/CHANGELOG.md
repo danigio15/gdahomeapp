@@ -10,6 +10,15 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.12.2
+
+_Solo l'app Android: Home Assistant e l'iPhone non cambiano._
+
+- **La correzione della 1.18.12.1, nel Play Store**: la 1.18.12.1 non era
+  entrata nel negozio, perché il suo numero di costruzione l'aveva già preso
+  l'orologio Wear OS. Adesso telefono e orologio hanno numeri che non si
+  incontrano più, e l'app che si apre di nuovo arriva davvero.
+
 ## 1.18.12.1
 
 _Solo l'app Android: Home Assistant e l'iPhone non cambiano._
