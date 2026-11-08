@@ -132,13 +132,12 @@ abstract final class PerchePremium {
 
   static String get notifiche => inLingua(
     it:
-        'Le notifiche elaborate — la scheda col grafico, la foto della '
-        'telecamera — e il riepilogo della sera sono di GdAHome Premium. Gli '
-        'avvisi di sicurezza arrivano sempre, anche senza.',
+        'Le notifiche sono di GdAHome Premium. Senza, arrivano solo gli '
+        'avvisi di sicurezza: fumo, gas, allagamento, antifurto scattato e '
+        'campanello.',
     en:
-        'Rich notifications — the chart card, the camera photo — and the '
-        'evening summary are part of GdAHome Premium. Safety alerts always '
-        'arrive, even without it.',
+        'Notifications are part of GdAHome Premium. Without it, only safety '
+        'alerts arrive: smoke, gas, water leak, alarm triggered and doorbell.',
   );
 
   static String get giornata => inLingua(

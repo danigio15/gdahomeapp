@@ -179,11 +179,17 @@ Future<void> _lasciaFare(WidgetTester tester) async {
   }
 }
 
-Future<(PonteFinto, Collegamento)> _unaCasa() async {
+/// La casa, che dice [premium] come la vede il ponte (`null`: non lo dice,
+/// e vale la licenza dell'app).
+Future<(PonteFinto, Collegamento)> _unaCasa({bool? premium}) async {
   final ponte = await PonteFinto.alza();
   ponte.notifiche
     ..clear()
     ..addAll(_statoDiCasa());
+  if (premium != null) {
+    ponte.notifiche['premium'] = premium;
+    ponte.notifiche['viaggi'] = premium;
+  }
   ponte.entita = [
     for (final (id, nome) in const [
       ('switch.lavatrice', 'Lavatrice'),
@@ -291,6 +297,45 @@ void main() {
         await ponte.spegni();
       });
     });
+
+    /* «Le notifiche sono solo per i Premium»: la pagina intera in Base —
+     * gli avvisi di sicurezza accesi, il resto col lucchetto — e con
+     * Premium. */
+    for (final premium in const [false, true]) {
+      final come = premium ? 'premium' : 'base';
+      testWidgets('la pagina Notifiche in ${come.toUpperCase()}, $tinta', (
+        tester,
+      ) async {
+        tester.view.physicalSize = const Size(390 * 3, 2900 * 3);
+        tester.view.devicePixelRatio = 3;
+        addTearDown(tester.view.reset);
+        late PonteFinto ponte;
+        late Collegamento collegamento;
+        await tester.runAsync(() async {
+          (ponte, collegamento) = await _unaCasa(premium: premium);
+        });
+        await tester.pumpWidget(
+          _app(
+            SchermataDelleNotifiche(
+              collegamento: collegamento,
+              postino: _PostinoFinto(collegamento),
+              cassaforte: CassaforteInMemoria(),
+              nomeDelTelefono: 'iPhone',
+            ),
+            scuro: scuro,
+          ),
+        );
+        await _lasciaFare(tester);
+        await expectLater(
+          find.byType(MaterialApp),
+          matchesGoldenFile('$_cartella/notifiche-$come-intera-$tinta.png'),
+        );
+        await tester.runAsync(() async {
+          await collegamento.chiudi();
+          await ponte.spegni();
+        });
+      });
+    }
 
     testWidgets('il foglio di una voce, $tinta', (tester) async {
       tester.view.physicalSize = const Size(390 * 3, 844 * 3);

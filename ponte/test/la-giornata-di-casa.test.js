@@ -3,10 +3,11 @@
  * Quello che deve restare vero:
  *
  *  - Premium lo decide il ponte, come per le automazioni: gdahome Premium o
- *    licenze spente. In Base le notifiche sono tutte semplici e senza foto,
- *    il riepilogo della sera non c'e', le righe «nel riepilogo» partono
- *    subito, «La tua giornata» dice `premium-richiesto`; gli avvisi di
- *    sicurezza arrivano sempre. Quando il Premium scade non si perde niente.
+ *    licenze spente. In Base arrivano solo gli avvisi di sicurezza, semplici
+ *    e senza foto: «Le notifiche sono solo per i Premium, non per tutti». Il
+ *    riepilogo della sera non c'e', le righe «nel riepilogo» non partono,
+ *    «La tua giornata» dice `premium-richiesto`. Quando il Premium scade le
+ *    impostazioni del telefono restano, per quando torna.
  *  - Il diario della casa annota il clima, il riscaldamento, il solare
  *    termico, l'auto (ricariche e viaggi), l'acqua e gli eventi; ogni
  *    sezione c'e' solo se in casa c'e' il dispositivo.
@@ -141,7 +142,7 @@ test("Premium: lo stato lo dice, con lo stesso criterio delle automazioni", asyn
   }
 });
 
-test("Base: tutte semplici e senza foto; Premium: elaborate con la foto", async () => {
+test("Base: solo la sicurezza, semplice e senza foto; Premium: elaborate con la foto", async () => {
   const licenze = { attive: true, premium: true };
   const banco = unBanco({ licenze });
   try {
@@ -152,27 +153,36 @@ test("Base: tutte semplici e senza foto; Premium: elaborate con la foto", async 
     assert.deepEqual(detto.foto, { id: "foto-1", t: "image/jpeg" });
     assert.equal(banco.foto.length, 1);
 
-    /* Il Premium scade: si torna da soli alle semplici, senza foto. */
+    /* Il Premium scade: il movimento non arriva piu'. Dal campo, in Base:
+     * «Movimento · Balcone — casa vuota · tocca per vedere». */
     licenze.premium = false;
     banco.orologio.ora += 2 * MINUTO;
-    assert.equal(await banco.notifiche.consegna(movimento()), 1);
-    detto = banco.apri(banco.spinte.at(-1));
-    assert.equal(detto.stile, "s");
-    assert.equal(detto.foto, undefined);
-    assert.equal(banco.foto.length, 1, "nessuna foto lascia la casa");
+    const prima = banco.spinte.length;
+    assert.equal(await banco.notifiche.consegna(movimento()), 0);
+    assert.equal(banco.spinte.length, prima);
     /* Le impostazioni del telefono restano quelle, per quando torna. */
     const stato = await banco.chiedi({ type: "ponte/notifiche/stato" });
     assert.equal(stato.result.impostazioni.stile, "elaborate");
 
-    /* La sicurezza arriva sempre, anche in Base. */
+    /* La sicurezza arriva, anche in Base: semplice, senza foto. */
     assert.equal(await banco.notifiche.consegna(antifurto()), 1);
-    assert.equal(banco.apri(banco.spinte.at(-1)).titolo, "Antifurto scattato");
+    detto = banco.apri(banco.spinte.at(-1));
+    assert.equal(detto.titolo, "Antifurto scattato");
+    assert.equal(detto.stile, "s");
+    assert.equal(detto.foto, undefined);
+    assert.equal(banco.foto.length, 1, "nessuna foto lascia la casa");
+
+    /* Il Premium torna: il movimento di nuovo, com'era scelto. */
+    licenze.premium = true;
+    banco.orologio.ora += 2 * MINUTO;
+    assert.equal(await banco.notifiche.consegna(movimento()), 1);
+    assert.equal(banco.apri(banco.spinte.at(-1)).stile, "e");
   } finally {
     banco.spegni();
   }
 });
 
-test("Base: niente riepilogo, e le righe «nel riepilogo» partono subito", async () => {
+test("Base: niente riepilogo, e le righe «nel riepilogo» non partono", async () => {
   const licenze = { attive: true, premium: true };
   const banco = unBanco({ licenze, adesso: alle(15) });
   try {
@@ -183,14 +193,14 @@ test("Base: niente riepilogo, e le righe «nel riepilogo» partono subito", asyn
     /* Con Premium la riga si mette da parte. */
     assert.equal(await banco.notifiche.consegna(movimento()), 0);
     assert.equal(banco.spinte.length, 0);
-    /* Il Premium scade prima della sera: la riga parte al battito, semplice. */
+    /* Il Premium scade prima della sera: la riga non parte, ne' adesso ne'
+     * dopo — in Base arrivano solo gli avvisi di sicurezza. */
     licenze.premium = false;
     await banco.notifiche._riepiloghi();
-    assert.equal(banco.spinte.length, 1, "nessuna notifica persa");
-    assert.equal(banco.apri(banco.spinte[0]).titolo, "Movimento all'ingresso");
-    assert.equal(banco.apri(banco.spinte[0]).stile, "s");
-    /* E quelle nuove non aspettano la sera. */
-    assert.equal(await banco.notifiche.consegna(movimento()), 1);
+    assert.equal(banco.spinte.length, 0);
+    assert.equal(banco.notifiche._inCoda.size, 0);
+    /* E quelle nuove nemmeno. */
+    assert.equal(await banco.notifiche.consegna(movimento()), 0);
 
     /* All'ora del riepilogo, in Base, non parte niente. */
     banco.notifiche.sentinella.riepilogo = () => ({
@@ -770,14 +780,27 @@ const unaGiornata = () => ({
   fasce: { nomi: {}, piuBassa: null },
 });
 
-test("Base: «🔋 Batterie da cambiare» alla sera, semplice, una volta, senza i telefoni", async () => {
-  const banco = unBanco({ licenze: { attive: true, premium: false }, adesso: alle(20, 25) });
+test("«🔋 Batterie da cambiare» alla sera, semplice, una volta, senza i telefoni; in Base no", async () => {
+  const licenze = { attive: true, premium: false };
+  const banco = unBanco({ licenze, adesso: alle(20, 25) });
   try {
     await conGettoneElaborate(banco);
     banco.notifiche.sentinella.carica(BATTERIE);
+    /* In Base non arrivano: non sono un avviso di sicurezza. */
+    banco.orologio.ora = alle(20, 31);
+    await banco.notifiche._riepiloghi();
+    assert.equal(banco.spinte.length, 0, "in Base solo gli avvisi di sicurezza");
+
+    /* Con Premium, e il riepilogo spento: a parte, alla sua ora. */
+    licenze.premium = true;
+    await banco.chiedi({
+      type: "ponte/notifiche/imposta",
+      impostazioni: { eventi: { riepilogo: false } },
+    });
+    banco.orologio.ora = new Date(2026, 9, 19, 20, 25).getTime();
     await banco.notifiche._riepiloghi();
     assert.equal(banco.spinte.length, 0, "non prima dell'ora del riepilogo");
-    banco.orologio.ora = alle(20, 31);
+    banco.orologio.ora = new Date(2026, 9, 19, 20, 31).getTime();
     await banco.notifiche._riepiloghi();
     assert.equal(banco.spinte.length, 1);
     const detto = banco.apri(banco.spinte[0]);
@@ -786,12 +809,12 @@ test("Base: «🔋 Batterie da cambiare» alla sera, semplice, una volta, senza 
     assert.equal(detto.stile, "s");
     assert.doesNotMatch(JSON.stringify(detto), /Persona 1|iPhone|sensor\./);
     /* Una volta al giorno. */
-    banco.orologio.ora = alle(20, 35);
+    banco.orologio.ora = new Date(2026, 9, 19, 20, 35).getTime();
     await banco.notifiche._riepiloghi();
     assert.equal(banco.spinte.length, 1);
     /* Senza batterie scariche, niente. */
     banco.notifiche.sentinella.carica(BATTERIE.slice(0, 1));
-    banco.orologio.ora = new Date(2026, 9, 19, 20, 31).getTime();
+    banco.orologio.ora = new Date(2026, 9, 20, 20, 31).getTime();
     await banco.notifiche._riepiloghi();
     assert.equal(banco.spinte.length, 1);
   } finally {

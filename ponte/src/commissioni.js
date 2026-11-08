@@ -928,13 +928,13 @@ export class Commissioni {
      * console, nessun server di fuori.
      *
      * Premium (lo stesso criterio di `automazioni.js`: gdahome Premium, o
-     * licenze spente). In Base le notifiche partono tutte **semplici**,
-     * senza foto della telecamera, il riepilogo della sera non esiste (le
-     * righe che un telefono aveva messo «nel riepilogo» partono subito,
-     * semplici) e `ponte/energia/giornata` risponde `premium-richiesto`. Gli
-     * avvisi di sicurezza — antifurto, allarmi, perdite, blackout — partono
-     * sempre, e cosi' le batterie scariche: chi il riepilogo non lo riceve
-     * (Base, o riepilogo spento) ha «🔋 Batterie da cambiare», semplice, una
+     * licenze spente). In Base al telefono arrivano **solo gli avvisi di
+     * sicurezza** — fumo, gas, allagamento, monossido, antifurto scattato,
+     * campanello — e la prova (`arrivaInBase` in `notifiche.js`), semplici e
+     * senza foto della telecamera; il riepilogo della sera non esiste (le
+     * righe che un telefono aveva messo «nel riepilogo» non partono) e
+     * `ponte/energia/giornata` risponde `premium-richiesto`. Con Premium chi
+     * il riepilogo l'ha spento ha «🔋 Batterie da cambiare», semplice, una
      * volta al giorno all'ora del riepilogo, coi dispositivi di casa e la
      * loro carica (non i telefoni ne' gli orologi, che sono di qualcuno);
      * chi lo riceve le trova dentro il riepilogo, senza doppioni. I tasti

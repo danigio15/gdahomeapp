@@ -414,6 +414,33 @@ export function vuoleLaVoce(imp, evento) {
   return true;
 }
 
+/* ─── Cosa arriva in Base ──────────────────────────────────────────────────
+ *
+ * «Le notifiche sono solo per i Premium, non per tutti.» In GdAHome Base al
+ * telefono arrivano solo gli avvisi di sicurezza: fumo, gas, allagamento e
+ * monossido (`allarmi`, che sono solo quelli: `ALLARMI` in `sentinella.js`),
+ * l'antifurto scattato e il campanello. E la prova, per vedere che arrivano.
+ * Tutto il resto — movimento, arrivi e uscite, elettrodomestici, clima,
+ * batterie, blackout, assistente, riepilogo, i messaggi dalla Home, le
+ * automazioni di Home Assistant, le personalizzate, «aggiorna l'app» — e' di
+ * Premium. I viaggi pianificati hanno il Premium loro, quello di GdANav
+ * (`viaggi`: `viaggi.js`, `sbloccato`), che gdahome Premium comprende.
+ *
+ * Dal campo, in una casa Base: «Movimento · Balcone — casa vuota · tocca per
+ * vedere». La regola sta qui, e la usa `consegna` prima di ogni telefono:
+ * nessuna strada ci passa attorno. Gli Echo restano come sono: non sono il
+ * telefono. */
+export const AVVISI_DI_SICUREZZA = Object.freeze(["antifurto", "allarmi", "campanello"]);
+
+export function arrivaInBase(evento, { viaggi = false } = {}) {
+  /* Una prova vale quanto la notifica che imita; quella di sempre, che non
+   * imita niente, arriva: e' come si vede che gli avvisi arrivano. */
+  const prova = evento?.tipo === "prova";
+  const tipo = prova ? evento.imita : evento?.tipo;
+  if (prova && !tipo) return true;
+  return AVVISI_DI_SICUREZZA.includes(tipo) || (viaggi === true && tipo === "viaggi");
+}
+
 /* Una notifica personalizzata come arriva dal telefono, ripulita. `null` se
  * non sta in piedi. */
 export function personalizzataPulita(detta) {
@@ -619,17 +646,17 @@ export class Notifiche {
    * Lo decide il ponte, con lo stesso criterio delle automazioni
    * (`automazioni.js`, `sbloccato`): gdahome Premium, o le licenze spente.
    *
-   *  - Base: solo notifiche **semplici**, nessuna foto della telecamera,
-   *    nessun riepilogo della sera (ne' testo ne' scheda), e la pagina «La
-   *    tua giornata» risponde `premium-richiesto`. Le righe che un telefono
-   *    aveva messo «nel riepilogo» partono subito, semplici.
-   *  - Gli avvisi di sicurezza — antifurto, allarmi, perdite, blackout e
-   *    batteria dell'UPS — partono sempre: Premium cambia come si vedono,
-   *    mai se arrivano.
+   *  - Base: al telefono arrivano **solo gli avvisi di sicurezza** — fumo,
+   *    gas, allagamento, monossido, antifurto scattato, campanello — e la
+   *    prova (`arrivaInBase`). Semplici, senza foto della telecamera. Niente
+   *    riepilogo della sera, e la pagina «La tua giornata» risponde
+   *    `premium-richiesto`. Le righe che un telefono aveva messo «nel
+   *    riepilogo» non partono: non sono avvisi di sicurezza.
+   *  - Premium: tutte, come le sceglie il telefono.
    *
-   * Si guarda a ogni notifica: quando il Premium scade si torna da soli alle
-   * semplici, e le impostazioni del telefono restano com'erano per quando
-   * torna. */
+   * Si guarda a ogni notifica: quando il Premium scade si torna da soli ai
+   * soli avvisi di sicurezza, e le impostazioni del telefono restano
+   * com'erano per quando torna. */
   get premium() {
     try {
       if (!this.licenze?.attive) return true;
@@ -942,15 +969,13 @@ export class Notifiche {
    * della casa, il meteo di domani e le notifiche che ha voluto lasciare per
    * la sera. */
   async _riepiloghi() {
-    const premium = this.premium;
-    /* In Base il riepilogo non c'e': le righe messe da parte quando il
-     * Premium c'era partono adesso, ognuna da sola e semplice. */
-    if (!premium) {
-      const code = [...this._inCoda];
+    /* In Base il riepilogo non c'e', e nemmeno le batterie da cambiare: al
+     * telefono arrivano solo gli avvisi di sicurezza (`arrivaInBase`). Le
+     * righe messe da parte quando il Premium c'era non partono: nessuna e'
+     * un avviso di sicurezza, che non aspetta mai la sera. */
+    if (!this.premium) {
       this._inCoda.clear();
-      for (const [telefono, righe] of code)
-        for (const riga of righe)
-          if (riga?.evento) await this.consegna(riga.evento, { soloA: telefono });
+      return;
     }
     const ora = new Date(this.adesso());
     const adessoInMinuti = ora.getHours() * 60 + ora.getMinutes();
@@ -963,11 +988,10 @@ export class Notifiche {
       if (adessoInMinuti < quando || adessoInMinuti > quando + 10) continue;
       if (this._riepilogoDel.get(telefono) === oggi) continue;
       this._riepilogoDel.set(telefono, oggi);
-      /* Chi il riepilogo non lo riceve — una casa Base, o un telefono che
-       * l'ha spento — le batterie da cambiare le sa lo stesso, alla stessa
-       * ora: e' un avviso di sicurezza, mai dietro Premium. Chi lo riceve le
-       * trova dentro il riepilogo, una volta sola. */
-      if (!premium || !imp.eventi.riepilogo) {
+      /* Chi il riepilogo l'ha spento le batterie da cambiare le sa lo
+       * stesso, alla stessa ora. Chi lo riceve le trova dentro il riepilogo,
+       * una volta sola. */
+      if (!imp.eventi.riepilogo) {
         if (batterie === undefined) batterie = await this._leBatterieDaCambiare();
         if (batterie)
           await this.consegna({ ...batterie, quando: this.adesso() }, { soloA: telefono });
@@ -1030,7 +1054,8 @@ export class Notifiche {
     const testo = (ancora) => [...mostrate, ...(altre ? [ancora] : [])].join(" · ");
     return {
       tipo: "riepilogo",
-      /* Passa anche col riepilogo spento, e in Base: non e' il riepilogo. */
+      /* Passa anche col riepilogo spento: non e' il riepilogo. In Base no
+       * (`arrivaInBase`): non e' un avviso di sicurezza. */
       sempre: true,
       stileDellaVoce: "semplice",
       urgenza: "normale",
@@ -1258,6 +1283,14 @@ export class Notifiche {
      * gia' stata detta o non si dice. Non si aspetta: la voce non ferma i
      * telefoni. */
     if (!soloA) void this._dilloAdAlexa(evento);
+    /* In Base al telefono solo gli avvisi di sicurezza (`arrivaInBase`): qui,
+     * prima di ogni telefono, per ogni strada che porta una notifica. */
+    if (!premium && !arrivaInBase(evento, { viaggi: this._viaggiSbloccati })) {
+      const perche = `«${evento?.tipo}» non arriva in Base: solo gli avvisi di sicurezza`;
+      if (categoriaDi(evento?.tipo) === "urgenti") this.registro.info(perche);
+      else this.registro.debug?.(perche);
+      return 0;
+    }
     const elenco = this.dispositivi.elenco();
     const chiCe = await this._chiCe();
     const ora = this.adesso();
@@ -2280,7 +2313,18 @@ export class Notifiche {
            * Premium (`viaggi.js`, `sbloccato`): senza, nemmeno di prova. */
           if (tipo === "viaggi" && !regola && !this._viaggiSbloccati)
             return no("premium-richiesto", "i viaggi pianificati sono di Premium");
-          const prova = regola ? this._provaDi(regola) : esempio || this._provaQualunque();
+          /* In Base arrivano solo gli avvisi di sicurezza (`arrivaInBase`):
+           * di prova solo quelli, e la prova di sempre. */
+          if (regola && !this.premium)
+            return no("premium-richiesto", "le notifiche personalizzate sono di GdAHome Premium");
+          if (esempio && !this.premium && !arrivaInBase(esempio, { viaggi: this._viaggiSbloccati }))
+            return no(
+              "premium-richiesto",
+              "in Base arrivano solo gli avvisi di sicurezza: il resto e' di GdAHome Premium",
+            );
+          const prova = regola
+            ? this._provaDi(regola)
+            : esempio || this._provaQualunque({ premium: this.premium });
           if (esempio) {
             /* Lo stile e' quello che la voce avra' davvero. */
             const imp = this.impostazioniDi(telefono);
@@ -2338,22 +2382,37 @@ export class Notifiche {
     }
   }
 
-  _provaQualunque() {
+  /* La prova di sempre. In Base dice cosa prova: gli avvisi di sicurezza,
+   * che sono quelli che arrivano. */
+  _provaQualunque({ premium = true } = {}) {
     return {
       tipo: "prova",
       urgenza: "normale",
       chiave: "prova",
       quando: this.adesso(),
-      parole: {
-        it: {
-          titolo: "✅ Notifica di prova",
-          testo: "Se la leggi, le notifiche di questa casa arrivano.",
-        },
-        en: {
-          titolo: "✅ Test notification",
-          testo: "If you can read this, this home's notifications work.",
-        },
-      },
+      parole: premium
+        ? {
+            it: {
+              titolo: "✅ Notifica di prova",
+              testo: "Se la leggi, le notifiche di questa casa arrivano.",
+            },
+            en: {
+              titolo: "✅ Test notification",
+              testo: "If you can read this, this home's notifications work.",
+            },
+          }
+        : {
+            it: {
+              titolo: "✅ Prova degli avvisi di sicurezza",
+              testo:
+                "Se la leggi, gli avvisi di sicurezza di questa casa arrivano: fumo, gas, allagamento, antifurto scattato e campanello.",
+            },
+            en: {
+              titolo: "✅ Safety alerts test",
+              testo:
+                "If you can read this, this home's safety alerts work: smoke, gas, water leak, alarm triggered and doorbell.",
+            },
+          },
       azioni: [],
     };
   }
@@ -2369,6 +2428,8 @@ export class Notifiche {
     const testo = [regola.testo, regola.conValore ? valore : ""].filter(Boolean).join(" · ");
     return {
       tipo: "prova",
+      /* Di Premium, come le personalizzate (`arrivaInBase`). */
+      imita: "personalizzata",
       urgenza: regola.urgenza,
       chiave: "prova",
       quando: this.adesso(),
@@ -2412,9 +2473,12 @@ export class Notifiche {
         })),
       io: utente,
       amministra: amministra === true,
-      /* gdahome Premium: senza, l'app mette il lucchetto su «Elaborate» e sul
-       * «Riepilogo della sera». */
+      /* gdahome Premium: senza, l'app mette il lucchetto su «Elaborate» e su
+       * ogni voce che non e' un avviso di sicurezza (`arrivaInBase`). */
       premium: this.premium,
+      /* Se «Quando partire» arriva: gdanav Premium, che gdahome Premium
+       * comprende. Senza, in Base, anche lei col lucchetto. */
+      viaggi: this._viaggiSbloccati,
     };
   }
 
@@ -2649,8 +2713,9 @@ export function cieloDiDomani(previsione, adesso) {
  */
 export function esempioDi(tipo, adesso = Date.now(), opzioni = {}) {
   const esempio = unEsempio(tipo, adesso, opzioni);
-  /* La categoria di quella vera: sul telefono sceglie il canale. */
-  return esempio ? { ...esempio, categoria: categoriaDi(tipo) } : null;
+  /* La categoria di quella vera: sul telefono sceglie il canale. E quale
+   * imita: in Base arriva solo se e' un avviso di sicurezza (`arrivaInBase`). */
+  return esempio ? { ...esempio, categoria: categoriaDi(tipo), imita: tipo } : null;
 }
 
 /* I tasti di un esempio: com'e' scritto quello vero, senza niente da fare.
