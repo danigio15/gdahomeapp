@@ -8676,13 +8676,19 @@
         const piano = uno.piano === "annuale" || uno.piano === "mensile" ? uno.piano : "";
         if (!piano) return null;
         const app = uno.app || "gdahome";
+        /* Solo dallo stesso negozio, e nella stessa valuta se la si sa: un
+         * annuale di Google pagato in dollari da un cliente americano non e'
+         * il prezzo di una prova Apple italiana («perche' App Store e' 54,99
+         * USD?»). Senza nessuno cosi', il listino. */
         const altri = (ABBONAMENTI?.elenco || []).filter(
           (altro) =>
             altro !== uno &&
             altro.prezzo > 0 &&
             !altro.sandbox &&
             altro.piano === piano &&
-            (altro.app || "gdahome") === app,
+            (altro.app || "gdahome") === app &&
+            altro.piattaforma === uno.piattaforma &&
+            (altro.valuta || "EUR") === (uno.valuta || "EUR"),
         );
         const piuRecente = (elenco) =>
           elenco
@@ -8720,6 +8726,11 @@
        * chi non rinnova o e' finito: li', in grigio, e fuori dai totali. */
       function gliImportiDelNegozio(riga, uno) {
         const ios = uno.piattaforma === "ios";
+        /* «Ancora sto USD»: il prezzo e' quello che paga il cliente, nella
+         * valuta del suo negozio. Un account Google o Apple negli Stati Uniti
+         * paga in dollari, ed e' giusto cosi'; ma senza il paese accanto
+         * sembrava un errore. Una valuta che non e' l'euro dice da dove. */
+        const estero = (uno.valuta || "EUR") !== "EUR" ? ilPaeseDelNegozio(uno.paese) : "";
         const detto = uno.prezzo > 0 ? Number(uno.prezzo) : null;
         const diListino = detto === null ? ilPrezzoDelPiano(uno) : null;
         const valuta = diListino?.valuta || uno.valuta || "EUR";
@@ -8750,7 +8761,9 @@
               }
             : {
                 testo: `${iSoldi(prezzo, valuta)}${unita}`,
-                sotto: diListino ? [sotto, "di listino"].filter(Boolean).join(" · ") : sotto,
+                sotto: [sotto, diListino ? "di listino" : "", valuta !== "EUR" ? estero : ""]
+                  .filter(Boolean)
+                  .join(" · "),
                 listino: Boolean(diListino),
                 importo: prezzo,
                 valuta,
@@ -8817,12 +8830,7 @@
           riga.previsto = spento("non rinnova");
           riga.reale = haPagato ? pagato() : nessuno("non pagherà");
         } else {
-          riga.previsto = previsto(
-            "ricorrente",
-            piano === "annuale" && prezzo !== null
-              ? `≈ ${iSoldi(prezzo / 12, valuta)} al mese`
-              : "",
-          );
+          riga.previsto = previsto("ricorrente", "");
           riga.reale = haPagato ? pagato() : nessuno("");
         }
         riga.importoDi =
@@ -8833,6 +8841,52 @@
               : ios
                 ? "importo dall'ultima transazione di App Store"
                 : "importo dal prezzo del piano su Google Play";
+        if (riga.importoDi && valuta !== "EUR")
+          riga.importoDi += ` · paga in ${valuta}, la valuta del suo account ${ios ? "Apple" : "Google"}${estero ? ` (${estero})` : ""}`;
+      }
+
+      /* Il paese del negozio, in parole: Google lo dice in due lettere
+       * («US»), Apple in tre («USA»). */
+      const DUE_LETTERE = {
+        USA: "US",
+        GBR: "GB",
+        CHE: "CH",
+        CAN: "CA",
+        AUS: "AU",
+        ITA: "IT",
+        SMR: "SM",
+        DEU: "DE",
+        FRA: "FR",
+        ESP: "ES",
+        NLD: "NL",
+        BEL: "BE",
+        AUT: "AT",
+        PRT: "PT",
+        IRL: "IE",
+        POL: "PL",
+        SWE: "SE",
+        NOR: "NO",
+        DNK: "DK",
+        ROU: "RO",
+        ALB: "AL",
+        BRA: "BR",
+        MEX: "MX",
+        ARG: "AR",
+        JPN: "JP",
+        CHN: "CN",
+        IND: "IN",
+        ARE: "AE",
+      };
+      function ilPaeseDelNegozio(paese) {
+        const detto = String(paese || "")
+          .trim()
+          .toUpperCase();
+        if (!detto) return "";
+        const codice = detto.length === 3 ? DUE_LETTERE[detto] || "" : detto;
+        try {
+          if (codice) return new Intl.DisplayNames(["it"], { type: "region" }).of(codice) || detto;
+        } catch (_paeseStrano) {}
+        return detto;
       }
 
       /* Una licenza, come si legge in una riga. `una` e' la licenza
@@ -9289,7 +9343,18 @@
           typeof ABBONAMENTI?.conti?.inizioDelMese === "number"
             ? ABBONAMENTI.conti.inizioDelMese
             : new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime();
-        const vuote = () => ({ alMese: {}, voci: new Map(), quante: 0, senzaPrezzo: 0 });
+        /* `aScadenza`: quello che entra alle prossime scadenze, il prezzo
+         * intero del piano (un annuale conta 49,99 €, non 4,17 al mese);
+         * `dal` e `al`: la prima e l'ultima di quelle scadenze. */
+        const vuote = () => ({
+          alMese: {},
+          aScadenza: {},
+          voci: new Map(),
+          quante: 0,
+          senzaPrezzo: 0,
+          dal: null,
+          al: null,
+        });
         const somme = {
           ricorrente: vuote(),
           prova: vuote(),
@@ -9308,6 +9373,12 @@
             if (p.alMese === null || p.alMese === undefined) qui.senzaPrezzo += 1;
             else {
               piu(qui.alMese, p.valuta, p.alMese);
+              piu(qui.aScadenza, p.valuta, p.importo);
+              const quando = riga.data?.quando;
+              if (typeof quando === "number") {
+                if (qui.dal === null || quando < qui.dal) qui.dal = quando;
+                if (qui.al === null || quando > qui.al) qui.al = quando;
+              }
               const chiave = `${p.piano}|${p.importo}|${p.valuta}`;
               const voce = qui.voci.get(chiave) || {
                 n: 0,
@@ -9336,8 +9407,10 @@
               Math.round(valore * 100) / 100,
             ]),
           );
-        somme.ricorrente.alMese = arrotonda(somme.ricorrente.alMese);
-        somme.prova.alMese = arrotonda(somme.prova.alMese);
+        for (const parte of [somme.ricorrente, somme.prova]) {
+          parte.alMese = arrotonda(parte.alMese);
+          parte.aScadenza = arrotonda(parte.aScadenza);
+        }
         somme.reale.mese = arrotonda(somme.reale.mese);
         somme.reale.tutti = arrotonda(somme.reale.tutti);
         return somme;
@@ -9351,7 +9424,7 @@
           : "0 €";
       };
 
-      /* Le somme vere: «3 × 4,99 €/mese + 1 × 49,99 €/anno», mensili prima. */
+      /* Le somme vere: «3 mensili × 4,99 € + 1 annuale × 49,99 €», mensili prima. */
       const leVociDelPrevisto = (parte) =>
         [...parte.voci.values()]
           .sort(
@@ -9362,18 +9435,32 @@
           )
           .map(
             (voce) =>
-              `${numero(voce.n)} × ${iSoldi(voce.importo, voce.valuta)}/${voce.piano === "annuale" ? "anno" : "mese"}`,
+              `${numero(voce.n)} ${voce.piano === "annuale" ? (voce.n === 1 ? "annuale" : "annuali") : voce.n === 1 ? "mensile" : "mensili"} × ${iSoldi(voce.importo, voce.valuta)}`,
           )
           .join(" + ");
 
-      /* Il previsto in una frase: «3 × 4,99 €/mese + 1 × 49,99 €/anno ≈
-       * 19,13 €/mese», e quanti non hanno il prezzo. */
+      /* Le scadenze in cui entrano: «il 20 nov», «dal 9 nov al 4 giu 2027». */
+      function leScadenzeDette(parte) {
+        if (parte.dal === null) return "";
+        if (ilGiornoCorto(parte.dal) === ilGiornoCorto(parte.al))
+          return conLArticolo("il", parte.dal);
+        return `${conLArticolo("dal", parte.dal)} ${conLArticolo("al", parte.al)}`;
+      }
+
+      /* Il previsto in una frase, a scadenza: «3 mensili × 4,99 € + 3
+       * annuali × 49,99 € = 164,94 €, dal 9 nov al 4 giu 2027», e quanti
+       * non hanno il prezzo. Ogni abbonamento col prezzo intero del suo
+       * piano: e' quello che entra quando scade. */
       function ilPrevistoDetto(parte) {
         const voci = leVociDelPrevisto(parte);
         const senza = parte.senzaPrezzo
           ? `${plurale(parte.senzaPrezzo, "abbonamento", "abbonamenti")} senza prezzo detto dal negozio, non ${parte.senzaPrezzo === 1 ? "contato" : "contati"}`
           : "";
-        return [voci ? `${voci} ≈ ${iSoldiInTutte(parte.alMese)}/mese` : "", senza]
+        const quando = leScadenzeDette(parte);
+        return [
+          voci ? `${voci} = ${iSoldiInTutte(parte.aScadenza)}${quando ? `, ${quando}` : ""}` : "",
+          senza,
+        ]
           .filter(Boolean)
           .join("; ");
       }
@@ -9389,7 +9476,7 @@
               .join("")}</span>
             ${/* già HTML */ laCellaDellImporto("lic-s-previsto", previsto)}
             ${/* già HTML */ laCellaDellImporto("lic-s-reale", reale)}
-            <span class="lic-s-importi"><small>previsto</small> <b${previsto.futuro ? ' class="futuro"' : ""}>${testo(previsto.testo)}${previsto.testo === "—" ? "" : "/mese"}</b>${previsto.futuro ? " <small>dopo la prova</small>" : ""}<small aria-hidden="true"> · </small><small>reale</small> <b>${testo(reale.testo)}</b>${reale.sotto ? ` <small>${testo(reale.sotto)}</small>` : ""}</span>
+            <span class="lic-s-importi"><small>previsto</small> <b${previsto.futuro ? ' class="futuro"' : ""}>${testo(previsto.testo)}</b>${previsto.testo !== "—" && previsto.sotto ? ` <small>${testo(previsto.sotto)}</small>` : ""}<small aria-hidden="true"> · </small><small>reale</small> <b>${testo(reale.testo)}</b>${reale.sotto ? ` <small>${testo(reale.sotto)}</small>` : ""}</span>
           </div>`;
       }
 
@@ -9412,7 +9499,7 @@
             quale === "nonrinnova"
               ? "Non pagheranno più: niente previsto."
               : ilPrevistoDetto(parte)
-                ? `${quale === "prova" ? "Se pagano alla fine della prova: " : ""}${ilPrevistoDetto(parte)}.`
+                ? `${quale === "prova" ? "Se pagano alla fine della prova: " : "Alle prossime scadenze: "}${ilPrevistoDetto(parte)}.`
                 : quale === "attiva"
                   ? "Nessuno che paga e rinnova: i regali sono gratis."
                   : "",
@@ -9422,8 +9509,8 @@
           ],
           previsto: conPrevisto
             ? {
-                testo: `≈ ${iSoldiInTutte(parte.alMese)}`,
-                sotto: quale === "prova" ? "al mese, dopo la prova" : "al mese",
+                testo: iSoldiInTutte(parte.aScadenza),
+                sotto: quale === "prova" ? "a fine prova" : "alle scadenze",
                 futuro: quale === "prova",
               }
             : { testo: "—", sotto: "" },
@@ -9431,7 +9518,8 @@
         });
       }
 
-      /* Il totale in fondo: il previsto e' il «Ricorrente» in cima, il reale
+      /* Il totale in fondo: il previsto e' quello che entra alle prossime
+       * scadenze (chi paga e rinnova, e le prove se non disdicono), il reale
        * l'«Incassato» del mese, coi numeri da cui vengono. Con un filtro o una
        * ricerca e' il totale di quello che si vede, e lo dice. */
       function ilTotaleDelleLicenze(righe, { filtrate = false } = {}) {
@@ -9439,16 +9527,24 @@
         const mese = ilMeseDetto(somme.inizioDelMese);
         const previstoDetto = ilPrevistoDetto(somme.ricorrente);
         const proveDette = ilPrevistoDetto(somme.prova);
+        const tutto = {};
+        for (const parte of [somme.ricorrente, somme.prova])
+          for (const [valuta, valore] of Object.entries(parte.aScadenza))
+            tutto[valuta] = Math.round(((tutto[valuta] || 0) + valore) * 100) / 100;
+        const conPrevisto = somme.ricorrente.voci.size + somme.prova.voci.size > 0;
         return laRigaDelleSomme({
           classe: "lic-somma lic-totale",
           titolo: filtrate ? "Totale delle licenze filtrate" : "Totale",
           spiega: [
-            `Previsto: ${previstoDetto || "nessuno che paga e rinnova"}${filtrate ? "." : ", come il «Ricorrente» in cima."}`,
+            `Previsto alle prossime scadenze: ${previstoDetto || "nessuno che paga e rinnova"}.`,
             proveDette ? `Le prove, se pagano alla fine: ${proveDette}.` : "",
             `Reale: ${iSoldiInTutte(somme.reale.mese)} pagati a ${mese}${filtrate ? "" : ", come l'«Incassato» in cima"}. Ultimi pagamenti in elenco: ${iSoldiInTutte(somme.reale.tutti)} (il quadro tiene l'ultimo pagamento di ogni abbonamento).`,
           ],
-          previsto: somme.ricorrente.voci.size
-            ? { testo: `≈ ${iSoldiInTutte(somme.ricorrente.alMese)}`, sotto: "al mese" }
+          previsto: conPrevisto
+            ? {
+                testo: iSoldiInTutte(tutto),
+                sotto: somme.prova.voci.size ? "alle scadenze, prove comprese" : "alle scadenze",
+              }
             : { testo: "—", sotto: "" },
           reale: { testo: iSoldiInTutte(somme.reale.mese), sotto: `a ${mese}` },
         });

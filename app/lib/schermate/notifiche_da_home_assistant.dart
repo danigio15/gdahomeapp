@@ -7,10 +7,10 @@ part of 'notifiche.dart';
  * (`ponte/src/notifiche-di-home-assistant.js`): per ognuna si sceglie se
  * riceverla anche qui. Di serie spente, tutte.
  *
- * In Base: il testo, su questo telefono, delle automazioni che mandano a lui
- * (o a tutti). Con Premium: la foto, i tasti, mandarle ad altri telefoni o a
- * tutti, e «Proponimi le nuove». Quello che in Base non c'e' ha il bollino
- * PREMIUM, e al tocco la spiegazione. */
+ * Sono di Premium: in Base al telefono arrivano solo gli avvisi di
+ * sicurezza, e queste non lo sono. L'elenco si vede, col bollino PREMIUM e
+ * le righe grigie, e al tocco la spiegazione. Con Premium: il testo, la foto,
+ * i tasti, mandarle ad altri telefoni o a tutti, e «Proponimi le nuove». */
 
 /// Il disegno di un'automazione, da come si chiama: la lavatrice, la porta,
 /// l'allarme. Quello che non si riconosce e' un avviso.
@@ -202,9 +202,6 @@ class SezioneDaHomeAssistant extends StatelessWidget {
   /// Con l'interruttore generale spento.
   final bool spento;
 
-  /// Se in questa casa la si puo' accendere: in Base solo quelle per lui.
-  bool _siAccende(AutomazioneCheAvvisa riga) => premium || riga.perMe;
-
   @override
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
@@ -222,6 +219,7 @@ class SezioneDaHomeAssistant extends StatelessWidget {
         _Titolo(
           disegno: 'automazioni',
           testo: inLingua(it: 'Da Home Assistant', en: 'From Home Assistant'),
+          diPremium: !premium,
         ),
         Scheda(
           child: Column(
@@ -287,7 +285,7 @@ class SezioneDaHomeAssistant extends StatelessWidget {
                   ),
                 ],
               ),
-              if (mieSpente.isNotEmpty && !spento) ...[
+              if (mieSpente.isNotEmpty && !spento && premium) ...[
                 const SizedBox(height: 8),
                 Padding(
                   padding: const EdgeInsets.only(left: 48),
@@ -323,12 +321,14 @@ class SezioneDaHomeAssistant extends StatelessWidget {
                 _RigaDaHomeAssistant(
                   riga: riga,
                   etichette: _leEtichette(riga, dati, premium: premium),
-                  bloccata: !_siAccende(riga),
+                  /* Solo con Premium: in Base al telefono arrivano solo gli
+                   * avvisi di sicurezza, e queste non lo sono. */
+                  bloccata: !premium,
                   spento: spento,
                   cambia: (si) => cambia({
                     riga.chiave: {'acceso': si},
                   }),
-                  tocca: _siAccende(riga) ? () => apri(riga) : spiegaIlPremium,
+                  tocca: premium ? () => apri(riga) : spiegaIlPremium,
                 ),
               ],
             ],
@@ -388,8 +388,7 @@ class _RigaDaHomeAssistant extends StatelessWidget {
   final AutomazioneCheAvvisa riga;
   final List<(String, _Tinta)> etichette;
 
-  /// Va al telefono di un altro, e la casa e' Base: grigia, e al tocco la
-  /// spiegazione del Premium.
+  /// La casa e' Base: grigia, e al tocco la spiegazione del Premium.
   final bool bloccata;
   final bool spento;
   final ValueChanged<bool> cambia;
@@ -522,7 +521,7 @@ class _StatoDelFoglioDaHA extends State<FoglioDaHomeAssistant> {
   late AutomazioneCheAvvisa _riga = widget.riga;
   bool _inCorso = false;
 
-  bool get _siAccende => widget.premium || _riga.perMe;
+  bool get _siAccende => widget.premium;
 
   Future<void> _cambia(Map<String, Object> voce) async {
     if (_inCorso) return;
@@ -758,7 +757,7 @@ class _StatoDelFoglioDaHA extends State<FoglioDaHomeAssistant> {
                 ),
               ],
             ),
-            if (!premium && (riga.conFoto || riga.conTasti)) ...[
+            if (!premium) ...[
               const SizedBox(height: 12),
               InkWell(
                 onTap: widget.spiegaIlPremium,
@@ -773,11 +772,11 @@ class _StatoDelFoglioDaHA extends State<FoglioDaHomeAssistant> {
                         child: Text(
                           inLingua(
                             it:
-                                'La foto e i tasti arrivano con Premium: '
-                                'qui arriva il testo.',
+                                'Le notifiche di Home Assistant arrivano con '
+                                'Premium: senza, solo gli avvisi di sicurezza.',
                             en:
-                                'The photo and the buttons come with '
-                                'Premium: here you get the text.',
+                                'Home Assistant notifications come with '
+                                'Premium: without it, only safety alerts.',
                           ),
                           style: testi.bodySmall?.copyWith(
                             color: colori.onSurfaceVariant,

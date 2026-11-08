@@ -1538,7 +1538,6 @@ export default Object.freeze({
   From: "Du",
   "From outside": "Depuis l'extérieur",
   "From the house": "Depuis la maison",
-  "From the integration": "Depuis l'intégration",
   "From this device": "Depuis cet appareil",
   "From … to": "Du … au",
   "Front left": "Avant gauche",
@@ -3717,9 +3716,6 @@ export default Object.freeze({
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
     "La consigne que la régulation s'est donnée : à côté du départ réel, elle dit si la chaudière y arrive.",
   "The description is missing.": "La description manque.",
-  "The device controls": "Les commandes de l'appareil",
-  "The device readings": "Les mesures de l'appareil",
-  "The device state": "L'état de l'appareil",
   "The doors and the windows": "Les portes et les fenêtres",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "Le relais de descente doit être une entité switch.*, et il ne s’applique que si la case du volet contient elle aussi un relais switch.*.",
@@ -8268,4 +8264,5 @@ export default Object.freeze({
   "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "les pages modifiées dans l'aperçu de leur onglet — l'ordre des blocs et ceux masqués. «Réinitialiser» la remet comme avant.",
   "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.": "les dessins dont tu as déplacé les pièces dans l'aperçu, sur l'ordinateur et sur le téléphone. «Réinitialiser» les remet comme avant.",
   "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.": "Il n'y a pas encore de thermostat avec chauffage et refroidissement : en attendant, elle s'ouvre sur Froid.",
+  "First open the Marketplace from the Home Assistant menu, read the warning and accept it: after that, updates install from here too.": "Ouvre d'abord le Marketplace depuis le menu de Home Assistant, lis l'avertissement et accepte-le : ensuite les mises à jour s'installent aussi d'ici.",
 });

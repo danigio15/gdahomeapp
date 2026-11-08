@@ -142,7 +142,9 @@ function unaCasa({ stati = [], valori = {} } = {}) {
 }
 
 test("trenta movimenti nell'ora, poi il campanello: arriva a tutti e due i telefoni", async () => {
-  /* La casa vuota e trenta telecamere: ogni movimento e' una notifica. */
+  /* La casa vuota e trenta telecamere, e telefoni che il movimento lo vogliono
+   * sempre: ogni movimento e' una notifica. (Con la casa vuota e basta se ne
+   * direbbe uno: il primo, e per mezz'ora nessun altro.) */
   const telecamere = Array.from({ length: 31 }, (_v, i) => `binary_sensor.telecamera_${i}_motion`);
   const casa = unaCasa({
     stati: [
@@ -154,6 +156,9 @@ test("trenta movimenti nell'ora, poi il campanello: arriva a tutti e due i telef
   try {
     await casa.registra("iphone");
     await casa.registra("tablet");
+    for (const chi of ["iphone", "tablet"])
+      await casa.imposta(chi, { su: { movimento: { quando: "sempre" } } });
+    casa.sentinella.movimentoSempre = true;
     for (const id of telecamere.slice(0, 30)) {
       casa.sentinella.cambia(id, stato(id, "on", { device_class: "motion" }));
       await corri();

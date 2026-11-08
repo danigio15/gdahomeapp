@@ -44,7 +44,7 @@ import { join } from "node:path";
 
 import { Archivio } from "./archivio.js";
 import { giornoDi, quoteDelMomento } from "./l-energia-di-casa.js";
-import { risolutoreDalla } from "./ricarica-di-notte.js";
+import { mappaDiCasa, risolutoreDalla } from "./ricarica-di-notte.js";
 import {
   contatoreDaProporre,
   genereDelSensore,
@@ -54,7 +54,11 @@ import {
 import { resolveRate } from "../plancia/src/core/energy-calculations.js";
 import { normalizzaLeFasce, nomeDellaFascia } from "../plancia/src/core/fasce-della-tariffa.js";
 import { accumuloDiCasa } from "../plancia/src/core/l-accumulo-di-casa.js";
-import { entitaDellaRicarica, letturaDellAuto } from "../plancia/src/core/ricarica-di-notte.js";
+import {
+  RIFERIMENTI,
+  entitaDellaRicarica,
+  letturaDellAuto,
+} from "../plancia/src/core/ricarica-di-notte.js";
 import { wattsFromState } from "../plancia/src/core/signed-energy.js";
 import { codiceDellaRicarica } from "../plancia/src/core/stato-della-ricarica.js";
 import {
@@ -267,6 +271,7 @@ function autoDellaPlancia(valori) {
         ? sezioni.ev
         : [];
   const diCasa = risolutoreDalla(v);
+  const mappa = mappaDiCasa(v);
   if (!elenco.length) {
     if (tipoMotore(v[MOTORE_DI_CASA_KEY]) === "termica") return [];
     const kwh = numero(v[CAPACITA_DI_CASA_KEY]);
@@ -281,10 +286,15 @@ function autoDellaPlancia(valori) {
         chiave: `a${indice}`,
         nome: String(auto.name || "").trim() || (indice ? `Auto ${indice + 1}` : "Auto"),
         kwh: capacitaDellaBatteria(auto),
-        /* La prima auto e' anche quella della mappatura generale. */
+        /* La prima auto e' anche quella della mappatura generale. La batteria
+         * pero' non si prende da un'altra auto: viene prima di quella di evcc,
+         * e la batteria della macchina accanto sarebbe un numero sbagliato. */
         risolvi: (rif) => {
           if (typeof sue[rif] === "string" && sue[rif]) return sue[rif];
-          return indice === elenco.findIndex((x) => siRicarica(oggetto(x))) ? diCasa(rif) : "";
+          if (indice !== elenco.findIndex((x) => siRicarica(oggetto(x)))) return "";
+          if (RIFERIMENTI.soc.includes(rif))
+            return typeof mappa[rif] === "string" ? mappa[rif] : "";
+          return diCasa(rif);
         },
       };
     });

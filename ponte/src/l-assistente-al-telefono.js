@@ -43,6 +43,7 @@ import {
 } from "./sentinella.js";
 import { nomePulito } from "./capire-la-casa.js";
 import { carichiDellaPlancia } from "./l-energia-di-casa.js";
+import { batteriaDellAutoInUso, risolutoreDellaRicarica } from "./ricarica-di-notte.js";
 import {
   elettrodomesticoDellaPlancia,
   tipoDellElettrodomestico,
@@ -60,6 +61,10 @@ import {
 } from "../plancia/src/core/ricarica-di-notte.js";
 import { codiceDellaRicarica } from "../plancia/src/core/stato-della-ricarica.js";
 import { presetDiRiposo } from "../plancia/src/core/climate-power.js";
+import { senzaDispositivo } from "../plancia/src/core/chi-non-risponde.js";
+import { escluseDellaTessera } from "../plancia/src/core/fuori-dai-widget.js";
+import { TESSERA_SCOLLEGATI } from "../plancia/src/core/i-dispositivi-scollegati.js";
+import { stanzaAllAperto } from "../plancia/src/core/room-overview.js";
 
 /* Attenzione all'anello: `sentinella.js` importa questo modulo, e questo
  * importa da lei i suoi aiutanti. Va bene finche' qui, fuori dalle funzioni,
@@ -124,6 +129,24 @@ const ARIA_DA = 15 * MINUTO;
 /* I dispositivi muti da sei ore, e gli aggiornamenti: una volta al giorno,
  * alle dieci, quando si ha un minuto per guardarli. */
 const MUTO_DA = 6 * ORA;
+/* «Ho tantissimi sensori che dice che non rispondono quando invece sono
+ * collegati e funzionano benissimo.» Un dispositivo e' muto solo se e'
+ * `unavailable` da almeno mezz'ora: un riavvio di Home Assistant, una
+ * ricaricata dell'integrazione, un riaggancio Zigbee durano meno. E chi va a
+ * pile — o chi si e' gia' visto tornare da solo — tace per mestiere: ZHA dice
+ * `unavailable` un sensore a batteria che non parla da sei ore, il Bluetooth
+ * uno che non si fa sentire da un quarto d'ora, e al primo movimento o alla
+ * prima porta aperta tornano. Quelli si dicono dopo un giorno intero. */
+export const MUTO_DAVVERO_DA = 30 * MINUTO;
+export const DORMIGLIONE_DA = 24 * ORA;
+/* Un dispositivo fatto solo di sensori che e' tornato da solo nell'ultima
+ * settimana e' uno che dorme, non uno che si e' rotto. Una presa o una luce
+ * che cadono e tornano no: quelle si dicono come prima (#33, «la pompa della
+ * piscina resta ferma»). */
+export const TORNATO_DA_SOLO_PER = 7 * 24 * ORA;
+/* Lo stesso elenco di muti non si ridice ogni mattina: solo quando ce n'e'
+ * uno nuovo, o una volta a settimana. */
+const MUTI_RIDETTI_OGNI = 7 * 24 * ORA;
 const MANUTENZIONE_DALLE = 10 * 60;
 const MANUTENZIONE_ALLE = 10 * 60 + 15;
 
@@ -131,9 +154,30 @@ const MANUTENZIONE_ALLE = 10 * 60 + 15;
 
 const MOVIMENTO = new Set(["motion", "occupancy", "presence"]);
 /* Fuori casa: un termometro del giardino a 30 gradi d'agosto e' l'estate,
- * non una stanza da rinfrescare. */
-const ALL_APERTO =
-  /estern|outdoor|outside|fuori|giardin|garden|balcon|terrazz|terrace|cortil|patio|veranda/i;
+ * non una stanza da rinfrescare — e a sei gradi di novembre e' l'inverno, non
+ * una stanza da scaldare. Dal campo: «notifiche della temperatura del sensore
+ * che ho in giardino», «non mi deve suggerire di attivare il riscaldamento».
+ * Le parole valgono nel nome, nell'identificativo e nell'area. */
+export const ALL_APERTO =
+  /estern|outdoor|outside|exterior|ext[eé]rieur|fuori|giardin|garden|jardin|garten|au(ss|ß)en|balcon|terrazz|terrac|terrasse|cortil|courtyard|patio|veranda|portic|loggia|pergol|gazebo|tettoi|carport|backyard|vialett|meteo|weather|(^|[^a-z])(orto|prato|yard|lawn|tetto|roof)([^a-z]|$)/i;
+/* Le misure del tempo che fa, che una stanza non ha: il punto di rugiada, la
+ * temperatura percepita, il vento che raffredda. */
+const DEL_TEMPO_CHE_FA =
+  /dew[\s_]*point|rugiada|wind[\s_]*chill|heat[\s_]*index|apparent|feels[\s_]*like|percepit/i;
+/* Chi le da' un servizio meteo lo scrive nell'attribuzione (`attribution`):
+ * met.no, OpenWeatherMap, AccuWeather, Pirate Weather, Tomorrow.io… Non
+ * basta un'attribuzione qualunque — Netatmo la scrive anche sul modulo del
+ * salotto — ci vuole quella di chi fa le previsioni. */
+const SERVIZIO_METEO =
+  /weather|meteo|forecast|met\.no|tomorrow\.io|buienradar|noaa|\bdwd\b|smhi|aemet|ipma|knmi/i;
+/* Le caselle della plancia che sono fuori per definizione: la stazione meteo
+ * della testata e la temperatura esterna dell'auto. */
+const CASELLE_DI_FUORI = Object.freeze([
+  "dm.home_meteo_temperatura",
+  "dm.home_meteo_umidita",
+  "dm.home_meteo_percepita",
+  "dm.ev_temperatura_esterna",
+]);
 /* I termometri che non dicono com'e' una stanza: il frigo, l'acqua, il
  * boiler, la piscina, i computer, le batterie, l'auto. */
 const NON_E_UNA_STANZA =
@@ -580,7 +624,12 @@ function entitaDellaCasella(vista, casella) {
  */
 export function soleAuto(vista) {
   const { ora, data, memoria } = vista;
-  const entita = entitaDellaRicarica(vista.risolvi);
+  /* La batteria e' quella dell'auto in uso, la stessa della pagina Auto:
+   * quella di evcc solo se l'auto non la dice. */
+  const entita = entitaDellaRicarica(
+    vista.valori ? risolutoreDellaRicarica(vista.valori) : vista.risolvi,
+    { batteria: batteriaDellAutoInUso(vista.valori) },
+  );
   const leggi = (id) => vista.stati.get(id) || null;
   /* Senza la modalita', il cavo o lo stato della ricarica non c'e' un'auto
    * da guardare: `letturaDellAuto` la direbbe collegata per non lasciarla a
@@ -894,12 +943,70 @@ export function appuntamento(vista) {
   return fuori;
 }
 
+/* ─── Fuori casa ─────────────────────────────────────────────────────────── */
+
+/* Le stanze della plancia: quelle dello stato salvato, o `cd_stanze`. */
+function stanzeDellaPlancia(valori) {
+  const dalloStato = json(valori?.dm_dashboard_state)?.sections?.rooms;
+  const elenco = Array.isArray(dalloStato) ? dalloStato : json(valori?.cd_stanze);
+  return Array.isArray(elenco) ? elenco.filter((s) => s && typeof s === "object") : [];
+}
+
+/**
+ * Le entita' che la plancia dice fuori casa: i termometri e gli igrometri
+ * delle stanze segnate «All'aperto» (o che si chiamano Giardino, Terrazzo…),
+ * la stazione meteo della testata, la temperatura esterna dell'auto. `risolvi`
+ * traduce le caselle `dm.` nell'entita' scelta.
+ */
+export function entitaAllAperto(valori = {}, risolvi = () => "") {
+  const fuori = new Set();
+  const traduci = (rif) => {
+    const pulito = String(rif || "").trim();
+    if (!pulito.startsWith("dm.")) return pulito;
+    try {
+      return String(risolvi(pulito) || "").trim();
+    } catch (_errore) {
+      return "";
+    }
+  };
+  for (const stanza of stanzeDellaPlancia(valori)) {
+    if (!stanzaAllAperto(stanza) && !ALL_APERTO.test(String(stanza.name || ""))) continue;
+    for (const rif of [
+      stanza.temp,
+      stanza.temperature_entity,
+      stanza.hum,
+      stanza.humidity_entity,
+    ]) {
+      const id = traduci(rif);
+      if (ENTITA.test(id)) fuori.add(id);
+    }
+  }
+  for (const casella of CASELLE_DI_FUORI) {
+    const id = traduci(casella);
+    if (ENTITA.test(id)) fuori.add(id);
+  }
+  return fuori;
+}
+
+/**
+ * Se un sensore sta fuori casa: dal nome, dall'identificativo o dall'area
+ * («Giardino», «Terrazzo», «Esterno»…), dalla plancia (`fuori`, quello che
+ * torna `entitaAllAperto`), o perche' e' di un servizio meteo — che misura
+ * il tempo che fa, e il tempo che fa e' fuori.
+ */
+export function eAllAperto({ id, stato, area = "", fuori = null }) {
+  if (fuori?.has?.(id)) return true;
+  const testo = `${id} ${nomeDi(stato, id)} ${area}`;
+  if (ALL_APERTO.test(testo) || DEL_TEMPO_CHE_FA.test(testo)) return true;
+  return SERVIZIO_METEO.test(String(stato?.attributes?.attribution || ""));
+}
+
 /* ─── 9. Una stanza troppo calda o troppo fredda ─────────────────────────── */
 
-/* Se un sensore e' dentro casa: non all'aperto, ne' dal nome ne' dall'area. */
-function eDiCasa(vista, id, stato) {
-  const testo = `${id} ${nomeDi(stato, id)} ${areaDi(vista, id)}`;
-  return !ALL_APERTO.test(testo);
+/* Se un sensore e' dentro casa: non all'aperto, ne' dal nome ne' dall'area
+ * ne' per la plancia (la spunta «All'aperto» della stanza). */
+function eDiCasa(vista, id, stato, fuori) {
+  return !eAllAperto({ id, stato, area: areaDi(vista, id), fuori });
 }
 
 /**
@@ -911,9 +1018,18 @@ export function comfort(vista) {
   const { ora, vuota, memoria } = vista;
   const fuori = [];
   const viste = new Set();
+  const allAperto = entitaAllAperto(vista.valori, vista.risolvi);
   for (const [id, stato] of gliStati(vista, "sensor")) {
     if (stato.attributes?.device_class !== "temperature") continue;
-    if (!eDiCasa(vista, id, stato) || NON_E_UNA_STANZA.test(`${id} ${nomeDi(stato, id)}`)) continue;
+    if (
+      !eDiCasa(vista, id, stato, allAperto) ||
+      NON_E_UNA_STANZA.test(`${id} ${nomeDi(stato, id)}`)
+    ) {
+      /* Un sensore che e' fuori non si ricorda nemmeno: se un giorno torna
+       * dentro, la mezz'ora riparte da li'. */
+      memoria.delete(`comfort:${id}`);
+      continue;
+    }
     const t = gradi(stato);
     const fuoriMisura = vuota === false && t !== null && (t >= TROPPO_CALDO || t <= TROPPO_FREDDO);
     if (regge(memoria, `comfort:${id}`, fuoriMisura, ora) < COMFORT_DA || !fuoriMisura) continue;
@@ -974,10 +1090,11 @@ export function aria(vista) {
   const { ora, vuota, memoria } = vista;
   const fuori = [];
   const viste = new Set();
+  const allAperto = entitaAllAperto(vista.valori, vista.risolvi);
   for (const [id, stato] of gliStati(vista, "sensor")) {
     const classe = stato.attributes?.device_class;
     if (classe !== "carbon_dioxide" && classe !== "humidity") continue;
-    if (!eDiCasa(vista, id, stato)) continue;
+    if (!eDiCasa(vista, id, stato, allAperto)) continue;
     const valore = numero(stato.state);
     const soglia = classe === "carbon_dioxide" ? CO2_ALTA : UMIDITA_ALTA;
     const pesante = vuota === false && valore !== null && valore >= soglia;
@@ -1035,37 +1152,107 @@ export function aria(vista) {
 
 /* ─── 11. I dispositivi che non rispondono ───────────────────────────────── */
 
+/* I domini di chi comanda qualcosa: un dispositivo che ne ha uno non dorme. */
+const COMANDA =
+  /^(switch|light|cover|climate|fan|lock|media_player|valve|vacuum|water_heater|humidifier|siren|alarm_control_panel)\./;
+/* Se un'entita' dice che il suo dispositivo va a pile: la classe la tiene
+ * anche quando e' `unavailable`, e Home Assistant la scrive. */
+const dellaPila = (id, stato) =>
+  stato?.attributes?.device_class === "battery" ||
+  /(^|[._])batter(y|ia)([._]|$)/.test(id) ||
+  numero(stato?.attributes?.battery_level) !== null;
+
+/**
+ * I dispositivi che non rispondono davvero: la regola sola che usano la
+ * notifica delle dieci e il riepilogo della sera.
+ *
+ * Un dispositivo e' muto quando nessuna delle sue entita' risponde — la
+ * regola della pagina «Non connessi» della plancia (`chi-non-risponde.js`) e
+ * del cruscotto di chi installa. Solo `unavailable`: `unknown` e' un
+ * sensore che non ha ancora niente da dire, ed e' normale dopo un riavvio. E
+ * non per quanto tempo un sensore non cambia: un contatto che resta chiuso
+ * per una settimana risponde benissimo.
+ *
+ * Poi deve durare: `soglia` dall'ultima entita' che ha smesso di parlare
+ * (`MUTO_DAVVERO_DA` di serie, che un riavvio non arriva a fare). Chi va a
+ * pile, o e' fatto solo di sensori e si e' visto tornare da solo nell'ultima
+ * settimana (`vista.tornatiDaSoli`, dispositivo → quando), un giorno intero.
+ *
+ * Non contano: le entita' che i registri dicono nascoste, disattivate o di
+ * diagnostica (`daNonContare`) — se parlano pero' dicono che il dispositivo
+ * c'e' —, quelle degli aiutanti, e quelle che chi abita ha messo da parte
+ * nella pagina «Non connessi» della plancia (`cd_widgets.excluded`). Senza
+ * registri non si sa di chi e' un'entita', e non si dice niente.
+ */
+export function dispositiviMuti(vista, { soglia = MUTO_DAVVERO_DA } = {}) {
+  const { ora } = vista;
+  const messiDaParte = escluseDellaTessera(
+    json(vista.valori?.cd_widgets)?.excluded,
+    TESSERA_SCOLLEGATI,
+  );
+  const dispositivi = new Map();
+  for (const [id, stato] of vista.stati) {
+    const suo = vista.dispositivoDi?.[id];
+    if (!suo || senzaDispositivo(id)) continue;
+    const voce = dispositivi.get(suo) || {
+      vivo: false,
+      muto: false,
+      da: 0,
+      primo: "",
+      pila: false,
+      comanda: false,
+    };
+    if (dellaPila(id, stato)) voce.pila = true;
+    if (COMANDA.test(id)) voce.comanda = true;
+    if (stato.state !== "unavailable") voce.vivo = true;
+    else if (!vista.daNonContare?.has?.(id) && !messiDaParte.has(id)) {
+      voce.muto = true;
+      voce.da = Math.max(voce.da, stato.dal);
+      voce.primo ||= id;
+    }
+    dispositivi.set(suo, voce);
+  }
+  const muti = [];
+  for (const [suo, v] of dispositivi) {
+    if (v.vivo || !v.muto) continue;
+    const tornato = vista.tornatiDaSoli?.get?.(suo);
+    const dorme =
+      v.pila || (!v.comanda && Number.isFinite(tornato) && ora - tornato < TORNATO_DA_SOLO_PER);
+    if (ora - v.da < (dorme ? Math.max(soglia, DORMIGLIONE_DA) : soglia)) continue;
+    muti.push({
+      suo,
+      nome: String(
+        vista.nomiDeiDispositivi?.[suo] || nomePulito(nomeDi(vista.stati.get(v.primo), v.primo)),
+      ).slice(0, 40),
+      da: ora - v.da,
+    });
+  }
+  return muti.sort((a, b) => a.nome.localeCompare(b.nome));
+}
+
 /**
  * Una volta al giorno, alle dieci: i dispositivi che non rispondono da sei
- * ore. Un dispositivo e' muto quando nessuna delle sue entita' risponde (la
- * stessa regola del riepilogo, `cosaSistemare`), e conta una volta; le entita'
- * nascoste, disattivate o di diagnostica non contano. Senza registri non si
- * sa di chi e' un'entita', e non si dice.
+ * ore (`dispositiviMuti`), tutti in una notifica sola. Lo stesso elenco non
+ * si ridice ogni mattina: solo se c'e' un dispositivo nuovo, o dopo una
+ * settimana.
  */
 export function nonRispondono(vista) {
   const { ora, data, memoria } = vista;
   if (!dentro(data, [MANUTENZIONE_DALLE, MANUTENZIONE_ALLE])) return [];
   if (memoria.get("non-rispondono:giorno") === giornoDi(ora)) return [];
-  const dispositivi = new Map();
-  for (const [id, stato] of vista.stati) {
-    const suo = vista.dispositivoDi?.[id];
-    if (!suo || vista.daNonContare?.has?.(id)) continue;
-    const voce = dispositivi.get(suo) || { vivo: false, da: 0, primo: id };
-    if (stato.state === "unavailable") voce.da = Math.max(voce.da, stato.dal);
-    else voce.vivo = true;
-    dispositivi.set(suo, voce);
-  }
-  const muti = [...dispositivi]
-    .filter(([, v]) => !v.vivo && ora - v.da >= MUTO_DA)
-    .map(([suo, v]) => ({
-      nome: String(
-        vista.nomiDeiDispositivi?.[suo] || nomePulito(nomeDi(vista.stati.get(v.primo), v.primo)),
-      ).slice(0, 40),
-      da: ora - v.da,
-    }))
-    .sort((a, b) => a.nome.localeCompare(b.nome));
+  const muti = dispositiviMuti(vista, { soglia: MUTO_DA });
+  /* Quelli gia' detti, finche' restano muti: chi torna esce, e se ricade e'
+   * di nuovo una notizia. */
+  const detti = memoria.get("non-rispondono:detti") || new Map();
+  for (const suo of detti.keys()) if (!muti.some((m) => m.suo === suo)) detti.delete(suo);
+  memoria.set("non-rispondono:detti", detti);
   if (!muti.length) return [];
+  const nuovi = muti.some((m) => !detti.has(m.suo));
+  const ultima = memoria.get("non-rispondono:ultima") ?? 0;
+  if (!nuovi && ora - ultima < MUTI_RIDETTI_OGNI) return [];
   memoria.set("non-rispondono:giorno", giornoDi(ora));
+  memoria.set("non-rispondono:ultima", ora);
+  for (const m of muti) if (!detti.has(m.suo)) detti.set(m.suo, ora);
   const da = Math.min(...muti.map((m) => m.da));
   const nomi = muti.map((m) => m.nome);
   const uno = muti.length === 1;

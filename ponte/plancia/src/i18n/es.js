@@ -1526,7 +1526,6 @@ export default Object.freeze({
   From: "Desde",
   "From outside": "Desde fuera",
   "From the house": "Desde la casa",
-  "From the integration": "Desde la integración",
   "From this device": "Desde este dispositivo",
   "From … to": "Desde … hasta",
   "Front left": "Delantero izquierdo",
@@ -3701,9 +3700,6 @@ export default Object.freeze({
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
     "El grado que la centralita se ha fijado: junto a la impulsión real dice si está llegando.",
   "The description is missing.": "Falta la descripción.",
-  "The device controls": "Los mandos del dispositivo",
-  "The device readings": "Las lecturas del dispositivo",
-  "The device state": "El estado del dispositivo",
   "The doors and the windows": "Las puertas y las ventanas",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "El relé de bajada debe ser una entidad switch.*, y solo se aplica cuando la casilla de la persiana también es un relé switch.*.",
@@ -8237,4 +8233,5 @@ export default Object.freeze({
   "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "las páginas cambiadas en la vista previa de su pestaña — el orden de los recuadros y los ocultos. «Restablecer» la deja como estaba.",
   "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.": "los dibujos cuyas piezas moviste en la vista previa, en el ordenador y en el teléfono. «Restablecer» los deja como estaban.",
   "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.": "Todavía no hay un termostato con calefacción y refrigeración: hasta que lo haya, se abre en Frío.",
+  "First open the Marketplace from the Home Assistant menu, read the warning and accept it: after that, updates install from here too.": "Primero abre el Marketplace desde el menú de Home Assistant, lee el aviso y acéptalo: después las actualizaciones se instalan también desde aquí.",
 });

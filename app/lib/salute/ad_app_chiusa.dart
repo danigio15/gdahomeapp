@@ -40,6 +40,18 @@ import 'postino_della_salute.dart';
 /// errori, da' una sveglia che suona e nessuno che risponde.
 const canaleDellaSveglia = 'gdahome/salute/sveglia';
 
+/// Spegne il giro della salute ad app chiusa, se c'e': dove la Salute per ora
+/// non c'e' (`laSaluteCe`), un giro acceso da una versione di prima non deve
+/// restare a leggere.
+Future<void> spegniLaSaluteAdAppChiusa({MethodChannel? canale}) async {
+  try {
+    await (canale ?? const MethodChannel(canaleDellaSveglia))
+        .invokeMethod<void>('spegni');
+  } catch (_) {
+    /* Nessuna parte nativa, o gia' spento: va bene uguale. */
+  }
+}
+
 /// Quanto si aspetta la casa ad app chiusa. iOS concede una trentina di
 /// secondi per sveglia, e la parte nativa chiude comunque a 25: aprire il
 /// filo e mandare deve stare dentro, con margine.

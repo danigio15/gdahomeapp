@@ -1522,7 +1522,6 @@ export default Object.freeze({
   From: "Başlangıç",
   "From outside": "Dışarıdan",
   "From the house": "Evden",
-  "From the integration": "Entegrasyondan",
   "From this device": "Bu cihazdan",
   "From … to": "Başlangıç … bitiş",
   "Front left": "Ön sol",
@@ -3685,9 +3684,6 @@ export default Object.freeze({
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
     "Kumandanın kendine verdiği değer: gerçek gidişin yanında oraya varılıp varılmadığını söyler.",
   "The description is missing.": "Açıklama eksik.",
-  "The device controls": "Cihazın kumandaları",
-  "The device readings": "Cihazın okumaları",
-  "The device state": "Cihazın durumu",
   "The doors and the windows": "Kapılar ve pencereler",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "İndirme rölesi bir switch.* varlığı olmalı ve yalnızca panjur alanında da bir switch.* rölesi varsa geçerlidir.",
@@ -8188,4 +8184,5 @@ export default Object.freeze({
   "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "sekmelerinin önizlemesinde değiştirilen sayfalar — blokların sırası ve gizlenenler. «Sıfırla» eski haline getirir.",
   "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.": "önizlemede parçalarını taşıdığın çizimler, bilgisayarda ve telefonda. «Sıfırla» onları eski haline getirir.",
   "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.": "Henüz ısıtma ve soğutma yapan bir termostat yok: olana kadar Soğutma'da açılır.",
+  "First open the Marketplace from the Home Assistant menu, read the warning and accept it: after that, updates install from here too.": "Önce Home Assistant menüsünden Marketplace'i aç, uyarıyı oku ve kabul et: bundan sonra güncellemeler buradan da yüklenir.",
 });

@@ -220,12 +220,13 @@ test("se il servizio rifiuta, il tasto Installa torna com'era", () => {
   assert.match(sorgente, /const parola = aggiornamento\.textContent;/);
   assert.match(
     sorgente,
-    /callHa\("update", "install", \{ entity_id: quale \}\)\.then\(\(esito\) => \{/,
+    /callHa\("update", "install", \{ entity_id: quale \}\)\.then\(\(esito\) => \{\s*if \(esito === undefined\) throw/,
   );
-  assert.match(
-    sorgente,
-    /if \(esito !== undefined\) \{\s*guardaIlRiavvioDopoLInstallazione\(\);\s*return;/,
-  );
+  assert.match(sorgente, /\.then\(\(\) => guardaIlRiavvioDopoLInstallazione\(\)\)/);
+  /* E il no si dice: il Marketplace che chiede di accettare l'avviso
+   * rifiutava ogni aggiornamento, e il tasto tornava com'era senza una
+   * parola. */
+  assert.match(sorgente, /root\.edToast\?\.\(ilRifiutoDetto\(errore\)\)/);
   assert.match(sorgente, /aggiornamento\.disabled = false;/);
   assert.match(sorgente, /aggiornamento\.textContent = parola;/);
 });

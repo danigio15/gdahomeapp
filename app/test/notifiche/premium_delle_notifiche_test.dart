@@ -1,6 +1,9 @@
-/// Le notifiche di Premium nella pagina «Notifiche»: in una casa Base
-/// «Elaborate» e il «Riepilogo della sera» hanno il lucchetto e il bollino
-/// PREMIUM, e al tocco si spiega che si compra solo dalle app sugli store.
+/// Le notifiche di Premium nella pagina «Notifiche»: «Le notifiche sono solo
+/// per i Premium, non per tutti». In una casa Base arrivano solo gli avvisi
+/// di sicurezza — fumo, gas, allagamento, antifurto scattato, campanello —
+/// e le altre voci, «Elaborate», le personalizzate e quelle di Home
+/// Assistant hanno il lucchetto e il bollino PREMIUM; al tocco si spiega che
+/// si compra solo dalle app sugli store.
 library;
 
 import 'package:flutter/material.dart';
@@ -47,6 +50,14 @@ Future<(PonteFinto, Collegamento)> _laPagina(
   WidgetTester tester, {
   required bool? premium,
   String stile = 'elaborate',
+}) => _laPaginaCon(tester, premium: premium, stile: stile);
+
+/// E se i viaggi arrivano ([viaggi], GdANav Premium).
+Future<(PonteFinto, Collegamento)> _laPaginaCon(
+  WidgetTester tester, {
+  required bool? premium,
+  String stile = 'elaborate',
+  bool? viaggi,
 }) async {
   tester.view.physicalSize = const Size(1200, 2600);
   tester.view.devicePixelRatio = 3;
@@ -60,6 +71,7 @@ Future<(PonteFinto, Collegamento)> _laPagina(
     } else {
       ponte.notifiche['premium'] = premium;
     }
+    if (viaggi != null) ponte.notifiche['viaggi'] = viaggi;
     ponte.notifiche['impostazioni'] = {
       'acceso': true,
       'eventi': <String, dynamic>{},
@@ -149,6 +161,91 @@ void main() {
     await _chiudi(tester, coppia);
   });
 
+  testWidgets('Base: gli avvisi di sicurezza accesi, il resto col lucchetto', (
+    tester,
+  ) async {
+    /* Una casa Base senza GdANav Premium: anche «Quando partire» chiuso. */
+    final coppia = await _laPaginaCon(tester, premium: false, viaggi: false);
+    final scorre = find.byType(Scrollable).first;
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('in-base-solo-la-sicurezza')),
+      300,
+      scrollable: scorre,
+    );
+    expect(
+      find.textContaining('arrivano solo gli avvisi di sicurezza'),
+      findsOneWidget,
+    );
+    /* Le tre voci della sicurezza: l'interruttore, nessun lucchetto. */
+    for (final evento in avvisiDiSicurezza) {
+      final voce = find.byKey(Key('voce-$evento'));
+      await tester.scrollUntilVisible(voce, 300, scrollable: scorre);
+      expect(find.byKey(Key('voce-$evento-bloccata')), findsNothing);
+      expect(
+        find.descendant(of: voce, matching: find.byType(Switch)),
+        findsOneWidget,
+        reason: evento,
+      );
+    }
+    /* Tutte le altre, col lucchetto e il bollino, senza interruttore. */
+    for (final evento in categorieDelleNotifiche.values.expand((e) => e)) {
+      if (avvisiDiSicurezza.contains(evento)) continue;
+      final voce = find.byKey(Key('voce-$evento-bloccata'));
+      await tester.scrollUntilVisible(voce, 300, scrollable: scorre);
+      expect(voce, findsOneWidget, reason: evento);
+      expect(
+        find.descendant(of: voce, matching: find.byType(BollinoPremium)),
+        findsOneWidget,
+        reason: evento,
+      );
+      expect(
+        find.descendant(of: voce, matching: find.byType(Switch)),
+        findsNothing,
+        reason: evento,
+      );
+    }
+    /* Il movimento, quello del campo: al tocco il Premium, e niente cambia. */
+    final movimento = find.byKey(const Key('voce-movimento-bloccata'));
+    await tester.scrollUntilVisible(movimento, -300, scrollable: scorre);
+    await Scrollable.ensureVisible(tester.element(movimento), alignment: 0.5);
+    await tester.pumpAndSettle();
+    await tester.tap(movimento);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('spiegazione-premium')), findsOneWidget);
+    expect(find.text(PerchePremium.notifiche), findsOneWidget);
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
+    /* Le personalizzate: «Aggiungi» spiega il Premium. */
+    final aggiungi = find.byKey(const Key('aggiungi-bloccata'));
+    await tester.scrollUntilVisible(aggiungi, 300, scrollable: scorre);
+    await Scrollable.ensureVisible(tester.element(aggiungi), alignment: 0.5);
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(of: aggiungi, matching: find.text('Aggiungi')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('spiegazione-premium')), findsOneWidget);
+    expect(
+      coppia.$1.chieste.where(
+        (una) => una['type'] == 'ponte/notifiche/imposta',
+      ),
+      isEmpty,
+      reason: 'il lucchetto non cambia niente sulla casa',
+    );
+    await _chiudi(tester, coppia);
+  });
+
+  testWidgets('Base: «Quando partire» arriva con GdANav Premium', (
+    tester,
+  ) async {
+    final coppia = await _laPaginaCon(tester, premium: false, viaggi: true);
+    final scorre = find.byType(Scrollable).first;
+    final viaggi = find.byKey(const Key('voce-viaggi'));
+    await tester.scrollUntilVisible(viaggi, 300, scrollable: scorre);
+    expect(find.byKey(const Key('voce-viaggi-bloccata')), findsNothing);
+    await _chiudi(tester, coppia);
+  });
+
   testWidgets('Base: toccando «Elaborate» si spiega, e non si sceglie', (
     tester,
   ) async {
@@ -170,6 +267,10 @@ void main() {
   ) async {
     final coppia = await _laPagina(tester, premium: true);
     expect(find.byType(BollinoPremium), findsNothing);
+    expect(find.byKey(const Key('in-base-solo-la-sicurezza')), findsNothing);
+    for (final evento in categorieDelleNotifiche.values.expand((e) => e)) {
+      expect(find.byKey(Key('voce-$evento-bloccata')), findsNothing);
+    }
     await tester.scrollUntilVisible(
       find.byKey(const Key('apri-la-giornata')),
       300,

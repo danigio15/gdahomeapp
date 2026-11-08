@@ -1494,7 +1494,6 @@ export default Object.freeze({
   From: "自",
   "From outside": "来自室外",
   "From the house": "来自屋内",
-  "From the integration": "来自集成",
   "From this device": "从本机",
   "From … to": "自 … 至",
   "Front left": "左前",
@@ -3621,9 +3620,6 @@ export default Object.freeze({
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
     "控制器为自己设定的温度：与实际供水温度并排，就知道有没有达到。",
   "The description is missing.": "缺少描述。",
-  "The device controls": "设备控制",
-  "The device readings": "设备读数",
-  "The device state": "设备状态",
   "The doors and the windows": "门和窗",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "下降继电器必须是 switch.* 实体，并且只有当卷帘那一栏填的也是 switch.* 继电器时才生效。",
@@ -8052,4 +8048,5 @@ export default Object.freeze({
   "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "在其选项卡预览中更改过的页面——方框的顺序和隐藏的方框。「重置」会恢复原样。",
   "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.": "在预览中移动过部件的图，分别针对电脑和手机。「重置」会恢复原样。",
   "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.": "还没有同时制热和制冷的恒温器：在有之前，打开时显示制冷。",
+  "First open the Marketplace from the Home Assistant menu, read the warning and accept it: after that, updates install from here too.": "请先在 Home Assistant 菜单中打开 Marketplace，阅读并接受警告：之后也可以从这里安装更新。",
 });

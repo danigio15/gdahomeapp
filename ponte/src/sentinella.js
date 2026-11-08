@@ -53,6 +53,12 @@ import { laPappa, normalizzaAnimali } from "../plancia/src/core/animali-model.js
 import { CHIAVE_CITOFONO, normalizzaIngresso } from "../plancia/src/core/citofono-e-posta.js";
 import { accesoPerIlConsumo } from "../plancia/src/core/consumo-del-clima.js";
 import { eUnTermostato, termostatoCheScalda } from "../plancia/src/core/il-termostato.js";
+import {
+  isPersonEntity,
+  normalizePeople,
+  personViewModel,
+} from "../plancia/src/core/person-model.js";
+import { chiEInCasa } from "../plancia/src/core/assistente-di-casa.js";
 import { righeDichiarate } from "../plancia/src/core/elenco-dichiarato.js";
 import {
   CAMPI_IN_PIU,
@@ -63,7 +69,12 @@ import {
   varchiDiCasa,
 } from "../plancia/src/core/varchi-di-casa.js";
 import { CHIAVE_VERSI, insiemeInvertiti } from "../plancia/src/core/verso-aperture.js";
-import { regoleDellAssistente } from "./l-assistente-al-telefono.js";
+import {
+  dispositiviMuti,
+  eAllAperto,
+  entitaAllAperto,
+  regoleDellAssistente,
+} from "./l-assistente-al-telefono.js";
 import {
   paroleDelBlackout,
   paroleDelCiclo,
@@ -206,6 +217,36 @@ const LUCI_CON_CASA_VUOTA_DA = 30 * MINUTO;
 /* La casa dorme: niente luci e niente movimento da venti minuti. */
 const CASA_CHE_DORME_DA = 20 * MINUTO;
 const CLIMA_CON_CASA_VUOTA_DA = 60 * MINUTO;
+/* Il movimento con la casa vuota. «Ieri mi arrivavano notifiche di continuo
+ * […] da parte dei sensori di movimento. A casa c'era mia suocera»: la casa e'
+ * vuota per le persone di Home Assistant, ma chi non ha un telefono abbinato
+ * non e' una persona, e ogni passaggio davanti a un sensore era una notifica.
+ * Adesso: un sensore si dice una volta finche' non sta fermo due ore; dopo una
+ * notifica, per mezz'ora nessun'altra; e tre movimenti in un quarto d'ora
+ * vogliono dire che in casa qualcuno c'e' — da li' tace finche' la casa non
+ * resta ferma quattro ore, o finche' non torna qualcuno. Il primo movimento
+ * pero' si dice sempre: e' quello che serve. */
+const MOVIMENTO_TORNA_NOTIZIA_DOPO = 2 * ORA;
+const MOVIMENTO_IN_CASA_VUOTA_OGNI = 30 * MINUTO;
+const QUALCUNO_C_E_DOPO = 3;
+const QUALCUNO_C_E_IN = 15 * MINUTO;
+const QUALCUNO_DIMENTICATO_DOPO = 4 * ORA;
+/* L'uscita, come quella dell'antifurto. «Ed io sono dentro»: alle 9:36 il
+ * telefono di Raffaele ha detto che era uscito, e nello stesso minuto
+ * presenza, telecamera, corridoio e letto si sono accesi — quattro notifiche
+ * «casa vuota», e la porta dello studio «uscita l'ultima persona alle 9:36».
+ * Chi esce davvero si lascia dietro una casa ferma; chi e' dentro no. La casa
+ * e' vuota davvero quando, dopo l'ultima uscita, e' rimasta ferma dieci
+ * minuti: ogni movimento li fa ripartire, e cosi' un sensore che dice che
+ * qualcuno c'e' adesso — il letto occupato, la presenza della stanza. Un
+ * sensore di passaggio acceso da mezz'ora, o di presenza da dodici ore, e'
+ * incantato e non conta. */
+const USCITA = 10 * MINUTO;
+const PASSAGGIO_ACCESO_AL_PIU = 30 * MINUTO;
+const PRESENZA_ACCESA_AL_PIU = 12 * ORA;
+/* Un'entita' che torna da `unavailable` dopo almeno mezz'ora, da sola: il
+ * suo dispositivo dorme e si sveglia, non e' rotto (`dispositiviMuti`). */
+const TORNATO_DOPO = 30 * MINUTO;
 const ELETTRODOMESTICO_ACCESO = 15; // W
 const ELETTRODOMESTICO_FERMO = 5; // W
 const ELETTRODOMESTICO_GIRA_ALMENO = 10 * MINUTO;
@@ -697,6 +738,12 @@ export class Sentinella {
      * prima valevano: quelle che smettono di valere si riarmano. */
     this._memoriaDellAssistente = new Map();
     this._attiveDellAssistente = new Set();
+    /* I dispositivi visti tornare da soli da `unavailable`, e quando. */
+    this._tornatiDaSoli = new Map();
+    /* Il movimento con la casa vuota: quali sensori sono gia' stati detti,
+     * l'ultima notifica, gli ultimi movimenti e se qualcuno in casa c'e'
+     * (`_movimentoDaDire`). Si azzera quando torna qualcuno. */
+    this._movimento = null;
   }
 
   /* ─── La configurazione della plancia ──────────────────────────────── */
@@ -816,6 +863,9 @@ export class Sentinella {
       if (!uno?.entity_id) continue;
       this.stati.set(uno.entity_id, this._stato(uno));
     }
+    /* Dove sta ognuno adesso: e' il punto da cui si contano arrivi e uscite. */
+    this._forma = null;
+    this._dove = new Map(this.lePersone().map((v) => [v.persona, v]));
   }
 
   _stato(uno) {
@@ -843,6 +893,17 @@ export class Sentinella {
       return;
     }
     const dopo = this.stati.get(id);
+    /* Un dispositivo che torna da solo dopo un bel po' di silenzio: dorme,
+     * non e' rotto. Un riavvio di Home Assistant tiene `unavailable` per
+     * pochi minuti, e non conta. */
+    const suo = this.dispositivoDi?.[id];
+    if (
+      suo &&
+      prima?.state === "unavailable" &&
+      !["unavailable", "unknown"].includes(dopo.state) &&
+      this.adesso() - prima.dal >= TORNATO_DOPO
+    )
+      this._tornatiDaSoli.set(suo, this.adesso());
     /* Una porta che si chiude dimentica il suo «va bene stanotte». */
     if (["off", "closed"].includes(dopo.state)) this.capire.chiusa(id);
     try {
@@ -1042,28 +1103,204 @@ export class Sentinella {
 
   /* ─── Chi c'e' in casa ─────────────────────────────────────────────── */
 
+  /* Le `person.*` di Home Assistant, coi loro stati: per i nomi da non
+   * scrivere nelle notifiche. Chi e' in casa lo dice `lePersone`. */
   persone() {
     return [...this.stati].filter(([id]) => dominioDi(id) === "person");
   }
 
-  /* Vuota, piena, o non si sa (`null`): senza persone in Home Assistant non
-   * c'e' modo di dirlo, e non lo si indovina. */
+  /* Chi abita la casa, come lo disegna la plancia: le persone della
+   * configurazione (`cd_people`, non nascoste), ognuna con l'entita' scelta
+   * li' — `person.*` o il `device_tracker.*` del telefono — e il suo Wi‑Fi.
+   * Dal campo: «mi da' casa vuota anche quando mia moglie e' a casa […] il
+   * suo segnalino, sia da browser che da app, e' corretto». La plancia
+   * guardava il telefono di lei, il ponte la sua `person.*`, che diceva un
+   * altra cosa. Una persona della plancia che segue un telefono si lega alla
+   * sua `person.*` (che ha quel telefono fra i suoi, o lo stesso nome): e'
+   * quella che i telefoni scelgono per gli arrivi. Le `person.*` che la
+   * plancia non nomina contano lo stesso, quando si sa dove sono.
+   *
+   * La forma (chi, con quale entita') si rifa' ogni minuto o quando cambia
+   * la plancia; dove sta ognuno si guarda ogni volta. */
+  _formaDellePersone() {
+    const ora = this.adesso();
+    const scritte = this._valori().cd_people;
+    const firma = typeof scritte === "string" ? scritte : JSON.stringify(scritte ?? null);
+    const prima = this._forma;
+    if (
+      prima &&
+      prima.firma === firma &&
+      prima.quante === this.stati.size &&
+      ora - prima.il < MINUTO
+    )
+      return prima.voci;
+    let dichiarate = [];
+    try {
+      dichiarate = normalizePeople(typeof scritte === "string" ? JSON.parse(scritte) : scritte);
+    } catch (_errore) {
+      dichiarate = [];
+    }
+    const nascoste = new Set(dichiarate.filter((p) => p.nascosta).map((p) => p.entity));
+    const diHomeAssistant = this.persone();
+    const stessoNome = (a, b) =>
+      Boolean(a) &&
+      String(a).trim().toLowerCase() ===
+        String(b || "")
+          .trim()
+          .toLowerCase();
+    const prese = new Set();
+    const voci = [];
+    for (const p of dichiarate) {
+      if (p.nascosta || !isPersonEntity(p.entity)) continue;
+      let persona = dominioDi(p.entity) === "person" ? p.entity : "";
+      if (!persona) {
+        const sua =
+          diHomeAssistant.find(([, st]) =>
+            [].concat(st.attributes?.device_trackers || []).includes(p.entity),
+          ) || diHomeAssistant.find(([, st]) => stessoNome(p.name, st.attributes?.friendly_name));
+        persona = sua?.[0] || "";
+      }
+      if (persona) prese.add(persona);
+      voci.push({ persona: persona || p.entity, entita: p.entity, dichiarata: true, scheda: p });
+    }
+    for (const [id] of diHomeAssistant) {
+      if (prese.has(id) || nascoste.has(id)) continue;
+      voci.push({
+        persona: id,
+        entita: id,
+        dichiarata: false,
+        scheda: normalizePeople([{ entity: id }])[0],
+      });
+    }
+    this._forma = { firma, quante: this.stati.size, il: ora, voci };
+    return voci;
+  }
+
+  /**
+   * Le persone, e dove sono: `casa`, `fuori`, o `incerta` quando non si sa.
+   * La regola e' quella della plancia (`chiEInCasa`): a casa, in una zona
+   * che si chiama casa («Casa», «Home»), o sullo stesso Wi‑Fi di chi e' a
+   * casa. `{persona, entita, nome, dove, dichiarata}`.
+   */
+  lePersone() {
+    const stati = this.statiComeOggetto();
+    const ora = this.adesso();
+    const viste = this._formaDellePersone().map((voce) => ({
+      ...voce,
+      vista: personViewModel(voce.scheda, stati, ora),
+    }));
+    const aCasa = (v) => chiEInCasa([v.vista]).inCasa === 1;
+    const reti = new Set(
+      viste
+        .filter(aCasa)
+        .map((v) => v.vista.wifi)
+        .filter(Boolean),
+    );
+    return viste.map((v) => ({
+      persona: v.persona,
+      entita: v.entita,
+      wifi: v.scheda.wifi || "",
+      nome: v.vista.name || nomeDi(this.stati.get(v.entita), v.entita),
+      dichiarata: v.dichiarata,
+      dove:
+        aCasa(v) || (v.vista.wifi && reti.has(v.vista.wifi))
+          ? "casa"
+          : v.vista.known
+            ? "fuori"
+            : "incerta",
+    }));
+  }
+
+  /* Quelle che contano per dire se la casa e' vuota: tutte quelle della
+   * plancia (chi non si sa dove sia e' «incerto», come li'), e le altre solo
+   * quando si sa dove sono — una `person.*` senza telefono resta `unknown`
+   * per sempre, e non deve tenere la casa piena. */
+  _personeCheContano() {
+    return this.lePersone().filter((v) => v.dichiarata || v.dove !== "incerta");
+  }
+
+  /* Vuota, piena, o non si sa (`null`): senza persone non c'e' modo di
+   * dirlo, e non lo si indovina; e nemmeno se qualcuno della plancia non si
+   * sa dove sia (un riavvio, un telefono spento). */
   casaVuota() {
-    const persone = this.persone();
+    const persone = this._personeCheContano();
     if (!persone.length) return null;
-    return persone.every(([, stato]) => stato.state !== "home");
+    if (persone.some((v) => v.dove === "casa")) return false;
+    if (persone.some((v) => v.dove === "incerta")) return null;
+    return true;
   }
 
   /* L'entita' `person.*` di un utente di Home Assistant. */
   personaDi(utente) {
+    return this._laVoceDi(utente)?.persona ?? null;
+  }
+
+  _laVoceDi(utente) {
     if (!utente) return null;
-    for (const [id, stato] of this.persone()) if (stato.attributes?.user_id === utente) return id;
-    return null;
+    return (
+      this.lePersone().find((v) => this.stati.get(v.persona)?.attributes?.user_id === utente) ??
+      null
+    );
   }
 
   aCasa(utente) {
-    const persona = this.personaDi(utente);
-    return persona ? this.stati.get(persona)?.state === "home" : null;
+    const voce = this._laVoceDi(utente);
+    if (!voce || voce.dove === "incerta") return null;
+    return voce.dove === "casa";
+  }
+
+  /**
+   * La persona di adesso per una scelta salvata su un telefono («dimmi
+   * quando arriva»): la stessa, o quella che Home Assistant ha rinominato
+   * (`person.giulia` → `person.giulia_2`), o quella della plancia che si
+   * chiama cosi'. `null` se non c'e' piu', o se le candidate sono due.
+   */
+  laPersonaPer(salvata) {
+    const voci = this.lePersone();
+    const id = String(salvata || "");
+    const uguale = voci.find((v) => v.persona === id || v.entita === id);
+    if (uguale) return uguale.persona;
+    const base = (entita) =>
+      String(entita || "")
+        .split(".")[1]
+        ?.replace(/_\d+$/, "") || "";
+    const slug = (testo) =>
+      String(testo || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_|_$/g, "");
+    const cercata = base(id);
+    if (!cercata) return null;
+    const candidate = [
+      ...new Set(
+        voci
+          .filter(
+            (v) =>
+              base(v.persona) === cercata || base(v.entita) === cercata || slug(v.nome) === cercata,
+          )
+          .map((v) => v.persona),
+      ),
+    ];
+    return candidate.length === 1 ? candidate[0] : null;
+  }
+
+  /* Chi arriva e chi esce: dove stava ognuno al giro prima, e dove sta
+   * adesso. Un cambio fra casa e fuori e' un arrivo o un'uscita; chi passa
+   * da o per «non si sa» (un riavvio, un telefono che si spegne) no. */
+  _chiSiSposta() {
+    const prima = this._dove;
+    const adesso = new Map(this.lePersone().map((v) => [v.persona, v]));
+    this._dove = adesso;
+    if (!prima) return [];
+    const mossi = [];
+    for (const [persona, v] of adesso) {
+      const era = prima.get(persona)?.dove;
+      if (!era || era === v.dove || era === "incerta" || v.dove === "incerta") continue;
+      mossi.push({ ...v, arriva: v.dove === "casa" });
+    }
+    return mossi;
   }
 
   /* ─── Le telecamere e i cancelli vicini ────────────────────────────── */
@@ -1166,6 +1403,115 @@ export class Sentinella {
     const ora = this.adesso();
     this._recenti.push({ id, nome: nomePulito(nome), colore, quando: ora });
     this._recenti = this._recenti.filter((r) => ora - r.quando <= 15 * MINUTO).slice(-10);
+  }
+
+  /* ─── Il movimento con la casa vuota ───────────────────────────────── */
+
+  /* La memoria del movimento in questa assenza, nuova se non c'e'. */
+  _ilMovimento() {
+    this._movimento ??= {
+      sensori: new Map(),
+      detto: null,
+      ultimo: null,
+      movimenti: [],
+      qualcuno: null,
+    };
+    return this._movimento;
+  }
+
+  /* Un sensore di movimento che cambia con la casa vuota: si segna. Quelli
+   * fuori casa — la telecamera del giardino, il gatto, il vento — non dicono
+   * che in casa c'e' qualcuno. */
+  _movimentoInCasaVuota(id, stato) {
+    if (stato.state !== "on" && stato.state !== "off") return;
+    const valori = this._valori();
+    const fuori = eAllAperto({
+      id,
+      stato,
+      area: String(this.aree?.get?.(id) || ""),
+      fuori: entitaAllAperto(valori, this._risolutore(valori)),
+    });
+    if (fuori) return;
+    const ora = this.adesso();
+    const m = this._ilMovimento();
+    if (stato.state === "on") m.acceso = ora;
+    /* Una casa ferma da quattro ore: chi c'era se n'e' andato, o dorme. */
+    if (
+      m.qualcuno === "dedotto" &&
+      m.ultimo !== null &&
+      ora - m.ultimo >= QUALCUNO_DIMENTICATO_DOPO
+    )
+      m.qualcuno = null;
+    m.ultimo = ora;
+    if (stato.state !== "on") return;
+    m.movimenti = m.movimenti.filter((una) => ora - una < QUALCUNO_C_E_IN);
+    m.movimenti.push(ora);
+    if (m.movimenti.length >= QUALCUNO_C_E_DOPO && !m.qualcuno) m.qualcuno = "dedotto";
+  }
+
+  /* Se questo movimento, con la casa vuota, e' da dire: non se qualcuno in
+   * casa c'e' (dedotto, o detto dal tasto), non nella mezz'ora dopo un altro,
+   * non due volte per lo stesso sensore finche' non e' stato fermo due ore,
+   * e non prima che l'uscita sia finita (`_uscitaFinita`): `accesoPrima` e'
+   * l'ultimo movimento visto prima di questo. */
+  _movimentoDaDire(id, ora, accesoPrima) {
+    const m = this._ilMovimento();
+    const prima = m.sensori.get(id);
+    const sensore =
+      prima && ora - prima.ultimo < MOVIMENTO_TORNA_NOTIZIA_DOPO ? prima : { detto: false };
+    sensore.ultimo = ora;
+    m.sensori.set(id, sensore);
+    if (this._qualcunoCe(ora)) return false;
+    if (!this._uscitaFinita(ora, { tranne: id, acceso: accesoPrima })) return false;
+    if (sensore.detto) return false;
+    if (m.detto !== null && ora - m.detto < MOVIMENTO_IN_CASA_VUOTA_OGNI) return false;
+    sensore.detto = true;
+    m.detto = ora;
+    return true;
+  }
+
+  /* Se, con la casa vuota per Home Assistant, in casa qualcuno c'e': l'ha
+   * detto il tasto «C'è qualcuno», o si muove (`_movimentoInCasaVuota`). */
+  _qualcunoCe(ora = this.adesso()) {
+    const m = this._movimento;
+    if (!m?.qualcuno) return false;
+    if (m.qualcuno === "detto") return true;
+    return m.ultimo !== null && ora - m.ultimo < QUALCUNO_DIMENTICATO_DOPO;
+  }
+
+  /* Se l'uscita e' finita: la casa e' ferma da `USCITA` dopo l'ultima persona
+   * uscita e dopo l'ultimo movimento visto (`acceso`), e nessun sensore di
+   * casa dice che qualcuno c'e' adesso (`tranne` quello che sta cambiando).
+   * Se non si sa quando e' uscita l'ultima persona, come prima: finita. */
+  _uscitaFinita(ora = this.adesso(), { tranne = null, acceso = this._movimento?.acceso } = {}) {
+    const vuotaDa = this._vuotaDa(this.casaVuota());
+    if (!Number.isFinite(vuotaDa)) return true;
+    const mosso = Number.isFinite(acceso) ? Math.max(vuotaDa, acceso) : vuotaDa;
+    if (ora - mosso < USCITA) return false;
+    let fuori = null;
+    for (const [id, stato] of this.stati) {
+      if (id === tranne || dominioDi(id) !== "binary_sensor" || stato.state !== "on") continue;
+      const classe = stato.attributes?.device_class;
+      if (!MOVIMENTO.has(classe)) continue;
+      const alPiu = classe === "motion" ? PASSAGGIO_ACCESO_AL_PIU : PRESENZA_ACCESA_AL_PIU;
+      if (!(ora - stato.dal < alPiu)) continue;
+      if (fuori === null) {
+        const valori = this._valori();
+        fuori = entitaAllAperto(valori, this._risolutore(valori));
+      }
+      const area = String(this.aree?.get?.(id) || "");
+      if (eAllAperto({ id, stato, area, fuori })) continue;
+      return false;
+    }
+    return true;
+  }
+
+  /** Il tasto «C'è qualcuno»: fino a quando non torna qualcuno di Home
+   * Assistant, il movimento con la casa vuota non si dice piu'. */
+  qualcunoInCasa() {
+    if (this.casaVuota() !== true) return false;
+    this._ilMovimento().qualcuno = "detto";
+    return true;
   }
 
   /* Se la casa dormiva fino al giro prima. */
@@ -1456,28 +1802,44 @@ export class Sentinella {
       return;
     }
 
-    /* Le persone: chi arriva e chi esce, e la casa che si svuota. */
-    if (dominio === "person" && prima && era !== dopo.state) {
-      const arriva = dopo.state === "home" && era !== "home";
-      const esce = era === "home" && dopo.state !== "home";
-      if (arriva || esce) {
+    /* Le persone: chi arriva e chi esce, e la casa che si svuota. Dove sta
+     * una persona lo dice la sua entita' (una `person.*` o il telefono che la
+     * plancia segue) o il suo Wi‑Fi: si guarda quando cambia una di quelle. */
+    const diUnaPersona =
+      dominio === "person" ||
+      dominio === "device_tracker" ||
+      this._formaDellePersone().some((v) => v.scheda.wifi === id);
+    if (diUnaPersona && prima && era !== dopo.state) {
+      const mossi = this._chiSiSposta();
+      for (const v of mossi)
         this._dici({
           tipo: "arrivi",
           urgenza: "bassa",
-          chiave: `arrivi:${id}:${arriva ? "su" : "giu"}`,
+          chiave: `arrivi:${v.persona}:${v.arriva ? "su" : "giu"}`,
           pausa: 5 * MINUTO,
-          entita: id,
-          persona: id,
-          parole: paroleDellArrivo(nome, arriva),
+          entita: v.entita,
+          persona: v.persona,
+          parole: paroleDellArrivo(v.nome, v.arriva),
         });
-      }
-      if (vuotaPrima === false && this.casaVuota() === true) this._casaAppenaVuota(nome);
-      return;
+      if (vuotaPrima === false && this.casaVuota() === true)
+        this._casaAppenaVuota(mossi.find((v) => !v.arriva)?.nome || nome);
+      /* Torna qualcuno: l'assenza e' finita, e con lei quello che il
+       * movimento si ricordava. */
+      if (this.casaVuota() !== true) this._movimento = null;
+      if (dominio === "person" || dominio === "device_tracker") return;
     }
 
     /* Il movimento: con la casa vuota, o di notte quando la casa dorme. Se
      * c'e' una telecamera li', con la sua foto per chi ha scelto le notifiche
      * elaborate. Chi lo vuole sempre lo dice nelle sue impostazioni. */
+    const accesoPrima = this._movimento?.acceso ?? null;
+    if (
+      dominio === "binary_sensor" &&
+      MOVIMENTO.has(classe) &&
+      dopo.state !== era &&
+      this.casaVuota() === true
+    )
+      this._movimentoInCasaVuota(id, dopo);
     if (
       dominio === "binary_sensor" &&
       MOVIMENTO.has(classe) &&
@@ -1485,10 +1847,14 @@ export class Sentinella {
       era !== "on"
     ) {
       const ora = this.adesso();
-      const vuota = this.casaVuota() === true;
+      /* Con la casa vuota si dice una volta, non a ogni passaggio
+       * (`_movimentoDaDire`). Quello che non si dice come «casa vuota» resta
+       * per chi il movimento lo vuole sempre. */
+      const vuotaPerLePersone = this.casaVuota() === true;
+      const vuota = vuotaPerLePersone && this._movimentoDaDire(id, ora, accesoPrima);
       /* La casa dorme se dormiva fino a un attimo fa: questo movimento e'
-       * quello che la sveglia. */
-      const notte = eNotte(new Date(ora)) && this._dormivaPrima(ora);
+       * quello che la sveglia. Con la casa vuota decide la regola di sopra. */
+      const notte = !vuotaPerLePersone && eNotte(new Date(ora)) && this._dormivaPrima(ora);
       if (vuota || notte || this.movimentoSempre) {
         const camera = this.telecameraPer(id, { soloVicina: true });
         const dati = {
@@ -1510,7 +1876,21 @@ export class Sentinella {
           perche: vuota ? "casa-vuota" : notte ? "notte" : "giorno",
           componi: { tipo: "movimento", dati },
           parole: inDueLingue(paroleDelMovimento, dati),
-          azioni: [tastoGuarda(), ...this._tastoInserisci()],
+          azioni: [
+            tastoGuarda(),
+            ...this._tastoInserisci(),
+            /* «A casa c'era mia suocera»: chi lo sa lo dice, e fino a quando
+             * non torna qualcuno il movimento con la casa vuota tace. */
+            ...(vuota
+              ? [
+                  {
+                    id: "qualcuno",
+                    parole: duePassi("C'è qualcuno", "Someone's home"),
+                    qualcuno: true,
+                  },
+                ]
+              : []),
+          ],
         });
       }
       return;
@@ -1764,9 +2144,9 @@ export class Sentinella {
 
   /* L'ora in cui e' uscita l'ultima persona, se si sa: «alle 9:12». */
   _uscitaUltima() {
-    const fuori = this.persone()
-      .filter(([, stato]) => stato.state !== "home")
-      .map(([, stato]) => stato.dal)
+    const fuori = this._personeCheContano()
+      .filter((v) => v.dove === "fuori")
+      .map((v) => this.stati.get(v.entita)?.dal)
       .filter(Number.isFinite);
     if (!fuori.length) return null;
     const d = new Date(Math.max(...fuori));
@@ -1789,6 +2169,10 @@ export class Sentinella {
     let luciDa = Infinity;
     const climiAccesi = [];
     let climaDa = Infinity;
+    /* Le luci, il clima e la musica «con la casa vuota» non si propongono di
+     * spegnere a chi in casa c'e' anche se Home Assistant non lo sa: la
+     * suocera che si muove, o chi l'ha detto col tasto «C'è qualcuno». */
+    const vuotaDavvero = vuota === true && !this._qualcunoCe(ora) && this._uscitaFinita(ora);
 
     for (const [id, stato] of this.stati) {
       const dominio = dominioDi(id);
@@ -1821,7 +2205,10 @@ export class Sentinella {
         (vuota === true
           ? ["detto", "stanotte"].includes(detto?.perche)
           : detto !== null || this.capire.portaInterna(id, nome, classe));
-      const daDire = aperta && !lascia && da >= APERTA_DA && (vuota === true || (notte && dorme));
+      /* Con la casa vuota, quando lo e' davvero: non a chi e' rimasto dentro
+       * mentre il telefono diceva «uscito» («Ed io sono dentro»). */
+      const daDire =
+        aperta && !lascia && da >= APERTA_DA && (vuota === true ? vuotaDavvero : notte && dorme);
       if (this._unaVolta(`aperture:${id}`, daDire)) {
         const dove = nomePulito(nome);
         const cosa = cosaApre(id, nome, classe);
@@ -1913,7 +2300,7 @@ export class Sentinella {
         }
       }
 
-      if (vuota === true && dominio === "light" && stato.state === "on") {
+      if (vuotaDavvero && dominio === "light" && stato.state === "on") {
         /* L'abitudine si impara prima di decidere: una luce accesa con la
          * casa vuota quasi tutti i giorni e' a orario. */
         if (passati > 0) this.capire.luceAccesaConLaCasaVuota(id, passati, ora);
@@ -1930,7 +2317,7 @@ export class Sentinella {
        * riscaldamento che tiene la temperatura col suo programma: un
        * termostato che scalda a casa vuota fa il suo mestiere. */
       if (
-        vuota === true &&
+        vuotaDavvero &&
         dominio === "climate" &&
         !this._eUnTermostato(id, stato) &&
         this._climaAcceso(id, stato)
@@ -1992,15 +2379,14 @@ export class Sentinella {
       });
     }
     /* Con «Tutti»: anche la musica rimasta accesa. */
-    const suona =
-      vuota === true
-        ? [...this.stati].filter(
-            ([id, s]) =>
-              dominioDi(id) === "media_player" &&
-              s.state === "playing" &&
-              ora - s.dal >= LUCI_CON_CASA_VUOTA_DA,
-          )
-        : [];
+    const suona = vuotaDavvero
+      ? [...this.stati].filter(
+          ([id, s]) =>
+            dominioDi(id) === "media_player" &&
+            s.state === "playing" &&
+            ora - s.dal >= LUCI_CON_CASA_VUOTA_DA,
+        )
+      : [];
     if (this._unaVolta("suggerimenti:musica", suona.length > 0)) {
       this._dici({
         tipo: "suggerimenti",
@@ -2065,6 +2451,7 @@ export class Sentinella {
       dispositivoDi: this.dispositivoDi || {},
       nomiDeiDispositivi: this.nomiDeiDispositivi || {},
       daNonContare: this.daNonContare,
+      tornatiDaSoli: this._tornatiDaSoli,
       valori,
       risolvi: this._risolutore(valori),
       letture: this._lettureDellAssistente(valori),
@@ -2115,7 +2502,10 @@ export class Sentinella {
   /* Da quando la casa e' vuota: l'ultima persona uscita. */
   _vuotaDa(vuota) {
     if (vuota !== true) return Infinity;
-    return Math.max(...this.persone().map(([, stato]) => stato.dal));
+    const da = this._personeCheContano()
+      .map((v) => this.stati.get(v.entita)?.dal)
+      .filter(Number.isFinite);
+    return da.length ? Math.max(...da) : Infinity;
   }
 
   /* ─── Il riepilogo della sera ──────────────────────────────────────── */
@@ -2179,8 +2569,11 @@ export class Sentinella {
      * connessi» della plancia: un dispositivo e' giu' quando NESSUNA delle sue
      * entita' risponde, e conta una volta. Un canale non usato di uno switch
      * acceso, il blocco bambini di un'asciugatrice spenta, non lo fanno giu'. */
-    const muti = new Set();
-    const vivi = new Set();
+    /* E deve durare (`dispositiviMuti`): «tantissimi sensori che dice che non
+     * rispondono quando invece sono collegati e funzionano benissimo». Il
+     * riepilogo contava anche chi era `unavailable` da un minuto — un riavvio
+     * di Home Assistant poco prima della sera — e i sensori a pile che ZHA e
+     * il Bluetooth dicono `unavailable` quando dormono. */
     for (const [id, stato] of this.stati) {
       const dominio = dominioDi(id);
       if (dominio === "sensor" && stato.attributes?.device_class === "battery") {
@@ -2188,12 +2581,16 @@ export class Sentinella {
         if (n !== null && n <= 15) batterie.push({ nome: nomeDi(stato, id), carica: n });
       }
       if (dominio === "update" && stato.state === "on") aggiornamenti += 1;
-      const suo = this.dispositivoDi?.[id];
-      if (!suo) continue;
-      if (stato.state === "unavailable") muti.add(suo);
-      else vivi.add(suo);
     }
-    const spenti = [...muti].filter((suo) => !vivi.has(suo)).length;
+    const spenti = dispositiviMuti({
+      ora: this.adesso(),
+      stati: this.stati,
+      dispositivoDi: this.dispositivoDi || {},
+      nomiDeiDispositivi: this.nomiDeiDispositivi || {},
+      daNonContare: this.daNonContare,
+      tornatiDaSoli: this._tornatiDaSoli,
+      valori: this._valori(),
+    }).length;
     return { batterie, spenti, aggiornamenti };
   }
 

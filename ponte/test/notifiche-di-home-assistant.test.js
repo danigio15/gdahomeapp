@@ -541,60 +541,60 @@ test("il contesto: anche una notify con l'automazione come genitore, e due ugual
   }
 });
 
-test("Base: solo il testo, solo su questo telefono, solo quelle per lui", async () => {
-  const casa = unaCasa({ premium: false });
+test("Base: non arrivano — «Le notifiche sono solo per i Premium» — e le scelte restano", async () => {
+  const casa = unaCasa();
   try {
     await casa.registra(casa.a);
     await casa.registra(casa.b);
     await casa.ha.leggi();
-    /* Quella che va al telefono di un altro: Premium. */
-    const altro = await casa.chiedi(casa.a, {
+    /* Accesa quando il Premium c'era. */
+    const accesa = await casa.chiedi(casa.a, {
       type: "ponte/notifiche/ha/imposta",
-      voci: { 1700000000003: { acceso: true } },
+      voci: { 1700000000002: { acceso: true } },
     });
-    assert.equal(altro.success, false);
-    assert.equal(altro.error.code, "premium-richiesto");
-    /* Mandarla a tutti: Premium. */
-    const tutti = await casa.chiedi(casa.a, {
-      type: "ponte/notifiche/ha/imposta",
-      voci: { 1700000000002: { acceso: true, a: "tutti" } },
-    });
-    assert.equal(tutti.error.code, "premium-richiesto");
+    assert.equal(accesa.success, true);
+    /* Il Premium finisce: non arriva piu', ne' col testo ne' senza. */
+    casa.licenze.premium = false;
+    const allarme = {
+      title: "Allarme",
+      message: "Movimento in giardino alle 02:14",
+      data: {
+        image: "/api/camera_proxy/camera.giardino",
+        actions: [{ action: "DISINSERISCI", title: "Disinserisci" }],
+      },
+    };
+    assert.equal(await casa.corre("automation.allarme_giardino", "mobile_app_pixel_8", allarme), 0);
+    assert.equal(casa.spinte.length, 0);
+    assert.equal(casa.foto.length, 0);
+    /* Accenderne una: Premium, anche quelle per lui. */
+    for (const voci of [
+      { 1700000000001: { acceso: true } },
+      { 1700000000003: { acceso: true } },
+      { 1700000000002: { acceso: true, a: "tutti" } },
+    ]) {
+      const no = await casa.chiedi(casa.a, { type: "ponte/notifiche/ha/imposta", voci });
+      assert.equal(no.success, false, JSON.stringify(voci));
+      assert.equal(no.error.code, "premium-richiesto");
+    }
     /* «Proponimi le nuove»: Premium. */
     const proponi = await casa.chiedi(casa.a, {
       type: "ponte/notifiche/ha/proponi",
       acceso: false,
     });
     assert.equal(proponi.error.code, "premium-richiesto");
-    /* Tutte o nessuna: la buona insieme alla cattiva non passa. */
-    const insieme = await casa.chiedi(casa.a, {
+    /* La scelta resta, e il Premium che torna la ritrova. */
+    const elenco = await casa.chiedi(casa.a, { type: "ponte/notifiche/ha/elenco" });
+    assert.equal(elenco.result.premium, false);
+    assert.equal(elenco.result.automazioni.find((r) => r.chiave === "1700000000002")?.acceso, true);
+    casa.licenze.premium = true;
+    assert.equal(await casa.corre("automation.allarme_giardino", "mobile_app_pixel_8", allarme), 1);
+    /* Spegnerla, in Base, si puo'. */
+    casa.licenze.premium = false;
+    const spenta = await casa.chiedi(casa.a, {
       type: "ponte/notifiche/ha/imposta",
-      voci: { 1700000000001: { acceso: true }, 1700000000003: { acceso: true } },
+      voci: { 1700000000002: { acceso: false } },
     });
-    assert.equal(insieme.success, false);
-    const ok = await casa.chiedi(casa.a, {
-      type: "ponte/notifiche/ha/imposta",
-      voci: { 1700000000002: { acceso: true } },
-    });
-    assert.equal(ok.success, true);
-    assert.equal(
-      await casa.corre("automation.allarme_giardino", "mobile_app_pixel_8", {
-        title: "Allarme",
-        message: "Movimento in giardino alle 02:14",
-        data: {
-          image: "/api/camera_proxy/camera.giardino",
-          actions: [{ action: "DISINSERISCI", title: "Disinserisci" }],
-        },
-      }),
-      1,
-    );
-    const busta = casa.apri(casa.spinte.at(-1));
-    assert.equal(busta.testo, "Movimento in giardino alle 02:14");
-    /* Niente foto, niente tasti, niente telecamera. */
-    assert.equal(casa.foto.length, 0);
-    assert.equal(busta.foto, undefined);
-    assert.deepEqual(busta.azioni, []);
-    assert.equal(busta.stile, "s");
+    assert.equal(spenta.success, true);
   } finally {
     casa.spegni();
   }

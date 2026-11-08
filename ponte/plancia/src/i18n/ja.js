@@ -1520,7 +1520,6 @@ export default Object.freeze({
   From: "開始",
   "From outside": "外から",
   "From the house": "家から",
-  "From the integration": "統合から",
   "From this device": "この端末から",
   "From … to": "開始 … 終了",
   "Front left": "左前",
@@ -3685,9 +3684,6 @@ export default Object.freeze({
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
     "制御装置が自ら決めた温度です。実際の往き温度と並べると、そこに届いているかがわかります。",
   "The description is missing.": "説明がありません。",
-  "The device controls": "デバイスの操作",
-  "The device readings": "デバイスの計測値",
-  "The device state": "デバイスの状態",
   "The doors and the windows": "扉と窓",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "下降リレーは switch.* エンティティである必要があり、シャッターの欄も switch.* リレーのときにだけ有効です。",
@@ -8190,4 +8186,5 @@ export default Object.freeze({
   "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "タブのプレビューで変更したページ — ボックスの順番と非表示のもの。「リセット」で元に戻ります。",
   "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.": "プレビューでパーツを動かした図、パソコンとスマートフォンそれぞれ。「リセット」で元に戻ります。",
   "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.": "暖房と冷房の両方を持つサーモスタットはまだありません。それまでは冷房で開きます。",
+  "First open the Marketplace from the Home Assistant menu, read the warning and accept it: after that, updates install from here too.": "まず Home Assistant のメニューから Marketplace を開き、警告を読んで承認してください。その後はここからも更新をインストールできます。",
 });

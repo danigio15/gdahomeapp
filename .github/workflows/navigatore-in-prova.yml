@@ -74,6 +74,12 @@ jobs:
           echo "numero=$numero" >> "$GITHUB_OUTPUT"
           echo "Versione in pubspec: $base. Questo pacchetto: $numero."
 
+      # Gradle scaricato prima, con dieci tentativi: GitHub, dove sta la
+      # distribuzione, a volte risponde 504 per ore (`gradle-in-anticipo.sh`).
+      - name: Gradle, scaricato prima
+        working-directory: .
+        run: strumenti/gradle-in-anticipo.sh
+
       - name: I pacchetti
         env:
           GDAHOME_NAVIGATORE: si

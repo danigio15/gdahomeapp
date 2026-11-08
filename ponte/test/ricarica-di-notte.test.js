@@ -29,7 +29,11 @@ import {
   prossimaFascia,
   stessoModo,
 } from "../plancia/src/core/ricarica-di-notte.js";
-import { RicaricaDiNotte, risolutoreDalla } from "../src/ricarica-di-notte.js";
+import {
+  RicaricaDiNotte,
+  batteriaDellAutoInUso,
+  risolutoreDalla,
+} from "../src/ricarica-di-notte.js";
 import { Commissioni } from "../src/commissioni.js";
 
 const MINUTO = 60_000;
@@ -688,13 +692,70 @@ test("uno 0% di evcc non copre la batteria vera dell'auto", () => {
     "sensor.leapmotor_batteria": { state: "46" },
   };
   assert.equal(letturaDellAuto(entita, stati).soc, 46);
-  /* se evcc sa la batteria, vale evcc */
+  /* nell'ordine di `entitaDellaRicarica` l'auto viene prima: vale l'auto,
+   * anche quando evcc dice un numero suo */
   stati["sensor.evcc_garage_vehicle_soc"].state = "52";
-  assert.equal(letturaDellAuto(entita, stati).soc, 52);
+  const inOrdine = {
+    ...entita,
+    soc: ["sensor.leapmotor_batteria", "sensor.evcc_garage_vehicle_soc"],
+  };
+  assert.equal(letturaDellAuto(inOrdine, stati).soc, 46);
   /* e se tutti dicono zero, e' zero */
   stati["sensor.evcc_garage_vehicle_soc"].state = "0";
   stati["sensor.leapmotor_batteria"].state = "0";
   assert.equal(letturaDellAuto(entita, stati).soc, 0);
+});
+
+/* «Perche' dice dal 60 se ho la batteria al 19%?» La Leapmotor dice 19%,
+ * evcc tiene un 60% vecchio. «Parte se la batteria e' sotto il 50%» deve
+ * partire: la batteria e' quella che la pagina Auto mostra. */
+test("la casa decide con la batteria dell'auto in uso, non con la stima di evcc", async () => {
+  const stati = {
+    ...statiDiCasa(),
+    "sensor.evcc_lp1_vehicle_soc": { state: "60", attributes: {} },
+    "number.evcc_lp1_limit_soc": { state: "100", attributes: {} },
+    "sensor.leapmotor_b10_batteria": { state: "19", attributes: { unit_of_measurement: "%" } },
+    "sensor.altra_batteria": { state: "90", attributes: {} },
+  };
+  const { ricarica, casa } = laCasa({
+    impostazioni: { attiva: true, sotto: 50 },
+    valori: {
+      cd_ev_cars: JSON.stringify([
+        { uid: "a", name: "Altra", ov: { "dm.ev_batteria_auto": "sensor.altra_batteria" } },
+        {
+          uid: "b10",
+          name: "Leapmotor b10",
+          ov: { "dm.ev_batteria_auto": "sensor.leapmotor_b10_batteria" },
+        },
+      ]),
+      cd_ev_car_active: "b10",
+    },
+    stati,
+    adesso: () => alle(16, 23),
+  });
+  assert.equal(ricarica.situazione().auto.soc, 19);
+  await ricarica.battito();
+  assert.equal(casa.chiesti.at(-1)?.service_data?.option, "now", "dal 19% parte");
+  assert.equal(ricarica.memoria.sessione.socInizio, 19);
+  /* l'auto tace: si torna a evcc, e al 60% sopra il 50% non partirebbe */
+  stati["sensor.leapmotor_b10_batteria"].state = "unavailable";
+  assert.equal(ricarica.situazione().auto.soc, 60);
+});
+
+test("la batteria dell'auto in uso: per uid, per posizione, o la prima", () => {
+  const cd_ev_cars = JSON.stringify([
+    { uid: "a", ov: { "dm.ev_batteria_auto": "sensor.prima" } },
+    { uid: "b", ov: { "dm.ev_batteria_auto": "sensor.seconda" } },
+  ]);
+  assert.equal(batteriaDellAutoInUso({ cd_ev_cars, cd_ev_car_active: "b" }), "sensor.seconda");
+  assert.equal(batteriaDellAutoInUso({ cd_ev_cars, cd_ev_car_active: "1" }), "sensor.seconda");
+  assert.equal(batteriaDellAutoInUso({ cd_ev_cars }), "sensor.prima");
+  assert.equal(batteriaDellAutoInUso({}), "");
+  /* senza `cd_ev_cars`, le auto del modello canonico */
+  const dm_dashboard_state = JSON.stringify({
+    sections: { ev: [{ uid: "c", ov: { "dm.ev_batteria_auto": "sensor.canonica" } }] },
+  });
+  assert.equal(batteriaDellAutoInUso({ dm_dashboard_state }), "sensor.canonica");
 });
 
 /* «Non mi deve far impostare a me il valore: deve considerare il massimo

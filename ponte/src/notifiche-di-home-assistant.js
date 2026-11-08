@@ -41,10 +41,12 @@
  *
  * ─── Base e Premium ───────────────────────────────────────────────────────
  *
- * Lo stesso criterio di `notifiche.js` (`premium`). In Base: il testo, solo
- * su questo telefono, e solo delle automazioni che mandano a lui (o a
- * tutti). Con Premium: la foto della telecamera (chiusa per quel telefono,
- * come le altre — e solo se quella telecamera a lui si mostra), i tasti (un
+ * Lo stesso criterio di `notifiche.js` (`premium`). Sono di Premium: in Base
+ * al telefono arrivano solo gli avvisi di sicurezza (`arrivaInBase`), e
+ * queste non lo sono. L'elenco si vede, le scelte restano per quando il
+ * Premium torna, ma accenderne una no. Con Premium: il testo, la foto della
+ * telecamera (chiusa per quel telefono, come le altre — e solo se quella
+ * telecamera a lui si mostra), i tasti (un
  * tasto premuto torna a Home Assistant come `mobile_app_notification_action`,
  * cosi' le automazioni che lo aspettano funzionano come prima), mandarle ad
  * altri telefoni o a tutti, e «Proponimi le nuove».
@@ -828,7 +830,13 @@ export class NotificheDiHomeAssistant {
       else return ["invalid_format", "a quale telefono?"];
     }
     if (!this.premium) {
-      /* In Base: su questo telefono, e solo quelle che vanno a lui. */
+      /* In Base non arrivano (`arrivaInBase` in `notifiche.js`): spegnerle si',
+       * accenderle no. */
+      if (detta.acceso === true)
+        return [
+          "premium-richiesto",
+          "le notifiche delle automazioni di Home Assistant sono di GdAHome Premium",
+        ];
       if (nuova.a && nuova.a !== "questo" && typeof detta.a === "string")
         return ["premium-richiesto", "mandarle ad altri telefoni e' di GdAHome Premium"];
       if (nuova.acceso === true && riga.bersaglio !== "questo" && riga.bersaglio !== "tutti")
