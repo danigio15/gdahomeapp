@@ -34,6 +34,7 @@ import '../licenza/licenza.dart';
 import '../licenza/negozio.dart';
 import '../parole.dart';
 import '../vestito/tema.dart';
+import '../salute/lettore.dart';
 
 /// Gli acquisti dell'app: uno solo, acceso dal portone (`main.dart`) appena
 /// c'e' la casa. `null` dove non si compra — il web, le prove.
@@ -984,14 +985,15 @@ List<(IconData, String, String)> _funzioni(bool sulWeb) {
         en: 'Pair them from your phone and choose where they go',
       ),
     ),
-    (
-      Icons.monitor_heart_outlined,
-      inLingua(it: 'La salute dall\'orologio', en: 'Health from your watch'),
-      inLingua(
-        it: 'Apple Watch, Galaxy Watch, Fitbit, Amazfit: le misure a casa',
-        en: 'Apple Watch, Galaxy Watch, Fitbit, Amazfit: your readings at home',
+    if (laSaluteCe)
+      (
+        Icons.monitor_heart_outlined,
+        inLingua(it: 'La salute dall\'orologio', en: 'Health from your watch'),
+        inLingua(
+          it: 'Apple Watch, Galaxy Watch, Fitbit, Amazfit: le misure a casa',
+          en: 'Apple Watch, Galaxy Watch, Fitbit, Amazfit: your readings at home',
+        ),
       ),
-    ),
     (
       Icons.navigation_outlined,
       inLingua(it: 'GdANav Premium compreso', en: 'GdANav Premium included'),

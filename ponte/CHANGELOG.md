@@ -35,6 +35,9 @@ _App GdAHome e Home Assistant._
   gli avvisi di sicurezza — fumo, gas, monossido, allagamento, antifurto
   scattato e campanello. Nella pagina Notifiche le altre voci hanno il
   lucchetto.
+- **La Salute, per ora solo su iPhone**: su Android la pagina Salute torna
+  quando Google avrà approvato i permessi di Health Connect. Le misure già
+  arrivate a casa restano nella plancia.
 
 **In Home Assistant:**
 
