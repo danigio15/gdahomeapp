@@ -495,8 +495,9 @@ jobs:
       # L'orologio nel negozio, dopo il telefono e sulle stesse piste — le sue,
       # quelle che il Play Console apre aggiungendo Wear OS fra i fattori di
       # forma: `internal` diventa `wear:internal`. Il pacchetto e' un altro,
-      # col suo numero (quello del telefono piu' uno), e senza il telefono gia'
-      # accettato non ha senso: se il passo di prima si ferma, questo non parte.
+      # col suo numero (quello del telefono, un miliardo piu' su), e senza il
+      # telefono gia' accettato non ha senso: se il passo di prima si ferma,
+      # questo non parte.
       - name: L'orologio nel negozio
         if: >-
           vars.GDAHOME_OROLOGIO == 'si' &&

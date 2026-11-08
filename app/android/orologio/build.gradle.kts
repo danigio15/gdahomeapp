@@ -24,11 +24,16 @@ val chiaveVera =
     }
 val cELaChiaveVera = chiaveVera.getProperty("storeFile") != null
 
-// Il numero per il negozio: quello del telefono piu' uno.
+// Il numero per il negozio: quello del telefono, un miliardo piu' su.
 //
 // Telefono e orologio stanno nella stessa scheda del Play Store, e li' due
-// pacchetti non possono avere lo stesso numero. Quelli del telefono vanno a
-// salti di cento (1.10.11 → 1101100), quindi «piu' uno» non si scontra mai.
+// pacchetti non possono avere lo stesso numero. Prima l'orologio era «il
+// telefono piu' uno», contando sui salti di cento del telefono (1.10.11 →
+// 1101100); ma le correzioni del telefono stanno proprio li' in mezzo
+// (1.18.12.1 → 1181201), e la 1.18.12.1 il Play Store l'ha rifiutata:
+// «Version code 1181201 has already been used», preso dall'orologio della
+// 1.18.12. Un miliardo sopra non si scontra con nessun numero del telefono,
+// cresce con lui, e sta sotto il massimo del negozio (2100000000).
 val versione = rootProject.file("../pubspec.yaml").readLines()
     .first { it.startsWith("version:") }
     .substringAfter("version:").trim()
@@ -65,7 +70,7 @@ android {
         // Wear OS 3, il primo dei Wear OS di adesso.
         minSdk = 30
         targetSdk = 36
-        versionCode = numeroDelTelefono + 1
+        versionCode = 1_000_000_000 + numeroDelTelefono
         versionName = nomeDellaVersione
     }
 
