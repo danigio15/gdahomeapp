@@ -2041,6 +2041,7 @@ export class Notifiche {
       else if (Array.isArray(una.vaBene)) azioni[una.id] = { vaBene: una.vaBene.slice(0, 10) };
       else if (typeof una.haAzione === "string") azioni[una.id] = { haAzione: una.haAzione };
       else if (typeof una.pappa === "string") azioni[una.id] = { pappa: una.pappa.slice(0, 80) };
+      else if (una.qualcuno === true) azioni[una.id] = { qualcuno: true };
     }
     if (!Object.keys(azioni).length) return;
     this._tasti.set(id, { telefono, azioni, scade: this.adesso() + VITA_DEI_TASTI });
@@ -2593,6 +2594,14 @@ export class Notifiche {
     if (azione.vaBene) {
       for (const id of azione.vaBene) this.sentinella.capire.vaBeneStanotte(id);
       this.sentinella.capire.scrivi();
+      return si({ fatto: true });
+    }
+    /* «C'è qualcuno»: in casa c'e' chi Home Assistant non conosce (la
+     * suocera, la baby-sitter). Fino a quando non torna una persona di Home
+     * Assistant il movimento con la casa vuota tace, per tutta la casa. Non
+     * tocca niente in Home Assistant. */
+    if (azione.qualcuno) {
+      this.sentinella.qualcunoInCasa();
       return si({ fatto: true });
     }
     if (!utente || (this.utenti && !(await this.utenti.eVivo(utente).catch(() => false))))

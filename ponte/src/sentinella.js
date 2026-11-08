@@ -63,7 +63,12 @@ import {
   varchiDiCasa,
 } from "../plancia/src/core/varchi-di-casa.js";
 import { CHIAVE_VERSI, insiemeInvertiti } from "../plancia/src/core/verso-aperture.js";
-import { regoleDellAssistente } from "./l-assistente-al-telefono.js";
+import {
+  dispositiviMuti,
+  eAllAperto,
+  entitaAllAperto,
+  regoleDellAssistente,
+} from "./l-assistente-al-telefono.js";
 import {
   paroleDelBlackout,
   paroleDelCiclo,
@@ -206,6 +211,23 @@ const LUCI_CON_CASA_VUOTA_DA = 30 * MINUTO;
 /* La casa dorme: niente luci e niente movimento da venti minuti. */
 const CASA_CHE_DORME_DA = 20 * MINUTO;
 const CLIMA_CON_CASA_VUOTA_DA = 60 * MINUTO;
+/* Il movimento con la casa vuota. «Ieri mi arrivavano notifiche di continuo
+ * […] da parte dei sensori di movimento. A casa c'era mia suocera»: la casa e'
+ * vuota per le persone di Home Assistant, ma chi non ha un telefono abbinato
+ * non e' una persona, e ogni passaggio davanti a un sensore era una notifica.
+ * Adesso: un sensore si dice una volta finche' non sta fermo due ore; dopo una
+ * notifica, per mezz'ora nessun'altra; e tre movimenti in un quarto d'ora
+ * vogliono dire che in casa qualcuno c'e' — da li' tace finche' la casa non
+ * resta ferma quattro ore, o finche' non torna qualcuno. Il primo movimento
+ * pero' si dice sempre: e' quello che serve. */
+const MOVIMENTO_TORNA_NOTIZIA_DOPO = 2 * ORA;
+const MOVIMENTO_IN_CASA_VUOTA_OGNI = 30 * MINUTO;
+const QUALCUNO_C_E_DOPO = 3;
+const QUALCUNO_C_E_IN = 15 * MINUTO;
+const QUALCUNO_DIMENTICATO_DOPO = 4 * ORA;
+/* Un'entita' che torna da `unavailable` dopo almeno mezz'ora, da sola: il
+ * suo dispositivo dorme e si sveglia, non e' rotto (`dispositiviMuti`). */
+const TORNATO_DOPO = 30 * MINUTO;
 const ELETTRODOMESTICO_ACCESO = 15; // W
 const ELETTRODOMESTICO_FERMO = 5; // W
 const ELETTRODOMESTICO_GIRA_ALMENO = 10 * MINUTO;
@@ -697,6 +719,12 @@ export class Sentinella {
      * prima valevano: quelle che smettono di valere si riarmano. */
     this._memoriaDellAssistente = new Map();
     this._attiveDellAssistente = new Set();
+    /* I dispositivi visti tornare da soli da `unavailable`, e quando. */
+    this._tornatiDaSoli = new Map();
+    /* Il movimento con la casa vuota: quali sensori sono gia' stati detti,
+     * l'ultima notifica, gli ultimi movimenti e se qualcuno in casa c'e'
+     * (`_movimentoDaDire`). Si azzera quando torna qualcuno. */
+    this._movimento = null;
   }
 
   /* ─── La configurazione della plancia ──────────────────────────────── */
@@ -843,6 +871,17 @@ export class Sentinella {
       return;
     }
     const dopo = this.stati.get(id);
+    /* Un dispositivo che torna da solo dopo un bel po' di silenzio: dorme,
+     * non e' rotto. Un riavvio di Home Assistant tiene `unavailable` per
+     * pochi minuti, e non conta. */
+    const suo = this.dispositivoDi?.[id];
+    if (
+      suo &&
+      prima?.state === "unavailable" &&
+      !["unavailable", "unknown"].includes(dopo.state) &&
+      this.adesso() - prima.dal >= TORNATO_DOPO
+    )
+      this._tornatiDaSoli.set(suo, this.adesso());
     /* Una porta che si chiude dimentica il suo «va bene stanotte». */
     if (["off", "closed"].includes(dopo.state)) this.capire.chiusa(id);
     try {
@@ -1168,6 +1207,84 @@ export class Sentinella {
     this._recenti = this._recenti.filter((r) => ora - r.quando <= 15 * MINUTO).slice(-10);
   }
 
+  /* ─── Il movimento con la casa vuota ───────────────────────────────── */
+
+  /* La memoria del movimento in questa assenza, nuova se non c'e'. */
+  _ilMovimento() {
+    this._movimento ??= {
+      sensori: new Map(),
+      detto: null,
+      ultimo: null,
+      movimenti: [],
+      qualcuno: null,
+    };
+    return this._movimento;
+  }
+
+  /* Un sensore di movimento che cambia con la casa vuota: si segna. Quelli
+   * fuori casa — la telecamera del giardino, il gatto, il vento — non dicono
+   * che in casa c'e' qualcuno. */
+  _movimentoInCasaVuota(id, stato) {
+    if (stato.state !== "on" && stato.state !== "off") return;
+    const valori = this._valori();
+    const fuori = eAllAperto({
+      id,
+      stato,
+      area: String(this.aree?.get?.(id) || ""),
+      fuori: entitaAllAperto(valori, this._risolutore(valori)),
+    });
+    if (fuori) return;
+    const ora = this.adesso();
+    const m = this._ilMovimento();
+    /* Una casa ferma da quattro ore: chi c'era se n'e' andato, o dorme. */
+    if (
+      m.qualcuno === "dedotto" &&
+      m.ultimo !== null &&
+      ora - m.ultimo >= QUALCUNO_DIMENTICATO_DOPO
+    )
+      m.qualcuno = null;
+    m.ultimo = ora;
+    if (stato.state !== "on") return;
+    m.movimenti = m.movimenti.filter((una) => ora - una < QUALCUNO_C_E_IN);
+    m.movimenti.push(ora);
+    if (m.movimenti.length >= QUALCUNO_C_E_DOPO && !m.qualcuno) m.qualcuno = "dedotto";
+  }
+
+  /* Se questo movimento, con la casa vuota, e' da dire: non se qualcuno in
+   * casa c'e' (dedotto, o detto dal tasto), non nella mezz'ora dopo un altro,
+   * non due volte per lo stesso sensore finche' non e' stato fermo due ore. */
+  _movimentoDaDire(id, ora) {
+    const m = this._ilMovimento();
+    const prima = m.sensori.get(id);
+    const sensore =
+      prima && ora - prima.ultimo < MOVIMENTO_TORNA_NOTIZIA_DOPO ? prima : { detto: false };
+    sensore.ultimo = ora;
+    m.sensori.set(id, sensore);
+    if (this._qualcunoCe(ora)) return false;
+    if (sensore.detto) return false;
+    if (m.detto !== null && ora - m.detto < MOVIMENTO_IN_CASA_VUOTA_OGNI) return false;
+    sensore.detto = true;
+    m.detto = ora;
+    return true;
+  }
+
+  /* Se, con la casa vuota per Home Assistant, in casa qualcuno c'e': l'ha
+   * detto il tasto «C'è qualcuno», o si muove (`_movimentoInCasaVuota`). */
+  _qualcunoCe(ora = this.adesso()) {
+    const m = this._movimento;
+    if (!m?.qualcuno) return false;
+    if (m.qualcuno === "detto") return true;
+    return m.ultimo !== null && ora - m.ultimo < QUALCUNO_DIMENTICATO_DOPO;
+  }
+
+  /** Il tasto «C'è qualcuno»: fino a quando non torna qualcuno di Home
+   * Assistant, il movimento con la casa vuota non si dice piu'. */
+  qualcunoInCasa() {
+    if (this.casaVuota() !== true) return false;
+    this._ilMovimento().qualcuno = "detto";
+    return true;
+  }
+
   /* Se la casa dormiva fino al giro prima. */
   _dormivaPrima(ora) {
     if (!this._memoria.has("svegliaFinoA")) return false;
@@ -1472,6 +1589,9 @@ export class Sentinella {
         });
       }
       if (vuotaPrima === false && this.casaVuota() === true) this._casaAppenaVuota(nome);
+      /* Torna qualcuno: l'assenza e' finita, e con lei quello che il
+       * movimento si ricordava. */
+      if (this.casaVuota() !== true) this._movimento = null;
       return;
     }
 
@@ -1481,14 +1601,25 @@ export class Sentinella {
     if (
       dominio === "binary_sensor" &&
       MOVIMENTO.has(classe) &&
+      dopo.state !== era &&
+      this.casaVuota() === true
+    )
+      this._movimentoInCasaVuota(id, dopo);
+    if (
+      dominio === "binary_sensor" &&
+      MOVIMENTO.has(classe) &&
       dopo.state === "on" &&
       era !== "on"
     ) {
       const ora = this.adesso();
-      const vuota = this.casaVuota() === true;
+      /* Con la casa vuota si dice una volta, non a ogni passaggio
+       * (`_movimentoDaDire`). Quello che non si dice come «casa vuota» resta
+       * per chi il movimento lo vuole sempre. */
+      const vuotaPerLePersone = this.casaVuota() === true;
+      const vuota = vuotaPerLePersone && this._movimentoDaDire(id, ora);
       /* La casa dorme se dormiva fino a un attimo fa: questo movimento e'
-       * quello che la sveglia. */
-      const notte = eNotte(new Date(ora)) && this._dormivaPrima(ora);
+       * quello che la sveglia. Con la casa vuota decide la regola di sopra. */
+      const notte = !vuotaPerLePersone && eNotte(new Date(ora)) && this._dormivaPrima(ora);
       if (vuota || notte || this.movimentoSempre) {
         const camera = this.telecameraPer(id, { soloVicina: true });
         const dati = {
@@ -1510,7 +1641,21 @@ export class Sentinella {
           perche: vuota ? "casa-vuota" : notte ? "notte" : "giorno",
           componi: { tipo: "movimento", dati },
           parole: inDueLingue(paroleDelMovimento, dati),
-          azioni: [tastoGuarda(), ...this._tastoInserisci()],
+          azioni: [
+            tastoGuarda(),
+            ...this._tastoInserisci(),
+            /* «A casa c'era mia suocera»: chi lo sa lo dice, e fino a quando
+             * non torna qualcuno il movimento con la casa vuota tace. */
+            ...(vuota
+              ? [
+                  {
+                    id: "qualcuno",
+                    parole: duePassi("C'è qualcuno", "Someone's home"),
+                    qualcuno: true,
+                  },
+                ]
+              : []),
+          ],
         });
       }
       return;
@@ -1789,6 +1934,10 @@ export class Sentinella {
     let luciDa = Infinity;
     const climiAccesi = [];
     let climaDa = Infinity;
+    /* Le luci, il clima e la musica «con la casa vuota» non si propongono di
+     * spegnere a chi in casa c'e' anche se Home Assistant non lo sa: la
+     * suocera che si muove, o chi l'ha detto col tasto «C'è qualcuno». */
+    const vuotaDavvero = vuota === true && !this._qualcunoCe(ora);
 
     for (const [id, stato] of this.stati) {
       const dominio = dominioDi(id);
@@ -1913,7 +2062,7 @@ export class Sentinella {
         }
       }
 
-      if (vuota === true && dominio === "light" && stato.state === "on") {
+      if (vuotaDavvero && dominio === "light" && stato.state === "on") {
         /* L'abitudine si impara prima di decidere: una luce accesa con la
          * casa vuota quasi tutti i giorni e' a orario. */
         if (passati > 0) this.capire.luceAccesaConLaCasaVuota(id, passati, ora);
@@ -1930,7 +2079,7 @@ export class Sentinella {
        * riscaldamento che tiene la temperatura col suo programma: un
        * termostato che scalda a casa vuota fa il suo mestiere. */
       if (
-        vuota === true &&
+        vuotaDavvero &&
         dominio === "climate" &&
         !this._eUnTermostato(id, stato) &&
         this._climaAcceso(id, stato)
@@ -1992,15 +2141,14 @@ export class Sentinella {
       });
     }
     /* Con «Tutti»: anche la musica rimasta accesa. */
-    const suona =
-      vuota === true
-        ? [...this.stati].filter(
-            ([id, s]) =>
-              dominioDi(id) === "media_player" &&
-              s.state === "playing" &&
-              ora - s.dal >= LUCI_CON_CASA_VUOTA_DA,
-          )
-        : [];
+    const suona = vuotaDavvero
+      ? [...this.stati].filter(
+          ([id, s]) =>
+            dominioDi(id) === "media_player" &&
+            s.state === "playing" &&
+            ora - s.dal >= LUCI_CON_CASA_VUOTA_DA,
+        )
+      : [];
     if (this._unaVolta("suggerimenti:musica", suona.length > 0)) {
       this._dici({
         tipo: "suggerimenti",
@@ -2065,6 +2213,7 @@ export class Sentinella {
       dispositivoDi: this.dispositivoDi || {},
       nomiDeiDispositivi: this.nomiDeiDispositivi || {},
       daNonContare: this.daNonContare,
+      tornatiDaSoli: this._tornatiDaSoli,
       valori,
       risolvi: this._risolutore(valori),
       letture: this._lettureDellAssistente(valori),
@@ -2179,8 +2328,11 @@ export class Sentinella {
      * connessi» della plancia: un dispositivo e' giu' quando NESSUNA delle sue
      * entita' risponde, e conta una volta. Un canale non usato di uno switch
      * acceso, il blocco bambini di un'asciugatrice spenta, non lo fanno giu'. */
-    const muti = new Set();
-    const vivi = new Set();
+    /* E deve durare (`dispositiviMuti`): «tantissimi sensori che dice che non
+     * rispondono quando invece sono collegati e funzionano benissimo». Il
+     * riepilogo contava anche chi era `unavailable` da un minuto — un riavvio
+     * di Home Assistant poco prima della sera — e i sensori a pile che ZHA e
+     * il Bluetooth dicono `unavailable` quando dormono. */
     for (const [id, stato] of this.stati) {
       const dominio = dominioDi(id);
       if (dominio === "sensor" && stato.attributes?.device_class === "battery") {
@@ -2188,12 +2340,16 @@ export class Sentinella {
         if (n !== null && n <= 15) batterie.push({ nome: nomeDi(stato, id), carica: n });
       }
       if (dominio === "update" && stato.state === "on") aggiornamenti += 1;
-      const suo = this.dispositivoDi?.[id];
-      if (!suo) continue;
-      if (stato.state === "unavailable") muti.add(suo);
-      else vivi.add(suo);
     }
-    const spenti = [...muti].filter((suo) => !vivi.has(suo)).length;
+    const spenti = dispositiviMuti({
+      ora: this.adesso(),
+      stati: this.stati,
+      dispositivoDi: this.dispositivoDi || {},
+      nomiDeiDispositivi: this.nomiDeiDispositivi || {},
+      daNonContare: this.daNonContare,
+      tornatiDaSoli: this._tornatiDaSoli,
+      valori: this._valori(),
+    }).length;
     return { batterie, spenti, aggiornamenti };
   }
 

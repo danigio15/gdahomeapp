@@ -171,11 +171,18 @@ function casaVuota(c) {
   );
 }
 
+/* Una stanza che si chiama come un posto fuori casa e' fuori casa anche senza
+ * la spunta: «notifiche della temperatura del sensore che ho in giardino»,
+ * «non mi deve suggerire di attivare il riscaldamento». */
+const ALL_APERTO =
+  /estern|outdoor|outside|exterior|fuori|giardin|garden|jardin|garten|balcon|terrazz|terrac|cortil|courtyard|patio|veranda|portic|loggia|pergol|gazebo|tettoi|backyard|meteo|weather|(^|[^a-z])(orto|prato|yard|lawn|tetto|roof)([^a-z]|$)/i;
+
 /* Le stanze da tenere comode: quelle di casa. Il balcone, il terrazzo, il
- * giardino segnati «All'aperto» (#251) si leggono, ma non si scaldano, non si
- * rinfrescano e non si arieggiano — e a sei gradi d'inverno sono soltanto
- * fuori. */
-const stanzeDiCasa = (c) => elenco(c.stanze).filter((s) => s.fuori !== true);
+ * giardino segnati «All'aperto» (#251) — o che si chiamano cosi' — si
+ * leggono, ma non si scaldano, non si rinfrescano e non si arieggiano — e a
+ * sei gradi d'inverno sono soltanto fuori. */
+const stanzeDiCasa = (c) =>
+  elenco(c.stanze).filter((s) => s.fuori !== true && !ALL_APERTO.test(pulito(s.name)));
 
 /* Il nome di una zona che e' la casa: «Casa», «Home», «Casa mia»… Chi ha
  * fatto in Home Assistant una zona sua per la casa, accanto a quella di

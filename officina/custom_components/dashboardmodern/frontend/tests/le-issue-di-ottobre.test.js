@@ -1,6 +1,6 @@
 /* Quattro piccole cose chieste da chi usa la plancia, e le prove che le tengono.
  *
- *  - #307: un dispositivo che torna entro cinque minuti non era scollegato;
+ *  - #307: un dispositivo che torna entro un quarto d'ora non era scollegato;
  *  - #334: le righe di una finestra non saltano sotto il dito;
  *  - #337: il citofono a muro solo dove serve, e si puo' togliere.
  */
@@ -11,11 +11,13 @@ import { TACE_DA_ALMENO, taceDaAbbastanza } from "../src/core/i-dispositivi-scol
 import { ciEIlCitofono, muroPulito } from "../src/core/plancia-a-muro.js";
 import { dimenticaLOrdine, inOrdineFermo } from "../src/sections/finestre-dei-widget.js";
 
-test("non connessi: solo chi tace da almeno cinque minuti (#307)", () => {
+test("non connessi: solo chi tace da almeno un quarto d'ora (#307)", () => {
   const adesso = Date.parse("2026-10-28T08:00:00Z");
-  assert.equal(TACE_DA_ALMENO, 5 * 60 * 1000);
+  assert.equal(TACE_DA_ALMENO, 15 * 60 * 1000);
   assert.equal(taceDaAbbastanza({ da: adesso - 60 * 1000 }, adesso), false);
-  assert.equal(taceDaAbbastanza({ da: adesso - 5 * 60 * 1000 }, adesso), true);
+  /* Un riavvio di Home Assistant lungo: dieci minuti non bastano. */
+  assert.equal(taceDaAbbastanza({ da: adesso - 10 * 60 * 1000 }, adesso), false);
+  assert.equal(taceDaAbbastanza({ da: adesso - 15 * 60 * 1000 }, adesso), true);
   assert.equal(taceDaAbbastanza({ da: adesso - 2 * 86400000 }, adesso), true);
   /* Da quando non si sa: si dice, come prima. */
   assert.equal(taceDaAbbastanza({ da: null }, adesso), true);

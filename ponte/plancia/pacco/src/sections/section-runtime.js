@@ -569,7 +569,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-BKVD5ABH.js";
+} from "../../chunk-2FR3NDVS.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -26700,7 +26700,7 @@ function perDispositivo(sciolte, di, nomi2) {
   }
   return [...fuori, ...insieme3.values()];
 }
-var TACE_DA_ALMENO = 5 * 60 * 1e3;
+var TACE_DA_ALMENO = 15 * 60 * 1e3;
 function taceDaAbbastanza(riga5, adesso2 = Date.now(), soglia3 = TACE_DA_ALMENO) {
   const da = Number(riga5?.da);
   if (!Number.isFinite(da) || da <= 0) return true;
@@ -56487,7 +56487,8 @@ function casaVuota(c) {
   const p = c.persone || {};
   return (numero37(p.totale) || 0) > 0 && (numero37(p.inCasa) || 0) === 0 && (numero37(p.incerte) || 0) === 0;
 }
-var stanzeDiCasa = (c) => elenco5(c.stanze).filter((s) => s.fuori !== true);
+var ALL_APERTO = /estern|outdoor|outside|exterior|fuori|giardin|garden|jardin|garten|balcon|terrazz|terrac|cortil|courtyard|patio|veranda|portic|loggia|pergol|gazebo|tettoi|backyard|meteo|weather|(^|[^a-z])(orto|prato|yard|lawn|tetto|roof)([^a-z]|$)/i;
+var stanzeDiCasa = (c) => elenco5(c.stanze).filter((s) => s.fuori !== true && !ALL_APERTO.test(pulito42(s.name)));
 var ZONA_DI_CASA = /^(?:a\s+)?(?:casa|home)(?:\s+(?:mia|nostra|\S+))?$/i;
 function chiEInCasa(viste2) {
   const aCasa = (v) => v?.presence === "home" || v?.presence === "zone" && ZONA_DI_CASA.test(String(v.zone || "").trim());

@@ -526,7 +526,9 @@ test("il movimento con la casa vuota propone «Inserisci» col modo su misura; c
   });
   assert.equal(inserisci.parole.it, "Inserisci · Totale");
   pin = "1234";
-  orologio.ora += MINUTO;
+  /* Lo stesso sensore, con la casa vuota, torna una notizia dopo due ore
+   * ferme. */
+  orologio.ora += 3 * 60 * MINUTO;
   sentinella._suMisuraCache = null;
   const conPin = muovi();
   assert.equal(conPin.azioni.find((a) => a.id === "inserisci").apre, true);

@@ -6249,7 +6249,7 @@ function nonRispondeModel(states) {
     nomi,
   });
   if (!mute.length) return null;
-  /* Solo chi tace da almeno cinque minuti (#307): un riavvio o un riaggancio
+  /* Solo chi tace da almeno un quarto d'ora (#307): un riavvio o un riaggancio
    * non e' un dispositivo scollegato. */
   const adesso = Date.now();
   const tacciono = mute.filter((una) => taceDaAbbastanza(una, adesso));

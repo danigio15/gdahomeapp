@@ -659,8 +659,11 @@ test("non-rispondono: alle dieci, i dispositivi muti da sei ore, contati una vol
   const ora = alle(10, 5);
   const casa = unaCasa(
     [
-      stato("sensor.cantina_temperatura", "unavailable", {}, 7 * ORA, ora),
-      stato("sensor.cantina_batteria", "unavailable", {}, 7 * ORA, ora),
+      /* Va a pile: per lui ci vuole un giorno intero. */
+      stato("sensor.cantina_temperatura", "unavailable", {}, 30 * ORA, ora),
+      stato("sensor.cantina_batteria", "unavailable", {}, 30 * ORA, ora),
+      stato("sensor.bagno_temperatura", "unavailable", {}, 7 * ORA, ora),
+      stato("sensor.bagno_batteria", "unavailable", { device_class: "battery" }, 7 * ORA, ora),
       stato("switch.studio", "unavailable", {}, 8 * ORA, ora),
       /* Un dispositivo con un'entita' che risponde non e' muto. */
       stato("sensor.sala_temperatura", "21", {}, ORA, ora),
@@ -675,6 +678,8 @@ test("non-rispondono: alle dieci, i dispositivi muti da sei ore, contati una vol
   casa.sentinella.dispositivoDi = {
     "sensor.cantina_temperatura": "d1",
     "sensor.cantina_batteria": "d1",
+    "sensor.bagno_temperatura": "d6",
+    "sensor.bagno_batteria": "d6",
     "switch.studio": "d2",
     "sensor.sala_temperatura": "d3",
     "sensor.sala_segnale": "d3",
@@ -689,7 +694,7 @@ test("non-rispondono: alle dieci, i dispositivi muti da sei ore, contati una vol
   assert.equal(dette.length, 1);
   const [e] = dette;
   assert.equal(e.parole.it.titolo, "📡 2 dispositivi non rispondono");
-  assert.equal(e.parole.it.testo, "Presa studio, Sensore cantina · da 7 h.");
+  assert.equal(e.parole.it.testo, "Presa studio, Sensore cantina · da 8 h.");
   assert.deepEqual(tasti(e), ["guarda", "basta"]);
   casa.passa(5 * MINUTO);
   assert.equal(casa.dell("suggerimenti:non-rispondono").length, 1);
