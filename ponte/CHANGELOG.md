@@ -10,6 +10,16 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.12.1
+
+_Solo l'app Android: Home Assistant e l'iPhone non cambiano._
+
+- **L'app su Android si apre di nuovo**: la 1.18.12 si chiudeva appena
+  aperta, prima di qualunque schermata. Una parte di Android che l'app usa
+  per lavorare in sottofondo veniva tagliata quando si preparava il pacchetto
+  per il Play Store, e all'apertura mancava. Adesso c'è, e prima di ogni
+  versione una prova apre l'app su un emulatore Android.
+
 ## 1.18.12
 
 _App GdAHome e Home Assistant._
