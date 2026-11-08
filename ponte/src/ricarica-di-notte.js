@@ -42,6 +42,8 @@ import { PROFILO_PRINCIPALE } from "./configurazione.js";
 import {
   CHIAVE_RICARICA_NOTTE,
   ESITO_VALE,
+  RIFERIMENTI,
+  batteriaDellAuto,
   entitaDellaRicarica,
   fasciaDi,
   impostazioniPulite,
@@ -51,6 +53,7 @@ import {
   prezzoDellaNotte,
   prossimaFascia,
 } from "../plancia/src/core/ricarica-di-notte.js";
+import { pickVehicle } from "../plancia/src/core/vehicle-model.js";
 
 /* Ogni quanto si guarda l'orologio. La fascia comincia a un minuto preciso, e
  * mezzo minuto di ritardo su sei ore di ricarica non si vede. */
@@ -74,6 +77,58 @@ function leggiJson(valore) {
 const oggetto = (valore) =>
   valore && typeof valore === "object" && !Array.isArray(valore) ? valore : {};
 
+/* Le auto della plancia, come le ha salvate. */
+function autoDellaConfigurazione(v) {
+  const sezioni = oggetto(oggetto(leggiJson(v.dm_dashboard_state)).sections);
+  const auto = leggiJson(v.cd_ev_cars);
+  return Array.isArray(auto) && auto.length ? auto : Array.isArray(sezioni.ev) ? sezioni.ev : [];
+}
+
+/**
+ * Il sensore della batteria dell'auto in uso (`cd_ev_car_active`), dal suo
+ * profilo: lo stesso che la pagina Auto mostra. «Perche' dice dal 60 se ho la
+ * batteria al 19%?» La soglia «parte se e' sotto» e il «ci arriva» si decidono
+ * con questo numero, non con la stima di evcc. Vuoto se il profilo non lo dice.
+ */
+export function batteriaDellAutoInUso(valori) {
+  return batteriaDellAuto(autoInUso(oggetto(valori)));
+}
+
+function autoInUso(v) {
+  const scelta = leggiJson(v.cd_ev_car_active);
+  return pickVehicle(autoDellaConfigurazione(v), String(scelta ?? ""));
+}
+
+/* Le caselle di casa: `cd_entity_overrides`, e la loro copia nel modello
+ * canonico. */
+export function mappaDiCasa(valori) {
+  const v = oggetto(valori);
+  const sezioni = oggetto(oggetto(leggiJson(v.dm_dashboard_state)).sections);
+  return {
+    ...oggetto(sezioni.entityOverrides),
+    ...oggetto(leggiJson(v.cd_entity_overrides)),
+  };
+}
+
+const scritta = (valore) => (typeof valore === "string" ? valore.trim() : "");
+
+/**
+ * Il risolutore per la ricarica: quello di casa, ma la batteria non si prende
+ * in prestito da un'altra auto. Con due auto, le caselle della batteria sono
+ * quelle dell'auto in uso, poi quelle di casa, e se non ci sono e' vuoto: la
+ * batteria la dira' evcc, non la macchina che sta in garage accanto.
+ */
+export function risolutoreDellaRicarica(valori) {
+  const v = oggetto(valori);
+  const casa = risolutoreDalla(v);
+  if (autoDellaConfigurazione(v).length < 2) return casa;
+  const inUso = autoInUso(v);
+  const sue = oggetto(inUso?.ov || inUso?.overrides);
+  const mappa = mappaDiCasa(v);
+  return (rif) =>
+    RIFERIMENTI.soc.includes(rif) ? scritta(sue[rif]) || scritta(mappa[rif]) : casa(rif);
+}
+
 /**
  * Chi traduce le caselle della plancia nelle entita' vere, a partire dalla
  * configurazione salvata. E' la stessa mappa che la plancia usa per
@@ -83,15 +138,8 @@ const oggetto = (valore) =>
  */
 export function risolutoreDalla(valori) {
   const v = oggetto(valori);
-  const stato = oggetto(leggiJson(v.dm_dashboard_state));
-  const sezioni = oggetto(stato.sections);
-  const mappa = {
-    ...oggetto(sezioni.entityOverrides),
-    ...oggetto(leggiJson(v.cd_entity_overrides)),
-  };
-  const auto = leggiJson(v.cd_ev_cars);
-  const elenco =
-    Array.isArray(auto) && auto.length ? auto : Array.isArray(sezioni.ev) ? sezioni.ev : [];
+  const mappa = mappaDiCasa(v);
+  const elenco = autoDellaConfigurazione(v);
   return (rif) => {
     if (typeof mappa[rif] === "string" && mappa[rif]) return mappa[rif];
     for (const una of elenco) {
@@ -145,7 +193,9 @@ export class RicaricaDiNotte {
   situazione() {
     const valori = this._valori();
     const impostazioni = impostazioniPulite(valori[CHIAVE_RICARICA_NOTTE]);
-    const entita = entitaDellaRicarica(risolutoreDalla(valori));
+    const entita = entitaDellaRicarica(risolutoreDellaRicarica(valori), {
+      batteria: batteriaDellAutoInUso(valori),
+    });
     const stati = (id) => this.stati(id);
     const auto = letturaDellAuto(entita, stati);
     const prezzo = prezzoDellaNotte({

@@ -1507,7 +1507,6 @@ export default Object.freeze({
   From: "من",
   "From outside": "من الخارج",
   "From the house": "من المنزل",
-  "From the integration": "من التكامل",
   "From this device": "من هذا الجهاز",
   "From … to": "من … إلى",
   "Front left": "أمامي أيسر",
@@ -3655,9 +3654,6 @@ export default Object.freeze({
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
     "الدرجة التي حدّدها المنظّم لنفسه: بجانب التدفق الحقيقي تقول إن كان يصل إليها.",
   "The description is missing.": "الوصف ناقص.",
-  "The device controls": "أوامر الجهاز",
-  "The device readings": "قراءات الجهاز",
-  "The device state": "حالة الجهاز",
   "The doors and the windows": "الأبواب والنوافذ",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "يجب أن يكون مرحّل النزول كيان switch.*، وهو لا ينطبق إلا عندما يكون حقل الستارة نفسه مرحّل switch.*.",
@@ -7442,6 +7438,9 @@ export default Object.freeze({
   "Urgent ones are said anyway.": "العاجلة تُنطق على أي حال.",
   "Voice": "صوت",
   "Which Echos": "أي أجهزة Echo",
+  "Which notifications": "أي إشعارات",
+  "Only those turned on in the app's Notifications: an item turned off on every phone is not said by the Echos.":
+    "فقط المفعّلة في إشعارات التطبيق: البند المعطّل على كل الهواتف لا تقوله أجهزة Echo.",
   "Urgent: alarm, sensors, doorbell, blackout": "عاجلة: الإنذار، المستشعرات، الجرس، انقطاع الكهرباء",
   "Security: arming, openings, motion": "الأمان: التفعيل، الفتح، الحركة",
   "Home: appliances, fridge, rain, pets": "المنزل: الأجهزة، الثلاجة، المطر، الحيوانات الأليفة",
@@ -8131,4 +8130,6 @@ export default Object.freeze({
   "🖥️ Computer": "🖥️ الحاسوب",
   "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "الصفحات التي غُيّرت في معاينة تبويبها — ترتيب المربعات والمخفية منها. «إعادة الضبط» تعيدها كما كانت.",
   "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.": "الرسومات التي نقلتَ أجزاءها في المعاينة، على الحاسوب وعلى الهاتف. «إعادة الضبط» تعيدها كما كانت.",
+  "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.": "لا يوجد بعد منظم حرارة للتدفئة والتبريد: إلى أن يوجد، تُفتح على التبريد.",
+  "First open the Marketplace from the Home Assistant menu, read the warning and accept it: after that, updates install from here too.": "افتح أولاً Marketplace من قائمة Home Assistant، واقرأ التحذير ووافق عليه: بعد ذلك تُثبَّت التحديثات من هنا أيضًا.",
 });

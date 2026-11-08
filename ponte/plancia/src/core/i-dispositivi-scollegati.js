@@ -265,10 +265,13 @@ function perDispositivo(sciolte, di, nomi) {
  * Da quanto deve tacere un dispositivo prima che la tessera in Home lo dica
  * (#307): «risultano non raggiungibili, in realta' funzionano». Un riavvio di
  * Home Assistant, un riaggancio Zigbee o un Wi-Fi che salta durano meno: chi
- * torna entro cinque minuti non era scollegato. Chi tace da prima — o non si
- * sa da quando — si dice.
+ * torna entro un quarto d'ora non era scollegato. Erano cinque minuti, e non
+ * bastavano: «ho tantissimi sensori che dice che non rispondono quando invece
+ * sono collegati e funzionano benissimo» — dopo un riavvio certe integrazioni
+ * (quelle nel cloud, le telecamere, i Tuya) ci mettono di piu' a tornare. Chi
+ * tace da prima — o non si sa da quando — si dice.
  */
-export const TACE_DA_ALMENO = 5 * 60 * 1000;
+export const TACE_DA_ALMENO = 15 * 60 * 1000;
 
 export function taceDaAbbastanza(riga, adesso = Date.now(), soglia = TACE_DA_ALMENO) {
   const da = Number(riga?.da);

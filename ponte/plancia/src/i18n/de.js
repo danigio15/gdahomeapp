@@ -1534,7 +1534,6 @@ export default Object.freeze({
   From: "Von",
   "From outside": "Von draußen",
   "From the house": "Aus dem Haus",
-  "From the integration": "Aus der Integration",
   "From this device": "Von diesem Gerät",
   "From … to": "Von … bis",
   "Front left": "Vorne links",
@@ -3707,9 +3706,6 @@ export default Object.freeze({
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
     "Der Wert, den sich die Regelung selbst gesetzt hat: neben dem echten Vorlauf sagt er, ob sie ihn erreicht.",
   "The description is missing.": "Die Beschreibung fehlt.",
-  "The device controls": "Die Bedienelemente des Geräts",
-  "The device readings": "Die Messwerte des Geräts",
-  "The device state": "Der Zustand des Geräts",
   "The doors and the windows": "Die Türen und die Fenster",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "Das Ab-Relais muss eine switch.*-Entität sein und gilt nur, wenn auch das Rollladenfeld ein switch.*-Relais enthält.",
@@ -7557,6 +7553,9 @@ export default Object.freeze({
   "Urgent ones are said anyway.": "Dringende werden trotzdem gesagt.",
   "Voice": "Stimme",
   "Which Echos": "Welche Echos",
+  "Which notifications": "Welche Benachrichtigungen",
+  "Only those turned on in the app's Notifications: an item turned off on every phone is not said by the Echos.":
+    "Nur die in den Benachrichtigungen der App eingeschalteten: Ein Eintrag, der auf jedem Telefon aus ist, wird von den Echos nicht gesagt.",
   "Urgent: alarm, sensors, doorbell, blackout": "Dringend: Alarm, Sensoren, Klingel, Stromausfall",
   "Security: arming, openings, motion": "Sicherheit: Scharfschalten, Öffnungen, Bewegung",
   "Home: appliances, fridge, rain, pets": "Zuhause: Geräte, Kühlschrank, Regen, Haustiere",
@@ -8246,4 +8245,6 @@ export default Object.freeze({
   "🖥️ Computer": "🖥️ Computer",
   "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "die in der Vorschau ihres Tabs geänderten Seiten — die Reihenfolge der Blöcke und die ausgeblendeten. «Zurücksetzen» stellt sie wieder her.",
   "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.": "die Zeichnungen, deren Teile du in der Vorschau verschoben hast, auf dem Computer und auf dem Telefon. «Zurücksetzen» stellt sie wieder her.",
+  "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.": "Es gibt noch kein Thermostat mit Heizen und Kühlen: bis dahin öffnet sie auf Kühlen.",
+  "First open the Marketplace from the Home Assistant menu, read the warning and accept it: after that, updates install from here too.": "Öffne zuerst den Marketplace im Home-Assistant-Menü, lies den Hinweis und akzeptiere ihn: danach lassen sich Updates auch von hier installieren.",
 });

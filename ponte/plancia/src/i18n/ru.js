@@ -1527,7 +1527,6 @@ export default Object.freeze({
   From: "С",
   "From outside": "Снаружи",
   "From the house": "Из дома",
-  "From the integration": "Из интеграции",
   "From this device": "С этого устройства",
   "From … to": "С … по",
   "Front left": "Передний левый",
@@ -3696,9 +3695,6 @@ export default Object.freeze({
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
     "Значение, которое задала себе автоматика: рядом с реальной подачей видно, доходит ли котёл до него.",
   "The description is missing.": "Не хватает описания.",
-  "The device controls": "Управление устройством",
-  "The device readings": "Показания устройства",
-  "The device state": "Состояние устройства",
   "The doors and the windows": "Двери и окна",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "Реле опускания должно быть сущностью switch.* и применяется только тогда, когда в поле рольставни тоже указано реле switch.*.",
@@ -7512,6 +7508,9 @@ export default Object.freeze({
   "Urgent ones are said anyway.": "Срочные всё равно произносятся.",
   "Voice": "Голос",
   "Which Echos": "Какие Echo",
+  "Which notifications": "Какие уведомления",
+  "Only those turned on in the app's Notifications: an item turned off on every phone is not said by the Echos.":
+    "Только включённые в Уведомлениях приложения: пункт, выключенный на всех телефонах, Echo не произносят.",
   "Urgent: alarm, sensors, doorbell, blackout": "Срочные: сигнализация, датчики, звонок, отключение питания",
   "Security: arming, openings, motion": "Безопасность: постановка на охрану, открытия, движение",
   "Home: appliances, fridge, rain, pets": "Дом: техника, холодильник, дождь, питомцы",
@@ -8201,4 +8200,6 @@ export default Object.freeze({
   "🖥️ Computer": "🖥️ Компьютер",
   "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "страницы, изменённые в предпросмотре их вкладки, — порядок блоков и скрытые блоки. «Сбросить» возвращает всё как было.",
   "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.": "рисунки, части которых вы переместили в предпросмотре, на компьютере и на телефоне. «Сбросить» возвращает их как было.",
+  "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.": "Термостата с обогревом и охлаждением пока нет: до тех пор открывается на Охлаждении.",
+  "First open the Marketplace from the Home Assistant menu, read the warning and accept it: after that, updates install from here too.": "Сначала откройте Marketplace в меню Home Assistant, прочитайте предупреждение и примите его: после этого обновления будут устанавливаться и отсюда.",
 });

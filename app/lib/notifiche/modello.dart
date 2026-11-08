@@ -24,6 +24,12 @@ const Map<String, List<String>> categorieDelleNotifiche = {
   'viaggi': ['viaggi'],
 };
 
+/// Gli avvisi di sicurezza: in GdAHome Base al telefono arrivano solo questi
+/// — fumo, gas, allagamento e monossido stanno in `allarmi` — e la prova.
+/// Il resto e' di Premium: «Le notifiche sono solo per i Premium, non per
+/// tutti». Gli stessi di `AVVISI_DI_SICUREZZA` in `ponte/src/notifiche.js`.
+const Set<String> avvisiDiSicurezza = {'antifurto', 'allarmi', 'campanello'};
+
 final RegExp _orario = RegExp(r'^([01]\d|2[0-3]):([0-5]\d)$');
 
 /// Gli eventi che hanno anche la versione «elaborata»: con la scheda
@@ -556,6 +562,7 @@ class StatoDelleNotifiche {
     this.io = '',
     this.amministra = false,
     this.premium,
+    this.viaggi,
   });
 
   final ImpostazioniDelleNotifiche impostazioni;
@@ -564,6 +571,10 @@ class StatoDelleNotifiche {
   /// licenze spente). `null` da un ponte di prima, che non lo dice: allora
   /// decide la licenza che l'app conosce.
   final bool? premium;
+
+  /// Se «Quando partire» arriva: GdANav Premium, che GdAHome Premium
+  /// comprende. `null` da un ponte di prima.
+  final bool? viaggi;
 
   /// Se questo telefono ha gia' detto alla casa dove mandarle.
   final bool registrato;
@@ -596,6 +607,7 @@ class StatoDelleNotifiche {
     io: io,
     amministra: amministra,
     premium: premium,
+    viaggi: viaggi,
   );
 
   Map<String, Object> inJson() => {
@@ -616,6 +628,7 @@ class StatoDelleNotifiche {
     'io': io,
     'amministra': amministra,
     'premium': ?premium,
+    'viaggi': ?viaggi,
   };
 
   static StatoDelleNotifiche leggi(Object? grezzo) {
@@ -649,6 +662,7 @@ class StatoDelleNotifiche {
       io: grezzo['io']?.toString() ?? '',
       amministra: grezzo['amministra'] == true,
       premium: grezzo['premium'] is bool ? grezzo['premium'] as bool : null,
+      viaggi: grezzo['viaggi'] is bool ? grezzo['viaggi'] as bool : null,
     );
   }
 }

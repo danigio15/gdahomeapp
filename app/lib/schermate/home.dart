@@ -968,6 +968,8 @@ class _HomeState extends State<Home> {
                  * aprono su meta' di quello che promettono. */
                 nellApp: widget.impostazioni.sulTelefono,
                 conPremium: collegamento.licenza.siVende,
+                /* Su Android la Salute, per ora, non c'e' (`laSaluteCe`). */
+                conLaSalute: laSaluteCe,
               ),
               bloccate: _bloccate,
               apriPremium: () => unawaited(

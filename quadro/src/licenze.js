@@ -535,6 +535,19 @@ export function haPagatoIlPeriodo(riga) {
   return !riga.sandbox && !riga.prova && riga.finito !== "acquisto-rimborsato";
 }
 
+/**
+ * Il giorno dell'ultimo pagamento, come lo conta «Incassato»: l'inizio del
+ * periodo pagato (`lInizioDelPeriodo`), mai dopo adesso. `null` se il periodo
+ * non e' stato pagato (prova, rimborso, test) o se non si sa. La Gestione lo
+ * scrive nella colonna «Importo reale» («pagato il 9 nov»): e' lo stesso
+ * giorno che decide se un pagamento e' del mese.
+ */
+export function ilGiornoDelPagamento(riga, ora = Date.now()) {
+  if (!haPagatoIlPeriodo(riga)) return null;
+  const quando = lInizioDelPeriodo(riga);
+  return quando === null ? null : Math.min(quando, ora);
+}
+
 /** Ha pagato almeno un periodo: questo, o uno dopo la prova. */
 export function haPagato(riga) {
   if (riga.sandbox || riga.finito === "acquisto-rimborsato") return false;
@@ -590,14 +603,23 @@ export function contaGliAbbonamenti(tutte, ora = Date.now()) {
   const inProva = delGruppo("prova");
   const proveRinnovano = inProva.filter((riga) => !nonRinnova(riga));
   const proveNonRinnovano = inProva.filter(nonRinnova);
-  const alMese = {};
+  /* Il ricorrente si somma intero e si arrotonda alla fine: due annuali da
+   * 49,99 € sono 8,33 € al mese, non 4,17 + 4,17. La Gestione somma la
+   * colonna «Importo previsto» allo stesso modo, e i due numeri coincidono. */
+  const alMeseIntero = {};
   for (const riga of pagantiRinnovano) {
     if (!(riga.prezzo > 0) || !riga.valuta) continue;
     const alMeseSuo =
       riga.piano === "annuale" ? riga.prezzo / 12 : riga.piano === "mensile" ? riga.prezzo : null;
     if (alMeseSuo === null) continue;
-    alMese[riga.valuta] = Math.round(((alMese[riga.valuta] || 0) + alMeseSuo) * 100) / 100;
+    alMeseIntero[riga.valuta] = (alMeseIntero[riga.valuta] || 0) + alMeseSuo;
   }
+  const alMese = Object.fromEntries(
+    Object.entries(alMeseIntero).map(([valuta, valore]) => [
+      valuta,
+      Math.round(valore * 100) / 100,
+    ]),
+  );
 
   /* Gli incassi del mese: l'ultimo periodo pagato, se e' cominciato da
    * mezzanotte del primo del mese. Un periodo che non e' di prova e' gia'
@@ -606,9 +628,8 @@ export function contaGliAbbonamenti(tutte, ora = Date.now()) {
    * stato lo stesso, e si conta adesso. */
   const inizioDelMese = lInizioDelMese(ora);
   const pagatiNelMese = righe.filter((riga) => {
-    if (!haPagatoIlPeriodo(riga)) return false;
-    const quando = lInizioDelPeriodo(riga);
-    return quando !== null && Math.min(quando, ora) >= inizioDelMese;
+    const quando = ilGiornoDelPagamento(riga, ora);
+    return quando !== null && quando >= inizioDelMese;
   });
   const incassato = {};
   for (const riga of pagatiNelMese) {
@@ -1470,6 +1491,18 @@ export class Licenze {
       pagatoDopoLaProva: Boolean(una.pagatoDopoLaProva),
       finito: una.negozio.finito || null,
       aggiornata: una.negozio.aggiornata || null,
+      /* Il giorno dell'ultimo pagamento, quello che conta «Incassato». */
+      pagatoIl: ilGiornoDelPagamento(
+        {
+          sandbox: Boolean(suo.sandbox),
+          prova: Boolean(una.prova),
+          finito: una.negozio.finito || null,
+          periodo: suo.periodo ?? null,
+          piano: suo.piano || "",
+          pagato: una.scade,
+        },
+        ora,
+      ),
     };
   }
 

@@ -11,6 +11,7 @@ import 'package:gdahome/casa/collegamento.dart';
 import 'package:gdahome/notifiche/modello.dart';
 import 'package:gdahome/ponte/sonda.dart';
 import 'package:gdahome/schermate/notifiche.dart';
+import 'package:gdahome/schermate/premium.dart';
 
 import '../ponte/ponte_finto.dart';
 import 'da_home_assistant_di_prova.dart';
@@ -252,29 +253,31 @@ void main() {
     await tester.runAsync(() => _chiudi(ponte, collegamento));
   });
 
-  testWidgets('il foglio in Base: le altre scelte col bollino', (tester) async {
+  testWidgets('Base: anche quelle per lui col lucchetto, e al tocco il '
+      'Premium', (tester) async {
     final (ponte, collegamento) = await _apri(
       tester,
       dati: datiDaHomeAssistant(premium: false),
       premium: false,
     );
-    await _finoA(tester, find.text('Allarme: movimento in giardino'));
-    await tester.tap(find.text('Allarme: movimento in giardino'));
+    /* «Le notifiche sono solo per i Premium»: niente «Accendi quelle di
+     * questo telefono», e il bollino accanto al titolo. */
+    expect(
+      find.byKey(const Key('accendi-quelle-di-questo-telefono')),
+      findsNothing,
+    );
+    final riga = find.byKey(const Key('ha-1700000000002'));
+    await _finoA(tester, riga);
+    final interruttore = tester.widget<Switch>(
+      find.descendant(of: riga, matching: find.byType(Switch)),
+    );
+    expect(interruttore.onChanged, isNull);
+    expect(interruttore.value, isFalse, reason: 'in Base non arriva');
+    await tester.tap(riga);
     await tester.pumpAndSettle();
-    /* L'altro telefono, tutti, e la foto coi tasti. */
-    expect(
-      find.descendant(
-        of: find.byType(FoglioDaHomeAssistant),
-        matching: find.byKey(const Key('bollino-premium')),
-      ),
-      findsNWidgets(3),
-    );
-    expect(
-      find.text('La foto e i tasti arrivano con Premium: qui arriva il testo.'),
-      findsOneWidget,
-    );
-    await tester.tap(find.byKey(const Key('ha-a-tutti')));
-    await _lasciaFare(tester);
+    expect(find.byType(FoglioDaHomeAssistant), findsNothing);
+    expect(find.byKey(const Key('spiegazione-premium')), findsOneWidget);
+    expect(find.text(PerchePremium.notifiche), findsOneWidget);
     expect(
       ponte.chieste.where((una) => una['type'] == 'ponte/notifiche/ha/imposta'),
       isEmpty,

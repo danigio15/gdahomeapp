@@ -32,7 +32,7 @@ import { canonicalClimateType } from "../core/device-model.js";
 import { letturaValvola } from "../core/valvola-trv.js";
 import {
   gradoNellaScala,
-  passoDellUnita,
+  passoDelClima,
   quotaNellaScala,
   scalaDellaZona,
   scalaDichiarata,
@@ -90,7 +90,12 @@ import {
   scadenzaDi,
 } from "./spegnimento-programmato-section.js";
 import { statiDelleCaldaie } from "./termico-del-caldo-section.js";
-import { climaDellaFinestra, gradiScritti, passoDellObiettivo } from "./home-widgets-section.js";
+import {
+  climaDellaFinestra,
+  gradiScritti,
+  obiettivoDaMostrare,
+  passoDellObiettivo,
+} from "./home-widgets-section.js";
 import {
   activeLocale,
   allStates,
@@ -421,7 +426,11 @@ export function climateReading(entity, states = allStates(), unita = unitaDellEn
      * evento di stato, e andarli a ripescare vorrebbe dire risolvere di nuovo
      * la stessa entita' che si e' appena letta. */
     attributi: attributes,
-    passo: passoDellUnita(attributes),
+    /* Il passo e' quello di tutta la plancia (`passoDelClima`): mezzo grado
+     * per chi non ne dichiara uno, come il popup. Prima qui ripiegava su un
+     * grado intero, e la card e il popup della stessa unita' si muovevano
+     * di due misure diverse. */
+    passo: passoDelClima(attributes),
   };
 }
 
@@ -1056,8 +1065,12 @@ function paintCard(card, unit, reading, labels) {
   /* Col flag acceso il numero grande e' l'ambiente e la riga piccola il
    * target; le didascalie seguono i numeri, o direbbero il falso. */
   const invertita = cartaInvertita();
-  const grande = invertita ? reading.ambient : reading.target;
-  const piccolo = invertita ? reading.target : reading.ambient;
+  /* L'obiettivo appena chiesto col meno o col piu', finche' Home Assistant
+   * non lo conferma: due tocchi di fila fanno un grado, non due volte lo
+   * stesso mezzo grado. E' la stessa memoria del popup. */
+  const obiettivo = obiettivoDaMostrare({ entity: unit.entity, target: reading.target });
+  const grande = invertita ? reading.ambient : obiettivo;
+  const piccolo = invertita ? obiettivo : reading.ambient;
   const target = card.querySelector("[data-dm-cl-target]");
   if (target) {
     target.innerHTML =
@@ -1088,7 +1101,7 @@ function paintCard(card, unit, reading, labels) {
   const estremoAlto = card.querySelector("[data-dm-cl-high]");
   if (estremoAlto) estremoAlto.textContent = `${gradoScritto(scala[1])}°`;
 
-  const targetRatio = ratio(reading.target, scala);
+  const targetRatio = ratio(obiettivo, scala);
   const fill = card.querySelector("[data-dm-cl-fill]");
   const knob = card.querySelector("[data-dm-cl-knob]");
   if (fill) fill.style.width = targetRatio === null ? "0%" : `${(targetRatio * 100).toFixed(1)}%`;
@@ -1884,27 +1897,38 @@ function apriIlTimer(event) {
 }
 
 /**
- * One step, one degree — everywhere.
+ * Il passo del meno e del piu' per chi la configurazione non la conosce.
  *
- * The card's ± call `setTemp()`, which has moved by a whole degree since v253.
- * The HVAC popup still ships `onclick="cpSetTemp(±0.5)"` in the legacy markup,
- * so the same unit answered with half a degree there and a full one here. This
- * keeps the legacy service call and only corrects the delta it is handed: aim
- * at the whole degree above or below the value the popup is showing.
+ * Le unita' configurate passano da `passoDellObiettivo`, con la loro riga.
+ * Chi resta — un'entita' aperta da una scorciatoia, fuori dal Clima — si
+ * muove con la stessa regola: il passo dell'unita' (`passoDelClima`, mezzo
+ * grado se non lo dichiara), e il numero riportato su quel passo. Prima qui
+ * si andava al grado intero sopra o sotto, e lo stesso popup rispondeva col
+ * mezzo grado a un'unita' e col grado intero a un'altra.
+ *
+ * Torna il numero da chiedere, o `null` se non c'e' niente da cui partire.
  */
-export function wholeDegreeDelta(shown, delta) {
-  const down = Number(delta) < 0;
-  const current = Number(shown);
-  if (!Number.isFinite(current)) return down ? -1 : 1;
-  // A unit parked on a half degree walks to the next whole one, not past it.
-  const next = down ? Math.ceil(current) - 1 : Math.floor(current) + 1;
-  return next - current;
+export function gradoDopoIlPasso(attributi, verso, base) {
+  const scritto = base === null || base === undefined || base === "" ? NaN : Number(base);
+  const partenza = Number.isFinite(scritto) ? scritto : Number(attributi?.temperature);
+  if (!Number.isFinite(partenza)) return null;
+  const passo = passoDelClima(attributi);
+  const segno = Number(verso) < 0 ? -1 : 1;
+  const sulPasso = Math.round((partenza + segno * passo) / passo) * passo;
+  const minima = Number(attributi?.min_temp);
+  const massima = Number(attributi?.max_temp);
+  const dentro = Math.min(
+    Number.isFinite(massima) ? massima : Infinity,
+    Math.max(Number.isFinite(minima) ? minima : -Infinity, sulPasso),
+  );
+  return Math.round(dentro * 100) / 100;
 }
 
 /* La barra si trascina («possibilita' di scorrere la barra per aumentare e
  * diminuire la temperatura, sia da desktop che da mobile»): il dito o il
  * mouse prendono la corsia, il pomello e il numero seguono in diretta, e al
- * rilascio parte UNA set_temperature col grado intero scelto. I ± restano. */
+ * rilascio parte UNA set_temperature col grado scelto, al passo dell'unita'.
+ * I ± restano. */
 /* Un grado scritto come lo si legge: 45 e non 45,0, ma 45,5 quando il
  * termostato lavora a mezzi gradi e quel mezzo grado e' la scelta. */
 function gradoScritto(valore) {
@@ -2007,16 +2031,25 @@ function installTemperatureStep() {
     const casella = doc?.getElementById("cp-temp-val");
     const shown = parseFloat(clean(casella?.textContent).replace(",", "."));
     /* Il passo, la scala e l'arrotondamento sono quelli dell'unita' — la
-     * stessa regola dei meno e piu' delle tessere (#252). Il passo del
-     * guscio, un grado intero fra 10 e 35, resta solo per chi non e' nella
-     * configurazione. */
+     * stessa regola dei meno e piu' delle tessere (#252). Chi non e' nella
+     * configurazione passa dal guscio, ma col passo di tutti. */
     const voluta = passoDellObiettivo(aperta, verso, Number.isFinite(shown) ? shown : undefined);
     if (voluta !== undefined) {
       root.navigator?.vibrate?.(8);
       if (voluta !== null && casella) scriviSeCambia(casella, esc(gradiScritti(voluta)));
       return undefined;
     }
-    return current.call(this, wholeDegreeDelta(shown, delta));
+    /* Fuori dalla configurazione: lo stesso passo, sullo stato che Home
+     * Assistant manda e dal numero che la finestra sta mostrando. */
+    const attributi = allStates()?.[aperta]?.attributes;
+    const prossimo = attributi
+      ? gradoDopoIlPasso(attributi, verso, Number.isFinite(shown) ? shown : undefined)
+      : null;
+    if (prossimo === null) return current.call(this, delta);
+    root.navigator?.vibrate?.(8);
+    chiamaClima(aperta, "set_temperature", { temperature: prossimo });
+    if (casella) scriviSeCambia(casella, esc(gradiScritti(prossimo)));
+    return undefined;
   }
   cpSetTempThermal.__dmClimateThermal = true;
   cpSetTempThermal.__dmPrevious = current;
@@ -2066,14 +2099,36 @@ function installaLaTerzaLinguetta() {
 
 /* Il meno e il piu' della card chiamano `setTemp()` del guscio, che conosce
  * solo `temperature`: su un termostato coi due obiettivi tornava subito,
- * senza fare niente. Chi ne ha due passa da qui; chi ne ha uno resta li',
- * esattamente com'era. */
+ * senza fare niente. Chi ne ha due passa da qui.
+ *
+ * E adesso anche chi ne ha uno. Il `setTemp()` del guscio va al grado intero
+ * («v253: step 1 grado intero»), mentre il popup della stessa unita' va al
+ * mezzo grado: «se fai piu' o meno ti cambia la temperatura a un grado e non
+ * mezzo; invece se la apri fa i mezzi gradi». Il passo della card e' quello
+ * del popup — `passoDellObiettivo`, col passo dell'unita' — e il numero
+ * chiesto si vede subito sulla card. */
 function installPassoDellaCard() {
   const current = root.setTemp;
   if (typeof current !== "function" || current.__dmClimateThermal) return;
   function setTempThermal(entity, direction, zona) {
-    if (muoviIlClimaDoppio(entity, direction === "up" ? 1 : -1, zona)) return undefined;
-    return current.call(this, entity, direction);
+    const verso = direction === "up" ? 1 : -1;
+    if (muoviIlClimaDoppio(entity, verso, zona)) return undefined;
+    const chiave = clean(entity);
+    const voluta = passoDellObiettivo(chiave, verso);
+    if (voluta !== undefined) {
+      root.navigator?.vibrate?.(10);
+      if (voluta !== null) renderClimate();
+      return undefined;
+    }
+    /* Un'entita' che la configurazione non conosce: lo stesso passo, sullo
+     * stato che Home Assistant manda. */
+    const attributi = allStates()?.[chiave]?.attributes;
+    const prossimo = attributi ? gradoDopoIlPasso(attributi, verso) : null;
+    if (prossimo === null) return current.call(this, entity, direction);
+    root.navigator?.vibrate?.(10);
+    if (prossimo !== Number(attributi.temperature))
+      chiamaClima(chiave, "set_temperature", { temperature: prossimo });
+    return undefined;
   }
   setTempThermal.__dmClimateThermal = true;
   setTempThermal.__dmPrevious = current;

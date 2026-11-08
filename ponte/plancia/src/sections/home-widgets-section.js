@@ -344,7 +344,7 @@ import {
   versoInvertito,
 } from "../core/verso-aperture.js";
 import { normalizeRobots, robotStateLabel, robotView } from "../core/robot-model.js";
-import { passoDellUnita, scalaDellUnita } from "../core/scala-clima.js";
+import { PASSO_DEL_CLIMA, passoDelClima, scalaDellUnita } from "../core/scala-clima.js";
 import {
   coppiaSpostata,
   obiettiviDelClima,
@@ -387,7 +387,7 @@ import {
   t,
   senzaCadere,
 } from "./shared.js";
-import { disegnaComeStaLaCasa } from "./come-sta-la-casa-section.js";
+import { disegnaComeStaLaCasa, ilRifiutoDetto } from "./come-sta-la-casa-section.js";
 import {
   disegnaAccantoAllePersone,
   registraLeFontiDellAssistente,
@@ -1254,7 +1254,7 @@ function rigaClima(states, unit) {
      * ne dichiara settanta (#252). */
     minima: scala[0],
     massima: scala[1],
-    passo: passoDellUnita(attributi, 0.5),
+    passo: passoDelClima(attributi),
     umidita: numero(attributi.current_humidity),
     azione: clean(attributi.hvac_action),
     /* Che macchina e', non solo cosa sta facendo adesso: un termosifone
@@ -1370,7 +1370,7 @@ export function obiettivoSpostato(riga, verso, base) {
   const scritto = base === null || base === undefined || base === "" ? NaN : Number(base);
   const partenza = Number.isFinite(scritto) ? scritto : riga.target;
   if (partenza === null || partenza === undefined || !Number.isFinite(Number(partenza))) return undefined;
-  const passo = Number(riga.passo) > 0 ? Number(riga.passo) : 0.5;
+  const passo = Number(riga.passo) > 0 ? Number(riga.passo) : PASSO_DEL_CLIMA;
   const minima = Number.isFinite(Number(riga.minima)) ? Number(riga.minima) : -Infinity;
   const massima = Number.isFinite(Number(riga.massima)) ? Number(riga.massima) : Infinity;
   const segno = Number(verso) < 0 ? -1 : 1;
@@ -6249,7 +6249,7 @@ function nonRispondeModel(states) {
     nomi,
   });
   if (!mute.length) return null;
-  /* Solo chi tace da almeno cinque minuti (#307): un riavvio o un riaggancio
+  /* Solo chi tace da almeno un quarto d'ora (#307): un riavvio o un riaggancio
    * non e' un dispositivo scollegato. */
   const adesso = Date.now();
   const tacciono = mute.filter((una) => taceDaAbbastanza(una, adesso));
@@ -11334,14 +11334,27 @@ function onClick(event) {
     const parola = aggiornamento.textContent;
     aggiornamento.disabled = true;
     aggiornamento.textContent = t("In corso", "Installing");
-    callHa("update", "install", { entity_id: quale }).then((esito) => {
-      if (esito !== undefined) {
-        guardaIlRiavvioDopoLInstallazione();
-        return;
-      }
-      aggiornamento.disabled = false;
-      aggiornamento.textContent = parola;
-    });
+    /* Il no di Home Assistant si dice, con le parole di `ilRifiutoDetto`:
+     * il Marketplace che chiede di accettare l'avviso rifiuta ogni
+     * aggiornamento delle integrazioni scaricate, e senza dirlo il tasto
+     * tornava com'era e basta. */
+    const installa =
+      typeof root.dmCallHaService === "function"
+        ? Promise.resolve(root.dmCallHaService("update", "install", { entity_id: quale }))
+        : callHa("update", "install", { entity_id: quale }).then((esito) => {
+            if (esito === undefined) throw new Error("");
+            return esito;
+          });
+    installa
+      .then(() => guardaIlRiavvioDopoLInstallazione())
+      .catch((errore) => {
+        aggiornamento.disabled = false;
+        aggiornamento.textContent = parola;
+        if (clean(errore?.message || errore))
+          try {
+            root.edToast?.(ilRifiutoDetto(errore));
+          } catch (_ignora) {}
+      });
     return;
   }
   const riavvia = event.target?.closest?.("[data-dm-w-riavvia]");

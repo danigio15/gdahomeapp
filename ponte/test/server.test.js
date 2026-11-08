@@ -197,6 +197,10 @@ async function abbinaSulFilo(b, codice, { nome = "telefono", sistema = "" } = {}
   }
 }
 
+/* Per chi e' il telefono: un codice senza nessuno non nasce piu' (vedi la
+ * prova «senza dire per chi, il codice non nasce» qui sotto). */
+const PER_CHI = JSON.stringify({ utente: CHI_AMMINISTRA });
+
 /* Di serie si bussa come chi amministra, che e' chi la console la apre: le
  * prove di chi non amministra lo dicono da se'. Alla porta dell'app questa
  * riga non dice niente, e non conta. */
@@ -265,7 +269,7 @@ test("il codice della console abbina il telefono, e vale una volta sola", async 
   const b = await banco();
   try {
     const { codice, invito } = await (
-      await prendi(`${b.consolle}/api/codice`, { method: "POST" })
+      await prendi(`${b.consolle}/api/codice`, { method: "POST", body: PER_CHI })
     ).json();
     assert.match(codice, /^[0-9A-Z]{16}$/);
     /* Nel QR code ci va il codice **e come si arriva qui**: un'app che
@@ -298,7 +302,9 @@ test("sulla porta dell'app non ci si abbina piu' per HTTP", async () => {
    * di casa: era la strada vecchia, e non c'e' piu'. */
   const b = await banco();
   try {
-    const { codice } = await (await prendi(`${b.consolle}/api/codice`, { method: "POST" })).json();
+    const { codice } = await (
+      await prendi(`${b.consolle}/api/codice`, { method: "POST", body: PER_CHI })
+    ).json();
     const risposta = await prendi(`${b.app}/abbinamento`, {
       method: "POST",
       body: JSON.stringify({ codice, nome: "vecchia app" }),
@@ -313,16 +319,57 @@ test("sulla porta dell'app non ci si abbina piu' per HTTP", async () => {
   }
 });
 
+/* «Per generare il QR code di abbinamento deve essere obbligatoria la scelta
+ * dell'utente associato.» Prima un codice senza `utente` si intestava da solo
+ * a chi premeva il tasto — quasi sempre chi amministra — e il telefono di un
+ * altro vedeva tutto quello che vede lui. */
+test("senza dire per chi, il codice non nasce: e non si intesta a chi preme", async () => {
+  const b = await banco();
+  try {
+    for (const corpo of [undefined, "{}", JSON.stringify({ utente: "  " })]) {
+      const risposta = await prendi(`${b.consolle}/api/codice`, { method: "POST", body: corpo });
+      assert.equal(risposta.status, 400, String(corpo));
+      const detto = await risposta.json();
+      assert.equal(detto.errore, "utente_richiesto");
+      assert.match(detto.spiegazione, /per chi/);
+    }
+    /* E nessun codice e' rimasto acceso per sbaglio. */
+    assert.equal((await (await prendi(`${b.consolle}/api/codice`)).json()).attivo, false);
+
+    /* Un utente che Home Assistant non conosce: no, con la sua parola. */
+    const fantasma = await prendi(`${b.consolle}/api/codice`, {
+      method: "POST",
+      body: JSON.stringify({ utente: "c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2" }),
+    });
+    assert.equal(fantasma.status, 400);
+    assert.equal((await fantasma.json()).errore, "utente_sconosciuto");
+
+    /* Detto per chi, il codice e' suo — anche se a premere e' chi amministra. */
+    const fatto = await (
+      await prendi(`${b.consolle}/api/codice`, {
+        method: "POST",
+        body: JSON.stringify({ utente: UN_OSPITE }),
+      })
+    ).json();
+    assert.equal(fatto.utente, UN_OSPITE);
+    await abbinaSulFilo(b, fatto.codice, { nome: "telefono dell'ospite" });
+    const suo = b.dispositivi.elenco().find((uno) => uno.nome === "telefono dell'ospite");
+    assert.equal(suo?.utente, UN_OSPITE);
+  } finally {
+    await b.spegni();
+  }
+});
+
 test("oltre il numero massimo la console non fabbrica piu' codici", async () => {
   const b = await banco();
   try {
     for (let i = 0; i < 3; i += 1) {
       const { codice } = await (
-        await prendi(`${b.consolle}/api/codice`, { method: "POST" })
+        await prendi(`${b.consolle}/api/codice`, { method: "POST", body: PER_CHI })
       ).json();
       await abbinaSulFilo(b, codice, { nome: `telefono ${i}` });
     }
-    const troppi = await prendi(`${b.consolle}/api/codice`, { method: "POST" });
+    const troppi = await prendi(`${b.consolle}/api/codice`, { method: "POST", body: PER_CHI });
     assert.equal(troppi.status, 409);
   } finally {
     await b.spegni();
@@ -356,7 +403,7 @@ test("il browser riceve il permesso di parlare, e la console no", async () => {
 test("la richiesta di permesso non consuma niente e non abbina nessuno", async () => {
   const b = await banco();
   try {
-    await prendi(`${b.consolle}/api/codice`, { method: "POST" });
+    await prendi(`${b.consolle}/api/codice`, { method: "POST", body: PER_CHI });
     for (let i = 0; i < 5; i += 1) {
       await prendi(`${b.app}/casa`, { method: "OPTIONS" });
     }
@@ -373,7 +420,9 @@ test("la richiesta di permesso non consuma niente e non abbina nessuno", async (
 test("abbinato dalla console, il telefono entra dal filo e parla con la casa", async () => {
   const b = await banco();
   try {
-    const { codice } = await (await prendi(`${b.consolle}/api/codice`, { method: "POST" })).json();
+    const { codice } = await (
+      await prendi(`${b.consolle}/api/codice`, { method: "POST", body: PER_CHI })
+    ).json();
     const { segno, chiave, dispositivo } = await abbinaSulFilo(b, codice, {
       nome: "Pixel",
       sistema: "android",
@@ -405,7 +454,9 @@ test("abbinato dalla console, il telefono entra dal filo e parla con la casa", a
 test("il motore dei DWG arriva al telefono per il filo, sotto il tetto dell'app", async () => {
   const b = await banco();
   try {
-    const { codice } = await (await prendi(`${b.consolle}/api/codice`, { method: "POST" })).json();
+    const { codice } = await (
+      await prendi(`${b.consolle}/api/codice`, { method: "POST", body: PER_CHI })
+    ).json();
     const { segno, chiave, dispositivo } = await abbinaSulFilo(b, codice, { nome: "Fold" });
     const telefono = telefonoCifrato(`${b.filo}/casa`, {
       chi: dispositivo.id,
@@ -452,7 +503,9 @@ test("il motore dei DWG arriva al telefono per il filo, sotto il tetto dell'app"
 test("il riconoscitore degli arredi arriva al telefono a pezzi, ognuno sotto la coda del centralino", async () => {
   const b = await banco();
   try {
-    const { codice } = await (await prendi(`${b.consolle}/api/codice`, { method: "POST" })).json();
+    const { codice } = await (
+      await prendi(`${b.consolle}/api/codice`, { method: "POST", body: PER_CHI })
+    ).json();
     const { segno, chiave, dispositivo } = await abbinaSulFilo(b, codice, { nome: "Fold" });
     const telefono = telefonoCifrato(`${b.filo}/casa`, {
       chi: dispositivo.id,
@@ -549,7 +602,9 @@ test("la console serve la sua pagina e non esce dalla sua cartella", async () =>
 test("la console stacca un telefono e ne butta giu' il filo", async () => {
   const b = await banco();
   try {
-    const { codice } = await (await prendi(`${b.consolle}/api/codice`, { method: "POST" })).json();
+    const { codice } = await (
+      await prendi(`${b.consolle}/api/codice`, { method: "POST", body: PER_CHI })
+    ).json();
     const { segno, chiave, dispositivo } = await abbinaSulFilo(b, codice, { nome: "via" });
 
     const telefono = telefonoCifrato(`${b.filo}/casa`, { chi: dispositivo.id, chiave });
@@ -585,7 +640,9 @@ test("la console stacca un telefono e ne butta giu' il filo", async () => {
 test("la console rinomina, e annulla un codice", async () => {
   const b = await banco();
   try {
-    const { codice } = await (await prendi(`${b.consolle}/api/codice`, { method: "POST" })).json();
+    const { codice } = await (
+      await prendi(`${b.consolle}/api/codice`, { method: "POST", body: PER_CHI })
+    ).json();
     const { dispositivo } = await abbinaSulFilo(b, codice, { nome: "prima" });
 
     const rinominato = await prendi(`${b.consolle}/api/dispositivi/${dispositivo.id}`, {
@@ -595,7 +652,7 @@ test("la console rinomina, e annulla un codice", async () => {
     assert.equal(rinominato.status, 200);
     assert.equal(b.dispositivi.elenco()[0].nome, "dopo");
 
-    await prendi(`${b.consolle}/api/codice`, { method: "POST" });
+    await prendi(`${b.consolle}/api/codice`, { method: "POST", body: PER_CHI });
     const annullato = await prendi(`${b.consolle}/api/codice`, { method: "DELETE" });
     assert.equal((await annullato.json()).annullato, true);
     assert.equal(b.abbinamento.stato().attivo, false);
@@ -625,7 +682,9 @@ test("il QR code si ridisegna, e chi ricarica la pagina lo ritrova", async () =>
    * valido e ricominciare davanti a qualcuno che aspetta. */
   const b = await banco();
   try {
-    const fatto = await (await prendi(`${b.consolle}/api/codice`, { method: "POST" })).json();
+    const fatto = await (
+      await prendi(`${b.consolle}/api/codice`, { method: "POST", body: PER_CHI })
+    ).json();
 
     const ancora = await (await prendi(`${b.consolle}/api/codice`)).json();
     assert.equal(ancora.attivo, true);
@@ -654,7 +713,7 @@ test("il QR code non esiste sulla porta dell'app", async () => {
    * aperta. */
   const b = await banco();
   try {
-    await prendi(`${b.consolle}/api/codice`, { method: "POST" });
+    await prendi(`${b.consolle}/api/codice`, { method: "POST", body: PER_CHI });
     for (const via of ["/api/qr.svg", "/api/codice"]) {
       assert.equal((await prendi(`${b.app}${via}`)).status, 404, via);
     }

@@ -73,7 +73,14 @@ const alle = (giorno, ore, minuti = 0) => new Date(2026, 9, giorno, ore, minuti,
 async function avvia(
   page,
   testInfo,
-  { impostazioni = null, fasce = TRE_FASCE, costo = null } = {},
+  {
+    impostazioni = null,
+    fasce = TRE_FASCE,
+    costo = null,
+    mappa = MAPPA,
+    profili = PROFILI,
+    stati = STATI,
+  } = {},
 ) {
   test.setTimeout(150_000);
   await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
@@ -123,7 +130,7 @@ async function avvia(
       window.eval("ws = window.__FINTO__");
       window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready", { detail: {} }));
     },
-    { mappa: MAPPA, profili: PROFILI, stati: STATI, impostazioni, fasce, costo },
+    { mappa, profili, stati, impostazioni, fasce, costo },
   );
   await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
 }
@@ -241,6 +248,57 @@ test("dice se l'auto arriva al limite entro la fine della fascia", async ({ page
   await expect(carta.locator('[data-rn="arriva"]')).toContainText("No: alle 05:00 sarà al 62%");
   await expect(riga).toHaveAttribute("data-tono", "attenzione");
   await fotografa(page, "ricarica-notte-non-ci-arriva", carta);
+});
+
+/* «Perché dice dal 60 se ho la batteria al 19%?» La Leapmotor b10 (67 kWh)
+ * dice 19% e la pagina Auto lo mostra; evcc, che di quest'auto non sa la
+ * batteria, tiene un 60% vecchio. La carta deve contare dal 19: a 6,9 kW
+ * (30 A su una fase) dalle 23 alle 5 al 100% non ci arriva. */
+const LEAPMOTOR = "sensor.leapmotor_b10_batteria";
+const MAPPA_B10 = { ...MAPPA, "dm.ev_batteria_auto": LEAPMOTOR };
+const STATI_B10 = {
+  ...STATI,
+  [LEAPMOTOR]: { state: "19", attributes: { unit_of_measurement: "%" } },
+  "sensor.evcc_garage_vehicle_soc": { state: "60", attributes: { unit_of_measurement: "%" } },
+  "number.evcc_garage_limit_soc": { state: "100", attributes: { unit_of_measurement: "%" } },
+  "number.evcc_garage_max_current": { state: "30", attributes: { unit_of_measurement: "A" } },
+  "select.evcc_garage_phases_configured": { state: "1", attributes: {} },
+};
+const PROFILI_B10 = [
+  { id: "auto1", uid: "auto-1", name: "Leapmotor b10", kwh: "67", ov: { ...MAPPA_B10 } },
+];
+
+test("conta dalla batteria dell'auto, non dalla stima di evcc", async ({ page }, testInfo) => {
+  await avvia(page, testInfo, {
+    impostazioni: { attiva: true, da: "23:00", a: "05:00", sotto: 100 },
+    mappa: MAPPA_B10,
+    profili: PROFILI_B10,
+    stati: STATI_B10,
+  });
+  const carta = await apriLaPaginaAuto(page);
+  const nota = carta.locator('[data-rn="arrivaNota"]');
+  await expect(carta.locator('[data-rn="kwEvcc"]')).toHaveText("6,9 kW · evcc (30 A)");
+  await expect(nota).toContainText("kW");
+  await fotografa(page, "ricarica-notte-dal-19", carta);
+  /* 81% di 67 kWh a 6,9 kW (col 90% di rendimento): 8 h 45 min, e in sei ore
+   * si arriva al 74%. */
+  await expect(carta.locator('[data-rn="arriva"]')).toContainText("No: alle 05:00 sarà al 74%");
+  await expect(nota).toContainText("Per arrivare al 100% servono 8 h 45 min a 6,9 kW");
+  await expect(carta.locator('[data-rn="arrivaRiga"]')).toHaveAttribute("data-tono", "attenzione");
+  /* Durante la notte, «ora» e' la stessa batteria. */
+  await laCasaDice(page, {
+    attiva: true,
+    sessione: { inizio: alle(16, 23), fine: alle(17, 5), modo: "now", socInizio: 19, kwh: 2 },
+    esito: null,
+    notteChiusa: false,
+  });
+  await expect(carta.locator('[data-rn="statoSotto"]')).toContainText("al 19% · ora 19%");
+  /* L'auto non dice niente: allora vale evcc. */
+  await page.evaluate((id) => {
+    eval("_RAW_STATES")[id] = { entity_id: id, state: "unavailable", attributes: {} };
+    window.dispatchEvent(new CustomEvent("dashboardmodern:state-changed", { detail: {} }));
+  }, LEAPMOTOR);
+  await expect(carta.locator('[data-rn="statoSotto"]')).toContainText("ora 60%");
 });
 
 /* «Non mi deve far impostare a me il valore: deve considerare il massimo

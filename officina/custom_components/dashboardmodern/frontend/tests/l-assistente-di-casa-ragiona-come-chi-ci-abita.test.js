@@ -593,6 +593,8 @@ test("comfort, aria, manutenzione", () => {
     casa(10, {
       stanze: [
         { name: "Camera", entity: "sensor.t_camera", temperatura: 15.5 },
+        /* Il giardino senza la spunta «All'aperto»: e' fuori lo stesso. */
+        { name: "Giardino", entity: "sensor.giardino_temperatura", temperatura: 6 },
         { name: "Studio", co2: 1450, entityCo2: "sensor.co2_studio" },
         { name: "Bagno", umidita: 78 },
       ],

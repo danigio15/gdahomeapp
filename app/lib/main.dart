@@ -76,6 +76,12 @@ Future<void> inAuto() => auto.inAuto();
 @pragma('vm:entry-point')
 Future<void> saluteAdAppChiusa() async {
   WidgetsFlutterBinding.ensureInitialized();
+  /* Su Android, per ora, la Salute non c'e' (`laSaluteCe`): un giro rimasto
+   * acceso da una versione di prima si spegne e basta. */
+  if (!laSaluteCe) {
+    await spegniLaSaluteAdAppChiusa();
+    return;
+  }
   laLingua = linguaPer([
     for (final quale in WidgetsBinding.instance.platformDispatcher.locales)
       quale.languageCode,
@@ -207,7 +213,7 @@ Future<void> main() async {
    * su Android, nella versione col navigatore in auto, il giro trova acceso
    * questo motore. Il filo e' quello dell'app: finito l'invio, se nessuno
    * guarda e non si e' in macchina, torna a riposo. */
-  if (!kIsWeb) {
+  if (laSaluteCe) {
     SvegliaDellaSalute(
       postino: postinoDellaSaluteDellApp(),
       laCasa: ilFiloConLaCasa,
@@ -218,6 +224,10 @@ Future<void> main() async {
             !navigatore.inMacchina.value;
       },
     ).accendi();
+  } else if (!kIsWeb) {
+    /* Android, per ora senza Salute: il giro di una versione di prima si
+     * spegne. */
+    unawaited(spegniLaSaluteAdAppChiusa());
   }
   /* Il giorno dei pagamenti: se questa costruzione e' sotto la versione
    * minima, l'app si copre con la pagina «aggiornala». Non si aspetta: la
@@ -599,7 +609,7 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
     /* La salute dal telefono: manda le misure scelte quando il filo si apre,
      * e ogni quarto d'ora con l'app aperta. Spenta finche' non la si accende
      * dalla pagina «Salute»: senza, non legge niente e non chiede niente. */
-    if (!kIsWeb && widget.cassaforte == null) {
+    if (laSaluteCe && widget.cassaforte == null) {
       /* Lo stesso della sveglia ad app chiusa (`postinoDellaSaluteDellApp`):
        * se l'app l'ha svegliata Salute, c'e' gia'. */
       postinoDellaSaluteDellApp()

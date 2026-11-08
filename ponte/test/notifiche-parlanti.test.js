@@ -496,7 +496,13 @@ test("il movimento con la casa vuota propone «Inserisci» col modo su misura; c
     ]),
   });
   sentinella.carica([
-    stato("person.uno", "not_home", { user_id: UTENTE_A }),
+    /* Uscita da un'ora: la casa e' vuota davvero. */
+    stato(
+      "person.uno",
+      "not_home",
+      { user_id: UTENTE_A },
+      new Date(mezzogiorno() - 60 * MINUTO).toISOString(),
+    ),
     stato("select.modo", "Spento"),
     stato("binary_sensor.pir_ingresso", "off", { device_class: "motion" }),
     stato("camera.ingresso", "idle"),
@@ -526,7 +532,9 @@ test("il movimento con la casa vuota propone «Inserisci» col modo su misura; c
   });
   assert.equal(inserisci.parole.it, "Inserisci · Totale");
   pin = "1234";
-  orologio.ora += MINUTO;
+  /* Lo stesso sensore, con la casa vuota, torna una notizia dopo due ore
+   * ferme. */
+  orologio.ora += 3 * 60 * MINUTO;
   sentinella._suMisuraCache = null;
   const conPin = muovi();
   assert.equal(conPin.azioni.find((a) => a.id === "inserisci").apre, true);

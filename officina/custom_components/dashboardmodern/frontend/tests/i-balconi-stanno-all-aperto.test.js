@@ -112,17 +112,27 @@ const titoli = (suggerimenti, tipo) =>
   suggerimenti.filter((s) => s.tipo === tipo).map((s) => s.titolo);
 
 test("il balcone a 6 gradi e al 79% non chiede di scaldare ne' di arieggiare", () => {
+  /* Un nome che non dice dove sta: la spunta e' l'unica a saperlo. */
   const balcone = {
-    name: "Balcone nord",
-    entity: "sensor.balcone_nord_temperatura",
+    name: "Lato nord",
+    entity: "sensor.lato_nord_temperatura",
     temperatura: 5.9,
     umidita: 79,
     co2: 1500,
   };
   /* Senza la spunta l'assistente parla: e' la prova che misura la cosa giusta. */
   const prima = suggerimentiDellaCasa(casa([balcone]), {}, { sensibilita: "tutto" }, "it");
-  assert.deepEqual(titoli(prima, "comfort"), ["Balcone nord è fredda: 5,9°"]);
+  assert.deepEqual(titoli(prima, "comfort"), ["Lato nord è fredda: 5,9°"]);
   assert.equal(titoli(prima, "aria").length, 2);
+  /* Una stanza che si chiama Balcone, Giardino, Terrazzo e' fuori anche senza
+   * la spunta: «non mi deve suggerire di attivare il riscaldamento». */
+  const colNome = suggerimentiDellaCasa(
+    casa([{ ...balcone, name: "Balcone nord" }]),
+    {},
+    { sensibilita: "tutto" },
+    "it",
+  );
+  assert.deepEqual(titoli(colNome, "comfort"), []);
 
   const dopo = suggerimentiDellaCasa(
     casa([{ ...balcone, fuori: true }]),

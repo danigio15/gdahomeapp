@@ -47,6 +47,7 @@ import {
   giornataDellaLuce,
 } from "../core/plancia-a-muro.js";
 import { CHIAVI_OGGETTI, oggettoWidget } from "../core/oggetti-widget.js";
+import { eUnTermostatoACoppia } from "../core/i-due-obiettivi-del-clima.js";
 import { ensureTitoloDellaSezione, riordinaLeLinguette } from "./alberatura-del-config-section.js";
 import { bridgeRequest, currentProfile } from "./config-persistence-section.js";
 import {
@@ -478,12 +479,14 @@ function elencoMarkup(p, i) {
       "It fills itself with the source dashboard's climate, split into the Cooling and Heating tabs like the Climate section: air conditioners in cooling, radiators and thermostats in heating, heat pumps in both.",
     ),
   }[p.modello];
+  /* Le tre linguette, con la stessa regola del tablet: chi e' un termostato
+   * a coppia sta nella sua, «Termostato», e in nessun'altra. */
+  const aCoppia = (id) => eUnTermostatoACoppia(allStates()?.[id]?.attributes);
   const nomi = (
     p.modello === "clima"
-      ? [
-          ...comandiDellaPagina(p, state.fonte || {}, "freddo"),
-          ...comandiDellaPagina(p, state.fonte || {}, "caldo"),
-        ]
+      ? ["freddo", "caldo", "termostato"].flatMap((zona) =>
+          comandiDellaPagina(p, state.fonte || {}, zona, { aCoppia }),
+        )
       : comandi
   )
     .map((c) => nomeDi(c.entita))
@@ -493,10 +496,21 @@ function elencoMarkup(p, i) {
       p.modello === "clima"
         ? riga(
             t("Si apre su", "Opens on"),
-            "",
+            /* «Mettici anche termostato come scelta, manca.» La terza
+             * linguetta del tablet e' quella dei termostati col caldo e il
+             * freddo; se in casa non ce ne sono, la pagina si apre su Freddo,
+             * e la riga lo dice. */
+            p.zona === "termostato" &&
+              !comandiDellaPagina(p, state.fonte || {}, "termostato", { aCoppia }).length
+              ? t(
+                  "In casa non c'è ancora un termostato col caldo e il freddo: finché non c'è, si apre su Freddo.",
+                  "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.",
+                )
+              : "",
             scelte(`pagine.${i}.zona`, p.zona, [
               ["freddo", `❄️ ${t("Freddo", "Cooling")}`],
               ["caldo", `🔥 ${t("Caldo", "Heating")}`],
+              ["termostato", `🌡️ ${t("Termostato", "Thermostat")}`],
             ]),
           )
         : ""

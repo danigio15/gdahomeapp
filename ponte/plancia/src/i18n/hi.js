@@ -1515,7 +1515,6 @@ export default Object.freeze({
   From: "से",
   "From outside": "बाहर से",
   "From the house": "घर से",
-  "From the integration": "इंटीग्रेशन से",
   "From this device": "इस उपकरण से",
   "From … to": "से … तक",
   "Front left": "आगे बायाँ",
@@ -3672,9 +3671,6 @@ export default Object.freeze({
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
     "वह तापमान जो कंट्रोलर ने खुद तय किया: असली प्रवाह के बगल में बताता है कि वहाँ पहुँच रहा है या नहीं।",
   "The description is missing.": "विवरण नहीं है।",
-  "The device controls": "डिवाइस के नियंत्रण",
-  "The device readings": "डिवाइस की रीडिंग",
-  "The device state": "डिवाइस की स्थिति",
   "The doors and the windows": "दरवाज़े और खिड़कियाँ",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "नीचे वाला रिले एक switch.* एंटिटी होनी चाहिए, और यह तभी लागू होता है जब शटर वाला खाना भी switch.* रिले हो।",
@@ -7478,6 +7474,9 @@ export default Object.freeze({
   "Urgent ones are said anyway.": "ज़रूरी सूचनाएँ फिर भी बोली जाती हैं।",
   "Voice": "आवाज़",
   "Which Echos": "कौन से Echo",
+  "Which notifications": "कौन-सी सूचनाएँ",
+  "Only those turned on in the app's Notifications: an item turned off on every phone is not said by the Echos.":
+    "केवल ऐप की सूचनाओं में चालू वाली: जो आइटम हर फ़ोन पर बंद है, उसे Echo नहीं बोलते।",
   "Urgent: alarm, sensors, doorbell, blackout": "ज़रूरी: अलार्म, सेंसर, डोरबेल, बिजली गुल",
   "Security: arming, openings, motion": "सुरक्षा: आर्म करना, खुलना, गतिविधि",
   "Home: appliances, fridge, rain, pets": "घर: उपकरण, फ्रिज, बारिश, पालतू",
@@ -8167,4 +8166,6 @@ export default Object.freeze({
   "🖥️ Computer": "🖥️ कंप्यूटर",
   "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "अपने टैब के पूर्वावलोकन में बदले गए पेज — बॉक्स का क्रम और छिपे हुए बॉक्स। «रीसेट» उसे पहले जैसा कर देता है।",
   "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.": "वे ड्रॉइंग जिनके हिस्से आपने पूर्वावलोकन में हिलाए, कंप्यूटर और फ़ोन पर। «रीसेट» उन्हें पहले जैसा कर देता है।",
+  "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.": "अभी गर्म और ठंडा करने वाला कोई थर्मोस्टैट नहीं है: जब तक नहीं होता, यह ठंडा पर खुलता है।",
+  "First open the Marketplace from the Home Assistant menu, read the warning and accept it: after that, updates install from here too.": "पहले Home Assistant के मेनू से Marketplace खोलें, चेतावनी पढ़ें और उसे स्वीकार करें: उसके बाद अपडेट यहाँ से भी इंस्टॉल होंगे।",
 });

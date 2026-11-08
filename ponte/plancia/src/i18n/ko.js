@@ -1518,7 +1518,6 @@ export default Object.freeze({
   From: "시작",
   "From outside": "바깥에서",
   "From the house": "집에서",
-  "From the integration": "통합에서",
   "From this device": "이 기기에서",
   "From … to": "시작 … 종료",
   "Front left": "왼쪽 앞",
@@ -3677,9 +3676,6 @@ export default Object.freeze({
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
     "제어기가 스스로 정한 값입니다. 실제 공급 온도 옆에서 도달했는지 알려줍니다.",
   "The description is missing.": "설명이 없습니다.",
-  "The device controls": "장치 제어",
-  "The device readings": "장치 측정값",
-  "The device state": "장치 상태",
   "The doors and the windows": "문과 창문",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "하강 릴레이는 switch.* 엔터티여야 하며, 셔터 칸도 switch.* 릴레이일 때만 적용됩니다.",
@@ -7469,6 +7465,9 @@ export default Object.freeze({
   "Urgent ones are said anyway.": "긴급 알림은 그래도 말합니다.",
   "Voice": "음성",
   "Which Echos": "어떤 Echo",
+  "Which notifications": "어떤 알림",
+  "Only those turned on in the app's Notifications: an item turned off on every phone is not said by the Echos.":
+    "앱의 알림에서 켜 둔 것만: 모든 휴대폰에서 꺼진 항목은 Echo가 말하지 않습니다.",
   "Urgent: alarm, sensors, doorbell, blackout": "긴급: 경보, 센서, 초인종, 정전",
   "Security: arming, openings, motion": "보안: 경계 설정, 열림, 움직임",
   "Home: appliances, fridge, rain, pets": "집: 가전, 냉장고, 비, 반려동물",
@@ -8158,4 +8157,6 @@ export default Object.freeze({
   "🖥️ Computer": "🖥️ 컴퓨터",
   "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "탭의 미리보기에서 바꾼 페이지 — 상자의 순서와 숨긴 상자. «초기화»하면 원래대로 돌아갑니다.",
   "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.": "미리보기에서 조각을 옮긴 그림, 컴퓨터와 휴대폰 각각. «초기화»하면 원래대로 돌아갑니다.",
+  "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.": "아직 난방과 냉방을 함께 하는 온도 조절기가 없습니다. 생길 때까지 냉방으로 열립니다.",
+  "First open the Marketplace from the Home Assistant menu, read the warning and accept it: after that, updates install from here too.": "먼저 Home Assistant 메뉴에서 Marketplace를 열고 경고를 읽은 뒤 수락하세요. 그러면 여기서도 업데이트를 설치할 수 있습니다.",
 });

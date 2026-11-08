@@ -1527,7 +1527,6 @@ export default Object.freeze({
   From: "De",
   "From outside": "De fora",
   "From the house": "De casa",
-  "From the integration": "Da integração",
   "From this device": "A partir deste dispositivo",
   "From … to": "De … até",
   "Front left": "Frente esquerda",
@@ -3701,9 +3700,6 @@ export default Object.freeze({
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
     "O grau que a central definiu para si: ao lado da ida real diz se está a chegar lá.",
   "The description is missing.": "Falta a descrição.",
-  "The device controls": "Os comandos do dispositivo",
-  "The device readings": "As leituras do dispositivo",
-  "The device state": "O estado do dispositivo",
   "The doors and the windows": "As portas e as janelas",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "O relé de descida tem de ser uma entidade switch.* e só se aplica quando a caixa da persiana também é um relé switch.*.",
@@ -7527,6 +7523,9 @@ export default Object.freeze({
   "Urgent ones are said anyway.": "As urgentes são ditas na mesma.",
   "Voice": "Voz",
   "Which Echos": "Que Echo",
+  "Which notifications": "Quais notificações",
+  "Only those turned on in the app's Notifications: an item turned off on every phone is not said by the Echos.":
+    "Só as ativadas nas Notificações da app: um item desativado em todos os telemóveis os Echo não dizem.",
   "Urgent: alarm, sensors, doorbell, blackout": "Urgentes: alarme, sensores, campainha, falha de energia",
   "Security: arming, openings, motion": "Segurança: ativações, aberturas, movimento",
   "Home: appliances, fridge, rain, pets": "Casa: eletrodomésticos, frigorífico, chuva, animais",
@@ -8216,4 +8215,6 @@ export default Object.freeze({
   "🖥️ Computer": "🖥️ Computador",
   "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "as páginas alteradas na pré-visualização do seu separador — a ordem dos blocos e os ocultos. «Repor» deixa-a como estava.",
   "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.": "os desenhos cujas peças moveu na pré-visualização, no computador e no telemóvel. «Repor» deixa-os como estavam.",
+  "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.": "Ainda não há um termóstato com aquecimento e arrefecimento: até haver, abre em Frio.",
+  "First open the Marketplace from the Home Assistant menu, read the warning and accept it: after that, updates install from here too.": "Primeiro abre o Marketplace no menu do Home Assistant, lê o aviso e aceita-o: depois as atualizações instalam-se também a partir daqui.",
 });

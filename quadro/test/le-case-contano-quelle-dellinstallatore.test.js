@@ -36,7 +36,26 @@ test("i regali hanno la loro casella, che porta a «Regali e codici»", () => {
   assert.match(GESTORE, /codiciLiberi[\s\S]{0,200}da usare/);
 });
 
-test("«Case Premium» non conta i regali, che stanno nella loro casella", () => {
-  assert.match(GESTORE, /const premium = tutte\.filter\([\s\S]{0,120}origine !== "regalo"/);
+/* «Case Premium» contava le Premium senza i regali, perche' i regali avevano la
+ * loro casella. Ma «non capisco nulla sulle licenze»: Premium e Base devono
+ * fare tutte le case, e una casa regalata e' Premium quanto una che paga.
+ * Adesso «Case Premium» le conta tutte, «su» quante sono, e il perche' lo
+ * dice la ciambella delle case per piano: pagano, in prova, regalo tuo,
+ * dagli installatori, Base. La casella «Regali» resta, per i regali e i
+ * codici. */
+test("«Case Premium» conta tutte le Premium, e la ciambella dice perche'", () => {
+  assert.match(GESTORE, /premium: tutte\.filter\(\(una\) => una\.licenza\.premium\)\.length,/);
+  assert.match(
+    GESTORE,
+    /"Case Premium",\s*numero\(casa\.premium\),\s*`\/\$\{numero\(casa\.tutte\)\}`/,
+  );
+  for (const parola of [
+    "Pagano un abbonamento",
+    "In prova gratuita",
+    "Regalo tuo",
+    "Dagli installatori",
+    "Base, gratis",
+  ])
+    assert.ok(GESTORE.includes(`"${parola}"`), `la ciambella non dice piu' «${parola}»`);
   assert.equal(GESTORE.includes('plurale(daDove("regalo")'), false);
 });

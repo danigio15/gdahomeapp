@@ -1439,6 +1439,7 @@ List<Sezione> vociDellaBarra({
   bool conZigbee = false,
   bool nellApp = true,
   bool conPremium = false,
+  bool conLaSalute = true,
 }) => [
   for (final una in Sezione.values)
     if ((una != Sezione.console || conLaConsole) &&
@@ -1446,6 +1447,7 @@ List<Sezione> vociDellaBarra({
         (una != Sezione.cruscotto || conIlCruscotto) &&
         (una != Sezione.gestione || conLaGestione) &&
         (una != Sezione.zigbee || conZigbee) &&
+        (una != Sezione.salute || conLaSalute) &&
         (chiAmministra || !una.soloPerChiAmministra) &&
         (nellApp || !una.soloNellApp))
       una,

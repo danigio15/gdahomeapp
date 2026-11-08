@@ -1524,7 +1524,6 @@ export default Object.freeze({
   From: "Od",
   "From outside": "Z zewnątrz",
   "From the house": "Z domu",
-  "From the integration": "Z integracji",
   "From this device": "Z tego urządzenia",
   "From … to": "Od … do",
   "Front left": "Przód lewy",
@@ -3691,9 +3690,6 @@ export default Object.freeze({
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
     "Wartość, którą sterownik sam sobie zadał: obok rzeczywistego zasilania mówi, czy kocioł do niej dochodzi.",
   "The description is missing.": "Brakuje opisu.",
-  "The device controls": "Sterowanie urządzeniem",
-  "The device readings": "Odczyty urządzenia",
-  "The device state": "Stan urządzenia",
   "The doors and the windows": "Drzwi i okna",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "Przekaźnik opuszczania musi być encją switch.* i działa tylko wtedy, gdy w polu rolety również jest przekaźnik switch.*.",
@@ -7517,6 +7513,9 @@ export default Object.freeze({
   "Urgent ones are said anyway.": "Pilne są mówione mimo to.",
   "Voice": "Głos",
   "Which Echos": "Które Echo",
+  "Which notifications": "Które powiadomienia",
+  "Only those turned on in the app's Notifications: an item turned off on every phone is not said by the Echos.":
+    "Tylko włączone w Powiadomieniach aplikacji: pozycji wyłączonej na każdym telefonie Echo nie wypowiadają.",
   "Urgent: alarm, sensors, doorbell, blackout": "Pilne: alarm, czujniki, dzwonek, brak prądu",
   "Security: arming, openings, motion": "Bezpieczeństwo: uzbrajanie, otwarcia, ruch",
   "Home: appliances, fridge, rain, pets": "Dom: urządzenia, lodówka, deszcz, zwierzęta",
@@ -8206,4 +8205,6 @@ export default Object.freeze({
   "🖥️ Computer": "🖥️ Komputer",
   "the pages changed in their tab's preview — the order of the blocks and the hidden ones. «Reset» puts it back as it was.": "strony zmienione w podglądzie ich karty — kolejność bloków i te ukryte. «Przywróć» przywraca je do poprzedniego stanu.",
   "the drawings whose pieces you moved in the preview, on the computer and on the phone. «Reset» puts them back as they were.": "rysunki, których części przeniesiono w podglądzie, na komputerze i na telefonie. «Przywróć» przywraca je do poprzedniego stanu.",
+  "There is no thermostat with heating and cooling yet: until there is, it opens on Cooling.": "Nie ma jeszcze termostatu z grzaniem i chłodzeniem: dopóki go nie będzie, otwiera się na Chłodzeniu.",
+  "First open the Marketplace from the Home Assistant menu, read the warning and accept it: after that, updates install from here too.": "Najpierw otwórz Marketplace z menu Home Assistant, przeczytaj ostrzeżenie i je zaakceptuj: potem aktualizacje zainstalujesz także stąd.",
 });

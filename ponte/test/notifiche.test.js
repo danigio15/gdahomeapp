@@ -136,7 +136,7 @@ test("allagamento, fumo e gas dal primo sensore; il campanello con il cancello d
 });
 
 test("l'ultimo che esce con l'antifurto spento, e il movimento con la casa vuota", () => {
-  const { sentinella, dette } = unaSentinella([
+  const { sentinella, dette, orologio } = unaSentinella([
     stato("person.uno", "home", { friendly_name: "Persona 1", user_id: UTENTE_A }),
     stato("person.due", "not_home", { friendly_name: "Persona 2" }),
     stato("alarm_control_panel.casa", "disarmed"),
@@ -163,6 +163,21 @@ test("l'ultimo che esce con l'antifurto spento, e il movimento con la casa vuota
   assert.equal(uscito.azioni[0].servizio.servizio, "alarm_arm_away");
   assert.equal(sentinella.aCasa(UTENTE_A), false);
 
+  /* Il movimento nel minuto in cui si esce e' chi esce: la casa e' vuota
+   * davvero quando resta ferma dieci minuti (`USCITA`). */
+  orologio.ora += MINUTO;
+  sentinella.cambia(
+    "binary_sensor.pir_sala",
+    stato("binary_sensor.pir_sala", "on", { device_class: "motion" }),
+  );
+  assert.equal(dette.at(-1).tipo, "uscito");
+  orologio.ora += MINUTO;
+  sentinella.cambia(
+    "binary_sensor.pir_sala",
+    stato("binary_sensor.pir_sala", "off", { device_class: "motion" }),
+  );
+
+  orologio.ora += 11 * MINUTO;
   sentinella.cambia(
     "binary_sensor.pir_sala",
     stato("binary_sensor.pir_sala", "on", { device_class: "motion" }),
@@ -874,17 +889,19 @@ test("le personalizzate: chi non amministra le fa solo per se'", async () => {
  * installa (`salute.js`) e della pagina «Non connessi»: un dispositivo e' giu'
  * quando NESSUNA delle sue entita' risponde, e conta una volta sola. */
 test("il riepilogo conta i dispositivi giu', non le entita' mute", () => {
+  /* Mute da due ore: un riavvio non dura tanto. */
+  const da = new Date(mezzogiorno() - 2 * 60 * MINUTO).toISOString();
   const { sentinella } = unaSentinella([
     // Una presa irraggiungibile: tutte e quattro mute → 1 dispositivo.
-    stato("switch.presa_giardino", "unavailable"),
-    stato("sensor.presa_giardino_potenza", "unavailable"),
-    stato("sensor.presa_giardino_energia", "unavailable"),
-    stato("sensor.presa_giardino_tensione", "unavailable"),
+    stato("switch.presa_giardino", "unavailable", {}, da),
+    stato("sensor.presa_giardino_potenza", "unavailable", {}, da),
+    stato("sensor.presa_giardino_energia", "unavailable", {}, da),
+    stato("sensor.presa_giardino_tensione", "unavailable", {}, da),
     // Uno switch acceso col canale non usato muto: non e' giu'.
-    stato("switch.unifi_porta_1", "unavailable"),
+    stato("switch.unifi_porta_1", "unavailable", {}, da),
     stato("sensor.unifi_cpu", "6"),
     // Un'entita' senza dispositivo: non e' un dispositivo non connesso.
-    stato("sensor.template_rotto", "unavailable"),
+    stato("sensor.template_rotto", "unavailable", {}, da),
   ]);
   sentinella.dispositivoDi = {
     "switch.presa_giardino": "presa",
@@ -1013,8 +1030,10 @@ test("il citofono di Ring: un evento senza classe, col nome o l'evento che dice 
  * modello, e cambia solo il seriale. Il movimento del balcone e' del balcone. */
 const SERIALE_INGRESSO = "i20230101aawrk11111111";
 const SERIALE_BALCONE = "i20230101aawrk22222222";
+/* Uscita da un'ora: la casa e' vuota davvero. */
+const daUnOra = () => new Date(mezzogiorno() - 60 * MINUTO).toISOString();
 const duePortoni = () => [
-  stato("person.uno", "not_home", { friendly_name: "Persona 1", user_id: UTENTE_A }),
+  stato("person.uno", "not_home", { friendly_name: "Persona 1", user_id: UTENTE_A }, daUnOra()),
   stato(`camera.ds_2cd2143g2_${SERIALE_INGRESSO}_101`, "idle", { friendly_name: "Ingresso" }),
   stato(`camera.ds_2cd2143g2_${SERIALE_BALCONE}_101`, "idle", { friendly_name: "Balcone" }),
   stato(`binary_sensor.ds_2cd2143g2_${SERIALE_BALCONE}_motion`, "off", {
@@ -1028,7 +1047,7 @@ const duePortoni = () => [
 ];
 
 test("il movimento di una telecamera porta quella telecamera, non una dello stesso modello", () => {
-  const { sentinella, dette } = unaSentinella(duePortoni());
+  const { sentinella, dette, orologio } = unaSentinella(duePortoni());
   const sensore = `binary_sensor.ds_2cd2143g2_${SERIALE_BALCONE}_motion`;
   sentinella.cambia(
     sensore,
@@ -1038,6 +1057,8 @@ test("il movimento di una telecamera porta quella telecamera, non una dello stes
   assert.equal(dette.at(-1).camera, `camera.ds_2cd2143g2_${SERIALE_BALCONE}_101`);
   assert.equal(dette.at(-1).conFoto, true);
 
+  /* Con la casa vuota, dopo un movimento per mezz'ora nessun altro. */
+  orologio.ora += 31 * MINUTO;
   const linea = `binary_sensor.ds_2cd2143g2_${SERIALE_INGRESSO}_line_crossing`;
   sentinella.cambia(
     linea,
@@ -1047,8 +1068,8 @@ test("il movimento di una telecamera porta quella telecamera, non una dello stes
 });
 
 test("col nome soltanto in comune vale il nome, e a pari merito nessuna telecamera", () => {
-  const { sentinella, dette } = unaSentinella([
-    stato("person.uno", "not_home", { friendly_name: "Persona 1", user_id: UTENTE_A }),
+  const { sentinella, dette, orologio } = unaSentinella([
+    stato("person.uno", "not_home", { friendly_name: "Persona 1", user_id: UTENTE_A }, daUnOra()),
     stato("camera.cam_a", "idle", { friendly_name: "Giardino" }),
     stato("camera.cam_b", "idle", { friendly_name: "Garage" }),
     stato("binary_sensor.pir_1", "off", { device_class: "motion", friendly_name: "PIR Garage" }),
@@ -1059,6 +1080,7 @@ test("col nome soltanto in comune vale il nome, e a pari merito nessuna telecame
     stato("binary_sensor.pir_1", "on", { device_class: "motion", friendly_name: "PIR Garage" }),
   );
   assert.equal(dette.at(-1).camera, "camera.cam_b");
+  orologio.ora += 31 * MINUTO;
   sentinella.cambia(
     "binary_sensor.pir_2",
     stato("binary_sensor.pir_2", "on", { device_class: "motion", friendly_name: "PIR corridoio" }),

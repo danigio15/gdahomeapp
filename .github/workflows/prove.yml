@@ -243,6 +243,10 @@ jobs:
           cache: true
       - run: flutter pub get
         working-directory: app
+      # Gradle scaricato prima, con dieci tentativi: GitHub, dove sta la
+      # distribuzione, a volte risponde 504 per ore (`gradle-in-anticipo.sh`).
+      - name: Gradle, scaricato prima
+        run: strumenti/gradle-in-anticipo.sh
       # In *release*, come il pacchetto vero: e' li' che gira R8, ed e' R8 che
       # si accorge di una libreria che manca o di una regola sbagliata.
       - name: Il pacchetto

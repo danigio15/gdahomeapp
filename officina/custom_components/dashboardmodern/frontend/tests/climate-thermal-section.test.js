@@ -155,19 +155,37 @@ test("HVAC and fan modes are one click away from the card", () => {
   assert.match(source, /function modeCaption/);
 });
 
-test("plus and minus move by a whole degree, in the popup too", async () => {
-  const { wholeDegreeDelta } = await loadSection();
-  // The card already steps by one through setTemp(); the legacy popup markup
-  // still asks for half a degree, so the delta is corrected on the way in.
-  assert.equal(24 + wholeDegreeDelta(24, 0.5), 25);
-  assert.equal(24 + wholeDegreeDelta(24, -0.5), 23);
-  // A unit parked on a half degree walks to the next whole one, not past it.
-  assert.equal(23.5 + wholeDegreeDelta(23.5, 0.5), 24);
-  assert.equal(23.5 + wholeDegreeDelta(23.5, -0.5), 23);
-  // Nothing readable on screen still moves by one.
-  assert.equal(wholeDegreeDelta(NaN, -0.5), -1);
-  assert.equal(wholeDegreeDelta(undefined, 0.5), 1);
+test("plus and minus move by the unit's step, half a degree when it declares none", async () => {
+  const { gradoDopoIlPasso } = await loadSection();
+  // «Se fai piu' o meno ti cambia la temperatura a un grado e non mezzo;
+  // invece se la apri fa i mezzi gradi.» La card e il popup hanno un passo solo.
+  assert.equal(gradoDopoIlPasso({ temperature: 19 }, 1), 19.5);
+  assert.equal(gradoDopoIlPasso({ temperature: 19 }, -1), 18.5);
+  // Dal numero che si sta mostrando, se c'e'.
+  assert.equal(gradoDopoIlPasso({ temperature: 19 }, 1, 20), 20.5);
+  // Il passo dichiarato vince, e un numero fuori passo torna sul passo.
+  assert.equal(gradoDopoIlPasso({ temperature: 20.5, target_temp_step: 1 }, 1), 22);
+  assert.equal(gradoDopoIlPasso({ temperature: 45, target_temp_step: 0.1 }, 1), 45.1);
+  // Dentro la scala dell'unita'.
+  assert.equal(gradoDopoIlPasso({ temperature: 30, max_temp: 30 }, 1), 30);
+  assert.equal(gradoDopoIlPasso({ temperature: 7, min_temp: 7 }, -1), 7);
+  // Niente da cui partire: niente numero.
+  assert.equal(gradoDopoIlPasso({}, 1), null);
   assert.match(source, /root\.cpSetTemp = cpSetTempThermal/);
+  assert.doesNotMatch(source, /wholeDegreeDelta/);
+});
+
+test("the card's plus and minus take the popup's road, not the shell's whole degree", () => {
+  // Il `setTemp()` del guscio va al grado intero: la card passa da
+  // `passoDellObiettivo`, lo stesso passo del popup.
+  const corpo = source.slice(source.indexOf("function installPassoDellaCard()"));
+  const passo = corpo.slice(0, corpo.indexOf("root.setTemp = setTempThermal"));
+  assert.match(passo, /passoDellObiettivo\(chiave, verso\)/);
+  assert.match(passo, /gradoDopoIlPasso\(attributi, verso\)/);
+  // La card mostra subito il numero chiesto.
+  assert.match(source, /obiettivoDaMostrare\(\{ entity: unit\.entity, target: reading\.target \}\)/);
+  // La lettura della card ha il passo di tutta la plancia.
+  assert.match(source, /passo: passoDelClima\(attributes\)/);
 });
 
 test("the redesigned card drops the legacy class names the old layers fight over", () => {

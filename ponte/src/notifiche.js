@@ -125,9 +125,10 @@ const TASTI_TENUTI_AL_PIU = 500;
  * telefono: mezza giornata, «fino a domani». «Più tardi» e' un'ora. */
 const BASTA_PER = 12 * ORA;
 
-/* Quante notifiche per telefono in un'ora, al massimo, comprese le urgenti.
- * Una casa che ne vuole mandare di piu' ha un sensore impazzito, e trenta
- * notifiche in un'ora sono gia' un telefono da buttare dalla finestra. */
+/* Quante notifiche per telefono in un'ora, al massimo. Una casa che ne vuole
+ * mandare di piu' ha un sensore impazzito, e trenta notifiche in un'ora sono
+ * gia' un telefono da buttare dalla finestra. Le urgenti contano, ma passano
+ * sempre (`_cePosto`). */
 const PER_TELEFONO_ALL_ORA = 30;
 
 /* I tasti del riepilogo della sera: «Apri la giornata» apre la pagina
@@ -344,7 +345,9 @@ export function impostazioniPulite(dette, prima = impostazioniDiSerie()) {
   if (Array.isArray(dette.persone))
     nuove.persone = [
       ...new Set(
-        dette.persone.filter((una) => typeof una === "string" && /^person\.[a-z0-9_]+$/.test(una)),
+        dette.persone.filter(
+          (una) => typeof una === "string" && /^(person|device_tracker)\.[a-z0-9_]+$/.test(una),
+        ),
       ),
     ].slice(0, 30);
   if (dette.assistente === "importanti" || dette.assistente === "tutti")
@@ -376,6 +379,72 @@ export function inSilenzio(impostazioni, data) {
   if (dalle === alle) return false;
   const ora = data.getHours() * 60 + data.getMinutes();
   return dalle < alle ? ora >= dalle && ora < alle : ora >= dalle || ora < alle;
+}
+
+/* Se un telefono ha scelto questa voce, com'e' scritta nella pagina
+ * Notifiche dell'app: l'interruttore della voce, le persone di cui dire chi
+ * arriva, quando dire un movimento, i dispositivi e la soglia su misura.
+ * Non le ore (il silenzio, «in che ore») ne' dove sta chi tiene il telefono:
+ * quelle sono del telefono, e gli Echo hanno il loro silenzio. La usano i
+ * telefoni e gli Echo (`_qualcunoLaVuole`). */
+export function vuoleLaVoce(imp, evento) {
+  /* Le batterie da cambiare passano anche col riepilogo spento. */
+  if (imp.eventi?.[evento.tipo] === false && !evento.sempre) return false;
+  if (evento.tipo === "suggerimenti" && imp.assistente === "importanti" && !evento.importante)
+    return false;
+  if (
+    evento.tipo === "arrivi" &&
+    ![evento.persona, evento.entita].some((uno) => uno && imp.persone?.includes(uno))
+  )
+    return false;
+  /* Su misura, voce per voce. */
+  const su = suDi(imp, evento.tipo);
+  if (su.quali.length && ![evento.entita, evento.camera].some((uno) => su.quali.includes(uno)))
+    return false;
+  if (evento.tipo === "movimento" && evento.perche) {
+    const vuole = {
+      sempre: true,
+      "casa-vuota": evento.perche === "casa-vuota",
+      notte: evento.perche === "notte",
+      "casa-vuota-o-notte": evento.perche !== "giorno",
+    }[su.quando];
+    if (!vuole) return false;
+  }
+  if (
+    evento.tipo === "elettrodomestici" &&
+    su.soglia !== null &&
+    typeof evento.misura?.euro === "number" &&
+    evento.misura.euro < su.soglia
+  )
+    return false;
+  return true;
+}
+
+/* ─── Cosa arriva in Base ──────────────────────────────────────────────────
+ *
+ * «Le notifiche sono solo per i Premium, non per tutti.» In GdAHome Base al
+ * telefono arrivano solo gli avvisi di sicurezza: fumo, gas, allagamento e
+ * monossido (`allarmi`, che sono solo quelli: `ALLARMI` in `sentinella.js`),
+ * l'antifurto scattato e il campanello. E la prova, per vedere che arrivano.
+ * Tutto il resto — movimento, arrivi e uscite, elettrodomestici, clima,
+ * batterie, blackout, assistente, riepilogo, i messaggi dalla Home, le
+ * automazioni di Home Assistant, le personalizzate, «aggiorna l'app» — e' di
+ * Premium. I viaggi pianificati hanno il Premium loro, quello di GdANav
+ * (`viaggi`: `viaggi.js`, `sbloccato`), che gdahome Premium comprende.
+ *
+ * Dal campo, in una casa Base: «Movimento · Balcone — casa vuota · tocca per
+ * vedere». La regola sta qui, e la usa `consegna` prima di ogni telefono:
+ * nessuna strada ci passa attorno. Gli Echo restano come sono: non sono il
+ * telefono. */
+export const AVVISI_DI_SICUREZZA = Object.freeze(["antifurto", "allarmi", "campanello"]);
+
+export function arrivaInBase(evento, { viaggi = false } = {}) {
+  /* Una prova vale quanto la notifica che imita; quella di sempre, che non
+   * imita niente, arriva: e' come si vede che gli avvisi arrivano. */
+  const prova = evento?.tipo === "prova";
+  const tipo = prova ? evento.imita : evento?.tipo;
+  if (prova && !tipo) return true;
+  return AVVISI_DI_SICUREZZA.includes(tipo) || (viaggi === true && tipo === "viaggi");
 }
 
 /* Una notifica personalizzata come arriva dal telefono, ripulita. `null` se
@@ -583,17 +652,17 @@ export class Notifiche {
    * Lo decide il ponte, con lo stesso criterio delle automazioni
    * (`automazioni.js`, `sbloccato`): gdahome Premium, o le licenze spente.
    *
-   *  - Base: solo notifiche **semplici**, nessuna foto della telecamera,
-   *    nessun riepilogo della sera (ne' testo ne' scheda), e la pagina «La
-   *    tua giornata» risponde `premium-richiesto`. Le righe che un telefono
-   *    aveva messo «nel riepilogo» partono subito, semplici.
-   *  - Gli avvisi di sicurezza — antifurto, allarmi, perdite, blackout e
-   *    batteria dell'UPS — partono sempre: Premium cambia come si vedono,
-   *    mai se arrivano.
+   *  - Base: al telefono arrivano **solo gli avvisi di sicurezza** — fumo,
+   *    gas, allagamento, monossido, antifurto scattato, campanello — e la
+   *    prova (`arrivaInBase`). Semplici, senza foto della telecamera. Niente
+   *    riepilogo della sera, e la pagina «La tua giornata» risponde
+   *    `premium-richiesto`. Le righe che un telefono aveva messo «nel
+   *    riepilogo» non partono: non sono avvisi di sicurezza.
+   *  - Premium: tutte, come le sceglie il telefono.
    *
-   * Si guarda a ogni notifica: quando il Premium scade si torna da soli alle
-   * semplici, e le impostazioni del telefono restano com'erano per quando
-   * torna. */
+   * Si guarda a ogni notifica: quando il Premium scade si torna da soli ai
+   * soli avvisi di sicurezza, e le impostazioni del telefono restano
+   * com'erano per quando torna. */
   get premium() {
     try {
       if (!this.licenze?.attive) return true;
@@ -818,12 +887,48 @@ export class Notifiche {
     void disdici?.();
   }
 
+  /* Le persone scelte su ogni telefono per gli arrivi, rimesse in pari con
+   * quelle di adesso. «Non mi da' piu' le notifiche quando lei esce o
+   * rientra»: Home Assistant aveva rinominato la sua `person.*`
+   * (`person.giulia` → `person.giulia_2`), e la scelta salvata non era piu'
+   * di nessuno. Quella che si ritrova si riscrive; quella che non c'e' piu'
+   * si dice una volta nel registro, e resta scritta: puo' tornare. */
+  _lePersoneScelte() {
+    if (!this.sentinella.lePersone().length) return;
+    this._personeSparite ??= new Set();
+    let cambiate = false;
+    for (const [telefono, voce] of Object.entries(this.archivio.dati.telefoni)) {
+      const scelte = voce?.impostazioni?.persone;
+      if (!Array.isArray(scelte) || !scelte.length) continue;
+      const nuove = scelte.map((una) => {
+        const adesso = this.sentinella.laPersonaPer(una);
+        if (adesso) return adesso;
+        if (!this._personeSparite.has(una)) {
+          this._personeSparite.add(una);
+          this.registro.attenzione(
+            `la persona ${una} scelta per arrivi e uscite su un telefono non c'e' piu' in Home Assistant: quel telefono non sapra' quando arriva o esce`,
+          );
+        }
+        return una;
+      });
+      const pulite = [...new Set(nuove)];
+      if (pulite.join("|") === scelte.join("|")) continue;
+      for (const [prima, dopo] of scelte.map((una, i) => [una, nuove[i]]))
+        if (prima !== dopo)
+          this.registro.info(`arrivi e uscite: ${prima} adesso e' ${dopo} (${telefono})`);
+      voce.impostazioni.persone = pulite;
+      cambiate = true;
+    }
+    if (cambiate) this.archivio.salva();
+  }
+
   async _battito() {
     if (!this._disdici) await this._abbonati();
     this.sentinella.movimentoSempre = Object.values(this.archivio.dati.telefoni).some(
       (voce) => suDi(impostazioniPulite(voce?.impostazioni), "movimento").quando === "sempre",
     );
     void this._leTelecamereDaTenere();
+    this._lePersoneScelte();
     this.sentinella.battito();
     await this._gliAvvisiDiAlexa();
     this._campionaIlDiario();
@@ -906,15 +1011,13 @@ export class Notifiche {
    * della casa, il meteo di domani e le notifiche che ha voluto lasciare per
    * la sera. */
   async _riepiloghi() {
-    const premium = this.premium;
-    /* In Base il riepilogo non c'e': le righe messe da parte quando il
-     * Premium c'era partono adesso, ognuna da sola e semplice. */
-    if (!premium) {
-      const code = [...this._inCoda];
+    /* In Base il riepilogo non c'e', e nemmeno le batterie da cambiare: al
+     * telefono arrivano solo gli avvisi di sicurezza (`arrivaInBase`). Le
+     * righe messe da parte quando il Premium c'era non partono: nessuna e'
+     * un avviso di sicurezza, che non aspetta mai la sera. */
+    if (!this.premium) {
       this._inCoda.clear();
-      for (const [telefono, righe] of code)
-        for (const riga of righe)
-          if (riga?.evento) await this.consegna(riga.evento, { soloA: telefono });
+      return;
     }
     const ora = new Date(this.adesso());
     const adessoInMinuti = ora.getHours() * 60 + ora.getMinutes();
@@ -927,11 +1030,10 @@ export class Notifiche {
       if (adessoInMinuti < quando || adessoInMinuti > quando + 10) continue;
       if (this._riepilogoDel.get(telefono) === oggi) continue;
       this._riepilogoDel.set(telefono, oggi);
-      /* Chi il riepilogo non lo riceve — una casa Base, o un telefono che
-       * l'ha spento — le batterie da cambiare le sa lo stesso, alla stessa
-       * ora: e' un avviso di sicurezza, mai dietro Premium. Chi lo riceve le
-       * trova dentro il riepilogo, una volta sola. */
-      if (!premium || !imp.eventi.riepilogo) {
+      /* Chi il riepilogo l'ha spento le batterie da cambiare le sa lo
+       * stesso, alla stessa ora. Chi lo riceve le trova dentro il riepilogo,
+       * una volta sola. */
+      if (!imp.eventi.riepilogo) {
         if (batterie === undefined) batterie = await this._leBatterieDaCambiare();
         if (batterie)
           await this.consegna({ ...batterie, quando: this.adesso() }, { soloA: telefono });
@@ -994,7 +1096,8 @@ export class Notifiche {
     const testo = (ancora) => [...mostrate, ...(altre ? [ancora] : [])].join(" · ");
     return {
       tipo: "riepilogo",
-      /* Passa anche col riepilogo spento, e in Base: non e' il riepilogo. */
+      /* Passa anche col riepilogo spento: non e' il riepilogo. In Base no
+       * (`arrivaInBase`): non e' un avviso di sicurezza. */
       sempre: true,
       stileDellaVoce: "semplice",
       urgenza: "normale",
@@ -1146,18 +1249,16 @@ export class Notifiche {
     }
   }
 
-  /* Se questo evento questo telefono lo vuole. */
-  _lovuole(imp, evento, utente) {
-    if (!imp.acceso) return false;
-    if (evento.tipo === "prova") return true;
-    /* Le batterie da cambiare passano anche col riepilogo spento. */
-    if (imp.eventi[evento.tipo] === false && !evento.sempre) return false;
-    if (evento.tipo === "suggerimenti" && imp.assistente === "importanti" && !evento.importante)
-      return false;
-    if (evento.tipo === "arrivi" && !imp.persone.includes(evento.persona)) return false;
-    if (evento.solo?.length && !evento.solo.includes(utente)) return false;
+  /* Se questo evento questo telefono lo vuole: vuoto se si', e se no il
+   * perche', in poche parole per il registro. */
+  _percheNo(imp, evento, utente) {
+    if (!imp.acceso) return "notifiche spente sul telefono";
+    if (evento.tipo === "prova") return "";
+    if (!vuoleLaVoce(imp, evento))
+      return `voce «${evento.tipo}» spenta (o non scelta) sul telefono`;
+    if (evento.solo?.length && !evento.solo.includes(utente)) return "non e' per questo utente";
     /* Un messaggio dalla Home non torna a chi l'ha scritto. */
-    if (evento.tranne && evento.tranne === utente) return false;
+    if (evento.tranne && evento.tranne === utente) return "l'ha scritto lui";
     /* Un viaggio pianificato l'ha messo chi lo riceve, a quell'ora: passa le
      * ore di silenzio come le urgenti (la sveglia per partire alle sei). */
     if (
@@ -1165,33 +1266,20 @@ export class Notifiche {
       !evento.oltreIlSilenzio &&
       inSilenzio(imp, new Date(this.adesso()))
     )
-      return false;
+      return "ore di silenzio";
     const categoria = categoriaDi(evento.tipo);
     if (imp.soloFuori && (categoria === "casa" || categoria === "assistente")) {
-      if (this.sentinella.aCasa(utente) === true) return false;
+      if (this.sentinella.aCasa(utente) === true) return "solo fuori casa, ed e' in casa";
     }
-    /* Su misura, voce per voce. */
-    const su = suDi(imp, evento.tipo);
-    if (su.quali.length && ![evento.entita, evento.camera].some((uno) => su.quali.includes(uno)))
-      return false;
-    if (!dentroLeOre(su.orari, new Date(this.adesso()))) return false;
-    if (evento.tipo === "movimento" && evento.perche) {
-      const vuole = {
-        sempre: true,
-        "casa-vuota": evento.perche === "casa-vuota",
-        notte: evento.perche === "notte",
-        "casa-vuota-o-notte": evento.perche !== "giorno",
-      }[su.quando];
-      if (!vuole) return false;
-    }
+    /* «In che ore» l'app non lo offre per le urgenti (`notifiche_su_misura.dart`,
+     * `conOrari`): una scelta rimasta scritta li' non si vede e non si puo'
+     * togliere, e non deve zittire il campanello. */
     if (
-      evento.tipo === "elettrodomestici" &&
-      su.soglia !== null &&
-      typeof evento.misura?.euro === "number" &&
-      evento.misura.euro < su.soglia
+      categoria !== "urgenti" &&
+      !dentroLeOre(suDi(imp, evento.tipo).orari, new Date(this.adesso()))
     )
-      return false;
-    return true;
+      return "fuori dalle ore scelte per questa voce";
+    return "";
   }
 
   _cePosto(telefono, evento) {
@@ -1201,7 +1289,14 @@ export class Notifiche {
      * «non deve esserci alcun limite». Le preme a mano chi le vuole, e
      * provare le voci non deve zittire le notifiche vere. */
     if (evento.tipo === "prova") return true;
-    if (volte.length >= PER_TELEFONO_ALL_ORA) return false;
+    /* Le urgenti — campanello, antifurto, allarmi, blackout — contano fra le
+     * trenta, ma non restano mai fuori: dal campo, «le notifiche del Ring non
+     * arrivano piu'». Una casa con tante telecamere riempiva l'ora coi
+     * movimenti, e il campanello dopo la trentesima si perdeva senza dire
+     * niente. Ognuna ha gia' la sua pausa (mezzo minuto il campanello), che
+     * un sensore impazzito non la ripete a raffica. */
+    const urgente = categoriaDi(evento.tipo) === "urgenti";
+    if (!urgente && volte.length >= PER_TELEFONO_ALL_ORA) return false;
     volte.push(ora);
     this._conti.set(telefono, volte);
     return true;
@@ -1230,10 +1325,33 @@ export class Notifiche {
      * gia' stata detta o non si dice. Non si aspetta: la voce non ferma i
      * telefoni. */
     if (!soloA) void this._dilloAdAlexa(evento);
+    /* In Base al telefono solo gli avvisi di sicurezza (`arrivaInBase`): qui,
+     * prima di ogni telefono, per ogni strada che porta una notifica. */
+    if (!premium && !arrivaInBase(evento, { viaggi: this._viaggiSbloccati })) {
+      const perche = `«${evento?.tipo}» non arriva in Base: solo gli avvisi di sicurezza`;
+      if (categoriaDi(evento?.tipo) === "urgenti") this.registro.info(perche);
+      else this.registro.debug?.(perche);
+      return 0;
+    }
     const elenco = this.dispositivi.elenco();
     const chiCe = await this._chiCe();
     const ora = this.adesso();
     let quanti = 0;
+    /* Le urgenti si raccontano nel registro dell'add-on: che sono arrivate, a
+     * quanti telefoni sono partite e, telefono per telefono, perche' a uno
+     * no. «Le notifiche del Ring non arrivano piu'», e senza il registro non
+     * si sapeva se il ponte il campanello l'avesse visto. Solo l'entita' e
+     * l'identificativo del telefono, come nel resto del registro. */
+    const traccia = !soloA && categoriaDi(evento?.tipo) === "urgenti";
+    const no = (telefono, perche) => {
+      if (traccia) this.registro.info(`${evento.tipo}: non va a ${telefono} (${perche})`);
+    };
+    if (traccia) {
+      this.registro.info(
+        `${evento.tipo} da ${evento.entita || evento.chiave || "?"}: ${elenco.length} dispositivi abbinati`,
+      );
+      if (!chiCe) no("nessun telefono", "gli utenti di Home Assistant non si leggono");
+    }
     /* E per le case che hanno gia' due abbinamenti con lo stesso indirizzo
      * (prima della regola qui sopra): a ogni indirizzo una busta sola, quella
      * dell'abbinamento aggiornato per ultimo. */
@@ -1249,19 +1367,39 @@ export class Notifiche {
     for (const dispositivo of elenco) {
       if (soloA && dispositivo.id !== soloA) continue;
       const voce = this.archivio.dati.telefoni[dispositivo.id];
-      if (!voce?.gettone) continue;
-      if (ultimoPer.get(voce.gettone)?.id !== dispositivo.id) continue;
+      if (!voce?.gettone) {
+        no(dispositivo.id, "il telefono non ha registrato le notifiche");
+        continue;
+      }
+      if (ultimoPer.get(voce.gettone)?.id !== dispositivo.id) {
+        no(dispositivo.id, "abbinamento vecchio dello stesso telefono");
+        continue;
+      }
       /* Solo telefoni di utenti veri, attivi adesso. Un telefono senza
        * utente — abbinato prima che i telefoni si intestassero — non riceve:
        * non si sa di chi sia, e allora non si sa cosa possa vedere. */
       const utente = dispositivo.utente;
-      if (!utente || !chiCe) continue;
+      if (!utente) {
+        no(dispositivo.id, "telefono senza utente: va riabbinato");
+        continue;
+      }
+      if (!chiCe) continue;
       const chi = chiCe.find((uno) => uno.id === utente);
-      if (!chi || chi.attivo === false) continue;
+      if (!chi || chi.attivo === false) {
+        no(dispositivo.id, "l'utente di Home Assistant non c'e' o e' disattivato");
+        continue;
+      }
       const amministra = chi.amministratore === true;
-      if (!this._vedeLaCasa(utente, amministra)) continue;
+      if (!this._vedeLaCasa(utente, amministra)) {
+        no(dispositivo.id, "l'utente non vede nessuna plancia");
+        continue;
+      }
       const imp = impostazioniPulite(voce.impostazioni);
-      if (!this._lovuole(imp, evento, utente)) continue;
+      const percheNo = this._percheNo(imp, evento, utente);
+      if (percheNo) {
+        no(dispositivo.id, percheNo);
+        continue;
+      }
       const su = suDi(imp, evento.tipo);
       /* «Nel riepilogo della sera»: non parte adesso, si mette da parte una
        * riga. L'urgente parte sempre — una cosa urgente la sera non serve.
@@ -1284,26 +1422,38 @@ export class Notifiche {
        * telefono non si e' detto non si dice nemmeno lui. */
       if (evento.tipo === "blackout" && su.soglia) {
         if (evento.misura?.fase === "torna") {
-          if ((evento.misura?.durata || 0) < su.soglia) continue;
+          if ((evento.misura?.durata || 0) < su.soglia) {
+            no(dispositivo.id, "il blackout e' durato meno della soglia");
+            continue;
+          }
         } else if (!evento.attesa) {
           const dopo = (evento.misura?.dal ?? ora) + su.soglia * MINUTO;
           if (dopo > ora) {
+            no(dispositivo.id, "aspetta la soglia del blackout");
             this._attese.push({ telefono: dispositivo.id, evento, dopo });
             continue;
           }
         }
       }
       const chiave = `${dispositivo.id}|${evento.chiave}`;
-      if ((this._rimandati.get(chiave) || 0) > ora) continue;
+      if ((this._rimandati.get(chiave) || 0) > ora) {
+        no(dispositivo.id, "rimandata dal tasto della notifica");
+        continue;
+      }
       if (
         evento.tipo !== "prova" &&
         evento.pausa &&
         ora - (this._detto.get(chiave) || 0) < evento.pausa
-      )
+      ) {
+        no(dispositivo.id, `gia' detta ${Math.round((ora - this._detto.get(chiave)) / 1000)} s fa`);
         continue;
+      }
       if (!this._cePosto(dispositivo.id, evento)) continue;
       const chiaveDelFilo = this.dispositivi.chiaveDi(dispositivo.id);
-      if (!chiaveDelFilo) continue;
+      if (!chiaveDelFilo) {
+        no(dispositivo.id, "il telefono non ha la chiave del filo");
+        continue;
+      }
       const camera = this._vedeLaTelecamera(utente, amministra, evento.camera)
         ? evento.camera
         : null;
@@ -1357,6 +1507,10 @@ export class Notifiche {
         this.registro.attenzione(`una notifica non si chiude: ${errore?.message || errore}`);
         continue;
       }
+      /* Col filo del centralino giu' parte quando torna: e' un ritardo, e si
+       * dice. */
+      if (traccia && this.postino && this.postino.pronto === false)
+        this.registro.info(`${evento.tipo}: a ${dispositivo.id} aspetta il filo del centralino`);
       const partita = this.postino?.spingi?.({
         telefono: dispositivo.id,
         gettone: voce.gettone,
@@ -1367,12 +1521,16 @@ export class Notifiche {
          * che non e' partita. */
         aspetta: evento.tipo !== "prova",
       });
-      if (!partita) continue;
+      if (!partita) {
+        no(dispositivo.id, "il centralino non c'e' o non l'ha presa");
+        continue;
+      }
       this._detto.set(chiave, ora);
       this._ricordaITasti(contenuto.id, dispositivo.id, evento);
       quanti += 1;
     }
-    if (quanti) this.registro.debug?.(`notifica «${evento.tipo}» a ${quanti} telefoni`);
+    if (traccia) this.registro.info(`${evento.tipo}: partita a ${quanti} telefoni`);
+    else if (quanti) this.registro.debug?.(`notifica «${evento.tipo}» a ${quanti} telefoni`);
     return quanti;
   }
 
@@ -1387,8 +1545,32 @@ export class Notifiche {
     return { conf: normalizzaAlexa(valori[CHIAVE_ALEXA]), lingua };
   }
 
+  /* Se almeno un telefono della casa ha accesa questa voce (`vuoleLaVoce`).
+   *
+   * «Perche' arrivano le notifiche su Alexa anche se non ho selezionato
+   * quella notifica?» Nel Config si sceglie la famiglia (Casa, Sicurezza…), e
+   * le voci una per una le sceglie la pagina Notifiche dell'app: gli Echo
+   * dicono le notifiche che arrivano ai telefoni, e una voce che nessun
+   * telefono riceve non la dicono. Nemmeno un'urgente: spenta su ogni
+   * telefono e' una scelta di chi ci abita. Un telefono con le notifiche
+   * tutte spente non sceglie; senza telefoni decide il Config da solo. */
+  _qualcunoLaVuole(evento) {
+    let telefoni = [];
+    try {
+      telefoni = (this.dispositivi?.elenco?.() ?? [])
+        .map((dispositivo) => this.archivio.dati.telefoni[dispositivo?.id])
+        .filter((voce) => voce?.gettone)
+        .map((voce) => impostazioniPulite(voce.impostazioni))
+        .filter((imp) => imp.acceso);
+    } catch (_errore) {
+      return true;
+    }
+    return !telefoni.length || telefoni.some((imp) => vuoleLaVoce(imp, evento));
+  }
+
   /* Fa dire un evento agli Echo scelti, se la casa lo vuole
-   * (`alexa-annunci.js`, `daDire`). Lo stesso evento (`chiave`) non si
+   * (`alexa-annunci.js`, `daDire`) e un telefono ha accesa la sua voce
+   * (`_qualcunoLaVuole`). Lo stesso evento (`chiave`) non si
    * ripete prima di due minuti, e in un'ora al piu' ALEXA_IN_UN_ORA volte:
    * un sensore che sbatte non deve far parlare la casa tutto il giorno.
    * Torna se l'ha mandato a Home Assistant. */
@@ -1405,6 +1587,7 @@ export class Notifiche {
         )
       )
         return false;
+      if (!this._qualcunoLaVuole(evento)) return false;
       const ora = this.adesso();
       this._alexaDette = (this._alexaDette || []).filter((una) => ora - una.quando < UN_ORA);
       const chiave = String(evento.chiave ?? evento.tipo);
@@ -1839,7 +2022,13 @@ export class Notifiche {
       quando: evento.quando ?? this.adesso(),
       scade: (evento.quando ?? this.adesso()) + VITA_DEI_TASTI,
       stile: stile === "elaborata" ? "e" : "s",
-      ...(su && su.suono !== "normale" ? { suono: su.suono } : {}),
+      /* «Muta» l'app non la offre alle urgenti (`notifiche_su_misura.dart`):
+       * una rimasta scritta non fa arrivare il campanello senza suono. */
+      ...(su &&
+      su.suono !== "normale" &&
+      !(su.suono === "muta" && (categoriaDi(evento.tipo) ?? evento.categoria) === "urgenti")
+        ? { suono: su.suono }
+        : {}),
       ...(evento.entita ? { entita: evento.entita } : {}),
       ...(camera ? { camera } : {}),
       ...(evento.chiamata ? { chiamata: true } : {}),
@@ -1894,6 +2083,7 @@ export class Notifiche {
       else if (Array.isArray(una.vaBene)) azioni[una.id] = { vaBene: una.vaBene.slice(0, 10) };
       else if (typeof una.haAzione === "string") azioni[una.id] = { haAzione: una.haAzione };
       else if (typeof una.pappa === "string") azioni[una.id] = { pappa: una.pappa.slice(0, 80) };
+      else if (una.qualcuno === true) azioni[una.id] = { qualcuno: true };
     }
     if (!Object.keys(azioni).length) return;
     this._tasti.set(id, { telefono, azioni, scade: this.adesso() + VITA_DEI_TASTI });
@@ -2166,7 +2356,18 @@ export class Notifiche {
            * Premium (`viaggi.js`, `sbloccato`): senza, nemmeno di prova. */
           if (tipo === "viaggi" && !regola && !this._viaggiSbloccati)
             return no("premium-richiesto", "i viaggi pianificati sono di Premium");
-          const prova = regola ? this._provaDi(regola) : esempio || this._provaQualunque();
+          /* In Base arrivano solo gli avvisi di sicurezza (`arrivaInBase`):
+           * di prova solo quelli, e la prova di sempre. */
+          if (regola && !this.premium)
+            return no("premium-richiesto", "le notifiche personalizzate sono di GdAHome Premium");
+          if (esempio && !this.premium && !arrivaInBase(esempio, { viaggi: this._viaggiSbloccati }))
+            return no(
+              "premium-richiesto",
+              "in Base arrivano solo gli avvisi di sicurezza: il resto e' di GdAHome Premium",
+            );
+          const prova = regola
+            ? this._provaDi(regola)
+            : esempio || this._provaQualunque({ premium: this.premium });
           if (esempio) {
             /* Lo stile e' quello che la voce avra' davvero. */
             const imp = this.impostazioniDi(telefono);
@@ -2224,22 +2425,37 @@ export class Notifiche {
     }
   }
 
-  _provaQualunque() {
+  /* La prova di sempre. In Base dice cosa prova: gli avvisi di sicurezza,
+   * che sono quelli che arrivano. */
+  _provaQualunque({ premium = true } = {}) {
     return {
       tipo: "prova",
       urgenza: "normale",
       chiave: "prova",
       quando: this.adesso(),
-      parole: {
-        it: {
-          titolo: "✅ Notifica di prova",
-          testo: "Se la leggi, le notifiche di questa casa arrivano.",
-        },
-        en: {
-          titolo: "✅ Test notification",
-          testo: "If you can read this, this home's notifications work.",
-        },
-      },
+      parole: premium
+        ? {
+            it: {
+              titolo: "✅ Notifica di prova",
+              testo: "Se la leggi, le notifiche di questa casa arrivano.",
+            },
+            en: {
+              titolo: "✅ Test notification",
+              testo: "If you can read this, this home's notifications work.",
+            },
+          }
+        : {
+            it: {
+              titolo: "✅ Prova degli avvisi di sicurezza",
+              testo:
+                "Se la leggi, gli avvisi di sicurezza di questa casa arrivano: fumo, gas, allagamento, antifurto scattato e campanello.",
+            },
+            en: {
+              titolo: "✅ Safety alerts test",
+              testo:
+                "If you can read this, this home's safety alerts work: smoke, gas, water leak, alarm triggered and doorbell.",
+            },
+          },
       azioni: [],
     };
   }
@@ -2255,6 +2471,8 @@ export class Notifiche {
     const testo = [regola.testo, regola.conValore ? valore : ""].filter(Boolean).join(" · ");
     return {
       tipo: "prova",
+      /* Di Premium, come le personalizzate (`arrivaInBase`). */
+      imita: "personalizzata",
       urgenza: regola.urgenza,
       chiave: "prova",
       quando: this.adesso(),
@@ -2269,9 +2487,11 @@ export class Notifiche {
 
   async _stato(telefono, utente, amministra) {
     const voce = this.archivio.dati.telefoni[telefono];
-    const persone = this.sentinella.persone().map(([id, stato]) => ({
-      id,
-      nome: String(stato.attributes?.friendly_name || id).slice(0, 60),
+    /* Le stesse persone della plancia, coi suoi nomi: quelle di cui dire chi
+     * arriva e chi esce. */
+    const persone = this.sentinella.lePersone().map((v) => ({
+      id: v.persona,
+      nome: String(v.nome || v.persona).slice(0, 60),
     }));
     const chiCe = (await this._chiCe()) ?? [];
     return {
@@ -2298,9 +2518,12 @@ export class Notifiche {
         })),
       io: utente,
       amministra: amministra === true,
-      /* gdahome Premium: senza, l'app mette il lucchetto su «Elaborate» e sul
-       * «Riepilogo della sera». */
+      /* gdahome Premium: senza, l'app mette il lucchetto su «Elaborate» e su
+       * ogni voce che non e' un avviso di sicurezza (`arrivaInBase`). */
       premium: this.premium,
+      /* Se «Quando partire» arriva: gdanav Premium, che gdahome Premium
+       * comprende. Senza, in Base, anche lei col lucchetto. */
+      viaggi: this._viaggiSbloccati,
     };
   }
 
@@ -2415,6 +2638,14 @@ export class Notifiche {
     if (azione.vaBene) {
       for (const id of azione.vaBene) this.sentinella.capire.vaBeneStanotte(id);
       this.sentinella.capire.scrivi();
+      return si({ fatto: true });
+    }
+    /* «C'è qualcuno»: in casa c'e' chi Home Assistant non conosce (la
+     * suocera, la baby-sitter). Fino a quando non torna una persona di Home
+     * Assistant il movimento con la casa vuota tace, per tutta la casa. Non
+     * tocca niente in Home Assistant. */
+    if (azione.qualcuno) {
+      this.sentinella.qualcunoInCasa();
       return si({ fatto: true });
     }
     if (!utente || (this.utenti && !(await this.utenti.eVivo(utente).catch(() => false))))
@@ -2535,8 +2766,9 @@ export function cieloDiDomani(previsione, adesso) {
  */
 export function esempioDi(tipo, adesso = Date.now(), opzioni = {}) {
   const esempio = unEsempio(tipo, adesso, opzioni);
-  /* La categoria di quella vera: sul telefono sceglie il canale. */
-  return esempio ? { ...esempio, categoria: categoriaDi(tipo) } : null;
+  /* La categoria di quella vera: sul telefono sceglie il canale. E quale
+   * imita: in Base arriva solo se e' un avviso di sicurezza (`arrivaInBase`). */
+  return esempio ? { ...esempio, categoria: categoriaDi(tipo), imita: tipo } : null;
 }
 
 /* I tasti di un esempio: com'e' scritto quello vero, senza niente da fare.

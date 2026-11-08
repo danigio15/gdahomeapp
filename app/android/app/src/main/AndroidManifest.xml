@@ -51,29 +51,17 @@
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" tools:node="remove" />
     <uses-feature android:name="android.hardware.fingerprint" android:required="false" />
 
-    <!-- La Salute (#227): le misure dell'orologio da Health Connect, portate
-         alla casa (`lib/salute/`). **Solo lettura**: nessun permesso WRITE,
-         GdAHome in Health Connect non scrive niente. Ogni misura si chiede a
-         chi usa il telefono quando accende «Salute», e solo quelle che sceglie;
-         il Play Console vuole la dichiarazione dei dati salute per ognuna. -->
-    <uses-permission android:name="android.permission.health.READ_STEPS" />
-    <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
-    <uses-permission android:name="android.permission.health.READ_RESTING_HEART_RATE" />
-    <uses-permission android:name="android.permission.health.READ_WEIGHT" />
-    <uses-permission android:name="android.permission.health.READ_BODY_FAT" />
-    <uses-permission android:name="android.permission.health.READ_BLOOD_PRESSURE" />
-    <uses-permission android:name="android.permission.health.READ_OXYGEN_SATURATION" />
-    <uses-permission android:name="android.permission.health.READ_SLEEP" />
-    <uses-permission android:name="android.permission.health.READ_ACTIVE_CALORIES_BURNED" />
-    <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED" />
-    <uses-permission android:name="android.permission.health.READ_DISTANCE" />
-    <uses-permission android:name="android.permission.health.READ_FLOORS_CLIMBED" />
-    <!-- Leggere anche ad app chiusa, per mandare le misure alla casa senza
-         aprire GdAHome (`salute/LaSaluteAdAppChiusa.kt`). Si chiede a parte,
-         con l'app davanti, e solo se Health Connect lo conosce; negato, le
-         misure vanno solo ad app aperta. Anche questo va nella dichiarazione
-         dei dati salute del Play Console. -->
-    <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND" />
+    <!-- La Salute (#227): le misure dell'orologio da Health Connect.
+         **Per ora fuori da Android**: Google deve ancora approvare i
+         permessi di Health Connect nella Play Console, e un'app che li
+         dichiara senza l'approvazione non passa la revisione. Niente
+         permessi `health.READ_*` qui, niente voce «Salute» nell'app
+         (`laSaluteCe` in `lib/salute/lettore.dart`). Quando arriva
+         l'approvazione si rimettono i permessi che c'erano (passi, battito,
+         battito a riposo, peso, massa grassa, pressione, ossigeno, sonno,
+         calorie attive e totali, distanza, piani, e la lettura in
+         background), l'intent-filter e l'activity-alias dei permessi salute,
+         e le `queries` di Health Connect: stanno nella storia di git. -->
 
     <!-- La plancia vera dentro l'app passa da un server locale, su
          127.0.0.1: e' l'unico indirizzo in chiaro che il WebView puo'
@@ -115,24 +103,7 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- Health Connect chiede «perche' vuoi questi dati?» aprendo
-                 l'app: si apre GdAHome, che lo dice nella pagina Salute. -->
-            <intent-filter>
-                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
-            </intent-filter>
         </activity>
-        <!-- Da Android 14 la stessa domanda arriva dalle impostazioni dei
-             permessi salute: si apre l'app, come sopra. -->
-        <activity-alias
-            android:name="ViewPermissionUsageActivity"
-            android:exported="true"
-            android:targetActivity=".MainActivity"
-            android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
-                <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
-            </intent-filter>
-        </activity-alias>
         <!-- I tasti sotto le notifiche («Spegni», «Apri cancello», «Più
              tardi»): li riceve il plugin, e li passa all'app che li porta alla
              casa sul suo filo. -->
@@ -218,11 +189,6 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
-        </intent>
-        <!-- Se Health Connect c'e', per la pagina Salute. -->
-        <package android:name="com.google.android.apps.healthdata" />
-        <intent>
-            <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
         </intent>
     </queries>
 </manifest>

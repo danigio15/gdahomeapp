@@ -17,7 +17,8 @@ indirizzo=$(sed -n 's/^distributionUrl=//p' gradle/wrapper/gradle-wrapper.proper
 nome=$(basename "$indirizzo" -bin.zip)
 casa="${RUNNER_TEMP:-${TMPDIR:-/tmp}}/$nome"
 if [ ! -x "$casa/bin/gradle" ]; then
-  curl -sSfL "$indirizzo" -o "$casa.zip"
+  # Con pazienza: GitHub, dove sta la distribuzione, a volte risponde 504.
+  curl -sSfL --retry 10 --retry-all-errors --retry-delay 15 "$indirizzo" -o "$casa.zip"
   unzip -q -o "$casa.zip" -d "$(dirname "$casa")"
 fi
 exec "$casa/bin/gradle" "$@"

@@ -301,6 +301,13 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
   /// In Base le elaborate e il riepilogo della sera non ci sono.
   bool get _premium => _stato?.premium ?? _collegamento.licenza.premium;
 
+  /// Se in una casa Base questa voce arriva: gli avvisi di sicurezza
+  /// (`avvisiDiSicurezza`), e «Quando partire» se la casa ha GdANav Premium
+  /// (`viaggi`; un ponte di prima non lo dice, e resta com'era).
+  bool _arrivaInBase(String evento, StatoDelleNotifiche stato) =>
+      avvisiDiSicurezza.contains(evento) ||
+      (evento == 'viaggi' && stato.viaggi != false);
+
   /// Il lucchetto toccato: perche', e che si compra solo dalle app.
   void _spiegaIlPremium() => unawaited(
     spiegaIlPremium(
@@ -552,7 +559,11 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
         ),
       );
     } catch (errore) {
-      _dici('$errore');
+      if ('$errore'.contains('premium-richiesto')) {
+        _spiegaIlPremium();
+      } else {
+        _dici('$errore');
+      }
     } finally {
       if (mounted) setState(() => _inProva = false);
     }
@@ -767,6 +778,11 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
           cambia: (stile) => _imposta(imp.con(stile: stile)),
         ),
         const SizedBox(height: 20),
+        /* In Base, prima delle voci: cosa arriva e cosa no. */
+        if (!premium) ...[
+          _SoloLaSicurezza(tocca: _spiegaIlPremium),
+          const SizedBox(height: 20),
+        ],
         for (final MapEntry(key: categoria, value: eventi)
             in categorieDelleNotifiche.entries) ...[
           _Titolo(
@@ -785,11 +801,11 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
               children: [
                 for (final (i, evento) in eventi.indexed) ...[
                   if (i > 0) const _Riga(),
-                  /* Il riepilogo della sera in Base non c'e': il lucchetto,
-                   * e al tocco la spiegazione. */
-                  if (evento == 'riepilogo' && !premium)
+                  /* In Base arrivano solo gli avvisi di sicurezza: le
+                   * altre voci col lucchetto, e al tocco la spiegazione. */
+                  if (!premium && !_arrivaInBase(evento, stato))
                     _Interruttore(
-                      chiave: const Key('voce-riepilogo-bloccata'),
+                      chiave: Key('voce-$evento-bloccata'),
                       disegno: comeSiChiama(evento).disegno,
                       titolo: comeSiChiama(evento).titolo,
                       sotto: comeSiChiama(evento).sotto,
@@ -800,6 +816,7 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
                     )
                   else
                     _Interruttore(
+                      chiave: Key('voce-$evento'),
                       disegno: comeSiChiama(evento).disegno,
                       titolo: comeSiChiama(evento).titolo,
                       sotto: comeSiChiama(evento).sotto,
@@ -814,13 +831,13 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
                       apri: () => _apriLaVoce(evento),
                     ),
                 ],
-                if (categoria == 'persone')
+                if (categoria == 'persone' && premium)
                   _LePersone(
                     persone: stato.persone,
                     scelte: imp.persone,
                     cambia: (scelte) => _imposta(imp.con(persone: scelte)),
                   ),
-                if (categoria == 'assistente')
+                if (categoria == 'assistente' && premium)
                   _Segmenti(
                     scelto: imp.assistente,
                     voci: {
@@ -855,12 +872,15 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
           ),
           const SizedBox(height: 20),
         ],
+        /* Le personalizzate sono di Premium: in Base restano scritte, per
+         * quando torna, ma col lucchetto. */
         _Titolo(
           disegno: 'mie',
           testo: inLingua(
             it: 'Notifiche personalizzate',
             en: 'Custom notifications',
           ),
+          diPremium: !premium,
         ),
         Scheda(
           padding: EdgeInsets.zero,
@@ -868,17 +888,23 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
             children: [
               for (final regola in stato.personalizzate) ...[
                 _LaPersonalizzata(
+                  bloccata: !premium,
                   regola: regola,
-                  cambia: regola.modificabile
+                  cambia: regola.modificabile && premium
                       ? (si) => _attivaLaPersonalizzata(regola, si)
                       : null,
-                  tocca: regola.modificabile
+                  tocca: !premium
+                      ? _spiegaIlPremium
+                      : regola.modificabile
                       ? () => _apriLEditor(regola)
                       : null,
                 ),
                 const _Riga(),
               ],
-              _Aggiungi(tocca: () => _apriLEditor()),
+              _Aggiungi(
+                key: premium ? null : const Key('aggiungi-bloccata'),
+                tocca: premium ? () => _apriLEditor() : _spiegaIlPremium,
+              ),
             ],
           ),
         ),
@@ -1051,6 +1077,46 @@ class _StatoDellaPagina extends State<SchermataDelleNotifiche> {
         ),
       ],
     ];
+  }
+}
+
+/// In una casa Base: arrivano solo gli avvisi di sicurezza, e al tocco la
+/// spiegazione del Premium.
+class _SoloLaSicurezza extends StatelessWidget {
+  const _SoloLaSicurezza({required this.tocca});
+  final VoidCallback tocca;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    return Scheda(
+      key: const Key('in-base-solo-la-sicurezza'),
+      colore: colori.secondaryContainer,
+      quandoPremuta: tocca,
+      child: Row(
+        children: [
+          Icon(Icons.lock_rounded, color: colori.onSecondaryContainer),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              inLingua(
+                it:
+                    'In GdAHome Base arrivano solo gli avvisi di sicurezza: '
+                    'fumo, gas, allagamento, antifurto scattato e '
+                    'campanello. Il resto è di Premium.',
+                en:
+                    'In GdAHome Base only safety alerts arrive: smoke, gas, '
+                    'water leak, alarm triggered and doorbell. The rest is '
+                    'part of Premium.',
+              ),
+              style: TextStyle(color: colori.onSecondaryContainer),
+            ),
+          ),
+          const SizedBox(width: 8),
+          const BollinoPremium(),
+        ],
+      ),
+    );
   }
 }
 
@@ -1277,10 +1343,18 @@ class _Pillola extends StatelessWidget {
 }
 
 class _Titolo extends StatelessWidget {
-  const _Titolo({required this.disegno, required this.testo, this.bollino});
+  const _Titolo({
+    required this.disegno,
+    required this.testo,
+    this.bollino,
+    this.diPremium = false,
+  });
   final String disegno;
   final String testo;
   final String? bollino;
+
+  /// Una sezione di Premium, in una casa Base: il bollino accanto al titolo.
+  final bool diPremium;
 
   @override
   Widget build(BuildContext context) {
@@ -1299,6 +1373,7 @@ class _Titolo extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
+          if (diPremium) const BollinoPremium(),
           if (bollino != null)
             Expanded(
               child: Align(
@@ -1687,17 +1762,22 @@ class _LaPersonalizzata extends StatelessWidget {
     required this.regola,
     required this.cambia,
     required this.tocca,
+    this.bloccata = false,
   });
 
   final NotificaPersonalizzata regola;
   final ValueChanged<bool>? cambia;
   final VoidCallback? tocca;
 
+  /// In una casa Base: resta scritta, per quando torna il Premium, ma grigia
+  /// e col lucchetto al posto dell'interruttore.
+  final bool bloccata;
+
   @override
   Widget build(BuildContext context) {
     final colori = Theme.of(context).colorScheme;
     final testi = Theme.of(context).textTheme;
-    return InkWell(
+    final riga = InkWell(
       onTap: tocca,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
@@ -1743,16 +1823,27 @@ class _LaPersonalizzata extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Switch(
-              value: regola.attiva,
-              onChanged: cambia,
-              activeTrackColor: colori.primary,
-              activeThumbColor: colori.onPrimary,
-            ),
+            if (bloccata)
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: Icon(
+                  Icons.lock_rounded,
+                  color: colori.onSurfaceVariant,
+                  size: 20,
+                ),
+              )
+            else
+              Switch(
+                value: regola.attiva,
+                onChanged: cambia,
+                activeTrackColor: colori.primary,
+                activeThumbColor: colori.onPrimary,
+              ),
           ],
         ),
       ),
     );
+    return bloccata ? Opacity(opacity: 0.5, child: riga) : riga;
   }
 }
 
@@ -1776,7 +1867,7 @@ IconData iconaDellEntita(String entita) {
 }
 
 class _Aggiungi extends StatelessWidget {
-  const _Aggiungi({required this.tocca});
+  const _Aggiungi({super.key, required this.tocca});
   final VoidCallback tocca;
 
   @override

@@ -132,6 +132,10 @@ android {
             applicationIdSuffix = ".prova"
         }
         release {
+            // Le regole dell'app per R8 (`proguard-rules.pro`): senza, il
+            // database di WorkManager perdeva il costruttore e l'app cadeva
+            // appena aperta.
+            proguardFiles("proguard-rules.pro")
             if (cELaChiaveVera) {
                 signingConfig = signingConfigs.getByName("vera")
             } else {

@@ -332,6 +332,11 @@ jobs:
           node -e 'const j=JSON.parse(require("fs").readFileSync("android/app/google-services.json","utf8")); if(!j.client?.some(c=>c.client_info?.android_client_info?.package_name==="com.gdahome.gdahome")){console.error("google-services.json non ha com.gdahome.gdahome");process.exit(1)}'
           echo "### Notifiche: Firebase acceso" >> "$GITHUB_STEP_SUMMARY"
 
+      # Gradle scaricato prima, con dieci tentativi: GitHub, dove sta la
+      # distribuzione, a volte risponde 504 per ore (`gradle-in-anticipo.sh`).
+      - name: Gradle, scaricato prima
+        run: strumenti/gradle-in-anticipo.sh
+
       - name: Il pacchetto
         working-directory: app
         env:
