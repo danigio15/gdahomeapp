@@ -548,7 +548,9 @@ test("l'inizio si vede: in colonna, «dal … →» sulla carta, e intero nella 
   /* La carta del telefono: «dal 6 nov → 2 dic» (la freccia la mette il CSS). */
   assert.match(suaRiga, /class="lic-c-data con-inizio con-data"/);
   assert.match(
-    soloTesto(suaRiga),
+    /* «dall'» e il giorno stanno in due tag: il testo senza tag li separa
+     * con uno spazio che sulla pagina non c'e' (l'1, l'8, l'11). */
+    soloTesto(suaRiga).replace(/' /g, "'"),
     new RegExp(`${PAGINA.conLArticolo("dal", ORA - 120 * GIORNO)} rinnova`),
   );
   assert.match(GESTORE, /\.lic-c-data\.con-inizio\.con-data > b::before,/);
