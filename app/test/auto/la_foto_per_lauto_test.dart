@@ -369,9 +369,9 @@ void main() {
     },
   );
 
-  test('sei e non di piu', () {
+  test('ventiquattro e non di piu', () {
     final tante = List.generate(
-      9,
+      30,
       (i) => '{"id":"light.n$i","nome":"N$i"}',
     ).join(',');
     final foto = _letto(
@@ -397,12 +397,12 @@ void main() {
     final righe = <String>[
       for (var i = 0; i < 6; i++)
         '{"id":"$i|Tasto $i","dominio":"script","servizio":"turn_on","entita":"script.t$i"}',
-      for (var i = 0; i < 6; i++)
+      for (var i = 0; i < 24; i++)
         '{"id":"light.d$i","dominio":"light","servizio":"toggle","entita":"light.d$i"}',
     ];
     final ricette = leRicetteDaScrivere('{"ricette":[${righe.join(',')}]}');
     expect(ricette.length, ricetteAlMassimo);
-    expect(ricette.length, 12);
-    expect(ricette.last.entita, 'light.d5');
+    expect(ricette.length, 30);
+    expect(ricette.last.entita, 'light.d23');
   });
 }

@@ -83,6 +83,7 @@ struct Dispositivi: View {
           .font(.footnote)
           .foregroundStyle(.secondary)
       }
+      Vecchia(quando: foto.quando)
       ForEach(foto.dispositivi) { d in
         Button {
           telefono.premi(d.id)
@@ -116,6 +117,7 @@ struct Azioni: View {
           .font(.footnote)
           .foregroundStyle(.secondary)
       }
+      Vecchia(quando: foto.quando)
       ForEach(foto.azioni) { a in
         Button {
           telefono.premi(a.id)
@@ -187,6 +189,23 @@ struct Segnato: View {
       Text(testo)
     } icon: {
       Image(systemName: simbolo).foregroundStyle(Color.accentColor)
+    }
+  }
+}
+
+/* «Le azioni non si ricaricano se le cambi.» L'elenco al polso è quello che
+ * la plancia sul telefono ha mandato l'ultima volta che era aperta: cambiate
+ * le azioni dal computer, al polso restano quelle di prima finché GdAHome sul
+ * telefono non si riapre. Se l'elenco ha più di dieci minuti lo si dice, con
+ * l'ora, invece di spacciarlo per adesso. */
+struct Vecchia: View {
+  let quando: Date?
+
+  var body: some View {
+    if let quando, Date().timeIntervalSince(quando) > 10 * 60 {
+      Text("Aggiornato alle \(quando.formatted(date: .omitted, time: .shortened)). Per le novità apri GdAHome sul telefono.")
+        .font(.footnote)
+        .foregroundStyle(.secondary)
     }
   }
 }

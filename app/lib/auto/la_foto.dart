@@ -41,9 +41,11 @@ const String nomeDelFile = 'gdahome-auto.json';
 const int misureAlMassimo = 3;
 const int azioniAlMassimo = 6;
 
-/// Quanti dispositivi entrano nella griglia. Sei, come i tasti: e' quello che
-/// l'auto mostra in una schermata.
-const int dispositiviAlMassimo = 6;
+/// Quanti dispositivi entrano nella fotografia. In auto se ne vedono sei,
+/// come i tasti, e li taglia chi legge (`LaFotoDellaCasa.kt`,
+/// `LaCasaInCarPlay.swift`); al polso la lista scorre, e ci vanno tutti
+/// quelli che la plancia manda: «in Dispositivi ci sono solo quei pochi».
+const int dispositiviAlMassimo = 24;
 
 /// Quante ricette si tengono in tutto.
 ///
@@ -264,7 +266,9 @@ List<RicettaDellAzione> leRicetteDaScrivere(String detto) {
     final id = _pulito(riga['id'], fino: _quantoLungo * 2);
     final dominio = _pulito(riga['dominio'], fino: 48);
     final servizio = _pulito(riga['servizio'], fino: 48);
-    final entita = _pulito(riga['entita'], fino: _quantoLungo * 2);
+    /* Un gruppo di luci ne porta tante, separate da virgole: lo stesso
+     * servizio su tutte («Luci», dall'Apple Watch). */
+    final entita = _pulito(riga['entita'], fino: _quantoLungo * 16);
     if (id.isEmpty ||
         dominio.isEmpty ||
         servizio.isEmpty ||

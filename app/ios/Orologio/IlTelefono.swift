@@ -52,19 +52,32 @@ final class IlTelefono: NSObject, ObservableObject {
       return dici("Il telefono non risponde. Tienilo vicino, con GdAHome installata.", bene: false)
     }
     inCorso = true
+    /* «Poi l'app si blocca.» Finché un tocco è in viaggio i tasti sono
+     * spenti, e se il telefono non rispondeva — né sì né no — restavano
+     * spenti: l'app sembrava ferma. Dopo dieci secondi si lascia perdere, si
+     * dice, e i tasti tornano. Una risposta che arriva dopo non conta più. */
+    numero += 1
+    let questo = numero
     s.sendMessage(messaggio) { [weak self] risposta in
       let ok = (risposta["ok"] as? Bool) == true
       let testo = risposta["testo"] as? String ?? (ok ? "Fatto" : "Non è partito")
-      Task { @MainActor in
-        self?.inCorso = false
-        self?.dici(testo, bene: ok)
-      }
+      Task { @MainActor in self?.finito(questo, testo, bene: ok) }
     } errorHandler: { [weak self] _ in
-      Task { @MainActor in
-        self?.inCorso = false
-        self?.dici("Il telefono non ha risposto", bene: false)
-      }
+      Task { @MainActor in self?.finito(questo, "Il telefono non ha risposto", bene: false) }
     }
+    Task { @MainActor [weak self] in
+      try? await Task.sleep(nanoseconds: 10_000_000_000)
+      self?.finito(questo, "Il telefono non ha risposto", bene: false)
+    }
+  }
+
+  /// Il numero dell'ultimo tocco mandato: risponde solo lui.
+  private var numero = 0
+
+  private func finito(_ quale: Int, _ testo: String, bene: Bool) {
+    guard quale == numero, inCorso else { return }
+    inCorso = false
+    dici(testo, bene: bene)
   }
 
   private func dici(_ testo: String, bene: Bool) {

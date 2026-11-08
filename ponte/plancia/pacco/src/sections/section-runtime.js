@@ -572,7 +572,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-TMY363CC.js";
+} from "../../chunk-Q6O4AAOR.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -101810,7 +101810,7 @@ function installTesseraDallaSchedaSection() {
 var pulito56 = (valore3) => String(valore3 ?? "").trim();
 var MISURE_AL_MASSIMO = 3;
 var AZIONI_AL_MASSIMO = 6;
-var DISPOSITIVI_AL_MASSIMO = 6;
+var DISPOSITIVI_AL_MASSIMO = 24;
 var GENERI_IN_AUTO = Object.freeze(["porta", "varco", "luce", "presa"]);
 var SI_VOGLIONO_TUTTI = /* @__PURE__ */ new Set(["porta", "varco"]);
 var IN_CASA2 = "home";
@@ -101842,12 +101842,30 @@ function lePersone(persone4, states) {
 }
 var DIPENDE_DA_ADESSO = /* @__PURE__ */ new Set(["lock", "media_player"]);
 var CHIEDE_UNA_VOCE = /* @__PURE__ */ new Set(["select", "input_select"]);
-var NON_ESCE_DALLA_PLANCIA = /* @__PURE__ */ new Set(["builtin", "luci_group"]);
+var NON_ESCE_DALLA_PLANCIA = /* @__PURE__ */ new Set(["builtin"]);
+function laRicettaDelGruppo(azione, risolvi5) {
+  const luci = [];
+  for (const luce2 of Array.isArray(azione.lights) ? azione.lights : []) {
+    const scritta = pulito56(luce2);
+    if (!scritta.includes(".")) continue;
+    let vera2 = scritta;
+    try {
+      const risolta2 = typeof risolvi5 === "function" ? risolvi5({ type: "entity", entity: scritta }) : null;
+      if (pulito56(risolta2?.entita).includes(".")) vera2 = pulito56(risolta2.entita);
+    } catch (_errore) {
+      vera2 = scritta;
+    }
+    if (!luci.includes(vera2)) luci.push(vera2);
+  }
+  if (!luci.length) return null;
+  return { dominio: "light", servizio: "toggle", entita: luci.join(","), dati: {} };
+}
 function laRicettaDellAzione(azione, risolvi5) {
   if (!azione) return null;
   const tipo = pulito56(azione.type).toLowerCase();
   if (NON_ESCE_DALLA_PLANCIA.has(tipo)) return null;
   if (pulito56(azione.confirm)) return null;
+  if (tipo === "luci_group") return laRicettaDelGruppo(azione, risolvi5);
   const risolta2 = typeof risolvi5 === "function" ? risolvi5(azione) : null;
   const entita4 = pulito56(risolta2?.entita);
   if (!entita4.includes(".")) return null;

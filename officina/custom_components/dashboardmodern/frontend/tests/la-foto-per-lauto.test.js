@@ -290,6 +290,23 @@ test("quello che apre qualcosa nella plancia non parte da solo", () => {
   assert.equal(laRicettaDellAzione(null, RISOLVI), null);
 });
 
+test("un gruppo di luci parte da solo: le accende o le spegne tutte insieme", () => {
+  /* «C'è il pulsante Luci che non fa niente», dall'Apple Watch: al polso
+   * diceva «Parte quando apri GdAHome sul telefono». */
+  assert.deepEqual(
+    laRicettaDellAzione(
+      { name: "Luci", type: "luci_group", lights: ["light.esterna", "light.sala", "light.esterna", "nonluce"] },
+      RISOLVI,
+    ),
+    { dominio: "light", servizio: "toggle", entita: "light.esterna,light.sala", dati: {} },
+  );
+  /* Con la domanda di conferma resta indietro, come ogni altra. */
+  assert.equal(
+    laRicettaDellAzione({ name: "Luci", type: "luci_group", lights: ["light.sala"], confirm: "Sicuro?" }, RISOLVI),
+    null,
+  );
+});
+
 test("il menu parte solo se la voce è già scelta", () => {
   /* Scegliere vuol dire un dito su uno schermo. */
   assert.equal(
@@ -435,8 +452,8 @@ test("l'ordine è quello che conta guidando: prima quello che si apre", () => {
   assert.deepEqual(idDi(dentro), ["cover.cancello", "cover.finestra_cucina", "light.salone"]);
 });
 
-test("sei e non di più, e si tagliano gli ultimi, non i primi", () => {
-  const tante = Array.from({ length: 9 }, (_v, i) => ({
+test("ventiquattro e non di più, e si tagliano gli ultimi, non i primi", () => {
+  const tante = Array.from({ length: 30 }, (_v, i) => ({
     ...SALONE,
     entity: `light.stanza_${i}`,
     nome: `Stanza ${i}`,
@@ -444,7 +461,7 @@ test("sei e non di più, e si tagliano gli ultimi, non i primi", () => {
   const dentro = iDispositiviPerLAuto([CANCELLO, ...tante]);
   assert.equal(dentro.length, DISPOSITIVI_AL_MASSIMO);
   assert.equal(dentro[0].id, "cover.cancello");
-  assert.equal(dentro.at(-1).id, "light.stanza_4");
+  assert.equal(dentro.at(-1).id, "light.stanza_22");
 });
 
 test("la stessa luce in due gruppi resta una luce sola", () => {
