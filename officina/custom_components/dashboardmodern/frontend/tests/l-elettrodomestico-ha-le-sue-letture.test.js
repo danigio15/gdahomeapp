@@ -177,7 +177,7 @@ test("una lettura scelta a mano si vede una volta sola, non due", () => {
   );
   /* E toglierle da lì non le fa sparire del tutto: se non resta altro da dire,
    * la finestra si apre lo stesso perché «Altre letture» ha ancora le sue. */
-  assert.match(blocco, /!scelteDaLeggere\.size\n  \)\n    return;/);
+  assert.match(blocco, /!scelteDaLeggere\.size\n  \)\n    return false;/);
   /* Lo stesso elenco che usa l'editor per salvarle: due modi di leggere quella
    * casella sarebbero due modi di sbagliarla. */
   assert.match(FINESTRA, /\n  elencoLetture,\n/);

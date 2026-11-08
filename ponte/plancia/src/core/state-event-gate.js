@@ -95,6 +95,29 @@ function osservaLaConfigurazione(root, dimentica, osservate) {
 export const IN_VISTA_KEY = "__DM_ENTITA_IN_VISTA__";
 const SUBITO_MS = 40;
 
+/* Col pannello a muro acceso, la plancia di sotto aspetta.
+ *
+ * «Sono molto lenti e hanno problemi di refresh», di un Sonoff da quattro
+ * pollici. Un numero che il pannello mostra — una potenza, una temperatura —
+ * cambia ogni secondo o due, e il mazzetto partiva subito per tutti: le
+ * novantacinque sezioni della plancia, nascosta sotto il pannello, si
+ * ridisegnavano ogni volta, e su quel processore il pannello aspettava loro.
+ *
+ * Adesso, finche' il pannello e' acceso, quello che mostra va a lui solo e
+ * subito, con un evento suo (`EVENTO_DEL_MURO`); il mazzetto per tutti gli
+ * altri parte al piu' ogni due secondi, e si porta dietro tutto. Gli avvisi
+ * sul pannello li guarda il pannello, dal suo evento. */
+export const EVENTO_DEL_MURO = "dashboardmodern:stati-del-muro";
+const CON_IL_MURO_MS = 2000;
+
+function muroAcceso(root) {
+  try {
+    return Boolean(root.document?.documentElement?.classList?.contains("dm-muro-acceso"));
+  } catch (_errore) {
+    return false;
+  }
+}
+
 function inVista(root, id) {
   try {
     const domanda = root[IN_VISTA_KEY];
@@ -128,9 +151,11 @@ export function installStateEventGate(
   const osservate = new Set(chiaviDate(chiavi));
   const original = broker.ingestState;
   const pendingIds = new Set();
+  const alMuro = new Set();
   let lastState = null;
   let timer = 0;
   let timerSubito = false;
+  let timerDelMuro = 0;
   let interests = null;
 
   const currentInterests = () => {
@@ -176,6 +201,18 @@ export function installStateEventGate(
     );
   };
 
+  const flushDelMuro = () => {
+    timerDelMuro = 0;
+    if (!alMuro.size) return;
+    const entityIds = [...alMuro];
+    alMuro.clear();
+    root.dispatchEvent?.(
+      typeof root.CustomEvent === "function"
+        ? new root.CustomEvent(EVENTO_DEL_MURO, { detail: { entity_ids: entityIds } })
+        : { type: EVENTO_DEL_MURO, detail: { entity_ids: entityIds } },
+    );
+  };
+
   const queue = (state) => {
     const id = String(state?.entity_id || "").trim();
     if (!id) return;
@@ -185,10 +222,18 @@ export function installStateEventGate(
     // unrelated Home Assistant chatter is ignored.
     const visto = inVista(root, id);
     if (!visto && configured.size && !configured.has(id)) return;
+    const muro = muroAcceso(root);
+    if (muro && visto) {
+      alMuro.add(id);
+      if (!timerDelMuro) {
+        timerDelMuro = root.setTimeout?.(flushDelMuro, SUBITO_MS) || 0;
+        if (!timerDelMuro) root.queueMicrotask?.(flushDelMuro);
+      }
+    }
     pendingIds.add(id);
     lastState = state || lastState;
-    const attesa = Math.max(0, Number(delay) || 0);
-    const subito = visto && attesa > SUBITO_MS;
+    const attesa = Math.max(0, Number(delay) || 0, muro ? CON_IL_MURO_MS : 0);
+    const subito = !muro && visto && attesa > SUBITO_MS;
     /* Un mazzetto gia' in partenza basta, a meno che questo stato sia in
      * vista e il mazzetto stia ancora aspettando il suo mezzo secondo: allora
      * parte prima, e si porta dietro anche gli altri. */

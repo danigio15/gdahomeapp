@@ -1330,6 +1330,95 @@ export function scriviSeCambia(nodo, markup) {
   return true;
 }
 
+/* Come `scriviSeCambia`, ma senza buttare giu' quello che c'e'.
+ *
+ * Riscrivere tutto con `innerHTML` rifa' ogni pezzo da capo: il browser lo
+ * rimisura, lo ridipinge intero e ridecodifica le immagini. Su un telefono non
+ * si vede; su un pannello a muro da quattro pollici (i Sonoff, gli NSPanel), con
+ * un processore piccolo, il quadro nuovo non e' pronto quando lo schermo lo
+ * chiede, e per un attimo resta il fondo vuoto: il lampo chiaro che si vedeva a
+ * ogni aggiornamento, anche solo dell'ora. Qui il disegno nuovo si confronta
+ * con quello che c'e', pezzo per pezzo, e si cambia solo quello che e'
+ * diverso: un numero, una classe, una riga.
+ *
+ * `tieni(vecchio, nuovo)` dice quali pezzi restano come sono anche se il
+ * disegno li riscrive: una telecamera col suo fotogramma, una copertina.
+ */
+export function rattoppaSeCambia(nodo, markup, { tieni } = {}) {
+  if (!nodo) return false;
+  const testo = String(markup ?? "");
+  rivendica(nodo);
+  if (nodo.dataset?.dmScritto === testo && nodo.textContent === nodo.dataset.dmTesto) return false;
+  const stampo = nodo.ownerDocument?.createElement?.("template");
+  /* Un pezzo che non ha mai avuto il nostro disegno (il primo giro, o qualcuno
+   * l'ha riscritto) si scrive intero: non c'e' niente da tenere. */
+  if (!stampo?.content || nodo.dataset?.dmScritto === undefined) {
+    nodo.innerHTML = testo;
+  } else {
+    stampo.innerHTML = testo;
+    rattoppaIFigli(nodo, stampo.content, tieni);
+  }
+  if (nodo.dataset) {
+    nodo.dataset.dmScritto = testo;
+    nodo.dataset.dmTesto = nodo.textContent;
+  }
+  return true;
+}
+
+function stessoPezzo(a, b) {
+  if (a.nodeType !== b.nodeType) return false;
+  if (a.nodeType !== 1) return true;
+  if (a.nodeName !== b.nodeName) return false;
+  /* Un campo che cambia tipo (una casella che diventa un cursore) si rifa'. */
+  return a.nodeName !== "INPUT" || a.getAttribute("type") === b.getAttribute("type");
+}
+
+function rattoppaIFigli(vecchio, nuovo, tieni) {
+  let a = vecchio.firstChild;
+  let b = nuovo.firstChild;
+  while (b) {
+    const prossimo = b.nextSibling;
+    if (!a) {
+      vecchio.appendChild(b);
+    } else {
+      const dopo = a.nextSibling;
+      if (stessoPezzo(a, b)) rattoppaIlPezzo(a, b, tieni);
+      else vecchio.replaceChild(b, a);
+      a = dopo;
+    }
+    b = prossimo;
+  }
+  while (a) {
+    const dopo = a.nextSibling;
+    a.remove();
+    a = dopo;
+  }
+}
+
+function rattoppaIlPezzo(a, b, tieni) {
+  if (a.nodeType !== 1) {
+    if (a.nodeValue !== b.nodeValue) a.nodeValue = b.nodeValue;
+    return;
+  }
+  if (tieni?.(a, b)) return;
+  for (const { name } of [...a.attributes]) if (!b.hasAttribute(name)) a.removeAttribute(name);
+  for (const { name, value, namespaceURI } of b.attributes) {
+    if (a.getAttribute(name) === value) continue;
+    if (namespaceURI) a.setAttributeNS(namespaceURI, name, value);
+    else a.setAttribute(name, value);
+  }
+  rattoppaIFigli(a, b, tieni);
+  /* Quello che si vede di un campo e' la proprieta', non l'attributo. */
+  if (a.nodeName === "INPUT") {
+    if (a.value !== b.value) a.value = b.value;
+    if (a.checked !== b.checked) a.checked = b.checked;
+  } else if (a.nodeName === "TEXTAREA") {
+    if (a.value !== b.value) a.value = b.value;
+  } else if (a.nodeName === "SELECT") {
+    if (a.selectedIndex !== b.selectedIndex) a.selectedIndex = b.selectedIndex;
+  }
+}
+
 /* Gli stessi due, per un attributo e per una classe, stanno nel nucleo: li
  * usano anche i moduli comuni che il guscio chiama, e una regola sola non si
  * scrive in due posti. Si riesportano da qui perche' le sezioni pescano tutto

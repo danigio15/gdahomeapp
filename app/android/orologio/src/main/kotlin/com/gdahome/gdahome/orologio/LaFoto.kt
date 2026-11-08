@@ -61,7 +61,7 @@ data class LaFoto(
                     if (id.isEmpty() || nome.isEmpty()) null
                     else Comando(id, nome, r.optString("disegno", "").trim(), r.optBoolean("conferma", false))
                 },
-                dispositivi = righe(json.optJSONArray("dispositivi")).mapNotNull { r ->
+                dispositivi = righe(json.optJSONArray("dispositivi"), fino = 24).mapNotNull { r ->
                     val id = r.optString("id", "").trim()
                     val nome = r.optString("nome", "").trim()
                     if (id.isEmpty() || nome.isEmpty()) null
@@ -104,9 +104,10 @@ data class LaFoto(
             )
         }
 
-        private fun righe(a: JSONArray?): List<JSONObject> {
+        /** Le righe di un elenco, al più [fino]: i dispositivi sono tutti quelli che la plancia manda. */
+        private fun righe(a: JSONArray?, fino: Int = 12): List<JSONObject> {
             if (a == null) return emptyList()
-            return (0 until minOf(a.length(), 12)).mapNotNull { a.optJSONObject(it) }
+            return (0 until minOf(a.length(), fino)).mapNotNull { a.optJSONObject(it) }
         }
     }
 }

@@ -485,19 +485,23 @@ function riveste(indice) {
     return nodo;
   };
 
+  /* La veste «elegante» per tutti, non solo per chi arriva da
+   * un'integrazione: «qual è il senso che solo la lavatrice hai modificato?
+   * Dovevi cambiare tutti». Una lavastoviglie con la presa smart e i sensori
+   * scritti a mano ha le stesse cose da dire — lo stato, l'energia, i numeri,
+   * i comandi — e adesso le dice allo stesso modo. */
   const collegato =
     Boolean(clean(appliance.device_id)) || Boolean(appliance.device_entities?.length);
-  if (collegato) {
-    try {
-      vesteIntegrazione(lista, appliance, mostrateDallaCard(appliance, model), titoletto);
-    } catch (errore) {
-      root.console?.warn?.("[DashboardModern] dettaglio integrazione", errore);
-    }
-    return true;
+  try {
+    if (vesteIntegrazione(lista, appliance, mostrateDallaCard(appliance, model), titoletto))
+      return true;
+  } catch (errore) {
+    root.console?.warn?.("[DashboardModern] dettaglio elettrodomestico", errore);
   }
+  if (collegato) return true;
 
-  /* Chi non ha un'integrazione tiene i blocchi di sempre: la card in cima
-   * racconta lo stato, e qui sotto restano le sue entita' una per una. */
+  /* Se la veste non ha niente da dire (nessuna entita' oltre la card), i
+   * blocchi di sempre, che allora sono vuoti anche loro: resta la card. */
   const { misure, pillole, comandi } = famiglie(appliance);
   if (misure.length) {
     lista.append(titoletto(t("Le misure", "The readings")));
@@ -930,7 +934,6 @@ function tastoDelComando(voce) {
 function vesteIntegrazione(lista, appliance, giaMostrate, titoletto) {
   const deviceId = clean(appliance?.device_id);
   const memoria = Array.isArray(appliance?.device_entities) ? appliance.device_entities : [];
-  if (!deviceId && !memoria.length) return;
   const catalogo = deviceId ? entitaDelDispositivo(deviceId) : null;
   const delDispositivo = catalogo || memoria.map((entity_id) => ({ entity_id: clean(entity_id) }));
   /* Le caselle scritte fuori dal dispositivo — la presa smart, i sensori
@@ -980,7 +983,7 @@ function vesteIntegrazione(lista, appliance, giaMostrate, titoletto) {
     !scelti.size &&
     !scelteDaLeggere.size
   )
-    return;
+    return false;
 
   const statiOra = allStates();
   const token = tokenDi(appliance);
@@ -1057,6 +1060,7 @@ function vesteIntegrazione(lista, appliance, giaMostrate, titoletto) {
     return 3;
   };
   const usate = new Set();
+  const giaDette = new Set();
   const misure = letture
     .map((voce) => {
       const unit = clean(statiOra?.[voce.entity]?.attributes?.unit_of_measurement);
@@ -1074,6 +1078,17 @@ function vesteIntegrazione(lista, appliance, giaMostrate, titoletto) {
       }
       return { ...una, parole };
     });
+  /* Due righe con la stessa parola («Dell'anno» per «Energia dell'anno» e
+   * per «Consumo annuale») sembrano la stessa misura scritta due volte:
+   * allora tutte e due tengono il loro nome. */
+  const quante = new Map();
+  for (const una of misure) quante.set(una.parole.toLowerCase(), (quante.get(una.parole.toLowerCase()) || 0) + 1);
+  for (const una of misure) {
+    if (quante.get(una.parole.toLowerCase()) < 2) continue;
+    const suo = conLaMaiuscola(nomeInParole(una.voce.name, token));
+    if (suo && !giaDette.has(suo.toLowerCase())) una.parole = suo;
+    giaDette.add(una.parole.toLowerCase());
+  }
   const energia = misure
     .filter((una) => una.glifo === "📊")
     .sort((x, y) => periodo(x.parole) - periodo(y.parole));
@@ -1189,6 +1204,7 @@ function vesteIntegrazione(lista, appliance, giaMostrate, titoletto) {
     lista.append(cassetto);
   }
   if (piede.textContent) lista.append(piede);
+  return true;
 }
 
 /* Il catalogo arriva dopo la finestra: se e' ancora aperta, si riveste. */

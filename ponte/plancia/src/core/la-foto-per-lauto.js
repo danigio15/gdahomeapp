@@ -46,9 +46,13 @@ export const MISURE_AL_MASSIMO = 3;
  * davanti. */
 export const AZIONI_AL_MASSIMO = 6;
 
-/* Quanti dispositivi entrano nella griglia. Sei, come le azioni: è quello che
- * Android mostra in una schermata, e il settimo vorrebbe dire scorrere. */
-export const DISPOSITIVI_AL_MASSIMO = 6;
+/* Quanti dispositivi vanno nella fotografia. In auto se ne vedono sei, come
+ * le azioni: è quello che Android Auto e CarPlay mostrano in una schermata, e
+ * li tagliano loro (`LaFotoDellaCasa.kt`, `LaCasaInCarPlay.swift`). La stessa
+ * fotografia va anche al polso, dove la lista scorre: «in Dispositivi ci sono
+ * solo quei pochi, gli altri non ci sono», dall'Apple Watch. Ventiquattro, e
+ * l'ordine resta quello di sempre: in auto i primi sei sono quelli di prima. */
+export const DISPOSITIVI_AL_MASSIMO = 24;
 
 /* I generi che vanno in auto, nell'ordine in cui contano guidando.
  *
@@ -131,8 +135,9 @@ function lePersone(persone, states) {
  * cui chiedere. Alcune azioni quel mondo non lo reggono, e vanno lasciate
  * indietro invece di eseguirle a metà:
  *
- * — quelle che aprono qualcosa nella plancia (un pannello delle luci, una voce
- *   del guscio): senza plancia non c'è niente da aprire;
+ * — quelle che aprono qualcosa nella plancia (una voce del guscio): senza
+ *   plancia non c'è niente da aprire. Il gruppo di luci no: fuori dalla
+ *   plancia le accende o le spegne tutte (vedi sotto);
  * — quelle con una domanda di conferma: la conferma è il segno che chi l'ha
  *   messa voleva essere guardato in faccia prima, e a schermo spento quella
  *   domanda non la vede nessuno;
@@ -147,7 +152,32 @@ function lePersone(persone, states) {
  * macchina lo dice. */
 const DIPENDE_DA_ADESSO = new Set(["lock", "media_player"]);
 const CHIEDE_UNA_VOCE = new Set(["select", "input_select"]);
-const NON_ESCE_DALLA_PLANCIA = new Set(["builtin", "luci_group"]);
+const NON_ESCE_DALLA_PLANCIA = new Set(["builtin"]);
+
+/* Un gruppo di luci invece esce: «c'è il pulsante Luci che non fa niente»,
+ * dall'Apple Watch. Nella plancia apre la finestra delle sue luci, ma fuori
+ * dalla plancia fa quello che fa il comando «Luci» scelto per l'auto
+ * (`app/lib/auto/i_comandi.dart`): le accende o le spegne tutte insieme, con
+ * un servizio solo sulle sue luci. Prima restava indietro, e al polso diceva
+ * «Parte quando apri GdAHome sul telefono». */
+function laRicettaDelGruppo(azione, risolvi) {
+  const luci = [];
+  for (const luce of Array.isArray(azione.lights) ? azione.lights : []) {
+    const scritta = pulito(luce);
+    if (!scritta.includes(".")) continue;
+    let vera = scritta;
+    try {
+      const risolta =
+        typeof risolvi === "function" ? risolvi({ type: "entity", entity: scritta }) : null;
+      if (pulito(risolta?.entita).includes(".")) vera = pulito(risolta.entita);
+    } catch (_errore) {
+      vera = scritta;
+    }
+    if (!luci.includes(vera)) luci.push(vera);
+  }
+  if (!luci.length) return null;
+  return { dominio: "light", servizio: "toggle", entita: luci.join(","), dati: {} };
+}
 
 /**
  * Come si esegue questo tasto senza nessuno che guardi, o `null`.
@@ -162,6 +192,7 @@ export function laRicettaDellAzione(azione, risolvi) {
   const tipo = pulito(azione.type).toLowerCase();
   if (NON_ESCE_DALLA_PLANCIA.has(tipo)) return null;
   if (pulito(azione.confirm)) return null;
+  if (tipo === "luci_group") return laRicettaDelGruppo(azione, risolvi);
   const risolta = typeof risolvi === "function" ? risolvi(azione) : null;
   const entita = pulito(risolta?.entita);
   if (!entita.includes(".")) return null;

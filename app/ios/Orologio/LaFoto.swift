@@ -84,7 +84,7 @@ struct LaFoto {
       guard !id.isEmpty, !nome.isEmpty else { return nil }
       return Comando(id: id, nome: nome, disegno: parola(r["disegno"]), conferma: (r["conferma"] as? Bool) == true)
     }
-    foto.dispositivi = elenco(json["dispositivi"]).compactMap { r in
+    foto.dispositivi = elenco(json["dispositivi"], fino: 24).compactMap { r in
       let id = parola(r["id"])
       let nome = parola(r["nome"])
       guard !id.isEmpty, !nome.isEmpty else { return nil }
@@ -139,8 +139,10 @@ private func numero(_ v: Any?) -> Double? {
   return d.isFinite ? d : nil
 }
 
-private func elenco(_ v: Any?) -> [[String: Any]] {
-  Array((v as? [[String: Any]] ?? []).prefix(12))
+/// Le righe di un elenco, al più [fino]. I dispositivi al polso sono tutti
+/// quelli che la plancia manda (ventiquattro): la lista scorre.
+private func elenco(_ v: Any?, fino: Int = 12) -> [[String: Any]] {
+  Array((v as? [[String: Any]] ?? []).prefix(fino))
 }
 
 // MARK: - I disegni
