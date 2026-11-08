@@ -167,7 +167,8 @@ function laRicettaDelGruppo(azione, risolvi) {
     if (!scritta.includes(".")) continue;
     let vera = scritta;
     try {
-      const risolta = typeof risolvi === "function" ? risolvi({ type: "entity", entity: scritta }) : null;
+      const risolta =
+        typeof risolvi === "function" ? risolvi({ type: "entity", entity: scritta }) : null;
       if (pulito(risolta?.entita).includes(".")) vera = pulito(risolta.entita);
     } catch (_errore) {
       vera = scritta;
