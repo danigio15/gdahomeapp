@@ -1,0 +1,130 @@
+# L'app si apre? Su un emulatore Android vero, il pacchetto in release.
+#
+# «Va in crash, l'app non si apre»: le prove guardano il codice, ma nessuna
+# accende l'app su un telefono. Qui si costruisce l'APK come quello del
+# negozio (release, R8 compreso), lo si installa su un emulatore, lo si apre
+# e si guarda il registro: se cade, il perche' sta in `si-apre-registro`, fra
+# gli artefatti, e in cima alla corsa.
+name: L'app si apre?
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["claude/**"]
+    paths:
+      - ".github/workflows/si-apre.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: si-apre-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    name: Android, sull'emulatore
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      # L'emulatore vuole la virtualizzazione: sulle macchine Linux di GitHub
+      # c'e', ma va aperta all'utente che lancia.
+      - name: KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Spazio su disco per Android
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/share/boost /opt/hostedtoolcache/CodeQL /usr/local/lib/node_modules "$AGENT_TOOLSDIRECTORY"/PyPy 2>/dev/null || true
+          sudo docker image prune -af >/dev/null 2>&1 || true
+          df -h /
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+        working-directory: app
+      - name: Gradle, scaricato prima
+        run: strumenti/gradle-in-anticipo.sh
+      - name: Il pacchetto, come quello del negozio
+        working-directory: app
+        env:
+          GDAHOME_FIRMA_DI_PROVA: si
+        run: flutter build apk --release --dart-define=VERSIONE="prova-${GITHUB_SHA:0:7}"
+      - name: L'emulatore
+        run: |
+          set -euo pipefail
+          sdk="$ANDROID_HOME/cmdline-tools/latest/bin"
+          yes | "$sdk/sdkmanager" --licenses > /dev/null || true
+          "$sdk/sdkmanager" "platform-tools" "emulator" "system-images;android-34;google_apis;x86_64" > /dev/null
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+          export PATH="$ANDROID_HOME/platform-tools:$PATH"
+          export ANDROID_AVD_HOME="$HOME/.android/avd"
+          mkdir -p "$ANDROID_AVD_HOME"
+          echo "ANDROID_AVD_HOME=$ANDROID_AVD_HOME" >> "$GITHUB_ENV"
+          echo no | "$sdk/avdmanager" create avd -n telefono -k "system-images;android-34;google_apis;x86_64" \
+            -d pixel_6 -p "$ANDROID_AVD_HOME/telefono.avd"
+          nohup "$ANDROID_HOME/emulator/emulator" -avd telefono -no-window -no-audio -no-boot-anim \
+            -gpu swiftshader_indirect -no-snapshot -memory 4096 > emulatore.log 2>&1 &
+          if ! timeout 600 bash -c 'adb wait-for-device; until [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d "\r")" = "1" ]; do sleep 5; done'; then
+            echo "::error::L'emulatore non e' partito in dieci minuti."
+            tail -80 emulatore.log || true
+            exit 1
+          fi
+          adb shell settings put global window_animation_scale 0
+          adb shell settings put global transition_animation_scale 0
+          adb shell settings put global animator_duration_scale 0
+      - name: Si apre?
+        run: |
+          set -uo pipefail
+          mkdir -p registro
+          adb install -r app/build/app/outputs/flutter-apk/app-release.apk
+          adb logcat -c
+          adb shell am start -W -n com.gdahome.gdahome/.MainActivity | tee registro/avvio.txt
+          sleep 45
+          adb logcat -d > registro/logcat.txt
+          adb shell dumpsys activity processes | grep -i gdahome > registro/processi.txt || true
+          adb exec-out screencap -p > registro/schermo.png || true
+          # Una seconda apertura, come chi riprova: a volte cade solo li'.
+          adb shell am force-stop com.gdahome.gdahome
+          adb logcat -c
+          adb shell am start -W -n com.gdahome.gdahome/.MainActivity | tee registro/avvio-2.txt
+          sleep 30
+          adb logcat -d > registro/logcat-2.txt
+          adb exec-out screencap -p > registro/schermo-2.png || true
+          crash=$(grep -nE "FATAL EXCEPTION|AndroidRuntime|Fatal signal|has died|ANR in com.gdahome|E/flutter" registro/logcat.txt registro/logcat-2.txt | head -120 || true)
+          {
+            echo "### L'app si apre?"
+            echo ""
+            if [ -n "$crash" ]; then
+              echo "**No.** Dal registro:"
+              echo ""
+              echo '```'
+              echo "$crash"
+              echo '```'
+            else
+              echo "Si': nessun crash nel registro dopo 45 secondi, e alla seconda apertura."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          # Il blocco intorno al crash, per intero.
+          for f in registro/logcat.txt registro/logcat-2.txt; do
+            grep -nE -A60 "FATAL EXCEPTION|Fatal signal" "$f" | head -200 || true
+          done
+          grep -E "E/flutter|F/|FATAL|AndroidRuntime" registro/logcat.txt | head -100 || true
+      - name: Il registro
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: si-apre-registro
+          path: |
+            registro/
+            emulatore.log
+          retention-days: 7
