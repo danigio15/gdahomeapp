@@ -13,6 +13,18 @@ on:
     branches: ["claude/**"]
     paths:
       - ".github/workflows/si-apre.yml"
+      - "app/android/**"
+      - "app/pubspec.yaml"
+      - "app/pubspec.lock"
+  # Ogni PR che tocca la parte Android o le dipendenze: la 1.18.12 e' uscita
+  # verde in tutte le prove e cadeva appena aperta, perche' nessuna prova
+  # l'apriva.
+  pull_request:
+    paths:
+      - ".github/workflows/si-apre.yml"
+      - "app/android/**"
+      - "app/pubspec.yaml"
+      - "app/pubspec.lock"
 
 permissions:
   contents: read
@@ -143,6 +155,11 @@ jobs:
             grep -nE -A60 "FATAL EXCEPTION|Fatal signal" "$f" | head -200 || true
           done
           grep -E "E/flutter|F/|FATAL|AndroidRuntime" registro/logcat.txt | head -100 || true
+          # Un crash dell'app fa diventare rossa la prova.
+          if grep -qE "Process: com\.gdahome|Fatal signal.*com\.gdahome" registro/logcat.txt registro/logcat-2.txt; then
+            echo "::error::L'app cade appena aperta: il registro e' qui sopra e in si-apre-registro."
+            exit 1
+          fi
       - name: Il registro
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
