@@ -278,6 +278,9 @@ export function translateTree(rootNode, locale = getLocale()) {
 
 const RENDER_EVENTS = Object.freeze([
   "dashboardmodern:state-changed",
+  /* Quello che il pannello a muro mostra, che col pannello acceso arriva a
+   * lui prima che agli altri (`state-event-gate.js`). */
+  "dashboardmodern:stati-del-muro",
   "dashboardmodern:status",
   "dashboardmodern:temperature-editor-rendered",
   /*

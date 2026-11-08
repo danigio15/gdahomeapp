@@ -72,7 +72,7 @@ import {
   vistaDelMeteo,
 } from "./meteo-section.js";
 import { oggettoWidget } from "../core/oggetti-widget.js";
-import { IN_VISTA_KEY } from "../core/state-event-gate.js";
+import { EVENTO_DEL_MURO, IN_VISTA_KEY } from "../core/state-event-gate.js";
 import {
   comandoDelLettore,
   compagniDelGruppo,
@@ -176,7 +176,9 @@ import { radioDelMuro, suonaLaRadioSu } from "./radio-section.js";
 import { logoDellaRadioMarkup, mettiILoghiDelleRadio } from "./loghi-delle-radio.js";
 import {
   allStates,
+  attributoSeCambia,
   chiamaServizio,
+  classeSeCambia,
   clean,
   doc,
   esc,
@@ -185,7 +187,7 @@ import {
   locale,
   readJson,
   root,
-  scriviSeCambia,
+  rattoppaSeCambia,
   section,
   wrapFunction,
   writeJsonIfChanged,
@@ -4908,7 +4910,13 @@ function togliLaTela() {
   diciAlloSchermo("muro", false);
   fermaIlBattito();
   doc?.getElementById(ID)?.remove();
-  doc?.documentElement?.classList?.remove("dm-muro-acceso");
+  doc?.documentElement?.classList?.remove("dm-muro-acceso", "dm-muro-chiaro");
+}
+
+/* Il pannello leggero: lo schermo piccolo, o la «Plancia leggera» dell'app,
+ * che mette il suo foglio di stile nella pagina. */
+function eLeggero() {
+  return Boolean(state.compatto || doc?.getElementById?.("gdahome-leggera"));
 }
 
 function misura(nodo, muro) {
@@ -4921,11 +4929,14 @@ function misura(nodo, muro) {
   const dentro = nodo.firstElementChild;
   state.compatto = eCompatto(larghezza, altezza);
   state.verso = v;
-  nodo.dataset.verso = v;
-  nodo.dataset.compatto = state.compatto ? "1" : "";
-  dentro.style.zoom = String(s);
-  dentro.style.width = `${larghezza / s}px`;
-  dentro.style.height = `${altezza / s}px`;
+  attributoSeCambia(nodo, "data-verso", v);
+  attributoSeCambia(nodo, "data-compatto", state.compatto ? "1" : "");
+  const zoom = String(s);
+  const largo = `${larghezza / s}px`;
+  const alto = `${altezza / s}px`;
+  if (dentro.style.zoom !== zoom) dentro.style.zoom = zoom;
+  if (dentro.style.width !== largo) dentro.style.width = largo;
+  if (dentro.style.height !== alto) dentro.style.height = alto;
 }
 
 /* Le linguette delle pagine, col nome scritto fin dove si puo'.
@@ -4938,6 +4949,12 @@ function misura(nodo, muro) {
  * spazio fra il titolo e l'ora, e se il contenuto e' piu' largo di lei non ci
  * sta. */
 const GRADINI_DELLE_LINGUETTE = ["", "mu-molte", "mu-icone"];
+/* L'ultima misura, e di cosa. Misurare vuol dire far ricalcolare al browser
+ * la pagina intera, fino a tre volte: su un pannello da quattro pollici era
+ * un pezzo grosso di ogni ridisegno, e a ogni giro — l'ora che cambia, una
+ * luce — la testa e' la stessa di prima. Se lo e', si rimette quello che si
+ * era misurato, senza chiedere niente al browser. */
+const linguette = { chiave: "", gradino: "", minimo: "" };
 function adattaLeLinguette(nodo) {
   const fila = nodo.querySelector(".mu-testa .mu-pagine");
   if (!fila) return;
@@ -4946,14 +4963,34 @@ function adattaLeLinguette(nodo) {
    * linguette perdano i nomi; il nome della pagina invece resta intero. */
   const titolo = testa.querySelector(".mu-titolo");
   const nome = titolo?.querySelector(".mu-tit");
+  const chiave = [
+    root.innerWidth,
+    root.innerHeight,
+    state.accanto || 0,
+    nodo.dataset.verso,
+    doc.fonts?.status,
+    testa.className,
+    testa.textContent,
+    fila.childElementCount,
+  ].join("|");
+  if (chiave === linguette.chiave) {
+    if (titolo && linguette.minimo) titolo.style.setProperty("--mu-tit-min", linguette.minimo);
+    for (const g of GRADINI_DELLE_LINGUETTE)
+      if (g) classeSeCambia(fila, g, g === linguette.gradino);
+    return;
+  }
+  linguette.minimo = "";
   if (nome) {
     const massimo = Number.parseFloat(getComputedStyle(nome).maxWidth);
     const pieno = Number.isFinite(massimo) ? Math.min(nome.scrollWidth, massimo) : nome.scrollWidth;
-    titolo.style.setProperty("--mu-tit-min", `${Math.ceil(pieno)}px`);
+    linguette.minimo = `${Math.ceil(pieno)}px`;
+    titolo.style.setProperty("--mu-tit-min", linguette.minimo);
   }
+  linguette.chiave = chiave;
   for (const gradino of GRADINI_DELLE_LINGUETTE) {
     fila.classList.remove(...GRADINI_DELLE_LINGUETTE.filter(Boolean));
     if (gradino) fila.classList.add(gradino);
+    linguette.gradino = gradino;
     if (testa.scrollWidth <= testa.clientWidth + 1) return;
   }
 }
@@ -4982,10 +5019,13 @@ export function disegna() {
   const nodo = tela();
   lasciaIlVelo();
   avviaIlBattito();
-  doc.documentElement.classList.add("dm-muro-acceso");
+  classeSeCambia(doc.documentElement, "dm-muro-acceso", true);
   const temaPlancia = doc.documentElement.getAttribute("data-theme") || "dark";
-  nodo.dataset.tema = temaDelMomento(muro, new Date(), temaPlancia);
+  const tema = temaDelMomento(muro, new Date(), temaPlancia);
+  attributoSeCambia(nodo, "data-tema", tema);
+  classeSeCambia(doc.documentElement, "dm-muro-chiaro", tema === "light");
   misura(nodo, muro);
+  attributoSeCambia(nodo, "data-leggero", eLeggero() ? "1" : "");
   /* La luce prima del disegno: puo' togliere il riposo (qualcuno e' arrivato)
    * o metterlo (lo 0% di notte). L'app la ascolta solo col pannello acceso,
    * che quindi si dice prima. */
@@ -5022,7 +5062,7 @@ export function disegna() {
       img,
     ]),
   );
-  if (scriviSeCambia(nodo.firstElementChild, corpo)) {
+  if (rattoppaSeCambia(nodo.firstElementChild, corpo, { tieni: siTiene })) {
     caricaLeTelecamere(nodo, vecchie);
     /* La copertina che c'era resta la stessa immagine: niente lampo. */
     for (const img of nodo.querySelectorAll("img[data-mu-copertina]")) {
@@ -5064,10 +5104,25 @@ function posizionaIlRiposo(nodo) {
   );
 }
 
+/* Nel ridisegno, la telecamera e la copertina che ci sono gia' restano
+ * quelle: col loro fotogramma, senza ricaricarsi. */
+function siTiene(vecchio, nuovo) {
+  if (vecchio.nodeName !== "IMG") return false;
+  const telecamera = vecchio.dataset?.muTelecamera;
+  if (telecamera) return telecamera === nuovo.dataset?.muTelecamera;
+  const copertina = vecchio.dataset?.muCopertina;
+  return (
+    Boolean(copertina) &&
+    copertina === nuovo.dataset?.muCopertina &&
+    vecchio.className === nuovo.className
+  );
+}
+
 function caricaLeTelecamere(nodo, vecchie = new Map()) {
   for (const img of nodo.querySelectorAll("img[data-mu-telecamera]")) {
     const entity = img.dataset.muTelecamera;
     const prima = vecchie.get(entity);
+    if (prima === img) continue;
     if (prima) {
       img.replaceWith(prima);
       continue;
@@ -6401,6 +6456,19 @@ function stili() {
     "dm-muro-style",
     `
 html.dm-muro-acceso,html.dm-muro-acceso body{overflow:hidden!important}
+/* Sotto il pannello la plancia di sempre non si vede, ma il browser la
+ * disegnava lo stesso: le pagine, la testa e il fondale con le sue macchie
+ * sfocate che si muovono per sempre. Su un pannello da quattro pollici era
+ * lavoro rubato al pannello. Finche' e' acceso, li' sotto non si disegna
+ * niente; le finestre della plancia, che il pannello apre, restano. */
+html.dm-muro-acceso body>.animated-mesh-bg{display:none!important}
+html.dm-muro-acceso body>header,html.dm-muro-acceso body>section.page{visibility:hidden!important;content-visibility:hidden!important}
+/* Il fondo della pagina e' quello del pannello: e' anche il colore che l'app
+ * mette dietro la pagina, e quello che si vede in un attimo in cui il quadro
+ * nuovo non e' ancora pronto. Prima era il celeste della plancia chiara, un
+ * lampo su un pannello scuro. */
+html.dm-muro-acceso,html.dm-muro-acceso body{background:#0c1322!important}
+html.dm-muro-acceso.dm-muro-chiaro,html.dm-muro-acceso.dm-muro-chiaro body{background:#f0f4f8!important}
 html.dm-solo-muro #editor-modal .ed-tabs,html.dm-solo-muro #editor-modal #dm-alberatura-famiglie,html.dm-solo-muro #editor-modal .dm-cerca-config,html.dm-solo-muro #editor-modal .dm-alberatura-titolo-famiglia{display:none!important}
 #editor-modal .mu-tutto-il-config{display:none}
 html.dm-solo-muro #editor-modal .mu-tutto-il-config{display:inline-flex;align-items:center;gap:6px;margin-right:8px;padding:8px 14px;border-radius:12px;border:none;background:var(--accent,#3b82f6);color:#fff;font-weight:800;font-size:13px;cursor:pointer}
@@ -7706,6 +7774,23 @@ ${MURO}[data-verso="verticale"] .mu-ptz-video{grid-column:1/-1}
 ${MURO}[data-verso="verticale"] .mu-ptz-comandi{grid-column:1/-1;justify-content:center}
 ${MURO}[data-verso="verticale"] .mu-ptz.senza-preset{grid-template-rows:minmax(0,1.2fr) minmax(0,1fr)}
 ${MURO}[data-verso="verticale"] .mu-reg-coppie{grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr))!important;grid-auto-rows:minmax(0,1fr)}
+/* Il pannello leggero: i quattro pollici (Sonoff, NSPanel) e chi ha acceso
+ * «Plancia leggera» nell'app. Hanno un processore piccolo, e ogni
+ * aggiornamento va ridipinto in tempo: la grana della carta (un rumore
+ * fondato col fondo), le ombre lunghe e sfumate, l'ombra sotto i disegni e il
+ * vetro sfocato costano tanto e su quattro pollici non si vedono. Restano i
+ * colori, i bordi e la luce delle card accese. */
+#${ID}[data-leggero="1"]{background:var(--bg-sculpted)}
+#${ID}[data-leggero="1"] .mu-carta::before{content:none}
+#${ID}[data-leggero="1"] .mu-carta{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 9%,transparent),0 1px 2px rgba(15,23,42,.1)}
+#${ID}[data-leggero="1"] .mu-accesa{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--acc) 50%,transparent),0 1px 2px rgba(15,23,42,.1)}
+#${ID}[data-leggero="1"] .mu-chip{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 8%,transparent)}
+#${ID}[data-leggero="1"] .mu-accesa .mu-chip,#${ID}[data-leggero="1"] .mu-chip.mu-acc{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 38%,transparent)}
+#${ID}[data-leggero="1"] .dm-oggetto{filter:none}
+#${ID}[data-leggero="1"] .mu-mp-fondo{display:none}
+#${ID}[data-leggero="1"] .mu-mp-arte{box-shadow:none}
+#${ID}[data-leggero="1"] .mu-velo{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(5,8,15,.8)}
+#${ID}[data-leggero="1"] *,#${ID}[data-leggero="1"] *::before,#${ID}[data-leggero="1"] *::after{transition:none!important}
 `,
   );
 }
@@ -7797,7 +7882,7 @@ export function installPlanciaAMuro() {
     disegna();
   });
   root[IN_VISTA_KEY] = eInVista;
-  root.addEventListener?.("dashboardmodern:state-changed", (event) => {
+  const quandoCambia = (event) => {
     controllaLOrecchio();
     suonaIlCampanello(event);
     guardaGliAvvisi(event);
@@ -7808,7 +7893,10 @@ export function installPlanciaAMuro() {
     const ids = event?.detail?.entity_ids || [];
     if (ids.length && !ids.some(eInVista)) return;
     disegna();
-  });
+  };
+  root.addEventListener?.("dashboardmodern:state-changed", quandoCambia);
+  /* Col pannello acceso, quello che mostra arriva prima qui, da solo. */
+  root.addEventListener?.(EVENTO_DEL_MURO, quandoCambia);
   root.addEventListener?.("resize", () => disegna());
   /* Quello che dicono i sensori del tablet, dall'app (`lo_schermo.dart`):
    * qualcuno vicino allo schermo, o la stanza che si fa buia. */

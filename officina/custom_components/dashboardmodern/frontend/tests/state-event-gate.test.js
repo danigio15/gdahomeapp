@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { CONFIG_KEYS } from "../src/core/chiavi-di-configurazione.js";
-import { IN_VISTA_KEY, installStateEventGate } from "../src/core/state-event-gate.js";
+import {
+  EVENTO_DEL_MURO,
+  IN_VISTA_KEY,
+  installStateEventGate,
+} from "../src/core/state-event-gate.js";
 
 function harness(delay = 0, sections = null, storageValues = {}) {
   const events = [];
@@ -149,6 +153,34 @@ test("un'entita' in vista sul tablet a muro passa, e non aspetta il mezzo second
   await new Promise((resolve) => setTimeout(resolve, 150));
   assert.equal(events.length, 1, "doveva arrivare ben prima dei 500 ms");
   assert.deepEqual(events[0].detail.entity_ids, ["light.soggiorno"]);
+});
+
+/* «Sono molto lenti e hanno problemi di refresh», di un pannello da quattro
+ * pollici. Col pannello acceso, quello che mostra va a lui solo e subito; la
+ * plancia di sotto, che nessuno vede, si aggiorna ogni due secondi, tutta
+ * insieme, e non a ogni numero che il pannello mostra. */
+test("col pannello a muro acceso, quello che mostra va a lui e la plancia aspetta", async () => {
+  const { broker, events, root } = harness(500, {
+    energy: { house: { total_energy: "sensor.house_total" } },
+  });
+  root.document = { documentElement: { classList: { contains: (c) => c === "dm-muro-acceso" } } };
+  root[IN_VISTA_KEY] = (id) => id === "light.soggiorno";
+  broker.subscription = 42;
+  broker.ingestState({ entity_id: "sensor.house_total", state: "1", attributes: {} });
+  broker.ingestState({ entity_id: "light.soggiorno", state: "off", attributes: {} });
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  assert.deepEqual(
+    events.map((e) => e.type),
+    [EVENTO_DEL_MURO],
+    "al pannello subito, alla plancia ancora niente",
+  );
+  assert.deepEqual(events[0].detail.entity_ids, ["light.soggiorno"]);
+  await new Promise((resolve) => setTimeout(resolve, 700));
+  assert.equal(events.length, 1, "nemmeno al mezzo secondo di sempre");
+  await new Promise((resolve) => setTimeout(resolve, 1400));
+  assert.equal(events.length, 2);
+  assert.equal(events[1].type, "dashboardmodern:state-changed");
+  assert.deepEqual(events[1].detail.entity_ids.sort(), ["light.soggiorno", "sensor.house_total"]);
 });
 
 test("una domanda che cade non ferma gli stati della plancia", async () => {

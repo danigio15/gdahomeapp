@@ -153,6 +153,7 @@ import {
   chiediLeCapacita,
   chiediLeCapacitaDiTutte,
   classeDelFondo,
+  classeSeCambia,
   clean,
   climaAccesoDaiWatt,
   climaScalda,
@@ -441,6 +442,7 @@ import {
   quantoTempoInParole,
   quotaNellaScala,
   ragioneDelRifiuto,
+  rattoppaSeCambia,
   readClimateUnits,
   readJson,
   readStoredLocale,
@@ -570,7 +572,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-WNSCEJ7O.js";
+} from "../../chunk-TMY363CC.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -1173,6 +1175,15 @@ function osservaLaConfigurazione(root7, dimentica, osservate) {
 }
 var IN_VISTA_KEY = "__DM_ENTITA_IN_VISTA__";
 var SUBITO_MS = 40;
+var EVENTO_DEL_MURO = "dashboardmodern:stati-del-muro";
+var CON_IL_MURO_MS = 2e3;
+function muroAcceso(root7) {
+  try {
+    return Boolean(root7.document?.documentElement?.classList?.contains("dm-muro-acceso"));
+  } catch (_errore) {
+    return false;
+  }
+}
 function inVista(root7, id) {
   try {
     const domanda2 = root7[IN_VISTA_KEY];
@@ -1187,9 +1198,11 @@ function installStateEventGate(broker3, root7 = globalThis, { delay = 500, chiav
   const osservate = new Set(chiaviDate(chiavi2));
   const original = broker3.ingestState;
   const pendingIds = /* @__PURE__ */ new Set();
+  const alMuro = /* @__PURE__ */ new Set();
   let lastState = null;
   let timer = 0;
   let timerSubito = false;
+  let timerDelMuro = 0;
   let interests = null;
   const currentInterests = () => {
     if (!interests) interests = entitaConfigurate(root7, [...osservate]);
@@ -1228,16 +1241,33 @@ function installStateEventGate(broker3, root7 = globalThis, { delay = 500, chiav
       })
     );
   };
+  const flushDelMuro = () => {
+    timerDelMuro = 0;
+    if (!alMuro.size) return;
+    const entityIds = [...alMuro];
+    alMuro.clear();
+    root7.dispatchEvent?.(
+      typeof root7.CustomEvent === "function" ? new root7.CustomEvent(EVENTO_DEL_MURO, { detail: { entity_ids: entityIds } }) : { type: EVENTO_DEL_MURO, detail: { entity_ids: entityIds } }
+    );
+  };
   const queue = (state207) => {
     const id = String(state207?.entity_id || "").trim();
     if (!id) return;
     const configured2 = currentInterests();
     const visto = inVista(root7, id);
     if (!visto && configured2.size && !configured2.has(id)) return;
+    const muro = muroAcceso(root7);
+    if (muro && visto) {
+      alMuro.add(id);
+      if (!timerDelMuro) {
+        timerDelMuro = root7.setTimeout?.(flushDelMuro, SUBITO_MS) || 0;
+        if (!timerDelMuro) root7.queueMicrotask?.(flushDelMuro);
+      }
+    }
     pendingIds.add(id);
     lastState = state207 || lastState;
-    const attesa = Math.max(0, Number(delay) || 0);
-    const subito = visto && attesa > SUBITO_MS;
+    const attesa = Math.max(0, Number(delay) || 0, muro ? CON_IL_MURO_MS : 0);
+    const subito = !muro && visto && attesa > SUBITO_MS;
     if (timer && (timerSubito || !subito)) return;
     if (timer) root7.clearTimeout?.(timer);
     timerSubito = subito;
@@ -8915,6 +8945,9 @@ function translateTree(rootNode, locale3 = getLocale()) {
 }
 var RENDER_EVENTS = Object.freeze([
   "dashboardmodern:state-changed",
+  /* Quello che il pannello a muro mostra, che col pannello acceso arriva a
+   * lui prima che agli altri (`state-event-gate.js`). */
+  "dashboardmodern:stati-del-muro",
   "dashboardmodern:status",
   "dashboardmodern:temperature-editor-rendered",
   /*
@@ -71634,13 +71667,13 @@ function corpoMarkup(vista2) {
 }
 function paginaSaluteMarkup(vista2) {
   const quale = vistaScelta(vista2);
-  const linguette4 = vista2.persone.length && vista2.strava ? `<div class="dm-salute-viste" role="tablist">
+  const linguette5 = vista2.persone.length && vista2.strava ? `<div class="dm-salute-viste" role="tablist">
           <button type="button" role="tab" aria-selected="${quale === "corpo"}" data-dm-salute-vista="corpo">❤️ ${esc(t("Il corpo", "Body"))}</button>
           <button type="button" role="tab" aria-selected="${quale === "strava"}" data-dm-salute-vista="strava">🏃 Strava</button>
         </div>` : "";
   const sport = vista2.strava ? sportScelto(vista2.strava, state59.sport) : "";
   const corpo6 = quale === "strava" ? paginaStravaMarkup(vista2.strava, { sport, settimane: state59.settimane[sport]?.righe ?? null }) : `<div class="dm-salute-corpo">${corpoMarkup(vista2)}</div>`;
-  return `<div class="dm-salute">${linguette4}${corpo6}</div>`;
+  return `<div class="dm-salute">${linguette5}${corpo6}</div>`;
 }
 function finestraSaluteMarkup(vista2) {
   if (!vista2) return "";
@@ -104554,23 +104587,23 @@ function ensureAlexaEditor() {
   return true;
 }
 function ensureAlexaEditorTab() {
-  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette4) return false;
+  const linguette5 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette5) return false;
   let fatte = false;
   for (const [id, nome] of [
     [ALEXA_EDITOR_TAB, `🔔 ${t("Notifiche", "Notifications")}`],
     [ALEXA_AVVISI_TAB, `📝 ${t("Avvisi personalizzati", "Custom announcements")}`],
     [ALEXA_MUSICA_TAB, `🎵 ${t("Musica", "Music")}`]
   ]) {
-    if (linguette4.querySelector(`.ed-tab[data-tab="${id}"]`)) continue;
+    if (linguette5.querySelector(`.ed-tab[data-tab="${id}"]`)) continue;
     const linguetta4 = doc.createElement("button");
     linguetta4.className = "ed-tab";
     linguetta4.dataset.tab = id;
     linguetta4.textContent = nome;
     linguetta4.addEventListener("click", () => root.editorSwitch?.(id));
-    const prima = linguette4.querySelector('.ed-tab[data-tab="runtime"]');
+    const prima = linguette5.querySelector('.ed-tab[data-tab="runtime"]');
     if (prima) prima.before(linguetta4);
-    else linguette4.append(linguetta4);
+    else linguette5.append(linguetta4);
     fatte = true;
   }
   if (fatte) riordinaLeLinguette();
@@ -110209,16 +110242,16 @@ function ridisegnaLaScheda() {
   return true;
 }
 function ensureRadioTab() {
-  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette4 || linguette4.querySelector(`.ed-tab[data-tab="${RADIO_TAB}"]`)) return false;
+  const linguette5 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette5 || linguette5.querySelector(`.ed-tab[data-tab="${RADIO_TAB}"]`)) return false;
   const linguetta4 = doc.createElement("button");
   linguetta4.className = "ed-tab";
   linguetta4.dataset.tab = RADIO_TAB;
   linguetta4.textContent = `📻 ${t("Radio", "Radio")}`;
   linguetta4.addEventListener("click", () => root.editorSwitch?.(RADIO_TAB));
-  const dopo = linguette4.querySelector('.ed-tab[data-tab="media"]');
+  const dopo = linguette5.querySelector('.ed-tab[data-tab="media"]');
   if (dopo) dopo.after(linguetta4);
-  else linguette4.append(linguetta4);
+  else linguette5.append(linguetta4);
   riordinaLeLinguette();
   return true;
 }
@@ -110892,13 +110925,13 @@ function testa(pagina3, muro) {
   const chipDelMeteo = inCasa ? `<div class="mu-meteo mu-meteo-casa" data-mu-temperatura="casa"><div class="mu-meteo-su">${m ? disegno("meteo", 44, "testa-meteo") : disegno("temperatura", 40, "testa-temp")}<b>${esc(inCasa)}</b></div><div class="mu-et">${esc([doveDellaTemperatura(sensore2.fuori), parolaDelMeteo].filter(Boolean).join(" · "))}</div></div><span class="mu-sep"></span>` : m && !suMeteo && numero52(m.temperatura) !== null ? `<div class="mu-meteo" data-mu-temperatura="meteo"><div class="mu-meteo-su">${disegno("meteo", 44, "testa-meteo")}<b>${decimale2(m.temperatura, 0)}°</b></div><div class="mu-et">${esc(parolaDelMeteo)}</div></div><span class="mu-sep"></span>` : "";
   const accento = accentoDi(pagina3);
   const lato = menuDiLato(muro, state112.verso, state112.compatto);
-  const linguette4 = !lato && muro.pagine.length > 1 ? `<div class="mu-pagine" role="tablist">${muro.pagine.map(
+  const linguette5 = !lato && muro.pagine.length > 1 ? `<div class="mu-pagine" role="tablist">${muro.pagine.map(
     (p, i) => `<button type="button" role="tab" class="${i === state112.pagina ? "si" : ""}" style="--acc:${accentoDi(p)}" aria-label="${esc(titoloDi2(p))}" data-mu-pagina="${i}" aria-selected="${i === state112.pagina}">${disegno(clean(p.disegno) || DISEGNO_DEL_MODELLO[p.modello], 22, `ling-${p.id}`)}<span>${esc(titoloDi2(p))}</span></button>`
   ).join("")}</div>` : "";
   return `<div class="mu-carta mu-testa${lato ? " mu-testa-lato" : ""}" style="--acc:${accento}">
     ${lato ? "" : tastoDelMenu()}
     <div class="mu-titolo"><div class="mu-tit${titoloLungo(titoloDi2(pagina3))}">${esc(titoloDi2(pagina3))}</div><div class="mu-et mu-sot">${esc(sottoDellaPagina(pagina3))}</div></div>
-    ${linguette4}
+    ${linguette5}
     <div class="mu-ora" data-mu-orologio>${chipDelMeteo}<div><div class="mu-h">${esc(o.ora)}</div><div class="mu-d">${esc(o.giorno)}</div></div></div>
   </div>`;
 }
@@ -111744,7 +111777,7 @@ function paginaStanza(pagina3) {
   const zona = pagina3.modello === "clima" ? zonaDellaPagina(pagina3) : "";
   const comandi = comandiDellaPagina(pagina3, state112.fonte, zona, { aCoppia });
   const elenco18 = MODELLI_ELENCO.includes(pagina3.modello);
-  const linguette4 = pagina3.modello === "clima" ? `<div class="mu-zone" role="tablist">${[
+  const linguette5 = pagina3.modello === "clima" ? `<div class="mu-zone" role="tablist">${[
     ["freddo", "clima", t("Freddo", "Cooling"), "#0ea5e9"],
     ["caldo", "caldo", t("Caldo", "Heating"), "#f97316"],
     ...ciSonoTermostati() ? [["termostato", "temperatura", t("Termostato", "Thermostat"), ACCENTO_DEL_TERMOSTATO]] : []
@@ -111754,9 +111787,9 @@ function paginaStanza(pagina3) {
   const posti = postiDellaPagina(pagina3);
   const quante3 = elenco18 ? Math.max(comandi.length, 1) : comandi.length ? Math.min(comandi.length, posti) : posti;
   if (elenco18 && !comandi.length)
-    return `${linguette4}${griglia2(pagina3, [vuoto3(0, t("Niente da mostrare qui", "Nothing to show here"))])}`;
+    return `${linguette5}${griglia2(pagina3, [vuoto3(0, t("Niente da mostrare qui", "Nothing to show here"))])}`;
   const carte = Array.from({ length: quante3 }, (_, i) => cardDelPosto(comandi[i], i, zona));
-  const riga5 = pagina3.modello === "stanza" ? pillole(pagina3) : linguette4;
+  const riga5 = pagina3.modello === "stanza" ? pillole(pagina3) : linguette5;
   return `${riga5}${griglia2(pagina3, carte, quante3)}`;
 }
 function misureDellaGriglia(pagina3) {
@@ -113625,7 +113658,10 @@ function togliLaTela() {
   diciAlloSchermo("muro", false);
   fermaIlBattito();
   doc?.getElementById(ID2)?.remove();
-  doc?.documentElement?.classList?.remove("dm-muro-acceso");
+  doc?.documentElement?.classList?.remove("dm-muro-acceso", "dm-muro-chiaro");
+}
+function eLeggero() {
+  return Boolean(state112.compatto || doc?.getElementById?.("gdahome-leggera"));
 }
 function misura5(nodo3, muro) {
   const larghezza = Math.max(320, (root.innerWidth || 1280) - (state112.accanto || 0));
@@ -113635,27 +113671,51 @@ function misura5(nodo3, muro) {
   const dentro3 = nodo3.firstElementChild;
   state112.compatto = eCompatto(larghezza, altezza);
   state112.verso = v;
-  nodo3.dataset.verso = v;
-  nodo3.dataset.compatto = state112.compatto ? "1" : "";
-  dentro3.style.zoom = String(s);
-  dentro3.style.width = `${larghezza / s}px`;
-  dentro3.style.height = `${altezza / s}px`;
+  attributoSeCambia(nodo3, "data-verso", v);
+  attributoSeCambia(nodo3, "data-compatto", state112.compatto ? "1" : "");
+  const zoom = String(s);
+  const largo = `${larghezza / s}px`;
+  const alto = `${altezza / s}px`;
+  if (dentro3.style.zoom !== zoom) dentro3.style.zoom = zoom;
+  if (dentro3.style.width !== largo) dentro3.style.width = largo;
+  if (dentro3.style.height !== alto) dentro3.style.height = alto;
 }
 var GRADINI_DELLE_LINGUETTE = ["", "mu-molte", "mu-icone"];
+var linguette3 = { chiave: "", gradino: "", minimo: "" };
 function adattaLeLinguette(nodo3) {
   const fila2 = nodo3.querySelector(".mu-testa .mu-pagine");
   if (!fila2) return;
   const testa2 = fila2.parentElement;
   const titolo3 = testa2.querySelector(".mu-titolo");
   const nome = titolo3?.querySelector(".mu-tit");
+  const chiave2 = [
+    root.innerWidth,
+    root.innerHeight,
+    state112.accanto || 0,
+    nodo3.dataset.verso,
+    doc.fonts?.status,
+    testa2.className,
+    testa2.textContent,
+    fila2.childElementCount
+  ].join("|");
+  if (chiave2 === linguette3.chiave) {
+    if (titolo3 && linguette3.minimo) titolo3.style.setProperty("--mu-tit-min", linguette3.minimo);
+    for (const g of GRADINI_DELLE_LINGUETTE)
+      if (g) classeSeCambia(fila2, g, g === linguette3.gradino);
+    return;
+  }
+  linguette3.minimo = "";
   if (nome) {
     const massimo = Number.parseFloat(getComputedStyle(nome).maxWidth);
     const pieno = Number.isFinite(massimo) ? Math.min(nome.scrollWidth, massimo) : nome.scrollWidth;
-    titolo3.style.setProperty("--mu-tit-min", `${Math.ceil(pieno)}px`);
+    linguette3.minimo = `${Math.ceil(pieno)}px`;
+    titolo3.style.setProperty("--mu-tit-min", linguette3.minimo);
   }
+  linguette3.chiave = chiave2;
   for (const gradino2 of GRADINI_DELLE_LINGUETTE) {
     fila2.classList.remove(...GRADINI_DELLE_LINGUETTE.filter(Boolean));
     if (gradino2) fila2.classList.add(gradino2);
+    linguette3.gradino = gradino2;
     if (testa2.scrollWidth <= testa2.clientWidth + 1) return;
   }
 }
@@ -113676,10 +113736,13 @@ function disegna8() {
   const nodo3 = tela();
   lasciaIlVelo();
   avviaIlBattito();
-  doc.documentElement.classList.add("dm-muro-acceso");
+  classeSeCambia(doc.documentElement, "dm-muro-acceso", true);
   const temaPlancia = doc.documentElement.getAttribute("data-theme") || "dark";
-  nodo3.dataset.tema = temaDelMomento(muro, /* @__PURE__ */ new Date(), temaPlancia);
+  const tema = temaDelMomento(muro, /* @__PURE__ */ new Date(), temaPlancia);
+  attributoSeCambia(nodo3, "data-tema", tema);
+  classeSeCambia(doc.documentElement, "dm-muro-chiaro", tema === "light");
   misura5(nodo3, muro);
+  attributoSeCambia(nodo3, "data-leggero", eLeggero() ? "1" : "");
   diciAlloSchermo("muro", true);
   regolaLaLuce();
   if (state112.pagina >= muro.pagine.length) state112.pagina = 0;
@@ -113708,7 +113771,7 @@ function disegna8() {
       img
     ])
   );
-  if (scriviSeCambia(nodo3.firstElementChild, corpo6)) {
+  if (rattoppaSeCambia(nodo3.firstElementChild, corpo6, { tieni: siTiene })) {
     caricaLeTelecamere(nodo3, vecchie);
     for (const img of nodo3.querySelectorAll("img[data-mu-copertina]")) {
       const prima = copertine.get(`${img.className}|${img.dataset.muCopertina}`);
@@ -113740,10 +113803,18 @@ function posizionaIlRiposo(nodo3) {
     `${Math.round(dy * libero(riquadro2.clientHeight, blocco3.offsetHeight))}px`
   );
 }
+function siTiene(vecchio, nuovo) {
+  if (vecchio.nodeName !== "IMG") return false;
+  const telecamera2 = vecchio.dataset?.muTelecamera;
+  if (telecamera2) return telecamera2 === nuovo.dataset?.muTelecamera;
+  const copertina2 = vecchio.dataset?.muCopertina;
+  return Boolean(copertina2) && copertina2 === nuovo.dataset?.muCopertina && vecchio.className === nuovo.className;
+}
 function caricaLeTelecamere(nodo3, vecchie = /* @__PURE__ */ new Map()) {
   for (const img of nodo3.querySelectorAll("img[data-mu-telecamera]")) {
     const entity2 = img.dataset.muTelecamera;
     const prima = vecchie.get(entity2);
+    if (prima === img) continue;
     if (prima) {
       img.replaceWith(prima);
       continue;
@@ -114787,6 +114858,19 @@ function stili2() {
     "dm-muro-style",
     `
 html.dm-muro-acceso,html.dm-muro-acceso body{overflow:hidden!important}
+/* Sotto il pannello la plancia di sempre non si vede, ma il browser la
+ * disegnava lo stesso: le pagine, la testa e il fondale con le sue macchie
+ * sfocate che si muovono per sempre. Su un pannello da quattro pollici era
+ * lavoro rubato al pannello. Finche' e' acceso, li' sotto non si disegna
+ * niente; le finestre della plancia, che il pannello apre, restano. */
+html.dm-muro-acceso body>.animated-mesh-bg{display:none!important}
+html.dm-muro-acceso body>header,html.dm-muro-acceso body>section.page{visibility:hidden!important;content-visibility:hidden!important}
+/* Il fondo della pagina e' quello del pannello: e' anche il colore che l'app
+ * mette dietro la pagina, e quello che si vede in un attimo in cui il quadro
+ * nuovo non e' ancora pronto. Prima era il celeste della plancia chiara, un
+ * lampo su un pannello scuro. */
+html.dm-muro-acceso,html.dm-muro-acceso body{background:#0c1322!important}
+html.dm-muro-acceso.dm-muro-chiaro,html.dm-muro-acceso.dm-muro-chiaro body{background:#f0f4f8!important}
 html.dm-solo-muro #editor-modal .ed-tabs,html.dm-solo-muro #editor-modal #dm-alberatura-famiglie,html.dm-solo-muro #editor-modal .dm-cerca-config,html.dm-solo-muro #editor-modal .dm-alberatura-titolo-famiglia{display:none!important}
 #editor-modal .mu-tutto-il-config{display:none}
 html.dm-solo-muro #editor-modal .mu-tutto-il-config{display:inline-flex;align-items:center;gap:6px;margin-right:8px;padding:8px 14px;border-radius:12px;border:none;background:var(--accent,#3b82f6);color:#fff;font-weight:800;font-size:13px;cursor:pointer}
@@ -116092,6 +116176,23 @@ ${MURO}[data-verso="verticale"] .mu-ptz-video{grid-column:1/-1}
 ${MURO}[data-verso="verticale"] .mu-ptz-comandi{grid-column:1/-1;justify-content:center}
 ${MURO}[data-verso="verticale"] .mu-ptz.senza-preset{grid-template-rows:minmax(0,1.2fr) minmax(0,1fr)}
 ${MURO}[data-verso="verticale"] .mu-reg-coppie{grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr))!important;grid-auto-rows:minmax(0,1fr)}
+/* Il pannello leggero: i quattro pollici (Sonoff, NSPanel) e chi ha acceso
+ * «Plancia leggera» nell'app. Hanno un processore piccolo, e ogni
+ * aggiornamento va ridipinto in tempo: la grana della carta (un rumore
+ * fondato col fondo), le ombre lunghe e sfumate, l'ombra sotto i disegni e il
+ * vetro sfocato costano tanto e su quattro pollici non si vedono. Restano i
+ * colori, i bordi e la luce delle card accese. */
+#${ID2}[data-leggero="1"]{background:var(--bg-sculpted)}
+#${ID2}[data-leggero="1"] .mu-carta::before{content:none}
+#${ID2}[data-leggero="1"] .mu-carta{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 9%,transparent),0 1px 2px rgba(15,23,42,.1)}
+#${ID2}[data-leggero="1"] .mu-accesa{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--acc) 50%,transparent),0 1px 2px rgba(15,23,42,.1)}
+#${ID2}[data-leggero="1"] .mu-chip{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 8%,transparent)}
+#${ID2}[data-leggero="1"] .mu-accesa .mu-chip,#${ID2}[data-leggero="1"] .mu-chip.mu-acc{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 38%,transparent)}
+#${ID2}[data-leggero="1"] .dm-oggetto{filter:none}
+#${ID2}[data-leggero="1"] .mu-mp-fondo{display:none}
+#${ID2}[data-leggero="1"] .mu-mp-arte{box-shadow:none}
+#${ID2}[data-leggero="1"] .mu-velo{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(5,8,15,.8)}
+#${ID2}[data-leggero="1"] *,#${ID2}[data-leggero="1"] *::before,#${ID2}[data-leggero="1"] *::after{transition:none!important}
 `
   );
 }
@@ -116164,7 +116265,7 @@ function installPlanciaAMuro() {
     disegna8();
   });
   root[IN_VISTA_KEY] = eInVista;
-  root.addEventListener?.("dashboardmodern:state-changed", (event) => {
+  const quandoCambia = (event) => {
     controllaLOrecchio();
     suonaIlCampanello2(event);
     guardaGliAvvisi(event);
@@ -116173,7 +116274,9 @@ function installPlanciaAMuro() {
     const ids = event?.detail?.entity_ids || [];
     if (ids.length && !ids.some(eInVista)) return;
     disegna8();
-  });
+  };
+  root.addEventListener?.("dashboardmodern:state-changed", quandoCambia);
+  root.addEventListener?.(EVENTO_DEL_MURO, quandoCambia);
   root.addEventListener?.("resize", () => disegna8());
   root.addEventListener?.("gdahome:schermo", (event) => {
     const detto3 = event?.detail || {};
@@ -119217,9 +119320,9 @@ function onPointerUp3() {
 }
 var LUCCHETTO = `<span class="au-lucchetto" aria-hidden="true"><svg viewBox="0 0 16 16" width="11" height="11"><rect x="3" y="7" width="10" height="7.5" rx="1.8" fill="#fff"/><path d="M5.2 7V5.2a2.8 2.8 0 0 1 5.6 0V7" stroke="#fff" stroke-width="1.8" fill="none"/></svg></span>`;
 function ensureLaVoce() {
-  const linguette4 = doc?.querySelector?.("#editor-modal .ed-tab")?.parentElement;
-  if (!linguette4) return false;
-  let voce3 = linguette4.querySelector(`.ed-tab[data-tab="${AUTOMAZIONI_TAB}"]`);
+  const linguette5 = doc?.querySelector?.("#editor-modal .ed-tab")?.parentElement;
+  if (!linguette5) return false;
+  let voce3 = linguette5.querySelector(`.ed-tab[data-tab="${AUTOMAZIONI_TAB}"]`);
   if (nellApp()) {
     voce3?.remove();
     return false;
@@ -119238,10 +119341,10 @@ function ensureLaVoce() {
       `config-${AUTOMAZIONI_TAB}`
     )}</span><span data-dm-config-name="true" class="dm-beta4-tab-label">${esc(nome)}</span><span class="au-tab-prem">PREMIUM</span>`;
     voce3.addEventListener("click", () => root.editorSwitch?.(AUTOMAZIONI_TAB));
-    const azioni2 = linguette4.querySelector('.ed-tab[data-tab="sez8"]');
+    const azioni2 = linguette5.querySelector('.ed-tab[data-tab="sez8"]');
     if (azioni2) azioni2.after(voce3);
     else
-      linguette4.querySelector('.ed-tab[data-tab="runtime"]')?.before(voce3) ?? linguette4.append(voce3);
+      linguette5.querySelector('.ed-tab[data-tab="runtime"]')?.before(voce3) ?? linguette5.append(voce3);
     riordinaLeLinguette();
   }
   const chiusa2 = state113.premium === false;
@@ -122064,7 +122167,7 @@ function contenutoMarkup(report) {
     ${notaMarkup3(report)}`;
 }
 function testataMarkup(impianti2, periodo) {
-  const linguette4 = impianti2.map(
+  const linguette5 = impianti2.map(
     (id) => `<button type="button" data-dm-rcl-impianto="${id}" aria-pressed="${id === state115.impianto}"><span aria-hidden="true">${id === "freddo" ? "❄️" : "🔥"}</span>${esc(nomeDellImpianto(id))}</button>`
   ).join("");
   const viste2 = VISTE_DEL_REPORT.map(
@@ -122072,7 +122175,7 @@ function testataMarkup(impianti2, periodo) {
   ).join("");
   return `<div class="dm-rcl-testa">
       <div class="dm-rcl-titoli"><h2 id="dm-rcl-titolo">${esc(t("Report del clima", "Climate report"))}</h2><p>${esc(t("Quanto hanno lavorato l'impianto e le stanze", "How long the system and the rooms ran"))}</p></div>
-      ${impianti2.length > 1 ? `<div class="dm-rcl-impianti" role="group" aria-label="${esc(t("Impianto", "System"))}">${linguette4}</div>` : ""}
+      ${impianti2.length > 1 ? `<div class="dm-rcl-impianti" role="group" aria-label="${esc(t("Impianto", "System"))}">${linguette5}</div>` : ""}
     </div>
     <div class="dm-rcl-periodo">
       <div class="dm-rcl-viste" role="group" aria-label="${esc(t("Periodo", "Period"))}">${viste2}</div>
@@ -131816,16 +131919,16 @@ function salva22() {
   return m;
 }
 function ensureMuroEditorTab() {
-  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette4 || linguette4.querySelector(`.ed-tab[data-tab="${MURO_EDITOR_TAB}"]`)) return false;
+  const linguette5 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette5 || linguette5.querySelector(`.ed-tab[data-tab="${MURO_EDITOR_TAB}"]`)) return false;
   const linguetta4 = doc.createElement("button");
   linguetta4.className = "ed-tab";
   linguetta4.dataset.tab = MURO_EDITOR_TAB;
   linguetta4.textContent = `📟 ${t("A muro", "On the wall")}`;
   linguetta4.addEventListener("click", () => root.editorSwitch?.(MURO_EDITOR_TAB));
-  const prima = linguette4.querySelector('.ed-tab[data-tab="runtime"]');
+  const prima = linguette5.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(linguetta4);
-  else linguette4.append(linguetta4);
+  else linguette5.append(linguetta4);
   riordinaLeLinguette();
   return true;
 }
@@ -139859,17 +139962,17 @@ function onChange12(event) {
   ridisegna15();
 }
 function ensureAnimaliEditorTab() {
-  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette4 || linguette4.querySelector(`.ed-tab[data-tab="${ANIMALI_EDITOR_TAB}"]`))
+  const linguette5 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette5 || linguette5.querySelector(`.ed-tab[data-tab="${ANIMALI_EDITOR_TAB}"]`))
     return false;
   const linguetta4 = doc.createElement("button");
   linguetta4.className = "ed-tab";
   linguetta4.dataset.tab = ANIMALI_EDITOR_TAB;
   linguetta4.textContent = `🐾 ${t("Animali", "Pets")}`;
   linguetta4.addEventListener("click", () => root.editorSwitch?.(ANIMALI_EDITOR_TAB));
-  const prima = linguette4.querySelector('.ed-tab[data-tab="runtime"]');
+  const prima = linguette5.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(linguetta4);
-  else linguette4.append(linguetta4);
+  else linguette5.append(linguetta4);
   return true;
 }
 function installStyles65() {
@@ -140147,16 +140250,16 @@ function onTorna(event) {
   root.edToast?.(t("🔔 Torna nell'avviso", "🔔 Back in the warning"));
 }
 function ensureScollegatiTab() {
-  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette4 || linguette4.querySelector(`.ed-tab[data-tab="${SCOLLEGATI_TAB}"]`)) return false;
+  const linguette5 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette5 || linguette5.querySelector(`.ed-tab[data-tab="${SCOLLEGATI_TAB}"]`)) return false;
   const linguetta4 = doc.createElement("button");
   linguetta4.className = "ed-tab";
   linguetta4.dataset.tab = SCOLLEGATI_TAB;
   linguetta4.textContent = `📡 ${t("Dispositivi non connessi", "Disconnected devices")}`;
   linguetta4.addEventListener("click", () => root.editorSwitch?.(SCOLLEGATI_TAB));
-  const prima = linguette4.querySelector('.ed-tab[data-tab="runtime"]');
+  const prima = linguette5.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(linguetta4);
-  else linguette4.append(linguetta4);
+  else linguette5.append(linguetta4);
   return true;
 }
 function installStyles66() {
@@ -148992,7 +149095,7 @@ function eroe(l, indice) {
     </div>
   </section>`;
 }
-function linguette3(l, aperta2) {
+function linguette4(l, aperta2) {
   const gomme = comeStannoLeGomme(l.dati);
   const attenzione = l.dati.attenzione || gomme.verdetto === "attento";
   const voci4 = [
@@ -149664,7 +149767,7 @@ function renderLaNuovaAuto() {
     caricaIKmDiOggi(l);
     pannello = pannelloViaggi(l);
   } else pannello = pannelloStato(l);
-  const html = `${garage(auto, indice)}${eroe(l, indice)}${linguette3(l, aperta2)}
+  const html = `${garage(auto, indice)}${eroe(l, indice)}${linguette4(l, aperta2)}
     <div class="dm-na-pannello" role="tabpanel" data-na-pannello="${aperta2}">${pannello}</div>`;
   const firma2 = `${locale()}|${html}`;
   if (firma2 !== state164.firma) {
@@ -156818,16 +156921,16 @@ function schedeAperte(body) {
   });
 }
 function ensureUpsEditorTab() {
-  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette4 || linguette4.querySelector(`.ed-tab[data-tab="${UPS_EDITOR_TAB}"]`)) return false;
+  const linguette5 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette5 || linguette5.querySelector(`.ed-tab[data-tab="${UPS_EDITOR_TAB}"]`)) return false;
   const linguetta4 = doc.createElement("button");
   linguetta4.className = "ed-tab";
   linguetta4.dataset.tab = UPS_EDITOR_TAB;
   linguetta4.textContent = `🔌 ${t("UPS", "UPS")}`;
   linguetta4.addEventListener("click", () => root.editorSwitch?.(UPS_EDITOR_TAB));
-  const prima = linguette4.querySelector('.ed-tab[data-tab="runtime"]');
+  const prima = linguette5.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(linguetta4);
-  else linguette4.append(linguetta4);
+  else linguette5.append(linguetta4);
   return true;
 }
 function installStyles77() {
@@ -157303,17 +157406,17 @@ function onClick54(event) {
   }
 }
 function ensureAllerteEditorTab() {
-  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette4 || linguette4.querySelector(`.ed-tab[data-tab="${ALLERTE_EDITOR_TAB}"]`))
+  const linguette5 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette5 || linguette5.querySelector(`.ed-tab[data-tab="${ALLERTE_EDITOR_TAB}"]`))
     return false;
   const linguetta4 = doc.createElement("button");
   linguetta4.className = "ed-tab";
   linguetta4.dataset.tab = ALLERTE_EDITOR_TAB;
   linguetta4.textContent = `⚠️ ${t("Allerte", "Alerts")}`;
   linguetta4.addEventListener("click", () => root.editorSwitch?.(ALLERTE_EDITOR_TAB));
-  const prima = linguette4.querySelector('.ed-tab[data-tab="runtime"]');
+  const prima = linguette5.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(linguetta4);
-  else linguette4.append(linguetta4);
+  else linguette5.append(linguetta4);
   return true;
 }
 function installStyles78() {
@@ -157724,17 +157827,17 @@ function onChange17(event) {
   }
 }
 function ensureRifiutiEditorTab() {
-  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette4 || linguette4.querySelector(`.ed-tab[data-tab="${RIFIUTI_EDITOR_TAB}"]`))
+  const linguette5 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette5 || linguette5.querySelector(`.ed-tab[data-tab="${RIFIUTI_EDITOR_TAB}"]`))
     return false;
   const linguetta4 = doc.createElement("button");
   linguetta4.className = "ed-tab";
   linguetta4.dataset.tab = RIFIUTI_EDITOR_TAB;
   linguetta4.textContent = `♻️ ${t("Rifiuti", "Waste")}`;
   linguetta4.addEventListener("click", () => root.editorSwitch?.(RIFIUTI_EDITOR_TAB));
-  const prima = linguette4.querySelector('.ed-tab[data-tab="runtime"]');
+  const prima = linguette5.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(linguetta4);
-  else linguette4.append(linguetta4);
+  else linguette5.append(linguetta4);
   return true;
 }
 function installStyles79() {
@@ -160415,16 +160518,16 @@ function onClick58(event) {
   }
 }
 function ensureMeteoEditorTab() {
-  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette4 || linguette4.querySelector(`.ed-tab[data-tab="${METEO_EDITOR_TAB}"]`)) return false;
+  const linguette5 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette5 || linguette5.querySelector(`.ed-tab[data-tab="${METEO_EDITOR_TAB}"]`)) return false;
   const linguetta4 = doc.createElement("button");
   linguetta4.className = "ed-tab";
   linguetta4.dataset.tab = METEO_EDITOR_TAB;
   linguetta4.textContent = `🌦️ ${t("Meteo", "Weather")}`;
   linguetta4.addEventListener("click", () => root.editorSwitch?.(METEO_EDITOR_TAB));
-  const prima = linguette4.querySelector('.ed-tab[data-tab="runtime"]');
+  const prima = linguette5.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(linguetta4);
-  else linguette4.append(linguetta4);
+  else linguette5.append(linguetta4);
   return true;
 }
 function installStyles85() {
@@ -161280,16 +161383,16 @@ function onChange19(event) {
   }
 }
 function ensureSaluteEditorTab() {
-  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette4 || linguette4.querySelector(`.ed-tab[data-tab="${SALUTE_EDITOR_TAB}"]`)) return false;
+  const linguette5 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette5 || linguette5.querySelector(`.ed-tab[data-tab="${SALUTE_EDITOR_TAB}"]`)) return false;
   const linguetta4 = doc.createElement("button");
   linguetta4.className = "ed-tab";
   linguetta4.dataset.tab = SALUTE_EDITOR_TAB;
   linguetta4.textContent = `❤️ ${t("Salute", "Health")}`;
   linguetta4.addEventListener("click", () => root.editorSwitch?.(SALUTE_EDITOR_TAB));
-  const prima = linguette4.querySelector('.ed-tab[data-tab="runtime"]');
+  const prima = linguette5.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(linguetta4);
-  else linguette4.append(linguetta4);
+  else linguette5.append(linguetta4);
   return true;
 }
 function installStyles86() {
@@ -161597,16 +161700,16 @@ function onChange20(event) {
   }
 }
 function ensureSportEditorTab() {
-  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette4 || linguette4.querySelector(`.ed-tab[data-tab="${SPORT_EDITOR_TAB}"]`)) return false;
+  const linguette5 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette5 || linguette5.querySelector(`.ed-tab[data-tab="${SPORT_EDITOR_TAB}"]`)) return false;
   const linguetta4 = doc.createElement("button");
   linguetta4.className = "ed-tab";
   linguetta4.dataset.tab = SPORT_EDITOR_TAB;
   linguetta4.textContent = `⚽ ${t("Sport", "Sports")}`;
   linguetta4.addEventListener("click", () => root.editorSwitch?.(SPORT_EDITOR_TAB));
-  const prima = linguette4.querySelector('.ed-tab[data-tab="runtime"]');
+  const prima = linguette5.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(linguetta4);
-  else linguette4.append(linguetta4);
+  else linguette5.append(linguetta4);
   return true;
 }
 function installStyles87() {
@@ -163260,12 +163363,12 @@ function energiaFinestra(occhio2, states) {
       `${segno4("solar", 22)} ${esc(t("Fotovoltaico", "Solar"))}`,
       `<p class="oc-vuoto">${esc(t("Le misure dell'energia si scelgono nel Config.", "Pick the energy sensors in the Config."))}</p>`
     );
-  const linguette4 = periodi.length > 1 ? `<div class="oc-linguette-flusso">${periodi.map(
+  const linguette5 = periodi.length > 1 ? `<div class="oc-linguette-flusso">${periodi.map(
     (p) => `<button type="button" data-oc="periodo" data-oc-periodo="${p}" aria-pressed="${p === state189.periodo}">${esc(nomi2[p])}</button>`
   ).join("")}</div>` : "";
   return finestraMarkup(
     `${segno4("solar", 22)} ${esc(t("Fotovoltaico", "Solar"))}`,
-    `${linguette4}${flussoMarkup2(f)}`,
+    `${linguette5}${flussoMarkup2(f)}`,
     { larga: true }
   );
 }
@@ -164481,9 +164584,9 @@ function soloOcchio() {
 function ensureOcchioEditorTab() {
   const solo = soloOcchio();
   doc?.documentElement?.classList?.toggle?.(SOLO_OCCHIO, solo);
-  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette4) return false;
-  const presente = linguette4.querySelector(`.ed-tab[data-tab="${OCCHIO_TAB}"]`);
+  const linguette5 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette5) return false;
+  const presente = linguette5.querySelector(`.ed-tab[data-tab="${OCCHIO_TAB}"]`);
   if (!serve()) {
     presente?.remove();
     return false;
@@ -164495,7 +164598,7 @@ function ensureOcchioEditorTab() {
   linguetta4.dataset.tab = OCCHIO_TAB;
   linguetta4.textContent = `👁️ ${t("Colpo d'occhio", "At a glance")}`;
   linguetta4.addEventListener("click", () => root.editorSwitch?.(OCCHIO_TAB));
-  linguette4.prepend(linguetta4);
+  linguette5.prepend(linguetta4);
   if (solo && schedaAttiva20() !== OCCHIO_TAB) root.editorSwitch?.(OCCHIO_TAB);
   return true;
 }
@@ -168810,9 +168913,9 @@ var SOLO_CASA3D = "dm-solo-casa3d";
 function ensureCasa3DEditorTab() {
   const solo = serve2();
   doc?.documentElement?.classList?.toggle?.(SOLO_CASA3D, solo);
-  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette4) return false;
-  const presente = linguette4.querySelector(`.ed-tab[data-tab="${CASA3D_TAB}"]`);
+  const linguette5 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette5) return false;
+  const presente = linguette5.querySelector(`.ed-tab[data-tab="${CASA3D_TAB}"]`);
   if (!solo) {
     presente?.remove();
     return false;
@@ -168823,7 +168926,7 @@ function ensureCasa3DEditorTab() {
     linguetta4.dataset.tab = CASA3D_TAB;
     linguetta4.textContent = `🏠 ${t("Casa 3D", "3D Home")}`;
     linguetta4.addEventListener("click", () => root.editorSwitch?.(CASA3D_TAB));
-    linguette4.appendChild(linguetta4);
+    linguette5.appendChild(linguetta4);
   }
   if (schedaAttiva21() !== CASA3D_TAB) root.editorSwitch?.(CASA3D_TAB);
   return !presente;
@@ -175289,17 +175392,17 @@ function onClick67(event) {
   }
 }
 function ensureSezioniMieTab() {
-  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette4 || linguette4.querySelector(`.ed-tab[data-tab="${SEZIONI_MIE_EDITOR_TAB}"]`))
+  const linguette5 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette5 || linguette5.querySelector(`.ed-tab[data-tab="${SEZIONI_MIE_EDITOR_TAB}"]`))
     return false;
   const linguetta4 = doc.createElement("button");
   linguetta4.className = "ed-tab";
   linguetta4.dataset.tab = SEZIONI_MIE_EDITOR_TAB;
   linguetta4.textContent = `⭐ ${t("Le tue sezioni", "Your sections")}`;
   linguetta4.addEventListener("click", () => root.editorSwitch?.(SEZIONI_MIE_EDITOR_TAB));
-  const prima = linguette4.querySelector('.ed-tab[data-tab="runtime"]');
+  const prima = linguette5.querySelector('.ed-tab[data-tab="runtime"]');
   if (prima) prima.before(linguetta4);
-  else linguette4.append(linguetta4);
+  else linguette5.append(linguetta4);
   return true;
 }
 function installStyles93() {
@@ -175843,17 +175946,17 @@ function onClick69(event) {
   }
 }
 function ensureEntitaMieTab() {
-  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette4 || linguette4.querySelector(`.ed-tab[data-tab="${ENTITA_MIE_EDITOR_TAB}"]`))
+  const linguette5 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette5 || linguette5.querySelector(`.ed-tab[data-tab="${ENTITA_MIE_EDITOR_TAB}"]`))
     return false;
   const linguetta4 = doc.createElement("button");
   linguetta4.className = "ed-tab";
   linguetta4.dataset.tab = ENTITA_MIE_EDITOR_TAB;
   linguetta4.textContent = `⭐ ${t("Le tue entità", "Your own entities")}`;
   linguetta4.addEventListener("click", () => root.editorSwitch?.(ENTITA_MIE_EDITOR_TAB));
-  const vicina = linguette4.querySelector('.ed-tab[data-tab="mie"]')?.nextSibling || linguette4.querySelector('.ed-tab[data-tab="runtime"]');
-  if (vicina) linguette4.insertBefore(linguetta4, vicina);
-  else linguette4.append(linguetta4);
+  const vicina = linguette5.querySelector('.ed-tab[data-tab="mie"]')?.nextSibling || linguette5.querySelector('.ed-tab[data-tab="runtime"]');
+  if (vicina) linguette5.insertBefore(linguetta4, vicina);
+  else linguette5.append(linguetta4);
   return true;
 }
 function installStyles95() {
@@ -176336,17 +176439,17 @@ function onChange25(event) {
   aggiornaLEsito(riga5);
 }
 function ensureMediaTab() {
-  const linguette4 = doc?.querySelector(".ed-tab")?.parentElement;
-  if (!linguette4 || linguette4.querySelector(`.ed-tab[data-tab="${MEDIA_EDITOR_TAB}"]`))
+  const linguette5 = doc?.querySelector(".ed-tab")?.parentElement;
+  if (!linguette5 || linguette5.querySelector(`.ed-tab[data-tab="${MEDIA_EDITOR_TAB}"]`))
     return false;
   const linguetta4 = doc.createElement("button");
   linguetta4.className = "ed-tab";
   linguetta4.dataset.tab = MEDIA_EDITOR_TAB;
   linguetta4.textContent = `🔊 ${t("Musica", "Media")}`;
   linguetta4.addEventListener("click", () => root.editorSwitch?.(MEDIA_EDITOR_TAB));
-  const prima = linguette4.querySelector('.ed-tab[data-tab="luci"]')?.nextSibling || linguette4.querySelector('.ed-tab[data-tab="runtime"]');
-  if (prima) linguette4.insertBefore(linguetta4, prima);
-  else linguette4.append(linguetta4);
+  const prima = linguette5.querySelector('.ed-tab[data-tab="luci"]')?.nextSibling || linguette5.querySelector('.ed-tab[data-tab="runtime"]');
+  if (prima) linguette5.insertBefore(linguetta4, prima);
+  else linguette5.append(linguetta4);
   return true;
 }
 function installStyles96() {
