@@ -10,6 +10,45 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.13
+
+_App GdAHome e Home Assistant._
+
+**Nell'app, il navigatore su Android Auto:**
+
+- **Il «3D aumentato» anche in macchina**: con la visuale «3D aumentato»
+  scelta sul telefono, sullo schermo dell'auto c'è la stessa scena: viadotti
+  in quota, alberi, edifici, il percorso all'altezza della strada e l'auto in
+  3D. Se il telefono non ce la fa, l'auto torna da sola alla mappa di sempre.
+- **Il percorso non sparisce più**: ripartendo dopo un arrivo senza toccare
+  «Fine», la linea blu poteva mancare mentre le indicazioni continuavano.
+  Adesso c'è sempre, e se un aggiornamento va perso torna da sola.
+- **Gli svincoli**: la freccia della manovra all'uscita non fa più lo
+  zig-zag; resta sulla corsia giusta e poi segue la rampa.
+- **Batteria e meteo nella scheda dell'arrivo**: batteria, chilometri che
+  restano, batteria all'arrivo e meteo stanno sotto il tempo e l'ora
+  d'arrivo, invece che in una barra sopra la mappa.
+- **Il simbolo scelto**: la freccia si vede anche con il «3D aumentato».
+- **Le impostazioni dall'auto**: la mappa (vista, «3D aumentato», simbolo
+  dell'auto, ZTL sulla mappa), l'audio (cosa si sente, volume e velocità
+  della voce) e ogni avviso uno per uno — autovelox, tutor, ZTL, limite,
+  polizia, incidenti… — a voce, col beep, solo sullo schermo o spento.
+
+**Nell'app, l'orologio:**
+
+- **Tutti i dispositivi al polso**: su Apple Watch e Wear OS se ne vedevano
+  sei; adesso la lista scorre e ci sono tutti.
+- **Il gruppo di luci parte**: un'azione che accende o spegne più luci
+  insieme parte anche dall'orologio e dall'auto, senza aprire l'app.
+- **L'Apple Watch non resta bloccato**: se il telefono non risponde a un
+  tocco, dopo dieci secondi lo dice e i tasti tornano.
+
+**In Home Assistant:**
+
+- **La plancia a muro sui pannelli da 4 pollici**: niente più lampi chiari a
+  ogni aggiornamento e meno lavoro per il pannello. Si ridisegna solo quello
+  che cambia, e sui pannelli piccoli gli effetti più pesanti sono spenti.
+
 ## 1.18.12.2
 
 _Solo l'app Android: Home Assistant e l'iPhone non cambiano._
