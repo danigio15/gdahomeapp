@@ -572,7 +572,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-NFSCKRYU.js";
+} from "../../chunk-T2IMNW62.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -94227,14 +94227,13 @@ function riveste(indice) {
     return nodo3;
   };
   const collegato = Boolean(clean(appliance.device_id)) || Boolean(appliance.device_entities?.length);
-  if (collegato) {
-    try {
-      vesteIntegrazione(lista7, appliance, mostrateDallaCard(appliance, model2), titoletto4);
-    } catch (errore) {
-      root.console?.warn?.("[DashboardModern] dettaglio integrazione", errore);
-    }
-    return true;
+  try {
+    if (vesteIntegrazione(lista7, appliance, mostrateDallaCard(appliance, model2), titoletto4))
+      return true;
+  } catch (errore) {
+    root.console?.warn?.("[DashboardModern] dettaglio elettrodomestico", errore);
   }
+  if (collegato) return true;
   const { misure, pillole: pillole2, comandi } = famiglie(appliance);
   if (misure.length) {
     lista7.append(titoletto4(t("Le misure", "The readings")));
@@ -94587,7 +94586,6 @@ function tastoDelComando(voce3) {
 function vesteIntegrazione(lista7, appliance, giaMostrate, titoletto4) {
   const deviceId = clean(appliance?.device_id);
   const memoria = Array.isArray(appliance?.device_entities) ? appliance.device_entities : [];
-  if (!deviceId && !memoria.length) return;
   const catalogo = deviceId ? entitaDelDispositivo(deviceId) : null;
   const delDispositivo = catalogo || memoria.map((entity_id) => ({ entity_id: clean(entity_id) }));
   const gia = new Set(delDispositivo.map((voce3) => clean(voce3.entity_id)));
@@ -94613,7 +94611,7 @@ function vesteIntegrazione(lista7, appliance, giaMostrate, titoletto4) {
   );
   const diagnostica = viste2(gruppi2.diagnostics).filter((voce3) => !scelti.has(voce3.entity));
   if (!stato3.length && !letture2.length && !comandi.length && !diagnostica.length && !scelti.size && !scelteDaLeggere.size)
-    return;
+    return false;
   const statiOra = allStates();
   const token = tokenDi(appliance);
   const scheda9 = (classe3 = "") => {
@@ -94668,6 +94666,7 @@ function vesteIntegrazione(lista7, appliance, giaMostrate, titoletto4) {
     return 3;
   };
   const usate2 = /* @__PURE__ */ new Set();
+  const giaDette = /* @__PURE__ */ new Set();
   const misure = letture2.map((voce3) => {
     const unit = clean(statiOra?.[voce3.entity]?.attributes?.unit_of_measurement);
     return { voce: voce3, unit, glifo: glifoDellaLettura(voce3.entity, unit) };
@@ -94679,6 +94678,14 @@ function vesteIntegrazione(lista7, appliance, giaMostrate, titoletto4) {
     }
     return { ...una, parole: parole5 };
   });
+  const quante3 = /* @__PURE__ */ new Map();
+  for (const una of misure) quante3.set(una.parole.toLowerCase(), (quante3.get(una.parole.toLowerCase()) || 0) + 1);
+  for (const una of misure) {
+    if (quante3.get(una.parole.toLowerCase()) < 2) continue;
+    const suo2 = conLaMaiuscola2(nomeInParole(una.voce.name, token));
+    if (suo2 && !giaDette.has(suo2.toLowerCase())) una.parole = suo2;
+    giaDette.add(una.parole.toLowerCase());
+  }
   const energia = misure.filter((una) => una.glifo === "📊").sort((x, y) => periodo(x.parole) - periodo(y.parole));
   const numeri = misure.filter((una) => una.glifo !== "📊");
   if (energia.length) {
@@ -94776,6 +94783,7 @@ function vesteIntegrazione(lista7, appliance, giaMostrate, titoletto4) {
     lista7.append(cassetto);
   }
   if (piede.textContent) lista7.append(piede);
+  return true;
 }
 function alCatalogo() {
   if (state73.aperto == null) return;

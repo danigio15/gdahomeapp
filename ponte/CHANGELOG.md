@@ -45,6 +45,11 @@ _App GdAHome e Home Assistant._
 
 **In Home Assistant:**
 
+- **La finestra nuova per tutti gli elettrodomestici**: lo stile della 1.18.12
+  — lo stato in grande, l'energia con le barre, i numeri grandi, i comandi —
+  c'era solo per quelli collegati a un'integrazione, come una lavatrice LG.
+  Adesso ce l'hanno tutti, anche una lavastoviglie con la presa smart e i
+  sensori messi a mano.
 - **La plancia a muro sui pannelli da 4 pollici**: niente più lampi chiari a
   ogni aggiornamento e meno lavoro per il pannello. Si ridisegna solo quello
   che cambia, e sui pannelli piccoli gli effetti più pesanti sono spenti.
