@@ -231,6 +231,19 @@ const MOVIMENTO_IN_CASA_VUOTA_OGNI = 30 * MINUTO;
 const QUALCUNO_C_E_DOPO = 3;
 const QUALCUNO_C_E_IN = 15 * MINUTO;
 const QUALCUNO_DIMENTICATO_DOPO = 4 * ORA;
+/* L'uscita, come quella dell'antifurto. «Ed io sono dentro»: alle 9:36 il
+ * telefono di Raffaele ha detto che era uscito, e nello stesso minuto
+ * presenza, telecamera, corridoio e letto si sono accesi — quattro notifiche
+ * «casa vuota», e la porta dello studio «uscita l'ultima persona alle 9:36».
+ * Chi esce davvero si lascia dietro una casa ferma; chi e' dentro no. La casa
+ * e' vuota davvero quando, dopo l'ultima uscita, e' rimasta ferma dieci
+ * minuti: ogni movimento li fa ripartire, e cosi' un sensore che dice che
+ * qualcuno c'e' adesso — il letto occupato, la presenza della stanza. Un
+ * sensore di passaggio acceso da mezz'ora, o di presenza da dodici ore, e'
+ * incantato e non conta. */
+const USCITA = 10 * MINUTO;
+const PASSAGGIO_ACCESO_AL_PIU = 30 * MINUTO;
+const PRESENZA_ACCESA_AL_PIU = 12 * ORA;
 /* Un'entita' che torna da `unavailable` dopo almeno mezz'ora, da sola: il
  * suo dispositivo dorme e si sveglia, non e' rotto (`dispositiviMuti`). */
 const TORNATO_DOPO = 30 * MINUTO;
@@ -1421,6 +1434,7 @@ export class Sentinella {
     if (fuori) return;
     const ora = this.adesso();
     const m = this._ilMovimento();
+    if (stato.state === "on") m.acceso = ora;
     /* Una casa ferma da quattro ore: chi c'era se n'e' andato, o dorme. */
     if (
       m.qualcuno === "dedotto" &&
@@ -1437,8 +1451,10 @@ export class Sentinella {
 
   /* Se questo movimento, con la casa vuota, e' da dire: non se qualcuno in
    * casa c'e' (dedotto, o detto dal tasto), non nella mezz'ora dopo un altro,
-   * non due volte per lo stesso sensore finche' non e' stato fermo due ore. */
-  _movimentoDaDire(id, ora) {
+   * non due volte per lo stesso sensore finche' non e' stato fermo due ore,
+   * e non prima che l'uscita sia finita (`_uscitaFinita`): `accesoPrima` e'
+   * l'ultimo movimento visto prima di questo. */
+  _movimentoDaDire(id, ora, accesoPrima) {
     const m = this._ilMovimento();
     const prima = m.sensori.get(id);
     const sensore =
@@ -1446,6 +1462,7 @@ export class Sentinella {
     sensore.ultimo = ora;
     m.sensori.set(id, sensore);
     if (this._qualcunoCe(ora)) return false;
+    if (!this._uscitaFinita(ora, { tranne: id, acceso: accesoPrima })) return false;
     if (sensore.detto) return false;
     if (m.detto !== null && ora - m.detto < MOVIMENTO_IN_CASA_VUOTA_OGNI) return false;
     sensore.detto = true;
@@ -1460,6 +1477,33 @@ export class Sentinella {
     if (!m?.qualcuno) return false;
     if (m.qualcuno === "detto") return true;
     return m.ultimo !== null && ora - m.ultimo < QUALCUNO_DIMENTICATO_DOPO;
+  }
+
+  /* Se l'uscita e' finita: la casa e' ferma da `USCITA` dopo l'ultima persona
+   * uscita e dopo l'ultimo movimento visto (`acceso`), e nessun sensore di
+   * casa dice che qualcuno c'e' adesso (`tranne` quello che sta cambiando).
+   * Se non si sa quando e' uscita l'ultima persona, come prima: finita. */
+  _uscitaFinita(ora = this.adesso(), { tranne = null, acceso = this._movimento?.acceso } = {}) {
+    const vuotaDa = this._vuotaDa(this.casaVuota());
+    if (!Number.isFinite(vuotaDa)) return true;
+    const mosso = Number.isFinite(acceso) ? Math.max(vuotaDa, acceso) : vuotaDa;
+    if (ora - mosso < USCITA) return false;
+    let fuori = null;
+    for (const [id, stato] of this.stati) {
+      if (id === tranne || dominioDi(id) !== "binary_sensor" || stato.state !== "on") continue;
+      const classe = stato.attributes?.device_class;
+      if (!MOVIMENTO.has(classe)) continue;
+      const alPiu = classe === "motion" ? PASSAGGIO_ACCESO_AL_PIU : PRESENZA_ACCESA_AL_PIU;
+      if (!(ora - stato.dal < alPiu)) continue;
+      if (fuori === null) {
+        const valori = this._valori();
+        fuori = entitaAllAperto(valori, this._risolutore(valori));
+      }
+      const area = String(this.aree?.get?.(id) || "");
+      if (eAllAperto({ id, stato, area, fuori })) continue;
+      return false;
+    }
+    return true;
   }
 
   /** Il tasto «C'è qualcuno»: fino a quando non torna qualcuno di Home
@@ -1788,6 +1832,7 @@ export class Sentinella {
     /* Il movimento: con la casa vuota, o di notte quando la casa dorme. Se
      * c'e' una telecamera li', con la sua foto per chi ha scelto le notifiche
      * elaborate. Chi lo vuole sempre lo dice nelle sue impostazioni. */
+    const accesoPrima = this._movimento?.acceso ?? null;
     if (
       dominio === "binary_sensor" &&
       MOVIMENTO.has(classe) &&
@@ -1806,7 +1851,7 @@ export class Sentinella {
        * (`_movimentoDaDire`). Quello che non si dice come «casa vuota» resta
        * per chi il movimento lo vuole sempre. */
       const vuotaPerLePersone = this.casaVuota() === true;
-      const vuota = vuotaPerLePersone && this._movimentoDaDire(id, ora);
+      const vuota = vuotaPerLePersone && this._movimentoDaDire(id, ora, accesoPrima);
       /* La casa dorme se dormiva fino a un attimo fa: questo movimento e'
        * quello che la sveglia. Con la casa vuota decide la regola di sopra. */
       const notte = !vuotaPerLePersone && eNotte(new Date(ora)) && this._dormivaPrima(ora);
@@ -2127,7 +2172,7 @@ export class Sentinella {
     /* Le luci, il clima e la musica «con la casa vuota» non si propongono di
      * spegnere a chi in casa c'e' anche se Home Assistant non lo sa: la
      * suocera che si muove, o chi l'ha detto col tasto «C'è qualcuno». */
-    const vuotaDavvero = vuota === true && !this._qualcunoCe(ora);
+    const vuotaDavvero = vuota === true && !this._qualcunoCe(ora) && this._uscitaFinita(ora);
 
     for (const [id, stato] of this.stati) {
       const dominio = dominioDi(id);
@@ -2160,7 +2205,10 @@ export class Sentinella {
         (vuota === true
           ? ["detto", "stanotte"].includes(detto?.perche)
           : detto !== null || this.capire.portaInterna(id, nome, classe));
-      const daDire = aperta && !lascia && da >= APERTA_DA && (vuota === true || (notte && dorme));
+      /* Con la casa vuota, quando lo e' davvero: non a chi e' rimasto dentro
+       * mentre il telefono diceva «uscito» («Ed io sono dentro»). */
+      const daDire =
+        aperta && !lascia && da >= APERTA_DA && (vuota === true ? vuotaDavvero : notte && dorme);
       if (this._unaVolta(`aperture:${id}`, daDire)) {
         const dove = nomePulito(nome);
         const cosa = cosaApre(id, nome, classe);

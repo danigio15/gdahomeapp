@@ -57,6 +57,13 @@ _App GdAHome e Home Assistant._
   resta ferma per ore o non torna qualcuno. Sotto la notifica c'è il tasto
   «C'è qualcuno», che lo zittisce finché non torna qualcuno. E a chi è in casa
   non si propone di spegnere luci, clima e musica.
+- **Il tempo d'uscita, come l'antifurto**: «ed io sono dentro». Il telefono
+  diceva «uscito» e nello stesso minuto si accendevano presenza, corridoio e
+  letto: quattro notifiche «casa vuota» e «porta aperta, uscita l'ultima
+  persona». Adesso la casa è vuota davvero quando resta ferma dieci minuti
+  dopo l'ultima uscita: ogni movimento li fa ripartire, e un letto o una
+  stanza occupati dicono che qualcuno c'è. Chi esce davvero riceve la porta
+  lasciata aperta dieci minuti dopo, e il primo movimento come prima.
 - **Il termometro del giardino non è una stanza**: niente «fa freddo» né
   «accendo il clima» da un sensore fuori casa. Si riconosce dal nome e
   dall'area (Giardino, Terrazzo, Balcone, Esterno…), dalla spunta

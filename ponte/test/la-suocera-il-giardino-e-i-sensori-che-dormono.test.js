@@ -187,8 +187,9 @@ test("torna Raffaele e riesce: e' un'altra assenza, e il primo movimento si dice
     "person.raffaele",
     stato("person.raffaele", "not_home", { friendly_name: "Raffaele" }, 0, alle(10, 20)),
   );
-  casa.orologio.ora = alle(10, 25);
-  casa.sentinella.cambia("binary_sensor.movimento_sala", pir("sala", "on", 0, alle(10, 25)));
+  /* Dieci minuti di casa ferma dopo l'uscita, e il primo movimento si dice. */
+  casa.orologio.ora = alle(10, 35);
+  casa.sentinella.cambia("binary_sensor.movimento_sala", pir("sala", "on", 0, alle(10, 35)));
   const dette = movimenti(casa.dette);
   assert.equal(dette.length, 2);
   assert.equal(dette[1].perche, "casa-vuota");
@@ -287,6 +288,161 @@ test("«C'è qualcuno» sotto la notifica: il movimento con la casa vuota tace f
   } finally {
     banco.spegni();
   }
+});
+
+/* «Ed io sono dentro»: alle 9:36 il telefono di Raffaele dice che e' uscito,
+ * e nello stesso minuto la presenza dello studio, la telecamera, il corridoio
+ * e il letto si accendono. Arrivavano quattro «Movimento · casa vuota» e
+ * «Porta Studio: porta aperta, uscita l'ultima persona alle 9:36». */
+const occupato = (id, nome, state, ora, fa = 0) =>
+  stato(id, state, { device_class: "occupancy", friendly_name: nome }, fa, ora);
+const movimento = (id, nome, state, ora, fa = 0) =>
+  stato(id, state, { device_class: "motion", friendly_name: nome }, fa, ora);
+const portaStudio = (ora) =>
+  stato(
+    "binary_sensor.porta_studio",
+    "on",
+    { device_class: "door", friendly_name: "Porta Studio" },
+    ora - alle(9, 16),
+    ora,
+  );
+
+function raffaeleDentro() {
+  const ora = alle(9, 30);
+  return unaCasa(
+    [
+      stato("person.raffaele", "home", { friendly_name: "Raffaele" }, ORA, ora),
+      stato("person.moglie", "not_home", { friendly_name: "Moglie" }, 2 * ORA, ora),
+      stato("alarm_control_panel.casa", "disarmed", { friendly_name: "Antifurto" }, ORA, ora),
+      occupato("binary_sensor.presenza_occupazione", "Presenza Occupazione", "off", ora, ORA),
+      occupato("binary_sensor.letto_occupato", "Letto Occupato", "off", ora, ORA),
+      movimento("binary_sensor.corridoio_occupazione", "Corridoio Occupazione", "off", ora, ORA),
+      movimento("binary_sensor.telecamera_camera_motion", "Telecamera camera", "off", ora, ORA),
+      portaStudio(ora),
+    ],
+    { ora },
+  );
+}
+
+/* Il telefono dice «uscito», e in casa ci si muove. */
+function esceIlTelefono(casa, quando) {
+  casa.orologio.ora = quando;
+  casa.sentinella.cambia(
+    "person.raffaele",
+    stato("person.raffaele", "not_home", { friendly_name: "Raffaele" }, 0, quando),
+  );
+}
+
+const accendi = (casa, id, quando, fatto, nome) => {
+  casa.orologio.ora = quando;
+  casa.sentinella.cambia(id, fatto(id, nome, "on", quando));
+  casa.sentinella.battito();
+};
+const spegni = (casa, id, quando, fatto, nome) => {
+  casa.orologio.ora = quando;
+  casa.sentinella.cambia(id, fatto(id, nome, "off", quando));
+  casa.sentinella.battito();
+};
+
+test("«Ed io sono dentro»: il telefono dice uscito, la casa si muove, niente «casa vuota»", () => {
+  const casa = raffaeleDentro();
+  esceIlTelefono(casa, alle(9, 36));
+  accendi(
+    casa,
+    "binary_sensor.presenza_occupazione",
+    alle(9, 36),
+    occupato,
+    "Presenza Occupazione",
+  );
+  accendi(
+    casa,
+    "binary_sensor.telecamera_camera_motion",
+    alle(9, 36),
+    movimento,
+    "Telecamera camera",
+  );
+  accendi(
+    casa,
+    "binary_sensor.corridoio_occupazione",
+    alle(9, 36),
+    movimento,
+    "Corridoio Occupazione",
+  );
+  spegni(
+    casa,
+    "binary_sensor.telecamera_camera_motion",
+    alle(9, 37),
+    movimento,
+    "Telecamera camera",
+  );
+  spegni(
+    casa,
+    "binary_sensor.corridoio_occupazione",
+    alle(9, 37),
+    movimento,
+    "Corridoio Occupazione",
+  );
+  spegni(casa, "binary_sensor.presenza_occupazione", alle(9, 37), occupato, "Presenza Occupazione");
+  /* Si mette a letto: il letto resta occupato, e la casa non e' vuota. */
+  accendi(casa, "binary_sensor.letto_occupato", alle(9, 37), occupato, "Letto Occupato");
+  for (let t = alle(9, 38); t <= alle(10, 31); t += MINUTO) {
+    casa.orologio.ora = t;
+    casa.sentinella.battito();
+  }
+  assert.equal(movimenti(casa.dette).length, 0, "nessun «Movimento · casa vuota»");
+  assert.equal(
+    casa.dette.filter((e) => e.tipo === "aperture").length,
+    0,
+    "niente «Porta Studio: porta aperta» a chi e' nello studio",
+  );
+  /* Si alza alle 10:40 e gira per casa: chi si muove dentro tiene la casa
+   * «occupata», un movimento dopo l'altro. */
+  spegni(casa, "binary_sensor.letto_occupato", alle(10, 40), occupato, "Letto Occupato");
+  for (let t = alle(10, 41); t < alle(12); t += 6 * MINUTO) {
+    accendi(casa, "binary_sensor.corridoio_occupazione", t, movimento, "Corridoio Occupazione");
+    spegni(
+      casa,
+      "binary_sensor.corridoio_occupazione",
+      t + MINUTO,
+      movimento,
+      "Corridoio Occupazione",
+    );
+  }
+  assert.equal(movimenti(casa.dette).length, 0);
+});
+
+test("chi esce davvero: la casa si ferma, e il movimento dopo si dice; la porta anche", () => {
+  const casa = raffaeleDentro();
+  esceIlTelefono(casa, alle(9, 36));
+  /* Il corridoio verso la porta: e' lui che esce. */
+  accendi(
+    casa,
+    "binary_sensor.corridoio_occupazione",
+    alle(9, 36),
+    movimento,
+    "Corridoio Occupazione",
+  );
+  spegni(
+    casa,
+    "binary_sensor.corridoio_occupazione",
+    alle(9, 37),
+    movimento,
+    "Corridoio Occupazione",
+  );
+  assert.equal(movimenti(casa.dette).length, 0, "chi esce non e' un movimento con la casa vuota");
+  for (let t = alle(9, 38); t <= alle(9, 50); t += MINUTO) {
+    casa.orologio.ora = t;
+    casa.sentinella.battito();
+  }
+  /* Dieci minuti di casa ferma: la porta lasciata aperta si dice. */
+  const porta = casa.dette.filter((e) => e.tipo === "aperture");
+  assert.equal(porta.length, 1);
+  assert.match(porta[0].parole.it.testo, /uscita l'ultima persona alle 9:36/);
+  /* E alle 11 qualcuno entra: il primo movimento si dice. */
+  accendi(casa, "binary_sensor.telecamera_camera_motion", alle(11), movimento, "Telecamera camera");
+  const dette = movimenti(casa.dette);
+  assert.equal(dette.length, 1);
+  assert.equal(dette[0].perche, "casa-vuota");
 });
 
 /* ─── 2 e 3. Il termometro del giardino ──────────────────────────────────── */

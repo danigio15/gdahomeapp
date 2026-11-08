@@ -136,7 +136,7 @@ test("allagamento, fumo e gas dal primo sensore; il campanello con il cancello d
 });
 
 test("l'ultimo che esce con l'antifurto spento, e il movimento con la casa vuota", () => {
-  const { sentinella, dette } = unaSentinella([
+  const { sentinella, dette, orologio } = unaSentinella([
     stato("person.uno", "home", { friendly_name: "Persona 1", user_id: UTENTE_A }),
     stato("person.due", "not_home", { friendly_name: "Persona 2" }),
     stato("alarm_control_panel.casa", "disarmed"),
@@ -163,6 +163,21 @@ test("l'ultimo che esce con l'antifurto spento, e il movimento con la casa vuota
   assert.equal(uscito.azioni[0].servizio.servizio, "alarm_arm_away");
   assert.equal(sentinella.aCasa(UTENTE_A), false);
 
+  /* Il movimento nel minuto in cui si esce e' chi esce: la casa e' vuota
+   * davvero quando resta ferma dieci minuti (`USCITA`). */
+  orologio.ora += MINUTO;
+  sentinella.cambia(
+    "binary_sensor.pir_sala",
+    stato("binary_sensor.pir_sala", "on", { device_class: "motion" }),
+  );
+  assert.equal(dette.at(-1).tipo, "uscito");
+  orologio.ora += MINUTO;
+  sentinella.cambia(
+    "binary_sensor.pir_sala",
+    stato("binary_sensor.pir_sala", "off", { device_class: "motion" }),
+  );
+
+  orologio.ora += 11 * MINUTO;
   sentinella.cambia(
     "binary_sensor.pir_sala",
     stato("binary_sensor.pir_sala", "on", { device_class: "motion" }),
@@ -1015,8 +1030,10 @@ test("il citofono di Ring: un evento senza classe, col nome o l'evento che dice 
  * modello, e cambia solo il seriale. Il movimento del balcone e' del balcone. */
 const SERIALE_INGRESSO = "i20230101aawrk11111111";
 const SERIALE_BALCONE = "i20230101aawrk22222222";
+/* Uscita da un'ora: la casa e' vuota davvero. */
+const daUnOra = () => new Date(mezzogiorno() - 60 * MINUTO).toISOString();
 const duePortoni = () => [
-  stato("person.uno", "not_home", { friendly_name: "Persona 1", user_id: UTENTE_A }),
+  stato("person.uno", "not_home", { friendly_name: "Persona 1", user_id: UTENTE_A }, daUnOra()),
   stato(`camera.ds_2cd2143g2_${SERIALE_INGRESSO}_101`, "idle", { friendly_name: "Ingresso" }),
   stato(`camera.ds_2cd2143g2_${SERIALE_BALCONE}_101`, "idle", { friendly_name: "Balcone" }),
   stato(`binary_sensor.ds_2cd2143g2_${SERIALE_BALCONE}_motion`, "off", {
@@ -1052,7 +1069,7 @@ test("il movimento di una telecamera porta quella telecamera, non una dello stes
 
 test("col nome soltanto in comune vale il nome, e a pari merito nessuna telecamera", () => {
   const { sentinella, dette, orologio } = unaSentinella([
-    stato("person.uno", "not_home", { friendly_name: "Persona 1", user_id: UTENTE_A }),
+    stato("person.uno", "not_home", { friendly_name: "Persona 1", user_id: UTENTE_A }, daUnOra()),
     stato("camera.cam_a", "idle", { friendly_name: "Giardino" }),
     stato("camera.cam_b", "idle", { friendly_name: "Garage" }),
     stato("binary_sensor.pir_1", "off", { device_class: "motion", friendly_name: "PIR Garage" }),

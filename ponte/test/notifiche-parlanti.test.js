@@ -496,7 +496,13 @@ test("il movimento con la casa vuota propone «Inserisci» col modo su misura; c
     ]),
   });
   sentinella.carica([
-    stato("person.uno", "not_home", { user_id: UTENTE_A }),
+    /* Uscita da un'ora: la casa e' vuota davvero. */
+    stato(
+      "person.uno",
+      "not_home",
+      { user_id: UTENTE_A },
+      new Date(mezzogiorno() - 60 * MINUTO).toISOString(),
+    ),
     stato("select.modo", "Spento"),
     stato("binary_sensor.pir_ingresso", "off", { device_class: "motion" }),
     stato("camera.ingresso", "idle"),
