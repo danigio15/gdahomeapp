@@ -46,6 +46,31 @@ _App GdAHome e Home Assistant._
 - **Notifiche solo per Premium**: l'add-on in Base manda al telefono solo gli
   avvisi di sicurezza, e la notifica di prova prova quelli. Nella console la
   tabella Base e Premium lo dice.
+- **Il movimento con la casa vuota, una volta sola**: «mi arrivavano
+  notifiche di continuo […] a casa c'era mia suocera». Adesso il primo
+  movimento si dice, poi per mezz'ora niente; se in casa ci si muove di
+  continuo vuol dire che qualcuno c'è, e il movimento tace finché la casa non
+  resta ferma per ore o non torna qualcuno. Sotto la notifica c'è il tasto
+  «C'è qualcuno», che lo zittisce finché non torna qualcuno. E a chi è in casa
+  non si propone di spegnere luci, clima e musica.
+- **Il termometro del giardino non è una stanza**: niente «fa freddo» né
+  «accendo il clima» da un sensore fuori casa. Si riconosce dal nome e
+  dall'area (Giardino, Terrazzo, Balcone, Esterno…), dalla spunta
+  «All'aperto» della stanza, dalla stazione meteo della testata e dai servizi
+  meteo. Le notifiche dell'assistente si spengono dalla pagina Notifiche
+  dell'app.
+- **«Non rispondono» solo quando è vero**: un dispositivo conta solo se non
+  risponde da almeno mezz'ora, non durante un riavvio di Home Assistant. I
+  sensori a pile e quelli che si risvegliano da soli si dicono dopo un giorno
+  intero, i dispositivi messi da parte nella pagina «Non connessi» non si
+  contano, e l'avviso delle dieci arriva in una notifica sola e non si ripete
+  ogni mattina con lo stesso elenco. In Home la tessera aspetta un quarto
+  d'ora.
+- **Chi è in casa, come lo vede la plancia**: «mi dà casa vuota anche quando
+  mia moglie è a casa». L'add-on guarda le stesse persone della plancia, con
+  l'entità scelta lì (anche il telefono), le zone che si chiamano «Casa» e il
+  Wi‑Fi di casa. Arrivi e uscite tornano anche per una persona che Home
+  Assistant ha rinominato.
 
 ## 1.18.11.2
 
