@@ -23,9 +23,14 @@ concurrency:
 
 jobs:
   android:
-    name: Android, sull'emulatore
+    name: Android ${{ matrix.api }}, sull'emulatore
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      # Il telefono che cadeva era un Android 17; il 14 per confronto.
+      matrix:
+        api: ["37", "36", "34"]
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
@@ -64,13 +69,26 @@ jobs:
           set -euo pipefail
           sdk="$ANDROID_HOME/cmdline-tools/latest/bin"
           yes | "$sdk/sdkmanager" --licenses > /dev/null || true
-          "$sdk/sdkmanager" "platform-tools" "emulator" "system-images;android-34;google_apis;x86_64" > /dev/null
+          immagine=""
+          for tipo in google_apis google_apis_playstore default; do
+            if "$sdk/sdkmanager" "platform-tools" "emulator" "system-images;android-${{ matrix.api }};$tipo;x86_64" > /dev/null 2>&1; then
+              immagine="system-images;android-${{ matrix.api }};$tipo;x86_64"
+              break
+            fi
+          done
+          if [ -z "$immagine" ]; then
+            echo "::warning::Nessuna immagine di Android ${{ matrix.api }} per l'emulatore."
+            echo "### Android ${{ matrix.api }}: nessuna immagine per l'emulatore" >> "$GITHUB_STEP_SUMMARY"
+            echo "manca=si" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          echo "Immagine: $immagine" | tee -a "$GITHUB_STEP_SUMMARY"
           echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
           export PATH="$ANDROID_HOME/platform-tools:$PATH"
           export ANDROID_AVD_HOME="$HOME/.android/avd"
           mkdir -p "$ANDROID_AVD_HOME"
           echo "ANDROID_AVD_HOME=$ANDROID_AVD_HOME" >> "$GITHUB_ENV"
-          echo no | "$sdk/avdmanager" create avd -n telefono -k "system-images;android-34;google_apis;x86_64" \
+          echo no | "$sdk/avdmanager" create avd -n telefono -k "$immagine" \
             -d pixel_6 -p "$ANDROID_AVD_HOME/telefono.avd"
           nohup "$ANDROID_HOME/emulator/emulator" -avd telefono -no-window -no-audio -no-boot-anim \
             -gpu swiftshader_indirect -no-snapshot -memory 4096 > emulatore.log 2>&1 &
@@ -83,6 +101,7 @@ jobs:
           adb shell settings put global transition_animation_scale 0
           adb shell settings put global animator_duration_scale 0
       - name: Si apre?
+        if: env.manca != 'si'
         run: |
           set -uo pipefail
           mkdir -p registro
@@ -102,7 +121,7 @@ jobs:
           adb exec-out screencap -p > registro/schermo-2.png || true
           crash=$(grep -nE "FATAL EXCEPTION|AndroidRuntime|Fatal signal|has died|ANR in com.gdahome|E/flutter" registro/logcat.txt registro/logcat-2.txt | head -120 || true)
           {
-            echo "### L'app si apre?"
+            echo "### L'app si apre? (Android ${{ matrix.api }})"
             echo ""
             if [ -n "$crash" ]; then
               echo "**No.** Dal registro:"
@@ -123,7 +142,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: si-apre-registro
+          name: si-apre-registro-${{ matrix.api }}
           path: |
             registro/
             emulatore.log
