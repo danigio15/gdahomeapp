@@ -28,9 +28,10 @@ jobs:
     timeout-minutes: 60
     strategy:
       fail-fast: false
-      # Il telefono che cadeva era un Android 17; il 14 per confronto.
+      # Il telefono che cadeva era un Android 17, che sull'emulatore di GitHub
+      # ancora non c'e': il piu' vicino, e il 14 per confronto.
       matrix:
-        api: ["37", "36", "34"]
+        api: ["36", "35", "34"]
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
@@ -106,16 +107,20 @@ jobs:
           set -uo pipefail
           mkdir -p registro
           adb install -r app/build/app/outputs/flutter-apk/app-release.apk
+          # Firmato di prova, il pacchetto si chiama `com.gdahome.gdahome.prova`
+          # (`applicationIdSuffix`): si prende quello installato.
+          pacchetto=$(adb shell pm list packages | tr -d '\r' | sed -n 's/^package://p' | grep '^com\.gdahome\.gdahome' | head -1)
+          echo "Pacchetto: $pacchetto" | tee registro/pacchetto.txt
           adb logcat -c
-          adb shell am start -W -n com.gdahome.gdahome/.MainActivity | tee registro/avvio.txt
+          adb shell am start -W -n "$pacchetto/com.gdahome.gdahome.MainActivity" | tee registro/avvio.txt
           sleep 45
           adb logcat -d > registro/logcat.txt
           adb shell dumpsys activity processes | grep -i gdahome > registro/processi.txt || true
           adb exec-out screencap -p > registro/schermo.png || true
           # Una seconda apertura, come chi riprova: a volte cade solo li'.
-          adb shell am force-stop com.gdahome.gdahome
+          adb shell am force-stop "$pacchetto"
           adb logcat -c
-          adb shell am start -W -n com.gdahome.gdahome/.MainActivity | tee registro/avvio-2.txt
+          adb shell am start -W -n "$pacchetto/com.gdahome.gdahome.MainActivity" | tee registro/avvio-2.txt
           sleep 30
           adb logcat -d > registro/logcat-2.txt
           adb exec-out screencap -p > registro/schermo-2.png || true
