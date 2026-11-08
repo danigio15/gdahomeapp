@@ -3687,7 +3687,6 @@ export default Object.freeze({
   "The description is missing.": "Açıklama eksik.",
   "The device controls": "Cihazın kumandaları",
   "The device readings": "Cihazın okumaları",
-  "The device state": "Cihazın durumu",
   "The doors and the windows": "Kapılar ve pencereler",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "İndirme rölesi bir switch.* varlığı olmalı ve yalnızca panjur alanında da bir switch.* rölesi varsa geçerlidir.",

@@ -3679,7 +3679,6 @@ export default Object.freeze({
   "The description is missing.": "설명이 없습니다.",
   "The device controls": "장치 제어",
   "The device readings": "장치 측정값",
-  "The device state": "장치 상태",
   "The doors and the windows": "문과 창문",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "하강 릴레이는 switch.* 엔터티여야 하며, 셔터 칸도 switch.* 릴레이일 때만 적용됩니다.",

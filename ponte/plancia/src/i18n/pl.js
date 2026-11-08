@@ -3693,7 +3693,6 @@ export default Object.freeze({
   "The description is missing.": "Brakuje opisu.",
   "The device controls": "Sterowanie urządzeniem",
   "The device readings": "Odczyty urządzenia",
-  "The device state": "Stan urządzenia",
   "The doors and the windows": "Drzwi i okna",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "Przekaźnik opuszczania musi być encją switch.* i działa tylko wtedy, gdy w polu rolety również jest przekaźnik switch.*.",

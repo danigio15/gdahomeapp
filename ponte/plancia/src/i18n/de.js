@@ -3709,7 +3709,6 @@ export default Object.freeze({
   "The description is missing.": "Die Beschreibung fehlt.",
   "The device controls": "Die Bedienelemente des Geräts",
   "The device readings": "Die Messwerte des Geräts",
-  "The device state": "Der Zustand des Geräts",
   "The doors and the windows": "Die Türen und die Fenster",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "Das Ab-Relais muss eine switch.*-Entität sein und gilt nur, wenn auch das Rollladenfeld ein switch.*-Relais enthält.",

@@ -3623,7 +3623,6 @@ export default Object.freeze({
   "The description is missing.": "缺少描述。",
   "The device controls": "设备控制",
   "The device readings": "设备读数",
-  "The device state": "设备状态",
   "The doors and the windows": "门和窗",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "下降继电器必须是 switch.* 实体，并且只有当卷帘那一栏填的也是 switch.* 继电器时才生效。",

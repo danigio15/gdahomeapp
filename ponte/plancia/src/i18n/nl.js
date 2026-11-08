@@ -3700,7 +3700,6 @@ export default Object.freeze({
   "The description is missing.": "De beschrijving ontbreekt.",
   "The device controls": "De bediening van het apparaat",
   "The device readings": "De metingen van het apparaat",
-  "The device state": "De toestand van het apparaat",
   "The doors and the windows": "De deuren en de ramen",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "Het neerrelais moet een switch.*-entiteit zijn en geldt alleen als het rolluikveld ook een switch.*-relais bevat.",

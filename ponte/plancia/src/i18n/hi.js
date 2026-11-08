@@ -3674,7 +3674,6 @@ export default Object.freeze({
   "The description is missing.": "विवरण नहीं है।",
   "The device controls": "डिवाइस के नियंत्रण",
   "The device readings": "डिवाइस की रीडिंग",
-  "The device state": "डिवाइस की स्थिति",
   "The doors and the windows": "दरवाज़े और खिड़कियाँ",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "नीचे वाला रिले एक switch.* एंटिटी होनी चाहिए, और यह तभी लागू होता है जब शटर वाला खाना भी switch.* रिले हो।",

@@ -3698,7 +3698,6 @@ export default Object.freeze({
   "The description is missing.": "Не хватает описания.",
   "The device controls": "Управление устройством",
   "The device readings": "Показания устройства",
-  "The device state": "Состояние устройства",
   "The doors and the windows": "Двери и окна",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "Реле опускания должно быть сущностью switch.* и применяется только тогда, когда в поле рольставни тоже указано реле switch.*.",

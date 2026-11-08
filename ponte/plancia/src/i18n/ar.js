@@ -3657,7 +3657,6 @@ export default Object.freeze({
   "The description is missing.": "الوصف ناقص.",
   "The device controls": "أوامر الجهاز",
   "The device readings": "قراءات الجهاز",
-  "The device state": "حالة الجهاز",
   "The doors and the windows": "الأبواب والنوافذ",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "يجب أن يكون مرحّل النزول كيان switch.*، وهو لا ينطبق إلا عندما يكون حقل الستارة نفسه مرحّل switch.*.",

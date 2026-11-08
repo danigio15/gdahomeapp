@@ -3703,7 +3703,6 @@ export default Object.freeze({
   "The description is missing.": "Falta la descripción.",
   "The device controls": "Los mandos del dispositivo",
   "The device readings": "Las lecturas del dispositivo",
-  "The device state": "El estado del dispositivo",
   "The doors and the windows": "Las puertas y las ventanas",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "El relé de bajada debe ser una entidad switch.*, y solo se aplica cuando la casilla de la persiana también es un relé switch.*.",
