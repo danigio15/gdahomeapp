@@ -5947,7 +5947,6 @@ export const MESSAGE_KEYS = Object.freeze([
   "The details are not coming in right now: try again shortly.",
   "The device controls",
   "The device readings",
-  "The device state",
   "The direction says where the wall you see sits in the plan: sizes and furniture places come from it.",
   "The door and window contacts this panel watches: switch on the ones you want among the entry points. They show on the Security page under “Entry points”, with the same name and the same state they have under Openings.",
   "The doorbell is ringing",

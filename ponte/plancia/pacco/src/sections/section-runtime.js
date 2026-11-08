@@ -570,7 +570,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-GECFKBZ5.js";
+} from "../../chunk-5YIH5J3L.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -5502,7 +5502,6 @@ var SOURCE_INDEX = Object.freeze({
   "Lo spengo finché non torna qualcuno?": "Turn it off until someone is back?",
   "Lo sport lo vede chi è entrato.": "Sports are shown to signed-in users.",
   "Lo stato": "The state",
-  "Lo stato del dispositivo": "The device state",
   "Lo stato dell'entità": "The entity state",
   "Lo stato viene da": "The state comes from",
   "Lo sto dicendo…": "Saying it…",
