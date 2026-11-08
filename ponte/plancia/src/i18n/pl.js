@@ -1524,7 +1524,6 @@ export default Object.freeze({
   From: "Od",
   "From outside": "Z zewnątrz",
   "From the house": "Z domu",
-  "From the integration": "Z integracji",
   "From this device": "Z tego urządzenia",
   "From … to": "Od … do",
   "Front left": "Przód lewy",
@@ -3691,8 +3690,6 @@ export default Object.freeze({
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
     "Wartość, którą sterownik sam sobie zadał: obok rzeczywistego zasilania mówi, czy kocioł do niej dochodzi.",
   "The description is missing.": "Brakuje opisu.",
-  "The device controls": "Sterowanie urządzeniem",
-  "The device readings": "Odczyty urządzenia",
   "The doors and the windows": "Drzwi i okna",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "Przekaźnik opuszczania musi być encją switch.* i działa tylko wtedy, gdy w polu rolety również jest przekaźnik switch.*.",

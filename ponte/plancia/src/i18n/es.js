@@ -1526,7 +1526,6 @@ export default Object.freeze({
   From: "Desde",
   "From outside": "Desde fuera",
   "From the house": "Desde la casa",
-  "From the integration": "Desde la integración",
   "From this device": "Desde este dispositivo",
   "From … to": "Desde … hasta",
   "Front left": "Delantero izquierdo",
@@ -3701,8 +3700,6 @@ export default Object.freeze({
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
     "El grado que la centralita se ha fijado: junto a la impulsión real dice si está llegando.",
   "The description is missing.": "Falta la descripción.",
-  "The device controls": "Los mandos del dispositivo",
-  "The device readings": "Las lecturas del dispositivo",
   "The doors and the windows": "Las puertas y las ventanas",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "El relé de bajada debe ser una entidad switch.*, y solo se aplica cuando la casilla de la persiana también es un relé switch.*.",

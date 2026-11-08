@@ -1494,7 +1494,6 @@ export default Object.freeze({
   From: "自",
   "From outside": "来自室外",
   "From the house": "来自屋内",
-  "From the integration": "来自集成",
   "From this device": "从本机",
   "From … to": "自 … 至",
   "Front left": "左前",
@@ -3621,8 +3620,6 @@ export default Object.freeze({
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
     "控制器为自己设定的温度：与实际供水温度并排，就知道有没有达到。",
   "The description is missing.": "缺少描述。",
-  "The device controls": "设备控制",
-  "The device readings": "设备读数",
   "The doors and the windows": "门和窗",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "下降继电器必须是 switch.* 实体，并且只有当卷帘那一栏填的也是 switch.* 继电器时才生效。",

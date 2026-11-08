@@ -1520,7 +1520,6 @@ export default Object.freeze({
   From: "開始",
   "From outside": "外から",
   "From the house": "家から",
-  "From the integration": "統合から",
   "From this device": "この端末から",
   "From … to": "開始 … 終了",
   "Front left": "左前",
@@ -3685,8 +3684,6 @@ export default Object.freeze({
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
     "制御装置が自ら決めた温度です。実際の往き温度と並べると、そこに届いているかがわかります。",
   "The description is missing.": "説明がありません。",
-  "The device controls": "デバイスの操作",
-  "The device readings": "デバイスの計測値",
   "The doors and the windows": "扉と窓",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "下降リレーは switch.* エンティティである必要があり、シャッターの欄も switch.* リレーのときにだけ有効です。",

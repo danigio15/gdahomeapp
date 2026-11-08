@@ -139,33 +139,6 @@ function numeroGrande(valore) {
   return `<b class="dm-apde-numero-grande">${esc(pezzi[1])}${pezzi[2] ? `<small>${esc(pezzi[2])}</small>` : ""}</b>`;
 }
 
-/* Il genere di una lettura, dal suo glifo: da' il colore alla casella. */
-const GENERI_DEI_GLIFI = new Map([
-  ["⚡", "potenza"],
-  ["📊", "energia"],
-  ["⏱️", "tempo"],
-  ["🔁", "cicli"],
-  ["🌡️", "caldo"],
-  ["💧", "acqua"],
-  ["🌀", "giri"],
-  ["💶", "costo"],
-]);
-const genereDelGlifo = (glifo) => GENERI_DEI_GLIFI.get(glifo) || "altro";
-
-/* Il segno di un comando, a sinistra della sua riga. */
-function segnoDelComando(voce, parole) {
-  const kind = voce.control?.kind;
-  const nome = `${parole} ${voce.entity}`.toLowerCase();
-  if (kind === "toggle") return { glifo: "⏻", genere: "accensione" };
-  if (kind === "press") return { glifo: "▶", genere: "azione" };
-  if (kind === "number")
-    return /fine|end|partenza|start|delay|ritard|timer/.test(nome)
-      ? { glifo: "⏰", genere: "tempo" }
-      : { glifo: "🎚️", genere: "numero" };
-  if (/programm|course|program|ciclo/.test(nome)) return { glifo: "🧺", genere: "programma" };
-  return { glifo: "▶", genere: "azione" };
-}
-
 /* Il marchio come lo conosce chi l'ha comprato: le integrazioni scrivono la
  * ragione sociale («LGE», «BSH Hausgeräte GmbH»). */
 const MARCHI = new Map([
@@ -995,165 +968,120 @@ function vesteIntegrazione(lista, appliance, giaMostrate, titoletto) {
   const statiOra = allStates();
   const token = tokenDi(appliance);
 
-  /* La testa: con chi e' collegata, e cos'e'. */
-  const testa = doc.createElement("section");
-  testa.className = "dm-apde-integrazione";
-  testa.dataset.dmApdeSource = catalogo ? "catalogo" : "memoria";
-  const nome = clean(appliance.integration_name) || clean(appliance.integration);
-  /* «LGE Y_V8_Y___W.B32QEUK (DEVICE_WASHER)»: il marchio come lo conosce
-   * chi l'ha comprato, e il modello senza la sigla del protocollo. */
-  const marchio = marchioInParole(appliance.device_manufacturer);
-  const modello = modelloInParole(appliance.device_model);
-  testa.innerHTML = `<span class="dm-apde-integrazione-ic" aria-hidden="true">🔗</span><span class="dm-apde-integrazione-testo"><strong>${esc(
-    nome
-      ? `${pick("Collegata a", "Connected to", activeLocale())} ${nome}`
-      : t("Dall'integrazione", "From the integration"),
-  )}</strong>${
-    marchio || modello
-      ? `<span>${marchio ? `<b>${esc(marchio)}</b>` : ""}${marchio && modello ? " · " : ""}${modello ? `<code>${esc(modello)}</code>` : ""}</span>`
-      : ""
-  }</span><i class="dm-apde-integrazione-punto" aria-hidden="true"></i>`;
-  lista.append(testa);
+  /* Due elenchi e basta, come le impostazioni del telefono.
+   *
+   * «Lo trovo incasinato»: la prima veste aveva una casella colorata per
+   * ogni numero, un riquadro per l'energia, una banda per la fase e una per
+   * l'integrazione — sei forme diverse sotto una card che ne ha gia' tante.
+   * Adesso sotto la card ci sono «Dettagli», una riga per cosa col nome a
+   * sinistra e il valore a destra, e «Comandi», una riga per comando col
+   * comando vero a destra. Chi fornisce i dati sta in fondo, in piccolo. */
+  const elenco = () => {
+    const nodo = doc.createElement("div");
+    nodo.className = "dm-apde-elenco";
+    return nodo;
+  };
+  const rigaDiDettaglio = (entity, parole, valore) => {
+    const riga = doc.createElement("button");
+    riga.type = "button";
+    riga.className = "dm-apde-dettaglio hist-clickable";
+    riga.dataset.dmApdeEntity = entity;
+    riga.innerHTML = `<span>${esc(parole)}</span><b>${esc(valore)}</b>`;
+    riga.addEventListener("click", (event) => apriStorico(event, entity, parole));
+    return riga;
+  };
 
-  /* Lo stato: la fase in grande, come si legge sull'oblo'; il resto in
-   * piccolo sotto. «Stato attuale spinning» in una pillola grigia non lo
-   * guardava nessuno. */
-  if (stato.length) {
-    const conFase = stato.map((voce) => {
-      const grezzo = clean(statiOra?.[voce.entity]?.state);
-      const fase = /^(on|off)$/i.test(grezzo) ? null : faseInParole(grezzo, activeLocale());
-      return { voce, fase: fase && fase.glifo !== "•" ? fase : null };
-    });
-    const principale = conFase.find((una) => una.fase);
-    if (principale) {
-      const banda = doc.createElement("button");
-      banda.type = "button";
-      banda.className = "dm-apde-fase hist-clickable";
-      banda.dataset.dmApdeEntity = principale.voce.entity;
-      const parole = nomeDellaVoce(principale.voce.name, token);
-      banda.innerHTML = `<span class="dm-apde-fase-ic" aria-hidden="true">${esc(principale.fase.glifo)}</span><span class="dm-apde-fase-testo"><small>${esc(parole)}</small><strong>${esc(principale.fase.label)}</strong></span>`;
-      banda.addEventListener("click", (event) =>
-        apriStorico(event, principale.voce.entity, parole),
-      );
-      lista.append(banda);
-    }
-    const altre = conFase.filter((una) => una !== principale).map((una) => una.voce);
-    if (altre.length) {
-      const fila = doc.createElement("div");
-      fila.className = "dm-apde-pillole";
-      for (const voce of altre) {
-        const nodo = doc.createElement("button");
-        nodo.type = "button";
-        nodo.className = "dm-apde-pillola";
-        nodo.dataset.acceso = voce.on ? "true" : "false";
-        nodo.dataset.dmApdeEntity = voce.entity;
-        const parole = nomeDellaVoce(voce.name, token);
-        const valore = statoInParole(statiOra?.[voce.entity]?.state, voce.value);
-        nodo.innerHTML = `<span>${esc(parole)}</span> <b>${esc(valore)}</b>`;
-        nodo.addEventListener("click", (event) => apriStorico(event, voce.entity, parole));
-        fila.append(nodo);
-      }
-      lista.append(fila);
-    }
+  const dettagli = [];
+  /* Lo stato: prima la fase, poi il resto. */
+  const conFase = stato.map((voce) => {
+    const grezzo = clean(statiOra?.[voce.entity]?.state);
+    const fase = /^(on|off)$/i.test(grezzo) ? null : faseInParole(grezzo, activeLocale());
+    return { voce, fase: fase && fase.glifo !== "•" ? fase : null };
+  });
+  conFase.sort((x, y) => Number(Boolean(y.fase)) - Number(Boolean(x.fase)));
+  for (const { voce } of conFase) {
+    dettagli.push(
+      rigaDiDettaglio(
+        voce.entity,
+        nomeDellaVoce(voce.name, token),
+        statoInParole(statiOra?.[voce.entity]?.state, voce.value),
+      ),
+    );
+  }
+  /* Le letture: l'energia dal giorno al totale, poi i tempi, i cicli. */
+  const periodo = (parole) => {
+    const detto = parole.toLowerCase();
+    if (/oggi|today/.test(detto)) return 0;
+    if (/mese|month/.test(detto)) return 1;
+    if (/anno|year/.test(detto)) return 2;
+    return 3;
+  };
+  const usate = new Set();
+  const misure = letture
+    .map((voce) => {
+      const unit = clean(statiOra?.[voce.entity]?.attributes?.unit_of_measurement);
+      return { voce, unit, glifo: glifoDellaLettura(voce.entity, unit) };
+    })
+    .sort((x, y) => postoDelGlifo(x.glifo) - postoDelGlifo(y.glifo))
+    .map((una) => {
+      let parole = nomeDellaLettura(una.voce.entity, una.voce.name, una.unit, token, usate);
+      /* «Energia» da sola, accanto a «Energia oggi», e' il contatore. */
+      if (una.glifo === "📊" && /^(energia|energy)$/i.test(parole))
+        parole = pick("Energia totale", "Total energy", activeLocale());
+      return { ...una, parole };
+    })
+    .sort(
+      (x, y) =>
+        postoDelGlifo(x.glifo) - postoDelGlifo(y.glifo) ||
+        (x.glifo === "📊" ? periodo(x.parole) - periodo(y.parole) : 0),
+    );
+  for (const { voce, parole } of misure)
+    dettagli.push(rigaDiDettaglio(voce.entity, parole, numeroInParole(voce.value)));
+  if (dettagli.length) {
+    lista.append(titoletto(pick("Dettagli", "Details", activeLocale())));
+    const fila = elenco();
+    fila.append(...dettagli);
+    lista.append(fila);
   }
 
-  /* Le letture: l'energia tutta in un riquadro — oggi, il mese, il totale
-   * uno accanto all'altro, che e' come si confrontano — e le altre in
-   * caselle col colore del loro genere: il tempo, i cicli, l'acqua. */
-  if (letture.length) {
-    lista.append(titoletto(t("Le letture del dispositivo", "The device readings")));
-    const usate = new Set();
-    const caselle = letture
-      .map((voce) => {
-        const unit = clean(statiOra?.[voce.entity]?.attributes?.unit_of_measurement);
-        return { voce, unit, glifo: glifoDellaLettura(voce.entity, unit) };
-      })
-      .sort((a, b) => postoDelGlifo(a.glifo) - postoDelGlifo(b.glifo))
-      .map((una) => ({
-        ...una,
-        parole: nomeDellaLettura(una.voce.entity, una.voce.name, una.unit, token, usate),
-      }));
-    /* Nell'ordine in cui si confrontano: oggi, il mese, l'anno, il totale. */
-    const periodo = (parole) => {
-      const detto = parole.toLowerCase();
-      if (/oggi|today/.test(detto)) return 0;
-      if (/mese|month/.test(detto)) return 1;
-      if (/anno|year/.test(detto)) return 2;
-      return 3;
-    };
-    const energia = caselle
-      .filter((una) => una.glifo === "📊")
-      .sort((a, b) => periodo(a.parole) - periodo(b.parole));
-    const resto = energia.length >= 2 ? caselle.filter((una) => una.glifo !== "📊") : caselle;
-    if (energia.length >= 2) {
-      const riquadro = doc.createElement("div");
-      riquadro.className = "dm-apde-energia";
-      riquadro.innerHTML = `<div class="dm-apde-energia-testa"><span aria-hidden="true">⚡</span>${esc(
-        t("Energia", "Energy"),
-      )}</div>`;
-      const colonne = doc.createElement("div");
-      colonne.className = "dm-apde-energia-colonne";
-      for (const { voce, parole } of energia) {
-        const colonna = doc.createElement("button");
-        colonna.type = "button";
-        colonna.className = "dm-apde-energia-colonna hist-clickable";
-        colonna.dataset.dmApdeEntity = voce.entity;
-        const breve =
-          conLaMaiuscola(parole.replace(/^(energia|energy)\s*/i, "")) || t("Totale", "Total");
-        colonna.innerHTML = `<span>${esc(breve)}</span>${numeroGrande(voce.value)}`;
-        colonna.addEventListener("click", (event) => apriStorico(event, voce.entity, parole));
-        colonne.append(colonna);
-      }
-      riquadro.append(colonne);
-      lista.append(riquadro);
-    }
-    if (resto.length) {
-      const griglia = doc.createElement("div");
-      griglia.className = "dm-apde-caselle";
-      for (const { voce, glifo, parole } of resto) {
-        const casella = doc.createElement("button");
-        casella.type = "button";
-        casella.className = "dm-apde-casella hist-clickable";
-        casella.dataset.dmApdeEntity = voce.entity;
-        casella.dataset.genere = genereDelGlifo(glifo);
-        casella.innerHTML = casellaDiLettura(glifo, voce.value, parole);
-        casella.addEventListener("click", (event) => apriStorico(event, voce.entity, parole));
-        griglia.append(casella);
-      }
-      lista.append(griglia);
-    }
-  }
-
-  /* I comandi: un elenco solo, come le impostazioni del telefono — una riga
-   * per comando, il suo segno a sinistra e il comando vero a destra. */
   const rigaDiComando = (voce) => {
     const riga = doc.createElement("div");
     riga.className = "dm-apde-comando";
     riga.dataset.dmApdeEntity = voce.entity;
-    const parole = nomeDellaVoce(voce.name, token);
-    const segno = segnoDelComando(voce, parole);
-    riga.dataset.genere = segno.genere;
-    const icona = doc.createElement("span");
-    icona.className = "dm-apde-comando-ic";
-    icona.setAttribute("aria-hidden", "true");
-    icona.textContent = segno.glifo;
     const etichetta = doc.createElement("span");
     etichetta.className = "dm-apde-comando-nome";
-    etichetta.textContent = parole;
-    riga.append(icona, etichetta);
+    etichetta.textContent = nomeDellaVoce(voce.name, token);
+    riga.append(etichetta);
     const tasto = tastoDelComando(voce);
     if (tasto) riga.append(tasto);
-    if (voce.control?.kind === "select" && tasto?.classList?.contains("dm-apde-scelte"))
-      riga.dataset.largo = "true";
+    if (tasto?.classList?.contains("dm-apde-scelte")) riga.dataset.largo = "true";
     return riga;
   };
   if (comandi.length) {
-    lista.append(titoletto(t("I comandi del dispositivo", "The device controls")));
-    const gruppo = doc.createElement("div");
-    gruppo.className = "dm-apde-gruppo";
-    for (const voce of comandi) gruppo.append(rigaDiComando(voce));
-    lista.append(gruppo);
+    lista.append(titoletto(pick("Comandi", "Controls", activeLocale())));
+    const fila = elenco();
+    for (const voce of comandi) fila.append(rigaDiComando(voce));
+    lista.append(fila);
   }
+
+  /* Chi fornisce i dati: in fondo, una riga piccola. «LGE Y_V8_Y___W.B32QEUK
+   * (DEVICE_WASHER)» diventa il marchio e il modello senza la sigla. */
+  const nome = clean(appliance.integration_name) || clean(appliance.integration);
+  const chi = [
+    marchioInParole(appliance.device_manufacturer),
+    modelloInParole(appliance.device_model),
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const piede = doc.createElement("p");
+  piede.className = "dm-apde-integrazione";
+  piede.dataset.dmApdeSource = catalogo ? "catalogo" : "memoria";
+  piede.textContent = [
+    nome ? `${pick("Dati da", "Data from", activeLocale())} ${nome}` : "",
+    chi,
+  ]
+    .filter(Boolean)
+    .join(" · ");
   aggiungiAltreLetture(lista, appliance, titoletto);
   /* Quelli scelti a mano stanno subito sotto (#338), prima della diagnostica:
    * sono i tasti per cui la finestra si apre, non un dettaglio. */
@@ -1182,6 +1110,7 @@ function vesteIntegrazione(lista, appliance, giaMostrate, titoletto) {
     }
     lista.append(cassetto);
   }
+  if (piede.textContent) lista.append(piede);
 }
 
 /* Il catalogo arriva dopo la finestra: se e' ancora aperta, si riveste. */
@@ -1262,14 +1191,6 @@ function css() {
       background:linear-gradient(155deg,color-mix(in srgb,var(--g) 13%,var(--card-bg,#fff)),var(--card-bg,#fff) 72%);
       color:inherit;font:inherit;transition:transform .15s}
     #details-list .dm-apde-casella:active{transform:scale(.98)}
-    #details-list .dm-apde-casella[data-genere="potenza"]{--g:#f97316}
-    #details-list .dm-apde-casella[data-genere="energia"]{--g:#f59e0b}
-    #details-list .dm-apde-casella[data-genere="tempo"]{--g:#8b5cf6}
-    #details-list .dm-apde-casella[data-genere="cicli"]{--g:#14b8a6}
-    #details-list .dm-apde-casella[data-genere="caldo"]{--g:#ef4444}
-    #details-list .dm-apde-casella[data-genere="acqua"]{--g:#0ea5e9}
-    #details-list .dm-apde-casella[data-genere="giri"]{--g:#6366f1}
-    #details-list .dm-apde-casella[data-genere="costo"]{--g:#10b981}
     #details-list .dm-apde-casella-ic{
       display:grid;place-items:center;width:32px;height:32px;border-radius:11px;
       font-size:16px;line-height:1;background:color-mix(in srgb,var(--g,#64748b) 18%,transparent)}
@@ -1283,38 +1204,6 @@ function css() {
       white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     #details-list .dm-apde-numero-grande small{
       margin-left:4px;font-family:inherit;font-size:13px;font-weight:600;color:var(--text-dim,#64748b)}
-    /* L'energia: un riquadro solo, le colonne una accanto all'altra. */
-    #details-list .dm-apde-energia{
-      margin:0 0 10px;padding:14px 14px 6px;border-radius:20px;
-      border:1px solid color-mix(in srgb,#f59e0b 26%,var(--card-border,#e2e8f0));
-      background:linear-gradient(150deg,color-mix(in srgb,#f59e0b 16%,var(--card-bg,#fff)),var(--card-bg,#fff) 75%)}
-    #details-list .dm-apde-energia-testa{
-      display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:color-mix(in srgb,#f59e0b 70%,#422006)}
-    #details-list .dm-apde-energia-testa span{
-      display:grid;place-items:center;width:28px;height:28px;border-radius:10px;
-      background:color-mix(in srgb,#f59e0b 22%,transparent);font-size:14px}
-    #details-list .dm-apde-energia-colonne{
-      display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:0}
-    #details-list .dm-apde-energia-colonna{
-      display:grid;gap:6px;padding:12px 4px 10px;text-align:left;cursor:pointer;
-      border:0;border-top:1px solid color-mix(in srgb,#f59e0b 18%,transparent);
-      background:none;color:inherit;font:inherit}
-    #details-list .dm-apde-energia-colonna>span{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
-    #details-list .dm-apde-energia-colonna .dm-apde-numero-grande{font-size:24px}
-    /* La fase: in grande, col suo glifo, come sull'oblo'. */
-    #details-list .dm-apde-fase{
-      display:flex;align-items:center;gap:13px;width:100%;margin:12px 0 8px;padding:14px 16px;
-      border-radius:20px;cursor:pointer;text-align:left;font:inherit;color:inherit;
-      border:1px solid color-mix(in srgb,#0ea5e9 28%,var(--card-border,#e2e8f0));
-      background:linear-gradient(120deg,color-mix(in srgb,#0ea5e9 16%,var(--card-bg,#fff)),
-        color-mix(in srgb,#6366f1 8%,var(--card-bg,#fff)))}
-    #details-list .dm-apde-fase-ic{
-      display:grid;place-items:center;width:46px;height:46px;border-radius:15px;flex:0 0 auto;
-      font-size:24px;background:var(--card-bg,#fff);box-shadow:0 4px 14px color-mix(in srgb,#0ea5e9 22%,transparent)}
-    #details-list .dm-apde-fase-testo{display:grid;gap:2px;min-width:0}
-    #details-list .dm-apde-fase-testo small{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
-    #details-list .dm-apde-fase-testo strong{
-      font-family:'Oswald',system-ui,sans-serif;font-weight:500;font-size:26px;line-height:1.05;color:var(--text,#0f172a)}
     #details-list .dm-apde-pillole{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 4px}
     #details-list .dm-apde-pillola{
       display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:999px;
@@ -1334,22 +1223,8 @@ function css() {
       display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;
       margin:0 0 8px;padding:10px 12px;border-radius:14px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff)}
-    /* I comandi del dispositivo: un elenco solo, le righe divise da un filo. */
-    #details-list .dm-apde-gruppo{
-      border-radius:20px;overflow:hidden;
-      border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff)}
-    #details-list .dm-apde-gruppo>.dm-apde-comando{
-      --g:#0ea5e9;margin:0;padding:12px 14px;border:0;border-radius:0;
-      border-top:1px solid var(--card-border,#eef2f7);min-height:60px}
-    #details-list .dm-apde-gruppo>.dm-apde-comando:first-child{border-top:0}
-    #details-list .dm-apde-comando[data-genere="accensione"]{--g:#10b981}
-    #details-list .dm-apde-comando[data-genere="tempo"]{--g:#8b5cf6}
-    #details-list .dm-apde-comando[data-genere="programma"]{--g:#f59e0b}
-    #details-list .dm-apde-comando-ic{
-      display:grid;place-items:center;width:34px;height:34px;border-radius:11px;flex:0 0 auto;
-      font-size:16px;font-weight:900;color:var(--g,#0ea5e9);
-      background:color-mix(in srgb,var(--g,#0ea5e9) 15%,transparent)}
-    #details-list .dm-apde-comando>.dm-apde-comando-nome{flex:1 1 0;min-width:min-content;white-space:normal;line-height:1.2}
+    #details-list .dm-apde-comando>.dm-apde-comando-nome{
+      flex:1 1 0;min-width:min-content;white-space:normal;line-height:1.2;font-size:14px;font-weight:700}
     #details-list .dm-apde-comando[data-largo="true"]>.dm-apde-scelte{flex:1 1 100%}
     /* Le scelte: tasti uno accanto all'altro, quello attivo colorato. */
     #details-list .dm-apde-scelte{
@@ -1407,24 +1282,28 @@ function css() {
     #details-list .dm-apde-vetrina{display:block;gap:0;padding:0;margin:0 0 4px}
     #details-list .dm-apde-vetrina .appl-wide-card.dm-ap-card{cursor:default;box-shadow:none;transform:none!important}
     #details-list .dm-apde-vetrina .appl-wide-card.dm-ap-card:hover{transform:none;box-shadow:none}
-    /* La testa: con chi e' collegata, il marchio e il modello, e il punto
-       verde di chi e' in linea. */
-    #details-list .dm-apde-integrazione{
-      display:flex;align-items:center;gap:11px;margin:18px 0 0;padding:10px 14px 10px 10px;
-      border-radius:16px;border:1px solid var(--card-border,#e2e8f0);background:var(--surface-2,#f8fafc)}
-    #details-list .dm-apde-integrazione-ic{
-      display:grid;place-items:center;width:34px;height:34px;border-radius:11px;flex:0 0 auto;
-      font-size:15px;background:var(--card-bg,#fff);box-shadow:0 1px 3px rgba(15,23,42,.1)}
-    #details-list .dm-apde-integrazione-testo{display:grid;gap:2px;min-width:0;flex:1 1 auto}
-    #details-list .dm-apde-integrazione strong{font-size:13px;font-weight:800;color:var(--text,#0f172a)}
-    #details-list .dm-apde-integrazione-testo>span{
-      font-size:11.5px;font-weight:600;color:var(--text-dim,#64748b);
-      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    #details-list .dm-apde-integrazione-testo b{font-weight:800;color:var(--text,#0f172a)}
-    #details-list .dm-apde-integrazione code{font:inherit;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px}
-    #details-list .dm-apde-integrazione-punto{
-      width:9px;height:9px;border-radius:50%;flex:0 0 auto;background:#10b981;
-      box-shadow:0 0 0 4px color-mix(in srgb,#10b981 20%,transparent)}
+    /* Gli elenchi: righe divise da un filo, il nome a sinistra e il valore
+       a destra. Niente colori: i colori li ha gia' la card. */
+    #details-list .dm-apde-elenco{
+      border-radius:18px;overflow:hidden;
+      border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff)}
+    #details-list .dm-apde-dettaglio{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;
+      min-height:48px;padding:11px 16px;border:0;border-top:1px solid var(--card-border,#eef2f7);
+      background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
+    #details-list .dm-apde-elenco>:first-child{border-top:0}
+    #details-list .dm-apde-dettaglio>span{
+      min-width:0;font-size:14px;font-weight:600;color:var(--text-dim,#64748b)}
+    #details-list .dm-apde-dettaglio>b{
+      flex:0 0 auto;font-size:15px;font-weight:800;color:var(--text,#0f172a);
+      font-variant-numeric:tabular-nums;text-align:right}
+    #details-list .dm-apde-elenco>.dm-apde-comando{
+      margin:0;padding:10px 16px;min-height:56px;border:0;border-radius:0;
+      border-top:1px solid var(--card-border,#eef2f7)}
+    #details-list .dm-apde-elenco>.dm-apde-comando:first-child{border-top:0}
+    #details-list p.dm-apde-integrazione{
+      display:block;margin:14px 4px 0;padding:0;border:0;background:none;
+      font-size:11.5px;font-weight:600;color:var(--text-dim,#94a3b8);text-align:center}
     #details-list .dm-apde-menu,#details-list .dm-apde-numero{
       flex:1 1 140px;min-width:0;max-width:220px;height:32px;padding:0 8px;border-radius:10px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--surface-2,#f8fafc);

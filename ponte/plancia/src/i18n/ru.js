@@ -1527,7 +1527,6 @@ export default Object.freeze({
   From: "С",
   "From outside": "Снаружи",
   "From the house": "Из дома",
-  "From the integration": "Из интеграции",
   "From this device": "С этого устройства",
   "From … to": "С … по",
   "Front left": "Передний левый",
@@ -3696,8 +3695,6 @@ export default Object.freeze({
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
     "Значение, которое задала себе автоматика: рядом с реальной подачей видно, доходит ли котёл до него.",
   "The description is missing.": "Не хватает описания.",
-  "The device controls": "Управление устройством",
-  "The device readings": "Показания устройства",
   "The doors and the windows": "Двери и окна",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "Реле опускания должно быть сущностью switch.* и применяется только тогда, когда в поле рольставни тоже указано реле switch.*.",

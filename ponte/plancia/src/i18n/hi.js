@@ -1515,7 +1515,6 @@ export default Object.freeze({
   From: "से",
   "From outside": "बाहर से",
   "From the house": "घर से",
-  "From the integration": "इंटीग्रेशन से",
   "From this device": "इस उपकरण से",
   "From … to": "से … तक",
   "Front left": "आगे बायाँ",
@@ -3672,8 +3671,6 @@ export default Object.freeze({
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
     "वह तापमान जो कंट्रोलर ने खुद तय किया: असली प्रवाह के बगल में बताता है कि वहाँ पहुँच रहा है या नहीं।",
   "The description is missing.": "विवरण नहीं है।",
-  "The device controls": "डिवाइस के नियंत्रण",
-  "The device readings": "डिवाइस की रीडिंग",
   "The doors and the windows": "दरवाज़े और खिड़कियाँ",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "नीचे वाला रिले एक switch.* एंटिटी होनी चाहिए, और यह तभी लागू होता है जब शटर वाला खाना भी switch.* रिले हो।",

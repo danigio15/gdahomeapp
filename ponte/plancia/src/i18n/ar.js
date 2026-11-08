@@ -1507,7 +1507,6 @@ export default Object.freeze({
   From: "من",
   "From outside": "من الخارج",
   "From the house": "من المنزل",
-  "From the integration": "من التكامل",
   "From this device": "من هذا الجهاز",
   "From … to": "من … إلى",
   "Front left": "أمامي أيسر",
@@ -3655,8 +3654,6 @@ export default Object.freeze({
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
     "الدرجة التي حدّدها المنظّم لنفسه: بجانب التدفق الحقيقي تقول إن كان يصل إليها.",
   "The description is missing.": "الوصف ناقص.",
-  "The device controls": "أوامر الجهاز",
-  "The device readings": "قراءات الجهاز",
   "The doors and the windows": "الأبواب والنوافذ",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "يجب أن يكون مرحّل النزول كيان switch.*، وهو لا ينطبق إلا عندما يكون حقل الستارة نفسه مرحّل switch.*.",

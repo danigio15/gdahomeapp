@@ -1518,7 +1518,6 @@ export default Object.freeze({
   From: "시작",
   "From outside": "바깥에서",
   "From the house": "집에서",
-  "From the integration": "통합에서",
   "From this device": "이 기기에서",
   "From … to": "시작 … 종료",
   "Front left": "왼쪽 앞",
@@ -3677,8 +3676,6 @@ export default Object.freeze({
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
     "제어기가 스스로 정한 값입니다. 실제 공급 온도 옆에서 도달했는지 알려줍니다.",
   "The description is missing.": "설명이 없습니다.",
-  "The device controls": "장치 제어",
-  "The device readings": "장치 측정값",
   "The doors and the windows": "문과 창문",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "하강 릴레이는 switch.* 엔터티여야 하며, 셔터 칸도 switch.* 릴레이일 때만 적용됩니다.",

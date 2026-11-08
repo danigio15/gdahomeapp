@@ -1534,7 +1534,6 @@ export default Object.freeze({
   From: "Von",
   "From outside": "Von draußen",
   "From the house": "Aus dem Haus",
-  "From the integration": "Aus der Integration",
   "From this device": "Von diesem Gerät",
   "From … to": "Von … bis",
   "Front left": "Vorne links",
@@ -3707,8 +3706,6 @@ export default Object.freeze({
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
     "Der Wert, den sich die Regelung selbst gesetzt hat: neben dem echten Vorlauf sagt er, ob sie ihn erreicht.",
   "The description is missing.": "Die Beschreibung fehlt.",
-  "The device controls": "Die Bedienelemente des Geräts",
-  "The device readings": "Die Messwerte des Geräts",
   "The doors and the windows": "Die Türen und die Fenster",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "Das Ab-Relais muss eine switch.*-Entität sein und gilt nur, wenn auch das Rollladenfeld ein switch.*-Relais enthält.",

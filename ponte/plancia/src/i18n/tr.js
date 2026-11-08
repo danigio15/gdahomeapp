@@ -1522,7 +1522,6 @@ export default Object.freeze({
   From: "Başlangıç",
   "From outside": "Dışarıdan",
   "From the house": "Evden",
-  "From the integration": "Entegrasyondan",
   "From this device": "Bu cihazdan",
   "From … to": "Başlangıç … bitiş",
   "Front left": "Ön sol",
@@ -3685,8 +3684,6 @@ export default Object.freeze({
   "The degree the controller set for itself: next to the real flow it says whether it is getting there.":
     "Kumandanın kendine verdiği değer: gerçek gidişin yanında oraya varılıp varılmadığını söyler.",
   "The description is missing.": "Açıklama eksik.",
-  "The device controls": "Cihazın kumandaları",
-  "The device readings": "Cihazın okumaları",
   "The doors and the windows": "Kapılar ve pencereler",
   "The down relay must be a switch.* entity, and it only applies when the shutter box is a switch.* relay too.":
     "İndirme rölesi bir switch.* varlığı olmalı ve yalnızca panjur alanında da bir switch.* rölesi varsa geçerlidir.",
