@@ -10,6 +10,43 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.12
+
+_App GdAHome e Home Assistant._
+
+**Nell'app:**
+
+- **Il navigatore in «3D aumentato»**: una visuale nuova accanto a 2D, 3D e
+  Immersiva. In guida si vedono i viadotti e i cavalcavia sollevati davvero,
+  con i piloni, i parapetti e l'ombra sotto, gli svincoli a più piani con le
+  rampe che salgono, le gallerie con gli imbocchi, gli alberi e gli edifici
+  con le finestre accese di notte. Il percorso è un nastro che sale sui ponti,
+  e l'auto resta sempre visibile, anche sotto un cavalcavia. Autovelox,
+  segnalazioni, soste e tappe stanno sul viadotto e si toccano anche lì. Se
+  il telefono non ce la fa, il navigatore torna da solo alla visuale di
+  prima. Su Android Auto e CarPlay la mappa prende lo stesso aspetto.
+- **Il navigatore in orizzontale**: il cruscotto di guida sta in un pannello
+  a sinistra e non esce più dallo schermo, su telefoni e tablet.
+- **Le notifiche sono di GdAHome Premium**: senza, al telefono arrivano solo
+  gli avvisi di sicurezza — fumo, gas, monossido, allagamento, antifurto
+  scattato e campanello. Nella pagina Notifiche le altre voci hanno il
+  lucchetto.
+
+**In Home Assistant:**
+
+- **La ricarica notturna legge la batteria dell'auto**: «perché dice dal 60%
+  se ho la batteria al 19%?». La stima e la partenza della ricarica
+  prendevano il numero di evcc, che spesso non sa quanto è carica l'auto.
+  Adesso vale il sensore dell'auto, lo stesso della pagina Auto; evcc conta
+  solo se l'auto non risponde. «Ci arriva?» dice il vero: «No: alle 05:00
+  sarà al 74%».
+- **Aggiornamenti bloccati dal Marketplace**: «Home Assistant ha rifiutato:
+  Open the Marketplace…» adesso si legge in italiano, con cosa fare: aprire il
+  Marketplace dal menu di Home Assistant e accettare l'avviso.
+- **Notifiche solo per Premium**: l'add-on in Base manda al telefono solo gli
+  avvisi di sicurezza, e la notifica di prova prova quelli. Nella console la
+  tabella Base e Premium lo dice.
+
 ## 1.18.11.2
 
 _Solo Home Assistant: l'app sul telefono non cambia._
