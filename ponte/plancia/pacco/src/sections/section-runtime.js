@@ -570,7 +570,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-L76SDWSV.js";
+} from "../../chunk-RYEDPJXA.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -94008,6 +94008,20 @@ var PAROLE_DELLE_SCELTE = new Map(
     [["cancel"], "Annulla", "Cancel"]
   ].flatMap(([chiavi2, it, en]) => chiavi2.map((chiave2) => [chiave2, { it, en }]))
 );
+var SEGNI_DELLE_SCELTE = /* @__PURE__ */ new Map([
+  ["start", "▶"],
+  ["resume", "▶"],
+  ["stop", "■"],
+  ["cancel", "■"],
+  ["pause", "❚❚"],
+  ["poweroff", "⏻"],
+  ["turnoff", "⏻"],
+  ["off", "⏻"],
+  ["poweron", "⏻"],
+  ["turnon", "⏻"],
+  ["on", "⏻"],
+  ["wakeup", "☀︎"]
+]);
 var nudoDi = (testo5) => clean(testo5).toLowerCase().replaceAll(/[\s_\-.]+/g, "");
 var conLaMaiuscola2 = (testo5) => testo5 ? testo5.charAt(0).toUpperCase() + testo5.slice(1) : testo5;
 function nomeDellaVoce(nome, tokenElettrodomestico) {
@@ -94393,7 +94407,8 @@ function tastoDelComando(voce3) {
         const tasto6 = doc.createElement("button");
         tasto6.type = "button";
         tasto6.className = "dm-apde-scelta";
-        tasto6.textContent = parole5[i];
+        const segno5 = SEGNI_DELLE_SCELTE.get(nudoDi(opzione));
+        tasto6.innerHTML = `${segno5 ? `<i aria-hidden="true">${segno5}</i>` : ""}${esc(parole5[i])}`;
         tasto6.setAttribute("aria-pressed", opzione === controllo.current ? "true" : "false");
         tasto6.addEventListener("click", (event) => {
           event.stopPropagation();
@@ -94556,7 +94571,7 @@ function vesteIntegrazione(lista7, appliance, giaMostrate, titoletto4) {
   const stato3 = soloQuelleViste(nuove(gruppi2.state), appliance);
   const scelti = new Set(elencoComandi(appliance?.comandi));
   const scelteDaLeggere = new Set(elencoLetture(appliance?.letture));
-  const viste2 = (elenco19) => soloQuelleViste(elenco19, appliance);
+  const viste2 = (elenco18) => soloQuelleViste(elenco18, appliance);
   const letture2 = viste2(nuove(gruppi2.readings)).filter(
     (voce3) => !scelteDaLeggere.has(voce3.entity)
   );
@@ -94568,35 +94583,49 @@ function vesteIntegrazione(lista7, appliance, giaMostrate, titoletto4) {
     return;
   const statiOra = allStates();
   const token = tokenDi(appliance);
-  const elenco18 = () => {
-    const nodo3 = doc.createElement("div");
-    nodo3.className = "dm-apde-elenco";
+  const scheda9 = (classe3 = "") => {
+    const nodo3 = doc.createElement("section");
+    nodo3.className = `dm-apde-scheda${classe3 ? ` ${classe3}` : ""}`;
     return nodo3;
   };
-  const rigaDiDettaglio = (entity2, parole5, valore3) => {
-    const riga5 = doc.createElement("button");
-    riga5.type = "button";
-    riga5.className = "dm-apde-dettaglio hist-clickable";
-    riga5.dataset.dmApdeEntity = entity2;
-    riga5.innerHTML = `<span>${esc(parole5)}</span><b>${esc(valore3)}</b>`;
-    riga5.addEventListener("click", (event) => apriStorico(event, entity2, parole5));
-    return riga5;
-  };
-  const dettagli = [];
   const conFase = stato3.map((voce3) => {
     const grezzo2 = clean(statiOra?.[voce3.entity]?.state);
     const fase = /^(on|off)$/i.test(grezzo2) ? null : faseInParole(grezzo2, activeLocale());
     return { voce: voce3, fase: fase && fase.glifo !== "•" ? fase : null };
   });
-  conFase.sort((x, y) => Number(Boolean(y.fase)) - Number(Boolean(x.fase)));
-  for (const { voce: voce3 } of conFase) {
-    dettagli.push(
-      rigaDiDettaglio(
-        voce3.entity,
-        nomeDellaVoce(voce3.name, token),
-        statoInParole2(statiOra?.[voce3.entity]?.state, voce3.value)
-      )
+  const principale = conFase.find((una) => una.fase) || conFase[0];
+  if (principale) {
+    const testa2 = doc.createElement("div");
+    testa2.className = "dm-apde-stato";
+    const parole5 = nomeDellaVoce(principale.voce.name, token);
+    const valore3 = principale.fase ? principale.fase.label : statoInParole2(statiOra?.[principale.voce.entity]?.state, principale.voce.value);
+    const grande = doc.createElement("button");
+    grande.type = "button";
+    grande.className = "dm-apde-stato-grande hist-clickable";
+    grande.dataset.dmApdeEntity = principale.voce.entity;
+    grande.innerHTML = `<small>${esc(parole5)}</small><strong>${esc(valore3)}</strong>`;
+    grande.addEventListener(
+      "click",
+      (event) => apriStorico(event, principale.voce.entity, parole5)
     );
+    testa2.append(grande);
+    const altri = doc.createElement("div");
+    altri.className = "dm-apde-stato-altri";
+    for (const { voce: voce3 } of conFase) {
+      if (voce3 === principale.voce) continue;
+      const nome2 = nomeDellaVoce(voce3.name, token);
+      const detto3 = statoInParole2(statiOra?.[voce3.entity]?.state, voce3.value);
+      const segno5 = doc.createElement("button");
+      segno5.type = "button";
+      segno5.className = "dm-apde-segno";
+      segno5.dataset.acceso = voce3.on ? "true" : "false";
+      segno5.dataset.dmApdeEntity = voce3.entity;
+      segno5.textContent = voce3.on ? `${nome2} ${pick("attivo", "on", activeLocale())}` : /^(off)$/i.test(clean(statiOra?.[voce3.entity]?.state)) ? `${nome2} ${pick("spento", "off", activeLocale())}` : `${nome2} · ${detto3}`;
+      segno5.addEventListener("click", (event) => apriStorico(event, voce3.entity, nome2));
+      altri.append(segno5);
+    }
+    if (altri.childElementCount) testa2.append(altri);
+    lista7.append(testa2);
   }
   const periodo = (parole5) => {
     const detto3 = parole5.toLowerCase();
@@ -94611,19 +94640,49 @@ function vesteIntegrazione(lista7, appliance, giaMostrate, titoletto4) {
     return { voce: voce3, unit, glifo: glifoDellaLettura(voce3.entity, unit) };
   }).sort((x, y) => postoDelGlifo(x.glifo) - postoDelGlifo(y.glifo)).map((una) => {
     let parole5 = nomeDellaLettura2(una.voce.entity, una.voce.name, una.unit, token, usate2);
-    if (una.glifo === "📊" && /^(energia|energy)$/i.test(parole5))
-      parole5 = pick("Energia totale", "Total energy", activeLocale());
+    if (una.glifo === "📊") {
+      parole5 = conLaMaiuscola2(parole5.replace(/^(energia|energy)\s*/i, "")) || pick("Totale", "Total", activeLocale());
+      if (/^del mese$/i.test(parole5)) parole5 = pick("Questo mese", "This month", activeLocale());
+    }
     return { ...una, parole: parole5 };
-  }).sort(
-    (x, y) => postoDelGlifo(x.glifo) - postoDelGlifo(y.glifo) || (x.glifo === "📊" ? periodo(x.parole) - periodo(y.parole) : 0)
-  );
-  for (const { voce: voce3, parole: parole5 } of misure)
-    dettagli.push(rigaDiDettaglio(voce3.entity, parole5, numeroInParole2(voce3.value)));
-  if (dettagli.length) {
-    lista7.append(titoletto4(pick("Dettagli", "Details", activeLocale())));
-    const fila2 = elenco18();
-    fila2.append(...dettagli);
-    lista7.append(fila2);
+  });
+  const energia = misure.filter((una) => una.glifo === "📊").sort((x, y) => periodo(x.parole) - periodo(y.parole));
+  const numeri = misure.filter((una) => una.glifo !== "📊");
+  if (energia.length) {
+    const carta = scheda9("dm-apde-energia");
+    carta.innerHTML = `<h5 class="dm-apde-scheda-titolo"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg>${esc(
+      pick("Energia", "Energy", activeLocale())
+    )}</h5>`;
+    const quanti4 = energia.map(
+      (una) => Number.parseFloat(clean(statiOra?.[una.voce.entity]?.state).replace(",", "."))
+    );
+    const massimo = Math.max(0, ...quanti4.filter(Number.isFinite));
+    energia.forEach((una, i) => {
+      const riga5 = doc.createElement("button");
+      riga5.type = "button";
+      riga5.className = "dm-apde-barra hist-clickable";
+      riga5.dataset.dmApdeEntity = una.voce.entity;
+      const quota = massimo > 0 && Number.isFinite(quanti4[i]) ? Math.max(3, Math.round(quanti4[i] / massimo * 100)) : 0;
+      riga5.innerHTML = `<span class="dm-apde-barra-testo"><span>${esc(una.parole)}</span><b>${esc(
+        numeroInParole2(una.voce.value)
+      )}</b></span><span class="dm-apde-barra-binario" aria-hidden="true"><i style="width:${quota}%"></i></span>`;
+      riga5.addEventListener("click", (event) => apriStorico(event, una.voce.entity, una.parole));
+      carta.append(riga5);
+    });
+    lista7.append(carta);
+  }
+  if (numeri.length) {
+    const carta = scheda9("dm-apde-numeri");
+    for (const una of numeri) {
+      const cella = doc.createElement("button");
+      cella.type = "button";
+      cella.className = "dm-apde-numero-cella hist-clickable";
+      cella.dataset.dmApdeEntity = una.voce.entity;
+      cella.innerHTML = `${numeroGrande(una.voce.value)}<span>${esc(una.parole)}</span>`;
+      cella.addEventListener("click", (event) => apriStorico(event, una.voce.entity, una.parole));
+      carta.append(cella);
+    }
+    lista7.append(carta);
   }
   const rigaDiComando = (voce3) => {
     const riga5 = doc.createElement("div");
@@ -94639,10 +94698,11 @@ function vesteIntegrazione(lista7, appliance, giaMostrate, titoletto4) {
     return riga5;
   };
   if (comandi.length) {
-    lista7.append(titoletto4(pick("Comandi", "Controls", activeLocale())));
-    const fila2 = elenco18();
-    for (const voce3 of comandi) fila2.append(rigaDiComando(voce3));
-    lista7.append(fila2);
+    const carta = scheda9("dm-apde-comandi");
+    const righe4 = comandi.map((voce3) => rigaDiComando(voce3));
+    righe4.sort((x, y) => Number(y.dataset.largo === "true") - Number(x.dataset.largo === "true"));
+    carta.append(...righe4);
+    lista7.append(carta);
   }
   const nome = clean(appliance.integration_name) || clean(appliance.integration);
   const chi = [
@@ -94796,26 +94856,24 @@ function css2() {
     #details-list .dm-apde-comando>.dm-apde-comando-nome{
       flex:1 1 0;min-width:min-content;white-space:normal;line-height:1.2;font-size:14px;font-weight:700}
     #details-list .dm-apde-comando[data-largo="true"]>.dm-apde-scelte{flex:1 1 100%}
-    /* Le scelte: tasti uno accanto all'altro, quello attivo colorato. */
-    #details-list .dm-apde-scelte{
-      display:flex;gap:4px;padding:4px;border-radius:14px;background:var(--surface-2,#f1f5f9)}
+    /* Le scelte: tasti grandi, due per riga, quello attivo pieno di blu. */
+    #details-list .dm-apde-scelte{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
     #details-list .dm-apde-scelta{
-      flex:1 1 auto;min-width:0;height:36px;padding:0 6px;border:0;border-radius:10px;cursor:pointer;
-      font:inherit;font-size:12px;font-weight:800;color:var(--text-dim,#64748b);background:transparent;
+      display:flex;align-items:center;justify-content:center;gap:7px;min-width:0;height:46px;
+      padding:0 10px;border:0;border-radius:14px;cursor:pointer;font:inherit;font-size:13.5px;
+      font-weight:800;color:var(--text,#334155);background:var(--surface-2,#f1f5f9);
       white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .15s,color .15s}
+    #details-list .dm-apde-scelta i{font-style:normal;font-size:12px}
     #details-list .dm-apde-scelta[aria-pressed="true"]{
-      background:var(--card-bg,#fff);color:#0284c7;box-shadow:0 1px 4px rgba(15,23,42,.14)}
+      background:#0284c7;color:#fff;box-shadow:0 6px 16px color-mix(in srgb,#0284c7 35%,transparent)}
     /* Il meno e il piu', col numero e la sua unita' in mezzo. */
-    #details-list .dm-apde-passi{
-      display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:14px;
-      background:var(--surface-2,#f1f5f9)}
+    #details-list .dm-apde-passi{display:inline-flex;align-items:center;gap:2px}
     #details-list .dm-apde-passo{
-      width:34px;height:34px;border:0;border-radius:10px;cursor:pointer;font:inherit;
-      font-size:18px;font-weight:800;color:var(--text,#0f172a);background:var(--card-bg,#fff);
-      box-shadow:0 1px 3px rgba(15,23,42,.12)}
+      width:34px;height:34px;border:0;border-radius:50%;cursor:pointer;font:inherit;
+      font-size:20px;font-weight:800;color:#0284c7;background:color-mix(in srgb,#0ea5e9 12%,transparent)}
     #details-list .dm-apde-passo:disabled{opacity:.35;cursor:not-allowed}
     #details-list .dm-apde-passi-valore{
-      min-width:48px;text-align:center;font-family:'Oswald',system-ui,sans-serif;font-size:20px;
+      min-width:52px;text-align:center;font-family:'Oswald',system-ui,sans-serif;font-size:20px;
       font-weight:500;color:var(--text,#0f172a);font-variant-numeric:tabular-nums}
     #details-list .dm-apde-passi-valore small{margin-left:3px;font-family:inherit;font-size:12px;color:var(--text-dim,#64748b)}
     #details-list .dm-apde-comando-nome{
@@ -94852,25 +94910,61 @@ function css2() {
     #details-list .dm-apde-vetrina{display:block;gap:0;padding:0;margin:0 0 4px}
     #details-list .dm-apde-vetrina .appl-wide-card.dm-ap-card{cursor:default;box-shadow:none;transform:none!important}
     #details-list .dm-apde-vetrina .appl-wide-card.dm-ap-card:hover{transform:none;box-shadow:none}
-    /* Gli elenchi: righe divise da un filo, il nome a sinistra e il valore
-       a destra. Niente colori: i colori li ha gia' la card. */
-    #details-list .dm-apde-elenco{
-      border-radius:18px;overflow:hidden;
-      border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff)}
-    #details-list .dm-apde-dettaglio{
-      display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;
-      min-height:48px;padding:11px 16px;border:0;border-top:1px solid var(--card-border,#eef2f7);
-      background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
-    #details-list .dm-apde-elenco>:first-child{border-top:0}
-    #details-list .dm-apde-dettaglio>span{
-      min-width:0;font-size:14px;font-weight:600;color:var(--text-dim,#64748b)}
-    #details-list .dm-apde-dettaglio>b{
-      flex:0 0 auto;font-size:15px;font-weight:800;color:var(--text,#0f172a);
-      font-variant-numeric:tabular-nums;text-align:right}
-    #details-list .dm-apde-elenco>.dm-apde-comando{
-      margin:0;padding:10px 16px;min-height:56px;border:0;border-radius:0;
-      border-top:1px solid var(--card-border,#eef2f7)}
-    #details-list .dm-apde-elenco>.dm-apde-comando:first-child{border-top:0}
+    /* La veste elegante: schede bianche con un'ombra leggera, un colore
+       solo (il blu), i numeri grandi. */
+    #details-list .dm-apde-scheda{
+      margin:0 0 12px;padding:16px;border-radius:22px;background:var(--card-bg,#fff);
+      border:1px solid color-mix(in srgb,var(--card-border,#e2e8f0) 55%,transparent);
+      box-shadow:0 1px 2px rgba(15,23,42,.05),0 8px 24px rgba(15,23,42,.07)}
+    #details-list .dm-apde-scheda-titolo{
+      display:flex;align-items:center;gap:8px;margin:0 0 12px;
+      font-size:13.5px;font-weight:800;color:var(--text,#0f172a)}
+    #details-list .dm-apde-scheda-titolo svg{width:18px;height:18px;stroke:#0284c7}
+    #details-list .dm-apde-stato{
+      display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;
+      margin:18px 4px 14px}
+    #details-list .dm-apde-stato-grande{
+      display:grid;gap:1px;min-width:0;padding:0;border:0;background:none;color:inherit;
+      font:inherit;text-align:left;cursor:pointer}
+    #details-list .dm-apde-stato-grande small{font-size:12.5px;font-weight:700;color:var(--text-dim,#64748b)}
+    #details-list .dm-apde-stato-grande strong{
+      font-family:'Oswald',system-ui,sans-serif;font-weight:500;font-size:32px;line-height:1.05;
+      color:var(--text,#0f172a)}
+    #details-list .dm-apde-stato-altri{display:flex;flex-wrap:wrap;gap:6px}
+    #details-list .dm-apde-segno{
+      padding:6px 11px;border:0;border-radius:999px;cursor:pointer;font:inherit;
+      font-size:11.5px;font-weight:800;color:var(--text-dim,#64748b);background:var(--surface-2,#f1f5f9)}
+    #details-list .dm-apde-segno[data-acceso="true"]{
+      color:#0284c7;background:color-mix(in srgb,#0ea5e9 14%,transparent)}
+    #details-list .dm-apde-barra{
+      display:grid;gap:7px;width:100%;padding:0;margin:0 0 13px;border:0;background:none;
+      color:inherit;font:inherit;text-align:left;cursor:pointer}
+    #details-list .dm-apde-barra:last-child{margin-bottom:2px}
+    #details-list .dm-apde-barra-testo{display:flex;justify-content:space-between;gap:10px}
+    #details-list .dm-apde-barra-testo span{font-size:13.5px;font-weight:700;color:var(--text-dim,#475569)}
+    #details-list .dm-apde-barra-testo b{
+      font-size:14.5px;font-weight:800;color:var(--text,#0f172a);font-variant-numeric:tabular-nums}
+    #details-list .dm-apde-barra-binario{
+      display:block;height:8px;border-radius:999px;overflow:hidden;background:var(--surface-2,#f1f5f9)}
+    #details-list .dm-apde-barra-binario i{
+      display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#38bdf8,#0284c7)}
+    #details-list .dm-apde-numeri{
+      display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:14px 0;padding:16px 4px}
+    #details-list .dm-apde-numero-cella{
+      display:grid;gap:5px;min-width:0;padding:2px 14px;border:0;background:none;color:inherit;
+      font:inherit;text-align:left;cursor:pointer;
+      border-left:1px solid var(--surface-2,#f1f5f9)}
+    #details-list .dm-apde-numero-cella:first-child{border-left:0}
+    #details-list .dm-apde-numero-cella>span{font-size:12.5px;font-weight:700;color:var(--text-dim,#64748b)}
+    #details-list .dm-apde-numero-cella .dm-apde-numero-grande{font-size:32px}
+    #details-list .dm-apde-comandi{padding:6px 16px}
+    #details-list .dm-apde-comandi>.dm-apde-comando{
+      margin:0;padding:12px 0;min-height:56px;border:0;border-radius:0;background:none;
+      border-top:1px solid var(--surface-2,#f1f5f9)}
+    #details-list .dm-apde-comandi>.dm-apde-comando:first-child{border-top:0}
+    #details-list .dm-apde-comandi>.dm-apde-comando[data-largo="true"]{padding-top:12px}
+    #details-list .dm-apde-comandi>.dm-apde-comando[data-largo="true"]>.dm-apde-comando-nome{
+      font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
     #details-list p.dm-apde-integrazione{
       display:block;margin:14px 4px 0;padding:0;border:0;background:none;
       font-size:11.5px;font-weight:600;color:var(--text-dim,#94a3b8);text-align:center}
@@ -94879,6 +94973,10 @@ function css2() {
       border:1px solid var(--card-border,#e2e8f0);background:var(--surface-2,#f8fafc);
       color:var(--text,#0f172a);font:inherit;font-size:12px;font-weight:700}
     #details-list .dm-apde-numero{flex-basis:96px;text-align:right;font-variant-numeric:tabular-nums}
+    /* Nella scheda dei comandi il menu si legge come un valore: blu, a destra. */
+    #details-list .dm-apde-comandi .dm-apde-menu{
+      flex:0 1 auto;width:auto;border:0;background:transparent;padding:0 2px;
+      color:#0284c7;font-size:14px;font-weight:800;text-align:right;text-align-last:right;cursor:pointer}
     #details-list .dm-apde-diagnostica{
       margin:14px 0 0;padding:0 12px 6px;border-radius:14px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--surface-2,#f8fafc)}

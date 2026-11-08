@@ -227,6 +227,22 @@ const PAROLE_DELLE_SCELTE = new Map(
   ].flatMap(([chiavi, it, en]) => chiavi.map((chiave) => [chiave, { it, en }])),
 );
 
+/* Il segno sul tasto di una scelta: ▶ Avvia, ■ Ferma, ⏻ Spegni. */
+const SEGNI_DELLE_SCELTE = new Map([
+  ["start", "▶"],
+  ["resume", "▶"],
+  ["stop", "■"],
+  ["cancel", "■"],
+  ["pause", "❚❚"],
+  ["poweroff", "⏻"],
+  ["turnoff", "⏻"],
+  ["off", "⏻"],
+  ["poweron", "⏻"],
+  ["turnon", "⏻"],
+  ["on", "⏻"],
+  ["wakeup", "☀︎"],
+]);
+
 const nudoDi = (testo) => clean(testo).toLowerCase().replaceAll(/[\s_\-.]+/g, "");
 const conLaMaiuscola = (testo) => (testo ? testo.charAt(0).toUpperCase() + testo.slice(1) : testo);
 
@@ -756,7 +772,8 @@ function tastoDelComando(voce) {
         const tasto = doc.createElement("button");
         tasto.type = "button";
         tasto.className = "dm-apde-scelta";
-        tasto.textContent = parole[i];
+        const segno = SEGNI_DELLE_SCELTE.get(nudoDi(opzione));
+        tasto.innerHTML = `${segno ? `<i aria-hidden="true">${segno}</i>` : ""}${esc(parole[i])}`;
         tasto.setAttribute("aria-pressed", opzione === controllo.current ? "true" : "false");
         tasto.addEventListener("click", (event) => {
           event.stopPropagation();
@@ -968,47 +985,70 @@ function vesteIntegrazione(lista, appliance, giaMostrate, titoletto) {
   const statiOra = allStates();
   const token = tokenDi(appliance);
 
-  /* Due elenchi e basta, come le impostazioni del telefono.
+  /* La veste «elegante», scelta fra tre (la C).
    *
-   * «Lo trovo incasinato»: la prima veste aveva una casella colorata per
-   * ogni numero, un riquadro per l'energia, una banda per la fase e una per
-   * l'integrazione — sei forme diverse sotto una card che ne ha gia' tante.
-   * Adesso sotto la card ci sono «Dettagli», una riga per cosa col nome a
-   * sinistra e il valore a destra, e «Comandi», una riga per comando col
-   * comando vero a destra. Chi fornisce i dati sta in fondo, in piccolo. */
-  const elenco = () => {
-    const nodo = doc.createElement("div");
-    nodo.className = "dm-apde-elenco";
+   * «Non si capisce nulla», poi «incasinato», poi «ancora piu' brutto»: le
+   * prime tre vesti erano caselle colorate, riquadri di ogni forma, poi un
+   * elenco grigio. Questa e' quella scelta guardandole affiancate: bianco,
+   * ombre leggere e un colore solo. In cima lo stato in grande; poi
+   * l'energia con le sue barre, dal giorno al totale; poi gli altri numeri
+   * grandi uno accanto all'altro; poi i comandi — le scelte corte come
+   * tasti, il resto riga per riga. */
+  const scheda = (classe = "") => {
+    const nodo = doc.createElement("section");
+    nodo.className = `dm-apde-scheda${classe ? ` ${classe}` : ""}`;
     return nodo;
   };
-  const rigaDiDettaglio = (entity, parole, valore) => {
-    const riga = doc.createElement("button");
-    riga.type = "button";
-    riga.className = "dm-apde-dettaglio hist-clickable";
-    riga.dataset.dmApdeEntity = entity;
-    riga.innerHTML = `<span>${esc(parole)}</span><b>${esc(valore)}</b>`;
-    riga.addEventListener("click", (event) => apriStorico(event, entity, parole));
-    return riga;
-  };
 
-  const dettagli = [];
-  /* Lo stato: prima la fase, poi il resto. */
+  /* Lo stato: la fase in grande; gli altri stati accanto, piccoli. */
   const conFase = stato.map((voce) => {
     const grezzo = clean(statiOra?.[voce.entity]?.state);
     const fase = /^(on|off)$/i.test(grezzo) ? null : faseInParole(grezzo, activeLocale());
     return { voce, fase: fase && fase.glifo !== "•" ? fase : null };
   });
-  conFase.sort((x, y) => Number(Boolean(y.fase)) - Number(Boolean(x.fase)));
-  for (const { voce } of conFase) {
-    dettagli.push(
-      rigaDiDettaglio(
-        voce.entity,
-        nomeDellaVoce(voce.name, token),
-        statoInParole(statiOra?.[voce.entity]?.state, voce.value),
-      ),
+  const principale = conFase.find((una) => una.fase) || conFase[0];
+  if (principale) {
+    const testa = doc.createElement("div");
+    testa.className = "dm-apde-stato";
+    const parole = nomeDellaVoce(principale.voce.name, token);
+    const valore = principale.fase
+      ? principale.fase.label
+      : statoInParole(statiOra?.[principale.voce.entity]?.state, principale.voce.value);
+    const grande = doc.createElement("button");
+    grande.type = "button";
+    grande.className = "dm-apde-stato-grande hist-clickable";
+    grande.dataset.dmApdeEntity = principale.voce.entity;
+    grande.innerHTML = `<small>${esc(parole)}</small><strong>${esc(valore)}</strong>`;
+    grande.addEventListener("click", (event) =>
+      apriStorico(event, principale.voce.entity, parole),
     );
+    testa.append(grande);
+    const altri = doc.createElement("div");
+    altri.className = "dm-apde-stato-altri";
+    for (const { voce } of conFase) {
+      if (voce === principale.voce) continue;
+      const nome = nomeDellaVoce(voce.name, token);
+      const detto = statoInParole(statiOra?.[voce.entity]?.state, voce.value);
+      const segno = doc.createElement("button");
+      segno.type = "button";
+      segno.className = "dm-apde-segno";
+      segno.dataset.acceso = voce.on ? "true" : "false";
+      segno.dataset.dmApdeEntity = voce.entity;
+      /* «Avvio remoto · Acceso» si dice «Avvio remoto attivo». */
+      segno.textContent = voce.on
+        ? `${nome} ${pick("attivo", "on", activeLocale())}`
+        : /^(off)$/i.test(clean(statiOra?.[voce.entity]?.state))
+          ? `${nome} ${pick("spento", "off", activeLocale())}`
+          : `${nome} · ${detto}`;
+      segno.addEventListener("click", (event) => apriStorico(event, voce.entity, nome));
+      altri.append(segno);
+    }
+    if (altri.childElementCount) testa.append(altri);
+    lista.append(testa);
   }
-  /* Le letture: l'energia dal giorno al totale, poi i tempi, i cicli. */
+
+  /* Le letture: l'energia dal giorno al totale, con le barre; il resto in
+   * numeri grandi. */
   const periodo = (parole) => {
     const detto = parole.toLowerCase();
     if (/oggi|today/.test(detto)) return 0;
@@ -1025,25 +1065,61 @@ function vesteIntegrazione(lista, appliance, giaMostrate, titoletto) {
     .sort((x, y) => postoDelGlifo(x.glifo) - postoDelGlifo(y.glifo))
     .map((una) => {
       let parole = nomeDellaLettura(una.voce.entity, una.voce.name, una.unit, token, usate);
-      /* «Energia» da sola, accanto a «Energia oggi», e' il contatore. */
-      if (una.glifo === "📊" && /^(energia|energy)$/i.test(parole))
-        parole = pick("Energia totale", "Total energy", activeLocale());
+      if (una.glifo === "📊") {
+        /* Nella scheda «Energia» la parola si dice una volta sola, in testa. */
+        parole =
+          conLaMaiuscola(parole.replace(/^(energia|energy)\s*/i, "")) ||
+          pick("Totale", "Total", activeLocale());
+        if (/^del mese$/i.test(parole)) parole = pick("Questo mese", "This month", activeLocale());
+      }
       return { ...una, parole };
-    })
-    .sort(
-      (x, y) =>
-        postoDelGlifo(x.glifo) - postoDelGlifo(y.glifo) ||
-        (x.glifo === "📊" ? periodo(x.parole) - periodo(y.parole) : 0),
+    });
+  const energia = misure
+    .filter((una) => una.glifo === "📊")
+    .sort((x, y) => periodo(x.parole) - periodo(y.parole));
+  const numeri = misure.filter((una) => una.glifo !== "📊");
+  if (energia.length) {
+    const carta = scheda("dm-apde-energia");
+    carta.innerHTML = `<h5 class="dm-apde-scheda-titolo"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg>${esc(
+      pick("Energia", "Energy", activeLocale()),
+    )}</h5>`;
+    const quanti = energia.map((una) =>
+      Number.parseFloat(clean(statiOra?.[una.voce.entity]?.state).replace(",", ".")),
     );
-  for (const { voce, parole } of misure)
-    dettagli.push(rigaDiDettaglio(voce.entity, parole, numeroInParole(voce.value)));
-  if (dettagli.length) {
-    lista.append(titoletto(pick("Dettagli", "Details", activeLocale())));
-    const fila = elenco();
-    fila.append(...dettagli);
-    lista.append(fila);
+    const massimo = Math.max(0, ...quanti.filter(Number.isFinite));
+    energia.forEach((una, i) => {
+      const riga = doc.createElement("button");
+      riga.type = "button";
+      riga.className = "dm-apde-barra hist-clickable";
+      riga.dataset.dmApdeEntity = una.voce.entity;
+      const quota =
+        massimo > 0 && Number.isFinite(quanti[i])
+          ? Math.max(3, Math.round((quanti[i] / massimo) * 100))
+          : 0;
+      riga.innerHTML = `<span class="dm-apde-barra-testo"><span>${esc(una.parole)}</span><b>${esc(
+        numeroInParole(una.voce.value),
+      )}</b></span><span class="dm-apde-barra-binario" aria-hidden="true"><i style="width:${quota}%"></i></span>`;
+      riga.addEventListener("click", (event) => apriStorico(event, una.voce.entity, una.parole));
+      carta.append(riga);
+    });
+    lista.append(carta);
+  }
+  if (numeri.length) {
+    const carta = scheda("dm-apde-numeri");
+    for (const una of numeri) {
+      const cella = doc.createElement("button");
+      cella.type = "button";
+      cella.className = "dm-apde-numero-cella hist-clickable";
+      cella.dataset.dmApdeEntity = una.voce.entity;
+      cella.innerHTML = `${numeroGrande(una.voce.value)}<span>${esc(una.parole)}</span>`;
+      cella.addEventListener("click", (event) => apriStorico(event, una.voce.entity, una.parole));
+      carta.append(cella);
+    }
+    lista.append(carta);
   }
 
+  /* I comandi: le scelte corte come tasti in cima, poi una riga per il
+   * resto — levette, menu, il meno e il piu'. */
   const rigaDiComando = (voce) => {
     const riga = doc.createElement("div");
     riga.className = "dm-apde-comando";
@@ -1058,10 +1134,12 @@ function vesteIntegrazione(lista, appliance, giaMostrate, titoletto) {
     return riga;
   };
   if (comandi.length) {
-    lista.append(titoletto(pick("Comandi", "Controls", activeLocale())));
-    const fila = elenco();
-    for (const voce of comandi) fila.append(rigaDiComando(voce));
-    lista.append(fila);
+    const carta = scheda("dm-apde-comandi");
+    const righe = comandi.map((voce) => rigaDiComando(voce));
+    /* Le righe coi tasti in cima: sono la cosa per cui si apre la finestra. */
+    righe.sort((x, y) => Number(y.dataset.largo === "true") - Number(x.dataset.largo === "true"));
+    carta.append(...righe);
+    lista.append(carta);
   }
 
   /* Chi fornisce i dati: in fondo, una riga piccola. «LGE Y_V8_Y___W.B32QEUK
@@ -1226,26 +1304,24 @@ function css() {
     #details-list .dm-apde-comando>.dm-apde-comando-nome{
       flex:1 1 0;min-width:min-content;white-space:normal;line-height:1.2;font-size:14px;font-weight:700}
     #details-list .dm-apde-comando[data-largo="true"]>.dm-apde-scelte{flex:1 1 100%}
-    /* Le scelte: tasti uno accanto all'altro, quello attivo colorato. */
-    #details-list .dm-apde-scelte{
-      display:flex;gap:4px;padding:4px;border-radius:14px;background:var(--surface-2,#f1f5f9)}
+    /* Le scelte: tasti grandi, due per riga, quello attivo pieno di blu. */
+    #details-list .dm-apde-scelte{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
     #details-list .dm-apde-scelta{
-      flex:1 1 auto;min-width:0;height:36px;padding:0 6px;border:0;border-radius:10px;cursor:pointer;
-      font:inherit;font-size:12px;font-weight:800;color:var(--text-dim,#64748b);background:transparent;
+      display:flex;align-items:center;justify-content:center;gap:7px;min-width:0;height:46px;
+      padding:0 10px;border:0;border-radius:14px;cursor:pointer;font:inherit;font-size:13.5px;
+      font-weight:800;color:var(--text,#334155);background:var(--surface-2,#f1f5f9);
       white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .15s,color .15s}
+    #details-list .dm-apde-scelta i{font-style:normal;font-size:12px}
     #details-list .dm-apde-scelta[aria-pressed="true"]{
-      background:var(--card-bg,#fff);color:#0284c7;box-shadow:0 1px 4px rgba(15,23,42,.14)}
+      background:#0284c7;color:#fff;box-shadow:0 6px 16px color-mix(in srgb,#0284c7 35%,transparent)}
     /* Il meno e il piu', col numero e la sua unita' in mezzo. */
-    #details-list .dm-apde-passi{
-      display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:14px;
-      background:var(--surface-2,#f1f5f9)}
+    #details-list .dm-apde-passi{display:inline-flex;align-items:center;gap:2px}
     #details-list .dm-apde-passo{
-      width:34px;height:34px;border:0;border-radius:10px;cursor:pointer;font:inherit;
-      font-size:18px;font-weight:800;color:var(--text,#0f172a);background:var(--card-bg,#fff);
-      box-shadow:0 1px 3px rgba(15,23,42,.12)}
+      width:34px;height:34px;border:0;border-radius:50%;cursor:pointer;font:inherit;
+      font-size:20px;font-weight:800;color:#0284c7;background:color-mix(in srgb,#0ea5e9 12%,transparent)}
     #details-list .dm-apde-passo:disabled{opacity:.35;cursor:not-allowed}
     #details-list .dm-apde-passi-valore{
-      min-width:48px;text-align:center;font-family:'Oswald',system-ui,sans-serif;font-size:20px;
+      min-width:52px;text-align:center;font-family:'Oswald',system-ui,sans-serif;font-size:20px;
       font-weight:500;color:var(--text,#0f172a);font-variant-numeric:tabular-nums}
     #details-list .dm-apde-passi-valore small{margin-left:3px;font-family:inherit;font-size:12px;color:var(--text-dim,#64748b)}
     #details-list .dm-apde-comando-nome{
@@ -1282,25 +1358,61 @@ function css() {
     #details-list .dm-apde-vetrina{display:block;gap:0;padding:0;margin:0 0 4px}
     #details-list .dm-apde-vetrina .appl-wide-card.dm-ap-card{cursor:default;box-shadow:none;transform:none!important}
     #details-list .dm-apde-vetrina .appl-wide-card.dm-ap-card:hover{transform:none;box-shadow:none}
-    /* Gli elenchi: righe divise da un filo, il nome a sinistra e il valore
-       a destra. Niente colori: i colori li ha gia' la card. */
-    #details-list .dm-apde-elenco{
-      border-radius:18px;overflow:hidden;
-      border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff)}
-    #details-list .dm-apde-dettaglio{
-      display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;
-      min-height:48px;padding:11px 16px;border:0;border-top:1px solid var(--card-border,#eef2f7);
-      background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
-    #details-list .dm-apde-elenco>:first-child{border-top:0}
-    #details-list .dm-apde-dettaglio>span{
-      min-width:0;font-size:14px;font-weight:600;color:var(--text-dim,#64748b)}
-    #details-list .dm-apde-dettaglio>b{
-      flex:0 0 auto;font-size:15px;font-weight:800;color:var(--text,#0f172a);
-      font-variant-numeric:tabular-nums;text-align:right}
-    #details-list .dm-apde-elenco>.dm-apde-comando{
-      margin:0;padding:10px 16px;min-height:56px;border:0;border-radius:0;
-      border-top:1px solid var(--card-border,#eef2f7)}
-    #details-list .dm-apde-elenco>.dm-apde-comando:first-child{border-top:0}
+    /* La veste elegante: schede bianche con un'ombra leggera, un colore
+       solo (il blu), i numeri grandi. */
+    #details-list .dm-apde-scheda{
+      margin:0 0 12px;padding:16px;border-radius:22px;background:var(--card-bg,#fff);
+      border:1px solid color-mix(in srgb,var(--card-border,#e2e8f0) 55%,transparent);
+      box-shadow:0 1px 2px rgba(15,23,42,.05),0 8px 24px rgba(15,23,42,.07)}
+    #details-list .dm-apde-scheda-titolo{
+      display:flex;align-items:center;gap:8px;margin:0 0 12px;
+      font-size:13.5px;font-weight:800;color:var(--text,#0f172a)}
+    #details-list .dm-apde-scheda-titolo svg{width:18px;height:18px;stroke:#0284c7}
+    #details-list .dm-apde-stato{
+      display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;
+      margin:18px 4px 14px}
+    #details-list .dm-apde-stato-grande{
+      display:grid;gap:1px;min-width:0;padding:0;border:0;background:none;color:inherit;
+      font:inherit;text-align:left;cursor:pointer}
+    #details-list .dm-apde-stato-grande small{font-size:12.5px;font-weight:700;color:var(--text-dim,#64748b)}
+    #details-list .dm-apde-stato-grande strong{
+      font-family:'Oswald',system-ui,sans-serif;font-weight:500;font-size:32px;line-height:1.05;
+      color:var(--text,#0f172a)}
+    #details-list .dm-apde-stato-altri{display:flex;flex-wrap:wrap;gap:6px}
+    #details-list .dm-apde-segno{
+      padding:6px 11px;border:0;border-radius:999px;cursor:pointer;font:inherit;
+      font-size:11.5px;font-weight:800;color:var(--text-dim,#64748b);background:var(--surface-2,#f1f5f9)}
+    #details-list .dm-apde-segno[data-acceso="true"]{
+      color:#0284c7;background:color-mix(in srgb,#0ea5e9 14%,transparent)}
+    #details-list .dm-apde-barra{
+      display:grid;gap:7px;width:100%;padding:0;margin:0 0 13px;border:0;background:none;
+      color:inherit;font:inherit;text-align:left;cursor:pointer}
+    #details-list .dm-apde-barra:last-child{margin-bottom:2px}
+    #details-list .dm-apde-barra-testo{display:flex;justify-content:space-between;gap:10px}
+    #details-list .dm-apde-barra-testo span{font-size:13.5px;font-weight:700;color:var(--text-dim,#475569)}
+    #details-list .dm-apde-barra-testo b{
+      font-size:14.5px;font-weight:800;color:var(--text,#0f172a);font-variant-numeric:tabular-nums}
+    #details-list .dm-apde-barra-binario{
+      display:block;height:8px;border-radius:999px;overflow:hidden;background:var(--surface-2,#f1f5f9)}
+    #details-list .dm-apde-barra-binario i{
+      display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#38bdf8,#0284c7)}
+    #details-list .dm-apde-numeri{
+      display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:14px 0;padding:16px 4px}
+    #details-list .dm-apde-numero-cella{
+      display:grid;gap:5px;min-width:0;padding:2px 14px;border:0;background:none;color:inherit;
+      font:inherit;text-align:left;cursor:pointer;
+      border-left:1px solid var(--surface-2,#f1f5f9)}
+    #details-list .dm-apde-numero-cella:first-child{border-left:0}
+    #details-list .dm-apde-numero-cella>span{font-size:12.5px;font-weight:700;color:var(--text-dim,#64748b)}
+    #details-list .dm-apde-numero-cella .dm-apde-numero-grande{font-size:32px}
+    #details-list .dm-apde-comandi{padding:6px 16px}
+    #details-list .dm-apde-comandi>.dm-apde-comando{
+      margin:0;padding:12px 0;min-height:56px;border:0;border-radius:0;background:none;
+      border-top:1px solid var(--surface-2,#f1f5f9)}
+    #details-list .dm-apde-comandi>.dm-apde-comando:first-child{border-top:0}
+    #details-list .dm-apde-comandi>.dm-apde-comando[data-largo="true"]{padding-top:12px}
+    #details-list .dm-apde-comandi>.dm-apde-comando[data-largo="true"]>.dm-apde-comando-nome{
+      font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
     #details-list p.dm-apde-integrazione{
       display:block;margin:14px 4px 0;padding:0;border:0;background:none;
       font-size:11.5px;font-weight:600;color:var(--text-dim,#94a3b8);text-align:center}
@@ -1309,6 +1421,10 @@ function css() {
       border:1px solid var(--card-border,#e2e8f0);background:var(--surface-2,#f8fafc);
       color:var(--text,#0f172a);font:inherit;font-size:12px;font-weight:700}
     #details-list .dm-apde-numero{flex-basis:96px;text-align:right;font-variant-numeric:tabular-nums}
+    /* Nella scheda dei comandi il menu si legge come un valore: blu, a destra. */
+    #details-list .dm-apde-comandi .dm-apde-menu{
+      flex:0 1 auto;width:auto;border:0;background:transparent;padding:0 2px;
+      color:#0284c7;font-size:14px;font-weight:800;text-align:right;text-align-last:right;cursor:pointer}
     #details-list .dm-apde-diagnostica{
       margin:14px 0 0;padding:0 12px 6px;border-radius:14px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--surface-2,#f8fafc)}
