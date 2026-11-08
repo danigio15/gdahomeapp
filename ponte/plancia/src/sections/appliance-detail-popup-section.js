@@ -127,7 +127,43 @@ function glifoDellaLettura(entity, unit) {
  * La parola andava sotto, in maiuscoletto da otto pixel e tagliata a meta'
  * («ENERGY_OGGI_LAVA…»): adesso si legge, e va a capo se serve. */
 function casellaDiLettura(glifo, valore, nome) {
-  return `<span class="dm-apde-casella-ic" aria-hidden="true">${glifo}</span><span class="dm-apde-casella-nome">${esc(nome)}</span><b>${esc(valore)}</b>`;
+  return `<span class="dm-apde-casella-ic" aria-hidden="true">${glifo}</span><span class="dm-apde-casella-nome">${esc(nome)}</span>${numeroGrande(valore)}`;
+}
+
+/* Il numero grande e l'unita' piccola accanto: «6,30» si legge da lontano,
+ * «kWh» serve solo a chi lo cerca. */
+function numeroGrande(valore) {
+  const detto = numeroInParole(clean(valore));
+  const pezzi = /^(-?[\d.,]+)\s*(.*)$/.exec(detto);
+  if (!pezzi) return `<b class="dm-apde-numero-grande">${esc(detto)}</b>`;
+  return `<b class="dm-apde-numero-grande">${esc(pezzi[1])}${pezzi[2] ? `<small>${esc(pezzi[2])}</small>` : ""}</b>`;
+}
+
+/* Il genere di una lettura, dal suo glifo: da' il colore alla casella. */
+const GENERI_DEI_GLIFI = new Map([
+  ["⚡", "potenza"],
+  ["📊", "energia"],
+  ["⏱️", "tempo"],
+  ["🔁", "cicli"],
+  ["🌡️", "caldo"],
+  ["💧", "acqua"],
+  ["🌀", "giri"],
+  ["💶", "costo"],
+]);
+const genereDelGlifo = (glifo) => GENERI_DEI_GLIFI.get(glifo) || "altro";
+
+/* Il segno di un comando, a sinistra della sua riga. */
+function segnoDelComando(voce, parole) {
+  const kind = voce.control?.kind;
+  const nome = `${parole} ${voce.entity}`.toLowerCase();
+  if (kind === "toggle") return { glifo: "⏻", genere: "accensione" };
+  if (kind === "press") return { glifo: "▶", genere: "azione" };
+  if (kind === "number")
+    return /fine|end|partenza|start|delay|ritard|timer/.test(nome)
+      ? { glifo: "⏰", genere: "tempo" }
+      : { glifo: "🎚️", genere: "numero" };
+  if (/programm|course|program|ciclo/.test(nome)) return { glifo: "🧺", genere: "programma" };
+  return { glifo: "▶", genere: "azione" };
 }
 
 /* Il marchio come lo conosce chi l'ha comprato: le integrazioni scrivono la
@@ -730,6 +766,41 @@ function tastoDelComando(voce) {
   if (!controllo) return null;
   const [domain] = voce.entity.split(".");
   if (controllo.kind === "select") {
+    /* Poche scelte corte: tasti, uno accanto all'altro, e quello attivo
+     * colorato. Un menu a tendina che nasconde «Avvia» dietro una freccia
+     * e' un passo in piu' per la cosa che si e' venuti a fare. */
+    const parole = controllo.options.map((opzione) => sceltaInParole(opzione));
+    if (
+      controllo.options.length >= 2 &&
+      controllo.options.length <= 4 &&
+      parole.every((parola) => parola.length <= 12)
+    ) {
+      const scelte = doc.createElement("div");
+      scelte.className = "dm-apde-scelte";
+      scelte.setAttribute("role", "group");
+      scelte.setAttribute("aria-label", voce.name);
+      const tasti = controllo.options.map((opzione, i) => {
+        const tasto = doc.createElement("button");
+        tasto.type = "button";
+        tasto.className = "dm-apde-scelta";
+        tasto.textContent = parole[i];
+        tasto.setAttribute("aria-pressed", opzione === controllo.current ? "true" : "false");
+        tasto.addEventListener("click", (event) => {
+          event.stopPropagation();
+          for (const altro of tasti) altro.setAttribute("aria-pressed", "false");
+          tasto.setAttribute("aria-pressed", "true");
+          comanda({
+            domain: "select",
+            service: "select_option",
+            target: { entity_id: voce.entity },
+            service_data: { option: opzione },
+          });
+        });
+        return tasto;
+      });
+      scelte.append(...tasti);
+      return scelte;
+    }
     const menu = doc.createElement("select");
     menu.className = "dm-apde-menu";
     menu.setAttribute("aria-label", voce.name);
@@ -751,6 +822,55 @@ function tastoDelComando(voce) {
     return menu;
   }
   if (controllo.kind === "number") {
+    /* Il meno, il numero con la sua unita', il piu': «Fine programmata 0 h»
+     * si regola col pollice, senza tastiera. */
+    const passo = Number(controllo.step) > 0 ? Number(controllo.step) : 1;
+    const minimo = Number.isFinite(Number(controllo.min)) ? Number(controllo.min) : -Infinity;
+    const massimo = Number.isFinite(Number(controllo.max)) ? Number(controllo.max) : Infinity;
+    const ora = Number.parseFloat(clean(controllo.current).replace(",", "."));
+    const unitaDelPasso = clean(allStates()?.[voce.entity]?.attributes?.unit_of_measurement);
+    if (Number.isFinite(ora) && Number.isFinite(minimo) && Number.isFinite(massimo)) {
+      const passi = doc.createElement("div");
+      passi.className = "dm-apde-passi";
+      passi.setAttribute("role", "group");
+      passi.setAttribute("aria-label", voce.name);
+      let valore = ora;
+      const meno = doc.createElement("button");
+      const piu = doc.createElement("button");
+      const mostra = doc.createElement("span");
+      mostra.className = "dm-apde-passi-valore";
+      const decimali = String(passo).includes(".") ? String(passo).split(".")[1].length : 0;
+      const disegna = () => {
+        mostra.innerHTML = `${esc(numeroInParole(valore.toFixed(decimali)))}${
+          unitaDelPasso ? `<small>${esc(unitaDelPasso)}</small>` : ""
+        }`;
+        meno.disabled = valore - passo < minimo - 1e-9;
+        piu.disabled = valore + passo > massimo + 1e-9;
+      };
+      for (const [tasto, segno, verso] of [
+        [meno, "−", -1],
+        [piu, "+", 1],
+      ]) {
+        tasto.type = "button";
+        tasto.className = "dm-apde-passo";
+        tasto.textContent = segno;
+        tasto.setAttribute("aria-label", `${segno} ${voce.name}`);
+        tasto.addEventListener("click", (event) => {
+          event.stopPropagation();
+          valore = Math.min(massimo, Math.max(minimo, valore + verso * passo));
+          disegna();
+          comanda({
+            domain: "number",
+            service: "set_value",
+            target: { entity_id: voce.entity },
+            service_data: { value: valore },
+          });
+        });
+      }
+      disegna();
+      passi.append(meno, mostra, piu);
+      return passi;
+    }
     const campo = doc.createElement("input");
     campo.type = "number";
     campo.className = "dm-apde-numero";
@@ -872,78 +992,167 @@ function vesteIntegrazione(lista, appliance, giaMostrate, titoletto) {
   )
     return;
 
+  const statiOra = allStates();
+  const token = tokenDi(appliance);
+
+  /* La testa: con chi e' collegata, e cos'e'. */
   const testa = doc.createElement("section");
   testa.className = "dm-apde-integrazione";
   testa.dataset.dmApdeSource = catalogo ? "catalogo" : "memoria";
   const nome = clean(appliance.integration_name) || clean(appliance.integration);
   /* «LGE Y_V8_Y___W.B32QEUK (DEVICE_WASHER)»: il marchio come lo conosce
    * chi l'ha comprato, e il modello senza la sigla del protocollo. */
-  const chi = [marchioInParole(appliance.device_manufacturer), modelloInParole(appliance.device_model)]
-    .filter(Boolean)
-    .join(" · ");
-  testa.innerHTML = `<strong>🔗 ${esc(t("Dall'integrazione", "From the integration"))}${nome ? ` ${esc(nome)}` : ""}</strong>${chi ? `<span>${esc(chi)}</span>` : ""}`;
+  const marchio = marchioInParole(appliance.device_manufacturer);
+  const modello = modelloInParole(appliance.device_model);
+  testa.innerHTML = `<span class="dm-apde-integrazione-ic" aria-hidden="true">🔗</span><span class="dm-apde-integrazione-testo"><strong>${esc(
+    nome
+      ? `${pick("Collegata a", "Connected to", activeLocale())} ${nome}`
+      : t("Dall'integrazione", "From the integration"),
+  )}</strong>${
+    marchio || modello
+      ? `<span>${marchio ? `<b>${esc(marchio)}</b>` : ""}${marchio && modello ? " · " : ""}${modello ? `<code>${esc(modello)}</code>` : ""}</span>`
+      : ""
+  }</span><i class="dm-apde-integrazione-punto" aria-hidden="true"></i>`;
   lista.append(testa);
-  const statiOra = allStates();
-  const token = tokenDi(appliance);
 
+  /* Lo stato: la fase in grande, come si legge sull'oblo'; il resto in
+   * piccolo sotto. «Stato attuale spinning» in una pillola grigia non lo
+   * guardava nessuno. */
   if (stato.length) {
-    lista.append(titoletto(t("Lo stato del dispositivo", "The device state")));
-    const fila = doc.createElement("div");
-    fila.className = "dm-apde-pillole";
-    for (const voce of stato) {
-      const nodo = doc.createElement("button");
-      nodo.type = "button";
-      nodo.className = "dm-apde-pillola";
-      nodo.dataset.acceso = voce.on ? "true" : "false";
-      nodo.dataset.dmApdeEntity = voce.entity;
-      const parole = nomeDellaVoce(voce.name, token);
-      const valore = statoInParole(statiOra?.[voce.entity]?.state, voce.value);
-      nodo.innerHTML = `<span>${esc(parole)}</span> <b>${esc(valore)}</b>`;
-      nodo.addEventListener("click", (event) => apriStorico(event, voce.entity, parole));
-      fila.append(nodo);
+    const conFase = stato.map((voce) => {
+      const grezzo = clean(statiOra?.[voce.entity]?.state);
+      const fase = /^(on|off)$/i.test(grezzo) ? null : faseInParole(grezzo, activeLocale());
+      return { voce, fase: fase && fase.glifo !== "•" ? fase : null };
+    });
+    const principale = conFase.find((una) => una.fase);
+    if (principale) {
+      const banda = doc.createElement("button");
+      banda.type = "button";
+      banda.className = "dm-apde-fase hist-clickable";
+      banda.dataset.dmApdeEntity = principale.voce.entity;
+      const parole = nomeDellaVoce(principale.voce.name, token);
+      banda.innerHTML = `<span class="dm-apde-fase-ic" aria-hidden="true">${esc(principale.fase.glifo)}</span><span class="dm-apde-fase-testo"><small>${esc(parole)}</small><strong>${esc(principale.fase.label)}</strong></span>`;
+      banda.addEventListener("click", (event) =>
+        apriStorico(event, principale.voce.entity, parole),
+      );
+      lista.append(banda);
     }
-    lista.append(fila);
+    const altre = conFase.filter((una) => una !== principale).map((una) => una.voce);
+    if (altre.length) {
+      const fila = doc.createElement("div");
+      fila.className = "dm-apde-pillole";
+      for (const voce of altre) {
+        const nodo = doc.createElement("button");
+        nodo.type = "button";
+        nodo.className = "dm-apde-pillola";
+        nodo.dataset.acceso = voce.on ? "true" : "false";
+        nodo.dataset.dmApdeEntity = voce.entity;
+        const parole = nomeDellaVoce(voce.name, token);
+        const valore = statoInParole(statiOra?.[voce.entity]?.state, voce.value);
+        nodo.innerHTML = `<span>${esc(parole)}</span> <b>${esc(valore)}</b>`;
+        nodo.addEventListener("click", (event) => apriStorico(event, voce.entity, parole));
+        fila.append(nodo);
+      }
+      lista.append(fila);
+    }
   }
+
+  /* Le letture: l'energia tutta in un riquadro — oggi, il mese, il totale
+   * uno accanto all'altro, che e' come si confrontano — e le altre in
+   * caselle col colore del loro genere: il tempo, i cicli, l'acqua. */
   if (letture.length) {
     lista.append(titoletto(t("Le letture del dispositivo", "The device readings")));
-    const griglia = doc.createElement("div");
-    griglia.className = "dm-apde-caselle";
-    /* Ogni casella col suo glifo e la sua parola — «Energia del mese», non
-     * «ENERGY_MESE_LAV…» — e le simili vicine: prima l'energia, poi i tempi. */
     const usate = new Set();
     const caselle = letture
       .map((voce) => {
         const unit = clean(statiOra?.[voce.entity]?.attributes?.unit_of_measurement);
         return { voce, unit, glifo: glifoDellaLettura(voce.entity, unit) };
       })
-      .sort((a, b) => postoDelGlifo(a.glifo) - postoDelGlifo(b.glifo));
-    for (const { voce, unit, glifo } of caselle) {
-      const parole = nomeDellaLettura(voce.entity, voce.name, unit, token, usate);
-      const casella = doc.createElement("button");
-      casella.type = "button";
-      casella.className = "dm-apde-casella hist-clickable";
-      casella.dataset.dmApdeEntity = voce.entity;
-      casella.innerHTML = casellaDiLettura(glifo, numeroInParole(voce.value), parole);
-      casella.addEventListener("click", (event) => apriStorico(event, voce.entity, parole));
-      griglia.append(casella);
+      .sort((a, b) => postoDelGlifo(a.glifo) - postoDelGlifo(b.glifo))
+      .map((una) => ({
+        ...una,
+        parole: nomeDellaLettura(una.voce.entity, una.voce.name, una.unit, token, usate),
+      }));
+    /* Nell'ordine in cui si confrontano: oggi, il mese, l'anno, il totale. */
+    const periodo = (parole) => {
+      const detto = parole.toLowerCase();
+      if (/oggi|today/.test(detto)) return 0;
+      if (/mese|month/.test(detto)) return 1;
+      if (/anno|year/.test(detto)) return 2;
+      return 3;
+    };
+    const energia = caselle
+      .filter((una) => una.glifo === "📊")
+      .sort((a, b) => periodo(a.parole) - periodo(b.parole));
+    const resto = energia.length >= 2 ? caselle.filter((una) => una.glifo !== "📊") : caselle;
+    if (energia.length >= 2) {
+      const riquadro = doc.createElement("div");
+      riquadro.className = "dm-apde-energia";
+      riquadro.innerHTML = `<div class="dm-apde-energia-testa"><span aria-hidden="true">⚡</span>${esc(
+        t("Energia", "Energy"),
+      )}</div>`;
+      const colonne = doc.createElement("div");
+      colonne.className = "dm-apde-energia-colonne";
+      for (const { voce, parole } of energia) {
+        const colonna = doc.createElement("button");
+        colonna.type = "button";
+        colonna.className = "dm-apde-energia-colonna hist-clickable";
+        colonna.dataset.dmApdeEntity = voce.entity;
+        const breve =
+          conLaMaiuscola(parole.replace(/^(energia|energy)\s*/i, "")) || t("Totale", "Total");
+        colonna.innerHTML = `<span>${esc(breve)}</span>${numeroGrande(voce.value)}`;
+        colonna.addEventListener("click", (event) => apriStorico(event, voce.entity, parole));
+        colonne.append(colonna);
+      }
+      riquadro.append(colonne);
+      lista.append(riquadro);
     }
-    lista.append(griglia);
+    if (resto.length) {
+      const griglia = doc.createElement("div");
+      griglia.className = "dm-apde-caselle";
+      for (const { voce, glifo, parole } of resto) {
+        const casella = doc.createElement("button");
+        casella.type = "button";
+        casella.className = "dm-apde-casella hist-clickable";
+        casella.dataset.dmApdeEntity = voce.entity;
+        casella.dataset.genere = genereDelGlifo(glifo);
+        casella.innerHTML = casellaDiLettura(glifo, voce.value, parole);
+        casella.addEventListener("click", (event) => apriStorico(event, voce.entity, parole));
+        griglia.append(casella);
+      }
+      lista.append(griglia);
+    }
   }
+
+  /* I comandi: un elenco solo, come le impostazioni del telefono — una riga
+   * per comando, il suo segno a sinistra e il comando vero a destra. */
   const rigaDiComando = (voce) => {
     const riga = doc.createElement("div");
     riga.className = "dm-apde-comando";
     riga.dataset.dmApdeEntity = voce.entity;
+    const parole = nomeDellaVoce(voce.name, token);
+    const segno = segnoDelComando(voce, parole);
+    riga.dataset.genere = segno.genere;
+    const icona = doc.createElement("span");
+    icona.className = "dm-apde-comando-ic";
+    icona.setAttribute("aria-hidden", "true");
+    icona.textContent = segno.glifo;
     const etichetta = doc.createElement("span");
     etichetta.className = "dm-apde-comando-nome";
-    etichetta.textContent = nomeDellaVoce(voce.name, token);
-    riga.append(etichetta);
+    etichetta.textContent = parole;
+    riga.append(icona, etichetta);
     const tasto = tastoDelComando(voce);
     if (tasto) riga.append(tasto);
+    if (voce.control?.kind === "select" && tasto?.classList?.contains("dm-apde-scelte"))
+      riga.dataset.largo = "true";
     return riga;
   };
   if (comandi.length) {
     lista.append(titoletto(t("I comandi del dispositivo", "The device controls")));
-    for (const voce of comandi) lista.append(rigaDiComando(voce));
+    const gruppo = doc.createElement("div");
+    gruppo.className = "dm-apde-gruppo";
+    for (const voce of comandi) gruppo.append(rigaDiComando(voce));
+    lista.append(gruppo);
   }
   aggiungiAltreLetture(lista, appliance, titoletto);
   /* Quelli scelti a mano stanno subito sotto (#338), prima della diagnostica:
@@ -1040,27 +1249,73 @@ function css() {
       content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
     #details-list .dm-apde-frase{margin:0;font-size:14.5px;font-weight:700;line-height:1.45;color:var(--text,#0f172a)}
     #details-list .dm-apde-titoletto{
-      margin:16px 0 8px;font-size:9.5px;font-weight:900;letter-spacing:1.7px;
-      text-transform:uppercase;color:var(--text-dim,#94a3b8)}
-    #details-list .dm-apde-caselle{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-    /* La casella: il glifo nel suo tondo e la parola accanto, il numero
-       grande sotto. La parola si legge intera, su due righe se serve. */
+      margin:20px 2px 10px;font-size:13px;font-weight:800;letter-spacing:0;
+      text-transform:none;color:var(--text,#0f172a)}
+    #details-list .dm-apde-caselle{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+    /* La casella: il colore del suo genere, il glifo nel suo tondo, la
+       parola intera e il numero grande con l'unita' piccola. */
     #details-list .dm-apde-casella{
-      display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:6px 8px;
-      padding:10px 11px 11px;border-radius:14px;text-align:left;cursor:pointer;
-      border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);color:inherit;font:inherit}
+      --g:#64748b;
+      display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:10px 9px;
+      padding:13px 13px 14px;border-radius:18px;text-align:left;cursor:pointer;
+      border:1px solid color-mix(in srgb,var(--g) 20%,var(--card-border,#e2e8f0));
+      background:linear-gradient(155deg,color-mix(in srgb,var(--g) 13%,var(--card-bg,#fff)),var(--card-bg,#fff) 72%);
+      color:inherit;font:inherit;transition:transform .15s}
+    #details-list .dm-apde-casella:active{transform:scale(.98)}
+    #details-list .dm-apde-casella[data-genere="potenza"]{--g:#f97316}
+    #details-list .dm-apde-casella[data-genere="energia"]{--g:#f59e0b}
+    #details-list .dm-apde-casella[data-genere="tempo"]{--g:#8b5cf6}
+    #details-list .dm-apde-casella[data-genere="cicli"]{--g:#14b8a6}
+    #details-list .dm-apde-casella[data-genere="caldo"]{--g:#ef4444}
+    #details-list .dm-apde-casella[data-genere="acqua"]{--g:#0ea5e9}
+    #details-list .dm-apde-casella[data-genere="giri"]{--g:#6366f1}
+    #details-list .dm-apde-casella[data-genere="costo"]{--g:#10b981}
     #details-list .dm-apde-casella-ic{
-      display:grid;place-items:center;width:28px;height:28px;border-radius:9px;
-      font-size:15px;line-height:1;background:var(--surface-2,#f1f5f9)}
+      display:grid;place-items:center;width:32px;height:32px;border-radius:11px;
+      font-size:16px;line-height:1;background:color-mix(in srgb,var(--g,#64748b) 18%,transparent)}
     #details-list .dm-apde-casella-nome{
-      min-width:0;font-size:11.5px;font-weight:700;line-height:1.2;color:var(--text-dim,#64748b);
+      min-width:0;font-size:12px;font-weight:700;line-height:1.2;color:var(--text-dim,#64748b);
       display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
-    #details-list .dm-apde-casella b{
-      grid-column:1 / -1;
-      font-family:'Oswald',system-ui,sans-serif;font-weight:500;font-size:21px;line-height:1.1;
+    #details-list .dm-apde-casella .dm-apde-numero-grande{grid-column:1 / -1}
+    #details-list .dm-apde-numero-grande{
+      display:block;font-family:'Oswald',system-ui,sans-serif;font-weight:500;font-size:28px;line-height:1;
       color:var(--text,#0f172a);font-variant-numeric:tabular-nums;
       white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    #details-list .dm-apde-pillole{display:flex;flex-wrap:wrap;gap:6px}
+    #details-list .dm-apde-numero-grande small{
+      margin-left:4px;font-family:inherit;font-size:13px;font-weight:600;color:var(--text-dim,#64748b)}
+    /* L'energia: un riquadro solo, le colonne una accanto all'altra. */
+    #details-list .dm-apde-energia{
+      margin:0 0 10px;padding:14px 14px 6px;border-radius:20px;
+      border:1px solid color-mix(in srgb,#f59e0b 26%,var(--card-border,#e2e8f0));
+      background:linear-gradient(150deg,color-mix(in srgb,#f59e0b 16%,var(--card-bg,#fff)),var(--card-bg,#fff) 75%)}
+    #details-list .dm-apde-energia-testa{
+      display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:color-mix(in srgb,#f59e0b 70%,#422006)}
+    #details-list .dm-apde-energia-testa span{
+      display:grid;place-items:center;width:28px;height:28px;border-radius:10px;
+      background:color-mix(in srgb,#f59e0b 22%,transparent);font-size:14px}
+    #details-list .dm-apde-energia-colonne{
+      display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:0}
+    #details-list .dm-apde-energia-colonna{
+      display:grid;gap:6px;padding:12px 4px 10px;text-align:left;cursor:pointer;
+      border:0;border-top:1px solid color-mix(in srgb,#f59e0b 18%,transparent);
+      background:none;color:inherit;font:inherit}
+    #details-list .dm-apde-energia-colonna>span{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    #details-list .dm-apde-energia-colonna .dm-apde-numero-grande{font-size:24px}
+    /* La fase: in grande, col suo glifo, come sull'oblo'. */
+    #details-list .dm-apde-fase{
+      display:flex;align-items:center;gap:13px;width:100%;margin:12px 0 8px;padding:14px 16px;
+      border-radius:20px;cursor:pointer;text-align:left;font:inherit;color:inherit;
+      border:1px solid color-mix(in srgb,#0ea5e9 28%,var(--card-border,#e2e8f0));
+      background:linear-gradient(120deg,color-mix(in srgb,#0ea5e9 16%,var(--card-bg,#fff)),
+        color-mix(in srgb,#6366f1 8%,var(--card-bg,#fff)))}
+    #details-list .dm-apde-fase-ic{
+      display:grid;place-items:center;width:46px;height:46px;border-radius:15px;flex:0 0 auto;
+      font-size:24px;background:var(--card-bg,#fff);box-shadow:0 4px 14px color-mix(in srgb,#0ea5e9 22%,transparent)}
+    #details-list .dm-apde-fase-testo{display:grid;gap:2px;min-width:0}
+    #details-list .dm-apde-fase-testo small{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+    #details-list .dm-apde-fase-testo strong{
+      font-family:'Oswald',system-ui,sans-serif;font-weight:500;font-size:26px;line-height:1.05;color:var(--text,#0f172a)}
+    #details-list .dm-apde-pillole{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 4px}
     #details-list .dm-apde-pillola{
       display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:999px;
       font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;
@@ -1079,6 +1334,45 @@ function css() {
       display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;
       margin:0 0 8px;padding:10px 12px;border-radius:14px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff)}
+    /* I comandi del dispositivo: un elenco solo, le righe divise da un filo. */
+    #details-list .dm-apde-gruppo{
+      border-radius:20px;overflow:hidden;
+      border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff)}
+    #details-list .dm-apde-gruppo>.dm-apde-comando{
+      --g:#0ea5e9;margin:0;padding:12px 14px;border:0;border-radius:0;
+      border-top:1px solid var(--card-border,#eef2f7);min-height:60px}
+    #details-list .dm-apde-gruppo>.dm-apde-comando:first-child{border-top:0}
+    #details-list .dm-apde-comando[data-genere="accensione"]{--g:#10b981}
+    #details-list .dm-apde-comando[data-genere="tempo"]{--g:#8b5cf6}
+    #details-list .dm-apde-comando[data-genere="programma"]{--g:#f59e0b}
+    #details-list .dm-apde-comando-ic{
+      display:grid;place-items:center;width:34px;height:34px;border-radius:11px;flex:0 0 auto;
+      font-size:16px;font-weight:900;color:var(--g,#0ea5e9);
+      background:color-mix(in srgb,var(--g,#0ea5e9) 15%,transparent)}
+    #details-list .dm-apde-comando>.dm-apde-comando-nome{flex:1 1 0;min-width:min-content;white-space:normal;line-height:1.2}
+    #details-list .dm-apde-comando[data-largo="true"]>.dm-apde-scelte{flex:1 1 100%}
+    /* Le scelte: tasti uno accanto all'altro, quello attivo colorato. */
+    #details-list .dm-apde-scelte{
+      display:flex;gap:4px;padding:4px;border-radius:14px;background:var(--surface-2,#f1f5f9)}
+    #details-list .dm-apde-scelta{
+      flex:1 1 auto;min-width:0;height:36px;padding:0 6px;border:0;border-radius:10px;cursor:pointer;
+      font:inherit;font-size:12px;font-weight:800;color:var(--text-dim,#64748b);background:transparent;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .15s,color .15s}
+    #details-list .dm-apde-scelta[aria-pressed="true"]{
+      background:var(--card-bg,#fff);color:#0284c7;box-shadow:0 1px 4px rgba(15,23,42,.14)}
+    /* Il meno e il piu', col numero e la sua unita' in mezzo. */
+    #details-list .dm-apde-passi{
+      display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:14px;
+      background:var(--surface-2,#f1f5f9)}
+    #details-list .dm-apde-passo{
+      width:34px;height:34px;border:0;border-radius:10px;cursor:pointer;font:inherit;
+      font-size:18px;font-weight:800;color:var(--text,#0f172a);background:var(--card-bg,#fff);
+      box-shadow:0 1px 3px rgba(15,23,42,.12)}
+    #details-list .dm-apde-passo:disabled{opacity:.35;cursor:not-allowed}
+    #details-list .dm-apde-passi-valore{
+      min-width:48px;text-align:center;font-family:'Oswald',system-ui,sans-serif;font-size:20px;
+      font-weight:500;color:var(--text,#0f172a);font-variant-numeric:tabular-nums}
+    #details-list .dm-apde-passi-valore small{margin-left:3px;font-family:inherit;font-size:12px;color:var(--text-dim,#64748b)}
     #details-list .dm-apde-comando-nome{
       min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
       font-size:13.5px;font-weight:800;color:var(--text,#0f172a)}
@@ -1113,13 +1407,24 @@ function css() {
     #details-list .dm-apde-vetrina{display:block;gap:0;padding:0;margin:0 0 4px}
     #details-list .dm-apde-vetrina .appl-wide-card.dm-ap-card{cursor:default;box-shadow:none;transform:none!important}
     #details-list .dm-apde-vetrina .appl-wide-card.dm-ap-card:hover{transform:none;box-shadow:none}
+    /* La testa: con chi e' collegata, il marchio e il modello, e il punto
+       verde di chi e' in linea. */
     #details-list .dm-apde-integrazione{
-      display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin:18px 0 2px;
-      padding:10px 12px;border-radius:14px;
-      border:1px solid color-mix(in srgb,#0ea5e9 30%,transparent);
-      background:color-mix(in srgb,#0ea5e9 7%,transparent)}
-    #details-list .dm-apde-integrazione strong{font-size:12.5px;font-weight:900;color:#0369a1}
-    #details-list .dm-apde-integrazione span{font-size:11px;font-weight:700;color:var(--text-dim,#94a3b8)}
+      display:flex;align-items:center;gap:11px;margin:18px 0 0;padding:10px 14px 10px 10px;
+      border-radius:16px;border:1px solid var(--card-border,#e2e8f0);background:var(--surface-2,#f8fafc)}
+    #details-list .dm-apde-integrazione-ic{
+      display:grid;place-items:center;width:34px;height:34px;border-radius:11px;flex:0 0 auto;
+      font-size:15px;background:var(--card-bg,#fff);box-shadow:0 1px 3px rgba(15,23,42,.1)}
+    #details-list .dm-apde-integrazione-testo{display:grid;gap:2px;min-width:0;flex:1 1 auto}
+    #details-list .dm-apde-integrazione strong{font-size:13px;font-weight:800;color:var(--text,#0f172a)}
+    #details-list .dm-apde-integrazione-testo>span{
+      font-size:11.5px;font-weight:600;color:var(--text-dim,#64748b);
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #details-list .dm-apde-integrazione-testo b{font-weight:800;color:var(--text,#0f172a)}
+    #details-list .dm-apde-integrazione code{font:inherit;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px}
+    #details-list .dm-apde-integrazione-punto{
+      width:9px;height:9px;border-radius:50%;flex:0 0 auto;background:#10b981;
+      box-shadow:0 0 0 4px color-mix(in srgb,#10b981 20%,transparent)}
     #details-list .dm-apde-menu,#details-list .dm-apde-numero{
       flex:1 1 140px;min-width:0;max-width:220px;height:32px;padding:0 8px;border-radius:10px;
       border:1px solid var(--card-border,#e2e8f0);background:var(--surface-2,#f8fafc);

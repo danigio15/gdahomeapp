@@ -38,15 +38,16 @@ _App GdAHome e Home Assistant._
 
 **In Home Assistant:**
 
-- **La finestra degli elettrodomestici si legge**: «non si capisce nulla».
-  Una lavatrice LG diceva «Total time», «Delayed end», «Operation start», lo
-  stato «spinning» e sei caselle tutte uguali col nome tagliato
-  («ENERGY_MESE_LAV…»). Adesso le parole delle integrazioni sono in italiano
-  (Durata totale, Fine programmata, Comando: Avvia), lo stato è la fase
-  («Centrifuga»), ogni lettura ha il suo simbolo — energia, tempo, cicli — e
-  il nome intero sopra il numero, con la virgola. Gli interruttori sono
-  levette che dicono «Acceso» o «Spento», accanto ai numeri c'è l'unità, e
-  l'ultimo ciclo non si ripete più sotto la scheda.
+- **La finestra degli elettrodomestici, ridisegnata**: «non si capisce
+  nulla». Una lavatrice LG diceva «Total time», «Delayed end», «Operation
+  start», lo stato «spinning» e sei caselle tutte uguali col nome tagliato.
+  Adesso la fase si legge in grande («Centrifuga»), l'energia sta in un
+  riquadro solo con oggi, mese e totale affiancati, le altre letture hanno
+  il colore e il simbolo del loro genere, e i comandi sono un elenco unico:
+  levette che dicono «Acceso» o «Spento», «Avvia · Ferma · Spegni» come
+  tasti, la fine programmata col meno e il più. Le parole delle integrazioni
+  sono in italiano, i numeri hanno la virgola, e l'ultimo ciclo non si
+  ripete più sotto la scheda.
 - **La ricarica notturna legge la batteria dell'auto**: «perché dice dal 60%
   se ho la batteria al 19%?». La stima e la partenza della ricarica
   prendevano il numero di evcc, che spesso non sa quanto è carica l'auto.
