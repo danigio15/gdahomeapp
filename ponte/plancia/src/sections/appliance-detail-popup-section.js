@@ -13,6 +13,8 @@
  * stessa finestra, stesso apri e chiudi, nessun secondo padrone.
  */
 import { deviceEntityGroups } from "../core/appliance-device-binding.js";
+import { faseInParole } from "../core/appliance-program.js";
+import { pick } from "../core/i18n.js";
 /* Il verbo con cui si preme un comando a parte lo sa gia' il robot (#306), e
  * per un elettrodomestico (#338) e' lo stesso: un tasto si preme, uno script si
  * accende, un'automazione si fa partire, un interruttore si inverte, una
@@ -111,7 +113,163 @@ function glifoDellaLettura(entity, unit) {
   if (/\bw\b|watt|power|potenza/.test(token)) return "⚡";
   if (/corrente|current|\ba\b/.test(token)) return "🔌";
   if (/volt|tension/.test(token)) return "🎚️";
+  /* Le letture delle integrazioni: «39 min» col grafico addosso non diceva
+   * che era un tempo, e «3» non diceva che erano cicli. */
+  if (/^(s|min|h|d)$/.test(unita) || /durat|time|tempo/.test(token)) return "⏱️";
+  if (/cicl|cycle|count|conteggio/.test(token)) return "🔁";
+  if (/€|eur|costo|cost|price|prezzo/.test(token)) return "💶";
+  if (/^(l|m³|m3)$/.test(unita) || /acqua|water/.test(token)) return "💧";
+  if (/rpm|giri|spin/.test(token)) return "🌀";
   return "📈";
+}
+
+/* Una casella: il glifo nel suo tondo, la parola sopra e il numero grande.
+ * La parola andava sotto, in maiuscoletto da otto pixel e tagliata a meta'
+ * («ENERGY_OGGI_LAVA…»): adesso si legge, e va a capo se serve. */
+function casellaDiLettura(glifo, valore, nome) {
+  return `<span class="dm-apde-casella-ic" aria-hidden="true">${glifo}</span><span class="dm-apde-casella-nome">${esc(nome)}</span><b>${esc(valore)}</b>`;
+}
+
+/* Il marchio come lo conosce chi l'ha comprato: le integrazioni scrivono la
+ * ragione sociale («LGE», «BSH Hausgeräte GmbH»). */
+const MARCHI = new Map([
+  ["lge", "LG"],
+  ["lgelectronics", "LG"],
+  ["bshhausgerategmbh", "Bosch Siemens"],
+  ["bshhausgeratemgbh", "Bosch Siemens"],
+  ["samsungelectronics", "Samsung"],
+  ["haier", "Haier"],
+]);
+function marchioInParole(marchio) {
+  const detto = clean(marchio);
+  const chiave = detto
+    .toLowerCase()
+    .normalize("NFD")
+    .replaceAll(/[\u0300-\u036f]/g, "")
+    .replaceAll(/[^a-z]/g, "");
+  return MARCHI.get(chiave) || detto;
+}
+/* Il modello senza la sigla del protocollo: «(DEVICE_WASHER)» lo dice
+ * ThinQ a se stesso, non a chi guarda. */
+function modelloInParole(modello) {
+  return clean(modello)
+    .replace(/\s*\((?:DEVICE_)?[A-Z_]+\)\s*$/, "")
+    .trim();
+}
+
+/* L'ordine delle caselle: prima la corrente, poi l'energia, poi i tempi. Chi
+ * apre la finestra di una lavatrice in funzione guarda quelle, nell'ordine. */
+const ORDINE_DEI_GLIFI = ["⚡", "📊", "⏱️", "🔁", "🌡️", "💧", "🌀", "💶", "🔌", "🎚️"];
+const postoDelGlifo = (glifo) => {
+  const posto = ORDINE_DEI_GLIFI.indexOf(glifo);
+  return posto === -1 ? ORDINE_DEI_GLIFI.length : posto;
+};
+
+/* Le parole delle integrazioni, in italiano.
+ *
+ * «Non si capisce nulla»: la finestra di una lavatrice LG diceva «Total
+ * time», «Delayed end», «Operation», «Power», e lo stato «spinning». Sono i
+ * nomi che le integrazioni pubblicano in inglese anche in una casa italiana.
+ * Qui le parole che tornano in ThinQ, SmartThings, Home Connect e hOn; una
+ * che non c'e' resta la sua, ripulita. La chiave e' il nome nudo: minuscolo,
+ * senza spazi ne' trattini. */
+const PAROLE_DELLE_VOCI = new Map(
+  [
+    [["totaltime", "totaltimes"], "Durata totale", "Total time"],
+    [["remaintime", "remainingtime", "timeremaining", "remaining"], "Tempo rimanente", "Time remaining"],
+    [["runningtime", "runtime", "elapsedtime"], "Tempo di funzionamento", "Running time"],
+    [["delayedend", "delayend", "reserveend", "relativehourtostop", "finishin"], "Fine programmata", "Delayed end"],
+    [["delayedstart", "delaystart", "reservestart", "relativehourtostart", "startin"], "Partenza ritardata", "Delayed start"],
+    [["operation", "operationmode", "washeroperation", "dryeroperation"], "Comando", "Operation"],
+    [["power", "powerswitch", "onoff"], "Accensione", "Power"],
+    [["remotestart", "remotecontrol", "remotecontrolenabled", "remotestartenabled"], "Avvio remoto", "Remote start"],
+    [["currentstatus", "runstate", "operationstate", "machinestate", "status", "state"], "Stato attuale", "Current status"],
+    [["cycles", "cyclecount", "washcycles", "cycle"], "Cicli", "Cycles"],
+    [["energy", "energyconsumption"], "Energia", "Energy"],
+    [["error", "errorcode", "errorstate"], "Errore", "Error"],
+    [["childlock", "childlocked"], "Blocco bambini", "Child lock"],
+    [["doorlock", "doorlocked"], "Blocco oblò", "Door lock"],
+    [["door", "dooropen", "doorstate"], "Oblò", "Door"],
+    [["spinspeed", "spin", "spinlevel"], "Centrifuga", "Spin"],
+    [["watertemp", "watertemperature", "temperature", "temp"], "Temperatura", "Temperature"],
+    [["course", "currentcourse", "program", "programme", "washcourse"], "Programma", "Program"],
+    [["detergent", "detergentlevel", "autodetergent"], "Detersivo", "Detergent"],
+    [["softener", "softenerlevel", "autosoftener"], "Ammorbidente", "Softener"],
+    [["rinsecount", "rinse"], "Risciacqui", "Rinses"],
+    [["prewash"], "Prelavaggio", "Pre-wash"],
+    [["steam"], "Vapore", "Steam"],
+    [["drylevel", "drymode"], "Asciugatura", "Drying"],
+  ].flatMap(([chiavi, it, en]) => chiavi.map((chiave) => [chiave, { it, en }])),
+);
+
+/* E le scelte dei menu: «start» e' un verbo, e sotto il pollice va detto
+ * come un verbo. Una scelta che e' una fase («spinning») la dice il
+ * vocabolario delle fasi. */
+const PAROLE_DELLE_SCELTE = new Map(
+  [
+    [["start"], "Avvia", "Start"],
+    [["stop"], "Ferma", "Stop"],
+    [["pause"], "Metti in pausa", "Pause"],
+    [["resume"], "Riprendi", "Resume"],
+    [["poweroff", "turnoff", "off"], "Spegni", "Switch off"],
+    [["poweron", "turnon", "on"], "Accendi", "Switch on"],
+    [["wakeup"], "Risveglia", "Wake up"],
+    [["cancel"], "Annulla", "Cancel"],
+  ].flatMap(([chiavi, it, en]) => chiavi.map((chiave) => [chiave, { it, en }])),
+);
+
+const nudoDi = (testo) => clean(testo).toLowerCase().replaceAll(/[\s_\-.]+/g, "");
+const conLaMaiuscola = (testo) => (testo ? testo.charAt(0).toUpperCase() + testo.slice(1) : testo);
+
+/* Il nome di una voce del dispositivo, in parole: prima il vocabolario delle
+ * integrazioni, poi le sue parole senza il nome dell'apparecchio. */
+function nomeDellaVoce(nome, tokenElettrodomestico) {
+  const via = new Set(tokenElettrodomestico);
+  const pezzi = clean(nome)
+    .replaceAll(/[_\-.]+/g, " ")
+    .split(/\s+/)
+    .filter((pezzo) => pezzo && !via.has(pezzo.toLowerCase()));
+  const riga = PAROLE_DELLE_VOCI.get(nudoDi(pezzi.join("")));
+  if (riga) return pick(riga.it, riga.en, activeLocale());
+  return conLaMaiuscola(nomeInParole(nome, tokenElettrodomestico));
+}
+
+/** Una scelta di un menu, in parole. */
+export function sceltaInParole(opzione) {
+  const riga = PAROLE_DELLE_SCELTE.get(nudoDi(opzione));
+  if (riga) return pick(riga.it, riga.en, activeLocale());
+  return faseInParole(opzione, activeLocale())?.label || clean(opzione).replaceAll("_", " ");
+}
+
+/* Il valore di uno stato, in parole: la fase nel vocabolario delle fasi, una
+ * data come la si dice («8 set, 01:40») e non come la scrive Home Assistant
+ * («2026-09-08T01:40:51.764Z»). */
+const DATA_ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
+export function statoInParole(grezzo, giaDetto) {
+  const valore = clean(grezzo);
+  if (DATA_ISO.test(valore)) {
+    const quando = new Date(valore);
+    if (!Number.isNaN(quando.getTime()))
+      return quando.toLocaleString(activeLocale(), {
+        day: "numeric",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+  }
+  if (/^(on|off)$/i.test(valore)) return giaDetto;
+  const fase = faseInParole(valore, activeLocale());
+  return fase?.label || giaDetto;
+}
+
+/* Un numero come si scrive qui: «6,30 kWh» in italiano, non «6.30 kWh». */
+function numeroInParole(testo) {
+  let virgola = ".";
+  try {
+    virgola = (1.5).toLocaleString(activeLocale()).charAt(1) || ".";
+  } catch (_errore) {}
+  if (virgola === ".") return String(testo);
+  return String(testo).replace(/^(-?\d+)\.(\d+)/, `$1${virgola}$2`);
 }
 
 /* Il nome della casella, in parole.
@@ -146,8 +304,8 @@ function nomeDellaLettura(entity, nome, unit, tokenElettrodomestico, usate) {
     usate.add(parola);
     return parola;
   }
-  /* Niente parola canonica (o gia' presa): le sue, ripulite. */
-  return nomeInParole(nome, tokenElettrodomestico);
+  /* Niente parola canonica (o gia' presa): le sue, ripulite e tradotte. */
+  return nomeDellaVoce(nome, tokenElettrodomestico);
 }
 
 /* Lo slug in parole: underscore e trattini in spazi, e il nome
@@ -324,8 +482,7 @@ function riveste(indice) {
       const casella = doc.createElement("button");
       casella.type = "button";
       casella.className = "dm-apde-casella hist-clickable";
-      casella.innerHTML = `<span class="dm-apde-casella-ic" aria-hidden="true">${misura.glifo}</span>
-        <b>${esc(misura.valore)}</b><span>${esc(misura.nome)}</span>`;
+      casella.innerHTML = casellaDiLettura(misura.glifo, numeroInParole(misura.valore), misura.nome);
       casella.addEventListener("click", (event) => apriStorico(event, misura.entity, misura.nome));
       griglia.append(casella);
     }
@@ -393,6 +550,9 @@ function mostrateDallaCard(appliance, model) {
     const id = clean(voce);
     if (id.includes(".")) viste.add(id);
   };
+  /* E l'ultimo ciclo: la card lo racconta gia' — avvio, durata, consumo,
+   * costo — e ripeterlo in caselle sotto erano quattro numeri uguali due
+   * volte nella stessa finestra. */
   for (const casella of [
     "control_entity",
     "power_entity",
@@ -400,6 +560,10 @@ function mostrateDallaCard(appliance, model) {
     "temperature_entity",
     "temperature_entity_2",
     "state_entity",
+    "last_start_entity",
+    "last_duration_entity",
+    "last_energy_entity",
+    "last_cost_entity",
   ])
     aggiungi(appliance?.[casella]);
   for (const chip of model?.program?.chips || []) aggiungi(chip.entity);
@@ -471,7 +635,7 @@ function tastoDelComandoExtra(voce) {
     for (const opzione of opzioni) {
       const riga = doc.createElement("option");
       riga.value = opzione;
-      riga.textContent = opzione.replaceAll("_", " ");
+      riga.textContent = sceltaInParole(opzione);
       riga.selected = opzione === voce.scelta;
       menu.append(riga);
     }
@@ -528,7 +692,12 @@ function aggiungiAltreLetture(lista, appliance, titoletto) {
     casella.type = "button";
     casella.className = "dm-apde-casella hist-clickable";
     casella.dataset.dmApdeEntity = voce.entity;
-    casella.innerHTML = `<span class="dm-apde-casella-ic" aria-hidden="true">📈</span><b>${esc(voce.testo)}</b><span>${esc(voce.name)}</span>`;
+    const unit = clean(allStates()?.[voce.entity]?.attributes?.unit_of_measurement);
+    casella.innerHTML = casellaDiLettura(
+      glifoDellaLettura(voce.entity, unit),
+      numeroInParole(voce.testo),
+      voce.name,
+    );
     casella.addEventListener("click", (event) => apriStorico(event, voce.entity, voce.name));
     griglia.append(casella);
   }
@@ -567,7 +736,7 @@ function tastoDelComando(voce) {
     for (const opzione of controllo.options) {
       const riga = doc.createElement("option");
       riga.value = opzione;
-      riga.textContent = opzione.replaceAll("_", " ");
+      riga.textContent = sceltaInParole(opzione);
       riga.selected = opzione === controllo.current;
       menu.append(riga);
     }
@@ -590,6 +759,8 @@ function tastoDelComando(voce) {
     if (controllo.max != null) campo.max = controllo.max;
     if (controllo.step != null) campo.step = controllo.step;
     campo.value = controllo.current;
+    /* «Delayed end 0»: zero cosa? L'unita' accanto al numero lo dice. */
+    const unita = clean(allStates()?.[voce.entity]?.attributes?.unit_of_measurement);
     campo.addEventListener("change", () => {
       const valore = Number(campo.value);
       if (!Number.isFinite(valore)) return;
@@ -600,7 +771,13 @@ function tastoDelComando(voce) {
         service_data: { value: valore },
       });
     });
-    return campo;
+    if (!unita) return campo;
+    const scatola = doc.createElement("span");
+    scatola.className = "dm-apde-numero-box";
+    const parola = doc.createElement("em");
+    parola.textContent = unita;
+    scatola.append(campo, parola);
+    return scatola;
   }
   const tasto = doc.createElement("button");
   tasto.type = "button";
@@ -614,12 +791,28 @@ function tastoDelComando(voce) {
     });
     return tasto;
   }
-  tasto.className = `dm-apde-tasto${controllo.on ? " on" : ""}`;
-  tasto.textContent = controllo.on ? "OFF" : "ON";
+  /* Un interruttore vero, che dice com'e'.
+   *
+   * Il tasto scriveva l'azione — «ON» su una cosa spenta, «OFF» su una
+   * accesa — e accanto a «Power» un «ON» si legge come «e' acceso»: «non si
+   * capisce nulla». Adesso c'e' la levetta, che a destra e colorata vuol dire
+   * acceso, e la parola dello stato accanto. */
+  tasto.className = "dm-apde-interruttore";
+  tasto.setAttribute("role", "switch");
   tasto.setAttribute("aria-label", voce.name);
+  const disegna = (acceso) => {
+    tasto.dataset.acceso = acceso ? "true" : "false";
+    tasto.setAttribute("aria-checked", acceso ? "true" : "false");
+    tasto.innerHTML = `<span class="dm-apde-interruttore-parola">${esc(
+      acceso ? t("Acceso", "On") : t("Spento", "Off"),
+    )}</span><span class="dm-apde-interruttore-binario" aria-hidden="true"><i></i></span>`;
+  };
+  disegna(Boolean(controllo.on));
   tasto.addEventListener("click", (event) => {
     event.stopPropagation();
-    root.cdApplEntTog?.(voce.entity, tasto);
+    const acceso = tasto.dataset.acceso === "true";
+    disegna(!acceso);
+    comanda({ domain, service: acceso ? "turn_off" : "turn_on", target: { entity_id: voce.entity } });
   });
   return tasto;
 }
@@ -683,12 +876,15 @@ function vesteIntegrazione(lista, appliance, giaMostrate, titoletto) {
   testa.className = "dm-apde-integrazione";
   testa.dataset.dmApdeSource = catalogo ? "catalogo" : "memoria";
   const nome = clean(appliance.integration_name) || clean(appliance.integration);
-  const chi = [appliance.device_manufacturer, appliance.device_model]
-    .map(clean)
+  /* «LGE Y_V8_Y___W.B32QEUK (DEVICE_WASHER)»: il marchio come lo conosce
+   * chi l'ha comprato, e il modello senza la sigla del protocollo. */
+  const chi = [marchioInParole(appliance.device_manufacturer), modelloInParole(appliance.device_model)]
     .filter(Boolean)
-    .join(" ");
+    .join(" · ");
   testa.innerHTML = `<strong>🔗 ${esc(t("Dall'integrazione", "From the integration"))}${nome ? ` ${esc(nome)}` : ""}</strong>${chi ? `<span>${esc(chi)}</span>` : ""}`;
   lista.append(testa);
+  const statiOra = allStates();
+  const token = tokenDi(appliance);
 
   if (stato.length) {
     lista.append(titoletto(t("Lo stato del dispositivo", "The device state")));
@@ -700,8 +896,10 @@ function vesteIntegrazione(lista, appliance, giaMostrate, titoletto) {
       nodo.className = "dm-apde-pillola";
       nodo.dataset.acceso = voce.on ? "true" : "false";
       nodo.dataset.dmApdeEntity = voce.entity;
-      nodo.innerHTML = `${esc(voce.name)} <b>${esc(voce.value)}</b>`;
-      nodo.addEventListener("click", (event) => apriStorico(event, voce.entity, voce.name));
+      const parole = nomeDellaVoce(voce.name, token);
+      const valore = statoInParole(statiOra?.[voce.entity]?.state, voce.value);
+      nodo.innerHTML = `<span>${esc(parole)}</span> <b>${esc(valore)}</b>`;
+      nodo.addEventListener("click", (event) => apriStorico(event, voce.entity, parole));
       fila.append(nodo);
     }
     lista.append(fila);
@@ -710,13 +908,23 @@ function vesteIntegrazione(lista, appliance, giaMostrate, titoletto) {
     lista.append(titoletto(t("Le letture del dispositivo", "The device readings")));
     const griglia = doc.createElement("div");
     griglia.className = "dm-apde-caselle";
-    for (const voce of letture) {
+    /* Ogni casella col suo glifo e la sua parola — «Energia del mese», non
+     * «ENERGY_MESE_LAV…» — e le simili vicine: prima l'energia, poi i tempi. */
+    const usate = new Set();
+    const caselle = letture
+      .map((voce) => {
+        const unit = clean(statiOra?.[voce.entity]?.attributes?.unit_of_measurement);
+        return { voce, unit, glifo: glifoDellaLettura(voce.entity, unit) };
+      })
+      .sort((a, b) => postoDelGlifo(a.glifo) - postoDelGlifo(b.glifo));
+    for (const { voce, unit, glifo } of caselle) {
+      const parole = nomeDellaLettura(voce.entity, voce.name, unit, token, usate);
       const casella = doc.createElement("button");
       casella.type = "button";
       casella.className = "dm-apde-casella hist-clickable";
       casella.dataset.dmApdeEntity = voce.entity;
-      casella.innerHTML = `<span class="dm-apde-casella-ic" aria-hidden="true">📈</span><b>${esc(voce.value)}</b><span>${esc(voce.name)}</span>`;
-      casella.addEventListener("click", (event) => apriStorico(event, voce.entity, voce.name));
+      casella.innerHTML = casellaDiLettura(glifo, numeroInParole(voce.value), parole);
+      casella.addEventListener("click", (event) => apriStorico(event, voce.entity, parole));
       griglia.append(casella);
     }
     lista.append(griglia);
@@ -727,7 +935,7 @@ function vesteIntegrazione(lista, appliance, giaMostrate, titoletto) {
     riga.dataset.dmApdeEntity = voce.entity;
     const etichetta = doc.createElement("span");
     etichetta.className = "dm-apde-comando-nome";
-    etichetta.textContent = voce.name;
+    etichetta.textContent = nomeDellaVoce(voce.name, token);
     riga.append(etichetta);
     const tasto = tastoDelComando(voce);
     if (tasto) riga.append(tasto);
@@ -757,8 +965,10 @@ function vesteIntegrazione(lista, appliance, giaMostrate, titoletto) {
       riga.className = "dm-apde-pillola";
       riga.dataset.acceso = voce.on ? "true" : "false";
       riga.dataset.dmApdeEntity = voce.entity;
-      riga.innerHTML = `${esc(voce.name)} <b>${esc(voce.value)}</b>`;
-      riga.addEventListener("click", (event) => apriStorico(event, voce.entity, voce.name));
+      const parole = nomeDellaVoce(voce.name, token);
+      const valore = statoInParole(statiOra?.[voce.entity]?.state, numeroInParole(voce.value));
+      riga.innerHTML = `<span>${esc(parole)}</span> <b>${esc(valore)}</b>`;
+      riga.addEventListener("click", (event) => apriStorico(event, voce.entity, parole));
       cassetto.append(riga);
     }
     lista.append(cassetto);
@@ -833,23 +1043,29 @@ function css() {
       margin:16px 0 8px;font-size:9.5px;font-weight:900;letter-spacing:1.7px;
       text-transform:uppercase;color:var(--text-dim,#94a3b8)}
     #details-list .dm-apde-caselle{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+    /* La casella: il glifo nel suo tondo e la parola accanto, il numero
+       grande sotto. La parola si legge intera, su due righe se serve. */
     #details-list .dm-apde-casella{
-      display:grid;gap:2px;padding:10px 11px;border-radius:14px;text-align:left;cursor:pointer;
+      display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:6px 8px;
+      padding:10px 11px 11px;border-radius:14px;text-align:left;cursor:pointer;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);color:inherit;font:inherit}
-    #details-list .dm-apde-casella-ic{font-size:15px;line-height:1}
+    #details-list .dm-apde-casella-ic{
+      display:grid;place-items:center;width:28px;height:28px;border-radius:9px;
+      font-size:15px;line-height:1;background:var(--surface-2,#f1f5f9)}
+    #details-list .dm-apde-casella-nome{
+      min-width:0;font-size:11.5px;font-weight:700;line-height:1.2;color:var(--text-dim,#64748b);
+      display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
     #details-list .dm-apde-casella b{
-      font-family:'Oswald',system-ui,sans-serif;font-weight:400;font-size:18px;line-height:1.1;
+      grid-column:1 / -1;
+      font-family:'Oswald',system-ui,sans-serif;font-weight:500;font-size:21px;line-height:1.1;
       color:var(--text,#0f172a);font-variant-numeric:tabular-nums;
       white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    #details-list .dm-apde-casella>span:last-child{
-      font-size:8.5px;font-weight:900;letter-spacing:1px;text-transform:uppercase;
-      color:var(--text-dim,#94a3b8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     #details-list .dm-apde-pillole{display:flex;flex-wrap:wrap;gap:6px}
     #details-list .dm-apde-pillola{
-      display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;
-      font-size:10.5px;font-weight:800;cursor:pointer;font-family:inherit;
+      display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:999px;
+      font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;
       border:1px solid var(--card-border,#e2e8f0);
-      background:var(--surface-2,#f8fafc);color:var(--text-dim,#94a3b8)}
+      background:var(--surface-2,#f8fafc);color:var(--text-dim,#64748b)}
     #details-list .dm-apde-pillola::before{
       content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
     #details-list .dm-apde-pillola[data-acceso="true"]{
@@ -865,11 +1081,30 @@ function css() {
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff)}
     #details-list .dm-apde-comando-nome{
       min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-      font-size:13px;font-weight:800;color:var(--text,#0f172a)}
+      font-size:13.5px;font-weight:800;color:var(--text,#0f172a)}
     #details-list .dm-apde-tasto{
       flex:0 0 auto;min-width:48px;height:32px;border:0;border-radius:10px;cursor:pointer;
       font-size:12px;font-weight:900;background:rgba(14,165,233,.14);color:#0284c7}
     #details-list .dm-apde-tasto.on{background:#0ea5e9;color:#fff}
+    /* L'interruttore: la parola dello stato e la levetta. */
+    #details-list .dm-apde-interruttore{
+      flex:0 0 auto;display:inline-flex;align-items:center;gap:9px;padding:0;border:0;
+      background:none;cursor:pointer;font:inherit;color:var(--text-dim,#64748b)}
+    #details-list .dm-apde-interruttore-parola{font-size:12px;font-weight:800}
+    #details-list .dm-apde-interruttore-binario{
+      position:relative;display:block;width:46px;height:28px;border-radius:999px;
+      background:var(--card-border,#cbd5e1);transition:background .2s}
+    #details-list .dm-apde-interruttore-binario i{
+      position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;
+      background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.3);transition:transform .2s}
+    #details-list .dm-apde-interruttore[data-acceso="true"]{color:#059669}
+    #details-list .dm-apde-interruttore[data-acceso="true"] .dm-apde-interruttore-binario{background:#10b981}
+    #details-list .dm-apde-interruttore[data-acceso="true"] .dm-apde-interruttore-binario i{transform:translateX(18px)}
+    #details-list .dm-apde-numero-box{
+      flex:1 1 120px;max-width:220px;display:inline-flex;align-items:center;gap:6px}
+    #details-list .dm-apde-numero-box .dm-apde-numero{flex:1 1 auto;max-width:none}
+    #details-list .dm-apde-numero-box em{
+      font-style:normal;font-size:12px;font-weight:800;color:var(--text-dim,#64748b)}
     /* Gli altri comandi (#338): un tasto che non si puo' premere lo dice, e
        la riga si stacca appena dalle altre per farsi riconoscere. */
     #details-list .dm-apde-tasto[disabled]{opacity:.45;cursor:not-allowed}

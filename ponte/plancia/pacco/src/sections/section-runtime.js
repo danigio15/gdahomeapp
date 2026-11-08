@@ -251,6 +251,7 @@ import {
   famiglieConSchede,
   fasciaDelleOre,
   fasciaInVigore,
+  faseInParole,
   fermaIVideo,
   finestraDellAvvio,
   finite,
@@ -569,7 +570,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-2FR3NDVS.js";
+} from "../../chunk-YNHFYVDI.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -93934,7 +93935,116 @@ function glifoDellaLettura(entity2, unit) {
   if (/\bw\b|watt|power|potenza/.test(token)) return "⚡";
   if (/corrente|current|\ba\b/.test(token)) return "🔌";
   if (/volt|tension/.test(token)) return "🎚️";
+  if (/^(s|min|h|d)$/.test(unita3) || /durat|time|tempo/.test(token)) return "⏱️";
+  if (/cicl|cycle|count|conteggio/.test(token)) return "🔁";
+  if (/€|eur|costo|cost|price|prezzo/.test(token)) return "💶";
+  if (/^(l|m³|m3)$/.test(unita3) || /acqua|water/.test(token)) return "💧";
+  if (/rpm|giri|spin/.test(token)) return "🌀";
   return "📈";
+}
+function casellaDiLettura(glifo2, valore3, nome) {
+  return `<span class="dm-apde-casella-ic" aria-hidden="true">${glifo2}</span><span class="dm-apde-casella-nome">${esc(nome)}</span><b>${esc(valore3)}</b>`;
+}
+var MARCHI = /* @__PURE__ */ new Map([
+  ["lge", "LG"],
+  ["lgelectronics", "LG"],
+  ["bshhausgerategmbh", "Bosch Siemens"],
+  ["bshhausgeratemgbh", "Bosch Siemens"],
+  ["samsungelectronics", "Samsung"],
+  ["haier", "Haier"]
+]);
+function marchioInParole(marchio) {
+  const detto3 = clean(marchio);
+  const chiave2 = detto3.toLowerCase().normalize("NFD").replaceAll(/[\u0300-\u036f]/g, "").replaceAll(/[^a-z]/g, "");
+  return MARCHI.get(chiave2) || detto3;
+}
+function modelloInParole(modello2) {
+  return clean(modello2).replace(/\s*\((?:DEVICE_)?[A-Z_]+\)\s*$/, "").trim();
+}
+var ORDINE_DEI_GLIFI = ["⚡", "📊", "⏱️", "🔁", "🌡️", "💧", "🌀", "💶", "🔌", "🎚️"];
+var postoDelGlifo = (glifo2) => {
+  const posto = ORDINE_DEI_GLIFI.indexOf(glifo2);
+  return posto === -1 ? ORDINE_DEI_GLIFI.length : posto;
+};
+var PAROLE_DELLE_VOCI2 = new Map(
+  [
+    [["totaltime", "totaltimes"], "Durata totale", "Total time"],
+    [["remaintime", "remainingtime", "timeremaining", "remaining"], "Tempo rimanente", "Time remaining"],
+    [["runningtime", "runtime", "elapsedtime"], "Tempo di funzionamento", "Running time"],
+    [["delayedend", "delayend", "reserveend", "relativehourtostop", "finishin"], "Fine programmata", "Delayed end"],
+    [["delayedstart", "delaystart", "reservestart", "relativehourtostart", "startin"], "Partenza ritardata", "Delayed start"],
+    [["operation", "operationmode", "washeroperation", "dryeroperation"], "Comando", "Operation"],
+    [["power", "powerswitch", "onoff"], "Accensione", "Power"],
+    [["remotestart", "remotecontrol", "remotecontrolenabled", "remotestartenabled"], "Avvio remoto", "Remote start"],
+    [["currentstatus", "runstate", "operationstate", "machinestate", "status", "state"], "Stato attuale", "Current status"],
+    [["cycles", "cyclecount", "washcycles", "cycle"], "Cicli", "Cycles"],
+    [["energy", "energyconsumption"], "Energia", "Energy"],
+    [["error", "errorcode", "errorstate"], "Errore", "Error"],
+    [["childlock", "childlocked"], "Blocco bambini", "Child lock"],
+    [["doorlock", "doorlocked"], "Blocco oblò", "Door lock"],
+    [["door", "dooropen", "doorstate"], "Oblò", "Door"],
+    [["spinspeed", "spin", "spinlevel"], "Centrifuga", "Spin"],
+    [["watertemp", "watertemperature", "temperature", "temp"], "Temperatura", "Temperature"],
+    [["course", "currentcourse", "program", "programme", "washcourse"], "Programma", "Program"],
+    [["detergent", "detergentlevel", "autodetergent"], "Detersivo", "Detergent"],
+    [["softener", "softenerlevel", "autosoftener"], "Ammorbidente", "Softener"],
+    [["rinsecount", "rinse"], "Risciacqui", "Rinses"],
+    [["prewash"], "Prelavaggio", "Pre-wash"],
+    [["steam"], "Vapore", "Steam"],
+    [["drylevel", "drymode"], "Asciugatura", "Drying"]
+  ].flatMap(([chiavi2, it, en]) => chiavi2.map((chiave2) => [chiave2, { it, en }]))
+);
+var PAROLE_DELLE_SCELTE = new Map(
+  [
+    [["start"], "Avvia", "Start"],
+    [["stop"], "Ferma", "Stop"],
+    [["pause"], "Metti in pausa", "Pause"],
+    [["resume"], "Riprendi", "Resume"],
+    [["poweroff", "turnoff", "off"], "Spegni", "Switch off"],
+    [["poweron", "turnon", "on"], "Accendi", "Switch on"],
+    [["wakeup"], "Risveglia", "Wake up"],
+    [["cancel"], "Annulla", "Cancel"]
+  ].flatMap(([chiavi2, it, en]) => chiavi2.map((chiave2) => [chiave2, { it, en }]))
+);
+var nudoDi = (testo5) => clean(testo5).toLowerCase().replaceAll(/[\s_\-.]+/g, "");
+var conLaMaiuscola2 = (testo5) => testo5 ? testo5.charAt(0).toUpperCase() + testo5.slice(1) : testo5;
+function nomeDellaVoce(nome, tokenElettrodomestico) {
+  const via = new Set(tokenElettrodomestico);
+  const pezzi = clean(nome).replaceAll(/[_\-.]+/g, " ").split(/\s+/).filter((pezzo3) => pezzo3 && !via.has(pezzo3.toLowerCase()));
+  const riga5 = PAROLE_DELLE_VOCI2.get(nudoDi(pezzi.join("")));
+  if (riga5) return pick(riga5.it, riga5.en, activeLocale());
+  return conLaMaiuscola2(nomeInParole(nome, tokenElettrodomestico));
+}
+function sceltaInParole(opzione) {
+  const riga5 = PAROLE_DELLE_SCELTE.get(nudoDi(opzione));
+  if (riga5) return pick(riga5.it, riga5.en, activeLocale());
+  return faseInParole(opzione, activeLocale())?.label || clean(opzione).replaceAll("_", " ");
+}
+var DATA_ISO2 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
+function statoInParole2(grezzo2, giaDetto) {
+  const valore3 = clean(grezzo2);
+  if (DATA_ISO2.test(valore3)) {
+    const quando6 = new Date(valore3);
+    if (!Number.isNaN(quando6.getTime()))
+      return quando6.toLocaleString(activeLocale(), {
+        day: "numeric",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+  }
+  if (/^(on|off)$/i.test(valore3)) return giaDetto;
+  const fase = faseInParole(valore3, activeLocale());
+  return fase?.label || giaDetto;
+}
+function numeroInParole2(testo5) {
+  let virgola = ".";
+  try {
+    virgola = 1.5.toLocaleString(activeLocale()).charAt(1) || ".";
+  } catch (_errore) {
+  }
+  if (virgola === ".") return String(testo5);
+  return String(testo5).replace(/^(-?\d+)\.(\d+)/, `$1${virgola}$2`);
 }
 function nomeDellaLettura2(entity2, nome, unit, tokenElettrodomestico, usate2) {
   const token = `${entity2} ${nome} ${unit}`.toLowerCase();
@@ -93956,7 +94066,7 @@ function nomeDellaLettura2(entity2, nome, unit, tokenElettrodomestico, usate2) {
     usate2.add(parola2);
     return parola2;
   }
-  return nomeInParole(nome, tokenElettrodomestico);
+  return nomeDellaVoce(nome, tokenElettrodomestico);
 }
 function nomeInParole(nome, tokenElettrodomestico) {
   const via = new Set(tokenElettrodomestico);
@@ -94085,8 +94195,7 @@ function riveste(indice) {
       const casella7 = doc.createElement("button");
       casella7.type = "button";
       casella7.className = "dm-apde-casella hist-clickable";
-      casella7.innerHTML = `<span class="dm-apde-casella-ic" aria-hidden="true">${misura8.glifo}</span>
-        <b>${esc(misura8.valore)}</b><span>${esc(misura8.nome)}</span>`;
+      casella7.innerHTML = casellaDiLettura(misura8.glifo, numeroInParole2(misura8.valore), misura8.nome);
       casella7.addEventListener("click", (event) => apriStorico(event, misura8.entity, misura8.nome));
       griglia3.append(casella7);
     }
@@ -94148,7 +94257,11 @@ function mostrateDallaCard(appliance, model2) {
     "remaining_entity",
     "temperature_entity",
     "temperature_entity_2",
-    "state_entity"
+    "state_entity",
+    "last_start_entity",
+    "last_duration_entity",
+    "last_energy_entity",
+    "last_cost_entity"
   ])
     aggiungi5(appliance?.[casella7]);
   for (const chip of model2?.program?.chips || []) aggiungi5(chip.entity);
@@ -94190,7 +94303,7 @@ function tastoDelComandoExtra(voce3) {
     for (const opzione of opzioni2) {
       const riga5 = doc.createElement("option");
       riga5.value = opzione;
-      riga5.textContent = opzione.replaceAll("_", " ");
+      riga5.textContent = sceltaInParole(opzione);
       riga5.selected = opzione === voce3.scelta;
       menu.append(riga5);
     }
@@ -94232,7 +94345,12 @@ function aggiungiAltreLetture(lista7, appliance, titoletto4) {
     casella7.type = "button";
     casella7.className = "dm-apde-casella hist-clickable";
     casella7.dataset.dmApdeEntity = voce3.entity;
-    casella7.innerHTML = `<span class="dm-apde-casella-ic" aria-hidden="true">📈</span><b>${esc(voce3.testo)}</b><span>${esc(voce3.name)}</span>`;
+    const unit = clean(allStates()?.[voce3.entity]?.attributes?.unit_of_measurement);
+    casella7.innerHTML = casellaDiLettura(
+      glifoDellaLettura(voce3.entity, unit),
+      numeroInParole2(voce3.testo),
+      voce3.name
+    );
     casella7.addEventListener("click", (event) => apriStorico(event, voce3.entity, voce3.name));
     griglia3.append(casella7);
   }
@@ -94269,7 +94387,7 @@ function tastoDelComando(voce3) {
     for (const opzione of controllo.options) {
       const riga5 = doc.createElement("option");
       riga5.value = opzione;
-      riga5.textContent = opzione.replaceAll("_", " ");
+      riga5.textContent = sceltaInParole(opzione);
       riga5.selected = opzione === controllo.current;
       menu.append(riga5);
     }
@@ -94293,6 +94411,7 @@ function tastoDelComando(voce3) {
     if (controllo.max != null) campo6.max = controllo.max;
     if (controllo.step != null) campo6.step = controllo.step;
     campo6.value = controllo.current;
+    const unita3 = clean(allStates()?.[voce3.entity]?.attributes?.unit_of_measurement);
     campo6.addEventListener("change", () => {
       const valore3 = Number(campo6.value);
       if (!Number.isFinite(valore3)) return;
@@ -94303,7 +94422,13 @@ function tastoDelComando(voce3) {
         service_data: { value: valore3 }
       });
     });
-    return campo6;
+    if (!unita3) return campo6;
+    const scatola2 = doc.createElement("span");
+    scatola2.className = "dm-apde-numero-box";
+    const parola2 = doc.createElement("em");
+    parola2.textContent = unita3;
+    scatola2.append(campo6, parola2);
+    return scatola2;
   }
   const tasto5 = doc.createElement("button");
   tasto5.type = "button";
@@ -94317,12 +94442,22 @@ function tastoDelComando(voce3) {
     });
     return tasto5;
   }
-  tasto5.className = `dm-apde-tasto${controllo.on ? " on" : ""}`;
-  tasto5.textContent = controllo.on ? "OFF" : "ON";
+  tasto5.className = "dm-apde-interruttore";
+  tasto5.setAttribute("role", "switch");
   tasto5.setAttribute("aria-label", voce3.name);
+  const disegna18 = (acceso7) => {
+    tasto5.dataset.acceso = acceso7 ? "true" : "false";
+    tasto5.setAttribute("aria-checked", acceso7 ? "true" : "false");
+    tasto5.innerHTML = `<span class="dm-apde-interruttore-parola">${esc(
+      acceso7 ? t("Acceso", "On") : t("Spento", "Off")
+    )}</span><span class="dm-apde-interruttore-binario" aria-hidden="true"><i></i></span>`;
+  };
+  disegna18(Boolean(controllo.on));
   tasto5.addEventListener("click", (event) => {
     event.stopPropagation();
-    root.cdApplEntTog?.(voce3.entity, tasto5);
+    const acceso7 = tasto5.dataset.acceso === "true";
+    disegna18(!acceso7);
+    comanda({ domain, service: acceso7 ? "turn_off" : "turn_on", target: { entity_id: voce3.entity } });
   });
   return tasto5;
 }
@@ -94360,9 +94495,11 @@ function vesteIntegrazione(lista7, appliance, giaMostrate, titoletto4) {
   testa2.className = "dm-apde-integrazione";
   testa2.dataset.dmApdeSource = catalogo ? "catalogo" : "memoria";
   const nome = clean(appliance.integration_name) || clean(appliance.integration);
-  const chi = [appliance.device_manufacturer, appliance.device_model].map(clean).filter(Boolean).join(" ");
+  const chi = [marchioInParole(appliance.device_manufacturer), modelloInParole(appliance.device_model)].filter(Boolean).join(" · ");
   testa2.innerHTML = `<strong>🔗 ${esc(t("Dall'integrazione", "From the integration"))}${nome ? ` ${esc(nome)}` : ""}</strong>${chi ? `<span>${esc(chi)}</span>` : ""}`;
   lista7.append(testa2);
+  const statiOra = allStates();
+  const token = tokenDi(appliance);
   if (stato3.length) {
     lista7.append(titoletto4(t("Lo stato del dispositivo", "The device state")));
     const fila2 = doc.createElement("div");
@@ -94373,8 +94510,10 @@ function vesteIntegrazione(lista7, appliance, giaMostrate, titoletto4) {
       nodo3.className = "dm-apde-pillola";
       nodo3.dataset.acceso = voce3.on ? "true" : "false";
       nodo3.dataset.dmApdeEntity = voce3.entity;
-      nodo3.innerHTML = `${esc(voce3.name)} <b>${esc(voce3.value)}</b>`;
-      nodo3.addEventListener("click", (event) => apriStorico(event, voce3.entity, voce3.name));
+      const parole5 = nomeDellaVoce(voce3.name, token);
+      const valore3 = statoInParole2(statiOra?.[voce3.entity]?.state, voce3.value);
+      nodo3.innerHTML = `<span>${esc(parole5)}</span> <b>${esc(valore3)}</b>`;
+      nodo3.addEventListener("click", (event) => apriStorico(event, voce3.entity, parole5));
       fila2.append(nodo3);
     }
     lista7.append(fila2);
@@ -94383,13 +94522,19 @@ function vesteIntegrazione(lista7, appliance, giaMostrate, titoletto4) {
     lista7.append(titoletto4(t("Le letture del dispositivo", "The device readings")));
     const griglia3 = doc.createElement("div");
     griglia3.className = "dm-apde-caselle";
-    for (const voce3 of letture2) {
+    const usate2 = /* @__PURE__ */ new Set();
+    const caselle2 = letture2.map((voce3) => {
+      const unit = clean(statiOra?.[voce3.entity]?.attributes?.unit_of_measurement);
+      return { voce: voce3, unit, glifo: glifoDellaLettura(voce3.entity, unit) };
+    }).sort((a, b2) => postoDelGlifo(a.glifo) - postoDelGlifo(b2.glifo));
+    for (const { voce: voce3, unit, glifo: glifo2 } of caselle2) {
+      const parole5 = nomeDellaLettura2(voce3.entity, voce3.name, unit, token, usate2);
       const casella7 = doc.createElement("button");
       casella7.type = "button";
       casella7.className = "dm-apde-casella hist-clickable";
       casella7.dataset.dmApdeEntity = voce3.entity;
-      casella7.innerHTML = `<span class="dm-apde-casella-ic" aria-hidden="true">📈</span><b>${esc(voce3.value)}</b><span>${esc(voce3.name)}</span>`;
-      casella7.addEventListener("click", (event) => apriStorico(event, voce3.entity, voce3.name));
+      casella7.innerHTML = casellaDiLettura(glifo2, numeroInParole2(voce3.value), parole5);
+      casella7.addEventListener("click", (event) => apriStorico(event, voce3.entity, parole5));
       griglia3.append(casella7);
     }
     lista7.append(griglia3);
@@ -94400,7 +94545,7 @@ function vesteIntegrazione(lista7, appliance, giaMostrate, titoletto4) {
     riga5.dataset.dmApdeEntity = voce3.entity;
     const etichetta3 = doc.createElement("span");
     etichetta3.className = "dm-apde-comando-nome";
-    etichetta3.textContent = voce3.name;
+    etichetta3.textContent = nomeDellaVoce(voce3.name, token);
     riga5.append(etichetta3);
     const tasto5 = tastoDelComando(voce3);
     if (tasto5) riga5.append(tasto5);
@@ -94428,8 +94573,10 @@ function vesteIntegrazione(lista7, appliance, giaMostrate, titoletto4) {
       riga5.className = "dm-apde-pillola";
       riga5.dataset.acceso = voce3.on ? "true" : "false";
       riga5.dataset.dmApdeEntity = voce3.entity;
-      riga5.innerHTML = `${esc(voce3.name)} <b>${esc(voce3.value)}</b>`;
-      riga5.addEventListener("click", (event) => apriStorico(event, voce3.entity, voce3.name));
+      const parole5 = nomeDellaVoce(voce3.name, token);
+      const valore3 = statoInParole2(statiOra?.[voce3.entity]?.state, numeroInParole2(voce3.value));
+      riga5.innerHTML = `<span>${esc(parole5)}</span> <b>${esc(valore3)}</b>`;
+      riga5.addEventListener("click", (event) => apriStorico(event, voce3.entity, parole5));
       cassetto.append(riga5);
     }
     lista7.append(cassetto);
@@ -94502,23 +94649,29 @@ function css2() {
       margin:16px 0 8px;font-size:9.5px;font-weight:900;letter-spacing:1.7px;
       text-transform:uppercase;color:var(--text-dim,#94a3b8)}
     #details-list .dm-apde-caselle{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+    /* La casella: il glifo nel suo tondo e la parola accanto, il numero
+       grande sotto. La parola si legge intera, su due righe se serve. */
     #details-list .dm-apde-casella{
-      display:grid;gap:2px;padding:10px 11px;border-radius:14px;text-align:left;cursor:pointer;
+      display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:6px 8px;
+      padding:10px 11px 11px;border-radius:14px;text-align:left;cursor:pointer;
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff);color:inherit;font:inherit}
-    #details-list .dm-apde-casella-ic{font-size:15px;line-height:1}
+    #details-list .dm-apde-casella-ic{
+      display:grid;place-items:center;width:28px;height:28px;border-radius:9px;
+      font-size:15px;line-height:1;background:var(--surface-2,#f1f5f9)}
+    #details-list .dm-apde-casella-nome{
+      min-width:0;font-size:11.5px;font-weight:700;line-height:1.2;color:var(--text-dim,#64748b);
+      display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
     #details-list .dm-apde-casella b{
-      font-family:'Oswald',system-ui,sans-serif;font-weight:400;font-size:18px;line-height:1.1;
+      grid-column:1 / -1;
+      font-family:'Oswald',system-ui,sans-serif;font-weight:500;font-size:21px;line-height:1.1;
       color:var(--text,#0f172a);font-variant-numeric:tabular-nums;
       white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    #details-list .dm-apde-casella>span:last-child{
-      font-size:8.5px;font-weight:900;letter-spacing:1px;text-transform:uppercase;
-      color:var(--text-dim,#94a3b8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     #details-list .dm-apde-pillole{display:flex;flex-wrap:wrap;gap:6px}
     #details-list .dm-apde-pillola{
-      display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;
-      font-size:10.5px;font-weight:800;cursor:pointer;font-family:inherit;
+      display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:999px;
+      font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;
       border:1px solid var(--card-border,#e2e8f0);
-      background:var(--surface-2,#f8fafc);color:var(--text-dim,#94a3b8)}
+      background:var(--surface-2,#f8fafc);color:var(--text-dim,#64748b)}
     #details-list .dm-apde-pillola::before{
       content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
     #details-list .dm-apde-pillola[data-acceso="true"]{
@@ -94534,11 +94687,30 @@ function css2() {
       border:1px solid var(--card-border,#e2e8f0);background:var(--card-bg,#fff)}
     #details-list .dm-apde-comando-nome{
       min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-      font-size:13px;font-weight:800;color:var(--text,#0f172a)}
+      font-size:13.5px;font-weight:800;color:var(--text,#0f172a)}
     #details-list .dm-apde-tasto{
       flex:0 0 auto;min-width:48px;height:32px;border:0;border-radius:10px;cursor:pointer;
       font-size:12px;font-weight:900;background:rgba(14,165,233,.14);color:#0284c7}
     #details-list .dm-apde-tasto.on{background:#0ea5e9;color:#fff}
+    /* L'interruttore: la parola dello stato e la levetta. */
+    #details-list .dm-apde-interruttore{
+      flex:0 0 auto;display:inline-flex;align-items:center;gap:9px;padding:0;border:0;
+      background:none;cursor:pointer;font:inherit;color:var(--text-dim,#64748b)}
+    #details-list .dm-apde-interruttore-parola{font-size:12px;font-weight:800}
+    #details-list .dm-apde-interruttore-binario{
+      position:relative;display:block;width:46px;height:28px;border-radius:999px;
+      background:var(--card-border,#cbd5e1);transition:background .2s}
+    #details-list .dm-apde-interruttore-binario i{
+      position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;
+      background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.3);transition:transform .2s}
+    #details-list .dm-apde-interruttore[data-acceso="true"]{color:#059669}
+    #details-list .dm-apde-interruttore[data-acceso="true"] .dm-apde-interruttore-binario{background:#10b981}
+    #details-list .dm-apde-interruttore[data-acceso="true"] .dm-apde-interruttore-binario i{transform:translateX(18px)}
+    #details-list .dm-apde-numero-box{
+      flex:1 1 120px;max-width:220px;display:inline-flex;align-items:center;gap:6px}
+    #details-list .dm-apde-numero-box .dm-apde-numero{flex:1 1 auto;max-width:none}
+    #details-list .dm-apde-numero-box em{
+      font-style:normal;font-size:12px;font-weight:800;color:var(--text-dim,#64748b)}
     /* Gli altri comandi (#338): un tasto che non si puo' premere lo dice, e
        la riga si stacca appena dalle altre per farsi riconoscere. */
     #details-list .dm-apde-tasto[disabled]{opacity:.45;cursor:not-allowed}
@@ -107064,7 +107236,7 @@ var STATI = {
   unavailable: ["non disponibile", "unavailable"],
   unknown: ["sconosciuto", "unknown"]
 };
-function statoInParole2(stato3) {
+function statoInParole3(stato3) {
   const s = pulito63(stato3);
   const noto = STATI[s.toLowerCase()];
   if (noto) return coppia(noto[0], noto[1]);
@@ -107098,7 +107270,7 @@ function diventaInParole(chi, stato3) {
   const s = pulito63(stato3).toLowerCase();
   const noto = DIVENTA[s];
   if (noto) return coppia(`${chi} ${noto[0]}`.trim(), `${chi} ${noto[1]}`.trim());
-  const a = statoInParole2(stato3);
+  const a = statoInParole3(stato3);
   return coppia(`${chi} diventa ${a.it}`.trim(), `${chi} becomes ${a.en}`.trim());
 }
 var numero51 = (x) => {
@@ -107375,7 +107547,7 @@ function condizioneDelDispositivoInParole(condizione, chi = "") {
   if (sotto) return coppia(`${it} sotto ${sotto}`, `${en} below ${sogliaEn(condizione.below)}`);
   const stato3 = STATO_DEL_DISPOSITIVO[tipo];
   if (stato3) {
-    const a = statoInParole2(stato3);
+    const a = statoInParole3(stato3);
     return coppia(`${it} è ${a.it}`, `${en} is ${a.en}`);
   }
   if (tipo === "is_motion") return coppia(`c'è movimento in ${it}`, `there's motion in ${en}`);
@@ -110316,7 +110488,7 @@ function disegnoDellEntita(id) {
     alarm_control_panel: "sicurezza"
   }[d] || "widget";
 }
-function statoInParole3(id) {
+function statoInParole4(id) {
   const s = stato2(id);
   if (!s) return t("Non trovata", "Not found");
   const v = String(s.state);
@@ -111204,9 +111376,9 @@ function cardEntita(c, i, grande = false) {
     return tessera2({
       chiave: clean(c.disegno) || disegnoDellEntita(id),
       accento: ACCENTI.azione,
-      etichetta: grande ? "" : statoInParole3(id),
+      etichetta: grande ? "" : statoInParole4(id),
       titolo: nomeDi10(id, c.nome),
-      sotto: clean(c.sotto) || (grande ? statoInParole3(id) : ""),
+      sotto: clean(c.sotto) || (grande ? statoInParole4(id) : ""),
       grande,
       classi: grande ? "" : "mu-comando",
       destra: grande ? "" : `<span class="mu-verbo" aria-hidden="true">${esc(t("Scegli", "Choose"))}</span>`,
@@ -111221,7 +111393,7 @@ function cardEntita(c, i, grande = false) {
     if (dato2) return dato2;
   }
   const on = acceso5(id) || ["unlocked", "playing", "cleaning"].includes(String(s?.state));
-  const parole5 = statoInParole3(id);
+  const parole5 = statoInParole4(id);
   if (servizio3 && !grande) {
     const dom = dominio2(id);
     const interruttore5 = INTERRUTTORI2.includes(dom);
@@ -111500,12 +111672,12 @@ function comandiDelLettore(l) {
     const id = c.entita || c.entity;
     if (dominio2(id) === "remote") {
       const premuto2 = c.comando ? "" : ` aria-pressed="${acceso5(id)}"`;
-      const parole6 = c.comando ? "" : statoInParole3(id);
+      const parole6 = c.comando ? "" : statoInParole4(id);
       return `<button type="button" class="${!c.comando && acceso5(id) ? "si" : ""}" data-mu-fa="mp-accanto" data-mu-entita="${esc(l.entity)}" data-mu-voce="${esc(c.entity)}"${premuto2}${c.available ? "" : " disabled"}>${esc(c.comando ? `${nomeDi10(id)} · ${c.comando}` : nomeDi10(id))}${parole6 ? ` <small>${esc(parole6)}</small>` : ""}</button>`;
     }
     const s = stato2(id);
     const servizio3 = servizioDellEntita(id, String(s?.state || ""));
-    const parole5 = statoInParole3(id);
+    const parole5 = statoInParole4(id);
     return `<button type="button" class="${acceso5(id) ? "si" : ""}" ${servizio3 ? `data-mu-fa="entita" data-mu-entita="${esc(id)}"` : `data-mu-entita="${esc(id)}" aria-disabled="true"`}>${esc(nomeDi10(id))}${parole5 ? ` <small>${esc(parole5)}</small>` : ""}</button>`;
   }).join("")}</div>`;
 }
@@ -111950,7 +112122,7 @@ function parolaDellaLettura(id) {
     const pos = numero52(s.attributes?.current_position);
     if (v === "open" && pos !== null && pos > 0 && pos < 100) return `${pos}%`;
   }
-  return statoInParole3(id);
+  return statoInParole4(id);
 }
 function letturaDaGuardare(id) {
   const s = stato2(id);
@@ -116121,8 +116293,8 @@ function fraseDelQuando(q) {
     const chi2 = q.entita.length ? nomi2(q.entita) : "…";
     const da = q.da;
     const a = q.a;
-    const prima = da ? detto2(statoInParole2(da)) : "";
-    const dopo = a ? detto2(statoInParole2(a)) : "";
+    const prima = da ? detto2(statoInParole3(da)) : "";
+    const dopo = a ? detto2(statoInParole3(a)) : "";
     let frase4 = t(`Quando ${chi2} cambia stato`, `When ${chi2} changes state`);
     if (da && a)
       frase4 = t(
@@ -116165,7 +116337,7 @@ function fraseDellaCondizione(c) {
   if (c.tipo === "stato")
     return c.vale === "spento" ? t(`${chi} spento`, `${chi} off`) : t(`${chi} acceso`, `${chi} on`);
   if (c.tipo === "uguale") {
-    const valore3 = c.valore ? detto2(statoInParole2(c.valore)) : "…";
+    const valore3 = c.valore ? detto2(statoInParole3(c.valore)) : "…";
     return c.non ? t(`${chi} non è «${valore3}»`, `${chi} is not «${valore3}»`) : t(`${chi} è «${valore3}»`, `${chi} is «${valore3}»`);
   }
   if (c.tipo === "attributo") {
@@ -116228,7 +116400,7 @@ function fraseDellAzione(a) {
         `aspetta che ${chi} salga sopra ${limite} (al massimo ${massimo} min)`,
         `wait until ${chi} rises above ${limite} (at most ${massimo} min)`
       );
-    const parola2 = detto2(statoInParole2(stato3));
+    const parola2 = detto2(statoInParole3(stato3));
     return t(
       `aspetta che ${chi} diventi ${parola2} (al massimo ${massimo} min)`,
       `wait until ${chi} becomes ${parola2} (at most ${massimo} min)`
@@ -116602,7 +116774,7 @@ function righeDellaCondizione(c, rientra = false) {
   }
   let riga5;
   if (tipo === "state") {
-    const stato3 = [].concat(c.state ?? "").map((x) => detto2(statoInParole2(x))).join(", ");
+    const stato3 = [].concat(c.state ?? "").map((x) => detto2(statoInParole3(x))).join(", ");
     riga5 = { testo: t(`${chi} è ${stato3}`, `${chi} is ${stato3}`) };
   } else if (tipo === "numeric_state") {
     const sopra = scritto2(c.above);
@@ -161635,7 +161807,7 @@ var KEY190 = "__DASHBOARDMODERN_BOLLETTE__";
 var state187 = root[KEY190] ||= { installed: false, frame: 0, firma: "" };
 var BOLLETTE_VIEW_ID = "view-bollette";
 var LINGUETTA = "bollette";
-function nomeDellaVoce(chiave2) {
+function nomeDellaVoce2(chiave2) {
   if (chiave2 === "daPagare") return t("Da pagare", "To pay");
   if (chiave2 === "stato") return t("Stato del pagamento", "Payment status");
   if (chiave2 === "ultima") return t("Ultima bolletta", "Latest bill");
@@ -161728,7 +161900,7 @@ function fraQuanto4(mesi) {
 }
 function casella6(chiave2, valore3, sotto = "", attenzione = false) {
   return `<div class="dm-bol-dato"${attenzione ? ' data-attenzione="true"' : ""}>
-      <span>${esc(nomeDellaVoce(chiave2))}</span>
+      <span>${esc(nomeDellaVoce2(chiave2))}</span>
       <b>${valore3}</b>
       ${sotto ? `<small>${esc(sotto)}</small>` : ""}
     </div>`;
@@ -161821,13 +161993,13 @@ function ensureScheda2() {
   for (const voce3 of VOCI_DELLA_BOLLETTA) {
     const riga5 = doc.createElement("label");
     riga5.className = "dm-bol-campo";
-    riga5.innerHTML = `<span>${esc(nomeDellaVoce(voce3.chiave))}</span>`;
+    riga5.innerHTML = `<span>${esc(nomeDellaVoce2(voce3.chiave))}</span>`;
     const trovato = trovati[voce3.chiave];
     const { field } = createEntityPickerField(doc, {
       id: `ed-bolletta-${voce3.chiave}`,
       value: scelte5[voce3.chiave] || "",
       placeholder: trovato ? nomeDellEntita(trovato, "", states) : "sensor.…",
-      label: nomeDellaVoce(voce3.chiave),
+      label: nomeDellaVoce2(voce3.chiave),
       locale: locale(),
       onPick: (input) => root.wzPickEntity?.(input)
     });
