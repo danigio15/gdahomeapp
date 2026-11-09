@@ -758,7 +758,7 @@ test("importo previsto e importo reale, stato per stato, senza inventare prezzi"
   );
 });
 
-test("in prova con il piano ma senza prezzo: quello dello stesso piano, o il listino", () => {
+test("in prova con il piano ma senza prezzo: in euro il listino, 4,99 €/mese e 49,99 €/anno", () => {
   const conPrezzo = riga({
     sog: casa(41),
     piano: "annuale",
@@ -797,8 +797,9 @@ test("in prova con il piano ma senza prezzo: quello dello stesso piano, o il lis
   const righe = PAGINA.tutteLeLicenze();
   const di = (nome) => righe.find((una) => una.nome === nome);
   const dal = PAGINA.conLArticolo("dal", ORA + 9 * GIORNO);
-  /* Lo stesso prodotto paga 47,99 €: quello. */
-  assert.equal(di("Prova Annuale").previsto.testo.replace(/\s/g, " "), "47,99 €/anno");
+  /* Lo stesso prodotto paga 47,99 €, ma il listino e' 49,99 €: «i prezzi
+   * non si trovano, deve essere mensile 4,99, annuale 49,99». */
+  assert.equal(di("Prova Annuale").previsto.testo.replace(/\s/g, " "), "49,99 €/anno");
   assert.equal(
     di("Prova Annuale").previsto.sotto.replace(/\s/g, " "),
     `${dal} · di listino`.replace(/\s/g, " "),
