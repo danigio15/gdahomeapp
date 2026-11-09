@@ -31,6 +31,20 @@ _App GdAHome._
 - **In guida sul telefono la riga dell'auto**: sotto l'ora d'arrivo, come
   nella scheda di Android Auto, batteria, chilometri che restano, batteria
   all'arrivo e meteo in una riga.
+- **Il «3D aumentato» più bello e più leggibile alla guida**: palazzi
+  diversi tra loro (facciate con persiane, balconi, palazzi d'epoca, anni
+  '70; i colori delle città italiane, coppi e terrazzi), niente più palazzi
+  «vuoti» o tetti sospesi, torri che non si deformano, ombre morbide, alberi
+  dipinti; palazzi e alberi non si spengono e riaccendono più. I palazzi
+  diventano trasparenti solo dove coprono l'auto, e la linea si vede meglio
+  in galleria.
+- **La strada già fatta resta disegnata** in guida, anche dopo un ricalcolo.
+- **Agli svincoli** la freccia bianca della manovra sta sulla linea blu.
+- **Android Auto**: il 3D inquadra l'auto più vicino e più dall'alto, gli
+  autovelox si vedono solo quando sono vicini, e a schermo diviso la riga del
+  viaggio sta intera.
+- **CarPlay**: nella scelta delle strade il «+7 min traffico» non va più a
+  capo a metà.
 
 ## 1.18.13
 
