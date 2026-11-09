@@ -95,23 +95,51 @@ class IlTelefono(context: Context, private val vetrina: Boolean = false) {
             .getCapability(TELEFONO, CapabilityClient.FILTER_REACHABLE)
             .addOnSuccessListener { info ->
                 val nodo = info.nodes.firstOrNull { it.isNearby } ?: info.nodes.firstOrNull()
+                if (nodo != null) manda(nodo.id, messaggio, zitto, capacita = true) else colTelefonoCollegato(messaggio, zitto)
+            }
+            .addOnFailureListener { colTelefonoCollegato(messaggio, zitto) }
+    }
+
+    /* «Il telefono non risponde», dal Galaxy Watch col telefono accanto e
+     * GdAHome aperta. La capacita' `gdahome_telefono` a volte non arriva
+     * all'orologio (Samsung la fa girare tardi, o dopo un aggiornamento
+     * dell'app non la riannuncia): allora si prova col telefono collegato,
+     * che e' quasi sempre l'unico. Se GdAHome c'e' risponde lui, come prima. */
+    private fun colTelefonoCollegato(messaggio: JSONObject, zitto: Boolean) {
+        Wearable.getNodeClient(contesto).connectedNodes
+            .addOnSuccessListener { nodi ->
+                val nodo = nodi.firstOrNull { it.isNearby } ?: nodi.firstOrNull()
                 if (nodo == null) {
-                    if (!zitto) finito(false, "Il telefono non risponde. Tienilo vicino, con GdAHome installata.")
+                    if (!zitto) finito(false, "L'orologio non è collegato al telefono. Controlla il Bluetooth.")
                     return@addOnSuccessListener
                 }
-                Wearable.getMessageClient(contesto)
-                    .sendRequest(nodo.id, TOCCO, messaggio.toString().toByteArray(Charsets.UTF_8))
-                    .addOnSuccessListener { byte ->
-                        val r = runCatching { JSONObject(String(byte, Charsets.UTF_8)) }.getOrNull() ?: JSONObject()
-                        r.optString("foto", "").takeIf { it.isNotEmpty() }?.let { prendi(it) }
-                        if (!zitto) {
-                            val ok = r.optBoolean("ok", false)
-                            finito(ok, r.optString("testo", "").ifEmpty { if (ok) "Fatto" else "Non è partito" })
-                        }
-                    }
-                    .addOnFailureListener { if (!zitto) finito(false, "Il telefono non ha risposto") }
+                manda(nodo.id, messaggio, zitto, capacita = false)
             }
-            .addOnFailureListener { if (!zitto) finito(false, "Il telefono non risponde") }
+            .addOnFailureListener {
+                if (!zitto) finito(false, "L'orologio non è collegato al telefono. Controlla il Bluetooth.")
+            }
+    }
+
+    private fun manda(nodo: String, messaggio: JSONObject, zitto: Boolean, capacita: Boolean) {
+        Wearable.getMessageClient(contesto)
+            .sendRequest(nodo, TOCCO, messaggio.toString().toByteArray(Charsets.UTF_8))
+            .addOnSuccessListener { byte ->
+                val r = runCatching { JSONObject(String(byte, Charsets.UTF_8)) }.getOrNull() ?: JSONObject()
+                r.optString("foto", "").takeIf { it.isNotEmpty() }?.let { prendi(it) }
+                if (!zitto) {
+                    val ok = r.optBoolean("ok", false)
+                    finito(ok, r.optString("testo", "").ifEmpty { if (ok) "Fatto" else "Non è partito" })
+                }
+            }
+            .addOnFailureListener {
+                if (zitto) return@addOnFailureListener
+                // Collegato ma senza risposta: sul telefono GdAHome non c'e', o
+                // e' una versione diversa da quella dell'orologio.
+                finito(
+                    false,
+                    if (capacita) "Il telefono non ha risposto" else "Aggiorna GdAHome sul telefono dal Play Store, poi aprila una volta.",
+                )
+            }
     }
 
     private fun finito(bene: Boolean, testo: String) {

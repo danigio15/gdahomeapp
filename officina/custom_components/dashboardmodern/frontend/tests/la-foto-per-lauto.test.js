@@ -438,11 +438,30 @@ test("una porta entra anche chiusa: il tasto serve proprio quando è chiusa", ()
   assert.equal(uno.stato, "Chiuso");
 });
 
-test("una luce spenta no: sarebbe un tasto che non risponde a nessuna domanda", () => {
-  /* Una casa ha quaranta luci e la griglia ne mostra sei. Quelle accese sono
-   * poche e sono quelle che uno cerca partendo; sei spente a caso sono sei
-   * tasti buttati. */
-  assert.deepEqual(idDi(iDispositiviPerLAuto([SALONE, CANTINA])), ["light.salone"]);
+test("una luce spenta in auto no, al polso sì: va in fondo, segnata «polso»", () => {
+  /* Una casa ha quaranta luci e la griglia dell'auto ne mostra sei. Quelle
+   * accese sono poche e sono quelle che uno cerca partendo; sei spente a caso
+   * sono sei tasti buttati. Al polso invece la lista scorre, e con le luci
+   * spente diceva «Nessun dispositivo da comandare». */
+  const dentro = iDispositiviPerLAuto([CANTINA, SALONE]);
+  assert.deepEqual(idDi(dentro), ["light.salone", "light.cantina"]);
+  assert.equal(dentro[0].polso, false);
+  assert.equal(dentro[1].polso, true);
+  assert.deepEqual(idDi(dentro.filter((uno) => !uno.polso)), ["light.salone"]);
+  const foto = laFotoPerLAuto({ dispositivi: [CANTINA], adesso: 1 });
+  assert.equal(foto.dispositivi[0].polso, true);
+});
+
+test("le spente non tolgono mai il posto a una presa accesa", () => {
+  const spente = Array.from({ length: 30 }, (_v, i) => ({
+    ...CANTINA,
+    entity: `light.spenta_${i}`,
+    nome: `Spenta ${i}`,
+  }));
+  const presa = { entity: "switch.forno", nome: "Forno", genere: "presa", acceso: true, stato: "Acceso" };
+  const dentro = iDispositiviPerLAuto([...spente, presa]);
+  assert.equal(dentro.length, DISPOSITIVI_AL_MASSIMO);
+  assert.equal(dentro[0].id, "switch.forno");
 });
 
 test("l'ordine è quello che conta guidando: prima quello che si apre", () => {

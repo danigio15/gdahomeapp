@@ -108,7 +108,7 @@ fun fileDellaFoto(context: Context): File = File(context.filesDir, NOME_DEL_FILE
  * valgono «non ce l'ho», che e' una risposta che le schermate sanno disegnare.
  * In auto un'eccezione e' una schermata nera mentre uno guida.
  */
-fun leggiLaFoto(context: Context): FotoDellaCasa? {
+fun leggiLaFoto(context: Context, perIlPolso: Boolean = false): FotoDellaCasa? {
     val file = fileDellaFoto(context)
     if (!file.isFile) return null
     val testo = runCatching { file.readText() }.getOrNull() ?: return null
@@ -116,7 +116,7 @@ fun leggiLaFoto(context: Context): FotoDellaCasa? {
     return FotoDellaCasa(
         casa = json.optString("casa", ""),
         quando = json.optLong("quando", 0L),
-        dispositivi = iDispositivi(json),
+        dispositivi = iDispositivi(json, perIlPolso),
         fotovoltaico = leMisure(json),
         persone = lePersone(json),
         azioni = leAzioni(json),
@@ -130,12 +130,20 @@ fun leggiLaFoto(context: Context): FotoDellaCasa? {
  * arrivassero di piu'. */
 const val DISPOSITIVI_AL_MASSIMO = 6
 
-private fun iDispositivi(json: JSONObject): List<Dispositivo> {
+/* Al polso la lista scorre: ci vanno tutti quelli che la plancia manda,
+ * anche le luci spente (`polso`), che in auto si saltano. Prima l'orologio
+ * Wear OS leggeva come l'auto: sei al massimo e solo le accese, e con le luci
+ * spente diceva «Nessun dispositivo da comandare». */
+const val DISPOSITIVI_AL_POLSO = 24
+
+private fun iDispositivi(json: JSONObject, perIlPolso: Boolean = false): List<Dispositivo> {
     val elenco = json.optJSONArray("dispositivi") ?: return emptyList()
     val fuori = mutableListOf<Dispositivo>()
+    val tetto = if (perIlPolso) DISPOSITIVI_AL_POLSO else DISPOSITIVI_AL_MASSIMO
     for (i in 0 until elenco.length()) {
-        if (fuori.size >= DISPOSITIVI_AL_MASSIMO) break
+        if (fuori.size >= tetto) break
         val voce = elenco.optJSONObject(i) ?: continue
+        if (!perIlPolso && voce.optBoolean("polso", false)) continue
         val id = voce.optString("id", "").trim()
         val nome = voce.optString("nome", "").trim()
         /* Senza nome non c'e' niente da scrivere sulla tessera, e senza

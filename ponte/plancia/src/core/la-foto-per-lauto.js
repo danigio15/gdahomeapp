@@ -280,19 +280,27 @@ export function iDispositiviPerLAuto(candidati = [], risolvi = null) {
     /* «Si vede ma non si comanda» vale anche qui. */
     if (grezzo?.comando === false) continue;
     const acceso = grezzo?.acceso === true;
-    /* Di luci e prese entra solo quello che è acceso: il perché sta scritto
-     * accanto a `GENERI_IN_AUTO`. */
-    if (!SI_VOGLIONO_TUTTI.has(genere) && !acceso) continue;
+    /* In auto di luci e prese entra solo quello che è acceso: il perché sta
+     * scritto accanto a `GENERI_IN_AUTO`. Al polso invece si vogliono tutte:
+     * «Nessun dispositivo da comandare», dal Wear OS con le luci spente. Le
+     * spente vanno nella fotografia segnate `polso`, e l'auto le salta
+     * (`LaFotoDellaCasa.kt`, `LaCasaInCarPlay.swift`). */
+    const polso = !SI_VOGLIONO_TUTTI.has(genere) && !acceso;
     const ricetta = laRicettaDelDispositivo(entity, risolvi);
     if (!ricetta) continue;
     visti.add(entity);
-    posto.push({ id: entity, nome, genere, acceso, stato: pulito(grezzo?.stato), ricetta });
+    posto.push({ id: entity, nome, genere, acceso, stato: pulito(grezzo?.stato), ricetta, polso });
   }
+  /* Prima quelli dell'auto, nel loro ordine; poi quelli solo per il polso.
+   * Così il tetto taglia le luci spente, mai una presa accesa. */
   const fuori = [];
-  for (const genere of GENERI_IN_AUTO) {
-    for (const uno of perGenere.get(genere) || []) {
-      if (fuori.length >= DISPOSITIVI_AL_MASSIMO) return fuori;
-      fuori.push(uno);
+  for (const soloPolso of [false, true]) {
+    for (const genere of GENERI_IN_AUTO) {
+      for (const uno of perGenere.get(genere) || []) {
+        if (uno.polso !== soloPolso) continue;
+        if (fuori.length >= DISPOSITIVI_AL_MASSIMO) return fuori;
+        fuori.push(uno);
+      }
     }
   }
   return fuori;
@@ -412,7 +420,8 @@ export function laFotoPerLAuto({
     dispositivi: iDispositiviPerLAuto(dispositivi, risolviEntita).map(
       /* La ricetta non ci va: nel file che legge l'auto vanno i nomi e gli
        * stati, e nient'altro. Quella viaggia a parte, come per i tasti. */
-      ({ id, nome, genere, acceso, stato }) => ({ id, nome, genere, acceso, stato }),
+      ({ id, nome, genere, acceso, stato, polso }) =>
+        polso ? { id, nome, genere, acceso, stato, polso } : { id, nome, genere, acceso, stato },
     ),
     fotovoltaico: leMisure(energia),
     persone: lePersone(persone, states),

@@ -10,6 +10,40 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.15
+
+_App GdAHome e Home Assistant._
+
+**L'orologio:**
+
+- **Tutti i dispositivi al polso**: sull'orologio Wear OS e sull'Apple Watch
+  arrivano anche le luci e le prese spente, non solo quelle accese — con le
+  luci spente diceva «Nessun dispositivo da comandare». In auto restano solo
+  porte, cancelli e quello che è acceso, come prima.
+- **Il navigatore al polso trova il telefono** anche quando l'orologio Wear
+  OS non lo vede fra quelli con GdAHome; se davvero non risponde, dice
+  perché: l'orologio non è collegato, o GdAHome sul telefono va aggiornata.
+
+**Nell'app, il navigatore:**
+
+- **La linea non sale più sui cavalcavia**: dove la strada passa sotto un
+  ponte la linea resta a terra, e il tratto coperto è tenue e tratteggiato,
+  senza frecce. Sotto i ponti niente più tremolio.
+- **La linea sta sulla strada**: dove i dati la spostavano di qualche metro
+  di lato, ora segue la carreggiata; e il tratto già fatto resta a terra,
+  all'altezza della strada.
+- **La freccia più fluida**: segue la velocità vera invece di rincorrere la
+  posizione, quindi non va più ora avanti ora indietro rispetto a dove sei;
+  in frenata rallenta con te.
+- **Lo zoom giusto**: in auto la mappa 3D non è più troppo vicina, e in
+  strada non si allontana più troppo.
+- **Android Auto**: a destra c'è di nuovo la striscia del traffico, con le
+  code colorate e i minuti in più; e con lo schermo diviso a metà le
+  indicazioni nel riquadro di sinistra non si tagliano più.
+- **CarPlay**: sullo schermo piccolo c'è la riga della batteria (batteria
+  ora → all'arrivo), e nella scelta delle strade la mappa inquadra il
+  viaggio invece di mezza Italia.
+
 ## 1.18.14
 
 _App GdAHome._

@@ -337,6 +337,25 @@ void main() {
     ]);
   });
 
+  test(
+    'una luce spenta arriva segnata «polso»: l\'orologio la vuole, l\'auto no',
+    () {
+      final foto = _letto(
+        laFotoDaScrivere(
+          '{"dispositivi":[{"id":"light.cantina","nome":"Cantina","genere":"luce","acceso":false,"stato":"Spenta","polso":true}]}',
+          casa: 'C',
+        ),
+      );
+      expect((foto['dispositivi'] as List).single['polso'], true);
+      // Senza il segno non se ne aggiunge uno.
+      final senza = _letto(laFotoDaScrivere(conDispositivi, casa: 'C'));
+      expect(
+        (senza['dispositivi'] as List).single.containsKey('polso'),
+        isFalse,
+      );
+    },
+  );
+
   test('coi soli dispositivi la fotografia si scrive lo stesso', () {
     /* Prima serviva almeno un numero, una persona o un tasto: una casa fatta
        di soli varchi e luci non avrebbe avuto niente in macchina, proprio

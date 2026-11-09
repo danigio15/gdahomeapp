@@ -110,6 +110,9 @@ String? laFotoDaScrivere(
       'genere': _pulito(riga['genere'], fino: 16),
       'acceso': riga['acceso'] == true,
       'stato': _pulito(riga['stato']),
+      /* Solo per il polso (una luce spenta): l'auto la salta, l'orologio
+       * no. Vedi `la-foto-per-lauto.js`. */
+      if (riga['polso'] == true) 'polso': true,
     });
   }
 
