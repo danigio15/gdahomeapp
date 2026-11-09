@@ -246,6 +246,8 @@ enum LaCasaInCarPlay {
     guard premium() else { return senzaPremium() }
     let foto = laFoto()
     let elenco = (foto?["dispositivi"] as? [[String: Any]] ?? []).compactMap { uno -> (String, String, String, String)? in
+      // Le luci spente sono solo per il polso: in auto si saltano.
+      if uno["polso"] as? Bool == true { return nil }
       let id = testo(uno["id"])
       let nome = testo(uno["nome"])
       guard !id.isEmpty, !nome.isEmpty else { return nil }

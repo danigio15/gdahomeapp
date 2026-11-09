@@ -572,7 +572,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-CBJJ4OEV.js";
+} from "../../chunk-WUB36I6W.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -101908,17 +101908,20 @@ function iDispositiviPerLAuto(candidati = [], risolvi5 = null) {
     if (!entity2 || !nome || visti.has(entity2)) continue;
     if (grezzo2?.comando === false) continue;
     const acceso7 = grezzo2?.acceso === true;
-    if (!SI_VOGLIONO_TUTTI.has(genere) && !acceso7) continue;
+    const polso = !SI_VOGLIONO_TUTTI.has(genere) && !acceso7;
     const ricetta = laRicettaDelDispositivo(entity2, risolvi5);
     if (!ricetta) continue;
     visti.add(entity2);
-    posto.push({ id: entity2, nome, genere, acceso: acceso7, stato: pulito56(grezzo2?.stato), ricetta });
+    posto.push({ id: entity2, nome, genere, acceso: acceso7, stato: pulito56(grezzo2?.stato), ricetta, polso });
   }
   const fuori = [];
-  for (const genere of GENERI_IN_AUTO) {
-    for (const uno3 of perGenere.get(genere) || []) {
-      if (fuori.length >= DISPOSITIVI_AL_MASSIMO) return fuori;
-      fuori.push(uno3);
+  for (const soloPolso of [false, true]) {
+    for (const genere of GENERI_IN_AUTO) {
+      for (const uno3 of perGenere.get(genere) || []) {
+        if (uno3.polso !== soloPolso) continue;
+        if (fuori.length >= DISPOSITIVI_AL_MASSIMO) return fuori;
+        fuori.push(uno3);
+      }
     }
   }
   return fuori;
@@ -101981,7 +101984,7 @@ function laFotoPerLAuto({
     dispositivi: iDispositiviPerLAuto(dispositivi, risolviEntita).map(
       /* La ricetta non ci va: nel file che legge l'auto vanno i nomi e gli
        * stati, e nient'altro. Quella viaggia a parte, come per i tasti. */
-      ({ id, nome, genere, acceso: acceso7, stato: stato3 }) => ({ id, nome, genere, acceso: acceso7, stato: stato3 })
+      ({ id, nome, genere, acceso: acceso7, stato: stato3, polso }) => polso ? { id, nome, genere, acceso: acceso7, stato: stato3, polso } : { id, nome, genere, acceso: acceso7, stato: stato3 }
     ),
     fotovoltaico: leMisure2(energia),
     persone: lePersone(persone4, states),

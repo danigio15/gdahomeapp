@@ -79,7 +79,7 @@ object IlTramiteDellOrologio {
         /* Senza Premium al polso si dice cosa serve, e i nomi di casa restano
          * sul telefono. */
         if (!premium) return foto.toString()
-        val casa = leggiLaFoto(context)
+        val casa = leggiLaFoto(context, perIlPolso = true)
         foto.put("casa", casa?.casa ?: "")
         foto.put("quando", casa?.quando ?: 0L)
         foto.put(
