@@ -141,7 +141,14 @@ enum LaCasaInCarPlay {
   /// Lascia scritto il comando e da' il colpetto al Dart, che lo esegue col
   /// filo dell'app. Torna `false` se non si e' potuto scrivere. Lo usa anche
   /// l'orologio (`LOrologio.swift`): un posto solo che sa premere.
-  static func lascia(_ id: String) -> Bool {
+  ///
+  /// `finito` riceve com'e' andata, con le parole di `ComeEFinitaInAuto`
+  /// (`lib/auto/in_auto.dart`: «fatto», «senzaCasa»…), o `nil` se il Dart non
+  /// ha risposto; non si chiama se il file non si e' scritto. Lo vuole
+  /// l'orologio: «ti da' fatto ma non fa niente» —
+  /// diceva «Fatto» appena il file era scritto, prima che la casa sentisse.
+  @discardableResult
+  static func lascia(_ id: String, finito: ((String?) -> Void)? = nil) -> Bool {
     var scritto = false
     if let cartella {
       try? FileManager.default.createDirectory(at: cartella, withIntermediateDirectories: true)
@@ -150,7 +157,15 @@ enum LaCasaInCarPlay {
         scritto = (try? dati.write(to: cartella.appendingPathComponent("gdahome-auto-comando.json"), options: .atomic)) != nil
       }
     }
-    if scritto { guarda?.invokeMethod("guarda", arguments: nil) }
+    /* Non scritto: lo dice il `false`, e `finito` non si chiama. */
+    guard scritto else { return false }
+    guard let guarda else {
+      finito?(nil)
+      return true
+    }
+    guarda.invokeMethod("guarda", arguments: nil) { risultato in
+      finito?(risultato as? String)
+    }
     return scritto
   }
 

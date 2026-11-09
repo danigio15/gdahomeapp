@@ -572,7 +572,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-ICKM4WX2.js";
+} from "../../chunk-QHSAIBFQ.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -109471,6 +109471,17 @@ function eNotte2(muro, adesso2 = /* @__PURE__ */ new Date()) {
   if (da === a) return false;
   return da < a ? qui >= da && qui < a : qui >= da || qui < a;
 }
+function cosaFaIlRisveglio(muro, stati4, { riposo: riposo2 = false, cambioAlRiposo = "" } = {}) {
+  const id = muro?.risveglio?.attivo ? muro.risveglio.entita : "";
+  const letto = id ? stati4?.[id] : null;
+  if (String(letto?.state) !== "on") return "";
+  if (!riposo2) return "resta";
+  return String(letto.last_changed || "") !== String(cambioAlRiposo || "") ? "sveglia" : "";
+}
+function cambioDelRisveglio(muro, stati4) {
+  const id = muro?.risveglio?.attivo ? muro.risveglio.entita : "";
+  return String(id && stati4?.[id]?.last_changed || "");
+}
 function dentroLaFascia(muro, adesso2) {
   const da = minutiDa3(muro?.notte?.da || MURO_VUOTO.notte.da);
   const a = minutiDa3(muro?.notte?.a || MURO_VUOTO.notte.a);
@@ -110497,6 +110508,9 @@ var state112 = root[KEY116] ||= {
   pagina: 0,
   toccato: Date.now(),
   riposo: false,
+  /* Il `last_changed` del sensore di risveglio quando il pannello e' andato
+   * a riposo: vedi `cosaFaIlRisveglio`. */
+  cambioAlRiposo: "",
   finestra: null,
   uscito: false,
   trascina: null,
@@ -113632,7 +113646,7 @@ function regolaLaLuce() {
     adesso: new Date(adesso2)
   });
   if (muro.luce.attiva && luce.notte && muro.luce.notte === 0 && !fonte && !state112.riposo && !state112.finestra && !state112.trascina) {
-    state112.riposo = true;
+    vaARiposo();
     if (muro.riposo.torna !== false) state112.pagina = 0;
   }
   const livello = livelloDellaLuce(muro, { vicino: Boolean(fonte), notte: luce.notte });
@@ -114552,17 +114566,30 @@ function battito3() {
   if (!muro?.attiva) return;
   if (state112.finestra && !state112.trascina && finestraDaChiudere(state112.finestra, state112.toccatoDalDito, Date.now()))
     chiudiFinestra();
+  const risveglio = cosaFaIlRisveglio(muro, allStates(), {
+    riposo: state112.riposo,
+    cambioAlRiposo: state112.cambioAlRiposo
+  });
+  if (risveglio === "resta") state112.toccato = Date.now();
+  if (risveglio === "sveglia") {
+    state112.riposo = false;
+    state112.toccato = Date.now();
+  }
   const fermo = Date.now() - state112.toccato;
   const sonno = (muro.riposo.attivo ? muro.riposo.minuti : 0) * 60 * 1e3;
   if (!state112.riposo && !state112.finestra && !state112.trascina && sonno && fermo > sonno) {
-    state112.riposo = true;
+    vaARiposo();
     if (muro.riposo.torna !== false) state112.pagina = 0;
   }
   if (!state112.riposo && eNotte2(muro) && fermo > 60 * 1e3 && !state112.finestra) {
-    state112.riposo = true;
+    vaARiposo();
     if (muro.riposo.torna !== false) state112.pagina = 0;
   }
   disegna8();
+}
+function vaARiposo() {
+  state112.riposo = true;
+  state112.cambioAlRiposo = cambioDelRisveglio(state112.muro, allStates());
 }
 var campanelloSuona2 = campanelloSuona;
 function campanelliDelMuro(muro = state112.muro) {
@@ -116338,7 +116365,7 @@ function installPlanciaAMuro() {
       });
     },
     riposa: () => {
-      state112.riposo = true;
+      vaARiposo();
       state112.pagina = 0;
       state112.finestra = null;
       disegna8();
