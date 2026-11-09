@@ -546,7 +546,7 @@ packages:
     description:
       path: "packages/gdanav_app"
       ref: main
-      resolved-ref: "ef1ad88c66409eb824ccf89bb4f6dd90994d9d60"
+      resolved-ref: ef1ad88c66409eb824ccf89bb4f6dd90994d9d60
       url: "https://github.com/danigio15/gdanav.git"
     source: git
     version: "0.1.0"
@@ -554,8 +554,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/gdanav_core"
-      ref: "ef1ad88c66409eb824ccf89bb4f6dd90994d9d60"
-      resolved-ref: "ef1ad88c66409eb824ccf89bb4f6dd90994d9d60"
+      ref: ef1ad88c66409eb824ccf89bb4f6dd90994d9d60
+      resolved-ref: ef1ad88c66409eb824ccf89bb4f6dd90994d9d60
       url: "https://github.com/danigio15/gdanav.git"
     source: git
     version: "0.1.0"
