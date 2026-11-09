@@ -758,7 +758,7 @@ test("importo previsto e importo reale, stato per stato, senza inventare prezzi"
   );
 });
 
-test("in prova con il piano ma senza prezzo: quello dello stesso piano, o il listino", () => {
+test("in prova con il piano ma senza prezzo: in euro il listino, 4,99 €/mese e 49,99 €/anno", () => {
   const conPrezzo = riga({
     sog: casa(41),
     piano: "annuale",
@@ -797,8 +797,9 @@ test("in prova con il piano ma senza prezzo: quello dello stesso piano, o il lis
   const righe = PAGINA.tutteLeLicenze();
   const di = (nome) => righe.find((una) => una.nome === nome);
   const dal = PAGINA.conLArticolo("dal", ORA + 9 * GIORNO);
-  /* Lo stesso prodotto paga 47,99 €: quello. */
-  assert.equal(di("Prova Annuale").previsto.testo.replace(/\s/g, " "), "47,99 €/anno");
+  /* Lo stesso prodotto paga 47,99 €, ma il listino e' 49,99 €: «i prezzi
+   * non si trovano, deve essere mensile 4,99, annuale 49,99». */
+  assert.equal(di("Prova Annuale").previsto.testo.replace(/\s/g, " "), "49,99 €/anno");
   assert.equal(
     di("Prova Annuale").previsto.sotto.replace(/\s/g, " "),
     `${dal} · di listino`.replace(/\s/g, " "),
@@ -942,7 +943,7 @@ test("i totali: il previsto e' quello che entra alle scadenze, il reale l'«Inca
    * porta 49,99 €, non 4,17 al mese. */
   assert.match(
     totale,
-    /Previsto alle prossime scadenze: 1 mensile × 4,99 € \+ 2 annuali × 49,99 € = 104,97 €, dal .+ al .+?\./,
+    /Previsto alle prossime scadenze: 1 mensile × 4,99 € \+ 2 annuali × 49,99 € = 104,97 €, dal(?:l'| ).+ al .+?\./,
   );
   assert.doesNotMatch(totale, /al mese|\/mese|Ricorrente/);
   /* Le prove a parte, e quella senza prezzo detta. */
@@ -967,7 +968,7 @@ test("i totali per gruppo: attive, in prova, non rinnovano", () => {
   const attive = piano(ilTotale(html, "attiva"));
   assert.match(
     attive,
-    /^Totale Attive Alle prossime scadenze: 1 mensile × 4,99 € \+ 2 annuali × 49,99 € = 104,97 €, dal /,
+    /^Totale Attive Alle prossime scadenze: 1 mensile × 4,99 € \+ 2 annuali × 49,99 € = 104,97 €, dal(?:l'| )/,
   );
   assert.match(attive, /104,97 € alle scadenze/);
   assert.match(

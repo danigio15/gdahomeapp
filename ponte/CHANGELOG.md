@@ -10,6 +10,42 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.14
+
+_App GdAHome._
+
+**Nell'app, il navigatore:**
+
+- **Le strade fra cui scegliere anche in macchina**: calcolato il viaggio,
+  Android Auto e CarPlay mostrano le stesse strade del telefono — più
+  rapida, risparmia energia, tempo simile, più lenta — con durata, da dove
+  passa, chilometri, batteria all'arrivo, consumo, pedaggio e traffico.
+  Toccandone una la si sceglie anche sul telefono; «Avvia» parte. Una meta
+  scelta sullo schermo dell'auto mostra prima le strade; a voce si parte
+  subito, come prima.
+- **La freccia nel «3D aumentato»**: col simbolo «freccia» scelto, in guida
+  c'è la freccia arancione e non più l'auto rossa.
+- **Le frecce sul percorso** nel «3D aumentato» puntano in avanti, e la
+  linea non si interrompe più spostando la mappa lontano dall'auto: continua,
+  con il traffico.
+- **In guida sul telefono la riga dell'auto**: sotto l'ora d'arrivo, come
+  nella scheda di Android Auto, batteria, chilometri che restano, batteria
+  all'arrivo e meteo in una riga.
+- **Il «3D aumentato» più bello e più leggibile alla guida**: palazzi
+  diversi tra loro (facciate con persiane, balconi, palazzi d'epoca, anni
+  '70; i colori delle città italiane, coppi e terrazzi), niente più palazzi
+  «vuoti» o tetti sospesi, torri che non si deformano, ombre morbide, alberi
+  dipinti; palazzi e alberi non si spengono e riaccendono più. I palazzi
+  diventano trasparenti solo dove coprono l'auto, e la linea si vede meglio
+  in galleria.
+- **La strada già fatta resta disegnata** in guida, anche dopo un ricalcolo.
+- **Agli svincoli** la freccia bianca della manovra sta sulla linea blu.
+- **Android Auto**: il 3D inquadra l'auto più vicino e più dall'alto, gli
+  autovelox si vedono solo quando sono vicini, e a schermo diviso la riga del
+  viaggio sta intera.
+- **CarPlay**: nella scelta delle strade il «+7 min traffico» non va più a
+  capo a metà.
+
 ## 1.18.13
 
 _App GdAHome e Home Assistant._

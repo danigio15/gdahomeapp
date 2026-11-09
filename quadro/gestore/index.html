@@ -8668,15 +8668,22 @@
       const LISTINO_GDAHOME = { mensile: 4.99, annuale: 49.99 };
 
       /* Il prezzo di un piano quando il negozio non l'ha detto (Apple, in
-       * prova, non lo manda): quello che paga, adesso, un altro abbonamento
-       * dello stesso prodotto — o della stessa app e dello stesso piano — e
-       * se non c'e' nessuno il listino di GdAHome. Torna `null` quando non si
+       * prova, non lo manda): in euro il listino di GdAHome; in un'altra
+       * valuta quello che paga, adesso, un altro abbonamento dello stesso
+       * prodotto — o della stessa app e dello stesso piano — e se non c'e'
+       * nessuno il listino. Torna `null` quando non si
        * sa nemmeno il piano: un prezzo senza piano sarebbe inventato. */
       function ilPrezzoDelPiano(uno) {
         const piano = uno.piano === "annuale" || uno.piano === "mensile" ? uno.piano : "";
         if (!piano) return null;
         const app = uno.app || "gdahome";
-        /* Solo dallo stesso negozio, e nella stessa valuta se la si sa: un
+        /* In euro vale il listino di GdAHome: 4,99 €/mese, 49,99 €/anno.
+         * Copiare il prezzo pagato da un altro cliente faceva leggere
+         * «44,99 €/anno» sulle prove App Store («i prezzi non si trovano»):
+         * il prezzo vero di chi paga resta sulla sua riga, detto dal negozio. */
+        if (app === "gdahome" && (uno.valuta || "EUR") === "EUR")
+          return { prezzo: LISTINO_GDAHOME[piano], valuta: "EUR", piano };
+        /* In un'altra valuta: solo dallo stesso negozio, e nella stessa valuta se la si sa: un
          * annuale di Google pagato in dollari da un cliente americano non e'
          * il prezzo di una prova Apple italiana («perche' App Store e' 54,99
          * USD?»). Senza nessuno cosi', il listino. */
