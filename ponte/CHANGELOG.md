@@ -28,10 +28,21 @@ _App GdAHome e Home Assistant._
 
 - **La linea non sale più sui cavalcavia**: dove la strada passa sotto un
   ponte la linea resta a terra, e il tratto coperto è tenue e tratteggiato,
-  senza frecce.
-- **CarPlay**: sullo schermo piccolo c'è la riga della batteria (batteria,
-  chilometri, arrivo, meteo), e nella scelta delle strade la mappa inquadra
-  il viaggio invece del mondo intero.
+  senza frecce. Sotto i ponti niente più tremolio.
+- **La linea sta sulla strada**: dove i dati la spostavano di qualche metro
+  di lato, ora segue la carreggiata; e il tratto già fatto resta a terra,
+  all'altezza della strada.
+- **La freccia più fluida**: segue la velocità vera invece di rincorrere la
+  posizione, quindi non va più ora avanti ora indietro rispetto a dove sei;
+  in frenata rallenta con te.
+- **Lo zoom giusto**: in auto la mappa 3D non è più troppo vicina, e in
+  strada non si allontana più troppo.
+- **Android Auto**: a destra c'è di nuovo la striscia del traffico, con le
+  code colorate e i minuti in più; e con lo schermo diviso a metà le
+  indicazioni nel riquadro di sinistra non si tagliano più.
+- **CarPlay**: sullo schermo piccolo c'è la riga della batteria (batteria
+  ora → all'arrivo), e nella scelta delle strade la mappa inquadra il
+  viaggio invece di mezza Italia.
 
 ## 1.18.14
 
