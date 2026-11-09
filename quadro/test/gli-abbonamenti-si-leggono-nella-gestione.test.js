@@ -942,7 +942,7 @@ test("i totali: il previsto e' quello che entra alle scadenze, il reale l'«Inca
    * porta 49,99 €, non 4,17 al mese. */
   assert.match(
     totale,
-    /Previsto alle prossime scadenze: 1 mensile × 4,99 € \+ 2 annuali × 49,99 € = 104,97 €, dal .+ al .+?\./,
+    /Previsto alle prossime scadenze: 1 mensile × 4,99 € \+ 2 annuali × 49,99 € = 104,97 €, dal(?:l'| ).+ al .+?\./,
   );
   assert.doesNotMatch(totale, /al mese|\/mese|Ricorrente/);
   /* Le prove a parte, e quella senza prezzo detta. */
@@ -967,7 +967,7 @@ test("i totali per gruppo: attive, in prova, non rinnovano", () => {
   const attive = piano(ilTotale(html, "attiva"));
   assert.match(
     attive,
-    /^Totale Attive Alle prossime scadenze: 1 mensile × 4,99 € \+ 2 annuali × 49,99 € = 104,97 €, dal /,
+    /^Totale Attive Alle prossime scadenze: 1 mensile × 4,99 € \+ 2 annuali × 49,99 € = 104,97 €, dal(?:l'| )/,
   );
   assert.match(attive, /104,97 € alle scadenze/);
   assert.match(
