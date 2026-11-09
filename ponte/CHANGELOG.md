@@ -10,6 +10,28 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.14
+
+_App GdAHome._
+
+**Nell'app, il navigatore:**
+
+- **Le strade fra cui scegliere anche in macchina**: calcolato il viaggio,
+  Android Auto e CarPlay mostrano le stesse strade del telefono — più
+  rapida, risparmia energia, tempo simile, più lenta — con durata, da dove
+  passa, chilometri, batteria all'arrivo, consumo, pedaggio e traffico.
+  Toccandone una la si sceglie anche sul telefono; «Avvia» parte. Una meta
+  scelta sullo schermo dell'auto mostra prima le strade; a voce si parte
+  subito, come prima.
+- **La freccia nel «3D aumentato»**: col simbolo «freccia» scelto, in guida
+  c'è la freccia arancione e non più l'auto rossa.
+- **Le frecce sul percorso** nel «3D aumentato» puntano in avanti, e la
+  linea non si interrompe più spostando la mappa lontano dall'auto: continua,
+  con il traffico.
+- **In guida sul telefono la riga dell'auto**: sotto l'ora d'arrivo, come
+  nella scheda di Android Auto, batteria, chilometri che restano, batteria
+  all'arrivo e meteo in una riga.
+
 ## 1.18.13
 
 _App GdAHome e Home Assistant._
