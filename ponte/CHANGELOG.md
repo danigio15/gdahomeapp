@@ -10,6 +10,29 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.15
+
+_App GdAHome e Home Assistant._
+
+**L'orologio:**
+
+- **Tutti i dispositivi al polso**: sull'orologio Wear OS e sull'Apple Watch
+  arrivano anche le luci e le prese spente, non solo quelle accese — con le
+  luci spente diceva «Nessun dispositivo da comandare». In auto restano solo
+  porte, cancelli e quello che è acceso, come prima.
+- **Il navigatore al polso trova il telefono** anche quando l'orologio Wear
+  OS non lo vede fra quelli con GdAHome; se davvero non risponde, dice
+  perché: l'orologio non è collegato, o GdAHome sul telefono va aggiornata.
+
+**Nell'app, il navigatore:**
+
+- **La linea non sale più sui cavalcavia**: dove la strada passa sotto un
+  ponte la linea resta a terra, e il tratto coperto è tenue e tratteggiato,
+  senza frecce.
+- **CarPlay**: sullo schermo piccolo c'è la riga della batteria (batteria,
+  chilometri, arrivo, meteo), e nella scelta delle strade la mappa inquadra
+  il viaggio invece del mondo intero.
+
 ## 1.18.14
 
 _App GdAHome._
