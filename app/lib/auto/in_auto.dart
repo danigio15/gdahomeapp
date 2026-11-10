@@ -35,6 +35,7 @@ import 'package:flutter/widgets.dart' show WidgetsFlutterBinding;
 import '../casa/archivio_delle_case.dart';
 import '../casa/cassaforte.dart';
 import '../casa/collegamento.dart';
+import '../casa/stato_della_casa.dart';
 import 'i_comandi.dart';
 import 'la_foto.dart';
 import 'qui.dart' as auto;
@@ -109,6 +110,38 @@ void ascoltaIlColpetto({Collegamento Function()? laCasaDellApp}) {
   }
 }
 
+/// Chi corregge la fotografia dopo un comando (`aggiornaIlDispositivoNellaFoto`).
+typedef AggiornaLaFoto = Future<void> Function(
+  String entita, {
+  required bool acceso,
+});
+
+/// Quanto si aspetta che Home Assistant dica lo stato nuovo, dopo un comando.
+const Duration quantoSiAspettaLoStato = Duration(seconds: 4);
+
+/// Lo stato di [id] appena diverso da [prima], o `null` se entro [fino] non
+/// cambia (un comando che non ha fatto niente, o una casa lenta: la
+/// fotografia resta com'era, e la plancia la sistemera').
+Future<String?> statoNuovo(
+  StatoDellaCasa stato,
+  String id,
+  String? prima, {
+  Duration fino = quantoSiAspettaLoStato,
+}) async {
+  String? diverso() {
+    final adesso = stato[id]?.stato;
+    return adesso != null && adesso != prima ? adesso : null;
+  }
+
+  if (diverso() case final gia?) return gia;
+  try {
+    await stato.cambiamenti.firstWhere((_) => diverso() != null).timeout(fino);
+  } catch (_) {
+    return null;
+  }
+  return diverso();
+}
+
 /// Da dove arriva il colpetto. Lo stesso nome sta in `IlPonteDellAuto.kt`: i
 /// due capi devono restare la stessa parola, perche' sbagliarli non da'
 /// nessun errore — da' un motore acceso che non fa niente.
@@ -133,6 +166,7 @@ Future<ComeEFinitaInAuto> eseguiIlComandoDellAuto({
   Collegamento Function()? apriLaCasa,
   Future<bool> Function()? premium,
   Collegamento Function()? laCasaDellApp,
+  AggiornaLaFoto? aggiornaLaFoto,
 }) async {
   if (_inCorso) return ComeEFinitaInAuto.niente;
   _inCorso = true;
@@ -143,6 +177,7 @@ Future<ComeEFinitaInAuto> eseguiIlComandoDellAuto({
       apriLaCasa,
       premium,
       laCasaDellApp,
+      aggiornaLaFoto ?? auto.aggiornaIlDispositivoNellaFoto,
     );
   } finally {
     _inCorso = false;
@@ -155,6 +190,7 @@ Future<ComeEFinitaInAuto> _esegui(
   Collegamento Function()? apriLaCasa,
   Future<bool> Function()? premium,
   Collegamento Function()? laCasaDellApp,
+  AggiornaLaFoto aggiornaLaFoto,
 ) async {
   final segno = await (prendiIlComando ?? auto.prendiIlComandoDellAuto)();
   if (segno == null || segno.isEmpty) return ComeEFinitaInAuto.niente;
@@ -207,12 +243,23 @@ Future<ComeEFinitaInAuto> _esegui(
     final servizio = ricetta.servizio == secondoLoStato
         ? ilServizioDiAdesso(ricetta.dominio, stato[ricetta.entita]?.stato)
         : ricetta.servizio;
+    final prima = stato[ricetta.entita]?.stato;
     await stato.comanda(
       servizio,
       ricetta.entita,
       dominio: ricetta.dominio,
       con: ricetta.dati.isEmpty ? null : {...ricetta.dati},
     );
+    /* «Vengono comandati ma non cambiano stato»: al polso la riga restava com'era,
+     * perche' la fotografia la riscrive solo la plancia aperta. Lo stato nuovo
+     * lo dice Home Assistant, e qui si aspetta — poco — e si corregge. Un
+     * gruppo di luci ne porta tante: lo sistemera' la plancia. */
+    if (!ricetta.entita.contains(',')) {
+      final dopo = await statoNuovo(stato, ricetta.entita, prima);
+      if (dopo != null) {
+        await aggiornaLaFoto(ricetta.entita, acceso: eAccesoPerLaFoto(dopo));
+      }
+    }
     return ComeEFinitaInAuto.fatto;
   } on TimeoutException {
     return ComeEFinitaInAuto.senzaCasa;

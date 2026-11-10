@@ -11,12 +11,14 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -95,14 +97,25 @@ private fun Radice(telefono: IlTelefono, vetrina: String = "") {
                     }
                 }
             }
+            /* L'avviso in un riquadro suo, al centro. Prima era testo ambra
+             * senza fondo, in basso: stava sopra la lista — «Il telefono non
+             * risponde» si leggeva mescolato a «Faretti Ingresso · Spenta» — e
+             * il bordo tondo dell'orologio ne tagliava i lati. */
             telefono.avviso?.let { testo ->
-                Text(
-                    testo,
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(horizontal = 24.dp, vertical = 10.dp),
-                    textAlign = TextAlign.Center,
-                    fontSize = 12.sp,
-                    color = ambra,
-                )
+                Box(
+                    Modifier
+                        .align(Alignment.Center)
+                        .padding(horizontal = 22.dp)
+                        .background(Color(0xF2101317), RoundedCornerShape(18.dp))
+                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                ) {
+                    Text(
+                        testo,
+                        textAlign = TextAlign.Center,
+                        fontSize = 13.sp,
+                        color = ambra,
+                    )
+                }
             }
         }
     }

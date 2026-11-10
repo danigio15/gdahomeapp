@@ -6911,6 +6911,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "WebRTC server error",
   "WebRTC timeout (10s)",
   "WebRTC WebSocket unreachable",
+  "WebRTC: connected, but no picture",
   "WebRTC: skipped — fill in “go2rtc stream name” in the Cameras tab (the camera name is not the lever)",
   "WebRTC: skipped, the browser does not support it",
   "WebRTC: the go2rtc stream name only works with the dashboard opened outside Home Assistant — in here the camera goes through its entity",

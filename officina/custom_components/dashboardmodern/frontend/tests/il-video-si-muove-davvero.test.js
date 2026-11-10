@@ -13,6 +13,8 @@ import test from "node:test";
 
 import {
   ATTESA_MINIMA,
+  aspettaUnImmagine,
+  haUnImmagine,
   aspettaCheSiMuova,
   mettiIlPoster,
   ceUnaFotoFerma,
@@ -186,4 +188,47 @@ test("un poster che c'e' gia' non si tocca, e senza fotogramma non se ne inventa
   /* E senza video non si scrive da nessuna parte. */
   assert.equal(mettiIlPoster(null, "camera.aarlo_ingresso", CASA), "");
   assert.equal(mettiIlPoster(undefined, "camera.aarlo_ingresso", CASA), "");
+});
+
+/* «Non si vede la telecamera»: il popup aperto e dentro un rettangolo nero.
+ * Il guscio dichiara riuscito il WebRTC al primo `loadeddata`, anche quando
+ * nessuna immagine arriva (H.265 che il browser non decodifica, solo audio,
+ * sonoro non concesso): il fermo se ne va e nessun'altra strada si prova. */
+function videoWebRtc({ larghezza = 0, fotogrammi = 0, fermo = false } = {}) {
+  return {
+    videoWidth: larghezza,
+    paused: fermo,
+    muted: false,
+    getVideoPlaybackQuality: () => ({ totalVideoFrames: fotogrammi }),
+    play() {
+      this.paused = false;
+      this.videoWidth = 1280;
+      return Promise.resolve();
+    },
+  };
+}
+
+test("il WebRTC che dipinge passa subito", async () => {
+  const v = videoWebRtc({ larghezza: 1280, fotogrammi: 3 });
+  assert.equal(haUnImmagine(v), true);
+  assert.equal(await aspettaUnImmagine(v, { attesa: 4000, passo: 100, dormi: subito }), true);
+});
+
+test("il WebRTC collegato senza immagine solleva: la fila scende all'HLS", async () => {
+  /* Larghezza zero: solo audio, o un codice che il browser non sa leggere. */
+  await assert.rejects(
+    aspettaUnImmagine(videoWebRtc(), { attesa: 1000, passo: 100, dormi: subito }),
+    /WebRTC/,
+  );
+  /* Una larghezza c'e', ma nessun fotogramma decodificato. */
+  const v = videoWebRtc({ larghezza: 1920, fotogrammi: 0 });
+  assert.equal(haUnImmagine(v), false);
+  await assert.rejects(aspettaUnImmagine(v, { attesa: 1000, passo: 100, dormi: subito }), /WebRTC/);
+});
+
+test("il WebRTC fermo perche' il sonoro non e' concesso parte muto", async () => {
+  const v = videoWebRtc({ fermo: true });
+  v.getVideoPlaybackQuality = () => ({ totalVideoFrames: v.paused ? 0 : 5 });
+  assert.equal(await aspettaUnImmagine(v, { attesa: 4000, passo: 100, dormi: subito }), true);
+  assert.equal(v.muted, true);
 });

@@ -55,6 +55,32 @@ Future<bool> lasciaLaFotoAllAuto(
   }
 }
 
+/// Dopo un comando partito da solo (dall'orologio, dall'auto): il
+/// dispositivo [entita] nella fotografia com'e' adesso, e l'orologio
+/// avvisato. Vedi [laFotoColDispositivo]. Non solleva mai.
+Future<void> aggiornaIlDispositivoNellaFoto(
+  String entita, {
+  required bool acceso,
+}) async {
+  try {
+    final cartella = await getApplicationSupportDirectory();
+    final foto = File('${cartella.path}/$nomeDelFile');
+    if (!await foto.exists()) return;
+    final nuova = laFotoColDispositivo(
+      await foto.readAsString(),
+      entita,
+      acceso: acceso,
+    );
+    if (nuova == null) return;
+    final mezzo = File('${cartella.path}/$nomeDelFile.mezzo');
+    await mezzo.writeAsString(nuova, flush: true);
+    await mezzo.rename(foto.path);
+    _diciloAllOrologio();
+  } catch (_) {
+    /* Al giro dopo la plancia la riscrive comunque giusta. */
+  }
+}
+
 /// Il comando che l'auto ha lasciato, se ce n'e' uno da eseguire adesso.
 ///
 /// Si toglie il file PRIMA di tornare, e si torna quello che c'era dentro: se

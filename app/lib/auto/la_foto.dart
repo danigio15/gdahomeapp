@@ -312,3 +312,70 @@ RicettaDellAzione? laRicettaDi(String id, List<RicettaDellAzione> ricette) {
   }
   return null;
 }
+
+/* ─── Il dispositivo appena comandato ────────────────────────────────────
+ *
+ * «Vengono comandati ma non cambiano stato», dal Galaxy Watch. La
+ * fotografia la scrive la plancia aperta sul telefono; col telefono in tasca
+ * la plancia non c'e', il comando dal polso partiva col filo dell'app e
+ * nessuno riscriveva la fotografia: al polso la luce accesa restava «Spenta».
+ * Chi ha eseguito il comando sa com'e' andata — lo stato nuovo arriva da Home
+ * Assistant — e corregge qui quella riga sola. */
+
+/// Le parole di uno stato e la loro opposta, come le scrive la plancia.
+const Map<String, String> _parolaOpposta = {
+  'Accesa': 'Spenta',
+  'Spenta': 'Accesa',
+  'Acceso': 'Spento',
+  'Spento': 'Acceso',
+  'Accese': 'Spente',
+  'Spente': 'Accese',
+  'Accesi': 'Spenti',
+  'Spenti': 'Accesi',
+  'Aperta': 'Chiusa',
+  'Chiusa': 'Aperta',
+  'Aperto': 'Chiuso',
+  'Chiuso': 'Aperto',
+  'On': 'Off',
+  'Off': 'On',
+};
+
+/// Gli stati di Home Assistant che al polso e in auto valgono «acceso».
+bool eAccesoPerLaFoto(String stato) =>
+    const {'on', 'open', 'opening'}.contains(stato.trim().toLowerCase());
+
+/// La fotografia [foto] con il dispositivo [entita] [acceso] o spento, o
+/// `null` se non c'e' niente da cambiare (non c'e', o e' gia' cosi').
+String? laFotoColDispositivo(
+  String foto,
+  String entita, {
+  required bool acceso,
+}) {
+  final letto = _prova(foto);
+  if (letto is! Map<String, Object?>) return null;
+  final elenco = letto['dispositivi'];
+  if (elenco is! List) return null;
+  var cambiata = false;
+  final nuovo = <Object?>[];
+  for (final riga in elenco) {
+    if (riga is! Map || riga['id'] != entita || riga['acceso'] == acceso) {
+      nuovo.add(riga);
+      continue;
+    }
+    cambiata = true;
+    final stato = '${riga['stato'] ?? ''}';
+    final corretta = <String, Object?>{
+      ...riga.cast<String, Object?>(),
+      'acceso': acceso,
+      'stato': _parolaOpposta[stato] ?? stato,
+    }..remove('polso');
+    /* Accesa entra anche in auto; spenta, una luce o una presa resta solo al
+     * polso (`la-foto-per-lauto.js`). Porte e varchi ci stanno sempre. */
+    if (!acceso && !const {'porta', 'varco'}.contains(riga['genere'])) {
+      corretta['polso'] = true;
+    }
+    nuovo.add(corretta);
+  }
+  if (!cambiata) return null;
+  return jsonEncode({...letto, 'dispositivi': nuovo});
+}

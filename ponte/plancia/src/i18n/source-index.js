@@ -7073,6 +7073,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Vuoto: quelli della sezione Musica della plancia": "Empty: the ones from the dashboard's Music section",
   "Vuoto: spegne": "Empty: turns off",
   "Vuoto: tutte quelle della sezione Sicurezza della plancia": "Empty: all the ones from the dashboard's Security section",
+  "WebRTC: collegato, ma senza immagine": "WebRTC: connected, but no picture",
   "WebRTC: il nome stream go2rtc funziona solo aprendo la plancia fuori da Home Assistant — qui dentro la telecamera passa dalla sua entità": "WebRTC: the go2rtc stream name only works with the dashboard opened outside Home Assistant — in here the camera goes through its entity",
   "WebRTC: provato per primo col suo tempo intero, il video non è arrivato": "WebRTC: tried first with its full time, the video did not arrive",
   "WebRTC: saltato — compila «Nome stream go2rtc» nella scheda Telecamere (il nome della telecamera non c’entra)": "WebRTC: skipped — fill in “go2rtc stream name” in the Cameras tab (the camera name is not the lever)",

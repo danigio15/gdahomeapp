@@ -38,3 +38,9 @@ Future<bool> diciLaLicenzaAllAuto({
 
 /// Nel browser nessuna auto: niente Premium in auto da guardare.
 Future<bool> laLicenzaDellAuto() async => false;
+
+/// Nel browser non c'e' fotografia da correggere.
+Future<void> aggiornaIlDispositivoNellaFoto(
+  String entita, {
+  required bool acceso,
+}) async {}

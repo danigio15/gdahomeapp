@@ -110,7 +110,7 @@ import { installPlanciaAMuroEditor } from "./plancia-a-muro-editor-section.js";
 import { installTestaFissa } from "./testa-fissa-section.js";
 import { installBatterie } from "./batterie-section.js";
 import { installBatterieEditor } from "./batterie-editor-section.js";
-import { installVideoSiMuove } from "./telecamera-il-video-si-muove-section.js";
+import { installVideoSiMuove, installWebRtcDipinge } from "./telecamera-il-video-si-muove-section.js";
 import { installTelecameraCapacita } from "./telecamera-capacita-section.js";
 import { installTelecameraSubito } from "./telecamera-subito-section.js";
 import { installShutterSkySection } from "./shutter-sky-section.js";
@@ -1077,6 +1077,7 @@ export function installSectionRuntime() {
     /* L'HLS di una telecamera vale quando il video si muove davvero (#385):
      * si avvolge la strada del guscio, che si accontentava dell'intestazione. */
     senzaCadere(installVideoSiMuove);
+    senzaCadere(installWebRtcDipinge);
     /* Il fotogramma si vede prima del negoziato, e la strada che ha funzionato
      * si prova per prima la volta dopo: «sono lentissime e non carica
      * immediatamente immagine». Si installa DOPO chi avvolge le singole

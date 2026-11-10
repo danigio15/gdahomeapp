@@ -572,7 +572,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-KT47TFTC.js";
+} from "../../chunk-RLTPF5ZH.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -8765,6 +8765,7 @@ var SOURCE_INDEX = Object.freeze({
   "Vuoto: quelli della sezione Musica della plancia": "Empty: the ones from the dashboard's Music section",
   "Vuoto: spegne": "Empty: turns off",
   "Vuoto: tutte quelle della sezione Sicurezza della plancia": "Empty: all the ones from the dashboard's Security section",
+  "WebRTC: collegato, ma senza immagine": "WebRTC: connected, but no picture",
   "WebRTC: il nome stream go2rtc funziona solo aprendo la plancia fuori da Home Assistant — qui dentro la telecamera passa dalla sua entità": "WebRTC: the go2rtc stream name only works with the dashboard opened outside Home Assistant — in here the camera goes through its entity",
   "WebRTC: provato per primo col suo tempo intero, il video non è arrivato": "WebRTC: tried first with its full time, the video did not arrive",
   "WebRTC: saltato — compila «Nome stream go2rtc» nella scheda Telecamere (il nome della telecamera non c’entra)": "WebRTC: skipped — fill in “go2rtc stream name” in the Cameras tab (the camera name is not the lever)",
@@ -133410,9 +133411,9 @@ function tempoDi(video) {
   const letto = Number(video?.currentTime);
   return Number.isFinite(letto) ? letto : Number.NaN;
 }
-function eAncoraSuo(video) {
+function eAncoraSuo(video, id = "cam-hls") {
   if (video?.isConnected === false) return false;
-  const adesso2 = doc?.getElementById?.("cam-hls");
+  const adesso2 = doc?.getElementById?.(id);
   return !adesso2 || adesso2 === video;
 }
 function ceUnaFotoFerma(video) {
@@ -133447,6 +133448,64 @@ function mettiIlPoster(video, entity2, states) {
   video.setAttribute("poster", foto);
   return foto;
 }
+function haUnImmagine(video) {
+  if (!video || !(Number(video.videoWidth) > 0)) return false;
+  try {
+    const qualita = video.getVideoPlaybackQuality?.();
+    if (qualita && Number.isFinite(qualita.totalVideoFrames) && qualita.totalVideoFrames === 0) return false;
+  } catch (_errore) {
+  }
+  return true;
+}
+function partiMuto(video) {
+  try {
+    video.muted = true;
+    const p = video.play?.();
+    if (p && typeof p.catch === "function") p.catch(() => {
+    });
+  } catch (_errore) {
+  }
+}
+async function aspettaUnImmagine(video, opzioni2 = {}) {
+  const attesa = Number(opzioni2.attesa) > 0 ? Number(opzioni2.attesa) : ATTESA_MINIMA;
+  const passo = Number(opzioni2.passo) > 0 ? Number(opzioni2.passo) : PASSO_FOTOGRAMMI;
+  const dormi = opzioni2.dormi || ((ms) => new Promise((risolvi5) => root.setTimeout?.(risolvi5, ms) || risolvi5()));
+  if (!video) return true;
+  let spintoMuto = false;
+  for (let speso = 0; ; speso += passo) {
+    if (!eAncoraSuo(video, "cam-video")) return true;
+    if (haUnImmagine(video)) return true;
+    if (speso >= attesa) break;
+    if (video.paused === true && !spintoMuto) {
+      spintoMuto = true;
+      partiMuto(video);
+    }
+    await dormi(passo);
+  }
+  const detto3 = t(
+    "WebRTC: collegato, ma senza immagine",
+    "WebRTC: connected, but no picture"
+  );
+  throw new Error(`${detto3} (${Math.round(attesa / 1e3)}s)`);
+}
+function installWebRtcDipinge() {
+  const precedente = root.dmCamWebRTC;
+  if (typeof precedente !== "function" || precedente.__dmWebRtcDipinge) return false;
+  async function avvolta(cam, strada2, content, attesa) {
+    const inizio = Date.now();
+    const esito2 = await precedente.call(this, cam, strada2, content, attesa);
+    const concesso = Number(attesa) > 0 ? Number(attesa) : ATTESA_MINIMA;
+    const resto = Math.max(ATTESA_MINIMA, concesso - (Date.now() - inizio));
+    const video = doc?.getElementById("cam-video");
+    mettiIlPoster(video, cam?.entity);
+    await aspettaUnImmagine(video, { attesa: resto });
+    return esito2;
+  }
+  avvolta.__dmWebRtcDipinge = true;
+  avvolta.__dmPrevious = precedente;
+  root.dmCamWebRTC = avvolta;
+  return true;
+}
 function installVideoSiMuove() {
   if (state136.installed) return false;
   const precedente = root.dmCamHLS;
@@ -133468,6 +133527,7 @@ function installVideoSiMuove() {
   return true;
 }
 senzaCadere(installVideoSiMuove);
+senzaCadere(installWebRtcDipinge);
 
 // src/core/daylight.js
 var CONFINI = Object.freeze([
@@ -146518,9 +146578,20 @@ function rigaDelDispositivo(d) {
   const marca = [d.marca, d.modello].filter(Boolean).join(" ");
   const quante3 = d.entita.length === 1 ? t("1 entità", "1 entity") : t(`${d.entita.length} entità`, `${d.entita.length} entities`);
   const destra = !muto2 && COMANDABILI4.includes(dominio5(p)) ? interruttore4(p, d.nome) : `<span class="aug-quando dv-val${muto2 ? " muto" : ""}">${esc(muto2 ? t("Non risponde", "Not answering") : valoreDi4(p))}</span>`;
-  return `<div class="aug-riga${muto2 ? " spenta" : ""}" style="--c:${colore2}" data-dv-disp="${esc(d.id)}" role="button" tabindex="0"><span class="aug-orb">${disegno5(
+  return `<div class="aug-riga${muto2 ? " spenta" : ""}" style="--c:${colore2}" data-dv-disp="${esc(d.id)}" role="button" tabindex="0">${segnoDellaRiga(
+    d,
     chiave2
-  )}</span><span class="aug-testo"><b class="aug-nome"><span>${esc(d.nome)}</span></b><small class="aug-fr">${esc([marca, quante3].filter(Boolean).join(" · "))}</small></span>${destra}</div>`;
+  )}<span class="aug-testo"><b class="aug-nome"><span>${esc(d.nome)}</span></b><small class="aug-fr">${esc([marca, quante3].filter(Boolean).join(" · "))}</small></span>${destra}</div>`;
+}
+function urlDelLogo(dominioV) {
+  const d = clean(dominioV);
+  return /^[a-z0-9_]+$/.test(d) ? LOGHI3.logo(d) : "";
+}
+function segnoDellaRiga(d, chiave2) {
+  const url = urlDelLogo(d.dominio);
+  if (url)
+    return `<span class="aug-orb dv-orb-logo"><img src="${esc(url)}" alt="" decoding="async"></span>`;
+  return `<span class="aug-orb">${disegno5(chiave2)}</span>`;
 }
 function dispositiviHtml() {
   const casa3 = state161.casa || { stanze: [], dispositivi: [] };
@@ -146559,7 +146630,7 @@ function dispositiviHtml() {
   for (const d of visti) {
     const chiave2 = state161.per === "stanza" ? `s:${d.stanza || "-"}` : `i:${d.dominio || "-"}`;
     const titolo3 = state161.per === "stanza" ? stanze4.get(d.stanza) || t("Senza stanza", "No room") : d.integrazione || t("Altro", "Other");
-    if (!gruppi2.has(chiave2)) gruppi2.set(chiave2, { chiave: chiave2, titolo: titolo3, voci: [] });
+    if (!gruppi2.has(chiave2)) gruppi2.set(chiave2, { chiave: chiave2, titolo: titolo3, dominio: d.dominio, voci: [] });
     gruppi2.get(chiave2).voci.push(d);
   }
   const ordinati = [...gruppi2.values()].sort(
@@ -146570,6 +146641,7 @@ function dispositiviHtml() {
       chiave: g.chiave,
       titolo: g.titolo,
       disegno: state161.per === "stanza" ? "stanze" : "widget",
+      segno: state161.per === "stanza" || !urlDelLogo(g.dominio) ? "" : logo2(g.titolo, g.dominio),
       colore: VIOLA3,
       conta: g.voci.length,
       righe: g.voci.map(rigaDelDispositivo)
@@ -147279,6 +147351,9 @@ ${S} .dv-pill,.ad-foglio .dv-pill{flex:none;font-style:normal;font-size:10.5px;f
 .dv-logo{flex:none;width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:var(--l);color:#fff;font-weight:900;font-size:14px;font-family:Inter,sans-serif}
 .dv-logo.img{background:#fff;box-shadow:inset 0 0 0 1px var(--divider-color,#e2e8f0);overflow:hidden}
 .dv-logo.img img{width:78%;height:78%;object-fit:contain}
+.aug-orb.dv-orb-logo{background:#fff;box-shadow:inset 0 0 0 1px var(--divider-color,#e2e8f0);overflow:hidden}
+.aug-orb.dv-orb-logo img{width:64%;height:64%;object-fit:contain}
+html[data-theme="dark"] .aug-orb.dv-orb-logo{background:#f8fafc}
 html[data-theme="dark"] .dv-logo.img{background:#f8fafc}
 .aug.dv-int .aug-testa{padding:12px 14px}
 .aug.dv-int .aug-testa>.dv-logo,.aug.dv-int .dv-logo-box>.dv-logo{width:40px;height:40px;border-radius:12px}
@@ -178052,6 +178127,7 @@ function installSectionRuntime() {
     senzaCadere(installShutterWindowSection);
     senzaCadere(installClimatePowerSection);
     senzaCadere(installVideoSiMuove);
+    senzaCadere(installWebRtcDipinge);
     senzaCadere(installTelecameraCapacita);
     senzaCadere(installTelecameraSubito);
     senzaCadere(installAlberatura);
