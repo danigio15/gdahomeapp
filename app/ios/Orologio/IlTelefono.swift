@@ -65,9 +65,12 @@ final class IlTelefono: NSObject, ObservableObject {
     } errorHandler: { [weak self] _ in
       Task { @MainActor in self?.finito(questo, "Il telefono non ha risposto", bene: false) }
     }
+    /* Il telefono risponde quando la casa ha sentito, non quando ha scritto
+     * il comando: riaprire il filo puo' chiedere fino a dodici secondi
+     * (`quantoSiAspettaIlFilo`). Venti, e poi si lascia perdere. */
     Task { @MainActor [weak self] in
-      try? await Task.sleep(nanoseconds: 10_000_000_000)
-      self?.finito(questo, "Il telefono non ha risposto", bene: false)
+      try? await Task.sleep(nanoseconds: 20_000_000_000)
+      self?.finito(questo, "Il telefono non ha risposto in tempo", bene: false)
     }
   }
 

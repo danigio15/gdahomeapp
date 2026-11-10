@@ -16,6 +16,7 @@
  */
 import Flutter
 import Foundation
+import UIKit
 import WatchConnectivity
 import gdanav_app
 
@@ -123,8 +124,29 @@ final class LOrologio: NSObject, WCSessionDelegate {
     case "comando":
       let id = (messaggio["id"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
       guard !id.isEmpty else { return risposta(["ok": false, "testo": "Comando sconosciuto"]) }
-      let scritto = LaCasaInCarPlay.lascia(id)
-      risposta(["ok": scritto, "testo": scritto ? "Fatto" : "Non sono riuscito a mandarlo"])
+      /* «Ti da' fatto ma non fa niente.» Il «Fatto» partiva appena il comando
+       * era scritto, e col telefono in tasca l'app e' in secondo piano: iOS la
+       * sveglia per pochi secondi, il filo con la casa e' chiuso e va
+       * riaperto, e spesso il tempo finiva prima. Adesso si chiede a iOS il
+       * tempo per finire, e al polso si risponde com'e' andata davvero. */
+      let app = UIApplication.shared
+      var tempo = UIBackgroundTaskIdentifier.invalid
+      let chiudi = {
+        guard tempo != .invalid else { return }
+        app.endBackgroundTask(tempo)
+        tempo = .invalid
+      }
+      tempo = app.beginBackgroundTask(withName: "gdahome:polso") { chiudi() }
+      let scritto = LaCasaInCarPlay.lascia(id) { com in
+        DispatchQueue.main.async {
+          risposta(LOrologio.risposta(com))
+          chiudi()
+        }
+      }
+      if !scritto {
+        risposta(["ok": false, "testo": "Non sono riuscito a mandarlo"])
+        chiudi()
+      }
     case "vai":
       let dove = messaggio["dove"] as? String ?? ""
       guard dove == "casa" || dove == "lavoro" else { return risposta(["ok": false, "testo": "Meta sconosciuta"]) }
@@ -139,6 +161,25 @@ final class LOrologio: NSObject, WCSessionDelegate {
       risposta(["ok": true, "testo": "Guida finita"])
     default:
       risposta(["ok": false, "testo": "Non so cosa fare"])
+    }
+  }
+
+  /// Quello che si dice al polso, da com'e' finito il comando nel Dart.
+  static func risposta(_ com: String?) -> [String: Any] {
+    switch com {
+    case "fatto":
+      return ["ok": true, "testo": "Fatto"]
+    case "niente":
+      /* Il comando l'ha preso un altro giro gia' in corso: parte da li'. */
+      return ["ok": true, "testo": "Mandato"]
+    case "aspettaLApp":
+      return ["ok": false, "testo": "Questo si fa dal telefono: apri GdAHome"]
+    case "senzaPremium":
+      return ["ok": false, "testo": "Serve GdAHome Premium"]
+    case "senzaCasa":
+      return ["ok": false, "testo": "La casa non risponde. Apri GdAHome sul telefono e riprova"]
+    default:
+      return ["ok": false, "testo": "Parte appena apri GdAHome sul telefono"]
     }
   }
 

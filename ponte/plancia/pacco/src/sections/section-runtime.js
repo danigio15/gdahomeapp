@@ -572,7 +572,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-ICKM4WX2.js";
+} from "../../chunk-KT47TFTC.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -76522,6 +76522,10 @@ function obiettivoDaMostrare(riga5) {
   obiettiviInVolo.delete(riga5.entity);
   return riga5.target ?? null;
 }
+function obiettivoInVolo(entity2, valore3, da) {
+  if (!entity2 || !Number.isFinite(Number(valore3))) return;
+  obiettiviInVolo.set(entity2, { valore: Number(valore3), da, fino: Date.now() + 5e3 });
+}
 function passoDellObiettivo(entity2, verso2, base) {
   const riga5 = climateRow(entity2);
   const voluta = obiettivoSpostato(riga5, verso2, base ?? obiettivoDaMostrare(riga5));
@@ -85704,10 +85708,27 @@ function dipingiPresa(presa) {
       target.innerHTML = `${gradoScritto(presa.grado)}<span class="dm-cl-deg">°</span>`;
   }
 }
+var DOPO_LA_PRESA_MS = 700;
+function clickDopoLaPresa(presa, card2, adesso2 = Date.now()) {
+  return Boolean(presa && card2 && presa.card === card2 && adesso2 - presa.quando < DOPO_LA_PRESA_MS);
+}
 function installRailDrag() {
   if (state64.railDrag || !doc) return;
   state64.railDrag = true;
   let presa = null;
+  let lasciata = null;
+  doc.addEventListener(
+    "click",
+    (event) => {
+      const card2 = event.target?.closest?.("[data-dm-cl]");
+      if (!clickDopoLaPresa(lasciata, card2)) return;
+      lasciata = null;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation?.();
+    },
+    true
+  );
   const aggiorna2 = (event) => {
     if (!presa) return;
     presa.grado = gradoDalPunto(presa, event.clientX);
@@ -85735,8 +85756,11 @@ function installRailDrag() {
     if (!presa) return;
     aggiorna2(event);
     if (Number.isFinite(presa.grado)) {
+      const prima = climateReading(presa.entity).target;
+      obiettivoInVolo(presa.entity, presa.grado, prima);
       chiamaClima(presa.entity, "set_temperature", { temperature: presa.grado });
     }
+    lasciata = { card: presa.card, quando: Date.now() };
     presa = null;
   };
   doc.addEventListener("pointerup", rilascia2, true);
@@ -109471,6 +109495,17 @@ function eNotte2(muro, adesso2 = /* @__PURE__ */ new Date()) {
   if (da === a) return false;
   return da < a ? qui >= da && qui < a : qui >= da || qui < a;
 }
+function cosaFaIlRisveglio(muro, stati4, { riposo: riposo2 = false, cambioAlRiposo = "" } = {}) {
+  const id = muro?.risveglio?.attivo ? muro.risveglio.entita : "";
+  const letto = id ? stati4?.[id] : null;
+  if (String(letto?.state) !== "on") return "";
+  if (!riposo2) return "resta";
+  return String(letto.last_changed || "") !== String(cambioAlRiposo || "") ? "sveglia" : "";
+}
+function cambioDelRisveglio(muro, stati4) {
+  const id = muro?.risveglio?.attivo ? muro.risveglio.entita : "";
+  return String(id && stati4?.[id]?.last_changed || "");
+}
 function dentroLaFascia(muro, adesso2) {
   const da = minutiDa3(muro?.notte?.da || MURO_VUOTO.notte.da);
   const a = minutiDa3(muro?.notte?.a || MURO_VUOTO.notte.a);
@@ -110497,6 +110532,9 @@ var state112 = root[KEY116] ||= {
   pagina: 0,
   toccato: Date.now(),
   riposo: false,
+  /* Il `last_changed` del sensore di risveglio quando il pannello e' andato
+   * a riposo: vedi `cosaFaIlRisveglio`. */
+  cambioAlRiposo: "",
   finestra: null,
   uscito: false,
   trascina: null,
@@ -113632,7 +113670,7 @@ function regolaLaLuce() {
     adesso: new Date(adesso2)
   });
   if (muro.luce.attiva && luce.notte && muro.luce.notte === 0 && !fonte && !state112.riposo && !state112.finestra && !state112.trascina) {
-    state112.riposo = true;
+    vaARiposo();
     if (muro.riposo.torna !== false) state112.pagina = 0;
   }
   const livello = livelloDellaLuce(muro, { vicino: Boolean(fonte), notte: luce.notte });
@@ -114552,17 +114590,30 @@ function battito3() {
   if (!muro?.attiva) return;
   if (state112.finestra && !state112.trascina && finestraDaChiudere(state112.finestra, state112.toccatoDalDito, Date.now()))
     chiudiFinestra();
+  const risveglio = cosaFaIlRisveglio(muro, allStates(), {
+    riposo: state112.riposo,
+    cambioAlRiposo: state112.cambioAlRiposo
+  });
+  if (risveglio === "resta") state112.toccato = Date.now();
+  if (risveglio === "sveglia") {
+    state112.riposo = false;
+    state112.toccato = Date.now();
+  }
   const fermo = Date.now() - state112.toccato;
   const sonno = (muro.riposo.attivo ? muro.riposo.minuti : 0) * 60 * 1e3;
   if (!state112.riposo && !state112.finestra && !state112.trascina && sonno && fermo > sonno) {
-    state112.riposo = true;
+    vaARiposo();
     if (muro.riposo.torna !== false) state112.pagina = 0;
   }
   if (!state112.riposo && eNotte2(muro) && fermo > 60 * 1e3 && !state112.finestra) {
-    state112.riposo = true;
+    vaARiposo();
     if (muro.riposo.torna !== false) state112.pagina = 0;
   }
   disegna8();
+}
+function vaARiposo() {
+  state112.riposo = true;
+  state112.cambioAlRiposo = cambioDelRisveglio(state112.muro, allStates());
 }
 var campanelloSuona2 = campanelloSuona;
 function campanelliDelMuro(muro = state112.muro) {
@@ -116338,7 +116389,7 @@ function installPlanciaAMuro() {
       });
     },
     riposa: () => {
-      state112.riposo = true;
+      vaARiposo();
       state112.pagina = 0;
       state112.finestra = null;
       disegna8();

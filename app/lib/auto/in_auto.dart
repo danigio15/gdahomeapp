@@ -90,10 +90,14 @@ Future<void> inAuto() async {
 /// Sull'iPhone il motore e' uno solo, quello dell'app, ed e' sempre acceso
 /// (CarPlay lo tiene su): il colpetto di `ios/Runner/LaCasaInCarPlay.swift`
 /// arriva a lui, e lo sente da qui. La chiama `main`.
+///
+/// Al colpetto si risponde com'e' finita (`fatto`, `senzaCasa`…): l'Apple
+/// Watch lo dice al polso, invece di un «Fatto» detto prima che la casa
+/// sentisse (`ios/Runner/LOrologio.swift`).
 void ascoltaIlColpetto({Collegamento Function()? laCasaDellApp}) {
   const MethodChannel(canaleDellAuto).setMethodCallHandler((_) async {
-    await eseguiIlComandoDellAuto(laCasaDellApp: laCasaDellApp);
-    return null;
+    final com = await eseguiIlComandoDellAuto(laCasaDellApp: laCasaDellApp);
+    return com.name;
   });
   /* Un comando lasciato mentre questo motore partiva: il colpetto e' arrivato
    * prima che ci fosse chi lo sentiva, ma il file c'e' ancora (lo toglie solo

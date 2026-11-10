@@ -2306,6 +2306,46 @@ export function eNotte(muro, adesso = new Date()) {
   return da < a ? qui >= da && qui < a : qui >= da || qui < a;
 }
 
+/**
+ * Cosa fa il sensore di «Si sveglia da solo» a ogni battito del pannello.
+ *
+ * «Il sensore che si mette per riattivare lo standby del tablet a volte non
+ * risponde e non riattiva lo schermo. Lo fa un po' come gli pare.» Il
+ * pannello si svegliava solo all'evento del sensore che diventa «on». Ma un
+ * sensore di presenza resta «on» finche' qualcuno c'e' — un radar anche dei
+ * minuti — e il riposo arrivava lo stesso, a sensore ancora acceso: chi
+ * tornava davanti al tablet non faceva nessun «on» nuovo, e lo schermo
+ * restava spento finche' il sensore non si spegneva e riaccendeva. Ogni
+ * tanto si', ogni tanto no, a seconda di quanto il sensore restava acceso.
+ *
+ * Adesso, come fa gia' la luminosita' dello schermo con chi e' vicino:
+ * - `"resta"`: il sensore dice che c'e' qualcuno e il pannello e' sveglio, il
+ *   riposo non arriva;
+ * - `"sveglia"`: il pannello e' a riposo e il sensore e' acceso con un cambio
+ *   diverso da quello che aveva quando e' andato a riposo — l'evento c'e'
+ *   stato e qui non e' arrivato, o e' arrivato mentre il pannello faceva
+ *   altro: ci si sveglia al battito;
+ * - `""`: niente.
+ *
+ * Il confronto e' col `last_changed` ricordato, non con l'orologio: quello
+ * del tablet e quello di Home Assistant non vanno d'accordo per forza. Un
+ * riposo chiesto a mano a sensore acceso ricorda quel cambio, e non si
+ * sveglia finche' il sensore non cambia davvero.
+ */
+export function cosaFaIlRisveglio(muro, stati, { riposo = false, cambioAlRiposo = "" } = {}) {
+  const id = muro?.risveglio?.attivo ? muro.risveglio.entita : "";
+  const letto = id ? stati?.[id] : null;
+  if (String(letto?.state) !== "on") return "";
+  if (!riposo) return "resta";
+  return String(letto.last_changed || "") !== String(cambioAlRiposo || "") ? "sveglia" : "";
+}
+
+/** Il cambio del sensore di risveglio da ricordare quando si va a riposo. */
+export function cambioDelRisveglio(muro, stati) {
+  const id = muro?.risveglio?.attivo ? muro.risveglio.entita : "";
+  return String((id && stati?.[id]?.last_changed) || "");
+}
+
 /* La fascia della notte scritta in «Di notte schermo nero», anche spenta:
  * «Giorno e notte da: Orario» usa quelle due ore. */
 function dentroLaFascia(muro, adesso) {

@@ -111,6 +111,8 @@ import {
   eCompatto,
   eNotte,
   chiCeVicino,
+  cosaFaIlRisveglio,
+  cambioDelRisveglio,
   eNotteDellaLuce,
   livelloDellaLuce,
   eUnaScena,
@@ -208,6 +210,9 @@ const state = (root[KEY] ||= {
   pagina: 0,
   toccato: Date.now(),
   riposo: false,
+  /* Il `last_changed` del sensore di risveglio quando il pannello e' andato
+   * a riposo: vedi `cosaFaIlRisveglio`. */
+  cambioAlRiposo: "",
   finestra: null,
   uscito: false,
   trascina: null,
@@ -4837,7 +4842,7 @@ function regolaLaLuce() {
     !state.finestra &&
     !state.trascina
   ) {
-    state.riposo = true;
+    vaARiposo();
     if (muro.riposo.torna !== false) state.pagina = 0;
   }
   const livello = livelloDellaLuce(muro, { vicino: Boolean(fonte), notte: luce.notte });
@@ -5967,17 +5972,35 @@ function battito() {
    * ritorno alla Home tornano a valere. */
   if (state.finestra && !state.trascina && finestraDaChiudere(state.finestra, state.toccatoDalDito, Date.now()))
     chiudiFinestra();
+  /* Il sensore di «Si sveglia da solo»: finche' dice che c'e' qualcuno il
+   * riposo non arriva, e un suo «on» che l'evento non ha portato sveglia il
+   * pannello qui, al piu' quindici secondi dopo. */
+  const risveglio = cosaFaIlRisveglio(muro, allStates(), {
+    riposo: state.riposo,
+    cambioAlRiposo: state.cambioAlRiposo,
+  });
+  if (risveglio === "resta") state.toccato = Date.now();
+  if (risveglio === "sveglia") {
+    state.riposo = false;
+    state.toccato = Date.now();
+  }
   const fermo = Date.now() - state.toccato;
   const sonno = (muro.riposo.attivo ? muro.riposo.minuti : 0) * 60 * 1000;
   if (!state.riposo && !state.finestra && !state.trascina && sonno && fermo > sonno) {
-    state.riposo = true;
+    vaARiposo();
     if (muro.riposo.torna !== false) state.pagina = 0;
   }
   if (!state.riposo && eNotte(muro) && fermo > 60 * 1000 && !state.finestra) {
-    state.riposo = true;
+    vaARiposo();
     if (muro.riposo.torna !== false) state.pagina = 0;
   }
   disegna();
+}
+
+/* Il pannello va a riposo, e ricorda com'era il sensore di risveglio. */
+function vaARiposo() {
+  state.riposo = true;
+  state.cambioAlRiposo = cambioDelRisveglio(state.muro, allStates());
 }
 
 /* ── il campanello ─────────────────────────────────────────────────────────
@@ -7931,7 +7954,7 @@ export function installPlanciaAMuro() {
       rileggi().catch(() => {});
     },
     riposa: () => {
-      state.riposo = true;
+      vaARiposo();
       state.pagina = 0;
       state.finestra = null;
       disegna();

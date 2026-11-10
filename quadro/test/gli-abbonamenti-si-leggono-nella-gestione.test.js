@@ -943,7 +943,7 @@ test("i totali: il previsto e' quello che entra alle scadenze, il reale l'«Inca
    * porta 49,99 €, non 4,17 al mese. */
   assert.match(
     totale,
-    /Previsto alle prossime scadenze: 1 mensile × 4,99 € \+ 2 annuali × 49,99 € = 104,97 €, dal(?:l'| ).+ al .+?\./,
+    /Previsto alle prossime scadenze: 1 mensile × 4,99 € \+ 2 annuali × 49,99 € = 104,97 €, dal(?:l'| ).+ al(?:l'| ).+?\./,
   );
   assert.doesNotMatch(totale, /al mese|\/mese|Ricorrente/);
   /* Le prove a parte, e quella senza prezzo detta. */
@@ -997,7 +997,12 @@ test("i totali seguono i filtri e la ricerca", () => {
   );
   coiSoldi({ cerca: "annuale uno" });
   totale = piano(ilTotale(PAGINA.gliAbbonamenti()));
-  assert.match(totale, /Previsto alle prossime scadenze: 1 annuale × 49,99 € = 49,99 €, il /);
+  /* «il 9 ott», ma «l'1 ott»: le date si muovono con oggi, e davanti a 1, 8 e
+   * 11 l'articolo si apostrofa. */
+  assert.match(
+    totale,
+    /Previsto alle prossime scadenze: 1 annuale × 49,99 € = 49,99 €, (?:il |l')/,
+  );
   assert.match(totale, /Ultimi pagamenti in elenco: 49,99 €/);
   coiSoldi();
   PAGINA.scegliIlFiltroDelleLicenze("nonrinnova");
