@@ -33,9 +33,11 @@ export const RESISTENZA_OLTRE_W = 1000;
 
 /** Cosa scalda l'acqua con [w] watt: "off", "on" (pompa di calore), "resistenza". */
 export function cosaScalda(w) {
-  if (w === null || w === undefined || !Number.isFinite(w) || w < POMPA_DI_CALORE_DA_W) return "off";
+  if (w === null || w === undefined || !Number.isFinite(w) || w < POMPA_DI_CALORE_DA_W)
+    return "off";
   return w > RESISTENZA_OLTRE_W ? "resistenza" : "on";
 }
+
 const PASSI = 6;
 
 const numero = (valore) => {

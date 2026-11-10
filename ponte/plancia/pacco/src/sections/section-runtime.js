@@ -572,7 +572,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-4QWNP54Q.js";
+} from "../../chunk-FFYVCB3O.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -150980,7 +150980,8 @@ var PERIODO = 4;
 var POMPA_DI_CALORE_DA_W = 20;
 var RESISTENZA_OLTRE_W = 1e3;
 function cosaScalda(w) {
-  if (w === null || w === void 0 || !Number.isFinite(w) || w < POMPA_DI_CALORE_DA_W) return "off";
+  if (w === null || w === void 0 || !Number.isFinite(w) || w < POMPA_DI_CALORE_DA_W)
+    return "off";
   return w > RESISTENZA_OLTRE_W ? "resistenza" : "on";
 }
 var PASSI = 6;
