@@ -10,6 +10,17 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.18
+
+_App GdAHome._
+
+**Nell'app, il navigatore:**
+
+- **Gli edifici veri restano aggiornati**: ogni mese escono gli edifici
+  nuovi di Overture Maps, e l'app riscarica da sola il pacchetto della tua
+  zona, solo in Wi-Fi o su una rete che non si paga a consumo. Finché il
+  nuovo non è arrivato intero, la mappa usa quello di prima.
+
 ## 1.18.17
 
 _App GdAHome e Home Assistant._
