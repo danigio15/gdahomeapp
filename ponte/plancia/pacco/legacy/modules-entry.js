@@ -45,7 +45,7 @@ import {
   stepReporter,
   stradaAppenaCaduta,
   strategieDellaTelecamera
-} from "../chunk-KT47TFTC.js";
+} from "../chunk-RCMO34VO.js";
 
 // src/legacy/dashboard-data.js
 function stableRoomId(room, index = 0) {

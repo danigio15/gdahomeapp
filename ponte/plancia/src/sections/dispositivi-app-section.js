@@ -370,9 +370,28 @@ function rigaDelDispositivo(d) {
     !muto && COMANDABILI.includes(dominio(p))
       ? interruttore(p, d.nome)
       : `<span class="aug-quando dv-val${muto ? " muto" : ""}">${esc(muto ? t("Non risponde", "Not answering") : valoreDi(p))}</span>`;
-  return `<div class="aug-riga${muto ? " spenta" : ""}" style="--c:${colore}" data-dv-disp="${esc(d.id)}" role="button" tabindex="0"><span class="aug-orb">${disegno(
+  return `<div class="aug-riga${muto ? " spenta" : ""}" style="--c:${colore}" data-dv-disp="${esc(d.id)}" role="button" tabindex="0">${segnoDellaRiga(
+    d,
     chiave,
-  )}</span><span class="aug-testo"><b class="aug-nome"><span>${esc(d.nome)}</span></b><small class="aug-fr">${esc([marca, quante].filter(Boolean).join(" · "))}</small></span>${destra}</div>`;
+  )}<span class="aug-testo"><b class="aug-nome"><span>${esc(d.nome)}</span></b><small class="aug-fr">${esc([marca, quante].filter(Boolean).join(" · "))}</small></span>${destra}</div>`;
+}
+
+/* «Non sono presenti le icone delle integrazioni.» Ogni riga aveva il disegno
+ * del tipo dell'entita' principale — per un telefono, una tessera qualunque —
+ * e il gruppo «per integrazione» sempre la stessa. Adesso, come nella pagina
+ * Integrazioni e come in Home Assistant, il logo dell'integrazione: sulla
+ * riga e in testa al gruppo. Finche' non arriva, o se non ce l'ha, il disegno
+ * di prima. */
+function urlDelLogo(dominioV) {
+  const d = clean(dominioV);
+  return /^[a-z0-9_]+$/.test(d) ? LOGHI.logo(d) : "";
+}
+
+function segnoDellaRiga(d, chiave) {
+  const url = urlDelLogo(d.dominio);
+  if (url)
+    return `<span class="aug-orb dv-orb-logo"><img src="${esc(url)}" alt="" decoding="async"></span>`;
+  return `<span class="aug-orb">${disegno(chiave)}</span>`;
 }
 
 function dispositiviHtml() {
@@ -423,7 +442,7 @@ function dispositiviHtml() {
       state.per === "stanza"
         ? stanze.get(d.stanza) || t("Senza stanza", "No room")
         : d.integrazione || t("Altro", "Other");
-    if (!gruppi.has(chiave)) gruppi.set(chiave, { chiave, titolo, voci: [] });
+    if (!gruppi.has(chiave)) gruppi.set(chiave, { chiave, titolo, dominio: d.dominio, voci: [] });
     gruppi.get(chiave).voci.push(d);
   }
   const ordinati = [...gruppi.values()].sort((a, b) =>
@@ -436,6 +455,7 @@ function dispositiviHtml() {
             chiave: g.chiave,
             titolo: g.titolo,
             disegno: state.per === "stanza" ? "stanze" : "widget",
+            segno: state.per === "stanza" || !urlDelLogo(g.dominio) ? "" : logo(g.titolo, g.dominio),
             colore: VIOLA,
             conta: g.voci.length,
             righe: g.voci.map(rigaDelDispositivo),
@@ -1324,6 +1344,9 @@ ${S} .dv-pill,.ad-foglio .dv-pill{flex:none;font-style:normal;font-size:10.5px;f
 .dv-logo{flex:none;width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:var(--l);color:#fff;font-weight:900;font-size:14px;font-family:Inter,sans-serif}
 .dv-logo.img{background:#fff;box-shadow:inset 0 0 0 1px var(--divider-color,#e2e8f0);overflow:hidden}
 .dv-logo.img img{width:78%;height:78%;object-fit:contain}
+.aug-orb.dv-orb-logo{background:#fff;box-shadow:inset 0 0 0 1px var(--divider-color,#e2e8f0);overflow:hidden}
+.aug-orb.dv-orb-logo img{width:64%;height:64%;object-fit:contain}
+html[data-theme="dark"] .aug-orb.dv-orb-logo{background:#f8fafc}
 html[data-theme="dark"] .dv-logo.img{background:#f8fafc}
 .aug.dv-int .aug-testa{padding:12px 14px}
 .aug.dv-int .aug-testa>.dv-logo,.aug.dv-int .dv-logo-box>.dv-logo{width:40px;height:40px;border-radius:12px}

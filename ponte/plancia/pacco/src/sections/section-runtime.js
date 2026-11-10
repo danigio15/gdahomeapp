@@ -572,7 +572,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-KT47TFTC.js";
+} from "../../chunk-RCMO34VO.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -146518,9 +146518,20 @@ function rigaDelDispositivo(d) {
   const marca = [d.marca, d.modello].filter(Boolean).join(" ");
   const quante3 = d.entita.length === 1 ? t("1 entità", "1 entity") : t(`${d.entita.length} entità`, `${d.entita.length} entities`);
   const destra = !muto2 && COMANDABILI4.includes(dominio5(p)) ? interruttore4(p, d.nome) : `<span class="aug-quando dv-val${muto2 ? " muto" : ""}">${esc(muto2 ? t("Non risponde", "Not answering") : valoreDi4(p))}</span>`;
-  return `<div class="aug-riga${muto2 ? " spenta" : ""}" style="--c:${colore2}" data-dv-disp="${esc(d.id)}" role="button" tabindex="0"><span class="aug-orb">${disegno5(
+  return `<div class="aug-riga${muto2 ? " spenta" : ""}" style="--c:${colore2}" data-dv-disp="${esc(d.id)}" role="button" tabindex="0">${segnoDellaRiga(
+    d,
     chiave2
-  )}</span><span class="aug-testo"><b class="aug-nome"><span>${esc(d.nome)}</span></b><small class="aug-fr">${esc([marca, quante3].filter(Boolean).join(" · "))}</small></span>${destra}</div>`;
+  )}<span class="aug-testo"><b class="aug-nome"><span>${esc(d.nome)}</span></b><small class="aug-fr">${esc([marca, quante3].filter(Boolean).join(" · "))}</small></span>${destra}</div>`;
+}
+function urlDelLogo(dominioV) {
+  const d = clean(dominioV);
+  return /^[a-z0-9_]+$/.test(d) ? LOGHI3.logo(d) : "";
+}
+function segnoDellaRiga(d, chiave2) {
+  const url = urlDelLogo(d.dominio);
+  if (url)
+    return `<span class="aug-orb dv-orb-logo"><img src="${esc(url)}" alt="" decoding="async"></span>`;
+  return `<span class="aug-orb">${disegno5(chiave2)}</span>`;
 }
 function dispositiviHtml() {
   const casa3 = state161.casa || { stanze: [], dispositivi: [] };
@@ -146559,7 +146570,7 @@ function dispositiviHtml() {
   for (const d of visti) {
     const chiave2 = state161.per === "stanza" ? `s:${d.stanza || "-"}` : `i:${d.dominio || "-"}`;
     const titolo3 = state161.per === "stanza" ? stanze4.get(d.stanza) || t("Senza stanza", "No room") : d.integrazione || t("Altro", "Other");
-    if (!gruppi2.has(chiave2)) gruppi2.set(chiave2, { chiave: chiave2, titolo: titolo3, voci: [] });
+    if (!gruppi2.has(chiave2)) gruppi2.set(chiave2, { chiave: chiave2, titolo: titolo3, dominio: d.dominio, voci: [] });
     gruppi2.get(chiave2).voci.push(d);
   }
   const ordinati = [...gruppi2.values()].sort(
@@ -146570,6 +146581,7 @@ function dispositiviHtml() {
       chiave: g.chiave,
       titolo: g.titolo,
       disegno: state161.per === "stanza" ? "stanze" : "widget",
+      segno: state161.per === "stanza" || !urlDelLogo(g.dominio) ? "" : logo2(g.titolo, g.dominio),
       colore: VIOLA3,
       conta: g.voci.length,
       righe: g.voci.map(rigaDelDispositivo)
@@ -147279,6 +147291,9 @@ ${S} .dv-pill,.ad-foglio .dv-pill{flex:none;font-style:normal;font-size:10.5px;f
 .dv-logo{flex:none;width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:var(--l);color:#fff;font-weight:900;font-size:14px;font-family:Inter,sans-serif}
 .dv-logo.img{background:#fff;box-shadow:inset 0 0 0 1px var(--divider-color,#e2e8f0);overflow:hidden}
 .dv-logo.img img{width:78%;height:78%;object-fit:contain}
+.aug-orb.dv-orb-logo{background:#fff;box-shadow:inset 0 0 0 1px var(--divider-color,#e2e8f0);overflow:hidden}
+.aug-orb.dv-orb-logo img{width:64%;height:64%;object-fit:contain}
+html[data-theme="dark"] .aug-orb.dv-orb-logo{background:#f8fafc}
 html[data-theme="dark"] .dv-logo.img{background:#f8fafc}
 .aug.dv-int .aug-testa{padding:12px 14px}
 .aug.dv-int .aug-testa>.dv-logo,.aug.dv-int .dv-logo-box>.dv-logo{width:40px;height:40px;border-radius:12px}
