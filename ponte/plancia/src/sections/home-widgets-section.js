@@ -1397,6 +1397,14 @@ export function obiettivoDaMostrare(riga) {
   return riga.target ?? null;
 }
 
+/** Un numero chiesto da fuori dai ± — la barra trascinata della card del
+ * Clima — tenuto in volo come quelli dei ±: finche' Home Assistant dice
+ * ancora `da`, la card mostra quello chiesto e non torna indietro. */
+export function obiettivoInVolo(entity, valore, da) {
+  if (!entity || !Number.isFinite(Number(valore))) return;
+  obiettiviInVolo.set(entity, { valore: Number(valore), da, fino: Date.now() + 5000 });
+}
+
 /** Il passo, mandato: torna il numero chiesto, o `null`/`undefined` come
  * `obiettivoSpostato` quando non parte niente. */
 export function passoDellObiettivo(entity, verso, base) {

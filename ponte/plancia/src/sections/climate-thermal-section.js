@@ -94,6 +94,7 @@ import {
   climaDellaFinestra,
   gradiScritti,
   obiettivoDaMostrare,
+  obiettivoInVolo,
   passoDellObiettivo,
 } from "./home-widgets-section.js";
 import {
@@ -1970,10 +1971,42 @@ function dipingiPresa(presa) {
   }
 }
 
+/* «Se sposto la temperatura scambia in automatico da riscaldamento a
+ * automatico, e non riesce a prendere la temperatura.» Due cose, dal video:
+ *
+ * - la card intera apre la finestra del Clima al click, e il dito che lascia
+ *   la barra un click lo fa sempre: la finestra si apriva sotto il dito, coi
+ *   tasti Spento / Auto / Programma, e il tocco dopo prendeva «Auto». Il
+ *   click che segue una presa sulla barra adesso si butta;
+ * - al rilascio il numero tornava a quello di prima finche' Home Assistant
+ *   non rispondeva, e chi riprendeva la barra ripartiva da li'. Il grado
+ *   chiesto resta in volo come quello dei meno e piu' (`obiettivoInVolo`). */
+const DOPO_LA_PRESA_MS = 700;
+
+/** Se questo click e' quello che il browser manda alla fine di una presa
+ * sulla barra di questa card: va buttato, non apre la finestra. */
+export function clickDopoLaPresa(presa, card, adesso = Date.now()) {
+  return Boolean(presa && card && presa.card === card && adesso - presa.quando < DOPO_LA_PRESA_MS);
+}
+
 function installRailDrag() {
   if (state.railDrag || !doc) return;
   state.railDrag = true;
   let presa = null;
+  /* L'ultima presa lasciata, per buttare il click che il browser manda dopo. */
+  let lasciata = null;
+  doc.addEventListener(
+    "click",
+    (event) => {
+      const card = event.target?.closest?.("[data-dm-cl]");
+      if (!clickDopoLaPresa(lasciata, card)) return;
+      lasciata = null;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation?.();
+    },
+    true,
+  );
   const aggiorna = (event) => {
     if (!presa) return;
     presa.grado = gradoDalPunto(presa, event.clientX);
@@ -2008,8 +2041,11 @@ function installRailDrag() {
        * e' un bene: il ritaglio di prima arrotondava all'intero superiore il
        * minimo e all'intero inferiore il massimo, cosi' un termostato che
        * dichiara 40,5 non arrivava mai al suo stesso minimo. */
+      const prima = climateReading(presa.entity).target;
+      obiettivoInVolo(presa.entity, presa.grado, prima);
       chiamaClima(presa.entity, "set_temperature", { temperature: presa.grado });
     }
+    lasciata = { card: presa.card, quando: Date.now() };
     presa = null;
   };
   doc.addEventListener("pointerup", rilascia, true);

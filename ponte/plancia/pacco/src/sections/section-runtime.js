@@ -572,7 +572,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-QHSAIBFQ.js";
+} from "../../chunk-EY6RJOCC.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -76522,6 +76522,10 @@ function obiettivoDaMostrare(riga5) {
   obiettiviInVolo.delete(riga5.entity);
   return riga5.target ?? null;
 }
+function obiettivoInVolo(entity2, valore3, da) {
+  if (!entity2 || !Number.isFinite(Number(valore3))) return;
+  obiettiviInVolo.set(entity2, { valore: Number(valore3), da, fino: Date.now() + 5e3 });
+}
 function passoDellObiettivo(entity2, verso2, base) {
   const riga5 = climateRow(entity2);
   const voluta = obiettivoSpostato(riga5, verso2, base ?? obiettivoDaMostrare(riga5));
@@ -85704,10 +85708,27 @@ function dipingiPresa(presa) {
       target.innerHTML = `${gradoScritto(presa.grado)}<span class="dm-cl-deg">°</span>`;
   }
 }
+var DOPO_LA_PRESA_MS = 700;
+function clickDopoLaPresa(presa, card2, adesso2 = Date.now()) {
+  return Boolean(presa && card2 && presa.card === card2 && adesso2 - presa.quando < DOPO_LA_PRESA_MS);
+}
 function installRailDrag() {
   if (state64.railDrag || !doc) return;
   state64.railDrag = true;
   let presa = null;
+  let lasciata = null;
+  doc.addEventListener(
+    "click",
+    (event) => {
+      const card2 = event.target?.closest?.("[data-dm-cl]");
+      if (!clickDopoLaPresa(lasciata, card2)) return;
+      lasciata = null;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation?.();
+    },
+    true
+  );
   const aggiorna2 = (event) => {
     if (!presa) return;
     presa.grado = gradoDalPunto(presa, event.clientX);
@@ -85735,8 +85756,11 @@ function installRailDrag() {
     if (!presa) return;
     aggiorna2(event);
     if (Number.isFinite(presa.grado)) {
+      const prima = climateReading(presa.entity).target;
+      obiettivoInVolo(presa.entity, presa.grado, prima);
       chiamaClima(presa.entity, "set_temperature", { temperature: presa.grado });
     }
+    lasciata = { card: presa.card, quando: Date.now() };
     presa = null;
   };
   doc.addEventListener("pointerup", rilascia2, true);
