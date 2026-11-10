@@ -12,11 +12,13 @@
  *   --dmx-rotor   il giro della girante della pompa, due volte il passo;
  *   --dmx-heat    da 0 a 1, quanto e' caldo il pannello (30 °C → 0, 90 °C → 1):
  *                 il bagliore del vetro;
- *   boiler        «on» quando il boiler tira potenza: e' la sua pompa di
- *                 calore che scalda l'acqua («quando c'e' assorbimento di
- *                 corrente c'e' la pompa di calore»). Sopra una piccola
- *                 soglia, perche' l'elettronica a riposo qualche watt lo
- *                 tira sempre e la ventola non deve girare per quello.
+ *   boiler        cosa scalda l'acqua, da quanto tira il boiler: «on» la
+ *                 pompa di calore («quando c'e' assorbimento di corrente c'e'
+ *                 la pompa di calore che scalda acqua»), «resistenza» oltre
+ *                 1 kW («se sale oltre 1 kW e' accesa la resistenza
+ *                 interna»), «off» sotto una piccola soglia — l'elettronica a
+ *                 riposo qualche watt lo tira sempre, e la ventola non deve
+ *                 girare per quello.
  *
  * Il modulo e' puro.
  */
@@ -25,6 +27,15 @@ const PERIODO = 4;
 
 /** Sotto questi watt la pompa di calore e' a riposo (l'elettronica accesa). */
 export const POMPA_DI_CALORE_DA_W = 20;
+
+/** Oltre questi watt e' accesa la resistenza interna, non la pompa di calore. */
+export const RESISTENZA_OLTRE_W = 1000;
+
+/** Cosa scalda l'acqua con [w] watt: "off", "on" (pompa di calore), "resistenza". */
+export function cosaScalda(w) {
+  if (w === null || w === undefined || !Number.isFinite(w) || w < POMPA_DI_CALORE_DA_W) return "off";
+  return w > RESISTENZA_OLTRE_W ? "resistenza" : "on";
+}
 const PASSI = 6;
 
 const numero = (valore) => {
@@ -58,7 +69,7 @@ export function ilMotoDelSolare({ delta, pannello, potenza } = {}) {
     ciclo: `${(PERIODO / n).toFixed(4)}s`,
     rotore: `${(PERIODO / (n * 2)).toFixed(4)}s`,
     calore: caloreDelPannello(pannello).toFixed(3),
-    boiler: w !== null && w >= POMPA_DI_CALORE_DA_W ? "on" : "off",
+    boiler: cosaScalda(w),
   };
 }
 

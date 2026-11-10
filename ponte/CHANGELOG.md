@@ -20,7 +20,11 @@ _App GdAHome e Home Assistant._
   sua pompa di calore che scalda l'acqua, e la pagina lo fa vedere: la
   ventola sulla testa del boiler gira, ne esce l'aria, le spire attorno al
   serbatoio si accendono col calore che entra, e in alto si legge «Pompa di
-  calore attiva». Al posto della resistenza rossa in fondo al serbatoio.
+  calore attiva».
+- **E la resistenza interna**: oltre 1 kW non è la pompa di calore ma la
+  resistenza dentro il serbatoio: la ventola si ferma, la resistenza in
+  fondo si accende rossa, l'acqua sopra si scalda, e si legge «Resistenza
+  accesa».
 
 **Nell'app, il navigatore:**
 

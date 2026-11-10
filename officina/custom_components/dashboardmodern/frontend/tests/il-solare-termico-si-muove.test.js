@@ -16,8 +16,10 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   POMPA_DI_CALORE_DA_W,
+  RESISTENZA_OLTRE_W,
   RIFERIMENTI_DEL_MOTO,
   caloreDelPannello,
+  cosaScalda,
   ilMotoDelSolare,
   lettureDelMoto,
   passiDelFlusso,
@@ -63,7 +65,7 @@ test("il pannello scalda da 30 a 90 gradi, e il boiler e' acceso se tira", () =>
   assert.equal(caloreDelPannello(60), 0.5);
   assert.equal(caloreDelPannello(120), 1);
   assert.equal(caloreDelPannello(undefined), 0);
-  assert.equal(ilMotoDelSolare({ potenza: 1500 }).boiler, "on");
+  assert.equal(ilMotoDelSolare({ potenza: 800 }).boiler, "on");
   assert.equal(ilMotoDelSolare({ potenza: 0 }).boiler, "off");
   assert.equal(ilMotoDelSolare({}).boiler, "off");
 });
@@ -74,6 +76,21 @@ test("la pompa di calore gira quando tira davvero, non per l'elettronica a ripos
   assert.equal(ilMotoDelSolare({ potenza: 492 }).boiler, "on");
   assert.equal(ilMotoDelSolare({ potenza: POMPA_DI_CALORE_DA_W }).boiler, "on");
   assert.equal(ilMotoDelSolare({ potenza: 4 }).boiler, "off");
+  assert.equal(ilMotoDelSolare({ potenza: RESISTENZA_OLTRE_W }).boiler, "on");
+});
+
+test("oltre 1 kW e' accesa la resistenza interna, non la pompa di calore", () => {
+  /* «Se sale oltre 1 kW e' accesa la resistenza interna.» */
+  assert.equal(RESISTENZA_OLTRE_W, 1000);
+  assert.equal(ilMotoDelSolare({ potenza: 1500 }).boiler, "resistenza");
+  assert.equal(ilMotoDelSolare({ potenza: 1001 }).boiler, "resistenza");
+  assert.equal(cosaScalda(Number.NaN), "off");
+  assert.match(SEZIONE, /\[data-dmx-boiler="resistenza"\] \.dmx-element \{ opacity:1;/);
+  assert.match(SEZIONE, /\[data-dmx-boiler="resistenza"\] \.dm-st-live::after \{ content:"\$\{element\}"; \}/);
+  /* La ventola gira solo con la pompa di calore. */
+  assert.doesNotMatch(SEZIONE, /\[data-dmx-boiler="resistenza"\] \.dmx-pdc-fan/);
+  /* A movimento ridotto la resistenza rallenta, non si spegne. */
+  assert.match(ramoRidotto(), /\[data-dmx-boiler="resistenza"\] \.dmx-element \{ animation:dmxElement 2\.4s/);
 });
 
 test("sul boiler c'e' la pompa di calore: ventola, spire, aria, e la pastiglia lo dice", () => {
@@ -82,8 +99,6 @@ test("sul boiler c'e' la pompa di calore: ventola, spire, aria, e la pastiglia l
   assert.match(SEZIONE, /\[data-dmx-boiler="on"\] \.dmx-pdc-fan \{ animation:dmxPdcFan/);
   assert.match(SEZIONE, /\[data-dmx-boiler="on"\] \.dmx-pdc-hot \{ opacity:1;/);
   assert.match(SEZIONE, /\[data-dmx-boiler="on"\] \.dm-st-live::after \{ content:"\$\{heatPump\}"; \}/);
-  /* Niente piu' resistenza accesa in fondo al serbatoio. */
-  assert.doesNotMatch(SEZIONE, /dmx-element/);
   /* A movimento ridotto la ventola rallenta, non si ferma; nella plancia
    * leggera continua a girare. */
   assert.match(ramoRidotto(), /\.dmx-pdc-fan \{ animation:dmxPdcFan 3\.2s/);
@@ -135,6 +150,7 @@ test("a movimento ridotto si spegne la decorazione, non lo stato", () => {
       "dmx-coil",
       "dmx-pdc-fan",
       "dmx-pdc-hot",
+      "dmx-element",
       "dmx-drop",
       "dmx-chev",
     ])

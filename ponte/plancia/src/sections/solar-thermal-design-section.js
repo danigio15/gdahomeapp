@@ -45,7 +45,8 @@
 // pulses run down the coil and the tank's stratification breathes; the valve
 // says open or closed; when the boiler draws power its heat pump runs — the
 // fan on its head turns, cool air leaves it and the condenser wrapped round
-// the tank glows with heat flowing in. All of it is CSS keyframes on transforms,
+// the tank glows with heat flowing in — and above 1 kW it is the internal
+// electric element instead, glowing at the bottom of the tank. All of it is CSS keyframes on transforms,
 // opacity and dash offsets — no timers, nothing running on a hidden page —
 // driven by the classes the runtime toggles plus three numbers read here from
 // the real readings (`core/il-solare-in-movimento.js`): the only HA state this
@@ -146,6 +147,7 @@ function stylesheet() {
   const charging = t("Carico solare attivo", "Solar charging");
   const safety = t("Limite di sicurezza", "Safety limit");
   const heatPump = t("Pompa di calore attiva", "Heat pump running");
+  const element = t("Resistenza accesa", "Heating element on");
   const open = t("Aperta", "Open");
   const closed = t("Chiusa", "Closed");
 
@@ -304,6 +306,8 @@ function stylesheet() {
     #page-boiler:has(#syn-p-ricircolo.active) .dm-st-live::after { content:"${recirculating}"; }
     #page-boiler[data-dmx-boiler="on"] .dm-st-live { color:#0284c7; border-color:rgba(2,132,199,.28); }
     #page-boiler[data-dmx-boiler="on"] .dm-st-live::after { content:"${heatPump}"; }
+    #page-boiler[data-dmx-boiler="resistenza"] .dm-st-live { color:#e11d48; border-color:rgba(225,29,72,.28); }
+    #page-boiler[data-dmx-boiler="resistenza"] .dm-st-live::after { content:"${element}"; }
     #page-boiler:has(#syn-p-solare.active) .dm-st-live { color:#c2410c; border-color:rgba(234,88,12,.28); }
     #page-boiler:has(#syn-p-solare.active) .dm-st-live::after { content:"${charging}"; }
     #page-boiler:has(#syn-p-solare.active) .dm-st-live::before {
@@ -316,6 +320,7 @@ function stylesheet() {
        pump, then recirculation. */
     html[data-theme="dark"] #page-boiler:has(#syn-p-ricircolo.active) .dm-st-live { color:#a78bfa; }
     html[data-theme="dark"] #page-boiler[data-dmx-boiler="on"] .dm-st-live { color:#38bdf8; }
+    html[data-theme="dark"] #page-boiler[data-dmx-boiler="resistenza"] .dm-st-live { color:#fb7185; }
     html[data-theme="dark"] #page-boiler:has(#syn-p-solare.active) .dm-st-live { color:#fb923c; }
     html[data-theme="dark"] #page-boiler:has(#syn-safety-icon.active) .dm-st-live { color:#f87171; }
   }
@@ -958,7 +963,10 @@ function motoCss() {
      c'e' la pompa di calore che scalda acqua»: what draws power here is not
      an electric element but a heat pump. While it runs its fan turns, cool
      air leaves it, and the condenser wrapped round the tank glows with heat
-     flowing in. No steam and no drips: a closed tank doesn't smoke. */
+     flowing in. No steam and no drips: a closed tank doesn't smoke.
+     Above 1 kW («se sale oltre 1 kW e' accesa la resistenza interna») it is
+     the electric element instead: the fan stops, the element at the bottom
+     of the tank glows and the water above it warms. */
   #page-boiler .dmx-pdc-body { fill:url(#dm-st-jacket); stroke:var(--st-frame); stroke-width:1.5; }
   #page-boiler .dmx-pdc-lid { fill:var(--st-cap); stroke:var(--st-frame); stroke-width:1.5; }
   #page-boiler .dmx-pdc-grille { fill:#1e293b; stroke:var(--st-frame); stroke-width:1.5; }
@@ -978,6 +986,13 @@ function motoCss() {
   @keyframes dmxPdcFan { to { transform:rotate(360deg); } }
   @keyframes dmxPdcAir { 0% { transform:scale(1); opacity:0; } 20% { opacity:.8; } 100% { transform:scale(1.9); opacity:0; } }
   @keyframes dmxPdcHot { from { stroke-dashoffset:0; } to { stroke-dashoffset:-24; } }
+  #page-boiler .dmx-element { fill:none; stroke:#94a3b8; stroke-width:4; stroke-linecap:round; opacity:.45; transition:opacity .4s; }
+  #page-boiler .dmx-element-heat { opacity:0; transition:opacity .6s; }
+  #page-boiler[data-dmx-boiler="resistenza"] .dmx-element { opacity:1; stroke:#ef4444; filter:url(#dm-st-glow); animation:dmxElement 1.2s ease-in-out infinite; }
+  #page-boiler[data-dmx-boiler="resistenza"] .dmx-element-heat { opacity:1; animation:dmxElementHeat 2.4s ease-in-out infinite; }
+  #page-boiler[data-dmx-boiler="resistenza"] .dmx-pdc-led { fill:#f97316; filter:url(#dm-st-glow); }
+  @keyframes dmxElement { 0%,100% { stroke:#dc2626; } 50% { stroke:#fca5a5; } }
+  @keyframes dmxElementHeat { 0%,100% { opacity:.55; } 50% { opacity:1; } }
 
   /* The valve: open says so with a green ping and chevrons crossing it,
      closed with a dashed red ring and the handle across. */
@@ -1005,6 +1020,7 @@ function motoCss() {
     #page-boiler .dmx-wave, #page-boiler .dmx-wisp, #page-boiler .dmx-pdc-air circle { opacity:0 !important; animation:none !important; }
     html body #page-boiler[data-dmx-boiler="on"] .dmx-pdc-fan { animation:dmxPdcFan 3.2s linear infinite !important; }
     html body #page-boiler[data-dmx-boiler="on"] .dmx-pdc-hot { animation:dmxPdcHot 2.4s linear infinite !important; }
+    html body #page-boiler[data-dmx-boiler="resistenza"] .dmx-element { animation:dmxElement 2.4s ease-in-out infinite !important; }
     html body #page-boiler:has(#flow-sol-hot.active) .dmx-hot .dmx-dots,
     html body #page-boiler:has(#flow-sol-cold.active) .dmx-cold .dmx-dots { animation:dmxRun25 var(--dmx-cycle) linear infinite !important; }
     html body #page-boiler:has(#flow-sol-hot.active) .dmx-hot .dmx-dots2,
@@ -1021,6 +1037,7 @@ function motoCss() {
   html body #page-boiler:not(#dmx-a):not(#dmx-b):not(#dmx-c):not(#dmx-d):has(#flow-sol-cold.active) .dmx-cold .dmx-dots,
   html body #page-boiler:not(#dmx-a):not(#dmx-b):not(#dmx-c):not(#dmx-d) #syn-p-solare.active .dm-st-rotor,
   html body #page-boiler:not(#dmx-a):not(#dmx-b):not(#dmx-c):not(#dmx-d)[data-dmx-boiler="on"] :is(.dmx-pdc-fan,.dmx-pdc-hot),
+  html body #page-boiler:not(#dmx-a):not(#dmx-b):not(#dmx-c):not(#dmx-d)[data-dmx-boiler="resistenza"] .dmx-element,
   html body #page-boiler:not(#dmx-a):not(#dmx-b):not(#dmx-c):not(#dmx-d) .syn-flow.active { animation-iteration-count:infinite !important; }
   `;
 }
@@ -1042,6 +1059,7 @@ function defsMarkup() {
   <linearGradient id="dmx-sweep" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".45" stop-color="#fde68a" stop-opacity="0"/><stop offset=".5" stop-color="#fff7d6" stop-opacity=".55"/><stop offset=".55" stop-color="#fde68a" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
   <radialGradient id="dmx-beam" cx="0" cy="0" r="1" gradientUnits="objectBoundingBox"><stop offset="0" stop-color="#fde68a" stop-opacity=".9"/><stop offset="1" stop-color="#fbbf24" stop-opacity="0"/></radialGradient>
   <linearGradient id="dmx-warmtop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff1c2" stop-opacity=".75"/><stop offset=".35" stop-color="#fb923c" stop-opacity=".25"/><stop offset=".6" stop-color="#fb923c" stop-opacity="0"/></linearGradient>
+  <linearGradient id="dmx-element-heat" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#f97316" stop-opacity=".7"/><stop offset=".45" stop-color="#fb923c" stop-opacity=".3"/><stop offset="1" stop-color="#fb923c" stop-opacity="0"/></linearGradient>
   <linearGradient id="dmx-cline" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".38"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
   <filter id="dmx-blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.4"/></filter>
   <linearGradient id="dm-st-win" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".22"/><stop offset=".3" stop-color="#fff" stop-opacity=".28"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></linearGradient>`;
@@ -1158,7 +1176,9 @@ function frontMarkup(L) {
     coil += ` Q ${T.cx} ${y + wh * 0.05}, ${wx + ww - 8} ${y} Q ${T.cx} ${y + wh * 0.055}, ${wx + 8} ${y + wh * 0.1}`;
   }
   /* Inside the window: the warm top that breathes, the line between hot and
-   * cold that sways, convection rising from the coil. */
+   * cold that sways, convection rising from the coil, and the electric
+   * element at the bottom — a hairpin rod, warming the water above it when
+   * it is on. */
   tank += `<clipPath id="dmx-win-clip"><rect x="${wx}" y="${wy}" width="${ww}" height="${wh}" rx="${ww / 2}"/></clipPath>`;
   tank += `<g class="dmx dmx-tank" clip-path="url(#dmx-win-clip)">`;
   tank += `<rect class="dmx-warm" x="${wx}" y="${wy}" width="${ww}" height="${wh}" fill="url(#dmx-warmtop)"/>`;
@@ -1167,6 +1187,12 @@ function frontMarkup(L) {
     const cx = wx + ww * (0.25 + (i % 3) * 0.25);
     tank += `<ellipse class="dmx-wisp" cx="${f1(cx)}" cy="${f1(wy + wh * 0.62)}" rx="${5 + (i % 2) * 2}" ry="${9 + (i % 2) * 3}" style="animation-delay:${((-i * 4) / 6).toFixed(3)}s"/>`;
   }
+  const ey0 = wy + wh * 0.875;
+  const ey1 = wy + wh * 0.93;
+  const ex0 = wx + ww * 0.2;
+  const ex1 = wx + ww * 0.8;
+  tank += `<rect class="dmx-element-heat" x="${wx}" y="${f1(wy + wh * 0.62)}" width="${ww}" height="${f1(wh * 0.38)}" fill="url(#dmx-element-heat)"/>`;
+  tank += `<path class="dmx-element" d="M ${f1(ex0)} ${f1(ey0)} L ${f1(ex1)} ${f1(ey0)} A ${f1((ey1 - ey0) / 2)} ${f1((ey1 - ey0) / 2)} 0 0 1 ${f1(ex1)} ${f1(ey1)} L ${f1(ex0)} ${f1(ey1)}"/>`;
   tank += `</g>`;
   tank += `<path class="dm-st-coil" d="${coil}"/>`;
   tank += `<g class="dmx dmx-coil"><path class="dmx-coil-warm" d="${coil}"/><path class="dmx-coil-pulse" d="${coil}"/><path class="dmx-coil-pulse dmx-coil-pulse2" d="${coil}"/></g>`;
