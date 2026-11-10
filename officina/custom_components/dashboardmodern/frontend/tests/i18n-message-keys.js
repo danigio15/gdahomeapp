@@ -2786,6 +2786,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "Heat lamp or heating",
   "Heat pump",
   "Heat pump (cool + heat)",
+  "Heat pump running",
   "Heat recovered",
   "Heat/cool",
   "Heater",

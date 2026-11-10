@@ -2999,6 +2999,7 @@ export default Object.freeze({
   "Rear right": "오른쪽 뒤",
   Recirculation: "순환",
   "Recirculation running": "순환 가동 중",
+  "Heat pump running": "히트펌프 작동 중",
   "Recirculation solenoid valve": "순환 전자밸브",
   "Recognised as": "인식 결과",
   "Recognised fields": "인식된 칸",

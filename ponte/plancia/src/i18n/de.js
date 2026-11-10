@@ -3024,6 +3024,7 @@ export default Object.freeze({
   "Rear right": "Hinten rechts",
   Recirculation: "Zirkulation",
   "Recirculation running": "Zirkulation läuft",
+  "Heat pump running": "Wärmepumpe in Betrieb",
   "Recirculation solenoid valve": "Zirkulations-Magnetventil",
   "Recognised as": "Erkannt als",
   "Recognised fields": "Erkannte Felder",

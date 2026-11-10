@@ -10,6 +10,29 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.18
+
+_App GdAHome e Home Assistant._
+
+**Il solare termico:**
+
+- **La pompa di calore sul boiler**: quando il boiler assorbe corrente è la
+  sua pompa di calore che scalda l'acqua, e la pagina lo fa vedere: la
+  ventola sulla testa del boiler gira, ne esce l'aria, le spire attorno al
+  serbatoio si accendono col calore che entra, e in alto si legge «Pompa di
+  calore attiva».
+- **E la resistenza interna**: oltre 1 kW non è la pompa di calore ma la
+  resistenza dentro il serbatoio: la ventola si ferma, la resistenza in
+  fondo si accende rossa, l'acqua sopra si scalda, e si legge «Resistenza
+  accesa».
+
+**Nell'app, il navigatore:**
+
+- **Gli edifici veri restano aggiornati**: ogni mese escono gli edifici
+  nuovi di Overture Maps, e l'app riscarica da sola il pacchetto della tua
+  zona, solo in Wi-Fi o su una rete che non si paga a consumo. Finché il
+  nuovo non è arrivato intero, la mappa usa quello di prima.
+
 ## 1.18.17
 
 _App GdAHome e Home Assistant._

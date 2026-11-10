@@ -3017,6 +3017,7 @@ export default Object.freeze({
   "Rear right": "Rechtsachter",
   Recirculation: "Circulatie",
   "Recirculation running": "Circulatie draait",
+  "Heat pump running": "Warmtepomp in bedrijf",
   "Recirculation solenoid valve": "Circulatiemagneetklep",
   "Recognised as": "Herkend als",
   "Recognised fields": "Herkende velden",

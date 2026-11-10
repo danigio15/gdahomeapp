@@ -3013,6 +3013,7 @@ export default Object.freeze({
   "Rear right": "Tył prawy",
   Recirculation: "Cyrkulacja",
   "Recirculation running": "Cyrkulacja pracuje",
+  "Heat pump running": "Pompa ciepła pracuje",
   "Recirculation solenoid valve": "Elektrozawór cyrkulacji",
   "Recognised as": "Rozpoznano jako",
   "Recognised fields": "Rozpoznane pola",

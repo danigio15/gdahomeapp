@@ -3008,6 +3008,7 @@ export default Object.freeze({
   "Rear right": "Arka sağ",
   Recirculation: "Sirkülasyon",
   "Recirculation running": "Sirkülasyon çalışıyor",
+  "Heat pump running": "Isı pompası çalışıyor",
   "Recirculation solenoid valve": "Sirkülasyon selenoid vanası",
   "Recognised as": "Şu olarak tanındı",
   "Recognised fields": "Tanınan alanlar",
