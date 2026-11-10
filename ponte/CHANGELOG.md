@@ -10,6 +10,45 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.17
+
+_App GdAHome e Home Assistant._
+
+**Le telecamere:**
+
+- **Niente più riquadro nero**: certe telecamere si collegavano ma non
+  mandavano un'immagine che il browser sapesse mostrare (un video H.265, il
+  solo audio, il sonoro non concesso), e il popup restava nero. Adesso, se
+  l'immagine non arriva, si prova da solo la strada dopo, fino alle
+  istantanee: la telecamera si vede sempre.
+
+**I dispositivi:**
+
+- **Il logo dell'integrazione**: ogni dispositivo ha accanto il logo della
+  sua integrazione, e lo ha anche la testa di ogni gruppo.
+
+**L'orologio:**
+
+- **Lo stato giusto dopo un comando**: dopo aver acceso o spento qualcosa dal
+  polso, la riga dice subito com'è adesso (Accesa, Spenta…), su Apple Watch e
+  su Wear OS, anche col telefono in tasca.
+- **Wear OS: gli avvisi si leggono**, in un riquadro scuro al centro.
+
+**Nell'app, il navigatore:**
+
+- **Gli edifici veri lungo la strada**: dove OpenStreetMap non li ha, la
+  scena 3D prende quelli di Overture Maps (con quelli che Microsoft ha
+  ricavato dalle foto dal satellite, con l'altezza). Il pacchetto della zona
+  si scarica una volta, solo in Wi-Fi o su una rete che non si paga a
+  consumo, e poi va anche senza rete.
+- **La freccia sta dove sta l'auto**: la posizione si segue lungo il percorso
+  con la velocità che dà l'auto, più fluida e senza scatti.
+- **Alle svolte**: fermi davanti a una svolta la freccia non ha già girato.
+- **La striscia del traffico** su Android Auto si vede bene, copre tutto il
+  viaggio e dice dove si è.
+- **Sotto un ponte basso** la linea del percorso non sale più
+  sull'impalcato, e gli alberi ci sono solo dove c'è un bosco o un parco.
+
 ## 1.18.16
 
 _App GdAHome e Home Assistant._
