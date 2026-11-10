@@ -2996,6 +2996,7 @@ export default Object.freeze({
   "Rear right": "पीछे दायाँ",
   Recirculation: "पुनःसंचरण",
   "Recirculation running": "पुनःसंचरण चालू",
+  "Heat pump running": "हीट पंप चालू",
   "Recirculation solenoid valve": "पुनःपरिसंचरण सोलेनॉइड वाल्व",
   "Recognised as": "इस रूप में पहचाना गया",
   "Recognised fields": "पहचाने गए खाने",

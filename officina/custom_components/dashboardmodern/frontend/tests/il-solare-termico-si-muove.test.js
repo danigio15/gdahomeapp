@@ -15,6 +15,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
+  POMPA_DI_CALORE_DA_W,
   RIFERIMENTI_DEL_MOTO,
   caloreDelPannello,
   ilMotoDelSolare,
@@ -67,6 +68,28 @@ test("il pannello scalda da 30 a 90 gradi, e il boiler e' acceso se tira", () =>
   assert.equal(ilMotoDelSolare({}).boiler, "off");
 });
 
+test("la pompa di calore gira quando tira davvero, non per l'elettronica a riposo", () => {
+  /* «Quando c'e' assorbimento di corrente c'e' la pompa di calore che scalda
+   * acqua.» Qualche watt a riposo non e' la pompa che gira. */
+  assert.equal(ilMotoDelSolare({ potenza: 492 }).boiler, "on");
+  assert.equal(ilMotoDelSolare({ potenza: POMPA_DI_CALORE_DA_W }).boiler, "on");
+  assert.equal(ilMotoDelSolare({ potenza: 4 }).boiler, "off");
+});
+
+test("sul boiler c'e' la pompa di calore: ventola, spire, aria, e la pastiglia lo dice", () => {
+  assert.match(SEZIONE, /function pompaDiCalore\(/);
+  assert.match(SEZIONE, /function spireDelCondensatore\(/);
+  assert.match(SEZIONE, /\[data-dmx-boiler="on"\] \.dmx-pdc-fan \{ animation:dmxPdcFan/);
+  assert.match(SEZIONE, /\[data-dmx-boiler="on"\] \.dmx-pdc-hot \{ opacity:1;/);
+  assert.match(SEZIONE, /\[data-dmx-boiler="on"\] \.dm-st-live::after \{ content:"\$\{heatPump\}"; \}/);
+  /* Niente piu' resistenza accesa in fondo al serbatoio. */
+  assert.doesNotMatch(SEZIONE, /dmx-element/);
+  /* A movimento ridotto la ventola rallenta, non si ferma; nella plancia
+   * leggera continua a girare. */
+  assert.match(ramoRidotto(), /\.dmx-pdc-fan \{ animation:dmxPdcFan 3\.2s/);
+  assert.match(SEZIONE, /\[data-dmx-boiler="on"\] :is\(\.dmx-pdc-fan,\.dmx-pdc-hot\)/);
+});
+
 test("le letture vengono dagli stati veri, attraverso il mappatore", () => {
   const mappa = {
     [RIFERIMENTI_DEL_MOTO.delta]: "sensor.dt",
@@ -110,7 +133,8 @@ test("a movimento ridotto si spegne la decorazione, non lo stato", () => {
       "blink-active",
       "dmx-dots",
       "dmx-coil",
-      "dmx-element",
+      "dmx-pdc-fan",
+      "dmx-pdc-hot",
       "dmx-drop",
       "dmx-chev",
     ])

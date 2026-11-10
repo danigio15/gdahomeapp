@@ -12,7 +12,15 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
 ## 1.18.18
 
-_App GdAHome._
+_App GdAHome e Home Assistant._
+
+**Il solare termico:**
+
+- **La pompa di calore sul boiler**: quando il boiler assorbe corrente è la
+  sua pompa di calore che scalda l'acqua, e la pagina lo fa vedere: la
+  ventola sulla testa del boiler gira, ne esce l'aria, le spire attorno al
+  serbatoio si accendono col calore che entra, e in alto si legge «Pompa di
+  calore attiva». Al posto della resistenza rossa in fondo al serbatoio.
 
 **Nell'app, il navigatore:**
 

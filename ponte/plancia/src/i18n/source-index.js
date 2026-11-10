@@ -4903,6 +4903,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Pompa": "Pump",
   "Pompa di calore": "Heat pump",
   "Pompa di calore (freddo + caldo)": "Heat pump (cool + heat)",
+  "Pompa di calore attiva": "Heat pump running",
   "Pompa di ricircolo": "Recirculation pump",
   "pompa ferma": "pump idle",
   "Pompa ferma": "Pump idle",

@@ -2982,6 +2982,7 @@ export default Object.freeze({
   "Rear right": "خلفي أيمن",
   Recirculation: "إعادة التدوير",
   "Recirculation running": "إعادة التدوير تعمل",
+  "Heat pump running": "مضخة الحرارة تعمل",
   "Recirculation solenoid valve": "صمام إعادة التدوير",
   "Recognised as": "تم التعرّف عليه كـ",
   "Recognised fields": "الحقول المتعرَّف عليها",

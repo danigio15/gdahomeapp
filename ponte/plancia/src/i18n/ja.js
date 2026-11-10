@@ -3006,6 +3006,7 @@ export default Object.freeze({
   "Rear right": "右後",
   Recirculation: "循環",
   "Recirculation running": "循環運転中",
+  "Heat pump running": "ヒートポンプ運転中",
   "Recirculation solenoid valve": "循環用電磁弁",
   "Recognised as": "認識結果",
   "Recognised fields": "認識した欄",

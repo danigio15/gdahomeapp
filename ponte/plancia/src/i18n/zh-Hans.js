@@ -2950,6 +2950,7 @@ export default Object.freeze({
   "Rear right": "右后",
   Recirculation: "循环",
   "Recirculation running": "循环运行中",
+  "Heat pump running": "热泵运行中",
   "Recirculation solenoid valve": "循环电磁阀",
   "Recognised as": "识别为",
   "Recognised fields": "识别到的栏",

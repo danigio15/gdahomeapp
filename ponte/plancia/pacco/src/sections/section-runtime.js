@@ -572,7 +572,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-IA7CL6NU.js";
+} from "../../chunk-E52WUT3D.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -6595,6 +6595,7 @@ var SOURCE_INDEX = Object.freeze({
   "Pompa": "Pump",
   "Pompa di calore": "Heat pump",
   "Pompa di calore (freddo + caldo)": "Heat pump (cool + heat)",
+  "Pompa di calore attiva": "Heat pump running",
   "Pompa di ricircolo": "Recirculation pump",
   "pompa ferma": "pump idle",
   "Pompa ferma": "Pump idle",
@@ -150976,6 +150977,7 @@ senzaCadere(installLaVentolaDellInverter);
 
 // src/core/il-solare-in-movimento.js
 var PERIODO = 4;
+var POMPA_DI_CALORE_DA_W = 20;
 var PASSI = 6;
 var numero61 = (valore3) => {
   if (valore3 === null || valore3 === void 0 || String(valore3).trim() === "") return null;
@@ -150998,7 +151000,7 @@ function ilMotoDelSolare({ delta, pannello, potenza: potenza3 } = {}) {
     ciclo: `${(PERIODO / n).toFixed(4)}s`,
     rotore: `${(PERIODO / (n * 2)).toFixed(4)}s`,
     calore: caloreDelPannello(pannello).toFixed(3),
-    boiler: w !== null && w > 0 ? "on" : "off"
+    boiler: w !== null && w >= POMPA_DI_CALORE_DA_W ? "on" : "off"
   };
 }
 var RIFERIMENTI_DEL_MOTO = Object.freeze({
@@ -151393,6 +151395,7 @@ function stylesheet() {
   const recirculating = t("Ricircolo attivo", "Recirculation running");
   const charging = t("Carico solare attivo", "Solar charging");
   const safety = t("Limite di sicurezza", "Safety limit");
+  const heatPump = t("Pompa di calore attiva", "Heat pump running");
   const open = t("Aperta", "Open");
   const closed = t("Chiusa", "Closed");
   return `
@@ -151548,6 +151551,8 @@ function stylesheet() {
     #page-boiler .dm-st-live::after { content:"${idle}"; }
     #page-boiler:has(#syn-p-ricircolo.active) .dm-st-live { color:#7c3aed; border-color:rgba(124,58,237,.28); }
     #page-boiler:has(#syn-p-ricircolo.active) .dm-st-live::after { content:"${recirculating}"; }
+    #page-boiler[data-dmx-boiler="on"] .dm-st-live { color:#0284c7; border-color:rgba(2,132,199,.28); }
+    #page-boiler[data-dmx-boiler="on"] .dm-st-live::after { content:"${heatPump}"; }
     #page-boiler:has(#syn-p-solare.active) .dm-st-live { color:#c2410c; border-color:rgba(234,88,12,.28); }
     #page-boiler:has(#syn-p-solare.active) .dm-st-live::after { content:"${charging}"; }
     #page-boiler:has(#syn-p-solare.active) .dm-st-live::before {
@@ -151556,8 +151561,10 @@ function stylesheet() {
     }
     #page-boiler:has(#syn-safety-icon.active) .dm-st-live { color:#dc2626; border-color:rgba(220,38,38,.34); }
     #page-boiler:has(#syn-safety-icon.active) .dm-st-live::after { content:"${safety}"; }
-    /* Same precedence in the dark: safety, then charging, then recirculation. */
+    /* Same precedence in the dark: safety, then charging, then the heat
+       pump, then recirculation. */
     html[data-theme="dark"] #page-boiler:has(#syn-p-ricircolo.active) .dm-st-live { color:#a78bfa; }
+    html[data-theme="dark"] #page-boiler[data-dmx-boiler="on"] .dm-st-live { color:#38bdf8; }
     html[data-theme="dark"] #page-boiler:has(#syn-p-solare.active) .dm-st-live { color:#fb923c; }
     html[data-theme="dark"] #page-boiler:has(#syn-safety-icon.active) .dm-st-live { color:#f87171; }
   }
@@ -152191,11 +152198,30 @@ function motoCss() {
   @keyframes dmxCoil { from { stroke-dashoffset:0; } to { stroke-dashoffset:-120; } }
   @keyframes dmxCoil2 { from { stroke-dashoffset:-60; } to { stroke-dashoffset:-180; } }
 
-  /* The boiler's element drawing power: it glows. No steam and no drips:
-     a closed tank doesn't smoke. Never on the safety valve, which has its own banner. */
-  #page-boiler .dmx-element { fill:#94a3b8; opacity:0; }
-  #page-boiler[data-dmx-boiler="on"] .dmx-element { opacity:1; fill:#ef4444; filter:url(#dm-st-glow); animation:dmxElement 1s ease-in-out infinite; }
-  @keyframes dmxElement { 0%,100% { fill:#dc2626; } 50% { fill:#fca5a5; } }
+  /* The heat pump on the tank's head. «Quando c'e' assorbimento di corrente
+     c'e' la pompa di calore che scalda acqua»: what draws power here is not
+     an electric element but a heat pump. While it runs its fan turns, cool
+     air leaves it, and the condenser wrapped round the tank glows with heat
+     flowing in. No steam and no drips: a closed tank doesn't smoke. */
+  #page-boiler .dmx-pdc-body { fill:url(#dm-st-jacket); stroke:var(--st-frame); stroke-width:1.5; }
+  #page-boiler .dmx-pdc-lid { fill:var(--st-cap); stroke:var(--st-frame); stroke-width:1.5; }
+  #page-boiler .dmx-pdc-grille { fill:#1e293b; stroke:var(--st-frame); stroke-width:1.5; }
+  #page-boiler .dmx-pdc-ring { fill:none; stroke:#94a3b8; stroke-opacity:.5; stroke-width:1; }
+  #page-boiler .dmx-pdc-blade { fill:#cbd5e1; }
+  #page-boiler .dmx-pdc-hub { fill:#f1f5f9; stroke:#64748b; stroke-width:1; }
+  #page-boiler .dmx-pdc-fan { transform-box:fill-box; transform-origin:center; }
+  #page-boiler .dmx-pdc-vent { stroke:var(--st-frame); stroke-width:2; stroke-linecap:round; opacity:.75; }
+  #page-boiler .dmx-pdc-led { fill:#94a3b8; transition:fill .4s; }
+  #page-boiler .dmx-pdc-air circle { fill:none; stroke:#0ea5e9; stroke-width:2.5; opacity:0; transform-box:fill-box; transform-origin:center; }
+  #page-boiler .dmx-pdc-wrap { fill:none; stroke:var(--st-frame); stroke-opacity:.55; stroke-width:3; stroke-linecap:round; }
+  #page-boiler .dmx-pdc-hot { fill:none; stroke:#f97316; stroke-width:3; stroke-linecap:round; stroke-dasharray:10 14; opacity:0; transition:opacity .5s; }
+  #page-boiler[data-dmx-boiler="on"] .dmx-pdc-fan { animation:dmxPdcFan .8s linear infinite; }
+  #page-boiler[data-dmx-boiler="on"] .dmx-pdc-led { fill:#22c55e; filter:url(#dm-st-glow); }
+  #page-boiler[data-dmx-boiler="on"] .dmx-pdc-air circle { animation:dmxPdcAir 2.4s ease-out infinite; }
+  #page-boiler[data-dmx-boiler="on"] .dmx-pdc-hot { opacity:1; filter:url(#dm-st-glow); animation:dmxPdcHot 1.2s linear infinite; }
+  @keyframes dmxPdcFan { to { transform:rotate(360deg); } }
+  @keyframes dmxPdcAir { 0% { transform:scale(1); opacity:0; } 20% { opacity:.8; } 100% { transform:scale(1.9); opacity:0; } }
+  @keyframes dmxPdcHot { from { stroke-dashoffset:0; } to { stroke-dashoffset:-24; } }
 
   /* The valve: open says so with a green ping and chevrons crossing it,
      closed with a dashed red ring and the handle across. */
@@ -152220,7 +152246,9 @@ function motoCss() {
      (particles at half speed, the rotor at a quarter). */
   @media (prefers-reduced-motion: reduce) {
     #page-boiler :is(.dmx-sweep,.dmx-wave,.dmx-beam,.dmx-rays,.dm-st-sun,.dmx-wisp,.dmx-cline,.dmx-warm,.dmx-panel-heat,.dm-st-riser,.dmx-halo,.dmx-ring,.dmx-current) { animation:none !important; }
-    #page-boiler .dmx-wave, #page-boiler .dmx-wisp { opacity:0 !important; }
+    #page-boiler .dmx-wave, #page-boiler .dmx-wisp, #page-boiler .dmx-pdc-air circle { opacity:0 !important; animation:none !important; }
+    html body #page-boiler[data-dmx-boiler="on"] .dmx-pdc-fan { animation:dmxPdcFan 3.2s linear infinite !important; }
+    html body #page-boiler[data-dmx-boiler="on"] .dmx-pdc-hot { animation:dmxPdcHot 2.4s linear infinite !important; }
     html body #page-boiler:has(#flow-sol-hot.active) .dmx-hot .dmx-dots,
     html body #page-boiler:has(#flow-sol-cold.active) .dmx-cold .dmx-dots { animation:dmxRun25 var(--dmx-cycle) linear infinite !important; }
     html body #page-boiler:has(#flow-sol-hot.active) .dmx-hot .dmx-dots2,
@@ -152236,6 +152264,7 @@ function motoCss() {
   html body #page-boiler:not(#dmx-a):not(#dmx-b):not(#dmx-c):not(#dmx-d):has(#flow-sol-hot.active) .dmx-hot .dmx-dots,
   html body #page-boiler:not(#dmx-a):not(#dmx-b):not(#dmx-c):not(#dmx-d):has(#flow-sol-cold.active) .dmx-cold .dmx-dots,
   html body #page-boiler:not(#dmx-a):not(#dmx-b):not(#dmx-c):not(#dmx-d) #syn-p-solare.active .dm-st-rotor,
+  html body #page-boiler:not(#dmx-a):not(#dmx-b):not(#dmx-c):not(#dmx-d)[data-dmx-boiler="on"] :is(.dmx-pdc-fan,.dmx-pdc-hot),
   html body #page-boiler:not(#dmx-a):not(#dmx-b):not(#dmx-c):not(#dmx-d) .syn-flow.active { animation-iteration-count:infinite !important; }
   `;
 }
@@ -152344,7 +152373,9 @@ function frontMarkup(L) {
   let tank = `<g data-dm-st-art="tank">`;
   tank += `<ellipse class="dm-st-tank-shadow" cx="${T.cx}" cy="${T.top + T.h + 6}" rx="${T.w * 0.62}" ry="${ry * 0.9}" filter="url(#dm-st-soft)"/>`;
   tank += `<path class="dm-st-tank-body" d="M ${tx} ${T.top} L ${tx} ${T.top + T.h} A ${T.w / 2} ${ry} 0 0 0 ${tx + T.w} ${T.top + T.h} L ${tx + T.w} ${T.top} Z"/>`;
+  tank += spireDelCondensatore(T, tx, ry);
   tank += `<ellipse class="dm-st-tank-cap" cx="${T.cx}" cy="${T.top}" rx="${T.w / 2}" ry="${ry}"/>`;
+  tank += pompaDiCalore(T, tx, ry);
   tank += `<rect class="dm-st-tank-window" x="${wx - 4}" y="${wy - 4}" width="${ww + 8}" height="${wh + 8}" rx="${ww / 2 + 4}"/>`;
   tank += `<rect x="${wx}" y="${wy}" width="${ww}" height="${wh}" rx="${ww / 2}" fill="url(#dm-st-strat)" opacity=".25" filter="url(#dm-st-soft)"/>`;
   tank += `<rect x="${wx}" y="${wy}" width="${ww}" height="${wh}" rx="${ww / 2}" fill="url(#dm-st-strat)"/>`;
@@ -152361,7 +152392,7 @@ function frontMarkup(L) {
     const cx = wx + ww * (0.25 + i % 3 * 0.25);
     tank += `<ellipse class="dmx-wisp" cx="${f1(cx)}" cy="${f1(wy + wh * 0.62)}" rx="${5 + i % 2 * 2}" ry="${9 + i % 2 * 3}" style="animation-delay:${(-i * 4 / 6).toFixed(3)}s"/>`;
   }
-  tank += `<rect class="dmx-element" x="${f1(wx + ww * 0.18)}" y="${f1(wy + wh * 0.9)}" width="${f1(ww * 0.64)}" height="6" rx="3"/></g>`;
+  tank += `</g>`;
   tank += `<path class="dm-st-coil" d="${coil}"/>`;
   tank += `<g class="dmx dmx-coil"><path class="dmx-coil-warm" d="${coil}"/><path class="dmx-coil-pulse" d="${coil}"/><path class="dmx-coil-pulse dmx-coil-pulse2" d="${coil}"/></g>`;
   tank += `<rect x="${wx}" y="${wy}" width="${ww}" height="${wh}" rx="${ww / 2}" fill="url(#dm-st-win)"/></g>`;
@@ -152375,6 +152406,52 @@ function frontMarkup(L) {
     leads += `<g data-dm-st-art="lead-${name}"><path class="dm-st-lead" d="M ${x1} ${y1} L ${x2} ${y2}" fill="none"/><circle class="dm-st-lead-dot" cx="${x2}" cy="${y2}" r="4"/></g>`;
   }
   return collector + tank + tap + leads;
+}
+function pompaDiCalore(T, tx, ry) {
+  const hh = T.w * 0.28;
+  const hr = T.w / 2 - T.w * 0.06;
+  const hry = ry * (hr / (T.w / 2));
+  const lry = hry * 0.75;
+  const cx = T.cx;
+  const top = T.top - hh;
+  const fy = T.top - hh * 0.42 + hry * 0.5;
+  const r = hh * 0.4;
+  let g = `<g class="dmx-pdc" data-dm-st-art="pompa-di-calore">`;
+  g += `<path class="dmx-pdc-body" d="M ${f1(cx - hr)} ${f1(top)} L ${f1(cx - hr)} ${f1(T.top)} A ${f1(hr)} ${f1(hry)} 0 0 0 ${f1(cx + hr)} ${f1(T.top)} L ${f1(cx + hr)} ${f1(top)} Z"/>`;
+  g += `<ellipse class="dmx-pdc-lid" cx="${f1(cx)}" cy="${f1(top)}" rx="${f1(hr)}" ry="${f1(lry)}"/>`;
+  for (const lato of [-1, 1]) {
+    const x0 = cx + lato * (r + 6);
+    const x1 = cx + lato * (hr - 9);
+    for (let i = -1; i <= 1; i += 1) {
+      const y = fy + i * r * 0.55;
+      g += `<path class="dmx-pdc-vent" d="M ${f1(x0)} ${f1(y)} L ${f1(x1)} ${f1(y)}"/>`;
+    }
+  }
+  g += `<circle class="dmx-pdc-grille" cx="${f1(cx)}" cy="${f1(fy)}" r="${f1(r)}"/>`;
+  g += `<g class="dmx-pdc-fan"><circle cx="${f1(cx)}" cy="${f1(fy)}" r="${f1(r * 0.86)}" fill="none"/>`;
+  for (let i = 0; i < 4; i += 1) {
+    g += `<path class="dmx-pdc-blade" transform="rotate(${i * 90} ${f1(cx)} ${f1(fy)})" d="M ${f1(cx)} ${f1(fy)} C ${f1(cx + r * 0.35)} ${f1(fy - r * 0.15)}, ${f1(cx + r * 0.8)} ${f1(fy - r * 0.45)}, ${f1(cx + r * 0.62)} ${f1(fy - r * 0.78)} C ${f1(cx + r * 0.3)} ${f1(fy - r * 0.8)}, ${f1(cx + r * 0.05)} ${f1(fy - r * 0.45)}, ${f1(cx)} ${f1(fy)} Z"/>`;
+  }
+  g += `</g>`;
+  g += `<circle class="dmx-pdc-ring" cx="${f1(cx)}" cy="${f1(fy)}" r="${f1(r * 0.66)}"/>`;
+  g += `<circle class="dmx-pdc-ring" cx="${f1(cx)}" cy="${f1(fy)}" r="${f1(r * 0.36)}"/>`;
+  g += `<circle class="dmx-pdc-hub" cx="${f1(cx)}" cy="${f1(fy)}" r="${f1(r * 0.18)}"/>`;
+  g += `<circle class="dmx-pdc-led" cx="${f1(cx + hr - 7)}" cy="${f1(top + lry + 6)}" r="2.6"/>`;
+  g += `<g class="dmx dmx-pdc-air">`;
+  for (let i = 0; i < 2; i += 1) {
+    g += `<circle cx="${f1(cx)}" cy="${f1(fy)}" r="${f1(r)}" style="animation-delay:${(-i * 1.2).toFixed(2)}s"/>`;
+  }
+  g += `</g></g>`;
+  return g;
+}
+function spireDelCondensatore(T, tx, ry) {
+  const ys = [0.5, 0.6, 0.7, 0.8].map((k) => T.top + T.h * k);
+  const xr = tx + T.w - 9;
+  let d = `M ${f1(xr)} ${f1(T.top + ry * 0.75)} L ${f1(xr)} ${f1(ys[0])}`;
+  let spire = "";
+  for (const y of ys) spire += ` M ${tx + 1.5} ${f1(y)} A ${T.w / 2 - 1.5} ${f1(ry * 0.9)} 0 0 0 ${tx + T.w - 1.5} ${f1(y)}`;
+  d += spire;
+  return `<g class="dmx-pdc-coil"><path class="dmx-pdc-wrap" d="${d}"/><path class="dmx dmx-pdc-hot" d="${d}"/></g>`;
 }
 function svgGroup(svg3, cls, where) {
   let group = svg3.querySelector(`:scope > g.${cls}`);

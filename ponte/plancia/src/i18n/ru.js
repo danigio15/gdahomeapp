@@ -3016,6 +3016,7 @@ export default Object.freeze({
   "Rear right": "Задний правый",
   Recirculation: "Рециркуляция",
   "Recirculation running": "Рециркуляция работает",
+  "Heat pump running": "Тепловой насос работает",
   "Recirculation solenoid valve": "Электроклапан рециркуляции",
   "Recognised as": "Распознано как",
   "Recognised fields": "Распознанные поля",
