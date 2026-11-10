@@ -572,7 +572,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-RCMO34VO.js";
+} from "../../chunk-H5YJE3F3.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -8765,6 +8765,7 @@ var SOURCE_INDEX = Object.freeze({
   "Vuoto: quelli della sezione Musica della plancia": "Empty: the ones from the dashboard's Music section",
   "Vuoto: spegne": "Empty: turns off",
   "Vuoto: tutte quelle della sezione Sicurezza della plancia": "Empty: all the ones from the dashboard's Security section",
+  "WebRTC: collegato, ma senza immagine": "WebRTC: connected, but no picture",
   "WebRTC: il nome stream go2rtc funziona solo aprendo la plancia fuori da Home Assistant — qui dentro la telecamera passa dalla sua entità": "WebRTC: the go2rtc stream name only works with the dashboard opened outside Home Assistant — in here the camera goes through its entity",
   "WebRTC: provato per primo col suo tempo intero, il video non è arrivato": "WebRTC: tried first with its full time, the video did not arrive",
   "WebRTC: saltato — compila «Nome stream go2rtc» nella scheda Telecamere (il nome della telecamera non c’entra)": "WebRTC: skipped — fill in “go2rtc stream name” in the Cameras tab (the camera name is not the lever)",
@@ -133410,9 +133411,9 @@ function tempoDi(video) {
   const letto = Number(video?.currentTime);
   return Number.isFinite(letto) ? letto : Number.NaN;
 }
-function eAncoraSuo(video) {
+function eAncoraSuo(video, id = "cam-hls") {
   if (video?.isConnected === false) return false;
-  const adesso2 = doc?.getElementById?.("cam-hls");
+  const adesso2 = doc?.getElementById?.(id);
   return !adesso2 || adesso2 === video;
 }
 function ceUnaFotoFerma(video) {
@@ -133447,6 +133448,64 @@ function mettiIlPoster(video, entity2, states) {
   video.setAttribute("poster", foto);
   return foto;
 }
+function haUnImmagine(video) {
+  if (!video || !(Number(video.videoWidth) > 0)) return false;
+  try {
+    const qualita = video.getVideoPlaybackQuality?.();
+    if (qualita && Number.isFinite(qualita.totalVideoFrames) && qualita.totalVideoFrames === 0) return false;
+  } catch (_errore) {
+  }
+  return true;
+}
+function partiMuto(video) {
+  try {
+    video.muted = true;
+    const p = video.play?.();
+    if (p && typeof p.catch === "function") p.catch(() => {
+    });
+  } catch (_errore) {
+  }
+}
+async function aspettaUnImmagine(video, opzioni2 = {}) {
+  const attesa = Number(opzioni2.attesa) > 0 ? Number(opzioni2.attesa) : ATTESA_MINIMA;
+  const passo = Number(opzioni2.passo) > 0 ? Number(opzioni2.passo) : PASSO_FOTOGRAMMI;
+  const dormi = opzioni2.dormi || ((ms) => new Promise((risolvi5) => root.setTimeout?.(risolvi5, ms) || risolvi5()));
+  if (!video) return true;
+  let spintoMuto = false;
+  for (let speso = 0; ; speso += passo) {
+    if (!eAncoraSuo(video, "cam-video")) return true;
+    if (haUnImmagine(video)) return true;
+    if (speso >= attesa) break;
+    if (video.paused === true && !spintoMuto) {
+      spintoMuto = true;
+      partiMuto(video);
+    }
+    await dormi(passo);
+  }
+  const detto3 = t(
+    "WebRTC: collegato, ma senza immagine",
+    "WebRTC: connected, but no picture"
+  );
+  throw new Error(`${detto3} (${Math.round(attesa / 1e3)}s)`);
+}
+function installWebRtcDipinge() {
+  const precedente = root.dmCamWebRTC;
+  if (typeof precedente !== "function" || precedente.__dmWebRtcDipinge) return false;
+  async function avvolta(cam, strada2, content, attesa) {
+    const inizio = Date.now();
+    const esito2 = await precedente.call(this, cam, strada2, content, attesa);
+    const concesso = Number(attesa) > 0 ? Number(attesa) : ATTESA_MINIMA;
+    const resto = Math.max(ATTESA_MINIMA, concesso - (Date.now() - inizio));
+    const video = doc?.getElementById("cam-video");
+    mettiIlPoster(video, cam?.entity);
+    await aspettaUnImmagine(video, { attesa: resto });
+    return esito2;
+  }
+  avvolta.__dmWebRtcDipinge = true;
+  avvolta.__dmPrevious = precedente;
+  root.dmCamWebRTC = avvolta;
+  return true;
+}
 function installVideoSiMuove() {
   if (state136.installed) return false;
   const precedente = root.dmCamHLS;
@@ -133468,6 +133527,7 @@ function installVideoSiMuove() {
   return true;
 }
 senzaCadere(installVideoSiMuove);
+senzaCadere(installWebRtcDipinge);
 
 // src/core/daylight.js
 var CONFINI = Object.freeze([
@@ -178067,6 +178127,7 @@ function installSectionRuntime() {
     senzaCadere(installShutterWindowSection);
     senzaCadere(installClimatePowerSection);
     senzaCadere(installVideoSiMuove);
+    senzaCadere(installWebRtcDipinge);
     senzaCadere(installTelecameraCapacita);
     senzaCadere(installTelecameraSubito);
     senzaCadere(installAlberatura);

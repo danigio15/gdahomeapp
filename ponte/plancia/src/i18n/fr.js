@@ -1611,6 +1611,7 @@ export default Object.freeze({
   "HLS not supported and hls.js missing": "HLS non pris en charge et hls.js absent",
   "HLS: skipped, hls.js not loaded": "HLS : ignoré, hls.js non chargé",
   "HLS: the header arrives but the pictures do not": "HLS : l’en-tête arrive mais pas les images",
+  "WebRTC: connected, but no picture": "WebRTC : connecté, mais sans image",
   Hair: "Cheveux",
   "Hair color": "Couleur des cheveux",
   "Hair dryer": "Sèche-cheveux",

@@ -106,9 +106,9 @@ function tempoDi(video) {
  * giudicarlo vorrebbe dire sollevare un errore su una cosa che non c'e'. Il
  * guscio prenderebbe quell'errore per un HLS fallito e proverebbe la strada
  * dopo — scrivendo dentro un popup che nel frattempo e' di qualcun altro. */
-function eAncoraSuo(video) {
+function eAncoraSuo(video, id = "cam-hls") {
   if (video?.isConnected === false) return false;
-  const adesso = doc?.getElementById?.("cam-hls");
+  const adesso = doc?.getElementById?.(id);
   return !adesso || adesso === video;
 }
 
@@ -179,6 +179,89 @@ export function mettiIlPoster(video, entity, states) {
   return foto;
 }
 
+/* ── Il WebRTC vale quando dipinge un'immagine ────────────────────────────
+ *
+ * «Non si vede la telecamera»: il popup aperto, la rotella sparita, e dentro
+ * un rettangolo nero. Il guscio dichiara riuscito il WebRTC al primo fra
+ * `loadeddata` e `playing`, e a quel punto il fermo immagine se ne va e
+ * nessun'altra strada si prova piu'. Ma il collegamento puo' riuscire senza
+ * che arrivi un'immagine: una telecamera in H.265, che il browser non sa
+ * decodificare, manda il suo flusso e il video resta senza fotogrammi; una
+ * trattativa che porta solo l'audio; un video col sonoro che il browser non
+ * lascia partire da solo. Tre rettangoli neri con scritto «riuscito».
+ *
+ * Qui si guarda quello che risponde: il video ha una larghezza, e (dove il
+ * browser lo dice) almeno un fotogramma decodificato? Se e' fermo perche' il
+ * sonoro non e' stato concesso, lo si fa partire muto (il tocco per l'audio
+ * c'e' gia'). Se l'immagine non arriva, si solleva l'errore che il guscio si
+ * aspetta e la fila scende all'HLS, al flusso del proxy, alle istantanee.
+ */
+
+/** Se quel video sta mostrando un'immagine vera. */
+export function haUnImmagine(video) {
+  if (!video || !(Number(video.videoWidth) > 0)) return false;
+  try {
+    const qualita = video.getVideoPlaybackQuality?.();
+    if (qualita && Number.isFinite(qualita.totalVideoFrames) && qualita.totalVideoFrames === 0) return false;
+  } catch (_errore) {}
+  return true;
+}
+
+/** Fa partire muto un video che il browser ha lasciato fermo. */
+function partiMuto(video) {
+  try {
+    video.muted = true;
+    const p = video.play?.();
+    if (p && typeof p.catch === "function") p.catch(() => {});
+  } catch (_errore) {}
+}
+
+/**
+ * Aspetta che quel video del WebRTC dipinga; se non dipinge, solleva.
+ */
+export async function aspettaUnImmagine(video, opzioni = {}) {
+  const attesa = Number(opzioni.attesa) > 0 ? Number(opzioni.attesa) : ATTESA_MINIMA;
+  const passo = Number(opzioni.passo) > 0 ? Number(opzioni.passo) : PASSO_FOTOGRAMMI;
+  const dormi =
+    opzioni.dormi || ((ms) => new Promise((risolvi) => root.setTimeout?.(risolvi, ms) || risolvi()));
+  if (!video) return true;
+  let spintoMuto = false;
+  for (let speso = 0; ; speso += passo) {
+    if (!eAncoraSuo(video, "cam-video")) return true;
+    if (haUnImmagine(video)) return true;
+    if (speso >= attesa) break;
+    if (video.paused === true && !spintoMuto) {
+      spintoMuto = true;
+      partiMuto(video);
+    }
+    await dormi(passo);
+  }
+  const detto = t(
+    "WebRTC: collegato, ma senza immagine",
+    "WebRTC: connected, but no picture",
+  );
+  throw new Error(`${detto} (${Math.round(attesa / 1000)}s)`);
+}
+
+export function installWebRtcDipinge() {
+  const precedente = root.dmCamWebRTC;
+  if (typeof precedente !== "function" || precedente.__dmWebRtcDipinge) return false;
+  async function avvolta(cam, strada, content, attesa) {
+    const inizio = Date.now();
+    const esito = await precedente.call(this, cam, strada, content, attesa);
+    const concesso = Number(attesa) > 0 ? Number(attesa) : ATTESA_MINIMA;
+    const resto = Math.max(ATTESA_MINIMA, concesso - (Date.now() - inizio));
+    const video = doc?.getElementById("cam-video");
+    mettiIlPoster(video, cam?.entity);
+    await aspettaUnImmagine(video, { attesa: resto });
+    return esito;
+  }
+  avvolta.__dmWebRtcDipinge = true;
+  avvolta.__dmPrevious = precedente;
+  root.dmCamWebRTC = avvolta;
+  return true;
+}
+
 export function installVideoSiMuove() {
   if (state.installed) return false;
   const precedente = root.dmCamHLS;
@@ -206,3 +289,4 @@ export function installVideoSiMuove() {
 }
 
 senzaCadere(installVideoSiMuove);
+senzaCadere(installWebRtcDipinge);
