@@ -10,6 +10,40 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.16
+
+_App GdAHome e Home Assistant._
+
+**Il tablet a muro:**
+
+- **Il sensore di presenza sveglia sempre lo schermo**: se il sensore era
+  ancora acceso quando il tablet andava a riposo, chi tornava davanti non lo
+  svegliava più finché il sensore non si spegneva e riaccendeva. Adesso,
+  finché il sensore vede qualcuno, il tablet resta acceso, e si sveglia
+  appena il sensore si riaccende.
+
+**Il clima:**
+
+- **La barra della temperatura non apre più la finestra**: lasciando la barra
+  si apriva la finestra del clima sotto il dito, e il tocco dopo poteva
+  passare il termostato in automatico. E il grado scelto resta quello,
+  invece di tornare per un attimo al valore di prima.
+
+**L'orologio:**
+
+- **Apple Watch: «Fatto» solo quando la casa ha sentito**: col telefono in
+  tasca il comando poteva non partire mentre il polso diceva «Fatto». Adesso
+  il telefono si prende il tempo di finire, e al polso arriva com'è andata
+  davvero, o perché non è partito.
+
+**Nell'app, il navigatore:**
+
+- **Lo schermo resta acceso mentre guidi**, anche senza lo schermo dell'auto:
+  il telefono sul supporto non si scurisce e non si spegne più.
+- **Evita ZTL**: fra le opzioni del percorso c'è «ZTL», accesa di serie. Le
+  ZTL attive per cui non hai il permesso si girano al largo su tutti i
+  percorsi; spenta, il percorso ci passa e la guida avvisa prima del varco.
+
 ## 1.18.15
 
 _App GdAHome e Home Assistant._
