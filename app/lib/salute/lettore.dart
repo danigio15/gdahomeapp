@@ -13,17 +13,14 @@ export 'lettore_qui/sul_web.dart'
     if (dart.library.io) 'lettore_qui/sul_telefono.dart'
     show lettoreDiQuestoSistema;
 
-/// Se la Salute c'e' su questo telefono.
+/// Se la Salute c'e' su questo telefono: sull'iPhone e su Android, non nel
+/// browser.
 ///
-/// **Su Android, per ora, no.** Google deve ancora approvare i permessi di
-/// Health Connect (la dichiarazione dei dati salute nella Play Console), e
-/// un'app che li chiede senza l'approvazione non passa la revisione. Finche'
-/// non arriva, su Android la voce «Salute» non c'e', i permessi non stanno
-/// nel manifest e il telefono non legge niente. Sull'iPhone resta tutto. Per
-/// rimetterla: qui `true` anche su Android, e i permessi `health.READ_*` di
-/// nuovo in `android/app/src/main/AndroidManifest.xml`.
-bool get laSaluteCe =>
-    !kIsWeb && defaultTargetPlatform != TargetPlatform.android;
+/// Su Android era rimasta fuori dalla 1.18.12 alla 1.18.18, finche' Google non
+/// ha approvato i permessi di Health Connect nella Play Console («finalmente
+/// la revisione per la salute e' passata»). I permessi `health.READ_*` sono
+/// tornati in `android/app/src/main/AndroidManifest.xml`.
+bool get laSaluteCe => !kIsWeb;
 
 /// Com'e' messo il telefono.
 enum DoveSiLegge {

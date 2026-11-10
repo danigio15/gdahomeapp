@@ -76,8 +76,8 @@ Future<void> inAuto() => auto.inAuto();
 @pragma('vm:entry-point')
 Future<void> saluteAdAppChiusa() async {
   WidgetsFlutterBinding.ensureInitialized();
-  /* Su Android, per ora, la Salute non c'e' (`laSaluteCe`): un giro rimasto
-   * acceso da una versione di prima si spegne e basta. */
+  /* Dove la Salute non c'e' (`laSaluteCe`) un giro rimasto acceso si spegne
+   * e basta. */
   if (!laSaluteCe) {
     await spegniLaSaluteAdAppChiusa();
     return;
@@ -225,8 +225,7 @@ Future<void> main() async {
       },
     ).accendi();
   } else if (!kIsWeb) {
-    /* Android, per ora senza Salute: il giro di una versione di prima si
-     * spegne. */
+    /* Un telefono senza Salute: il giro di una versione di prima si spegne. */
     unawaited(spegniLaSaluteAdAppChiusa());
   }
   /* Il giorno dei pagamenti: se questa costruzione e' sotto la versione
