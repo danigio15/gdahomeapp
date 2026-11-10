@@ -10,6 +10,30 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.19
+
+_App GdAHome._
+
+**La salute:**
+
+- **Su Android torna la Salute**: Google ha approvato i permessi di Health
+  Connect. Le misure dell'orologio (passi, battito, sonno, peso e le altre)
+  si portano di nuovo alla casa, anche ad app chiusa.
+
+**Nell'app, il navigatore:**
+
+- **La linea del percorso sulla strada giusta**: agli svincoli e alle
+  rotonde la linea non va più verso l'uscita per poi tornare, e la freccia
+  resta sulla strada su cui si è.
+- **Il traffico sulla linea del percorso**: non corre più di fianco al
+  percorso; lungo la strada da fare lo dicono i colori del percorso.
+- **La freccia più fluida**: niente più salti mentre arrivano i pezzi di
+  mappa nuovi, e più fotogrammi andando.
+- **Su Android Auto la freccia in mezzo**: anche con lo schermo diviso (la
+  musica a destra) e con le schede della navigazione aperte.
+- **Lo zoom**: i tasti + e − e le dita funzionano anche nella mappa 3D; in
+  autostrada la mappa si allontana meno.
+
 ## 1.18.18
 
 _App GdAHome e Home Assistant._
