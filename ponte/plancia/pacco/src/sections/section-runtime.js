@@ -572,7 +572,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-WIVXFRHG.js";
+} from "../../chunk-4MQNJDQP.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -85712,7 +85712,10 @@ function dipingiPresa(presa) {
 }
 var DOPO_LA_PRESA_MS = 700;
 function clickDopoLaPresa(presa, card2, adesso2 = Date.now()) {
-  return Boolean(presa && card2 && presa.card === card2 && adesso2 - presa.quando < DOPO_LA_PRESA_MS);
+  if (!presa || !card2 || adesso2 - presa.quando >= DOPO_LA_PRESA_MS) return false;
+  const entita4 = clean(card2.dataset?.dmCl);
+  if (presa.entity && entita4) return presa.entity === entita4;
+  return presa.card === card2;
 }
 function installRailDrag() {
   if (state64.railDrag || !doc) return;
@@ -85762,11 +85765,12 @@ function installRailDrag() {
       obiettivoInVolo(presa.entity, presa.grado, prima);
       chiamaClima(presa.entity, "set_temperature", { temperature: presa.grado });
     }
-    lasciata = { card: presa.card, quando: Date.now() };
+    lasciata = { card: presa.card, entity: presa.entity, quando: Date.now() };
     presa = null;
   };
   doc.addEventListener("pointerup", rilascia2, true);
   doc.addEventListener("pointercancel", () => {
+    if (presa) lasciata = { card: presa.card, entity: presa.entity, quando: Date.now() };
     presa = null;
   });
 }

@@ -1984,9 +1984,18 @@ function dipingiPresa(presa) {
 const DOPO_LA_PRESA_MS = 700;
 
 /** Se questo click e' quello che il browser manda alla fine di una presa
- * sulla barra di questa card: va buttato, non apre la finestra. */
+ * sulla barra di questa card: va buttato, non apre la finestra.
+ *
+ * La card si riconosce dal termostato che racconta, non dall'elemento: «questo
+ * avviene principalmente da telefono iOS». Sull'iPhone il click arriva un
+ * attimo dopo il rilascio, e intanto la card si e' gia' ridisegnata (il grado
+ * in volo, la risposta di Home Assistant): era un elemento nuovo, il confronto
+ * diceva «un'altra card», e la finestra si apriva sotto il dito. */
 export function clickDopoLaPresa(presa, card, adesso = Date.now()) {
-  return Boolean(presa && card && presa.card === card && adesso - presa.quando < DOPO_LA_PRESA_MS);
+  if (!presa || !card || adesso - presa.quando >= DOPO_LA_PRESA_MS) return false;
+  const entita = clean(card.dataset?.dmCl);
+  if (presa.entity && entita) return presa.entity === entita;
+  return presa.card === card;
 }
 
 function installRailDrag() {
@@ -2045,11 +2054,14 @@ function installRailDrag() {
       obiettivoInVolo(presa.entity, presa.grado, prima);
       chiamaClima(presa.entity, "set_temperature", { temperature: presa.grado });
     }
-    lasciata = { card: presa.card, quando: Date.now() };
+    lasciata = { card: presa.card, entity: presa.entity, quando: Date.now() };
     presa = null;
   };
   doc.addEventListener("pointerup", rilascia, true);
+  /* Una presa che il sistema interrompe non manda niente, ma il click che
+   * puo' seguire non deve aprire la finestra lo stesso. */
   doc.addEventListener("pointercancel", () => {
+    if (presa) lasciata = { card: presa.card, entity: presa.entity, quando: Date.now() };
     presa = null;
   });
 }
