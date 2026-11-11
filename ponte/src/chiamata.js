@@ -119,6 +119,29 @@ const SILENZIO_MASSIMO = 90 * SECONDO;
  * scaduto), uno di un'ora no. Le buste restano cifrate per il telefono: qui
  * non si apre niente, e niente si scrive sul disco. */
 export const SPINTE_IN_ATTESA = 50;
+
+/* ─── Due copie della stessa casa ─────────────────────────────────────────
+ *
+ * «Da fuori si disconnette continuamente» (#388, #407). Il centralino tiene una
+ * casa sola per identificativo, e chi arriva secondo prende il posto del primo
+ * («questa casa si e' ricollegata»): giusto per la casa vera che si riaggancia
+ * mentre il suo filo vecchio non e' ancora morto. Ma se la stessa identita' gira
+ * su due macchine — un backup di Home Assistant ripristinato altrove, una
+ * vecchia installazione rimasta accesa — le due si rubano il posto ogni secondo
+ * o due, all'infinito, e a ogni scambio i telefoni collegati da fuori cadono.
+ * In casa l'app va dritta sulla rete e non se ne accorge nessuno.
+ *
+ * Tre volte scalzati in dieci minuti vuol dire che non e' un filo vecchio: c'e'
+ * un'altra copia. Questa allora lascia il posto all'altra — da fuori almeno una
+ * delle due si raggiunge — e riprova piu' tardi (dieci minuti, poi venti,
+ * quaranta, al piu' un'ora), e lo dice: nel registro, una volta, e nella
+ * console dell'add-on finche' dura. Dieci minuti dentro senza scalzate e
+ * l'avviso se ne va. */
+const SCALZATI_DA = /ricollegat/i;
+const DOPPIA_DOPO = 3;
+export const FINESTRA_DELLA_DOPPIA = 10 * 60 * SECONDO;
+export const ATTESA_DELLA_DOPPIA = 10 * 60 * SECONDO;
+const ATTESA_DELLA_DOPPIA_MASSIMA = 60 * 60 * SECONDO;
 export const ATTESA_DELLE_SPINTE = 10 * 60 * SECONDO;
 
 export class Chiamata {
@@ -132,6 +155,9 @@ export class Chiamata {
     battito = BATTITO,
     silenzioMassimo = SILENZIO_MASSIMO,
     attesaDelleSpinte = ATTESA_DELLE_SPINTE,
+    finestraDellaDoppia = FINESTRA_DELLA_DOPPIA,
+    attesaDellaDoppia = ATTESA_DELLA_DOPPIA,
+    adesso = () => Date.now(),
   }) {
     this.dove = String(dove || "").replace(/\/+$/, "");
     this.identita = identita;
@@ -156,6 +182,16 @@ export class Chiamata {
      *
      * La legge la console, e la scrive in cima. */
     this.perche = "";
+
+    this.finestraDellaDoppia = finestraDellaDoppia;
+    this.attesaDellaDoppia = attesaDellaDoppia;
+    this._adesso = adesso;
+    /* Un'altra copia di questa casa sul centralino (vedi sopra): `{da, volte,
+     * riprovaIl}`, o `null`. La legge la console. */
+    this.doppia = null;
+    this._scalzate = [];
+    this._volteDoppia = 0;
+    this._dentroDa = 0;
 
     this._spentaApposta = false;
     this._tentativi = 0;
@@ -449,6 +485,7 @@ export class Chiamata {
       this.rifiutata = null;
       this.perche = "";
       this._tentativi = 0;
+      this._dentroDa = this._adesso();
       this.registro.info(`il centralino ci conosce: ${this.identita.casa}`);
       this._cominciaABattere();
       /* Prima di qualunque telefono: il centralino decide su questo se far
@@ -590,6 +627,17 @@ export class Chiamata {
 
   _colpetto() {
     if (!this.dentro) return;
+    /* Dentro e tranquilli da un pezzo: l'altra copia non c'e' piu'. */
+    if (
+      (this.doppia || this._scalzate.length) &&
+      this._adesso() - this._dentroDa > this.finestraDellaDoppia
+    ) {
+      if (this.doppia)
+        this.registro.info("centralino: nessun'altra copia di questa casa, da fuori si entra");
+      this.doppia = null;
+      this._scalzate = [];
+      this._volteDoppia = 0;
+    }
     const zitto = Date.now() - this._vistoIl > this.silenzioMassimo;
 
     /* Prima di poter dire che un filo e' morto bisogna sapere che quel
@@ -659,12 +707,41 @@ export class Chiamata {
      * lo tira giu' di nuovo. */
     const quanto = Math.min(this.attesaMassima, SECONDO * 2 ** Math.min(this._tentativi, 6));
     this._tentativi += 1;
-    const conCaso = Math.floor(quanto / 2 + Math.random() * (quanto / 2));
+    let conCaso = Math.floor(quanto / 2 + Math.random() * (quanto / 2));
 
     if (this._tentativi === 1) this.registro.attenzione(`centralino: ${perche}`);
+
+    const doppia = this._seCeUnaCopia(this.perche);
+    if (doppia !== null) conCaso = doppia;
     clearTimeout(this._riprova);
     this._riprova = setTimeout(() => this._bussa(), conCaso);
     this._riprova.unref?.();
+  }
+
+  /* Se questa caduta e' la terza scalzata in poco tempo: quanto aspettare
+   * prima di ribussare, lasciando il posto all'altra copia; `null` se no. */
+  _seCeUnaCopia(perche) {
+    if (!SCALZATI_DA.test(perche)) return null;
+    const ora = this._adesso();
+    this._scalzate = this._scalzate.filter((quando) => ora - quando < this.finestraDellaDoppia);
+    this._scalzate.push(ora);
+    if (this._scalzate.length < DOPPIA_DOPO) return null;
+    this._scalzate = [];
+    this._volteDoppia += 1;
+    const attesa = Math.min(
+      this.attesaDellaDoppia * 2 ** (this._volteDoppia - 1),
+      ATTESA_DELLA_DOPPIA_MASSIMA,
+    );
+    if (!this.doppia) {
+      this.registro.errore(
+        "centralino: un'altra installazione si collega con l'identita' di questa casa, e le due si " +
+          "rubano il posto: da fuori casa i telefoni cadono di continuo. Succede ripristinando un " +
+          "backup di Home Assistant su un'altra macchina, o lasciando accesa una vecchia copia: " +
+          `spegni GdAHome sulla copia in piu'. Intanto questa lascia il posto e riprova fra ${Math.round(attesa / 60_000)} minuti.`,
+      );
+    }
+    this.doppia = { da: this.doppia?.da ?? ora, volte: this._volteDoppia, riprovaIl: ora + attesa };
+    return attesa;
   }
 
   _buttaGiuITelefoni() {

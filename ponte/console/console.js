@@ -769,6 +769,18 @@
      * sul centralino nuovo o su quello di prima lo guarda qui, invece di
      * andarselo a cercare nel programma. */
     var dove = centralino.dove || "";
+    /* Un'altra copia di questa casa le ruba il posto (#407): e' il primo da
+     * dire, perche' ha un rimedio solo e lo deve fare chi guarda. */
+    if (centralino.doppia) {
+      return {
+        come: "male",
+        corto: due("un'altra copia", "another copy"),
+        lungo: due(
+          "Un'altra installazione si collega con l'identità di questa casa e le due si rubano il posto: da fuori casa i telefoni cadono di continuo. Succede ripristinando un backup di Home Assistant su un'altra macchina, o lasciando accesa una vecchia copia: spegni GdAHome sulla copia in più.",
+          "Another installation connects with this home's identity and the two keep taking each other's place: from away the phones keep dropping. It happens when a Home Assistant backup is restored on another machine, or an old copy is left running: turn GdAHome off on the extra copy.",
+        ),
+      };
+    }
     if (centralino.rifiutata) {
       return {
         come: "male",
@@ -842,6 +854,21 @@
       riga = due(
         "Da fuori casa l'app non entra: è spento nelle opzioni di questo add-on, alla voce «da fuori casa».",
         "From away the app can't get in: it is turned off in this add-on's options, under “from away”.",
+      );
+    } else if (centralino.doppia) {
+      come = "male";
+      corto = due("cade di continuo", "keeps dropping");
+      riga = due(
+        "Da fuori casa l'app cade di continuo: un'altra copia di questa casa le ruba il posto.",
+        "From away the app keeps dropping: another copy of this home keeps taking its place.",
+      );
+      perche = due(
+        "un'altra installazione si collega col nome e il segreto di questa casa (un backup di Home Assistant ripristinato su un'altra macchina, o una vecchia copia accesa).",
+        "another installation connects with this home's name and secret (a Home Assistant backup restored on another machine, or an old copy left running).",
+      );
+      cosaFare = due(
+        "Spegni GdAHome sulla copia in più. Questa intanto lascia il posto all'altra e riprova da sola.",
+        "Turn GdAHome off on the extra copy. Meanwhile this one steps aside and retries by itself.",
       );
     } else if (centralino.rifiutata) {
       come = "male";
