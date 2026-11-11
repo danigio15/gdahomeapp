@@ -1,0 +1,142 @@
+{
+  "casa": "",
+  "quando": 1794400000000,
+  "dispositivi": [
+    {
+      "id": "light.cucina",
+      "nome": "Cucina",
+      "genere": "luce",
+      "acceso": true,
+      "stato": "Accesa"
+    },
+    {
+      "id": "switch.presa_tv",
+      "nome": "Presa TV",
+      "genere": "presa",
+      "acceso": true,
+      "stato": "Accesa"
+    },
+    {
+      "id": "light.sala",
+      "nome": "Sala",
+      "genere": "luce",
+      "acceso": false,
+      "stato": "Spenta",
+      "polso": true
+    },
+    {
+      "id": "switch.luce_esterna",
+      "nome": "Luce esterna",
+      "genere": "luce",
+      "acceso": false,
+      "stato": "Spenta",
+      "polso": true
+    },
+    {
+      "id": "light.studio",
+      "nome": "Studio",
+      "genere": "luce",
+      "acceso": false,
+      "stato": "Spenta",
+      "polso": true
+    }
+  ],
+  "fotovoltaico": [],
+  "persone": [],
+  "azioni": [
+    {
+      "id": "0|Luce esterna",
+      "nome": "Luce esterna",
+      "segno": "💡",
+      "subito": true
+    },
+    {
+      "id": "1|Zona giorno",
+      "nome": "Zona giorno",
+      "segno": "💡",
+      "subito": true
+    },
+    {
+      "id": "2|Cancello",
+      "nome": "Cancello",
+      "segno": "🚧",
+      "subito": true
+    },
+    {
+      "id": "3|Tutte le luci",
+      "nome": "Tutte le luci",
+      "segno": "",
+      "subito": false
+    },
+    {
+      "id": "4|Buonanotte",
+      "nome": "Buonanotte",
+      "segno": "",
+      "subito": false
+    },
+    {
+      "id": "5|Portone",
+      "nome": "Portone",
+      "segno": "",
+      "subito": false
+    }
+  ],
+  "ricette": [
+    {
+      "id": "0|Luce esterna",
+      "dominio": "light",
+      "servizio": "toggle",
+      "entita": "switch.luce_esterna",
+      "dati": {}
+    },
+    {
+      "id": "1|Zona giorno",
+      "dominio": "light",
+      "servizio": "toggle",
+      "entita": "light.sala,light.cucina",
+      "dati": {}
+    },
+    {
+      "id": "2|Cancello",
+      "dominio": "switch",
+      "servizio": "toggle",
+      "entita": "switch.cancello",
+      "dati": {}
+    },
+    {
+      "id": "light.cucina",
+      "dominio": "light",
+      "servizio": "toggle",
+      "entita": "light.cucina",
+      "dati": {}
+    },
+    {
+      "id": "switch.presa_tv",
+      "dominio": "switch",
+      "servizio": "toggle",
+      "entita": "switch.presa_tv",
+      "dati": {}
+    },
+    {
+      "id": "light.sala",
+      "dominio": "light",
+      "servizio": "toggle",
+      "entita": "light.sala",
+      "dati": {}
+    },
+    {
+      "id": "switch.luce_esterna",
+      "dominio": "switch",
+      "servizio": "toggle",
+      "entita": "switch.luce_esterna",
+      "dati": {}
+    },
+    {
+      "id": "light.studio",
+      "dominio": "light",
+      "servizio": "toggle",
+      "entita": "light.studio",
+      "dati": {}
+    }
+  ]
+}

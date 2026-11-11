@@ -32,9 +32,37 @@ Future<bool> lasciaLaFotoAllAuto(
   String detto, {
   required String casa,
   bool daSola = true,
-}) async {
+}) {
   final scritta = laFotoDaScrivere(detto, casa: casa, daSola: daSola);
-  if (scritta == null) return false;
+  if (scritta == null) return Future.value(false);
+  return _unaAllaVolta(() => _lasciaLaFoto(detto, scritta, daSola: daSola));
+}
+
+/* Una scrittura alla volta, nell'ordine in cui arrivano.
+ *
+ * La fotografia e le sue ricette passano tutte dallo stesso file di passaggio
+ * (`.mezzo`), e chi le scrive non aspetta chi c'era prima: la plancia ne manda
+ * due di fila quando la pagina si apre e la configurazione arriva un attimo
+ * dopo, e chi esegue un comando corregge la stessa fotografia. Due scritture
+ * insieme sullo stesso file ne facevano uno solo coi pezzi di tutt'e due — un
+ * JSON che non si legge, e in macchina e al polso «non e' arrivato niente» —
+ * oppure lasciavano la fotografia di una e le ricette dell'altra: il tasto al
+ * polso c'era, e toccandolo «Questo si fa dal telefono». E' lo stesso guaio
+ * che aveva avuto il biglietto di Premium (`_conIlBigliettoPerLAuto` in
+ * `main.dart`), e si cura allo stesso modo. */
+Future<void> _fila = Future<void>.value();
+
+Future<T> _unaAllaVolta<T>(Future<T> Function() lavoro) {
+  final fatto = _fila.then((_) => lavoro());
+  _fila = fatto.then((_) {}, onError: (Object _) {});
+  return fatto;
+}
+
+Future<bool> _lasciaLaFoto(
+  String detto,
+  String scritta, {
+  required bool daSola,
+}) async {
   try {
     final cartella = await getApplicationSupportDirectory();
     final mezzo = File('${cartella.path}/$nomeDelFile.mezzo');
@@ -63,6 +91,11 @@ Future<bool> lasciaLaFotoAllAuto(
 /// dispositivo [entita] nella fotografia com'e' adesso, e l'orologio
 /// avvisato. Vedi [laFotoColDispositivo]. Non solleva mai.
 Future<void> aggiornaIlDispositivoNellaFoto(
+  String entita, {
+  required bool acceso,
+}) => _unaAllaVolta(() => _aggiornaIlDispositivo(entita, acceso: acceso));
+
+Future<void> _aggiornaIlDispositivo(
   String entita, {
   required bool acceso,
 }) async {
@@ -144,24 +177,35 @@ Future<void> _leRicette(
 /// plancia e quelle dei comandi rapidi scelti per il navigatore.
 Future<List<RicettaDellAzione>> leRicetteDellAuto() async {
   final dellaPlancia = await _quelleDellaPlancia(nomeDelleRicette);
-  return [...dellaPlancia, ...(await leggiIComandi()).ricette];
+  return [...?dellaPlancia, ...(await leggiIComandi()).ricette];
 }
 
 /// Le ricette per un comando che arriva dall'orologio: ci sono anche col
 /// lucchetto acceso.
+///
+/// Il file del polso c'e' da quando l'app lo scrive, cioe' dalla prima
+/// fotografia che la plancia manda **dopo** l'aggiornamento — e la plancia la
+/// manda solo quando e' sotto gli occhi di qualcuno. Chi aggiorna e prova
+/// subito dall'orologio quel file non ce l'ha ancora: valgono le ricette che
+/// c'erano gia', quelle dell'auto, che e' quello con cui il polso comandava
+/// prima. Senza, per ogni luce usciva «Questo si fa dal telefono: apri
+/// GdAHome» anche a chi il lucchetto non l'ha mai messo.
 Future<List<RicettaDellAzione>> leRicetteDelPolso() async {
-  final dellaPlancia = await _quelleDellaPlancia(nomeDelleRicetteDelPolso);
-  return [...dellaPlancia, ...(await leggiIComandi()).ricette];
+  final dellaPlancia =
+      await _quelleDellaPlancia(nomeDelleRicetteDelPolso) ??
+      await _quelleDellaPlancia(nomeDelleRicette);
+  return [...?dellaPlancia, ...(await leggiIComandi()).ricette];
 }
 
-Future<List<RicettaDellAzione>> _quelleDellaPlancia(String nome) async {
+/// Le ricette scritte in [nome], o `null` se quel file non c'e'.
+Future<List<RicettaDellAzione>?> _quelleDellaPlancia(String nome) async {
   try {
     final cartella = await getApplicationSupportDirectory();
     final file = File('${cartella.path}/$nome');
-    if (!await file.exists()) return const [];
+    if (!await file.exists()) return null;
     return leRicetteDaScrivere(await file.readAsString());
   } catch (_) {
-    return const [];
+    return null;
   }
 }
 
@@ -247,7 +291,7 @@ Future<List<ComandoRapido>> leAzioniRapide() async {
     if (!await foto.exists()) return const [];
     return leAzioniDellaPlancia(
       await foto.readAsString(),
-      await _quelleDellaPlancia(nomeDelleRicette),
+      await _quelleDellaPlancia(nomeDelleRicette) ?? const [],
     );
   } catch (_) {
     return const [];
