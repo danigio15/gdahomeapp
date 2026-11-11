@@ -10,6 +10,39 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.22
+
+_App GdAHome e Home Assistant._
+
+**Nell'app, il navigatore:**
+
+- **La linea del percorso non va più a zig zag**: su certe strade larghe e
+  nei parcheggi la linea ondeggiava invece di stare dritta sulla strada.
+- **La linea grande non sparisce più guardando avanti**: spostando la mappa
+  lungo la strada da fare, la linea grande finiva e ne restava una sottile,
+  fuori posto. Adesso arriva fin dove la mappa è in 3D.
+
+**Dall'orologio:**
+
+- **Su Wear OS «Fatto» vuol dire fatto**: l'orologio diceva «Fatto» anche
+  quando il comando non partiva. Adesso dice com'è andata davvero, e se la
+  casa non risponde lo scrive.
+- **Dall'orologio si comanda anche col lucchetto dell'app**: con il lucchetto
+  acceso, Apple Watch e Wear OS rispondevano «Parte quando apri GdAHome sul
+  telefono» a ogni tasto. L'orologio è di chi lo porta: adesso comanda. In
+  macchina resta com'era: col lucchetto niente parte da solo.
+
+**La salute:**
+
+- **Su Android tornano battito, sonno e le altre misure**: dopo gli ultimi
+  aggiornamenti Android aveva tolto i permessi di Health Connect, e
+  arrivavano solo passi, distanza e calorie. L'app li richiede da sola alla
+  prima apertura; nella pagina «Salute» dell'app c'è il tasto «Dai i
+  permessi che mancano».
+- **Il nome con il ritratto**: nella pagina Salute il nome non sta più sotto
+  il titolo, dove sembrava il nome della sezione, ma apre la pagina col
+  ritratto che la persona ha in «Persone».
+
 ## 1.18.21
 
 _App GdAHome._
