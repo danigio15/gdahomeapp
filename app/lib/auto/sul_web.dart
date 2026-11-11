@@ -18,8 +18,13 @@ Future<bool> lasciaLaFotoAllAuto(
 /// Sempre `null`: nessuna auto ha lasciato niente da premere.
 Future<String?> prendiIlComandoDellAuto() async => null;
 
+/// Sempre `null`: nel browser non c'e' ne' auto ne' orologio.
+Future<({String id, bool dalPolso})?> prendiIlComandoLasciato() async => null;
+
 /// Nessuna ricetta: nel browser non c'e' niente che parta da solo.
 Future<List<RicettaDellAzione>> leRicetteDellAuto() async => const [];
+
+Future<List<RicettaDellAzione>> leRicetteDelPolso() async => const [];
 
 /// Nel browser non c'e' nessuna auto: nessun comando da scegliere.
 Future<IComandiScelti?> leggiIComandiSeCi() async => null;

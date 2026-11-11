@@ -77,7 +77,14 @@ final class LOrologio: NSObject, WCSessionDelegate {
         ["id": $0.id, "nome": $0.nome, "disegno": $0.disegno, "conferma": $0.conferma]
       }
       foto["dispositivi"] = casa["dispositivi"] ?? []
-      foto["azioni"] = casa["azioni"] ?? []
+      /* Al polso un'azione parte da sola anche col lucchetto acceso
+       * (`subitoAlPolso` in `lib/auto/la_foto.dart`): «non ti fa fare le
+       * azioni da Apple Watch». */
+      foto["azioni"] = (casa["azioni"] as? [[String: Any]] ?? []).map { azione -> [String: Any] in
+        var sua = azione
+        if (azione["subitoAlPolso"] as? Bool) == true { sua["subito"] = true }
+        return sua
+      }
       foto["persone"] = casa["persone"] ?? []
       foto["misure"] = casa["fotovoltaico"] ?? []
       foto["nav"] = guida
@@ -137,7 +144,7 @@ final class LOrologio: NSObject, WCSessionDelegate {
         tempo = .invalid
       }
       tempo = app.beginBackgroundTask(withName: "gdahome:polso") { chiudi() }
-      let scritto = LaCasaInCarPlay.lascia(id) { com in
+      let scritto = LaCasaInCarPlay.lascia(id, dalPolso: true) { com in
         DispatchQueue.main.async {
           risposta(LOrologio.risposta(com))
           chiudi()

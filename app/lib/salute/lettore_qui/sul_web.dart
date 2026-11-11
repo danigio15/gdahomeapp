@@ -16,6 +16,10 @@ class LettoreCheNonCE implements LettoreDellaSalute {
   Future<bool> chiediIlPermesso(Set<MisuraDelCorpo> misure) async => false;
 
   @override
+  Future<Set<MisuraDelCorpo>> senzaPermesso(Set<MisuraDelCorpo> misure) async =>
+      const {};
+
+  @override
   Future<Map<MisuraDelCorpo, Lettura>> leggi(
     Set<MisuraDelCorpo> misure, {
     DateTime? adesso,

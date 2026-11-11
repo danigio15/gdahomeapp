@@ -46,6 +46,17 @@ abstract interface class LettoreDellaSalute {
   /// sapere che dati ha uno), e una misura negata torna semplicemente vuota.
   Future<bool> chiediIlPermesso(Set<MisuraDelCorpo> misure);
 
+  /// Le misure, fra queste, che il telefono **non** lascia leggere: il
+  /// permesso manca. Lo sa dire solo Android (Health Connect); sull'iPhone
+  /// Apple non lo dice mai, e nel browser non c'e' niente da chiedere: vuoto.
+  ///
+  /// «Da Wear OS non ci sono tutti i dati, ad esempio battiti cardiaci,
+  /// sonno»: dalla 1.18.12 alla 1.18.18 i permessi di Health Connect erano
+  /// fuori dall'app, e Android li ha tolti a chi li aveva dati. Tornati nella
+  /// 1.18.19, l'app li credeva gia' chiesti e non li richiedeva: arrivavano
+  /// solo le misure nuove, chieste per la prima volta.
+  Future<Set<MisuraDelCorpo>> senzaPermesso(Set<MisuraDelCorpo> misure);
+
   /// Le ultime letture delle misure scelte: quelle che non ci sono mancano.
   Future<Map<MisuraDelCorpo, Lettura>> leggi(
     Set<MisuraDelCorpo> misure, {

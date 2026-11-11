@@ -247,6 +247,39 @@ void main() {
       expect((senza['azioni']! as List).first, containsPair('subito', false));
     });
 
+    test('ma al polso sì: l\'orologio comanda anche col lucchetto', () {
+      /* «Non ti fa fare le azioni da Apple Watch»: col lucchetto ogni tasto
+         diceva «Parte quando apri GdAHome sul telefono». L'orologio è di chi
+         lo porta: nella fotografia c'è un segno a parte, che l'auto non
+         legge. */
+      final senza = _letto(
+        laFotoDaScrivere(mandata, casa: 'Casa', daSola: false),
+      );
+      final azione = (senza['azioni']! as List).first as Map;
+      expect(azione, containsPair('subito', false));
+      expect(azione, containsPair('subitoAlPolso', true));
+      /* Senza lucchetto non serve: vale `subito`. */
+      final con = _letto(laFotoDaScrivere(mandata, casa: 'Casa'));
+      expect(
+        ((con['azioni']! as List).first as Map).containsKey('subitoAlPolso'),
+        isFalse,
+      );
+    });
+
+    test('il comando lasciato dice se viene dal polso', () {
+      expect(
+        ilComandoVieneDalPolso('{"azione":"a","quando":1,"polso":true}'),
+        isTrue,
+      );
+      expect(ilComandoVieneDalPolso('{"azione":"a","quando":1}'), isFalse);
+      expect(
+        ilComandoVieneDalPolso('{"azione":"a","quando":1,"polso":"si"}'),
+        isFalse,
+      );
+      expect(ilComandoVieneDalPolso('non è json'), isFalse);
+      expect(ilComandoVieneDalPolso(''), isFalse);
+    });
+
     test('una ricetta a metà non si esegue a metà', () {
       /* Quello che arriva da una pagina non si copia come viene: qui dentro
          c'è il nome di un servizio che poi si chiama davvero. */

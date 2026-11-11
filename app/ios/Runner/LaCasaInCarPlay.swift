@@ -148,11 +148,13 @@ enum LaCasaInCarPlay {
   /// l'orologio: «ti da' fatto ma non fa niente» —
   /// diceva «Fatto» appena il file era scritto, prima che la casa sentisse.
   @discardableResult
-  static func lascia(_ id: String, finito: ((String?) -> Void)? = nil) -> Bool {
+  static func lascia(_ id: String, dalPolso: Bool = false, finito: ((String?) -> Void)? = nil) -> Bool {
     var scritto = false
     if let cartella {
       try? FileManager.default.createDirectory(at: cartella, withIntermediateDirectories: true)
-      let json: [String: Any] = ["azione": id, "quando": Int64(Date().timeIntervalSince1970 * 1000)]
+      var json: [String: Any] = ["azione": id, "quando": Int64(Date().timeIntervalSince1970 * 1000)]
+      /* Dall'orologio: si comanda anche col lucchetto acceso (`in_auto.dart`). */
+      if dalPolso { json["polso"] = true }
       if let dati = try? JSONSerialization.data(withJSONObject: json) {
         scritto = (try? dati.write(to: cartella.appendingPathComponent("gdahome-auto-comando.json"), options: .atomic)) != nil
       }

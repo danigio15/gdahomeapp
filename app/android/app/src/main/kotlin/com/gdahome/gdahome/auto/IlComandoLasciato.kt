@@ -21,11 +21,13 @@ private const val NOME_DEL_FILE = "gdahome-auto-comando.json"
 fun fileDelComando(context: Context): File = File(context.filesDir, NOME_DEL_FILE)
 
 /** Lascia scritto il comando. Torna `false` se non si e' potuto scrivere. */
-fun lasciaIlComando(context: Context, id: String): Boolean {
+fun lasciaIlComando(context: Context, id: String, dalPolso: Boolean = false): Boolean {
     val quale = id.trim()
     if (quale.isEmpty()) return false
     val json = JSONObject()
         .put("azione", quale)
         .put("quando", System.currentTimeMillis())
+    /* Dall'orologio: si comanda anche col lucchetto acceso (`in_auto.dart`). */
+    if (dalPolso) json.put("polso", true)
     return runCatching { fileDelComando(context).writeText(json.toString()) }.isSuccess
 }

@@ -26,7 +26,9 @@ import {
   giorniUniti,
   personeDellaSalute,
 } from "../core/salute.js";
+import { normalizePeople, personInitials, personViewModel } from "../core/person-model.js";
 import { registraTitoloDiPagina } from "./page-masthead-section.js";
+import { fermaRitrattiPersi, installAvatar3dStyle, ritrattoVivo } from "./person-avatar-section.js";
 import {
   chiediLeSettimaneStrava,
   finestraStravaMarkup,
@@ -424,18 +426,81 @@ function eroeMarkup(persona, obiettivo, { finestra = false } = {}) {
   </section>`;
 }
 
-function corpoMarkup(vista) {
+/* ── di chi sono le misure ────────────────────────────────────────────────
+ *
+ * «Sposta il nome sotto, non nell'etichetta della sezione, e riporta lo
+ * stesso avatar configurato di quella persona.» Il nome stava nel
+ * sottotitolo della pagina, in maiuscoletto sotto «Salute», dove sembrava il
+ * nome della sezione. Adesso apre il corpo della pagina, col ritratto che la
+ * persona ha in «Persone»: la foto, l'avatar costruito, l'emoji, o le
+ * iniziali sul suo colore. Chi in «Persone» non c'e' ha le iniziali sul
+ * rosso della Salute.
+ */
+
+const senzaSegni = (testo) =>
+  clean(testo)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+/** Le persone di «Persone», ognuna con come si vede adesso e i nomi con cui si riconosce. */
+function genteDiCasa(states) {
+  return normalizePeople(readJson("cd_people", [])).map((persona) => {
+    const vista = personViewModel(persona, states, Date.now());
+    const nomi = [vista.name, persona.name, clean(persona.entity).split(".")[1]?.replace(/_/g, " ")]
+      .map(senzaSegni)
+      .filter(Boolean);
+    return { persona, vista, nomi };
+  });
+}
+
+/**
+ * Chi, in «Persone», e' la persona di queste misure: stesso nome (o stessa
+ * entita'), senza badare a maiuscole e accenti; se no, lo stesso primo nome —
+ * «Giovanni» e «Giovanni Rossi» —, ma solo se in casa ce n'e' uno solo.
+ */
+export function personaDiCasa(persona, gente) {
+  const cerco = [persona?.nome, persona?.chi].map(senzaSegni).filter(Boolean);
+  if (!cerco.length) return null;
+  const precisa = gente.find((g) => g.nomi.some((n) => cerco.includes(n)));
+  if (precisa) return precisa;
+  const primo = (nome) => nome.split(/\s+/)[0];
+  const simili = gente.filter((g) => g.nomi.some((n) => cerco.some((c) => primo(n) === primo(c))));
+  return simili.length === 1 ? simili[0] : null;
+}
+
+function ritrattoMarkup(persona, casa) {
+  const vista = casa?.vista;
+  const avatar = vista?.avatar || {};
+  const dentro = avatar.face
+    ? ""
+    : clean(avatar.emoji)
+      ? esc(avatar.emoji)
+      : `<b>${esc(vista?.initials || personInitials(persona.nome))}</b>`;
+  const foto = vista?.photo ? `<img src="${esc(vista.photo)}" alt="" loading="lazy" data-dm-salute-foto>` : "";
+  return `<span class="dm-salute-ritratto" style="--dm-person-color:${esc(clean(avatar.color) || ROSSO)}"><span class="dm-salute-avatar"${
+    avatar.face ? ` data-ritratto="${esc(casa.persona.id)}"` : ""
+  }>${dentro}</span>${foto}</span>`;
+}
+
+/** Chi e': una persona sola ha il suo ritratto e il nome; piu' persone, le linguette coi ritratti. */
+function chiMarkup(vista, persona, states) {
+  const gente = genteDiCasa(states);
+  if (vista.persone.length > 1) {
+    return `<div class="dm-salute-persone" role="tablist">${vista.persone
+      .map(
+        (p) =>
+          `<button type="button" role="tab" aria-selected="${p.chi === persona.chi}" data-dm-salute-chi="${esc(p.chi)}">${ritrattoMarkup(p, personaDiCasa(p, gente))}<span>${esc(p.nome)}</span></button>`,
+      )
+      .join("")}</div>`;
+  }
+  return `<div class="dm-salute-chi">${ritrattoMarkup(persona, personaDiCasa(persona, gente))}<b>${esc(persona.nome)}</b></div>`;
+}
+
+function corpoMarkup(vista, states = allStates() || {}) {
   const persona = personaScelta(vista);
   if (!persona) return "";
-  const persone =
-    vista.persone.length > 1
-      ? `<div class="dm-salute-persone" role="tablist">${vista.persone
-          .map(
-            (p) =>
-              `<button type="button" role="tab" aria-selected="${p.chi === persona.chi}" data-dm-salute-chi="${esc(p.chi)}">${esc(p.nome)}</button>`,
-          )
-          .join("")}</div>`
-      : "";
+  const persone = chiMarkup(vista, persona, states);
   return `${persone}${eroeMarkup(persona, vista.config.obiettivoPassi)}${schedeMarkup(persona)}
     <p class="dm-salute-fonte">${esc(
       t(
@@ -596,6 +661,28 @@ function dipingi(vista) {
       void chiediLoStorico(m, 30, ["mean", "max", "state"]);
   }
   scriviSeCambia(dove, paginaSaluteMarkup(vista));
+  ravvivaIRitratti(dove);
+}
+
+/* I ritratti costruiti sono tele: si compongono dopo che il markup e' a
+ * schermo, e solo dove la tela non c'e' ancora. Una foto che non si carica
+ * (un file rinominato) si toglie, e sotto resta l'avatar. */
+function ravvivaIRitratti(dove) {
+  const tele = [...(dove.querySelectorAll?.(".dm-salute-avatar[data-ritratto]") || [])];
+  if (tele.length) {
+    const gente = normalizePeople(readJson("cd_people", []));
+    for (const host of tele) {
+      if (host.querySelector("canvas")) continue;
+      const faccia = gente.find((p) => p.id === host.dataset.ritratto)?.avatar?.face;
+      if (faccia) void ritrattoVivo(host, faccia, "sveglio");
+    }
+  }
+  for (const foto of dove.querySelectorAll?.("img[data-dm-salute-foto]") || []) {
+    if (foto.dataset.dmAscolta) continue;
+    foto.dataset.dmAscolta = "1";
+    foto.addEventListener("error", () => foto.remove(), { once: true });
+  }
+  fermaRitrattiPersi();
 }
 
 function schedule() {
@@ -624,13 +711,20 @@ function alTocco(evento) {
   schedule();
 }
 
+/* Il sottotitolo della pagina dice cosa c'e', non di chi: il nome sta nel
+ * corpo, col ritratto ([chiMarkup]). Sotto «Salute», in maiuscoletto,
+ * «Giovanni» sembrava il nome della sezione. */
 function titoloDellaPagina() {
   const vista = vistaSalute();
   if (!vista) return null;
-  const parti = [];
-  if (vista.persone.length) parti.push(vista.persone.map((p) => p.nome).join(" · "));
+  const NOMI_ORA = NOMI();
+  const ordine = ["passi", "battito", "sistolica", "peso", "sonno", "calorie"];
+  const cosa = new Set();
+  for (const p of vista.persone) for (const chiave of ordine) if (p.misure[chiave]) cosa.add(chiave);
+  const parti = ordine.filter((chiave) => cosa.has(chiave)).map((chiave) => NOMI_ORA[chiave]);
   if (vista.strava) parti.push("Strava");
-  return { subtitle: parti.join(" · ") };
+  /* Una voce sola non e' un sottotitolo: resta quello di serie. */
+  return parti.length > 1 ? { subtitle: parti.join(" · ") } : null;
 }
 
 /* ── il foglio ─────────────────────────────────────────────────────────── */
@@ -644,7 +738,19 @@ export function foglioSalute(P) {
   ${P} .dm-salute-viste button,${P} .dm-salute-persone button{padding:9px 14px;border-radius:999px;font:inherit;font-size:14px;font-weight:800;
     cursor:pointer;color:var(--text,#0f172a);background:var(--card-background-color,#fff);border:1px solid var(--card-border,#e2e8f0)}
   ${P} .dm-salute-viste button[aria-selected="true"]{color:#fff;background:var(--sal);border-color:var(--sal)}
-  ${P} .dm-salute-persone button{font-size:13px;padding:7px 12px}
+  ${P} .dm-salute-persone button{display:inline-flex;align-items:center;gap:8px;font-size:13px;padding:5px 13px 5px 5px}
+  ${P} .dm-salute-chi{display:flex;align-items:center;gap:12px;min-width:0}
+  ${P} .dm-salute-chi > b{font-size:21px;font-weight:900;letter-spacing:-.01em;color:var(--text,#0f172a);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  ${P} .dm-salute-ritratto{position:relative;flex:0 0 auto;width:54px;height:54px;border-radius:50%;overflow:hidden;
+    box-shadow:0 0 0 2px var(--card-background-color,#fff),0 0 0 4px color-mix(in srgb,var(--sal) 55%,transparent)}
+  ${P} .dm-salute-persone .dm-salute-ritratto{width:30px;height:30px;box-shadow:none}
+  ${P} .dm-salute-avatar{position:absolute;inset:0;display:grid;place-items:center;font-size:28px;line-height:1;border-radius:50%;
+    color:var(--dm-person-color,${ROSSO});
+    background:radial-gradient(circle at 32% 26%,color-mix(in srgb,var(--dm-person-color,${ROSSO}) 10%,var(--card-background-color,#fff)),color-mix(in srgb,var(--dm-person-color,${ROSSO}) 30%,var(--card-background-color,#fff)))}
+  ${P} .dm-salute-avatar b{font-size:19px;font-weight:900;letter-spacing:.5px}
+  ${P} .dm-salute-persone .dm-salute-avatar{font-size:16px}
+  ${P} .dm-salute-persone .dm-salute-avatar b{font-size:11px}
+  ${P} .dm-salute-ritratto img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%}
   ${P} .dm-salute-persone button[aria-selected="true"]{color:var(--sal);border-color:var(--sal);background:color-mix(in srgb,var(--sal) 10%,var(--card-background-color,#fff))}
   ${P} .dm-salute-eroe{display:grid;gap:12px;padding:18px;border-radius:24px;color:#fff;
     background:linear-gradient(150deg,#f43f5e,#e11d48 55%,#9f1239);box-shadow:0 18px 40px -26px rgba(225,29,72,.9)}
@@ -716,6 +822,7 @@ export function installSalute() {
   if (!doc || state.installed) return false;
   state.installed = true;
   installStyle("dm-salute-style", foglioSalute(`#${SALUTE_PAGE_ID}`));
+  installAvatar3dStyle();
   registraTitoloDiPagina(SALUTE_PAGE_ID, titoloDellaPagina);
   /* Come lo sport: quando la plancia ridisegna la barra, la voce si rimette
    * com'era (accesa o spenta). */

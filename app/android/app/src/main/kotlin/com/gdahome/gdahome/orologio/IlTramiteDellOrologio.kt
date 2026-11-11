@@ -111,7 +111,7 @@ object IlTramiteDellOrologio {
             "azioni",
             JSONArray(
                 casa?.azioni.orEmpty().map {
-                    JSONObject().put("id", it.id).put("nome", it.nome).put("subito", it.subito)
+                    JSONObject().put("id", it.id).put("nome", it.nome).put("subito", it.subitoAlPolso)
                 },
             ),
         )
@@ -172,11 +172,64 @@ object IlTramiteDellOrologio {
     }
 
     /**
-     * Un tocco dal polso. Torna la risposta da mostrare all'orologio, in
-     * JSON: `{"ok": true, "testo": "Fatto"}`.
+     * Un tocco dal polso. [finito] riceve, una volta, la risposta da mostrare
+     * all'orologio, in JSON: `{"ok": true, "testo": "Fatto"}`.
+     *
+     * «Android dice fatto ma in realta' non fa nulla.» Per un comando si
+     * rispondeva «Fatto» appena scritto il file, prima che il Dart lo
+     * eseguisse: se poi non partiva (la casa che non risponde, un tasto che
+     * vuole l'app) al polso restava una bugia. Adesso si aspetta com'e'
+     * finita, come sull'iPhone (`LOrologio.swift`), al piu' [ATTESA_MS].
      */
-    fun esegui(context: Context, detto: String): String {
+    fun esegui(context: Context, detto: String, finito: (String) -> Unit) {
         val messaggio = runCatching { JSONObject(detto) }.getOrNull() ?: JSONObject()
+        fun risposta(ok: Boolean, testo: String) = JSONObject().put("ok", ok).put("testo", testo).toString()
+        if (messaggio.optString("cosa", "") != "comando" || !LaLicenzaInAuto.premium(context)) {
+            return finito(subito(context, messaggio))
+        }
+        val id = messaggio.optString("id", "").trim()
+        if (id.isEmpty()) return finito(risposta(false, "Comando sconosciuto"))
+        if (!lasciaIlComando(context, id, dalPolso = true)) {
+            return finito(risposta(false, "Non sono riuscito a mandarlo"))
+        }
+        principale.post {
+            var detta = false
+            val rispondi: (String) -> Unit = { testo ->
+                if (!detta) {
+                    detta = true
+                    finito(testo)
+                }
+            }
+            val tardi = Runnable { rispondi(risposta(true, "Mandato: la casa non ha ancora risposto")) }
+            principale.postDelayed(tardi, ATTESA_MS)
+            IlPonteDellAuto.sveglia(context) { com ->
+                principale.post {
+                    principale.removeCallbacks(tardi)
+                    rispondi(comEFinita(com))
+                }
+            }
+        }
+    }
+
+    /** Quello che si dice al polso, da com'e' finito il comando nel Dart (`ComeEFinitaInAuto`). */
+    fun comEFinita(com: String?): String {
+        fun risposta(ok: Boolean, testo: String) = JSONObject().put("ok", ok).put("testo", testo).toString()
+        return when (com) {
+            "fatto" -> risposta(true, "Fatto")
+            // Il comando l'ha preso un altro giro gia' in corso: parte da li'.
+            "niente" -> risposta(true, "Mandato")
+            "aspettaLApp" -> risposta(false, "Questo si fa dal telefono: apri GdAHome")
+            "senzaPremium" -> risposta(false, "Serve GdAHome Premium")
+            "senzaCasa" -> risposta(false, "La casa non risponde. Apri GdAHome sul telefono e riprova")
+            else -> risposta(false, "Parte appena apri GdAHome sul telefono")
+        }
+    }
+
+    /** Quanto si aspetta che il Dart dica com'e' finito il comando. */
+    private const val ATTESA_MS = 9_000L
+
+    /** I tocchi a cui si risponde subito: tutto tranne un comando. */
+    private fun subito(context: Context, messaggio: JSONObject): String {
         fun risposta(ok: Boolean, testo: String) = JSONObject().put("ok", ok).put("testo", testo).toString()
         val cosa = messaggio.optString("cosa", "")
         if (cosa == "aggiorna") {
@@ -188,13 +241,6 @@ object IlTramiteDellOrologio {
          * niente, come in auto. */
         if (!LaLicenzaInAuto.premium(context)) return risposta(false, "Serve GdAHome Premium")
         return when (cosa) {
-            "comando" -> {
-                val id = messaggio.optString("id", "").trim()
-                if (id.isEmpty()) return risposta(false, "Comando sconosciuto")
-                val scritto = lasciaIlComando(context, id)
-                if (scritto) principale.post { IlPonteDellAuto.sveglia(context) }
-                risposta(scritto, if (scritto) "Fatto" else "Non sono riuscito a mandarlo")
-            }
             "vai" -> {
                 val dove = messaggio.optString("dove", "")
                 val luogo = when (dove) {
