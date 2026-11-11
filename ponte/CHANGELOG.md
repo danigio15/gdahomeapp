@@ -10,6 +10,25 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.20
+
+_App GdAHome e Home Assistant._
+
+**Da fuori casa:**
+
+- **Niente più cadute continue per una casa doppia**: se la stessa casa è
+  accesa su due macchine (un backup di Home Assistant ripristinato su un
+  altro computer, una vecchia copia rimasta accesa), le due si rubavano il
+  posto e da fuori l'app cadeva di continuo. Adesso GdAHome se ne accorge,
+  lascia il posto all'altra copia e lo dice nella console dell'add-on, con
+  cosa fare: spegnere la copia in più.
+
+**Il clima:**
+
+- **Su iPhone la barra della temperatura non apre più la finestra**: lasciando
+  la barra, sull'iPhone si apriva lo stesso la finestra del clima sotto il
+  dito, e il tocco dopo poteva passare il termostato in automatico.
+
 ## 1.18.19
 
 _App GdAHome._
