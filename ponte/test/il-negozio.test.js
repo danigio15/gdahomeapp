@@ -664,11 +664,25 @@ test("le app non si pubblicano su GitHub: vanno solo nei negozi", () => {
    * costruiscono le app le portano nel Play Console e su TestFlight, e basta. */
   for (const nome of ["app.yml", "navigatore-in-prova.yml", "orologi.yml"]) {
     const workflow = readFileSync(join(RADICE, ".github", "workflows", nome), "utf8");
-    assert.doesNotMatch(
-      workflow,
-      /upload-artifact/,
-      `${nome} non deve lasciare pacchetti fra gli artefatti`,
-    );
+    /* L'unica eccezione: il pacchetto Android da caricare a mano quando il
+     * negozio non lo prende via API (Health Connect), solo se chiesto, solo
+     * cifrato con la parola di un segreto, e per un giorno. */
+    const lasciati = workflow.split(/uses: actions\/upload-artifact@v\d+/).slice(1);
+    for (const passo of lasciati) {
+      const percorsi = [...passo.matchAll(/^\s+path: (.+)$/gm)].map((una) => una[1].trim());
+      assert.equal(nome, "app.yml", `${nome} non deve lasciare pacchetti fra gli artefatti`);
+      assert.deepEqual(
+        percorsi.slice(0, 1),
+        ["gdahome-android-cifrato.zip"],
+        "solo lo zip cifrato",
+      );
+      assert.match(passo, /retention-days: 1\b/, "e per un giorno");
+    }
+    if (lasciati.length) {
+      assert.match(workflow, /7z a -tzip -mem=AES256 -p"\$PAROLA"/, "lo zip e' cifrato");
+      assert.match(workflow, /secrets\.PAROLA_DEL_PACCHETTO/, "con la parola di un segreto");
+      assert.match(workflow, /if: inputs\.pacchetto_a_mano/, "e solo se chiesto");
+    }
     assert.doesNotMatch(
       workflow,
       /gh release (create|upload|edit)/,
