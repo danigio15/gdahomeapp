@@ -52,6 +52,15 @@ on:
         type: boolean
         required: false
         default: false
+      pacchetto_a_mano:
+        description: >-
+          Lascia il pacchetto Android fra gli artefatti per caricarlo a mano
+          nel Play Console, chiuso in uno zip cifrato (AES-256) con la parola
+          del segreto PAROLA_DEL_PACCHETTO, per un giorno. Solo quando il
+          negozio non lo prende via API (Health Connect, novembre 2026).
+        type: boolean
+        required: false
+        default: false
       elenca_le_piste:
         description: >-
           Non costruisce niente: chiede solo al negozio come si chiamano
@@ -449,6 +458,37 @@ jobs:
       # chiesta e credenziale che manca, invece, si ferma e lo dice: un
       # caricamento che non succede senza che nessuno se ne accorga e' peggio
       # di una corsa rossa.
+      # Il pacchetto per caricarlo a mano, solo se chiesto e solo cifrato.
+      #
+      # «Mi devi fornire l'aab da caricare a mano»: col pacchetto che chiede i
+      # permessi di Health Connect, Google Play via API risponde 403 «You must
+      # let us know whether your app includes any health features» anche con
+      # la dichiarazione approvata, e 400 se lo si consegna senza revisione.
+      # Resta il caricamento a mano. La repository pero' e' pubblica: un AAB
+      # fra gli artefatti lo scarica chiunque. Quindi lo zip e' cifrato con la
+      # parola che sta nel segreto PAROLA_DEL_PACCHETTO, e vive un giorno.
+      - name: Il pacchetto per caricarlo a mano, cifrato
+        if: inputs.pacchetto_a_mano && steps.chiave.outputs.vera == 'si'
+        env:
+          PAROLA: ${{ secrets.PAROLA_DEL_PACCHETTO }}
+        run: |
+          if [ -z "$PAROLA" ]; then
+            echo "::error::Chiesto il pacchetto a mano ma manca il segreto PAROLA_DEL_PACCHETTO."
+            exit 1
+          fi
+          command -v 7z > /dev/null || sudo apt-get install -y p7zip-full > /dev/null
+          cd app/build/app/outputs/bundle/release
+          7z a -tzip -mem=AES256 -p"$PAROLA" "$GITHUB_WORKSPACE/gdahome-android-cifrato.zip" app-release.aab > /dev/null
+          echo "### Il pacchetto da caricare a mano" >> "$GITHUB_STEP_SUMMARY"
+          echo "Fra gli artefatti, «gdahome-android-cifrato»: si apre con la parola di PAROLA_DEL_PACCHETTO." >> "$GITHUB_STEP_SUMMARY"
+      - name: Il pacchetto cifrato fra gli artefatti
+        if: inputs.pacchetto_a_mano && steps.chiave.outputs.vera == 'si'
+        uses: actions/upload-artifact@v4
+        with:
+          name: gdahome-android-cifrato
+          path: gdahome-android-cifrato.zip
+          retention-days: 1
+
       - name: Nel negozio
         if: >-
           steps.chiave.outputs.vera == 'si' &&
