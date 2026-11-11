@@ -492,6 +492,27 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
+      # Il pacchetto da caricare a mano, quando il negozio non l'ha preso.
+      #
+      # «Rifiutata»: col pacchetto che chiede i permessi di Health Connect il
+      # negozio, via API, risponde «You must let us know whether your app
+      # includes any health features» anche con la dichiarazione approvata. Il
+      # rimedio e' caricarlo una volta a mano nella Play Console: e' li' che
+      # compaiono le dichiarazioni che mancano (quella di Health Connect si
+      # vede solo dopo che e' arrivato un pacchetto che la chiede). Solo se il
+      # negozio ha detto di no, e per due giorni: il repository e' pubblico, e
+      # il pacchetto e' l'app con le sue chiavi, come quella nel negozio.
+      - name: Il pacchetto, per caricarlo a mano
+        if: failure() && steps.chiave.outputs.vera == 'si'
+        uses: actions/upload-artifact@v4
+        with:
+          name: gdahome-android-da-caricare-a-mano
+          path: |
+            app/build/app/outputs/bundle/release/app-release.aab
+            app/build/orologio/outputs/bundle/release/orologio-release.aab
+          if-no-files-found: ignore
+          retention-days: 2
+
       # L'orologio nel negozio, dopo il telefono e sulle stesse piste — le sue,
       # quelle che il Play Console apre aggiungendo Wear OS fra i fattori di
       # forma: `internal` diventa `wear:internal`. Il pacchetto e' un altro,
