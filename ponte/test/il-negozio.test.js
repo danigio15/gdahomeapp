@@ -205,6 +205,7 @@ function negozioFinto({
   revisioneAMano = false,
   soloLaConsegna = false,
   inRevisione = "",
+  salute = "",
 } = {}) {
   const fatte = [];
   const prendi = async (dove, opzioni = {}) => {
@@ -274,6 +275,22 @@ function negozioFinto({
               domain: "androidpublisher.googleapis.com",
             },
           ],
+        },
+      });
+    /* Com'e' andata la 1.18.19: col pacchetto che chiede Health Connect il
+     * negozio vuole la dichiarazione della salute. «controllo»: lo dice al
+     * controllo e alla consegna che manda in revisione; «sempre»: anche a
+     * quella senza revisione. */
+    if (
+      salute &&
+      (via.endsWith(":validate") ||
+        consegnaInRevisione ||
+        (salute === "sempre" && /:commit/.test(via)))
+    )
+      return risposta(403, {
+        error: {
+          code: 403,
+          message: "You must let us know whether your app includes any health features.",
         },
       });
     if (
@@ -692,6 +709,52 @@ test("quando il negozio non manda da solo in revisione, si consegna lo stesso e 
     detto.some((riga) => /Invia per revisione/.test(riga)),
     "il registro dice che la revisione va mandata dal Play Console",
   );
+});
+
+test("quando il negozio vuole la dichiarazione della salute, si consegna senza revisione e lo si dice", async (t) => {
+  /* «Rifiutata»: la 1.18.19 e la 1.18.20 si fermavano al controllo, e la
+   * consegna non partiva mai. */
+  const negozio = negozioFinto({ salute: "controllo" });
+  const detto = [];
+  const esito = await porta({
+    pacco: unPacco(t),
+    piste: ["internal"],
+    novita: NOVITA,
+    segreto: JSON.stringify(credenzialeFinto()),
+    prendi: negozio.prendi,
+    dillo: (riga) => detto.push(riga),
+    aspetta: async () => {},
+  });
+  assert.equal(esito.pubblicato, true);
+  const app = `/androidpublisher/v3/applications/${COME_SI_CHIAMA}`;
+  const chiamate = negozio.fatte.filter((una) => /:(validate|commit)/.test(una));
+  assert.deepEqual(chiamate, [
+    `POST ${app}/edits/modifica-1:validate`,
+    `POST ${app}/edits/modifica-1:commit?changesNotSentForReview=true&changesInReviewBehavior=ERROR_IF_IN_REVIEW`,
+  ]);
+  assert.ok(
+    detto.some((riga) => /Health Connect/.test(riga) && /Contenuti app/.test(riga)),
+    "il registro dice di completare le dichiarazioni e mandare in revisione dal Play Console",
+  );
+});
+
+test("se la salute la vuole anche la consegna senza revisione, si butta come prima", async (t) => {
+  const negozio = negozioFinto({ salute: "sempre" });
+  const detto = [];
+  await assert.rejects(
+    porta({
+      pacco: unPacco(t),
+      piste: ["internal"],
+      novita: NOVITA,
+      segreto: JSON.stringify(credenzialeFinto()),
+      prendi: negozio.prendi,
+      dillo: (riga) => detto.push(riga),
+      aspetta: async () => {},
+    }),
+    /health features/,
+  );
+  const app = `/androidpublisher/v3/applications/${COME_SI_CHIAMA}`;
+  assert.ok(negozio.fatte.includes(`DELETE ${app}/edits/modifica-1`), "la modifica si butta");
 });
 
 test("se rifiuta solo la consegna, il controllo resta com'e' e si riconsegna", async (t) => {
