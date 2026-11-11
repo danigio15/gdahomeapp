@@ -223,7 +223,13 @@ class ScelteDellaSalute {
     this.chiestoDaChiusa = false,
     this.tentatoDaChiusa,
     this.rifiutataDaChiusa = false,
+    this.negate = const {},
   });
+
+  /// Le misure per cui il permesso, richiesto di nuovo, e' rimasto negato
+  /// (Android): non si richiedono da sole a ogni invio — chi ha detto di no
+  /// ha detto di no — ma dalla pagina «Salute» si possono ridare.
+  final Set<MisuraDelCorpo> negate;
 
   final bool acceso;
 
@@ -277,6 +283,7 @@ class ScelteDellaSalute {
     bool? chiestoDaChiusa,
     DateTime? tentatoDaChiusa,
     bool? rifiutataDaChiusa,
+    Set<MisuraDelCorpo>? negate,
   }) => ScelteDellaSalute(
     acceso: acceso ?? this.acceso,
     persona: persona ?? this.persona,
@@ -288,6 +295,7 @@ class ScelteDellaSalute {
     chiestoDaChiusa: chiestoDaChiusa ?? this.chiestoDaChiusa,
     tentatoDaChiusa: tentatoDaChiusa ?? this.tentatoDaChiusa,
     rifiutataDaChiusa: rifiutataDaChiusa ?? this.rifiutataDaChiusa,
+    negate: negate ?? this.negate,
   );
 
   /// Da quando una sveglia ad app chiusa torna a valere la pena: un quarto
@@ -321,6 +329,7 @@ class ScelteDellaSalute {
     if (tentatoDaChiusa != null)
       'tentato': tentatoDaChiusa!.millisecondsSinceEpoch,
     if (rifiutataDaChiusa) 'rifiutata': true,
+    if (negate.isNotEmpty) 'negate': [for (final m in negate) m.name],
   };
 
   String get comeSiScrive => jsonEncode(inJson());
@@ -367,6 +376,7 @@ class ScelteDellaSalute {
           ? DateTime.fromMillisecondsSinceEpoch(tentato)
           : null,
       rifiutataDaChiusa: letto['rifiutata'] == true,
+      negate: daNomi(letto['negate']) ?? const {},
     );
   }
 }

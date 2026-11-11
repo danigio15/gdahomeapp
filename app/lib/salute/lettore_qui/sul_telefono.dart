@@ -121,6 +121,28 @@ class LettoreDelTelefono implements LettoreDellaSalute {
     }
   }
 
+  @override
+  Future<Set<MisuraDelCorpo>> senzaPermesso(Set<MisuraDelCorpo> misure) async {
+    if (_iPhone) return const {};
+    final fuori = <MisuraDelCorpo>{};
+    try {
+      await _preparati();
+      for (final misura in misure) {
+        final tipi = tipiDi(misura, iPhone: false);
+        if (tipi.isEmpty) continue;
+        final cE = await _health.hasPermissions(
+          tipi,
+          permissions: [for (final _ in tipi) HealthDataAccess.READ],
+        );
+        if (cE != true) fuori.add(misura);
+      }
+    } catch (_) {
+      /* Health Connect non risponde: non si sa, e non si chiede a vuoto. */
+      return const {};
+    }
+    return fuori;
+  }
+
   Future<List<Campione>> _campioni(
     List<HealthDataType> tipi,
     DateTime da,

@@ -140,6 +140,33 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
     );
   });
 
+  /* I permessi che Android ha tolto (o che non si sono mai dati): la domanda
+   * di Health Connect, con tutte le misure che mancano. Se resta fuori
+   * qualcosa — chi dice di no due volte non vede piu' la domanda — si dice
+   * dove si danno a mano. */
+  Future<void> _daiIPermessi() => _lavora(() async {
+    final restano = await _postino.chiediIPermessiCheMancano(
+      widget.collegamento.filo,
+    );
+    _avviso(
+      restano == 0
+          ? inLingua(
+              it: 'Permessi dati: le misure arrivano alla casa.',
+              en: 'Permissions granted: readings are on their way home.',
+            )
+          : inLingua(
+              it:
+                  'Mancano ancora $restano permessi. Se la richiesta non '
+                  'compare: Impostazioni → Health Connect → Autorizzazioni '
+                  'app → GdAHome.',
+              en:
+                  '$restano permissions still missing. If the request does '
+                  'not show: Settings → Health Connect → App permissions → '
+                  'GdAHome.',
+            ),
+    );
+  });
+
   void _avviso(String testo) {
     if (!mounted) return;
     ScaffoldMessenger.maybeOf(context)
@@ -381,6 +408,10 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
                           _postino.letto &&
                           scelte.misure.contains(misura) &&
                           lette[misura] == null,
+                      senzaPermesso:
+                          scelte.acceso &&
+                          scelte.misure.contains(misura) &&
+                          _postino.senzaPermesso.contains(misura),
                       iPhone: dove == DoveSiLegge.appleSalute,
                     ),
                     secondary: _segno(misura),
@@ -389,6 +420,20 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
           ),
         ),
         const SizedBox(height: 12),
+        if (scelte.acceso && _postino.senzaPermesso.isNotEmpty) ...[
+          FilledButton.tonalIcon(
+            key: const Key('salute-permessi'),
+            onPressed: _lavorando ? null : _daiIPermessi,
+            icon: const Icon(Icons.health_and_safety_outlined),
+            label: Text(
+              inLingua(
+                it: 'Dai i permessi che mancano',
+                en: 'Grant the missing permissions',
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
         if (scelte.acceso)
           OutlinedButton.icon(
             key: const Key('salute-manda'),
@@ -481,9 +526,10 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
     Lettura? lettura, {
     required bool manca,
     required bool iPhone,
+    bool senzaPermesso = false,
   }) {
     final riga = Text(_riga(misura, lettura));
-    if (!manca) return riga;
+    if (!manca && !senzaPermesso) return riga;
     final colori = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -491,8 +537,19 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
         riga,
         const SizedBox(height: 2),
         Text(
-          nessunValore(misura, iPhone: iPhone),
-          key: Key('salute-manca-${misura.name}'),
+          /* Senza il permesso non e' «l'orologio non la misura»: e' che il
+           * telefono non la lascia leggere, e si rimedia col tasto sotto. */
+          senzaPermesso
+              ? inLingua(
+                  it: 'Manca il permesso di Health Connect.',
+                  en: 'The Health Connect permission is missing.',
+                )
+              : nessunValore(misura, iPhone: iPhone),
+          key: Key(
+            senzaPermesso
+                ? 'salute-permesso-${misura.name}'
+                : 'salute-manca-${misura.name}',
+          ),
           style: Theme.of(context).textTheme.bodySmall
               ?.copyWith(color: colori.tertiary),
         ),

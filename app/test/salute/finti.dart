@@ -44,8 +44,19 @@ class LettoreFinto implements LettoreDellaSalute {
   @override
   Future<bool> chiediIlPermesso(Set<MisuraDelCorpo> misure) async {
     chiesti.add(misure);
+    final dopo = senzaDopoLaRichiesta;
+    if (dopo != null) senza = dopo;
     return permesso;
   }
+
+  /// Le misure senza permesso (Android): dopo una richiesta diventano
+  /// [senzaDopoLaRichiesta], se detto.
+  Set<MisuraDelCorpo> senza = const {};
+  Set<MisuraDelCorpo>? senzaDopoLaRichiesta;
+
+  @override
+  Future<Set<MisuraDelCorpo>> senzaPermesso(Set<MisuraDelCorpo> misure) async =>
+      senza.intersection(misure);
 
   @override
   Future<Map<MisuraDelCorpo, Lettura>> leggi(

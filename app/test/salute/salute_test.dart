@@ -118,6 +118,52 @@ void main() {
       expect(postino.scelte.ultimoInvio, adesso);
     });
 
+    test('i permessi tolti da Android si richiedono una volta; i negati solo dalla pagina', () async {
+      /* «Da Wear OS non ci sono tutti i dati, ad esempio battiti cardiaci,
+           sonno»: dalla 1.18.12 alla 1.18.18 i permessi di Health Connect
+           erano fuori dall'app e Android li ha tolti; poi l'app li credeva
+           gia' chiesti. */
+      await postino.accendi(filo, const ScelteDellaSalute());
+      lettore.chiesti.clear();
+      lettore.senza = {MisuraDelCorpo.battito, MisuraDelCorpo.sonno};
+      /* Il battito si rida', il sonno no. */
+      lettore.senzaDopoLaRichiesta = {MisuraDelCorpo.sonno};
+      await postino.manda(filo, subito: true);
+      expect(lettore.chiesti.single, {
+        MisuraDelCorpo.battito,
+        MisuraDelCorpo.sonno,
+      });
+      expect(postino.senzaPermesso, {MisuraDelCorpo.sonno});
+      expect(postino.scelte.negate, {MisuraDelCorpo.sonno});
+
+      /* Al giro dopo non si richiede: chi ha detto di no ha detto di no. */
+      lettore.chiesti.clear();
+      await postino.manda(filo, subito: true);
+      expect(lettore.chiesti, isEmpty);
+      expect(postino.senzaPermesso, {MisuraDelCorpo.sonno});
+
+      /* Dalla pagina si': il tasto «Dai i permessi che mancano». */
+      lettore.senzaDopoLaRichiesta = {};
+      expect(await postino.chiediIPermessiCheMancano(filo), 0);
+      expect(lettore.chiesti.single, {MisuraDelCorpo.sonno});
+      expect(postino.scelte.negate, isEmpty);
+      expect(postino.senzaPermesso, isEmpty);
+    });
+
+    test('le misure negate si ricordano fra un avvio e l\'altro', () {
+      final scritte = const ScelteDellaSalute(
+        acceso: true,
+        negate: {MisuraDelCorpo.sonno},
+      ).comeSiScrive;
+      expect(ScelteDellaSalute.daQuelloCheCEra(scritte).negate, {
+        MisuraDelCorpo.sonno,
+      });
+      expect(
+        ScelteDellaSalute.daQuelloCheCEra('{"acceso":true}').negate,
+        isEmpty,
+      );
+    });
+
     test('senza permesso resta spento', () async {
       lettore.permesso = false;
       expect(await postino.accendi(filo, const ScelteDellaSalute()), isFalse);

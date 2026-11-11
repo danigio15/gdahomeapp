@@ -78,6 +78,12 @@ class PostinoDellaSalute {
   GuastoDellaSalute? _ultimoGuasto;
   Timer? _giro;
 
+  Set<MisuraDelCorpo> _senzaPermesso = const {};
+
+  /// Le misure scelte che il telefono non lascia leggere (Android): la
+  /// pagina lo scrive accanto, col tasto per dare il permesso.
+  Set<MisuraDelCorpo> get senzaPermesso => _senzaPermesso;
+
   ScelteDellaSalute get scelte => _scelte;
   Map<MisuraDelCorpo, Lettura> get ultimeLette => _ultimeLette;
 
@@ -215,6 +221,11 @@ class PostinoDellaSalute {
         await lettore.chiediIlPermesso(daChiedere);
         await _salva(_scelte.tutteViste());
       }
+      /* I permessi che il telefono ha tolto (Android, vedi
+       * [LettoreDellaSalute.senzaPermesso]): si richiedono una volta, con
+       * l'app davanti. Quelli che restano negati si ricordano, e non si
+       * richiedono a ogni invio. */
+      if (siChiede) await _richiediQuelliTolti();
       /* Il permesso di leggere ad app chiusa (Android), una volta sola e
        * con l'app davanti: anche chi aveva acceso la Salute prima che ci
        * fosse lo trova chiesto qui, al primo invio. */
@@ -256,6 +267,39 @@ class PostinoDellaSalute {
     } finally {
       _mandando = false;
     }
+  }
+
+  Future<void> _richiediQuelliTolti({bool ancheLeNegate = false}) async {
+    var senza = await lettore.senzaPermesso(_scelte.misure);
+    final daRichiedere = ancheLeNegate
+        ? senza
+        : senza.difference(_scelte.negate);
+    if (daRichiedere.isNotEmpty) {
+      /* Tutte quelle che mancano in una domanda sola. */
+      await lettore.chiediIlPermesso(senza);
+      senza = await lettore.senzaPermesso(_scelte.misure);
+    }
+    final negate = daRichiedere.isNotEmpty
+        ? senza
+        : _scelte.negate.intersection(senza);
+    if (negate.length != _scelte.negate.length ||
+        !negate.containsAll(_scelte.negate)) {
+      await _salva(_scelte.con(negate: negate));
+    }
+    if (senza.length != _senzaPermesso.length ||
+        !senza.containsAll(_senzaPermesso)) {
+      _senzaPermesso = senza;
+      _avvisa();
+    }
+  }
+
+  /// Dalla pagina: ridà i permessi che mancano, anche quelli gia' negati una
+  /// volta, e manda subito. Torna quante misure restano senza permesso.
+  Future<int> chiediIPermessiCheMancano(Filo? filo) async {
+    await carica();
+    await _richiediQuelliTolti(ancheLeNegate: true);
+    await manda(filo, subito: true);
+    return _senzaPermesso.length;
   }
 
   /// Se una sveglia ad app chiusa adesso sarebbe troppo presto: un quarto
