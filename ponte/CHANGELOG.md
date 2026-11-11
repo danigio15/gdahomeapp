@@ -10,6 +10,45 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.23
+
+_App GdAHome._
+
+**Nell'app, il navigatore:**
+
+- **I sottopassi non hanno più le scatole**: dove una stradina passa sotto
+  l'autostrada comparivano due blocchi di cemento ai lati della carreggiata,
+  come un cavalcavia a cui manca il ponte. Adesso la strada passa sotto e
+  basta.
+- **L'ombra sotto i ponti è pulita**: sotto i viadotti il suolo faceva
+  chiazze a righe, che cambiavano muovendo la mappa.
+- **Guardando avanti la mappa resta in 3D**: spostando la mappa lontano
+  dall'auto finivano le strade in 3D, e del percorso restava una linea
+  sottile. Adesso la scena e la linea grande arrivano dove si guarda.
+- **Alle svolte la linea gira sull'incrocio**: in certi incroci girava
+  qualche metro prima o dopo. E nei tratti interrati non fa più scalini.
+- **La linea resta intera sopra la strada**: guardando da lontano, o dopo
+  tanti chilometri di viaggio, su rampe e ponti poteva comparire a pezzi.
+
+**Dall'orologio:**
+
+- **«Fatto», e la luce si accende davvero**: un'azione «gruppo di luci» con
+  dentro un interruttore (una luce che sta su un relè) rispondeva «Fatto» e
+  non faceva niente. Vale anche per i tasti in macchina.
+- **Aggiornata l'app, l'orologio comanda subito**: dopo l'ultimo
+  aggiornamento, finché non si riapriva la plancia ogni luce rispondeva
+  «Questo si fa dal telefono: apri GdAHome».
+- **Col telefono in tasca il comando arriva**: se il collegamento dell'app
+  con la casa si era addormentato, il comando andava perso. Adesso l'app se
+  ne accorge e si ricollega prima di mandarlo.
+- **La riga sull'orologio dice com'è adesso**: dopo il comando la luce
+  risultava ancora com'era prima. E «Apri o chiudi» su una serratura chiusa
+  la richiudeva invece di aprirla.
+
+Se dopo l'aggiornamento l'orologio dice ancora «Parte quando apri GdAHome
+sul telefono», basta aprire GdAHome una volta e lasciare la plancia in vista
+qualche secondo.
+
 ## 1.18.22
 
 _App GdAHome e Home Assistant._
