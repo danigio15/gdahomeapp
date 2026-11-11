@@ -226,3 +226,44 @@ for (const tema of ["light", "dark"]) {
     );
   });
 }
+
+/* «Sposta il nome sotto, non nell'etichetta della sezione, e riporta lo
+ * stesso avatar configurato di quella persona.» Il nome stava nel
+ * sottotitolo della pagina, sotto «Salute». Adesso apre il corpo, col
+ * ritratto che la persona ha in «Persone». */
+const PERSONE = [
+  {
+    id: "p1",
+    name: "Marco Rossi",
+    entity: "person.marco",
+    avatar: {
+      color: "#3a6fb0",
+      face: { persona: "uomo", capelli: "corti", carnagione: "media", vestito: "casual" },
+    },
+  },
+];
+
+test("Il nome sta nel corpo della pagina, col ritratto della persona", async ({
+  page,
+}, testInfo) => {
+  test.setTimeout(120_000);
+  await boot(page, testInfo, "light");
+  await page.evaluate((elenco) => {
+    window.localStorage.setItem("cd_people", JSON.stringify(elenco));
+    window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready"));
+  }, PERSONE);
+  const voce = page.locator('.tab[data-tab="salute"]');
+  await expect(voce).toHaveCount(1, { timeout: 20_000 });
+  await voce.evaluate((n) => n.click());
+  const pagina = page.locator("#page-salute");
+  await expect(pagina.locator(".dm-salute")).toBeVisible({ timeout: 20_000 });
+  /* Il nome, col ritratto costruito di «Marco Rossi» (lo stesso primo nome). */
+  const chi = pagina.locator(".dm-salute-chi");
+  await expect(chi.locator("b")).toHaveText("Marco");
+  await expect(chi.locator("canvas.dm-avatar-3d")).toHaveCount(1, { timeout: 60_000 });
+  /* E non nel sottotitolo della pagina, che dice cosa c'è. */
+  const sotto = page.locator("#page-salute .dm-page-mast-sub");
+  await expect(sotto).not.toContainText("Marco");
+  await expect(sotto).toContainText("Passi");
+  await fotoDellaPagina(page, foto(testInfo, "salute-nome-e-ritratto"));
+});
