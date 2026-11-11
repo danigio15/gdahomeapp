@@ -20,6 +20,18 @@ test("il click che segue una presa sulla barra non apre la finestra", () => {
   assert.equal(clickDopoLaPresa(presa, null, 1_200), false, "fuori dalle card non si tocca niente");
 });
 
+test("su iPhone la card si e' gia' ridisegnata: e' la stessa, si riconosce dal termostato", () => {
+  // «Questo avviene principalmente da telefono iOS.» Il click arriva dopo il
+  // ridisegno: un elemento nuovo, lo stesso termostato.
+  const prima = { dataset: { dmCl: "climate.sala" } };
+  const ridisegnata = { dataset: { dmCl: "climate.sala" } };
+  const altra = { dataset: { dmCl: "climate.camera" } };
+  const presa = { card: prima, entity: "climate.sala", quando: 1_000 };
+  assert.equal(clickDopoLaPresa(presa, ridisegnata, 1_400), true, "la stessa card, ridisegnata, non si apre");
+  assert.equal(clickDopoLaPresa(presa, altra, 1_400), false, "un altro termostato si apre");
+  assert.equal(clickDopoLaPresa(presa, ridisegnata, 2_000), false, "un tocco vero, piu' tardi, apre");
+});
+
 test("il grado lasciato sulla barra resta finche' Home Assistant dice il vecchio", () => {
   const entity = "climate.sala_prova_barra";
   obiettivoInVolo(entity, 21.5, 19);

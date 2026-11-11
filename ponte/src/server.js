@@ -1287,6 +1287,9 @@ async function api({
          * modo di sapere se il nome non si risolve, se la porta e' chiusa o
          * se dall'altra parte c'e' qualcosa che non e' un centralino. */
         perche: chiamata?.perche || "",
+        /* Un'altra copia di questa casa che le ruba il posto sul centralino
+         * (`Chiamata.doppia`): da fuori i telefoni cadono di continuo. */
+        doppia: chiamata?.doppia ?? null,
       },
       /* Che versione e' questo gdahome. La console la scrive accanto al nome,
        * sempre: la scheda «La versione» c'e' solo sugli add-on locali, e a chi
