@@ -205,10 +205,28 @@ object IlTramiteDellOrologio {
             IlPonteDellAuto.sveglia(context) { com ->
                 principale.post {
                     principale.removeCallbacks(tardi)
-                    rispondi(comEFinita(com))
+                    rispondi(conLaFoto(context, com))
                 }
             }
         }
+    }
+
+    /**
+     * La risposta al polso, e con lei la fotografia di adesso quando il
+     * comando e' andato.
+     *
+     * «Accende le luci ma non cambia stato.» Il Dart corregge la fotografia
+     * quando Home Assistant dice lo stato nuovo, e per una luce lo dice quasi
+     * sempre prima ancora di rispondere al comando: quando arriva «fatto» la
+     * riga giusta e' gia' sul disco. L'orologio la fotografia dentro una
+     * risposta la sa prendere da sempre (`IlTelefono.kt`, `manda`): cosi' la
+     * riga cambia insieme alla conferma, senza aspettare il Data Layer. Se lo
+     * stato arriva dopo, parte da se' quando il Dart lo dice ([manda]).
+     */
+    private fun conLaFoto(context: Context, com: String?): String {
+        val detta = comEFinita(com)
+        if (com != "fatto") return detta
+        return runCatching { JSONObject(detta).put("foto", fotografia(context)).toString() }.getOrDefault(detta)
     }
 
     /** Quello che si dice al polso, da com'e' finito il comando nel Dart (`ComeEFinitaInAuto`). */

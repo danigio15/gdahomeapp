@@ -49,3 +49,8 @@ Future<void> aggiornaIlDispositivoNellaFoto(
   String entita, {
   required bool acceso,
 }) async {}
+
+Future<void> aggiornaIDispositiviNellaFoto(Map<String, bool> accesi) async {}
+
+/// Nel browser non c'e' fotografia, e quindi nessun dispositivo dentro.
+Future<List<String>> iDispositiviDellaFoto() async => const [];

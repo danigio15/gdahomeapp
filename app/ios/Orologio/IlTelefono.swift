@@ -19,6 +19,28 @@ final class IlTelefono: NSObject, ObservableObject {
   /// Se un tocco e' in viaggio verso il telefono.
   @Published private(set) var inCorso = false
 
+  /* ─── La riga che cambia al tocco ───────────────────────────────────────
+   *
+   * «Funziona, ma non aggiorna lo stato: rimane sempre spenta ma è accesa.»
+   * Il tocco fa il giro del telefono e della casa prima di tornare, e intanto
+   * al polso non succedeva niente. Adesso la riga si gira subito, col suo
+   * colpetto, e resta girata finche' il telefono non dice com'e' davvero: se
+   * il comando non parte torna com'era, con l'avviso; se parte, la
+   * fotografia che arriva dopo la conferma — o, passato il tempo, la
+   * smentisce: e' lei la verita'.
+   *
+   * `vera` e' l'ultima fotografia arrivata dal telefono; `attese` le righe
+   * girate al tocco (l'entita', com'e' attesa, fino a quando ci si crede).
+   * Quello che si disegna, `foto`, e' la prima con sopra le seconde. */
+  private var vera: LaFoto?
+  private var attese: [String: (acceso: Bool, fino: Date)] = [:]
+
+  /// Per quanto si crede alla riga girata al tocco, se il telefono non la
+  /// conferma: il tempo che il telefono si da' per sentire lo stato nuovo
+  /// dalla casa (`quantoSiAspettaLoStato` in `lib/auto/in_auto.dart`), e un
+  /// po'.
+  private let quantoSiCredeAlTocco: TimeInterval = 12
+
   func accendi() {
     /* La vetrina (`Vetrina.swift`): la casa d'esempio, e nessun filo. */
     if Vetrina.schermata != nil {
@@ -40,18 +62,29 @@ final class IlTelefono: NSObject, ObservableObject {
     } errorHandler: { _ in }
   }
 
-  func premi(_ id: String) { manda(["cosa": "comando", "id": id]) }
+  func premi(_ id: String) { manda(["cosa": "comando", "id": id], comando: id) }
 
   func vai(_ dove: String) { manda(["cosa": "vai", "dove": dove]) }
 
   func ferma() { manda(["cosa": "ferma"]) }
 
-  private func manda(_ messaggio: [String: Any]) {
+  /// Manda un tocco al telefono. `comando` e' l'id di quello che si e'
+  /// premuto, quando e' un comando di casa: si sente e si vede subito.
+  private func manda(_ messaggio: [String: Any], comando: String? = nil) {
     let s = WCSession.default
     guard s.activationState == .activated, s.isReachable else {
       return dici("Il telefono non risponde. Tienilo vicino, con GdAHome installata.", bene: false)
     }
     inCorso = true
+    /* Il tocco si sente e si vede subito; com'e' andata arriva dopo. */
+    let eUnComando = comando != nil
+    let girata: String?
+    if let comando {
+      WKInterfaceDevice.current().play(.click)
+      girata = gira(comando) ? comando : nil
+    } else {
+      girata = nil
+    }
     /* «Poi l'app si blocca.» Finché un tocco è in viaggio i tasti sono
      * spenti, e se il telefono non rispondeva — né sì né no — restavano
      * spenti: l'app sembrava ferma. Dopo dieci secondi si lascia perdere, si
@@ -61,30 +94,94 @@ final class IlTelefono: NSObject, ObservableObject {
     s.sendMessage(messaggio) { [weak self] risposta in
       let ok = (risposta["ok"] as? Bool) == true
       let testo = risposta["testo"] as? String ?? (ok ? "Fatto" : "Non è partito")
-      Task { @MainActor in self?.finito(questo, testo, bene: ok) }
+      /* A comando andato il telefono manda con la risposta la fotografia di
+       * adesso (`LOrologio.swift`): la riga giusta arriva con la conferma. */
+      let foto = risposta["foto"] as? String
+      Task { @MainActor in
+        self?.finito(questo, testo, bene: ok, girata: girata, eUnComando: eUnComando, foto: foto)
+      }
     } errorHandler: { [weak self] _ in
-      Task { @MainActor in self?.finito(questo, "Il telefono non ha risposto", bene: false) }
+      Task { @MainActor in
+        self?.finito(questo, "Il telefono non ha risposto", bene: false, girata: girata, eUnComando: eUnComando)
+      }
     }
     /* Il telefono risponde quando la casa ha sentito, non quando ha scritto
      * il comando: riaprire il filo puo' chiedere fino a dodici secondi
      * (`quantoSiAspettaIlFilo`). Venti, e poi si lascia perdere. */
     Task { @MainActor [weak self] in
       try? await Task.sleep(nanoseconds: 20_000_000_000)
-      self?.finito(questo, "Il telefono non ha risposto in tempo", bene: false)
+      self?.finito(
+        questo, "Il telefono non ha risposto in tempo", bene: false, girata: girata, eUnComando: eUnComando)
     }
   }
 
   /// Il numero dell'ultimo tocco mandato: risponde solo lui.
   private var numero = 0
 
-  private func finito(_ quale: Int, _ testo: String, bene: Bool) {
+  private func finito(
+    _ quale: Int, _ testo: String, bene: Bool, girata: String? = nil, eUnComando: Bool = false, foto: String? = nil
+  ) {
     guard quale == numero, inCorso else { return }
     inCorso = false
-    dici(testo, bene: bene)
+    if let girata, !bene {
+      /* Non e' partito: la riga torna com'era. */
+      attese[girata] = nil
+      mostra()
+    }
+    if let foto { prendi(foto) }
+    /* Il colpetto del tocco c'e' gia' stato: qui si sente solo il no. */
+    dici(testo, bene: bene, colpetto: !(bene && eUnComando))
+    /* Lo stato nuovo il telefono lo manda da se' quando la casa lo dice; se
+     * per strada si perde, fra poco lo si chiede. */
+    if bene, eUnComando {
+      Task { @MainActor [weak self] in
+        try? await Task.sleep(nanoseconds: 4_000_000_000)
+        self?.aggiorna()
+      }
+    }
   }
 
-  private func dici(_ testo: String, bene: Bool) {
-    WKInterfaceDevice.current().play(bene ? .success : .failure)
+  /// Gira la riga di `id`, se e' quella di un dispositivo.
+  private func gira(_ id: String) -> Bool {
+    guard let riga = foto?.dispositivi.first(where: { $0.id == id }) else { return false }
+    attese[id] = (acceso: !riga.acceso, fino: Date().addingTimeInterval(quantoSiCredeAlTocco))
+    mostra()
+    /* Passato il tempo, vale quello che dice il telefono. */
+    let fra = UInt64((quantoSiCredeAlTocco + 0.1) * 1_000_000_000)
+    Task { @MainActor [weak self] in
+      try? await Task.sleep(nanoseconds: fra)
+      self?.mostra()
+    }
+    return true
+  }
+
+  /// Disegna la fotografia del telefono, con sopra le righe girate al tocco.
+  private func mostra() {
+    guard var arrivata = vera else { return }
+    let adesso = Date()
+    attese = attese.filter { $0.value.fino > adesso }
+    if !attese.isEmpty {
+      var righe: [Dispositivo] = []
+      for riga in arrivata.dispositivi {
+        if let attesa = attese[riga.id] {
+          if attesa.acceso == riga.acceso {
+            // Il telefono la conferma: non c'e' piu' niente da aspettare.
+            attese[riga.id] = nil
+            righe.append(riga)
+          } else {
+            righe.append(riga.girato())
+          }
+        } else {
+          righe.append(riga)
+        }
+      }
+      arrivata.dispositivi = righe
+    }
+    foto = arrivata
+  }
+
+  private func dici(_ testo: String, bene: Bool, colpetto: Bool = true) {
+    if colpetto { WKInterfaceDevice.current().play(bene ? .success : .failure) }
     avviso = testo
     let detto = testo
     Task { @MainActor [weak self] in
@@ -94,7 +191,9 @@ final class IlTelefono: NSObject, ObservableObject {
   }
 
   fileprivate func prendi(_ testo: String?) {
-    if let nuova = LaFoto.leggi(testo) { foto = nuova }
+    guard let nuova = LaFoto.leggi(testo) else { return }
+    vera = nuova
+    mostra()
   }
 }
 

@@ -146,8 +146,24 @@ final class LOrologio: NSObject, WCSessionDelegate {
       tempo = app.beginBackgroundTask(withName: "gdahome:polso") { chiudi() }
       let scritto = LaCasaInCarPlay.lascia(id, dalPolso: true) { com in
         DispatchQueue.main.async {
-          risposta(LOrologio.risposta(com))
-          chiudi()
+          var detta = LOrologio.risposta(com)
+          guard com == "fatto" else {
+            risposta(detta)
+            chiudi()
+            return
+          }
+          /* «Funziona, ma non aggiorna lo stato della luce.» Il Dart
+           * corregge la fotografia quando Home Assistant dice lo stato
+           * nuovo, e per una luce lo dice quasi sempre prima ancora di
+           * rispondere al comando: quando arriva «fatto» la riga giusta e'
+           * gia' sul disco, e viaggia con la risposta. */
+          detta["foto"] = self.fotografia()
+          risposta(detta)
+          /* Se lo stato arriva dopo, il Dart lo sta ancora aspettando
+           * (`lib/auto/in_auto.dart`, il seguito del comando) e quando
+           * arriva lo manda al polso da se' (`manda`). Gli si lascia il
+           * tempo: chiudere qui voleva dire farsi sospendere prima. */
+          DispatchQueue.main.asyncAfter(deadline: .now() + 12) { chiudi() }
         }
       }
       if !scritto {
