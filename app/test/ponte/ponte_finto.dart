@@ -78,9 +78,18 @@ class PonteFinto {
   /// Quando e' `true`, non risponde ai comandi: e' Home Assistant che tace.
   bool muto = false;
 
+  /// Le prese a cui non si risponde piu', una per una: il filo rimasto in
+  /// mano a un telefono in tasca, «aperto» in apparenza e morto in realta'.
+  /// Chi si ricollega trova una presa nuova, e quella risponde.
+  final Set<TelefonoCollegato> sorde = {};
+
   /// Quando e' `true`, risponde a tutto tranne che ai colpetti: una casa viva
   /// che il `ping` non lo conosce.
   bool senzaPong = false;
+
+  /// Quando e' `false`, e' un ponte che `subscribe_entities` non lo lascia
+  /// passare: risponde di no, come a un comando che non conosce.
+  bool conosceGliAbbonamentiStretti = true;
 
   /// Quando e' `false`, e' un ponte di prima della compressione: nella
   /// stretta di mano non dice di saper aprire il gzip, e non comprime.
@@ -158,7 +167,7 @@ class PonteFinto {
     }
 
     arrivati.add(detto);
-    if (muto) return;
+    if (muto || sorde.contains(presa)) return;
 
     final id = detto['id'];
     /* Il colpetto, come lo fa Home Assistant: `ping` e si risponde `pong`.
@@ -172,6 +181,8 @@ class PonteFinto {
     /* Un comando che Home Assistant non conosce: e' anche quello che risponde
      * una casa senza DashboardModern a `dashboardmodern/config/get`. */
     if (detto['type'] == 'un_comando_che_non_esiste' ||
+        (detto['type'] == 'subscribe_entities' &&
+            !conosceGliAbbonamentiStretti) ||
         (detto['type'] == 'dashboardmodern/config/get' && !planciaInstallata)) {
       _manda(presa, {
         'id': id,

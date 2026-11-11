@@ -263,6 +263,38 @@ class RicettaDellAzione {
   /// Quello che il servizio vuole oltre all'entita' — la voce di un menu.
   final Map<String, Object?> dati;
 
+  /// Le entita' su cui si chiama: una, o tante per un gruppo di luci.
+  List<String> get leEntita => [
+    for (final una in entita.split(','))
+      if (una.trim().contains('.')) una.trim(),
+  ];
+
+  /// Il dominio con cui il servizio si chiama davvero.
+  ///
+  /// Quasi sempre e' [dominio]. Ma un gruppo di luci arriva scritto
+  /// `light.toggle` — dalla plancia (`laRicettaDelGruppo`) e dai comandi
+  /// scelti (`leAzioniDellaConfigurazione`) — anche quando dentro ha degli
+  /// interruttori: la luce del giardino sta su un rele', ed e' uno
+  /// `switch.*`. Home Assistant a `light.toggle` su un interruttore risponde
+  /// che e' andata bene e non fa niente: il servizio delle luci guarda solo
+  /// le luci. Al polso usciva «Fatto», e la luce restava com'era.
+  ///
+  /// `homeassistant.toggle` invece lo gira lui al dominio di ogni entita'.
+  /// Si corregge qui, dove si esegue, perche' cosi' vale anche per le
+  /// ricette gia' scritte sul telefono e per una plancia non aggiornata. Uno
+  /// script e una scena restano com'erano: li' il dominio e' il servizio.
+  String get dominioDaChiamare {
+    const girano = {'toggle', 'turn_on', 'turn_off'};
+    final suo = dominio.trim().toLowerCase();
+    if (!girano.contains(servizio) || suo == 'scene' || suo == 'script') {
+      return dominio;
+    }
+    for (final una in leEntita) {
+      if (una.split('.').first.toLowerCase() != suo) return 'homeassistant';
+    }
+    return dominio;
+  }
+
   Map<String, Object?> get comeSiScrive => {
     'id': id,
     'dominio': dominio,
