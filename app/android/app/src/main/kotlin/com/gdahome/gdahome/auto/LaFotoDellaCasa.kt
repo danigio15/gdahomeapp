@@ -85,6 +85,8 @@ data class Azione(
      * Qui non si decide: si legge, e si scrive la cosa giusta sul tasto.
      */
     val subito: Boolean,
+    /** Lo stesso, per l'orologio: lì parte da sola anche col lucchetto acceso. */
+    val subitoAlPolso: Boolean = subito,
 )
 
 data class FotoDellaCasa(
@@ -208,6 +210,9 @@ private fun leAzioni(json: JSONObject): List<Azione> {
                      * vecchia di questo campo non deve promettere che il tasto
                      * parte da solo. */
                     subito = voce.optBoolean("subito", false),
+                    /* Al polso parte da sola anche col lucchetto acceso
+                     * (`subitoAlPolso` in `lib/auto/la_foto.dart`). */
+                    subitoAlPolso = voce.optBoolean("subito", false) || voce.optBoolean("subitoAlPolso", false),
                 ),
             )
         }

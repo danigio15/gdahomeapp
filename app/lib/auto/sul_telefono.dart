@@ -44,7 +44,11 @@ Future<bool> lasciaLaFotoAllAuto(
      * ci vanno i nomi, e nomi e basta. Col lucchetto acceso non se ne scrive
      * nessuna — niente parte da solo, e una ricetta che nessuno eseguira' e'
      * solo un elenco di entita' in piu' sul disco. */
-    await _leRicette(cartella, daSola ? leRicetteDaScrivere(detto) : const []);
+    final ricette = leRicetteDaScrivere(detto);
+    await _leRicette(cartella, nomeDelleRicette, daSola ? ricette : const []);
+    /* Per l'orologio ci sono sempre: col lucchetto l'auto non comanda, il
+     * polso si' (vedi `subitoAlPolso` in `la_foto.dart`). */
+    await _leRicette(cartella, nomeDelleRicetteDelPolso, ricette);
     _diciloAllOrologio();
     return true;
   } catch (_) {
@@ -90,17 +94,24 @@ Future<void> aggiornaIlDispositivoNellaFoto(
 ///
 /// Anche un comando scaduto si toglie: resterebbe li' a farsi ritrovare a ogni
 /// apertura, e ogni volta verrebbe buttato via di nuovo.
-Future<String?> prendiIlComandoDellAuto() async {
+Future<String?> prendiIlComandoDellAuto() async =>
+    (await prendiIlComandoLasciato())?.id;
+
+/// Il comando lasciato, e se l'ha lasciato l'orologio: dal polso si comanda
+/// anche col lucchetto acceso, dall'auto no ([leRicetteDelPolso]).
+Future<({String id, bool dalPolso})?> prendiIlComandoLasciato() async {
   try {
     final cartella = await getApplicationSupportDirectory();
     final file = File('${cartella.path}/$nomeDelComando');
     if (!await file.exists()) return null;
     final detto = await file.readAsString();
     await file.delete();
-    return ilComandoDellAuto(
+    final id = ilComandoDellAuto(
       detto,
       adesso: DateTime.now().millisecondsSinceEpoch,
     );
+    if (id == null) return null;
+    return (id: id, dalPolso: ilComandoVieneDalPolso(detto));
   } catch (_) {
     /* Non c'era, non si e' letto, non si e' tolto: non si preme niente. In
      * macchina si e' gia' visto che il comando parte quando l'app e' in linea,
@@ -111,9 +122,10 @@ Future<String?> prendiIlComandoDellAuto() async {
 
 Future<void> _leRicette(
   Directory cartella,
+  String nome,
   List<RicettaDellAzione> ricette,
 ) async {
-  final file = File('${cartella.path}/$nomeDelleRicette');
+  final file = File('${cartella.path}/$nome');
   try {
     if (ricette.isEmpty) {
       if (await file.exists()) await file.delete();
@@ -131,14 +143,21 @@ Future<void> _leRicette(
 /// Le ricette scritte, per chi deve eseguire un comando: quelle della
 /// plancia e quelle dei comandi rapidi scelti per il navigatore.
 Future<List<RicettaDellAzione>> leRicetteDellAuto() async {
-  final dellaPlancia = await _quelleDellaPlancia();
+  final dellaPlancia = await _quelleDellaPlancia(nomeDelleRicette);
   return [...dellaPlancia, ...(await leggiIComandi()).ricette];
 }
 
-Future<List<RicettaDellAzione>> _quelleDellaPlancia() async {
+/// Le ricette per un comando che arriva dall'orologio: ci sono anche col
+/// lucchetto acceso.
+Future<List<RicettaDellAzione>> leRicetteDelPolso() async {
+  final dellaPlancia = await _quelleDellaPlancia(nomeDelleRicetteDelPolso);
+  return [...dellaPlancia, ...(await leggiIComandi()).ricette];
+}
+
+Future<List<RicettaDellAzione>> _quelleDellaPlancia(String nome) async {
   try {
     final cartella = await getApplicationSupportDirectory();
-    final file = File('${cartella.path}/$nomeDelleRicette');
+    final file = File('${cartella.path}/$nome');
     if (!await file.exists()) return const [];
     return leRicetteDaScrivere(await file.readAsString());
   } catch (_) {
@@ -228,7 +247,7 @@ Future<List<ComandoRapido>> leAzioniRapide() async {
     if (!await foto.exists()) return const [];
     return leAzioniDellaPlancia(
       await foto.readAsString(),
-      await _quelleDellaPlancia(),
+      await _quelleDellaPlancia(nomeDelleRicette),
     );
   } catch (_) {
     return const [];

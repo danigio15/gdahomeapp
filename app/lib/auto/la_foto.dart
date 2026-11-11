@@ -140,6 +140,11 @@ String? laFotoDaScrivere(
        * perche' «e' partito» su una cosa che parte fra mezz'ora e' la bugia
        * peggiore che possa dire un cruscotto. */
       'subito': daSola && riga['subito'] == true,
+      /* Al polso parte da sola anche col lucchetto: l'orologio e' di chi lo
+       * porta, e si blocca da se' quando lo si toglie. «Non ti fa fare le
+       * azioni da Apple Watch»: col lucchetto acceso ogni tasto diceva «Parte
+       * quando apri GdAHome sul telefono». In macchina no: li' vale `subito`. */
+      if (!daSola && riga['subito'] == true) 'subitoAlPolso': true,
     });
   }
 
@@ -216,6 +221,19 @@ String? ilComandoDellAuto(String detto, {required int adesso}) {
   if (quando - adesso > quantoValeIlComandoMs) return null;
   return id;
 }
+
+/// Se il comando lasciato viene dall'orologio (`"polso": true`), e non
+/// dall'auto. Chi lo scrive: `IlComandoLasciato.kt`, `LaCasaInCarPlay.swift`.
+bool ilComandoVieneDalPolso(String detto) {
+  if (detto.isEmpty || detto.length > 4096) return false;
+  final letto = _prova(detto);
+  return letto is Map<String, Object?> && letto['polso'] == true;
+}
+
+/// Le ricette per l'orologio: ci sono anche col lucchetto acceso, quando in
+/// [nomeDelleRicette] non se ne scrive nessuna. Le legge solo l'app, e solo
+/// per un comando che arriva dal polso.
+const String nomeDelleRicetteDelPolso = 'gdahome-polso-ricette.json';
 
 /// Il file in cui l'app tiene le ricette dei tasti.
 ///

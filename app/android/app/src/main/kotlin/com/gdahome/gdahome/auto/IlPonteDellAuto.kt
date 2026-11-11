@@ -55,8 +55,25 @@ object IlPonteDellAuto {
      * o scade.
      */
     @Synchronized
-    fun sveglia(context: Context) {
-        runCatching {
+    fun sveglia(context: Context, finito: ((String?) -> Unit)? = null) {
+        /* Com'e' finita lo dice il Dart, al colpetto (`in_auto.dart`): chi lo
+         * vuole sapere — l'orologio, che lo scrive al polso — passa [finito].
+         * Si chiama una volta sola, anche se qualcosa va storto. */
+        var detto = false
+        val unaVolta: (String?) -> Unit = { com ->
+            if (!detto) {
+                detto = true
+                finito?.invoke(com)
+            }
+        }
+        val risposta = object : MethodChannel.Result {
+            override fun success(result: Any?) = unaVolta(result as? String)
+
+            override fun error(errorCode: String, errorMessage: String?, errorDetails: Any?) = unaVolta(null)
+
+            override fun notImplemented() = unaVolta(null)
+        }
+        val andata = runCatching {
             /* Il motore dell'app, se e' acceso: nella versione col navigatore
              * in auto lo e' da quando si e' saliti (`IlNavigatoreInAuto`), e
              * ha gia' il filo con la casa aperto. Accenderne un secondo voleva
@@ -68,7 +85,7 @@ object IlPonteDellAuto {
             val dellApp = FlutterEngineCache.getInstance().get(IlNavigatoreInAuto.MOTORE)
             if (dellApp != null) {
                 MethodChannel(dellApp.dartExecutor.binaryMessenger, CANALE)
-                    .invokeMethod(GUARDA, null)
+                    .invokeMethod(GUARDA, null, risposta)
                 return
             }
             val gia = motore
@@ -76,10 +93,16 @@ object IlPonteDellAuto {
                 /* Il motore c'e' gia' e sta li' ad aspettare: gli si dice di
                  * guardare, e ritrova il file appena scritto. */
                 MethodChannel(gia.dartExecutor.binaryMessenger, CANALE)
-                    .invokeMethod(GUARDA, null)
+                    .invokeMethod(GUARDA, null, risposta)
                 return
             }
             val nuovo = FlutterEngine(context.applicationContext)
+            /* Il motore appena acceso esegue da se' il comando che trova, e
+             * poi dice com'e' finita con `finito` (`inAuto` in `in_auto.dart`). */
+            MethodChannel(nuovo.dartExecutor.binaryMessenger, CANALE).setMethodCallHandler { call, result ->
+                if (call.method == FINITO) unaVolta(call.arguments as? String)
+                result.success(null)
+            }
             /* I plugin vanno registrati a mano: un motore fatto cosi' non li
              * ha. Senza, la cassaforte e la cartella dei file non rispondono —
              * e senza cassaforte non c'e' nessuna casa da aprire. */
@@ -92,6 +115,7 @@ object IlPonteDellAuto {
             )
             motore = nuovo
         }
+        if (andata.isFailure) unaVolta(null)
     }
 
     /** Spegne il motore. Lo chiama la sessione dell'auto quando finisce. */
@@ -111,4 +135,5 @@ object IlPonteDellAuto {
      * l'app che si apre. */
     private const val CANALE = "gdahome/auto/guarda"
     private const val GUARDA = "guarda"
+    private const val FINITO = "finito"
 }

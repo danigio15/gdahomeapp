@@ -81,11 +81,22 @@ Future<void> inAuto() async {
    * premuto arriva di qui un colpetto. Accenderne uno per ogni pressione
    * vorrebbe dire far ripartire tutto — macchina virtuale, plugin, cassaforte
    * — per un comando solo, e in macchina i tasti si premono di fila. */
-  const MethodChannel(canaleDellAuto).setMethodCallHandler((_) async {
-    await eseguiIlComandoDellAuto();
-    return null;
-  });
-  await eseguiIlComandoDellAuto();
+  /* Al colpetto si risponde com'e' finita, come sull'iPhone: «Android dice
+   * fatto ma in realta' non fa nulla», dal Wear OS. Il telefono rispondeva
+   * «Fatto» all'orologio appena scritto il comando, prima di sapere se era
+   * partito. Adesso `IlTramiteDellOrologio.kt` aspetta questa risposta. */
+  const canale = MethodChannel(canaleDellAuto);
+  canale.setMethodCallHandler(
+    (_) async => (await eseguiIlComandoDellAuto()).name,
+  );
+  final com = await eseguiIlComandoDellAuto();
+  /* Il comando per cui il motore e' stato acceso: nessun colpetto l'ha
+   * portato, e chi l'ha acceso aspetta di sapere com'e' finita. */
+  try {
+    await canale.invokeMethod<void>('finito', com.name);
+  } catch (_) {
+    /* Nessuno ascolta: l'auto, che non aspetta niente. */
+  }
 }
 
 /// Sull'iPhone il motore e' uno solo, quello dell'app, ed e' sempre acceso
@@ -192,12 +203,23 @@ Future<ComeEFinitaInAuto> _esegui(
   Collegamento Function()? laCasaDellApp,
   AggiornaLaFoto aggiornaLaFoto,
 ) async {
-  final segno = await (prendiIlComando ?? auto.prendiIlComandoDellAuto)();
+  /* Da dove viene: dal polso si comanda anche col lucchetto acceso (le sue
+   * ricette ci sono sempre), dall'auto no. */
+  String? segno;
+  var dalPolso = false;
+  if (prendiIlComando != null) {
+    segno = await prendiIlComando();
+  } else {
+    final lasciato = await auto.prendiIlComandoLasciato();
+    segno = lasciato?.id;
+    dalPolso = lasciato?.dalPolso ?? false;
+  }
   if (segno == null || segno.isEmpty) return ComeEFinitaInAuto.niente;
 
   final ricetta = laRicettaDi(
     segno,
-    await (leRicette ?? auto.leRicetteDellAuto)(),
+    await (leRicette ??
+        (dalPolso ? auto.leRicetteDelPolso : auto.leRicetteDellAuto))(),
   );
   /* Nessuna ricetta vuol dire «questo tasto vuole qualcuno che guardi», e non
    * «questo tasto e' rotto»: si lascia stare, e l'app quando si apre non lo

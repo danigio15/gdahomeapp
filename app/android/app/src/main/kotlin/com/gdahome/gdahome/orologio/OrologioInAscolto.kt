@@ -8,15 +8,22 @@
 package com.gdahome.gdahome.orologio
 
 import com.google.android.gms.tasks.Task
-import com.google.android.gms.tasks.Tasks
+import com.google.android.gms.tasks.TaskCompletionSource
 import com.google.android.gms.wearable.WearableListenerService
 
 class OrologioInAscolto : WearableListenerService() {
     override fun onRequest(nodeId: String, path: String, request: ByteArray): Task<ByteArray>? {
         if (path != IlTramiteDellOrologio.TOCCO) return null
-        val risposta = runCatching {
-            IlTramiteDellOrologio.esegui(applicationContext, request.toString(Charsets.UTF_8))
-        }.getOrElse { """{"ok":false,"testo":"Non è partito"}""" }
-        return Tasks.forResult(risposta.toByteArray(Charsets.UTF_8))
+        /* La risposta arriva quando il comando e' finito davvero, non appena
+         * e' stato scritto: vedi `IlTramiteDellOrologio.esegui`. */
+        val fonte = TaskCompletionSource<ByteArray>()
+        runCatching {
+            IlTramiteDellOrologio.esegui(applicationContext, request.toString(Charsets.UTF_8)) { risposta ->
+                fonte.trySetResult(risposta.toByteArray(Charsets.UTF_8))
+            }
+        }.onFailure {
+            fonte.trySetResult("""{"ok":false,"testo":"Non è partito"}""".toByteArray(Charsets.UTF_8))
+        }
+        return fonte.task
     }
 }
