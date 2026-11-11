@@ -122,14 +122,22 @@ void ascoltaIlColpetto({Collegamento Function()? laCasaDellApp}) {
   }
 }
 
-/// Chi corregge la fotografia dopo un comando (`aggiornaIlDispositivoNellaFoto`).
-typedef AggiornaLaFoto = Future<void> Function(
-  String entita, {
-  required bool acceso,
-});
+/// Chi corregge la fotografia dopo un comando
+/// (`aggiornaIDispositiviNellaFoto`): per ogni entita', se e' accesa.
+typedef AggiornaLaFoto = Future<void> Function(Map<String, bool> accesi);
 
 /// Quanto si aspetta che Home Assistant dica lo stato nuovo, dopo un comando.
-const Duration quantoSiAspettaLoStato = Duration(seconds: 4);
+///
+/// Otto secondi, e non piu' quattro: non li aspetta piu' nessuno. La conferma
+/// al polso parte appena Home Assistant accetta il comando, e lo stato nuovo
+/// si aspetta dopo, per conto suo ([_ilSeguito]) — una lampadina lenta ha il
+/// tempo di dirlo, e chi ha toccato l'orologio non lo paga.
+const Duration quantoSiAspettaLoStato = Duration(seconds: 8);
+
+/// Quanto si lascia a una scena o a uno script per cambiare quello che cambia:
+/// non c'e' un'entita' sola di cui aspettare lo stato, e allora si guarda
+/// per un po' cosa si muove.
+const Duration quantoSiGuardaUnaScena = Duration(milliseconds: 2500);
 
 /// Lo stato di [id] appena diverso da [prima], o `null` se entro [fino] non
 /// cambia (un comando che non ha fatto niente, o una casa lenta: la
@@ -161,6 +169,15 @@ Future<String?> statoNuovo(
 /// lento, e' un filo che non c'e' piu' — e chi ha toccato l'orologio aspetta.
 const Duration quantoSiAspettaUnCenno = Duration(seconds: 3);
 
+/// Quanto si aspetta lo stato di adesso, dopo il si' all'abbonamento.
+///
+/// Tre secondi, e non uno: da fuori casa il ponte tiene gli eventi **un
+/// secondo** e li manda insieme (`ponte/src/ponte.js`, il mucchio), e lo
+/// stato di adesso e' un evento. Con un secondo di attesa arrivava un soffio
+/// dopo, a tempo scaduto: lo stato «non si sapeva», e la riga al polso non
+/// si correggeva.
+const Duration quantoSiAspettaLoStatoDiAdesso = Duration(seconds: 3);
+
 /// Lo stato delle entita' di un comando, chiesto apposta per quel comando.
 ///
 /// ── Perche' non lo stato della casa ─────────────────────────────────────
@@ -168,59 +185,123 @@ const Duration quantoSiAspettaUnCenno = Duration(seconds: 3);
 /// Lo stato della casa ([Collegamento.stato]) si riempie solo quando qualcuno
 /// lo chiede (`serveLaCasa`): un `get_states` da un megabyte e mezzo, e poi
 /// ogni cambiamento di ogni entita'. Chi esegue un comando dal polso non l'ha
-/// mai chiesto, e quindi leggeva sempre «non lo so»: una serratura chiusa
-/// riceveva «chiudi» invece di «apri» (`secondo_lo_stato`), e dopo il comando
-/// si aspettavano quattro secondi uno stato nuovo che non poteva arrivare —
-/// «vengono comandati ma non cambiano stato», e la risposta al polso in
-/// ritardo per niente.
+/// mai chiesto, e quindi leggeva sempre «non lo so».
 ///
 /// Qui si chiede a Home Assistant lo stato di **quelle** entita' e basta
 /// (`subscribe_entities` coi loro nomi, come fa gia' il navigatore per i
 /// sensori dell'auto): prima com'e' adesso, poi quello che cambia.
 ///
-/// ── E perche' prima del comando ─────────────────────────────────────────
+/// ── Si chiede prima del comando, ma non lo si aspetta ───────────────────
 ///
-/// Perche' e' anche il modo di sapere che il filo e' vivo. Quello dell'app,
-/// col telefono in tasca, resta «aperto» in apparenza e morto in realta'
-/// (vedi `Filo.sveglia`): un comando mandato li' non arriva a nessuno e non
-/// torna indietro. Questa domanda si puo' rifare; il comando no — un cancello
-/// aperto due volte e' un cancello richiuso.
+/// La domanda parte **prima** del comando e sullo stesso filo: Home Assistant
+/// le prende in ordine, quindi lo stato «di adesso» che risponde e' quello di
+/// prima del comando, e tutto quello che il comando cambia arriva dopo, come
+/// cambiamento. Non serve aspettare la risposta per mandare il comando — e
+/// aspettarla costava un secondo intero a ogni tocco da fuori casa.
+///
+/// Si aspetta solo in due casi: quando lo stato serve a **scegliere** il
+/// servizio (una serratura: apri o chiudi?), e quando il filo e' quello
+/// dell'app e c'era gia' — col telefono in tasca resta «aperto» in apparenza
+/// e morto in realta' (vedi `Filo.sveglia`), e il si' a questa domanda e' la
+/// prova che e' vivo. La domanda si puo' rifare; il comando no.
 class _Sguardo {
-  final _stati = <String, String>{};
+  _Sguardo._();
+
+  /// Comincia a guardare [entita] sul filo di [collegamento]. Torna subito:
+  /// chi vuole sapere se il filo ha risposto chiede [vivo].
+  factory _Sguardo.su(Collegamento collegamento, List<String> entita) {
+    final sguardo = _Sguardo._();
+    final filo = collegamento.filo;
+    if (filo == null || !filo.dentro) {
+      sguardo._cenno.complete(false);
+      return sguardo;
+    }
+    /* Si ascolta nello stesso giro in cui l'abbonamento torna, come fa il
+     * navigatore: lo stato di adesso arriva subito dopo il si', e chi si
+     * mette in ascolto un attimo dopo lo perde. */
+    filo
+        .sottoscrivi({'type': 'subscribe_entities', 'entity_ids': entita})
+        .then<void>(
+          (flusso) {
+            final ascolto = flusso.listen(
+              sguardo._prendi,
+              onError: (Object _) {},
+              /* Il filo si e' chiuso: non arrivera' piu' niente, e chi
+               * aspetta smette di aspettare. */
+              onDone: () {
+                if (!sguardo._cambi.isClosed) sguardo._cambi.close();
+              },
+            );
+            if (sguardo._chiuso) {
+              unawaited(ascolto.cancel().catchError((Object _) {}));
+              return;
+            }
+            sguardo._ascolto = ascolto;
+            if (!sguardo._cenno.isCompleted) sguardo._cenno.complete(true);
+          },
+          onError: (Object errore) {
+            /* Un ponte di prima dice di no, ma lo dice: il filo e' vivo, e
+             * lo stato da qui non si sapra'. Tutto il resto e' un filo che
+             * non c'e'. */
+            sguardo.cieco = errore is ComandoRifiutato;
+            if (!sguardo._cenno.isCompleted) {
+              sguardo._cenno.complete(sguardo.cieco);
+            }
+          },
+        );
+    return sguardo;
+  }
+
+  final _prima = <String, String>{};
+  final _adesso = <String, String>{};
+  final _cambiate = <String>{};
+  final _cenno = Completer<bool>();
+  final _primo = Completer<void>();
   final _cambi = StreamController<void>.broadcast();
   StreamSubscription<Map<String, dynamic>>? _ascolto;
+  bool _chiuso = false;
 
-  /* Un ponte di prima, che `subscribe_entities` non lo lascia passare: se lo
-   * stato serve davvero, tutta la casa. */
-  StatoDellaCasa? _tutta;
+  /// Il ponte non conosce la domanda: il filo e' vivo, ma lo stato non c'e'.
+  bool cieco = false;
+
+  /// Se il filo ha dato un cenno entro [entro]: ha risposto alla domanda, o
+  /// ha detto di non conoscerla.
+  Future<bool> vivo({Duration entro = quantoSiAspettaUnCenno}) =>
+      _cenno.future.timeout(entro, onTimeout: () => false);
+
+  /// Aspetta lo stato di adesso — quello di prima del comando — al piu'
+  /// [entro]. Torna comunque: chi chiama guarda poi cosa si sa.
+  Future<void> loStatoDiAdesso({
+    Duration entro = quantoSiAspettaLoStatoDiAdesso,
+  }) async {
+    if (!await vivo() || cieco) return;
+    await _primo.future.timeout(entro, onTimeout: () {});
+  }
+
+  /// Com'era [id] prima del comando, o `null` se non si sa.
+  String? prima(String id) => _prima[id];
 
   /// Com'e' adesso [id], o `null` se non si sa.
-  String? adesso(String id) => _tutta != null ? _tutta![id]?.stato : _stati[id];
+  String? adesso(String id) => _adesso[id];
 
-  /// Lo stato di [id] appena diverso da [prima]; `null` se non cambia entro
-  /// [fino], o se non c'e' modo di saperlo.
-  Future<String?> dopo(
-    String id,
-    String? prima, {
-    Duration fino = quantoSiAspettaLoStato,
-  }) async {
-    /* Senza sapere com'era non si riconosce il cambiamento; e quello che
-     * Home Assistant non raggiunge non cambiera'. */
-    if (prima == null || prima == 'unavailable') return null;
-    if (_tutta case final casa?) return statoNuovo(casa, id, prima, fino: fino);
-    if (_ascolto == null) return null;
-    String? diverso() {
-      final adesso = _stati[id];
-      return adesso != null && adesso != prima ? adesso : null;
-    }
+  /// Le entita' che hanno cambiato stato da quando si guarda.
+  Set<String> get cambiate => _cambiate;
 
-    if (diverso() case final gia?) return gia;
+  /// Se di [id] non c'e' piu' niente da aspettare: e' cambiata, oppure lo
+  /// stato di adesso e' arrivato e dice che Home Assistant non la raggiunge,
+  /// o che non la conosce proprio.
+  bool ferma(String id) =>
+      _cambiate.contains(id) ||
+      (_primo.isCompleted && (_prima[id] ?? 'unavailable') == 'unavailable');
+
+  /// Aspetta finche' [basta] non e' vero, al piu' [fino].
+  Future<void> finche(bool Function() basta, {required Duration fino}) async {
+    if (basta() || _cambi.isClosed) return;
     try {
-      await _cambi.stream.firstWhere((_) => diverso() != null).timeout(fino);
+      await _cambi.stream.firstWhere((_) => basta()).timeout(fino);
     } catch (_) {
-      return null;
+      /* Il tempo e' finito, o il filo si e' chiuso: vale quello che si sa. */
     }
-    return diverso();
   }
 
   /* Un messaggio dell'abbonamento: `a` le entita' con lo stato intero, `c`
@@ -229,81 +310,108 @@ class _Sguardo {
     if (evento['a'] case final Map aggiunte) {
       for (final MapEntry(:key, :value) in aggiunte.entries) {
         if (value is Map && value['s'] is String) {
-          _stati['$key'] = value['s'] as String;
+          final stato = value['s'] as String;
+          _prima.putIfAbsent('$key', () => stato);
+          _adesso['$key'] = stato;
         }
       }
+      if (!_primo.isCompleted) _primo.complete();
     }
     if (evento['c'] case final Map cambiate) {
       for (final MapEntry(:key, :value) in cambiate.entries) {
         final piu = value is Map ? value['+'] : null;
         if (piu is Map && piu['s'] is String) {
-          _stati['$key'] = piu['s'] as String;
+          final stato = piu['s'] as String;
+          if (_adesso['$key'] != stato) _cambiate.add('$key');
+          _adesso['$key'] = stato;
         }
       }
     }
     if (evento['r'] case final List tolte) {
       for (final id in tolte) {
-        _stati.remove('$id');
+        _adesso.remove('$id');
       }
     }
     if (!_cambi.isClosed) _cambi.add(null);
   }
 
   Future<void> chiudi() async {
+    _chiuso = true;
     await _ascolto?.cancel().catchError((Object _) {});
     _ascolto = null;
     if (!_cambi.isClosed) await _cambi.close();
   }
 }
 
-/// Guarda [entita] sul filo di [collegamento]. `null` se il filo non ha dato
-/// nessun cenno: e' morto, e chi chiama decide se rifarlo.
-Future<_Sguardo?> _guarda(
-  Collegamento collegamento,
-  List<String> entita, {
-  required bool serveLoStato,
+/* I seguiti ancora in corso: vedi [_ilSeguito]. */
+final Set<Future<void>> _seguiti = {};
+
+/// Finisce quando sono finiti tutti i seguiti dei comandi gia' partiti: lo
+/// stato nuovo arrivato, la fotografia corretta, i fili aperti apposta
+/// richiusi. Per le prove, e per chi vuole spegnere tutto con ordine.
+Future<void> ilSeguitoDeiComandi() async {
+  while (_seguiti.isNotEmpty) {
+    await Future.wait(_seguiti.toList());
+  }
+}
+
+/// Quello che resta da fare dopo che Home Assistant ha accettato il comando,
+/// e che chi ha toccato l'orologio non deve aspettare: lo stato nuovo, e la
+/// fotografia corretta con quello.
+///
+/// «Premo e dopo un po' da' il tap di feedback»: la risposta al polso partiva
+/// solo dopo aver aspettato lo stato nuovo. Adesso parte appena il comando e'
+/// accettato, e questo va avanti da solo: quando lo stato arriva la
+/// fotografia si corregge, e chi la porta al polso viene avvisato
+/// (`aggiornaIDispositiviNellaFoto`).
+///
+/// Si scrive com'e' **adesso** per Home Assistant, non «il contrario di
+/// prima»: se lo stato nuovo non arriva in tempo la riga resta quella vera,
+/// e se la riga era gia' sbagliata prima del comando torna giusta lo stesso.
+Future<void> _ilSeguito({
+  required _Sguardo sguardo,
+  required List<String> comandate,
+  required bool diUnaScena,
+  required StatoDellaCasa? tutta,
+  required String? prima,
+  required AggiornaLaFoto aggiornaLaFoto,
+  required Future<void> Function() allaFine,
 }) async {
-  final filo = collegamento.filo;
-  if (filo == null || !filo.dentro) return null;
-  final sguardo = _Sguardo();
-  final primo = Completer<void>();
-  /* Si ascolta nello stesso giro in cui l'abbonamento torna, come fa il
-   * navigatore: lo stato di adesso arriva subito dopo il si', e chi si mette
-   * in ascolto un attimo dopo lo perde. */
-  final abbonamento = filo
-      .sottoscrivi({'type': 'subscribe_entities', 'entity_ids': entita})
-      .then<void>((flusso) {
-        sguardo._ascolto = flusso.listen((evento) {
-          sguardo._prendi(evento);
-          if (!primo.isCompleted) primo.complete();
-        }, onError: (Object _) {});
-      });
   try {
-    await abbonamento.timeout(quantoSiAspettaUnCenno);
-    /* Se lo stato di adesso non arriva il filo e' vivo lo stesso — ha appena
-     * risposto — e si va avanti senza. */
-    await primo.future.timeout(const Duration(seconds: 1), onTimeout: () {});
-    return sguardo;
-  } on ComandoRifiutato {
-    /* Un ponte di prima: dice di no, ma lo dice — il filo e' vivo. */
-    if (serveLoStato) {
-      await collegamento.serveLaCasa();
-      final casa = collegamento.stato;
-      if (casa != null && casa.pieno) sguardo._tutta = casa;
+    if (tutta != null && comandate.length == 1) {
+      /* Un ponte di prima, e tutta la casa gia' letta per scegliere il
+       * servizio: lo stato nuovo arriva da li'. */
+      final id = comandate.single;
+      final dopo = await statoNuovo(tutta, id, prima);
+      if (dopo != null) await aggiornaLaFoto({id: eAccesoPerLaFoto(dopo)});
+      return;
     }
-    return sguardo;
-  } on TimeoutException {
-    /* Se il si' arriva dopo, l'abbonamento non resta li' per nessuno. */
-    unawaited(
-      abbonamento.then<void>(
-        (_) => sguardo.chiudi(),
-        onError: (Object _) => sguardo.chiudi(),
-      ),
+    /* Senza un cenno, o con un ponte che la domanda non la conosce, lo stato
+     * da qui non arrivera': la fotografia resta com'era. */
+    if (!await sguardo.vivo() || sguardo.cieco) return;
+    if (diUnaScena) {
+      /* Una scena non dice cosa cambia: si guarda per un po', e si scrive
+       * quello che si e' mosso. */
+      await sguardo.finche(() => false, fino: quantoSiGuardaUnaScena);
+      await aggiornaLaFoto({
+        for (final id in sguardo.cambiate)
+          if (sguardo.adesso(id) case final stato?) id: eAccesoPerLaFoto(stato),
+      });
+      return;
+    }
+    await sguardo.finche(
+      () => comandate.every(sguardo.ferma),
+      fino: quantoSiAspettaLoStato,
     );
-    return null;
+    await aggiornaLaFoto({
+      for (final id in comandate)
+        if (sguardo.adesso(id) case final stato?) id: eAccesoPerLaFoto(stato),
+    });
   } catch (_) {
+    /* La fotografia resta com'era: la sistemera' la plancia. */
+  } finally {
     await sguardo.chiudi();
-    return null;
+    await allaFine();
   }
 }
 
@@ -342,7 +450,7 @@ Future<ComeEFinitaInAuto> eseguiIlComandoDellAuto({
       apriLaCasa,
       premium,
       laCasaDellApp,
-      aggiornaLaFoto ?? auto.aggiornaIlDispositivoNellaFoto,
+      aggiornaLaFoto ?? auto.aggiornaIDispositiviNellaFoto,
     );
   } finally {
     _inCorso = false;
@@ -401,68 +509,129 @@ Future<ComeEFinitaInAuto> _esegui(
   final condiviso = laCasaDellApp != null;
   Collegamento? collegamento;
   _Sguardo? sguardo;
+  void Function()? lascia;
+  /* Da quando il comando e' accettato, il filo e lo sguardo sono del seguito:
+   * li chiude lui quando ha finito. */
+  var alSeguito = false;
+  /* Chiude quello che si e' aperto per questo comando. Il motore senza
+   * schermo puo' morire subito dopo, ma chiudere il filo e' comunque la cosa
+   * giusta: la casa vede una presa che si chiude invece di una che smette di
+   * rispondere. Quello dell'app invece resta: e' suo. */
+  Future<void> chiudiTutto() async {
+    final aperto = collegamento;
+    if (aperto != null && !condiviso) {
+      await aperto.chiudi().catchError((Object _) {});
+    }
+    lascia?.call();
+  }
+
   try {
-    collegamento =
+    final aperto = collegamento =
         laCasaDellApp?.call() ??
         apriLaCasa?.call() ??
         Collegamento(archivio: ArchivioDelleCase(const CassaforteDelSistema()));
-    if (!collegamento.archivio.aperto) await collegamento.archivio.apri();
-    if (condiviso && collegamento.aRiposo) collegamento.sveglia();
+    /* Finche' il comando e' in viaggio il filo non si rifa' da solo per
+     * prendere la strada corta: vedi [Collegamento.tieniIlFilo]. */
+    lascia = aperto.tieniIlFilo();
+    if (!aperto.archivio.aperto) await aperto.archivio.apri();
+    /* Il filo dell'app che c'era gia' va provato prima di affidargli il
+     * comando; uno appena aperto, qui sotto, e' vivo per forza. */
+    final cEraGia = condiviso && aperto.dentro && !aperto.aRiposo;
+    if (condiviso && aperto.aRiposo) aperto.sveglia();
     /* Su un filo gia' aperto `apri` non fa niente; su uno che dorme o che si
      * sta ricollegando lo rimette in piedi. */
-    await collegamento.apri().timeout(quantoSiAspettaIlFilo);
-    if (!collegamento.dentro || collegamento.stato == null) {
+    await aperto.apri().timeout(quantoSiAspettaIlFilo);
+    if (!aperto.dentro || aperto.stato == null) {
       return ComeEFinitaInAuto.senzaCasa;
     }
-    /* Lo stato di adesso delle entita' del comando, che e' anche la prova
-     * che il filo e' vivo: vedi [_Sguardo]. Mai un elenco vuoto: per Home
-     * Assistant vorrebbe dire «tutte». */
-    final entita = ricetta.leEntita.isEmpty
+    /* Le entita' del comando. Mai un elenco vuoto: per Home Assistant
+     * vorrebbe dire «tutte». */
+    final comandate = ricetta.leEntita.isEmpty
         ? [ricetta.entita]
         : ricetta.leEntita;
+    /* Una scena e uno script cambiano altre cose, non se stessi: si guardano
+     * i dispositivi che al polso hanno una riga. */
+    final suo = ricetta.dominio.trim().toLowerCase();
+    final diUnaScena = suo == 'scene' || suo == 'script';
+    final guardate = <String>{
+      ...comandate,
+      if (diUnaScena) ...await auto.iDispositiviDellaFoto(),
+    }.toList();
     final serveLoStato = ricetta.servizio == secondoLoStato;
-    sguardo = await _guarda(collegamento, entita, serveLoStato: serveLoStato);
-    if (sguardo == null && condiviso) {
+
+    var occhi = sguardo = _Sguardo.su(aperto, guardate);
+    if (cEraGia && !await occhi.vivo()) {
       /* Il filo dell'app non ha dato un cenno: col telefono in tasca resta
        * «aperto» e non lo e' piu', e `apri` qui sopra gli ha creduto. Si
        * rifa' da capo, come fa l'app quando torna davanti (`main.dart`,
        * `daRifare`), e si riguarda. Il comando non e' ancora partito: non
        * c'e' niente che possa partire due volte. */
-      await collegamento.apri(forza: true).timeout(quantoSiAspettaIlFilo);
-      if (!collegamento.dentro || collegamento.stato == null) {
+      await occhi.chiudi();
+      await aperto.apri(forza: true).timeout(quantoSiAspettaIlFilo);
+      if (!aperto.dentro || aperto.stato == null) {
         return ComeEFinitaInAuto.senzaCasa;
       }
-      sguardo = await _guarda(collegamento, entita, serveLoStato: serveLoStato);
+      occhi = sguardo = _Sguardo.su(aperto, guardate);
     }
-    final stato = collegamento.stato;
+    final unaSola = comandate.length == 1 ? comandate.single : null;
+    StatoDellaCasa? tutta;
+    String? prima;
+    if (serveLoStato) {
+      /* Il servizio che dipende da com'e' messa adesso (una serratura, un
+       * lettore) si decide con lo stato di adesso in mano: questo si',
+       * si aspetta. */
+      await occhi.loStatoDiAdesso();
+      if (occhi.cieco) {
+        /* Un ponte di prima: tutta la casa, che e' l'unico modo. */
+        await aperto.serveLaCasa();
+        final casa = aperto.stato;
+        if (casa != null && casa.pieno) tutta = casa;
+      }
+      if (unaSola != null) {
+        prima = tutta != null ? tutta[unaSola]?.stato : occhi.adesso(unaSola);
+      }
+    }
+    final stato = aperto.stato;
     if (stato == null) return ComeEFinitaInAuto.senzaCasa;
-    /* Senza sguardo (il filo appena rifatto non ha risposto alla domanda in
-     * tempo, o non la capisce) il comando parte lo stesso, come ha sempre
-     * fatto: la domanda serve a comandare meglio, non a decidere se
-     * comandare. Se il filo non c'e' davvero lo dira' il comando. */
-    final unaSola = entita.length == 1 ? entita.single : null;
-    final prima = unaSola == null ? null : sguardo?.adesso(unaSola);
-    /* Il servizio che dipende da com'e' messa adesso (una serratura, un
-     * lettore) si decide qui, con lo stato di adesso in mano. */
-    final servizio = serveLoStato
-        ? ilServizioDiAdesso(ricetta.dominio, prima)
-        : ricetta.servizio;
     await stato.comanda(
-      servizio,
+      serveLoStato
+          ? ilServizioDiAdesso(ricetta.dominio, prima)
+          : ricetta.servizio,
       ricetta.entita,
       dominio: ricetta.dominioDaChiamare,
       con: ricetta.dati.isEmpty ? null : {...ricetta.dati},
     );
-    /* «Vengono comandati ma non cambiano stato»: al polso la riga restava com'era,
-     * perche' la fotografia la riscrive solo la plancia aperta. Lo stato nuovo
-     * lo dice Home Assistant, e qui si aspetta — poco — e si corregge. Un
-     * gruppo di luci ne porta tante: lo sistemera' la plancia. */
-    if (unaSola != null) {
-      final dopo = await sguardo?.dopo(unaSola, prima);
-      if (dopo != null) {
-        await aggiornaLaFoto(unaSola, acceso: eAccesoPerLaFoto(dopo));
+    /* Accettato: da qui la risposta e' «fatto», e non aspetta piu' niente.
+     *
+     * Quello che si sa gia' si scrive subito — lo stato nuovo di una luce
+     * arriva quasi sempre **prima** del si' al comando, e la risposta al
+     * polso parte con la riga gia' giusta nella fotografia. Il resto lo fa
+     * il seguito. */
+    if (!diUnaScena && tutta == null && comandate.every(occhi.ferma)) {
+      try {
+        await aggiornaLaFoto({
+          for (final id in comandate)
+            if (occhi.adesso(id) case final adesso?)
+              id: eAccesoPerLaFoto(adesso),
+        });
+      } catch (_) {
+        /* Il comando e' andato: una fotografia che non si scrive non lo
+         * fa diventare un «la casa non risponde». */
       }
+      return ComeEFinitaInAuto.fatto;
     }
+    alSeguito = true;
+    late final Future<void> seguito;
+    seguito = _ilSeguito(
+      sguardo: occhi,
+      comandate: comandate,
+      diUnaScena: diUnaScena,
+      tutta: tutta,
+      prima: prima,
+      aggiornaLaFoto: aggiornaLaFoto,
+      allaFine: chiudiTutto,
+    ).whenComplete(() => _seguiti.remove(seguito));
+    _seguiti.add(seguito);
     return ComeEFinitaInAuto.fatto;
   } on TimeoutException {
     return ComeEFinitaInAuto.senzaCasa;
@@ -472,12 +641,9 @@ Future<ComeEFinitaInAuto> _esegui(
      * e' gia' stato tolto, quindi non si ripete da solo. */
     return ComeEFinitaInAuto.senzaCasa;
   } finally {
-    await sguardo?.chiudi();
-    /* Il motore muore subito dopo, ma chiudere il filo e' comunque la cosa
-     * giusta: la casa vede una presa che si chiude invece di una che smette
-     * di rispondere. Quello dell'app invece resta: e' suo. */
-    if (collegamento != null && !condiviso) {
-      await collegamento.chiudi().catchError((Object _) {});
+    if (!alSeguito) {
+      await sguardo?.chiudi();
+      await chiudiTutto();
     }
   }
 }

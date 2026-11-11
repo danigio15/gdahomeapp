@@ -10,6 +10,39 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.24
+
+_App GdAHome._
+
+**Nell'app, il navigatore:**
+
+- **Le strade nuove ci sono**: svincoli e rotonde che la mappa segna ancora
+  «in costruzione» non venivano disegnati, e la linea del percorso e quella
+  del traffico correvano nel vuoto, lontano da ogni strada. Adesso si
+  disegnano come le altre, con i loro ponti.
+- **Ai caselli una pensilina**: i caselli dell'autostrada e della
+  tangenziale comparivano come palazzi con le finestre, di traverso sulle
+  corsie, e il percorso ci passava dentro. Adesso sono tettoie su pilastri.
+- **In auto, a schermo diviso, la navigazione resta in mezzo**: con la mappa
+  in mezzo schermo l'auto poteva finire tutta da una parte.
+- **In auto i tasti dello zoom rispondono subito**. E in autostrada, passato
+  uno svincolo, la mappa non si allontana più di colpo: lo fa piano.
+- **La scena 3D nella diagnosi**: nella scheda «Android Auto» si legge
+  com'era la scena dell'auto nell'ultimo viaggio (lo schermo, le aree
+  libere, lo zoom scelto), per capire subito cosa non torna.
+
+**Dall'orologio:**
+
+- **La conferma arriva subito**: si premeva, e il colpetto di conferma
+  arrivava dopo qualche secondo. Adesso arriva appena la casa accetta il
+  comando.
+- **La riga dice com'è adesso**: la luce si accendeva, ma sull'orologio
+  restava «spenta». Adesso la riga cambia al tocco, e poi vale quello che
+  dice la casa; se il comando non parte torna com'era, con l'avviso.
+
+Per l'orologio serve l'app aggiornata anche al polso: su Apple Watch e su
+Wear OS si aggiorna insieme a quella del telefono, a volte qualche ora dopo.
+
 ## 1.18.23
 
 _App GdAHome._

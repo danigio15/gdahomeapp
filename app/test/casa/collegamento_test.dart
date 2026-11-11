@@ -14,6 +14,7 @@ import 'package:gdahome/ponte/indirizzo.dart';
 import 'package:gdahome/ponte/presa.dart';
 import 'package:gdahome/ponte/sonda.dart';
 
+import '../licenza/gettoni_di_prova.dart';
 import '../ponte/ponte_finto.dart';
 
 void main() {
@@ -289,6 +290,81 @@ void main() {
       reason: 'l\'indirizzo nuovo se lo tiene',
     );
     expect(collegamento.dentro, isTrue);
+    await inCasa.spegni();
+    await laStradaLunga.spegni();
+  });
+
+  test('la strada corta aspetta chi tiene il filo: un comando in viaggio non '
+      'si trova il filo rifatto sotto', () async {
+    /* «Dall'orologio funziona, ma non aggiorna lo stato», e a volte «La casa
+     * non risponde» con la luce accesa lo stesso. Il telefono si sveglia in
+     * tasca, entra dalla strada lunga, e un attimo dopo il collegamento
+     * impara la strada di casa e rifa' il filo — proprio mentre il comando
+     * dal polso ci sta passando sopra. Chi ha un comando in viaggio tiene il
+     * filo (`tieniIlFilo`), e la strada corta si prende quando lo lascia.
+     *
+     * Due ponti, la stessa casa da due strade, come nella prova qui sopra. E
+     * la casa e' Premium, che da fuori ci si entra per davvero: una Base da
+     * fuori si riapre per un'altra ragione, la sua licenza. */
+    final inCasa = await PonteFinto.alza();
+    final laStradaLunga = await PonteFinto.alza();
+    laStradaLunga.indirizziDiCasa = [inCasa.indirizzo];
+    final gettone = await firmaUnGettone(origine: 'regalo', perSempre: true);
+    for (final uno in [inCasa, laStradaLunga]) {
+      uno.licenza = {
+        'gettoni': {'gdahome': gettone},
+      };
+    }
+    final casa = await archivio.aggiungi(
+      nome: 'Casa',
+      segno: segnoBuono,
+      identificativo: chiBuono,
+      chiave: chiaveBuona,
+      inCasa: IndirizzoDelPonte.leggi('192.168.99.99')!,
+      daFuoriCasa: laStradaLunga.indirizzo,
+    );
+    collegamento = Collegamento(
+      archivio: archivio,
+      licenza: GestoreLicenza(chiave: chiaveDiProva),
+      sonda: Sonda(
+        attesa: const Duration(milliseconds: 400),
+        vantaggio: const Duration(milliseconds: 40),
+        bussa: (dove) async {
+          if (dove == laStradaLunga.indirizzo.salute) {
+            await Future<void>.delayed(const Duration(milliseconds: 150));
+            return true;
+          }
+          return dove == inCasa.indirizzo.salute;
+        },
+      ),
+    );
+    final lascia = collegamento.tieniIlFilo();
+    await collegamento.apri();
+    expect(collegamento.daDove, DaDove.daFuori);
+    final ilFilo = collegamento.filo;
+
+    /* La strada di casa la impara lo stesso, e se la scrive: ma il filo
+     * resta quello. */
+    await _finoA(
+      () =>
+          archivio.quella(casa.id)!.inCasa?.toString() ==
+          inCasa.indirizzo.toString(),
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    expect(identical(collegamento.filo, ilFilo), isTrue);
+    expect(collegamento.dentro, isTrue);
+    expect(collegamento.daDove, DaDove.daFuori);
+    expect(inCasa.collegamenti, 0);
+
+    /* Lasciato, la prende. */
+    lascia();
+    await _finoA(
+      () =>
+          collegamento.daDove == DaDove.daDentro &&
+          collegamento.comeVa == ComeVa.aperta &&
+          collegamento.dentro,
+    );
+    expect(inCasa.collegamenti, 1);
     await inCasa.spegni();
     await laStradaLunga.spegni();
   });

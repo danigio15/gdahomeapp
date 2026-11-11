@@ -114,6 +114,12 @@ jobs:
           persist-credentials: false
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
+          # Fissata, qui e in tutti i flussi che installano Flutter: con il
+          # solo canale arriva la versione del giorno, e una uscita nuova
+          # (la 3.50.0) ha reso rossa l'analisi e avrebbe costruito il
+          # rilascio con un Flutter mai provato. Si alza apposta, tutti
+          # insieme, la stessa di GdANav.
+          flutter-version: 3.47.5
           channel: stable
           cache: true
       - name: Le dipendenze
@@ -192,6 +198,7 @@ jobs:
           xcodebuild -version
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
+          flutter-version: 3.47.5
           channel: stable
           cache: true
       - run: flutter pub get
@@ -239,6 +246,7 @@ jobs:
           df -h /
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
+          flutter-version: 3.47.5
           channel: stable
           cache: true
       - run: flutter pub get

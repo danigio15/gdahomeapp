@@ -1233,7 +1233,7 @@ class Collegamento {
         return;
       }
       await archivio.segnaLApprodo(casa.id, DaDove.daDentro);
-      await apri(forza: true);
+      await _prendiLaStradaCorta();
       return;
     }
 
@@ -1241,6 +1241,48 @@ class Collegamento {
     /* E si riparte da li'. La casa e' la stessa e il filo si riapre subito:
      * costa un lampo adesso, e toglie il giro dal mondo a tutto il resto
      * della giornata. */
+    await _prendiLaStradaCorta();
+  }
+
+  /* ─── Il filo tenuto fermo ───────────────────────────────────────────── */
+
+  /* Quanti stanno usando questo filo per una cosa che non si puo' rifare. */
+  int _tenuto = 0;
+
+  /* La strada corta e' stata trovata mentre il filo era tenuto: si prende
+   * appena lo lasciano. */
+  bool _stradaDaPrendere = false;
+
+  /// Tiene fermo il filo finche' non si chiama quello che torna.
+  ///
+  /// Prendere la strada corta vuol dire **rifare il filo**, e succede da
+  /// solo, un attimo dopo essere entrati dalla strada lunga
+  /// ([_imparaLaStradaDiCasa]): e' proprio il momento in cui un comando
+  /// dall'orologio sta passando — il telefono si e' appena svegliato in
+  /// tasca, il Wi-Fi ha risposto un soffio dopo il giro lungo. Il filo
+  /// rifatto sotto un comando in viaggio lo perdeva («La casa non risponde»,
+  /// e la luce accesa lo stesso), o perdeva lo stato nuovo che il comando
+  /// stava aspettando. Un comando non si rimanda: un cancello aperto due
+  /// volte e' un cancello richiuso. Chi ne ha uno in viaggio tiene il filo, e
+  /// la strada corta aspetta che lo lasci.
+  void Function() tieniIlFilo() {
+    _tenuto += 1;
+    var lasciato = false;
+    return () {
+      if (lasciato) return;
+      lasciato = true;
+      _tenuto -= 1;
+      if (_tenuto > 0 || !_stradaDaPrendere) return;
+      _stradaDaPrendere = false;
+      if (_filo != null && !_aRiposo) unawaited(apri(forza: true));
+    };
+  }
+
+  Future<void> _prendiLaStradaCorta() async {
+    if (_tenuto > 0) {
+      _stradaDaPrendere = true;
+      return;
+    }
     await apri(forza: true);
   }
 

@@ -400,7 +400,14 @@ String? laFotoColDispositivo(
   String foto,
   String entita, {
   required bool acceso,
-}) {
+}) => laFotoCoiDispositivi(foto, {entita: acceso});
+
+/// La fotografia [foto] con ognuno dei dispositivi di [accesi] acceso o
+/// spento come c'e' scritto li', o `null` se non c'e' niente da cambiare.
+///
+/// Tanti in una volta: un gruppo di luci, o una scena, ne cambia piu' d'uno,
+/// e una riscrittura sola vuol dire una fotografia sola portata al polso.
+String? laFotoCoiDispositivi(String foto, Map<String, bool> accesi) {
   final letto = _prova(foto);
   if (letto is! Map<String, Object?>) return null;
   final elenco = letto['dispositivi'];
@@ -408,7 +415,8 @@ String? laFotoColDispositivo(
   var cambiata = false;
   final nuovo = <Object?>[];
   for (final riga in elenco) {
-    if (riga is! Map || riga['id'] != entita || riga['acceso'] == acceso) {
+    final acceso = riga is Map ? accesi[riga['id']] : null;
+    if (riga is! Map || acceso == null || riga['acceso'] == acceso) {
       nuovo.add(riga);
       continue;
     }
@@ -428,4 +436,16 @@ String? laFotoColDispositivo(
   }
   if (!cambiata) return null;
   return jsonEncode({...letto, 'dispositivi': nuovo});
+}
+
+/// Le entita' dei dispositivi che stanno nella fotografia [foto]: quelle di
+/// cui al polso si vede una riga.
+List<String> iDispositiviNella(String foto) {
+  final letto = _prova(foto);
+  final elenco = letto is Map<String, Object?> ? letto['dispositivi'] : null;
+  return [
+    if (elenco is List)
+      for (final riga in elenco)
+        if (riga is Map && riga['id'] is String) riga['id'] as String,
+  ];
 }

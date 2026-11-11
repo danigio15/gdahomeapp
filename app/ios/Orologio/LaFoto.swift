@@ -21,7 +21,33 @@ struct Dispositivo: Identifiable, Hashable {
   let genere: String
   let stato: String
   let acceso: Bool
+
+  /// La stessa riga, accesa se era spenta e spenta se era accesa: e' quello
+  /// che si mostra appena la si tocca, prima che il telefono dica com'e'
+  /// andata (`IlTelefono.swift`, `gira`). La parola e' quella che la plancia
+  /// ha scritto, girata come la gira il telefono (`lib/auto/la_foto.dart`,
+  /// `_parolaOpposta`); una che non si conosce resta com'e'.
+  func girato() -> Dispositivo {
+    Dispositivo(id: id, nome: nome, genere: genere, stato: parolaOpposta[stato] ?? stato, acceso: !acceso)
+  }
 }
+
+private let parolaOpposta: [String: String] = [
+  "Accesa": "Spenta",
+  "Spenta": "Accesa",
+  "Acceso": "Spento",
+  "Spento": "Acceso",
+  "Accese": "Spente",
+  "Spente": "Accese",
+  "Accesi": "Spenti",
+  "Spenti": "Accesi",
+  "Aperta": "Chiusa",
+  "Chiusa": "Aperta",
+  "Aperto": "Chiuso",
+  "Chiuso": "Aperto",
+  "On": "Off",
+  "Off": "On",
+]
 
 struct Azione: Identifiable, Hashable {
   let id: String

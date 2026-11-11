@@ -28,6 +28,7 @@
 package com.gdahome.gdahome.auto
 
 import android.content.Context
+import com.gdahome.gdahome.orologio.IlTramiteDellOrologio
 import io.flutter.FlutterInjector
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
@@ -103,6 +104,15 @@ object IlPonteDellAuto {
                 if (call.method == FINITO) unaVolta(call.arguments as? String)
                 result.success(null)
             }
+            /* L'orologio. Dopo un comando il Dart corregge la fotografia — la
+             * luce che era spenta adesso e' accesa — e lo dice sul canale
+             * `gdahome/orologio` (`lib/auto/sul_telefono.dart`), perche' il
+             * telefono la porti al polso. Questo motore quel canale non
+             * l'aveva: ad app chiusa la fotografia si correggeva sul disco e
+             * al polso non arrivava mai — «accende le luci ma non cambia
+             * stato», dal Wear OS. Il motore dell'app ce l'ha da sempre
+             * (`MainActivity`, `IlNavigatoreInAuto`). */
+            IlTramiteDellOrologio.collega(nuovo.dartExecutor.binaryMessenger, context.applicationContext)
             /* I plugin vanno registrati a mano: un motore fatto cosi' non li
              * ha. Senza, la cassaforte e la cartella dei file non rispondono —
              * e senza cassaforte non c'e' nessuna casa da aprire. */

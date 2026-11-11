@@ -78,6 +78,12 @@ class PonteFinto {
   /// Quando e' `true`, non risponde ai comandi: e' Home Assistant che tace.
   bool muto = false;
 
+  /// Chi vuole fare qualcosa appena arriva un messaggio, **prima** che il
+  /// ponte risponda: Home Assistant lo stato nuovo di una luce lo dice prima
+  /// del si' al servizio che l'ha accesa, e chi lo finge deve poter fare lo
+  /// stesso.
+  void Function(Map<String, dynamic> detto)? quandoArriva;
+
   /// Le prese a cui non si risponde piu', una per una: il filo rimasto in
   /// mano a un telefono in tasca, «aperto» in apparenza e morto in realta'.
   /// Chi si ricollega trova una presa nuova, e quella risponde.
@@ -168,6 +174,7 @@ class PonteFinto {
 
     arrivati.add(detto);
     if (muto || sorde.contains(presa)) return;
+    quandoArriva?.call(detto);
 
     final id = detto['id'];
     /* Il colpetto, come lo fa Home Assistant: `ping` e si risponde `pong`.
@@ -1436,8 +1443,51 @@ class PonteFinto {
   /// sottoscrizione fa esattamente questo. Un ponte vero quella risposta la
   /// perde e non se ne accorge; qui senza guardia diventa un errore che fa
   /// fallire una prova che non c'entra niente.
-  void _manda(TelefonoCollegato presa, Map<String, dynamic> cosa) =>
-      presa.manda(jsonEncode(cosa));
+  /// Quando c'e', gli eventi di Home Assistant aspettano questa finestra
+  /// prima di partire, tutti insieme: e' il mucchio che il ponte vero fa
+  /// passando dal centralino (`ponte/src/ponte.js`, `_alTelefono`, un secondo).
+  /// Una risposta di Home Assistant fa partire subito quello che aspetta, e
+  /// poi lei; le risposte del ponte (`ponte/…`, `dashboardmodern/…`) vanno
+  /// per conto loro, come di la'.
+  Duration? finestraDegliEventi;
+  final Map<TelefonoCollegato, List<String>> _inAttesa = {};
+  final Map<TelefonoCollegato, Timer> _svuota = {};
+
+  void _manda(TelefonoCollegato presa, Map<String, dynamic> cosa) {
+    final finestra = finestraDegliEventi;
+    final testo = jsonEncode(cosa);
+    if (finestra == null) {
+      presa.manda(testo);
+      return;
+    }
+    if (cosa['type'] == 'event') {
+      (_inAttesa[presa] ??= []).add(testo);
+      _svuota[presa] ??= Timer(finestra, () => _svuotaIlMucchio(presa));
+      return;
+    }
+    if (!_ePerContoDelPonte(cosa['id'])) _svuotaIlMucchio(presa);
+    presa.manda(testo);
+  }
+
+  bool _ePerContoDelPonte(Object? id) {
+    for (final chiesto in arrivati.reversed) {
+      if (chiesto['id'] != id) continue;
+      final tipo = '${chiesto['type']}';
+      return tipo.startsWith('ponte/') || tipo.startsWith('dashboardmodern/');
+    }
+    return false;
+  }
+
+  void _svuotaIlMucchio(TelefonoCollegato presa) {
+    _svuota.remove(presa)?.cancel();
+    final insieme = _inAttesa.remove(presa);
+    if (insieme == null || insieme.isEmpty || !prese.contains(presa)) return;
+    presa.manda(
+      insieme.length == 1
+          ? insieme.single
+          : '$segnoDelMucchio${insieme.join('\n')}',
+    );
+  }
 
   /// Quello che il ponte finto risponde a `get_states`. Le prove lo cambiano.
   List<Map<String, dynamic>> entita = [];

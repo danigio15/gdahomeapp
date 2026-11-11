@@ -11,7 +11,33 @@ import org.json.JSONObject
 
 data class Comando(val id: String, val nome: String, val disegno: String, val conferma: Boolean)
 
-data class Dispositivo(val id: String, val nome: String, val genere: String, val stato: String, val acceso: Boolean)
+data class Dispositivo(val id: String, val nome: String, val genere: String, val stato: String, val acceso: Boolean) {
+    /**
+     * La stessa riga, accesa se era spenta e spenta se era accesa: e' quello
+     * che si mostra appena la si tocca, prima che il telefono dica com'e'
+     * andata (`IlTelefono.kt`, `gira`). La parola e' quella che la plancia ha
+     * scritto, girata come la gira il telefono (`lib/auto/la_foto.dart`,
+     * `_parolaOpposta`); una che non si conosce resta com'e'.
+     */
+    fun girato(): Dispositivo = copy(acceso = !acceso, stato = PAROLA_OPPOSTA[stato] ?: stato)
+}
+
+private val PAROLA_OPPOSTA = mapOf(
+    "Accesa" to "Spenta",
+    "Spenta" to "Accesa",
+    "Acceso" to "Spento",
+    "Spento" to "Acceso",
+    "Accese" to "Spente",
+    "Spente" to "Accese",
+    "Accesi" to "Spenti",
+    "Spenti" to "Accesi",
+    "Aperta" to "Chiusa",
+    "Chiusa" to "Aperta",
+    "Aperto" to "Chiuso",
+    "Chiuso" to "Aperto",
+    "On" to "Off",
+    "Off" to "On",
+)
 
 data class Azione(val id: String, val nome: String, val subito: Boolean)
 

@@ -36,8 +36,11 @@ import 'package:gdahome/auto/sul_telefono.dart';
 import 'package:gdahome/casa/archivio_delle_case.dart';
 import 'package:gdahome/casa/cassaforte.dart';
 import 'package:gdahome/casa/collegamento.dart';
+import 'package:gdahome/licenza/licenza.dart';
+import 'package:gdahome/ponte/indirizzo.dart';
 import 'package:gdahome/ponte/sonda.dart';
 
+import '../licenza/gettoni_di_prova.dart';
 import '../ponte/ponte_finto.dart';
 
 /// La casa finta che fa quello che fa Home Assistant quando gli arriva un
@@ -52,69 +55,77 @@ class CasaFinta {
 
   final PonteFinto ponte;
 
-  final _chiamati = <String>[];
-
   /// I servizi arrivati, come «light.toggle light.sala».
-  List<String> get chiamati {
-    _guarda();
-    return _chiamati;
+  final chiamati = <String>[];
+
+  /// Quanto ci mette un dispositivo a dire lo stato nuovo, dopo che Home
+  /// Assistant ha accettato il comando: una lampadina Zigbee, una presa nel
+  /// cloud. Zero vuol dire subito, **prima** del si' al servizio: e' quello
+  /// che fa Home Assistant con una luce che risponde.
+  Duration ritardoDelloStato = Duration.zero;
+
+  /// Cosa cambia una scena, quando la si accende.
+  final Map<String, Map<String, String>> scene = {};
+
+  var _accesa = false;
+
+  void accendi() {
+    _accesa = true;
+    ponte.quandoArriva = _arrivato;
   }
 
-  Timer? _giro;
-  var _visti = 0;
-
-  void accendi() =>
-      _giro = Timer.periodic(const Duration(milliseconds: 5), (_) => _guarda());
-
-  void spegni() => _giro?.cancel();
-
-  /// Dopo aver svuotato `ponte.arrivati`: si ricomincia a contare da li'.
-  void daCapo() {
-    _visti = 0;
-    _chiamati.clear();
+  void spegni() {
+    _accesa = false;
+    ponte.quandoArriva = null;
   }
 
   String? statoDi(String id) {
-    _guarda();
-    return _statoDi(id);
-  }
-
-  String? _statoDi(String id) {
     for (final una in ponte.entita) {
       if (una['entity_id'] == id) return una['state'] as String?;
     }
     return null;
   }
 
-  void _guarda() {
-    while (_visti < ponte.arrivati.length) {
-      final detto = ponte.arrivati[_visti++];
-      if (detto['type'] != 'call_service') continue;
-      final dominio = '${detto['domain']}';
-      final servizio = '${detto['service']}';
-      final bersaglio = detto['target'];
-      final su = bersaglio is Map ? '${bersaglio['entity_id']}' : '';
-      _chiamati.add('$dominio.$servizio $su');
-      for (final id in su.split(',').map((uno) => uno.trim())) {
-        final suo = id.split('.').first;
-        if (dominio != suo && dominio != 'homeassistant') continue;
-        final prima = _statoDi(id);
-        /* Quello che non c'e' o non si raggiunge non si gira. */
-        if (prima == null || prima == 'unavailable') continue;
-        final dopo = switch (servizio) {
-          'toggle' => prima == 'on' ? 'off' : 'on',
-          'turn_on' => 'on',
-          'turn_off' => 'off',
-          'unlock' => 'unlocked',
-          'lock' => 'locked',
-          _ => prima,
-        };
-        if (dopo != prima) _cambia(id, dopo);
+  void _arrivato(Map<String, dynamic> detto) {
+    if (detto['type'] != 'call_service') return;
+    final dominio = '${detto['domain']}';
+    final servizio = '${detto['service']}';
+    final bersaglio = detto['target'];
+    final su = bersaglio is Map ? '${bersaglio['entity_id']}' : '';
+    chiamati.add('$dominio.$servizio $su');
+    for (final id in su.split(',').map((uno) => uno.trim())) {
+      final suo = id.split('.').first;
+      if (dominio != suo && dominio != 'homeassistant') continue;
+      if (suo == 'scene' && servizio == 'turn_on') {
+        for (final MapEntry(:key, :value) in (scene[id] ?? {}).entries) {
+          _traPoco(key, value);
+        }
+        continue;
       }
+      final prima = statoDi(id);
+      /* Quello che non c'e' o non si raggiunge non si gira. */
+      if (prima == null || prima == 'unavailable') continue;
+      final dopo = switch (servizio) {
+        'toggle' => prima == 'on' ? 'off' : 'on',
+        'turn_on' => 'on',
+        'turn_off' => 'off',
+        'unlock' => 'unlocked',
+        'lock' => 'locked',
+        _ => prima,
+      };
+      if (dopo != prima) _traPoco(id, dopo);
     }
   }
 
+  void _traPoco(String id, String stato) {
+    if (ritardoDelloStato == Duration.zero) return _cambia(id, stato);
+    Timer(ritardoDelloStato, () {
+      if (_accesa) _cambia(id, stato);
+    });
+  }
+
   void _cambia(String id, String stato) {
+    if (statoDi(id) == stato) return;
     final nuova = PonteFinto.unaEntita(
       id,
       stato,
@@ -214,6 +225,8 @@ void main() {
   });
 
   tearDown(() async {
+    /* Prima i seguiti dei comandi: stanno ancora usando i fili e i file. */
+    await ilSeguitoDeiComandi();
     casa.spegni();
     for (final uno in aperti) {
       await uno.chiudi().catchError((Object _) {});
@@ -226,9 +239,10 @@ void main() {
   });
 
   /// Un filo nuovo verso la casa finta.
-  Collegamento unFilo() {
+  Collegamento unFilo([ArchivioDelleCase? conLArchivio]) {
     final nuovo = Collegamento(
-      archivio: archivio,
+      archivio: conLArchivio ?? archivio,
+      licenza: GestoreLicenza(chiave: chiaveDiProva),
       sonda: Sonda(
         attesa: const Duration(milliseconds: 200),
         vantaggio: const Duration(milliseconds: 40),
@@ -285,6 +299,14 @@ void main() {
   /// (`inAuto`, il motore senza schermo di Android).
   Future<ComeEFinitaInAuto> aSchermoSpento() =>
       eseguiIlComandoDellAuto(apriLaCasa: unFilo);
+
+  /// La riga di [id] nella fotografia che il telefono porta al polso.
+  Future<Map<String, dynamic>> laRiga(String id) async =>
+      ((jsonDecode(await file(nomeDelFile).readAsString())
+                  as Map<String, dynamic>)['dispositivi']
+              as List)
+          .cast<Map<String, dynamic>>()
+          .firstWhere((uno) => uno['id'] == id);
 
   group('con la fotografia appena arrivata dalla plancia', () {
     test('una luce dell\'elenco dispositivi si accende dal polso', () async {
@@ -547,8 +569,9 @@ void main() {
 
       /* E una luce parte senza chiedere tutta la casa, e senza aspettare
        * uno stato che nessuno puo' dirle. */
+      await ilSeguitoDeiComandi();
       ponte.arrivati.clear();
-      casa.daCapo();
+      casa.chiamati.clear();
       await lasciaLaFotoAllAuto(dallaPlancia, casa: 'Casa di prova');
       await tocca('light.sala');
       final cronometro = Stopwatch()..start();
@@ -688,6 +711,170 @@ void main() {
       expect(casa.statoDi('light.sala'), 'on');
       expect(ponte.collegamenti, prima, reason: 'nessun filo nuovo');
       expect(dellApp.dentro, isTrue);
+    });
+  });
+
+  group('lo stato arriva al polso', () {
+    test('da fuori casa, dove gli eventi arrivano a mucchi', () async {
+      /* Passando dal centralino il ponte tiene gli eventi un secondo e li
+       * manda insieme (`ponte/src/ponte.js`, `FINESTRA_DEL_MUCCHIO`): lo
+       * stato di adesso, che e' un evento, arriva un secondo dopo il si'. */
+      ponte.finestraDegliEventi = const Duration(seconds: 1);
+      await lasciaLaFotoAllAuto(dallaPlancia, casa: 'Casa di prova');
+      await tocca('light.sala');
+      final cronometro = Stopwatch()..start();
+      expect(await aSchermoSpento(), ComeEFinitaInAuto.fatto);
+      /* Il comando non aspetta quel secondo: prima lo aspettava a ogni
+       * tocco, e con un secondo di attesa contro un secondo di finestra lo
+       * stato arrivava a tempo scaduto una volta si' e una no. */
+      expect(cronometro.elapsed, lessThan(const Duration(milliseconds: 900)));
+      await ilSeguitoDeiComandi();
+      expect(casa.statoDi('light.sala'), 'on');
+      expect((await laRiga('light.sala'))['acceso'], isTrue);
+    });
+
+    test('in casa ma entrati dalla strada lunga: il filo si rifa\' da dentro '
+        'mentre il comando e\' in viaggio', () async {
+      /* Il telefono che si sveglia in tasca: il Wi-Fi risponde un soffio dopo
+       * il giro lungo, si entra da fuori, e appena dentro il collegamento
+       * impara la strada di casa e **rifa' il filo** (`_imparaLaStradaDiCasa`).
+       * Il comando dal polso arriva proprio in quel momento. */
+      final diFuori = ArchivioDelleCase(CassaforteInMemoria());
+      await diFuori.apri();
+      await diFuori.aggiungi(
+        nome: 'Casa di prova',
+        segno: segnoBuono,
+        identificativo: chiBuono,
+        chiave: chiaveBuona,
+        inCasa: IndirizzoDelPonte.leggi('192.168.99.99')!,
+        daFuoriCasa: ponte.indirizzo,
+      );
+      ponte.indirizziDiCasa = [ponte.indirizzo];
+      /* La casa e' Premium, e lo dice: da fuori ci si entra per davvero. */
+      ponte.licenza = {
+        'gettoni': {
+          'gdahome': await firmaUnGettone(origine: 'regalo', perSempre: true),
+        },
+      };
+      /* E la luce ci mette un attimo a dirsi accesa: lo stato nuovo arriva
+       * dopo la conferma, quando il filo si starebbe gia' rifacendo. */
+      casa.ritardoDelloStato = const Duration(milliseconds: 400);
+      await lasciaLaFotoAllAuto(dallaPlancia, casa: 'Casa di prova');
+      await tocca('light.sala');
+      expect(
+        await eseguiIlComandoDellAuto(apriLaCasa: () => unFilo(diFuori)),
+        ComeEFinitaInAuto.fatto,
+      );
+      await ilSeguitoDeiComandi();
+      expect(
+        casa.chiamati.where((uno) => uno.startsWith('light.toggle')),
+        hasLength(1),
+      );
+      expect(casa.statoDi('light.sala'), 'on');
+      expect((await laRiga('light.sala'))['acceso'], isTrue);
+    });
+
+    test('la conferma parte appena Home Assistant accetta, e lo stato arriva '
+        'dopo per conto suo', () async {
+      /* «Premo e dopo un po' da' il tap di feedback.» Una lampadina che ci
+       * mette un secondo e mezzo a dire di essersi accesa: la conferma al
+       * polso non la aspetta. */
+      casa.ritardoDelloStato = const Duration(milliseconds: 1500);
+      await lasciaLaFotoAllAuto(dallaPlancia, casa: 'Casa di prova');
+      await pumpEventQueue();
+      dettoAllOrologio = 0;
+      await tocca('light.sala');
+      final cronometro = Stopwatch()..start();
+      expect(await aSchermoSpento(), ComeEFinitaInAuto.fatto);
+      expect(cronometro.elapsed, lessThan(const Duration(seconds: 1)));
+      expect((await laRiga('light.sala'))['acceso'], isFalse);
+
+      await ilSeguitoDeiComandi();
+      expect((await laRiga('light.sala'))['acceso'], isTrue);
+      expect((await laRiga('light.sala'))['stato'], 'Accesa');
+      await pumpEventQueue();
+      expect(dettoAllOrologio, 1, reason: 'e il polso lo viene a sapere');
+    });
+
+    test('un gruppo di luci aggiorna le righe delle sue luci', () async {
+      await lasciaLaFotoAllAuto(dallaPlancia, casa: 'Casa di prova');
+      final azione = (await alPolso()).azioni['Zona giorno']!;
+      await tocca(azione.id);
+      expect(await aSchermoSpento(), ComeEFinitaInAuto.fatto);
+      await ilSeguitoDeiComandi();
+      expect((await laRiga('light.sala'))['acceso'], isTrue);
+      expect((await laRiga('light.cucina'))['acceso'], isFalse);
+      expect((await laRiga('light.cucina'))['stato'], 'Spenta');
+    });
+    test('una scena aggiorna le righe di quello che cambia', () async {
+      /* Una scena non ha una riga sua: spegne e accende altre cose. Dopo
+       * averla accesa si guardano i dispositivi che al polso hanno una riga,
+       * e si corregge quello che si e' mosso. */
+      ponte.entita = [
+        ...ponte.entita,
+        PonteFinto.unaEntita('scene.cinema', '2026-11-11T20:00:00+00:00'),
+      ];
+      casa.scene['scene.cinema'] = {
+        'light.cucina': 'off',
+        'switch.presa_tv': 'off',
+        'light.sala': 'on',
+      };
+      casa.ritardoDelloStato = const Duration(milliseconds: 200);
+      await lasciaLaFotoAllAuto(dallaPlancia, casa: 'Casa di prova');
+      const cinema = RicettaDellAzione(
+        id: '6|Cinema',
+        dominio: 'scene',
+        servizio: 'turn_on',
+        entita: 'scene.cinema',
+      );
+      expect(
+        await eseguiIlComandoDellAuto(
+          prendiIlComando: () async => cinema.id,
+          leRicette: () async => const [cinema],
+          apriLaCasa: unFilo,
+        ),
+        ComeEFinitaInAuto.fatto,
+      );
+      await ilSeguitoDeiComandi();
+      expect(casa.chiamati, ['scene.turn_on scene.cinema']);
+      expect((await laRiga('light.cucina'))['acceso'], isFalse);
+      expect((await laRiga('switch.presa_tv'))['acceso'], isFalse);
+      expect((await laRiga('light.sala'))['acceso'], isTrue);
+      /* Quello che la scena non ha toccato resta com'era. */
+      expect((await laRiga('switch.luce_esterna'))['acceso'], isFalse);
+    });
+
+    test('quello che Home Assistant non raggiunge non si aspetta, e la riga '
+        'resta vera', () async {
+      await lasciaLaFotoAllAuto(dallaPlancia, casa: 'Casa di prova');
+      await tocca('light.studio');
+      final cronometro = Stopwatch()..start();
+      expect(await aSchermoSpento(), ComeEFinitaInAuto.fatto);
+      await ilSeguitoDeiComandi();
+      expect(cronometro.elapsed, lessThan(const Duration(seconds: 2)));
+      expect((await laRiga('light.studio'))['acceso'], isFalse);
+    });
+
+    test('una riga che era gia\' sbagliata torna giusta', () async {
+      /* La fotografia dice «Sala spenta», ma intanto qualcuno l'ha accesa
+       * dal muro. Dal polso la si tocca: si spegne — e la riga, che diceva
+       * gia' «Spenta», resta giusta; «Cucina», toccata, si spegne e lo dice. */
+      await lasciaLaFotoAllAuto(dallaPlancia, casa: 'Casa di prova');
+      ponte.entita = [
+        for (final una in ponte.entita)
+          una['entity_id'] == 'light.sala'
+              ? PonteFinto.unaEntita('light.sala', 'on', nome: 'Sala')
+              : una,
+      ];
+      /* Lenta: lo stato nuovo arriva dopo che il tempo e' scaduto. Si scrive
+       * com'e' per Home Assistant in quel momento, non «il contrario di
+       * prima». */
+      casa.ritardoDelloStato = const Duration(milliseconds: 300);
+      await tocca('light.sala');
+      expect(await aSchermoSpento(), ComeEFinitaInAuto.fatto);
+      await ilSeguitoDeiComandi();
+      expect(casa.statoDi('light.sala'), 'off');
+      expect((await laRiga('light.sala'))['acceso'], isFalse);
     });
   });
 }

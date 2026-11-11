@@ -93,21 +93,21 @@ Future<bool> _lasciaLaFoto(
 Future<void> aggiornaIlDispositivoNellaFoto(
   String entita, {
   required bool acceso,
-}) => _unaAllaVolta(() => _aggiornaIlDispositivo(entita, acceso: acceso));
+}) => aggiornaIDispositiviNellaFoto({entita: acceso});
 
-Future<void> _aggiornaIlDispositivo(
-  String entita, {
-  required bool acceso,
-}) async {
+/// Lo stesso, per tanti dispositivi in una volta: una riscrittura sola, e
+/// l'orologio avvisato una volta. Non solleva mai.
+Future<void> aggiornaIDispositiviNellaFoto(Map<String, bool> accesi) =>
+    accesi.isEmpty
+    ? Future<void>.value()
+    : _unaAllaVolta(() => _aggiornaIDispositivi(accesi));
+
+Future<void> _aggiornaIDispositivi(Map<String, bool> accesi) async {
   try {
     final cartella = await getApplicationSupportDirectory();
     final foto = File('${cartella.path}/$nomeDelFile');
     if (!await foto.exists()) return;
-    final nuova = laFotoColDispositivo(
-      await foto.readAsString(),
-      entita,
-      acceso: acceso,
-    );
+    final nuova = laFotoCoiDispositivi(await foto.readAsString(), accesi);
     if (nuova == null) return;
     final mezzo = File('${cartella.path}/$nomeDelFile.mezzo');
     await mezzo.writeAsString(nuova, flush: true);
@@ -115,6 +115,19 @@ Future<void> _aggiornaIlDispositivo(
     _diciloAllOrologio();
   } catch (_) {
     /* Al giro dopo la plancia la riscrive comunque giusta. */
+  }
+}
+
+/// Le entita' dei dispositivi che stanno nella fotografia: quelle di cui al
+/// polso si vede una riga. Vuoto se la fotografia non c'e'.
+Future<List<String>> iDispositiviDellaFoto() async {
+  try {
+    final cartella = await getApplicationSupportDirectory();
+    final foto = File('${cartella.path}/$nomeDelFile');
+    if (!await foto.exists()) return const [];
+    return iDispositiviNella(await foto.readAsString());
+  } catch (_) {
+    return const [];
   }
 }
 
