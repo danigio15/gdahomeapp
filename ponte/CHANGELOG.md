@@ -10,6 +10,24 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.21
+
+_App GdAHome._
+
+**Nell'app, il navigatore:**
+
+- **La linea del percorso sulla strada**: in tante zone la linea correva
+  qualche metro accanto alla strada, o finiva sulla carreggiata opposta di
+  una strada a due carreggiate. Adesso si appoggia sulla strada della mappa,
+  dal lato in cui si va, anche agli svincoli.
+- **Sui viadotti la linea resta sopra**: non scende più sulla strada che
+  passa sotto il ponte.
+- **La strada già fatta arriva fino all'auto**: la striscia del percorso
+  passato non resta più indietro per poi ridisegnarsi a salti.
+- **Su Android Auto la mappa 3D più fluida con l'app aperta**: aprendo
+  GdAHome sul telefono mentre si guida, la mappa sull'auto andava a scatti.
+  Adesso la mappa dell'auto lavora per conto suo (da Android 11).
+
 ## 1.18.20
 
 _App GdAHome e Home Assistant._
