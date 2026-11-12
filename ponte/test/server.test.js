@@ -125,7 +125,12 @@ async function casaFinta() {
  * sente dire di no subito, e niente esce di qui. */
 const QUADRO_CHIUSO = "http://127.0.0.1:9";
 
-async function banco({ quadro = null, installatore = false, chiaveDelCruscotto = "" } = {}) {
+async function banco({
+  quadro = null,
+  installatore = false,
+  chiaveDelCruscotto = "",
+  chiaveDelleLicenze,
+} = {}) {
   const cartella = mkdtempSync(join(tmpdir(), "ponte-server-"));
   const ha = await casaFinta();
   const primaCasa = process.env.PONTE_CASA;
@@ -154,6 +159,7 @@ async function banco({ quadro = null, installatore = false, chiaveDelCruscotto =
     quadroOgni: 15,
     installatore,
     chiaveDelCruscotto,
+    chiaveDelleLicenze,
     /* Le prove bussano da qui, non dal proxy dell'ingress. */
     proxyDellIngress: ["127.0.0.1"],
   });
@@ -361,9 +367,11 @@ test("senza dire per chi, il codice non nasce: e non si intesta a chi preme", as
 });
 
 test("oltre il numero massimo la console non fabbrica piu' codici", async () => {
+  /* La casa del banco e' Base (il quadro non risponde): i telefoni sono due,
+   * anche se le opzioni ne dicono tre. */
   const b = await banco();
   try {
-    for (let i = 0; i < 3; i += 1) {
+    for (let i = 0; i < 2; i += 1) {
       const { codice } = await (
         await prendi(`${b.consolle}/api/codice`, { method: "POST", body: PER_CHI })
       ).json();
@@ -737,7 +745,7 @@ async function attendi(condizione, entro = 5000) {
 }
 
 test("dalla scheda dell'add-on una plancia nasce col suo modello e con chi la vede", async () => {
-  const b = await banco();
+  const b = await banco({ chiaveDelleLicenze: "" }); /* licenze spente: qui non si prova Base */
   try {
     /* «A muro» e un utente solo: un tablet in ingresso, entrato con l'utente
      * dell'ospite. La plancia nasce gia' a muro, senza aprirne il config. */
@@ -780,7 +788,7 @@ test("dalla scheda dell'add-on una plancia nasce col suo modello e con chi la ve
 });
 
 test("le plance si aggiungono, si rinominano e si tolgono dalla scheda dell'add-on", async () => {
-  const b = await banco();
+  const b = await banco({ chiaveDelleLicenze: "" }); /* licenze spente: qui non si prova Base */
   try {
     /* Una casa ne ha una, e si chiama come si e' sempre chiamata. */
     const prima = await (await prendi(`${b.consolle}/api/plance`)).json();

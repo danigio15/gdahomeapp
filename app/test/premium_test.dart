@@ -175,7 +175,7 @@ void main() {
     expect(find.text('Premium'), findsOneWidget);
     expect(find.text('GdAHome Premium'), findsOneWidget);
     expect(find.textContaining('14 giorni di prova gratuita'), findsOneWidget);
-    expect(find.text('Più plance e più case'), findsOneWidget);
+    expect(find.text('Più plance, case e telefoni'), findsOneWidget);
     expect(find.textContaining('Gratis per tutti'), findsOneWidget);
     expect(find.text('49,99 €/anno'), findsOneWidget);
     expect(find.text('4,99 €/mese'), findsOneWidget);

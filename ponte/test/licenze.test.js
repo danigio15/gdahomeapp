@@ -384,7 +384,9 @@ test("con la chiave la casa tiene la licenza e gira le ricevute, ma non limita n
   assert.equal(licenze.limitata, false, "con Base la casa non si limita");
   const base = licenze.stato();
   assert.equal(base.attive, true);
-  assert.equal(base.limitata, false);
+  /* Per la console si': con Base la plancia e' una e i telefoni due. */
+  assert.equal(base.limitata, true);
+  assert.equal(base.telefoni_con_base, 2);
   assert.equal(base.gdahome.attiva, false);
   assert.equal("soloSullIPhone" in base, false);
 
@@ -681,7 +683,7 @@ function commissioniCon({ limitata, cartella }) {
   return { commissioni: new Commissioni({ plance, plancia, licenze, registro: ZITTO }), plance };
 }
 
-test("con Base l'app vede solo la plancia principale; dentro Home Assistant tutte", async () => {
+test("con Base si vede solo la plancia principale: dall'app e dentro Home Assistant", async () => {
   const cartella = unPosto();
   try {
     /* Due plance fatte quando la casa era Premium: restano sul disco. */
@@ -714,15 +716,15 @@ test("con Base l'app vede solo la plancia principale; dentro Home Assistant tutt
     );
     assert.equal(aggiunta.error.code, "premium-richiesto");
 
-    /* Dentro Home Assistant le plance stanno fra le Dashboard: l'elenco e'
-     * quello intero. */
+    /* Anche dentro Home Assistant: con Base la plancia e' una. La seconda
+     * resta sul disco, e torna con Premium. */
     const inCasa = await commissioni.rispondi(
       { id: 5, type: "ponte/plance/elenco" },
       { chiChiede: CHI_DI_PROVA },
     );
     assert.deepEqual(
       inCasa.result.plance.map((una) => una.profilo),
-      ["primary", "mare"],
+      ["primary"],
     );
   } finally {
     rmSync(cartella, { recursive: true, force: true });
@@ -779,11 +781,11 @@ test("con Base vera il ponte da' all'app solo la principale, anche se l'app chie
     assert.equal((await chiedi(dallApp)).success, true);
 
     /* Il gettone e' scaduto: Base. L'app modificata la chiede per nome e il
-     * ponte dice di no; dentro Home Assistant resta tutto com'era. */
+     * ponte dice di no; e dentro Home Assistant lo stesso. */
     ora = ADESSO + 9 * GIORNO;
     assert.equal(licenze.soloLaPrincipaleNellApp, true);
     assert.equal((await chiedi(dallApp)).error?.code, "premium-richiesto");
-    assert.equal((await chiedi({ chiChiede: CHI_DI_PROVA })).success, true);
+    assert.equal((await chiedi({ chiChiede: CHI_DI_PROVA })).error?.code, "premium-richiesto");
     assert.equal(licenze.limitata, false, "il resto di Base non cambia");
   } finally {
     rmSync(cartella, { recursive: true, force: true });
@@ -793,6 +795,23 @@ test("con Base vera il ponte da' all'app solo la principale, anche se l'app chie
 test("a licenze spente l'app vede tutte le plance", () => {
   const { licenze } = leLicenze({ chiave: "" });
   assert.equal(licenze.soloLaPrincipaleNellApp, false);
+});
+
+test("i telefoni: due con Base, senza limite con Premium, quelli delle opzioni a licenze spente", async () => {
+  assert.equal(leLicenze({ chiave: "" }).licenze.telefoniMassimi(10), 10);
+  let ora = ADESSO;
+  const { licenze } = leLicenze({
+    adesso: () => ora,
+    risposte: {
+      "/v1/licenze/casa": conGettoni({ gdahome: unGettone({ sog: CASA }, { adesso: ADESSO }) }),
+    },
+  });
+  await licenze.rinnova();
+  assert.equal(licenze.telefoniMassimi(10), Infinity);
+  ora = ADESSO + 9 * GIORNO;
+  assert.equal(licenze.telefoniMassimi(10), 2);
+  /* Le opzioni possono solo stringere: con uno, uno. */
+  assert.equal(licenze.telefoniMassimi(1), 1);
 });
 
 test("ponte/licenza/* li chiede qualunque telefono abbinato, non solo chi amministra", async () => {

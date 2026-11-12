@@ -141,6 +141,18 @@ class _HomeState extends State<Home> {
   int _chieste = 0;
   String? _chiestoPer;
 
+  /* «Ma è sparito zigbee?» (Marco, da fuori, 12 novembre): la voce compare
+   * solo se il ponte dice che una rete c'e', e la domanda partiva una volta
+   * sola. Da fuori il giro passa dal centralino, e un «nessuna» detto una
+   * volta — il ponte che cercava Zigbee2MQTT, il filo appena salito — teneva
+   * la voce nascosta fino a quando si richiudeva l'app. Ora, finche' la rete
+   * non c'e', si richiede ancora: poche volte, a distanza. */
+  static const _fraUnaDomandaELAltra = Duration(seconds: 20);
+  DateTime? _chiestoIl;
+  Timer? _richiedi;
+
+  bool get _forseZigbee => widget.impostazioni.sulTelefono && !_zigbee;
+
   /* Quanti aggiornamenti aspettano in casa.
    *
    * E' il numero che compare sulla voce del menu, e ci compare perche' senza
@@ -257,6 +269,7 @@ class _HomeState extends State<Home> {
     Postino.istanza?.inSospeso.removeListener(_ascoltaLeNotifiche);
     _tocchi?.cancel();
     _giroDegliAggiornamenti?.cancel();
+    _richiedi?.cancel();
     inMacchina.removeListener(_inMacchinaECambiato);
     _menuDiGdanav.dispose();
     _pianificatoreDiGdanav.dispose();
@@ -313,10 +326,14 @@ class _HomeState extends State<Home> {
     if (_chiestoPer != quale) {
       _chiestoPer = quale;
       _chieste = 0;
-    } else if (!_mancaUnCodice || _chieste >= _quanteVolteSiRichiede) {
+    } else if (!(_mancaUnCodice || _forseZigbee) ||
+        _chieste >= _quanteVolteSiRichiede ||
+        DateTime.now().difference(_chiestoIl ?? DateTime(2000)) <
+            _fraUnaDomandaELAltra) {
       return;
     }
     _chieste += 1;
+    _chiestoIl = DateTime.now();
     final risponde = await LaConsole(filo).cE();
     /* Cruscotto e Gestione sono la stessa domanda fatta a chi la sa, e il
      * ponte le risponde in un giro solo. */
@@ -347,6 +364,14 @@ class _HomeState extends State<Home> {
         _chiave = quadro.chiave;
         _chiaveGestione = quadro.chiaveGestione;
         _amministra = quadro.amministra;
+      });
+    }
+    /* Senza rete ne' altre occasioni (il filo che risale, una casa nuova) la
+     * domanda non ripartirebbe da sola: la si rimette in fila. */
+    _richiedi?.cancel();
+    if ((_mancaUnCodice || _forseZigbee) && _chieste < _quanteVolteSiRichiede) {
+      _richiedi = Timer(_fraUnaDomandaELAltra, () {
+        if (mounted) _seRisponde();
       });
     }
   }

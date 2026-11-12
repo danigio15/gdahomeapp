@@ -1105,7 +1105,7 @@ async function api({
        * il tasto «Aggiungi» invece di farlo premere per un no. */
       json(risposta, {
         plance: conIlModello(plance.elenco(), configurazione),
-        limitata: licenze?.limitata === true,
+        limitata: licenze?.limitata === true || licenze?.soloLaPrincipaleNellApp === true,
       });
       return;
     }
@@ -1296,7 +1296,12 @@ async function api({
        * l'ha installato dal negozio non la diceva nessuno. */
       versione: opzioni.versione || "",
       porta: opzioni.portaDellApp,
-      massimi: opzioni.dispositiviMassimi,
+      /* Quanti telefoni della casa si abbinano: con Premium senza limite, e
+       * allora `null` (in JSON `Infinity` non si scrive). */
+      massimi: (() => {
+        const quanti = dispositivi.massimi ?? opzioni.dispositiviMassimi;
+        return Number.isFinite(quanti) ? quanti : null;
+      })(),
       /* Se questo add-on si porta dietro gdahome da aprire in un browser.
        * La console lo chiede per sapere se mostrare il link o tacere: un link
        * che porta a un 404 e' peggio di nessun link. */
@@ -1364,8 +1369,9 @@ async function api({
   }
 
   if (via === "/api/codice" && metodo === "POST") {
-    if (dispositivi.quantiDiCasa() >= opzioni.dispositiviMassimi) {
-      male(risposta, 409, `sono gia' abbinati ${opzioni.dispositiviMassimi} dispositivi`);
+    const massimi = dispositivi.massimi ?? opzioni.dispositiviMassimi;
+    if (dispositivi.quantiDiCasa() >= massimi) {
+      male(risposta, 409, `sono gia' abbinati ${massimi} dispositivi`);
       return;
     }
     /* **Per chi** e' questo codice — e va detto, sempre.

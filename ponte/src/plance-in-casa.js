@@ -64,6 +64,7 @@ import {
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { PROFILO_PRINCIPALE } from "./configurazione.js";
 import { NON_SONO_PLANCE } from "./voci-nella-barra.js";
 
 /* Dove finisce quello che scriviamo, dentro la `www` di Home Assistant. Una
@@ -222,6 +223,9 @@ export class PlanceInCasa {
     this.segno = String(segno || "");
     this.prendi = prendi;
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
+    /* Se fra le Plance va solo la principale (gdahome Base): lo dice
+     * `index.js`, dalle licenze. */
+    this.soloLaPrincipale = () => false;
     this._io = null;
     /* Se la cartella `www` di Home Assistant l'abbiamo fatta noi.
      *
@@ -501,7 +505,19 @@ export class PlanceInCasa {
     const servita = await this.laServe();
     const manca = servita === false ? "riavvio" : "";
 
-    const quali = this.plance.elenco();
+    /* Con gdahome Base fra le Plance c'e' solo la principale: le altre si
+     * tolgono dalla barra (qui sotto, con `pulisci`) ma non dal ponte, e
+     * tornano quando la casa e' Premium. */
+    const tutte = this.plance.elenco();
+    let soloLaPrincipale = false;
+    try {
+      soloLaPrincipale = this.soloLaPrincipale?.() === true;
+    } catch (_errore) {
+      soloLaPrincipale = false;
+    }
+    const quali = soloLaPrincipale
+      ? tutte.filter((una) => una.profilo === PROFILO_PRINCIPALE)
+      : tutte;
     let fatte = 0;
     for (const una of quali) {
       try {

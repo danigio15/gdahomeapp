@@ -169,12 +169,21 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   const licenze = new Licenze({
     casa: identita.casa,
     cartella: opzioni.cartella,
+    /* Solo le prove la cambiano: vuota spegne le licenze. Le opzioni
+     * dell'add-on non ce l'hanno, e vale quella del codice. */
+    ...(typeof opzioni.chiaveDelleLicenze === "string"
+      ? { chiave: opzioni.chiaveDelleLicenze }
+      : {}),
     registro,
   });
-  /* Le plance chiedono qui se limitarsi, e la risposta e' no: i lucchetti di
-   * Base li mettono l'app e il browser (`licenze.js`, «La casa non limita
-   * niente»). Il cancello resta, spento. */
-  plance.limitata = () => licenze.limitata;
+  /* Le plance chiedono qui se limitarsi: con Base la plancia e' una, quella
+   * principale che l'add-on mette in Home Assistant, e altre non se ne
+   * aggiungono — ne' dalla console, ne' dall'app, ne' da chi segue la casa.
+   * Con le licenze spente e' sempre no. */
+  plance.limitata = () => licenze.limitata || licenze.soloLaPrincipaleNellApp;
+  /* E i telefoni: con Base due, con Premium senza limite, con le licenze
+   * spente quelli delle opzioni (`Licenze.telefoniMassimi`). */
+  dispositivi.massimi = () => licenze.telefoniMassimi(opzioni.dispositiviMassimi);
   /* Le segnalazioni e la chat dell'app: dal ponte al centralino, e da li' a
    * chi mantiene il progetto. */
   const segnalazioni = new Segnalazioni({
@@ -308,6 +317,17 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     registro,
   });
   plance.quandoCambia = () => planceInCasa.sistema();
+  /* Con Base fra le Plance di Home Assistant c'e' solo la principale; le
+   * altre restano nel ponte, e tornano nella barra il giorno che la casa e'
+   * Premium. Si rifa' quando la licenza cambia da una all'altra. */
+  planceInCasa.soloLaPrincipale = () => licenze.soloLaPrincipaleNellApp;
+  let soloLaPrincipalePrima = licenze.soloLaPrincipaleNellApp;
+  licenze.on("cambio", () => {
+    const adesso = licenze.soloLaPrincipaleNellApp;
+    if (adesso === soloLaPrincipalePrima) return;
+    soloLaPrincipalePrima = adesso;
+    planceInCasa.sistema();
+  });
 
   /* La chiamata verso il centralino: e' cosi' che si entra da fuori casa,
    * senza che chi ha installato l'add-on apra o configuri niente. */

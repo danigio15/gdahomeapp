@@ -39,9 +39,12 @@
  * il centralino (`docs/ACCENDERE-GLI-ACQUISTI.md`). E' la scelta del 29
  * settembre: «base funziona e anche addon funziona». `limitata` resta falso.
  *
- * Una regola sola la fa valere anche la casa, perche' l'app da sola non basta
- * (un'app modificata la saltava): con Base all'app si serve la plancia
- * principale e basta (`soloLaPrincipaleNellApp`).
+ * Due regole le fa valere anche la casa, perche' l'app da sola non basta
+ * (un'app modificata la saltava): con Base la plancia e' una, la principale
+ * che l'add-on mette in Home Assistant — all'app, nel browser e fra le Plance
+ * di Home Assistant (`soloLaPrincipaleNellApp`) — e di telefoni se ne
+ * abbinano due (`telefoniMassimi`). Le plance in piu' restano sul disco, e i
+ * telefoni gia' abbinati restano: tornano e si aggiungono con Premium.
  */
 
 import { EventEmitter } from "node:events";
@@ -51,6 +54,9 @@ import { Archivio } from "./archivio.js";
 import { CHIAVE_PUBBLICA_LICENZE } from "./chiave-licenze.js";
 import { leggiGettone, valeAdesso, verificaGettone } from "./gettone.js";
 import { perchePreciso, QUADRO_DI_DIFETTO } from "./rapporto.js";
+
+/* I telefoni della casa che si abbinano con gdahome Base. */
+export const TELEFONI_CON_BASE = 2;
 
 /* Ogni quanto si rinnova. Il gettone vale otto giorni: sei ore lasciano
  * trentuno tentativi prima che scada, che bastano a qualunque guasto
@@ -231,8 +237,9 @@ export class Licenze extends EventEmitter {
     return false;
   }
 
-  /* L'unica regola di Base che la casa fa valere da se': all'app si serve la
-   * plancia principale e basta.
+  /* Una delle due regole di Base che la casa fa valere da se': la plancia e'
+   * la principale e basta, nell'app e anche in Home Assistant (il nome e'
+   * rimasto quello di quando valeva solo per l'app).
    *
    * Il resto resta com'era deciso («base funziona e anche addon funziona»:
    * dentro Home Assistant le plance sono tutte, il fuori casa lo decide il
@@ -242,6 +249,21 @@ export class Licenze extends EventEmitter {
    * licenze spente e' sempre falso. */
   get soloLaPrincipaleNellApp() {
     return this.attive && !this.premium;
+  }
+
+  /* Quanti telefoni della casa possono restare abbinati insieme.
+   *
+   * Con Base due, con Premium quanti se ne vuole: e' la seconda regola di
+   * Base che la casa fa valere da se', per la stessa ragione della plancia
+   * (l'abbinamento lo fa la casa, non l'app). `diSerie` e' quello scritto
+   * nelle opzioni dell'add-on: con le licenze spente vale lui, come sempre.
+   * Con Base vale il piu' piccolo dei due. Chi era gia' abbinato resta: non
+   * si stacca nessuno, solo non se ne aggiungono altri finche' non si scende
+   * sotto. Senza limite e' `Infinity`. */
+  telefoniMassimi(diSerie) {
+    if (!this.attive) return diSerie;
+    if (this.premium) return Infinity;
+    return Math.min(TELEFONI_CON_BASE, diSerie);
   }
 
   /* Il gettone da dare al centralino: quello di gdahome, cosi' com'e'. Lo
@@ -286,9 +308,11 @@ export class Licenze extends EventEmitter {
     }
     return {
       attive: this.attive,
-      /* Se la casa si limita: mai (vedi `limitata`). La console lo legge per
-       * non spegnere tasti che la casa non spegne. */
-      limitata: this.limitata,
+      /* Se la casa sta nei limiti di Base: una plancia, due telefoni. La
+       * console lo legge per spegnere il tasto «Aggiungi» delle plance. */
+      limitata: this.limitata || this.soloLaPrincipaleNellApp,
+      /* Quanti telefoni si abbinano con Base. */
+      telefoni_con_base: TELEFONI_CON_BASE,
       casa: this.casa,
       gdahome: una("gdahome"),
       gdanav: una("gdanav"),

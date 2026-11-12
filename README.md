@@ -120,8 +120,9 @@ Ognuna con le sue sezioni e le sue stanze, a un tocco l'una dall'altra.
 **🏘️ Più case.** Con Premium fino a **10 case** nella stessa app — casa, casa
 al mare, l'ufficio — e si passa dall'una all'altra senza riabbinare.
 
-**🔌 I dispositivi.** Tutte le entità di Home Assistant divise per tipo, con i
-loro comandi.
+**🔌 I dispositivi** _(Premium)_. Tutte le entità di Home Assistant divise per
+tipo, con i loro comandi; e dall'app anche le integrazioni, gli aiutanti e le
+automazioni, col pianificatore a orari e fasce.
 
 **📡 Zigbee dall'app** _(Premium)_. Si abbina un dispositivo Zigbee dal
 telefono, e l'app chiede **«Dove lo metto?»**: finisce direttamente nella
@@ -211,20 +212,26 @@ Assistant non esce mai dall'add-on.
 
 ## Quanto costa
 
-|                                         | **Base**<br>gratis, per sempre |   **Premium**<br>4,99 € al mese · 49,99 € all'anno   |
-| --------------------------------------- | :----------------------------: | :--------------------------------------------------: |
-| L'add-on e la plancia in Home Assistant |               ✅               |                          ✅                          |
-| Plance                                  |       una, la principale       |                fino a **30** per casa                |
-| Case nell'app                           |              una               |                    fino a **10**                     |
-| Dove funziona                           |       sulla rete di casa       | **anche da fuori casa**, cifrato, senza aprire porte |
-| Configurare la plancia dal telefono     |               —                |                          ✅                          |
-| Aggiungere dispositivi Zigbee dall'app  |               —                |               ✅ con «Dove lo metto?»                |
-| La plancia a muro (tablet, NSPanel)     |               —                |                          ✅                          |
-| Al polso (Apple Watch, Wear OS)         |               —                |                          ✅                          |
-| In auto (Android Auto, CarPlay)         |               —                |                          ✅                          |
-| GdANav, il navigatore                   |       la versione gratis       |             **GdANav Premium compreso**              |
-| Segnalazioni e chat di assistenza       |               ✅               |                          ✅                          |
-| Account da fare                         |            nessuno             |                       nessuno                        |
+|                                                                     | **Base**<br>gratis, per sempre |   **Premium**<br>4,99 € al mese · 49,99 € all'anno   |
+| ------------------------------------------------------------------- | :----------------------------: | :--------------------------------------------------: |
+| L'add-on e la plancia in Home Assistant                             |               ✅               |                          ✅                          |
+| Plance (anche in Home Assistant)                                    |       una, la principale       |                fino a **30** per casa                |
+| Telefoni abbinati alla casa                                         |            fino a 2            |                   **senza limite**                   |
+| Case nell'app                                                       |              una               |                    fino a **10**                     |
+| Dove funziona                                                       |       sulla rete di casa       | **anche da fuori casa**, cifrato, senza aprire porte |
+| L'app dal browser                                                   |               —                |                          ✅                          |
+| Configurare la plancia dal telefono                                 |               —                |                          ✅                          |
+| Dispositivi, integrazioni, aiutanti e automazioni dall'app          |               —                |                          ✅                          |
+| Aggiungere dispositivi Zigbee dall'app                              |               —                |               ✅ con «Dove lo metto?»                |
+| Notifiche elaborate, riepilogo della sera, mini video del movimento |               —                |                          ✅                          |
+| La plancia a muro (tablet, NSPanel)                                 |               —                |                          ✅                          |
+| La Casa 3D, dalla tua planimetria                                   |               —                |                          ✅                          |
+| La Salute dall'orologio, per tutta la famiglia                      |               —                |                          ✅                          |
+| Al polso (Apple Watch, Wear OS)                                     |               —                |                          ✅                          |
+| In auto (Android Auto, CarPlay)                                     |               —                |                          ✅                          |
+| GdANav, il navigatore                                               |       la versione gratis       |             **GdANav Premium compreso**              |
+| Segnalazioni e chat di assistenza                                   |               ✅               |                          ✅                          |
+| Account da fare                                                     |            nessuno             |                       nessuno                        |
 
 > **I primi 14 giorni di Premium sono gratis**, la prima volta: si prova
 > tutto, e se non serve si disdice dal Play Store o dall'App Store prima che
@@ -241,7 +248,8 @@ Assistant non esce mai dall'add-on.
 
 Si attiva **una volta per la casa**, e tutti i telefoni abbinati a quella casa
 sono Premium insieme a lei — anche l'app dal browser. Chi abita con te non
-paga un'altra volta.
+paga un'altra volta. Con Base i telefoni abbinati sono al massimo due; con
+Premium quanti ne vuoi.
 
 ### Come si ha
 
@@ -283,7 +291,9 @@ scheda dell'add-on, e il codice regalo si può scrivere lì.
 ### Quando finisce
 
 Non si perde niente. La casa torna Base: la plancia principale resta, e le
-plance in più restano salvate dove sono — si rivedono appena Premium torna.
+plance in più restano salvate dove sono — si rivedono appena Premium torna,
+anche fra le Plance di Home Assistant. I telefoni già abbinati restano; per
+abbinarne uno nuovo, con Base, devono essere meno di due.
 
 ### GdANav da solo
 
@@ -398,7 +408,7 @@ prende quella configurazione e la usa.
 
 **Siamo in quattro in casa: paghiamo quattro volte?**
 No. Premium è della casa: tutti i telefoni abbinati, e l'app dal browser, sono
-Premium insieme.
+Premium insieme. E con Premium i telefoni non hanno limite: con Base sono due.
 
 **Il mio installatore mi ha dato un codice. Dove lo metto?**
 Nell'app, **Premium → Ho un codice regalo**, oppure nella scheda dell'add-on in
@@ -438,4 +448,3 @@ breve: si legge e si controlla cosa fa, si installa e si usa a casa propria o
 nella propria attività; non si ripubblica, non si rivende e non si aggira
 Premium. Chi installa per i clienti lo fa con l'autorizzazione di CRV
 Immobiliare S.r.l.
-

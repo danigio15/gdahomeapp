@@ -10,6 +10,26 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.26
+
+_App GdAHome._
+
+**Nell'app, il navigatore:**
+
+- **Gli eventi sulla strada**: sulla mappa compaiono incidenti, strade
+  chiuse, lavori e pericoli (veicoli fermi, ghiaccio, nebbia, corsie
+  chiuse…), ognuno col suo simbolo. Le strade chiuse e i tratti coi lavori
+  si vedono anche sulla strada, tratteggiati: rossi e bianchi le chiusure,
+  arancio e bianchi i lavori. Anche in 3D e in auto.
+
+**Nell'app:**
+
+- **Zigbee nel menu non sparisce più**: se all'apertura la casa rispondeva
+  ancora senza Zigbee, la voce restava nascosta finché non si chiudeva e
+  riapriva l'app. Adesso l'app richiede da sola, e la voce torna.
+
+Per tutte e due va aggiornata l'app.
+
 ## 1.18.25
 
 _App GdAHome e Home Assistant._

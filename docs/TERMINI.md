@@ -55,11 +55,17 @@ acquisti: chi paga lo verifica il negozio.
 
 GdAHome Base è gratis, per sempre. **Premium** aggiunge, oggi:
 
-- fino a 30 plance per casa e fino a 10 case nell'app;
+- fino a 30 plance per casa (con Base una, la principale, anche in Home
+  Assistant) e fino a 10 case nell'app;
+- i telefoni abbinati alla casa senza limite (con Base al massimo due), e
+  l'app dal browser;
 - la casa da fuori casa, cifrata da un capo all'altro, senza aprire porte sul
   router;
 - la configurazione della plancia dal telefono;
-- le automazioni;
+- i dispositivi, le integrazioni, gli aiutanti e le automazioni dall'app;
+- le notifiche elaborate, il riepilogo della sera e il mini video del
+  movimento;
+- la plancia a muro e la Casa 3D;
 - i dispositivi Zigbee, abbinati dall'app;
 - la salute dall'orologio, con le misure che vanno alla casa;
 - la casa al polso (Apple Watch e Wear OS) e in auto (Android Auto e CarPlay);

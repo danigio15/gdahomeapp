@@ -151,7 +151,8 @@ async function catena({ chiaveDelCentralino = PUBBLICA_DI_PROVA } = {}) {
   const plance = new Plance({
     cartella: cartellaDellePlance,
     registro: ZITTO,
-    limitata: () => licenze.limitata,
+    /* Come in `index.js`: con Base la plancia e' una. */
+    limitata: () => licenze.limitata || licenze.soloLaPrincipaleNellApp,
   });
 
   const portiere = new Portiere({
@@ -511,7 +512,7 @@ async function laConsole(c) {
   return { chiedi, chiudi: () => new Promise((ok) => console_.close(ok)) };
 }
 
-test("la console: lo stato della licenza e il codice regalo; le plance non si limitano", async () => {
+test("la console: lo stato della licenza e il codice regalo; con Base la plancia e' una", async () => {
   const c = await catena();
   const console_ = await laConsole(c);
   try {
@@ -521,15 +522,15 @@ test("la console: lo stato della licenza e il codice regalo; le plance non si li
     assert.equal(prima.detto.gdahome.attiva, false);
     assert.equal("gettoni" in prima.detto, false, "i gettoni alla pagina non servono");
 
-    /* Base, e in Home Assistant le plance si aggiungono lo stesso: la casa
-     * non limita niente. La plancia sola di Base e' dell'app e del browser. */
+    /* Base: la plancia e' una, la principale, anche in Home Assistant. La
+     * console spegne «Aggiungi», e il ponte dice di no lo stesso. */
     const plance = await console_.chiedi("/api/plance");
-    assert.equal(plance.detto.limitata, false);
+    assert.equal(plance.detto.limitata, true);
     const aggiunta = await console_.chiedi("/api/plance", {
       method: "POST",
       body: JSON.stringify({ titolo: "Mare" }),
     });
-    assert.equal(aggiunta.stato, 201);
+    assert.notEqual(aggiunta.stato, 201);
 
     /* Un codice storto non va nemmeno al quadro. */
     const storto = await console_.chiedi("/api/licenza/riscatta", {

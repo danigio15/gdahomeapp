@@ -146,6 +146,8 @@ export class Dispositivi {
     giorniDiSilenzio = 90,
     adesso = () => Date.now(),
   } = {}) {
+    /* Un numero, o una funzione che lo dice adesso: con le licenze il
+     * massimo cambia mentre il ponte gira (`Licenze.telefoniMassimi`). */
     this.massimi = massimi;
     this.giorniDiSilenzio = giorniDiSilenzio;
     this.adesso = adesso;
@@ -288,8 +290,17 @@ export class Dispositivi {
     return this._vivi.length;
   }
 
+  get massimi() {
+    const detto = typeof this._massimi === "function" ? this._massimi() : this._massimi;
+    return typeof detto === "number" && !Number.isNaN(detto) ? detto : 10;
+  }
+
+  set massimi(quanti) {
+    this._massimi = quanti;
+  }
+
   /* Quelli della casa, senza i telefoni di prova: sono loro a stare nei
-   * dieci (`dispositivi_massimi`). Chi rivede l'app per i negozi non toglie
+   * massimi (`dispositivi_massimi`, e con le licenze `telefoniMassimi`). Chi rivede l'app per i negozi non toglie
    * il posto a chi in casa ci abita. */
   quantiDiCasa() {
     return this._vivi.filter((uno) => !Number.isFinite(uno.finoA)).length;
@@ -305,8 +316,9 @@ export class Dispositivi {
    * Il segno esce da qui una volta sola, adesso. Chi lo perde riabbina: non
    * c'e' nessuna strada per rileggerlo, ed e' voluto. */
   abbina({ nome, sistema, utente = "", finoA = null, ...detto } = {}) {
-    if (!Number.isFinite(finoA) && this.quantiDiCasa() >= this.massimi) {
-      throw new TroppiDispositivi(`sono gia' abbinati ${this.massimi} dispositivi`);
+    const massimi = this.massimi;
+    if (!Number.isFinite(finoA) && this.quantiDiCasa() >= massimi) {
+      throw new TroppiDispositivi(`sono gia' abbinati ${massimi} dispositivi`);
     }
     const segno = segnoNuovo();
     const chiave = chiaveDelFiloNuova();

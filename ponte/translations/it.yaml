@@ -126,6 +126,7 @@ configuration:
         description: >-
           Quanti telefoni possono restare abbinati nello stesso momento. Il
           telefono di casa, quello di chi ci abita con te, quello dei nonni.
+          Con GdAHome Base al massimo due; con Premium senza limite.
   chi_installa:
     name: Chi installa
     description: >-
