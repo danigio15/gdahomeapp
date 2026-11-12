@@ -44,8 +44,7 @@ Tre cose vanno dette con precisione:
   memoria e a GdAHome fa vedere solo la somma di tutte le case, per sapere chi
   deve aggiornare l'app.
 
-Il centralino di GdAHome è `tramite.gdahome.org`. Chi vuole, se ne accende uno
-suo — è nel codice, ed è gratis.
+Il centralino di GdAHome è `tramite.gdahome.org`, e lo gestisce solo GdAHome.
 
 ## Le segnalazioni e la chat di assistenza
 
