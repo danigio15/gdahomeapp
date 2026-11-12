@@ -118,9 +118,11 @@ Solo se la accendi tu, dal menu dell'app › **Salute**. Spenta, GdAHome non
 legge niente e non chiede niente.
 
 Accesa, l'app **legge** da Apple Salute (iPhone) o da Health Connect
-(Android) le sole misure che scegli — passi, battito, battito a riposo, peso,
-massa grassa, pressione, ossigeno, sonno, calorie attive — e solo le ultime.
-Non scrive mai nulla in Salute o in Health Connect.
+(Android) le sole misure che scegli — passi, distanza, piani saliti, battito,
+battito a riposo, peso, massa grassa, pressione, ossigeno, sonno, calorie attive
+e totali — e solo quelle recenti. Se lasci acceso «Manda anche ad app chiusa»,
+le legge anche con l'app chiusa, per mandarle alla casa. Non scrive mai nulla in
+Salute o in Health Connect.
 
 Le misure vanno **soltanto alla tua casa**: al ponte GdAHome nel tuo Home
 Assistant, cifrate. Da fuori casa passano dal centralino, che porta byte

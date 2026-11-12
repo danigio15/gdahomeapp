@@ -36,12 +36,19 @@ servono per la prossima.
 
 1. **Dichiarazione dei permessi salute** (Play Console › Policy › App
    content › Health apps / Health Connect): dichiarare la lettura di
-   STEPS, HEART_RATE, RESTING_HEART_RATE, WEIGHT, BODY_FAT,
-   BLOOD_PRESSURE, OXYGEN_SATURATION, SLEEP, ACTIVE_CALORIES_BURNED, con lo
-   scopo «mostrare all'utente le sue misure nella sua casa domotica». Solo
-   lettura, nessuna scrittura.
-2. **Data safety**: «Health info» e «Fitness info» raccolti, cifrati in
+   STEPS, DISTANCE, FLOORS_CLIMBED, HEART_RATE, RESTING_HEART_RATE, WEIGHT,
+   BODY_FAT, BLOOD_PRESSURE, OXYGEN_SATURATION, SLEEP,
+   ACTIVE_CALORIES_BURNED, TOTAL_CALORIES_BURNED e
+   HEALTH_DATA_IN_BACKGROUND (l'interruttore «Manda anche ad app chiusa»).
+   Solo lettura, nessuna scrittura.
+2. **La scheda dello Store deve dire di Health Connect.** Il 12 novembre
+   2026 Google ha rifiutato l'app: «Non descrive chiaramente la
+   funzionalità di Connessione Salute nella descrizione dell'app su Google
+   Play». La descrizione completa deve avere un paragrafo che dica cosa
+   legge da Health Connect, perché, dove va e che cosa vede l'utente; la
+   dichiarazione deve dire lo stesso, con le stesse parole.
+3. **Data safety**: «Health info» e «Fitness info» raccolti, cifrati in
    transito, **non** condivisi con terzi, eliminabili dall'utente
    (spegnendo «Salute»).
-3. **Android 8 come minimo** (API 26): lo chiede Health Connect. I
+4. **Android 8 come minimo** (API 26): lo chiede Health Connect. I
    telefoni con Android 7 non ricevono più aggiornamenti.
