@@ -1946,3 +1946,50 @@ a.scarico:hover {
     display: none;
   }
 }
+
+/* ── Le novità: Casa 3D, Salute, pannello a muro ────────────────────────── */
+
+.novita-casa {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: clamp(24px, 3.4vw, 48px);
+  align-items: start;
+}
+
+.novita-salute,
+.novita-muro {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: clamp(24px, 3.4vw, 48px);
+  align-items: center;
+  margin-top: clamp(72px, 9vw, 128px);
+}
+
+.novita-muro {
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+}
+
+.novita-detto .sottotitolo {
+  margin-top: 0;
+}
+
+.novita-detto p {
+  margin: 0 0 18px;
+  color: var(--inchiostro-lieve);
+}
+
+.due-telefoni {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(14px, 2vw, 28px);
+  max-width: 560px;
+  justify-self: center;
+}
+
+@media (max-width: 900px) {
+  .novita-casa,
+  .novita-salute,
+  .novita-muro {
+    grid-template-columns: 1fr;
+  }
+}
