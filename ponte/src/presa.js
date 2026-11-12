@@ -306,6 +306,17 @@ export class Presa {
   /* Torna `false` quando la presa e' stata chiusa e non ha senso continuare. */
   _gestisci({ tipo, finito, carico }) {
     if (tipo === TIPO.chiusura) {
+      /* Il motivo che dice l'altra parte, prima di rispondere.
+       *
+       * «Si connette e si disconnette continuamente» (#407): il centralino
+       * chiude dicendo perche' — «questa casa si e' ricollegata» per una casa
+       * doppia — e qui lo si buttava, rispondendo con un motivo vuoto. Nel
+       * registro restava «filo chiuso», e chi doveva riconoscere la casa
+       * doppia da quella parola non la vedeva mai. */
+      if (carico && carico.length > 2) {
+        const detto = carico.subarray(2).toString("utf8");
+        if (detto) this.motivo = detto;
+      }
       this.chiudi(CHIUSURA.normale, "");
       return false;
     }
