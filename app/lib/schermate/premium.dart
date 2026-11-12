@@ -941,10 +941,13 @@ List<(IconData, String, String)> _funzioni(bool sulWeb) {
   return [
     (
       Icons.dashboard_customize_outlined,
-      inLingua(it: 'Più plance e più case', en: 'More dashboards and homes'),
       inLingua(
-        it: 'Fino a 30 plance per casa e 10 case nell\'app',
-        en: 'Up to 30 dashboards per home and 10 homes in the app',
+        it: 'Più plance, case e telefoni',
+        en: 'More dashboards, homes and phones',
+      ),
+      inLingua(
+        it: 'Fino a 30 plance e 10 case, telefoni senza limite (con Base 2)',
+        en: 'Up to 30 dashboards and 10 homes, phones with no limit (Base: 2)',
       ),
     ),
     (

@@ -180,7 +180,7 @@ casa ne riguarda **una**.
 | `quadro_configurazione` | lascia che chi ti ha fatto l'impianto configuri la plancia da lontano: la vede com'è fatta e la riscrive, senza telecamere. Spento di serie |
 | `minuti_del_codice`     | quanto vive il QR che abbina un telefono (5)                                                                                                |
 | `giorni_di_silenzio`    | dopo quanto un telefono sparito viene tolto da solo; zero vuol dire mai (90)                                                                |
-| `dispositivi_massimi`   | quanti telefoni possono restare abbinati insieme (10)                                                                                       |
+| `dispositivi_massimi`   | quanti telefoni possono restare abbinati insieme (10; con GdAHome Base al massimo 2, con Premium senza limite)                               |
 
 ### `chi_installa` — solo se GdAHome lo monti in casa d'altri
 

@@ -138,10 +138,9 @@
    * al tetto, invece di farlo premere per sentirsi dire di no. */
   var PLANCE_AL_MASSIMO = 30;
 
-  /* Se questa casa sta nei limiti di gdahome Base **dentro il ponte**. Lo
-   * dice `api/licenza` (`limitata`), e il ponte di oggi non lo dice mai: i
-   * lucchetti di Base li mettono l'app e il browser. Resta per un ponte che un
-   * giorno tornasse a limitare: allora il tasto «Aggiungi» si spegne. */
+  /* Se questa casa sta nei limiti di gdahome Base **dentro il ponte**: la
+   * plancia e' una. Lo dice `api/licenza` (`limitata`), e allora il tasto
+   * «Aggiungi» delle plance si spegne. */
   var soloBase = false;
 
   /* Se questa casa ha gdahome Premium, per le frasi che con Base direbbero il
@@ -1239,10 +1238,19 @@
         return comeSiChiama(uno);
       }),
     );
-    trova("telefoni-spiega").textContent = due(
-      "I telefoni e i tablet che entrano in questa casa. Puoi abbinarne fino a " + massimi + ".",
-      "The phones and tablets that get into this home. You can pair up to " + massimi + ".",
-    );
+    /* `massimi` vuoto: con Premium i telefoni non hanno limite. */
+    var senzaLimite = typeof massimi !== "number";
+    trova("telefoni-spiega").textContent = senzaLimite
+      ? due(
+          "I telefoni e i tablet che entrano in questa casa. Con Premium puoi abbinarne quanti vuoi.",
+          "The phones and tablets that get into this home. With Premium you can pair as many as you like.",
+        )
+      : due(
+          "I telefoni e i tablet che entrano in questa casa. Puoi abbinarne fino a " +
+            massimi +
+            ".",
+          "The phones and tablets that get into this home. You can pair up to " + massimi + ".",
+        );
     /* «3 di 10»: era «1 di 10 telefono», con la parola che si accordava col
      * numero sbagliato. Il numero da solo si legge meglio, e non sbaglia.
      * Nei dieci stanno i telefoni di casa: quelli di prova non li contano. */
@@ -1252,10 +1260,15 @@
     /* «2 di 10» e quattro righe sotto: le due di prova non contano, e lo si
      * dice, invece di lasciarlo indovinare. */
     var diProva = dispositivi.length - diCasa;
-    trova("conteggio").textContent = due(
-      diCasa + " di " + massimi + (diProva ? " · più " + diProva + " di prova" : ""),
-      diCasa + " of " + massimi + (diProva ? " · plus " + diProva + " trial" : ""),
-    );
+    trova("conteggio").textContent = senzaLimite
+      ? due(
+          diCasa + (diProva ? " · più " + diProva + " di prova" : ""),
+          diCasa + (diProva ? " · plus " + diProva + " trial" : ""),
+        )
+      : due(
+          diCasa + " di " + massimi + (diProva ? " · più " + diProva + " di prova" : ""),
+          diCasa + " of " + massimi + (diProva ? " · plus " + diProva + " trial" : ""),
+        );
 
     /* Mentre un nome si sta scrivendo, l'elenco resta com'e'. */
     if (inModifica.indexOf("telefono:") === 0) return;
@@ -2573,7 +2586,7 @@
         var diCasa = stato.dispositivi.filter(function (uno) {
           return !uno.finoA;
         }).length;
-        pieno = diCasa >= stato.massimi;
+        pieno = typeof stato.massimi === "number" && diCasa >= stato.massimi;
         trova("abbina-pieno").hidden = !pieno;
         trova("abbina-pieno").textContent = due(
           "Hai già " +
@@ -3581,10 +3594,9 @@
     var spenta = { attiva: false };
     var gdahome = stato.gdahome || spenta;
     var gdanav = stato.gdanav || spenta;
-    /* Base limita la casa solo se il ponte lo dice, e il ponte di oggi non
-     * lo dice mai: i lucchetti di Base li mettono l'app e il browser, e qui
-     * non si spengono tasti che la casa non spegne. Un ponte di prima, che
-     * `limitata` non la mandava, limitava con Base. */
+    /* Base limita la casa quando il ponte lo dice (`limitata`): la plancia
+     * e' una. Un ponte di prima, che `limitata` non la mandava, limitava con
+     * Base. */
     soloBase = stato.limitata === undefined ? !gdahome.attiva : stato.limitata === true;
     premium = Boolean(gdahome.attiva);
     /* Lo stato in grande: «Premium attivo», fino a quando e da dove; o «Base»

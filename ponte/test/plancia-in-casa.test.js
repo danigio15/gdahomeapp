@@ -154,6 +154,8 @@ async function banco() {
     portaDellApp: 0,
     portaDellaConsole: 0,
     dispositiviMassimi: 3,
+    /* Licenze spente: qui si provano i cassetti delle plance, non Base. */
+    chiaveDelleLicenze: "",
     minutiDelCodice: 5,
     giorniDiSilenzio: 90,
     registro: "errore",

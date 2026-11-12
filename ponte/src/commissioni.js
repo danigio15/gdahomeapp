@@ -815,9 +815,10 @@ export class Commissioni {
     ) {
       return no(id, "unauthorized", "per questo entra col tuo utente: riabbina questo telefono");
     }
-    /* Base, visto dall'app: la plancia principale e basta. Con le licenze
-     * spente e' sempre falso, e tutto va com'e' sempre andato. */
-    const soloLaPrima = dalTelefono === true && this._limitata();
+    /* Base: la plancia principale e basta, dall'app e anche dentro Home
+     * Assistant, dove fra le Plance resta solo lei (`plance-in-casa.js`).
+     * Con le licenze spente e' sempre falso, e tutto va com'e' sempre andato. */
+    const soloLaPrima = this._limitata();
     if (tipo === TIPO) return this._http(detto, chiChiede, amministra, puoAmministrare);
     if (tipo === TIPO_MOLTI) return this._molti(detto, chiChiede, amministra);
     if (tipo === TIPO_PLANCIA) return this._laPlancia(detto, chiChiede, amministra, soloLaPrima);

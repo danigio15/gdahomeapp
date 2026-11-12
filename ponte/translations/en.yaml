@@ -87,7 +87,8 @@ configuration:
         name: How many phones at once
         description: >-
           How many phones can stay paired at the same time. Yours, the one of
-          whoever lives with you, your parents'.
+          whoever lives with you, your parents'. With GdAHome Base two at
+          most; with Premium no limit.
   chi_installa:
     name: The installer
     description: >-
