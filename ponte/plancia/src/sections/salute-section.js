@@ -25,6 +25,8 @@ import {
   giorniDalleStatistiche,
   giorniUniti,
   personeDellaSalute,
+  puntiConFascia,
+  riassuntoDeiGiorni,
 } from "../core/salute.js";
 import { normalizePeople, personInitials, personViewModel } from "../core/person-model.js";
 import { registraTitoloDiPagina } from "./page-masthead-section.js";
@@ -74,6 +76,10 @@ const state = (root[KEY] ||= {
    * `{righe, chieste, chiedendo}`. */
   settimane: {},
   storico: {},
+  /* La finestra dello storico: `{misura, periodo, giorno, da}` o `null`, e le
+   * statistiche che chiede, per chiave della domanda. */
+  dettaglio: null,
+  dati: {},
 });
 
 /* ── le parole ─────────────────────────────────────────────────────────── */
@@ -247,7 +253,7 @@ function settimanaPassiMarkup(misura, obiettivo) {
         const altezza = Math.max(2, Math.round((g.valore / massimo) * 100));
         const giorno = new Date(g.inizio).toLocaleDateString(locale(), { weekday: "short" });
         const etichetta = `${giorno}: ${numeroBello(g.valore)} ${t("passi", "steps")}`;
-        return `<span class="dm-salute-giorno${i === giorni.length - 1 ? " ora" : ""}${g.valore >= obiettivo ? " fatto" : ""}" title="${esc(etichetta)}" aria-label="${esc(etichetta)}" role="img">
+        return `<span class="dm-salute-giorno${i === giorni.length - 1 ? " ora" : ""}${g.valore >= obiettivo ? " fatto" : ""}" title="${esc(etichetta)}" aria-label="${esc(etichetta)}" role="button" tabindex="0" data-dm-salute-giorno="${g.inizio}">
           <span class="dm-salute-colonna"><i style="height:${altezza}%"></i></span>
           <small>${esc(giorno)}</small>
         </span>`;
@@ -288,7 +294,7 @@ function meseDelPesoMarkup(misura) {
 }
 
 function schedaMarkup(chiave, { valore, unita, sotto = "", quando = "", extra = "", largo = false, nota = "" }) {
-  return `<article class="dm-salute-scheda${largo ? " larga" : ""}" data-dm-salute-misura="${chiave}">
+  return `<article class="dm-salute-scheda${largo ? " larga" : ""}" data-dm-salute-misura="${chiave}" role="button" tabindex="0">
     <div class="dm-salute-testa"><span class="dm-salute-segno" aria-hidden="true">${SEGNI[chiave] || "•"}</span><span>${esc(NOMI()[chiave])}</span></div>
     <b>${esc(valore)}${unita ? `<small> ${esc(unita)}</small>` : ""}</b>
     ${nota ? `<em class="dm-salute-fascia" data-fascia="${esc(nota)}">${esc(FASCE()[nota] || nota)}</em>` : ""}
@@ -384,7 +390,7 @@ function attivitaMarkup(m) {
       )}</span>`
     : "";
   const quando = quandoArrivato(piuRecente(m.calorie, m.esercizio, m.inPiedi, m.calorieRiposo));
-  return `<article class="dm-salute-scheda larga dm-salute-attivita" data-dm-salute-misura="attivita">
+  return `<article class="dm-salute-scheda larga dm-salute-attivita" data-dm-salute-misura="attivita" role="button" tabindex="0">
     <div class="dm-salute-testa"><span class="dm-salute-segno" aria-hidden="true">${SEGNI.attivita}</span><span>${esc(NOMI().attivita)}</span></div>
     <div class="dm-salute-anelli">
       ${voce("movimento", m.calorie, "kcal")}
@@ -408,7 +414,7 @@ function eroeMarkup(persona, obiettivo, { finestra = false } = {}) {
   const passi = persona.misure.passi;
   if (!passi) return "";
   const quota = passi.valore / obiettivo;
-  return `<section class="dm-salute-eroe">
+  return `<section class="dm-salute-eroe"${finestra ? "" : ' data-dm-salute-misura="passi" role="button" tabindex="0"'}>
     <div class="dm-salute-eroe-testa">
       <div class="dm-salute-eroe-anello">${anelloMarkup(quota)}<span>${Math.round(quota * 100)}%</span></div>
       <div class="dm-salute-eroe-dati">
@@ -570,6 +576,319 @@ async function chiediLoStorico(misura, giorni, tipi) {
   }
 }
 
+/* ── la finestra dello storico ─────────────────────────────────────────────
+ *
+ * «Devi creare un popup al tap sulle card e sui giorni che mi fa vedere i dati
+ * anche storici.» Toccando una scheda si apre la sua storia: 7, 30 o 90
+ * giorni, media, minimo e massimo (e il totale per quello che si somma), il
+ * grafico e i giorni uno per uno. Toccando un giorno — nella finestra o nelle
+ * colonne dei passi — si apre quel giorno: tutte le misure, e passi e battito
+ * ora per ora. Tutto dalle statistiche di Home Assistant, chieste quando
+ * servono.
+ */
+
+const PERIODI = [7, 30, 90];
+const ORA = 3_600_000;
+
+/* Le misure di ogni scheda: la prima ha il grafico grande. */
+const GRUPPI = {
+  passi: ["passi", "distanza", "piani"],
+  battito: ["battito", "battitoRiposo"],
+  pressione: ["sistolica", "diastolica"],
+  peso: ["peso", "grasso"],
+  sonno: ["sonno"],
+  ossigeno: ["ossigeno"],
+  calorie: ["calorie", "calorieRiposo"],
+  attivita: ["calorie", "esercizio", "inPiedi", "calorieRiposo"],
+  distanza: ["distanza"],
+  piani: ["piani"],
+};
+
+const nomeDellaMisura = (chiave) =>
+  ({
+    sistolica: t("Massima", "Systolic"),
+    diastolica: t("Minima", "Diastolic"),
+    calorieRiposo: t("Calorie a riposo", "Resting calories"),
+    battitoRiposo: t("Battito a riposo", "Resting heart rate"),
+  })[chiave] ||
+  NOMI()[chiave] ||
+  chiave;
+
+const segnoDellaScheda = (chiave) => SEGNI[chiave] || (chiave === "pressione" ? SEGNI.pressione : "•");
+
+/* Il valore detto come lo dice la scheda. */
+function valoreDetto(chiave, valore, unita = "") {
+  if (!Number.isFinite(valore)) return "—";
+  if (chiave === "sonno") return durataSonno(valore);
+  const cifre = chiave === "distanza" ? 2 : chiave === "peso" || chiave === "grasso" ? 1 : 0;
+  const u = chiave === "grasso" ? "%" : chiave === "passi" ? t("passi", "steps") : chiave === "piani" ? "" : unita;
+  return `${numeroBello(valore, cifre)}${u ? ` ${u}` : ""}`;
+}
+
+/* Tutti i sensori di una misura (lei e quelli dietro), con lo storico. */
+const sensoriDi = (misura) => [misura, ...(misura?.altre || [])].filter((m) => m?.statistiche);
+
+/* Le statistiche di [ids] fra [inizio] e [fine], per [periodo]: si chiedono
+ * una volta (e di nuovo dopo mezz'ora); `null` finche' non arrivano. */
+function statistiche(ids, inizio, fine, periodo) {
+  const chiave = `${periodo}|${inizio}|${ids.join(",")}`;
+  const voce = (state.dati[chiave] ||= { righe: null, chieste: 0 });
+  if (!voce.chiedendo && Date.now() - voce.chieste > OGNI && ids.length) {
+    voce.chiedendo = true;
+    voce.chieste = Date.now();
+    chiediAHomeAssistant(
+      {
+        type: "recorder/statistics_during_period",
+        start_time: new Date(inizio).toISOString(),
+        end_time: new Date(fine).toISOString(),
+        statistic_ids: ids,
+        period: periodo,
+        types: ["change", "max", "mean", "min", "state"],
+      },
+      20_000,
+    )
+      .then((risposta) => {
+        voce.righe = risposta && typeof risposta === "object" ? risposta : {};
+      })
+      .catch(() => {
+        voce.righe = voce.righe || {};
+      })
+      .finally(() => {
+        voce.chiedendo = false;
+        dipingiIlDettaglio();
+      });
+  }
+  if (!ids.length) return {};
+  return voce.righe;
+}
+
+/* I punti di una misura dalle righe chieste, coi sensori dietro uniti come fa
+ * la scheda ([giorniDi]). */
+function puntiDi(misura, righe) {
+  if (!misura || !righe) return [];
+  const [principale, ...altri] = sensoriDi(misura);
+  if (!principale) return [];
+  const suoi = puntiConFascia(righe[principale.entity] || [], principale.classe);
+  const degliAltri = altri.map((a) => puntiConFascia(righe[a.entity] || [], a.classe));
+  return giorniUniti(suoi, degliAltri, misura.classe);
+}
+
+const mezzanotte = (ms) => {
+  const d = new Date(ms);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+};
+
+const giornoDetto = (ms, lungo = false) =>
+  new Date(ms).toLocaleDateString(
+    locale(),
+    lungo ? { weekday: "long", day: "numeric", month: "long" } : { weekday: "short", day: "numeric" },
+  );
+
+/* Le colonne: [punti] con `valore`, toccabili se [tocca]. */
+function colonneMarkup(chiave, punti, { tocca = false, etichetta = (p) => giornoDetto(p.inizio) } = {}) {
+  if (!punti.length) return "";
+  const massimo = Math.max(...punti.map((p) => p.valore), 1);
+  const fitte = punti.length > 16;
+  return `<div class="dm-sd-colonne${fitte ? " fitte" : ""}" style="--n:${punti.length}">${punti
+    .map((p) => {
+      const altezza = Math.max(2, Math.round((p.valore / massimo) * 100));
+      const detto = `${etichetta(p)}: ${valoreDetto(chiave, p.valore)}`;
+      return `<span class="dm-sd-colonna"${tocca ? ` role="button" tabindex="0" data-dm-salute-giorno="${p.inizio}"` : ""} title="${esc(detto)}" aria-label="${esc(detto)}">
+        <span><i style="height:${altezza}%"></i></span>${fitte ? "" : `<small>${esc(etichetta(p))}</small>`}
+      </span>`;
+    })
+    .join("")}</div>`;
+}
+
+/* La linea, con la fascia fra minimo e massimo dove c'e'. */
+function lineaMarkup(chiave, punti) {
+  if (punti.length < 2) return punti.length ? `<p class="dm-sd-vuoto">${esc(t("Un solo valore, per ora.", "Just one value so far."))}</p>` : "";
+  const valori = punti.flatMap((p) => [p.valore, p.minimo ?? p.valore, p.massimo ?? p.valore]);
+  const basso = Math.min(...valori);
+  const alto = Math.max(...valori);
+  const campo = Math.max(alto - basso, 1);
+  const L = 320;
+  const A = 120;
+  const x = (i) => 6 + (i / (punti.length - 1)) * (L - 12);
+  const y = (v) => A - 10 - ((v - basso) / campo) * (A - 24);
+  const linea = punti.map((p, i) => `${x(i).toFixed(1)},${y(p.valore).toFixed(1)}`).join(" ");
+  const conFascia = punti.every((p) => Number.isFinite(p.minimo));
+  const fascia = conFascia
+    ? `<polygon points="${[
+        ...punti.map((p, i) => `${x(i).toFixed(1)},${y(p.massimo).toFixed(1)}`),
+        ...punti.map((p, i) => `${x(i).toFixed(1)},${y(p.minimo).toFixed(1)}`).reverse(),
+      ].join(" ")}" fill="currentColor" opacity=".14"/>`
+    : "";
+  return `<figure class="dm-sd-linea"><svg viewBox="0 0 ${L} ${A}" preserveAspectRatio="none" role="img" aria-label="${esc(nomeDellaMisura(chiave))}">
+    ${fascia}<polyline points="${linea}" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+  </svg><figcaption><span>${esc(valoreDetto(chiave, alto))}</span><span>${esc(valoreDetto(chiave, basso))}</span></figcaption></figure>`;
+}
+
+const siSomma = (misura) => /^total/.test(clean(misura?.classe));
+
+function graficoMarkup(chiave, misura, punti, tocca) {
+  return siSomma(misura) || chiave === "sonno" ? colonneMarkup(chiave, punti, { tocca }) : lineaMarkup(chiave, punti);
+}
+
+function riassuntoMarkup(chiave, misura, punti) {
+  const r = riassuntoDeiGiorni(punti, misura?.classe);
+  if (!r.quanti) return "";
+  const u = misura?.unita || "";
+  const voci = [
+    [t("Media", "Average"), valoreDetto(chiave, r.media, u)],
+    [t("Minimo", "Min"), valoreDetto(chiave, r.minimo, u)],
+    [t("Massimo", "Max"), valoreDetto(chiave, r.massimo, u)],
+  ];
+  if (r.totale !== null) voci.push([t("Totale", "Total"), valoreDetto(chiave, r.totale, u)]);
+  return `<div class="dm-sd-riassunto">${voci.map(([n, v]) => `<span><small>${esc(n)}</small><b>${esc(v)}</b></span>`).join("")}</div>`;
+}
+
+/* La finestra di una scheda. */
+function dettaglioDellaSchedaMarkup(persona, quale, periodo) {
+  const chiavi = (GRUPPI[quale] || [quale]).filter((c) => persona.misure[c]);
+  if (!chiavi.length) return "";
+  const fine = Date.now();
+  const inizio = mezzanotte(fine) - (periodo - 1) * GIORNO;
+  const ids = chiavi.flatMap((c) => sensoriDi(persona.misure[c]).map((s) => s.entity));
+  const righe = statistiche(ids, inizio, fine, "day");
+  const periodi = `<div class="dm-sd-periodi" role="tablist">${PERIODI.map(
+    (n) =>
+      `<button type="button" role="tab" aria-selected="${n === periodo}" data-dm-salute-periodo="${n}">${esc(t(`${n} giorni`, `${n} days`))}</button>`,
+  ).join("")}</div>`;
+  if (!ids.length)
+    return `${periodi}<p class="dm-sd-vuoto">${esc(t("Questo sensore non tiene lo storico in Home Assistant.", "This sensor keeps no history in Home Assistant."))}</p>`;
+  if (!righe) return `${periodi}<p class="dm-sd-vuoto">${esc(t("Carico lo storico…", "Loading the history…"))}</p>`;
+  /* Oggi si legge dal sensore: le statistiche arrivano all'ora piena. */
+  const puntiDiOggi = (misura) => {
+    const punti = puntiDi(misura, righe);
+    if (siSomma(misura) && punti.at(-1)?.inizio === mezzanotte(fine) && Number.isFinite(misura.valore))
+      punti.at(-1).valore = misura.valore;
+    return punti;
+  };
+  const blocchi = chiavi.map((c, i) => {
+    const misura = persona.misure[c];
+    const punti = puntiDiOggi(misura);
+    if (!punti.length)
+      return i
+        ? ""
+        : `<p class="dm-sd-vuoto">${esc(t("Ancora niente storico: arriva un giorno alla volta.", "No history yet: it builds up one day at a time."))}</p>`;
+    return `<section class="dm-sd-blocco${i ? " piccolo" : ""}">
+      ${i ? `<h4>${esc(nomeDellaMisura(c))}</h4>` : ""}
+      ${riassuntoMarkup(c, misura, punti)}
+      ${graficoMarkup(c, misura, punti, i === 0)}
+    </section>`;
+  });
+  const principale = persona.misure[chiavi[0]];
+  const punti = puntiDiOggi(principale);
+  const elenco = punti
+    .slice()
+    .reverse()
+    .map(
+      (p) =>
+        `<button type="button" class="dm-sd-riga" data-dm-salute-giorno="${p.inizio}"><span>${esc(giornoDetto(p.inizio, true))}</span><b>${esc(
+          valoreDetto(chiavi[0], p.valore, principale.unita),
+        )}</b></button>`,
+    )
+    .join("");
+  return `${periodi}${blocchi.join("")}${elenco ? `<div class="dm-sd-elenco">${elenco}</div>` : ""}`;
+}
+
+/* La finestra di un giorno: tutte le misure di quel giorno, e passi e battito
+ * ora per ora. */
+function dettaglioDelGiornoMarkup(persona, giorno) {
+  const m = persona.misure;
+  const chiavi = Object.keys(m).filter((c) => sensoriDi(m[c]).length);
+  const fine = Math.min(giorno + GIORNO, Date.now());
+  const ids = chiavi.flatMap((c) => sensoriDi(m[c]).map((s) => s.entity));
+  const delGiorno = statistiche(ids, giorno, giorno + GIORNO, "day");
+  const orarie = ["passi", "battito"].filter((c) => m[c] && sensoriDi(m[c]).length);
+  const perOra = statistiche(orarie.flatMap((c) => sensoriDi(m[c]).map((s) => s.entity)), giorno, fine, "hour");
+  if (!ids.length) return `<p class="dm-sd-vuoto">${esc(t("Questi sensori non tengono lo storico in Home Assistant.", "These sensors keep no history in Home Assistant."))}</p>`;
+  if (!delGiorno) return `<p class="dm-sd-vuoto">${esc(t("Carico il giorno…", "Loading the day…"))}</p>`;
+  const oggi = giorno === mezzanotte(Date.now());
+  const caselle = chiavi
+    .map((c) => {
+      const punto = puntiDi(m[c], delGiorno).find((p) => p.inizio === giorno);
+      const valore = oggi && siSomma(m[c]) && Number.isFinite(m[c].valore) ? m[c].valore : punto?.valore;
+      if (!Number.isFinite(valore)) return "";
+      const fascia = punto && Number.isFinite(punto.minimo) ? `${valoreDetto(c, punto.minimo)} – ${valoreDetto(c, punto.massimo)}` : "";
+      return `<span class="dm-sd-casella"><small>${esc(nomeDellaMisura(c))}</small><b>${esc(valoreDetto(c, valore, m[c].unita))}</b>${
+        fascia ? `<em>${esc(fascia)}</em>` : ""
+      }</span>`;
+    })
+    .filter(Boolean)
+    .join("");
+  const ore = orarie
+    .map((c) => {
+      if (!perOra) return `<p class="dm-sd-vuoto">${esc(t("Carico le ore…", "Loading the hours…"))}</p>`;
+      const punti = puntiDi(m[c], perOra);
+      if (!punti.length) return "";
+      const etichetta = (p) => new Date(p.inizio).toLocaleTimeString(locale(), { hour: "2-digit" });
+      return `<section class="dm-sd-blocco piccolo"><h4>${esc(`${nomeDellaMisura(c)} · ${t("ora per ora", "hour by hour")}`)}</h4>${
+        siSomma(m[c]) ? colonneMarkup(c, punti, { etichetta }) : lineaMarkup(c, punti)
+      }</section>`;
+    })
+    .join("");
+  return `${caselle ? `<div class="dm-sd-caselle">${caselle}</div>` : `<p class="dm-sd-vuoto">${esc(t("Nessuna misura in questo giorno.", "No readings on this day."))}</p>`}${ore}`;
+}
+
+function dettaglioMarkup(vista) {
+  const d = state.dettaglio;
+  const persona = d && personaScelta(vista);
+  if (!persona) return "";
+  const giorno = Number.isFinite(d.giorno);
+  const titolo = giorno
+    ? giornoDetto(d.giorno, true)
+    : `${segnoDellaScheda(d.misura)} ${d.misura === "passi" ? NOMI().passi : NOMI()[d.misura] || nomeDellaMisura(d.misura)}`;
+  const corpo = giorno ? dettaglioDelGiornoMarkup(persona, d.giorno) : dettaglioDellaSchedaMarkup(persona, d.misura, d.periodo);
+  const indietro = giorno && d.da ? `<button type="button" class="dm-sd-indietro" data-dm-salute-indietro aria-label="${esc(t("Indietro", "Back"))}">‹</button>` : "";
+  return `<div class="dm-sd-velo" data-dm-salute-chiudi></div>
+    <div class="dm-sd-foglio" role="dialog" aria-modal="true" aria-label="${esc(titolo)}">
+      <header>${indietro}<div><small>${esc(persona.nome)}</small><b>${esc(titolo)}</b></div>
+        <button type="button" class="dm-sd-chiudi" data-dm-salute-chiudi aria-label="${esc(t("Chiudi", "Close"))}">✕</button></header>
+      <div class="dm-sd-dentro">${corpo}</div>
+    </div>`;
+}
+
+/* La finestra sta nel corpo della pagina, non dentro la sezione: una pagina
+ * che scorre o si sposta portava con se' anche lei, e restava a meta' schermo. */
+const DETTAGLIO_ID = "dm-salute-dettaglio";
+
+function dipingiIlDettaglio() {
+  const pagina = doc?.body;
+  if (!pagina) return;
+  let finestra = doc.getElementById(DETTAGLIO_ID);
+  if (!state.dettaglio) {
+    finestra?.remove();
+    return;
+  }
+  const vista = vistaSalute();
+  const markup = vista ? dettaglioMarkup(vista) : "";
+  if (!markup) {
+    state.dettaglio = null;
+    finestra?.remove();
+    return;
+  }
+  if (!finestra) {
+    finestra = doc.createElement("div");
+    finestra.className = "dm-sd";
+    finestra.id = DETTAGLIO_ID;
+    pagina.append(finestra);
+  }
+  const dentro = finestra.querySelector(".dm-sd-dentro");
+  const giu = dentro ? dentro.scrollTop : 0;
+  scriviSeCambia(finestra, markup);
+  const nuovo = finestra.querySelector(".dm-sd-dentro");
+  if (nuovo && giu) nuovo.scrollTop = giu;
+}
+
+function apriIlDettaglio(cosa) {
+  state.dettaglio = cosa;
+  if (root.navigator?.vibrate) root.navigator.vibrate(5);
+  dipingiIlDettaglio();
+}
+
 /* ── la pagina e la voce ───────────────────────────────────────────────── */
 
 function ultimaPagina() {
@@ -649,7 +968,10 @@ function accendiLaVoce(vista) {
 function dipingi(vista) {
   const pagina = ensurePagina();
   const dove = pagina?.querySelector?.("#salute-wrap");
-  if (!dove || !paginaVisibile(SALUTE_PAGE_ID)) return;
+  if (!dove || !paginaVisibile(SALUTE_PAGE_ID)) {
+    if (state.dettaglio) apriIlDettaglio(null);
+    return;
+  }
   if (vistaScelta(vista) === "strava") {
     const sport = sportScelto(vista.strava, state.sport);
     if (vista.strava.statistiche.sport[sport]) void chiediLeSettimaneStrava(vista.strava, sport, state.settimane, schedule);
@@ -662,6 +984,7 @@ function dipingi(vista) {
   }
   scriviSeCambia(dove, paginaSaluteMarkup(vista));
   ravvivaIRitratti(dove);
+  if (state.dettaglio) dipingiIlDettaglio();
 }
 
 /* I ritratti costruiti sono tele: si compongono dopo che il markup e' a
@@ -701,11 +1024,31 @@ function schedule() {
 }
 
 function alTocco(evento) {
+  const dentro = evento.target?.closest?.(`#${SALUTE_PAGE_ID},#${DETTAGLIO_ID}`);
+  if (dentro) {
+    const chiudi = evento.target.closest("[data-dm-salute-chiudi]");
+    const indietro = evento.target.closest("[data-dm-salute-indietro]");
+    const periodo = evento.target.closest("[data-dm-salute-periodo]");
+    const giorno = evento.target.closest("[data-dm-salute-giorno]");
+    const misura = evento.target.closest("[data-dm-salute-misura]");
+    if (chiudi) return apriIlDettaglio(null);
+    if (indietro && state.dettaglio?.da) return apriIlDettaglio(state.dettaglio.da);
+    if (periodo && state.dettaglio) return apriIlDettaglio({ ...state.dettaglio, periodo: Number(periodo.dataset.dmSalutePeriodo) || 30 });
+    if (giorno) {
+      const da = state.dettaglio && !Number.isFinite(state.dettaglio.giorno) ? state.dettaglio : null;
+      return apriIlDettaglio({ giorno: Number(giorno.dataset.dmSaluteGiorno), da });
+    }
+    if (misura && !evento.target.closest(".dm-sd"))
+      return apriIlDettaglio({ misura: clean(misura.dataset.dmSaluteMisura), periodo: 30 });
+  }
   const vista = evento.target?.closest?.("[data-dm-salute-vista]");
   const chi = evento.target?.closest?.("[data-dm-salute-chi]");
   const sport = evento.target?.closest?.(`#${SALUTE_PAGE_ID} [data-dm-strava-sport]`);
   if (vista) state.vista = clean(vista.dataset.dmSaluteVista);
-  else if (chi) state.chi = clean(chi.dataset.dmSaluteChi);
+  else if (chi) {
+    state.chi = clean(chi.dataset.dmSaluteChi);
+    state.dettaglio = null;
+  }
   else if (sport) state.sport = clean(sport.dataset.dmStravaSport);
   else return;
   schedule();
@@ -806,6 +1149,9 @@ export function foglioSalute(P) {
   ${P} .dm-salute-anello-voce b small{font-size:13px;font-weight:800;color:var(--text-dim,#64748b)}
   ${P} .dm-salute-fonte{margin:0;font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b);text-align:center}
   ${P} .dm-salute-finestra .dm-strava{gap:10px}
+  ${P} [data-dm-salute-misura][role="button"],${P} [data-dm-salute-giorno]{cursor:pointer;-webkit-tap-highlight-color:transparent}
+  ${P} .dm-salute-scheda[role="button"]{transition:transform .12s ease,box-shadow .12s ease}
+  ${P} .dm-salute-scheda[role="button"]:active{transform:scale(.98)}
   @media (max-width:640px){
     ${P} .dm-salute-schede{grid-template-columns:repeat(2,minmax(0,1fr))}
     ${P} .dm-salute-scheda.larga{grid-column:1 / -1}
@@ -816,12 +1162,64 @@ export function foglioSalute(P) {
   `;
 }
 
+
+/* Il foglio della finestra dello storico, che sta nel corpo della pagina. */
+export function foglioDettaglio(P = `#${DETTAGLIO_ID}`) {
+  return `
+  ${P}.dm-sd{--sal:${ROSSO};position:fixed;inset:0;z-index:2147483000;display:flex;align-items:flex-end;justify-content:center}
+  ${P} .dm-sd-velo{position:absolute;inset:0;background:rgba(15,23,42,.45);backdrop-filter:blur(2px)}
+  ${P} .dm-sd-foglio{position:relative;display:flex;flex-direction:column;width:min(560px,100%);max-height:88vh;
+    border-radius:24px 24px 0 0;background:var(--card-background-color,#fff);color:var(--text,#0f172a);
+    box-shadow:0 -20px 50px -20px rgba(15,23,42,.45);padding-bottom:env(safe-area-inset-bottom,0)}
+  @media (min-width:700px){${P}.dm-sd{--sal:${ROSSO};align-items:center}${P} .dm-sd-foglio{border-radius:24px}}
+  ${P} .dm-sd-foglio header{display:flex;align-items:center;gap:10px;padding:16px 16px 10px;border-bottom:1px solid var(--card-border,#e2e8f0)}
+  ${P} .dm-sd-foglio header div{display:grid;flex:1;min-width:0}
+  ${P} .dm-sd-foglio header small{font-size:12px;font-weight:800;color:var(--text-dim,#64748b);text-transform:uppercase;letter-spacing:.06em}
+  ${P} .dm-sd-foglio header b{font-size:20px;font-weight:900;text-transform:capitalize;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  ${P} .dm-sd-chiudi,${P} .dm-sd-indietro{flex:0 0 auto;width:36px;height:36px;border-radius:50%;border:0;font:inherit;font-size:18px;font-weight:900;
+    cursor:pointer;color:var(--text,#0f172a);background:color-mix(in srgb,var(--text,#0f172a) 8%,transparent)}
+  ${P} .dm-sd-indietro{font-size:26px;line-height:1}
+  ${P} .dm-sd-dentro{display:grid;gap:14px;padding:14px 16px 20px;overflow:auto;-webkit-overflow-scrolling:touch}
+  ${P} .dm-sd-periodi{display:flex;gap:6px}
+  ${P} .dm-sd-periodi button{flex:1;padding:8px 10px;border-radius:999px;font:inherit;font-size:13px;font-weight:800;cursor:pointer;
+    color:var(--text,#0f172a);background:transparent;border:1px solid var(--card-border,#e2e8f0)}
+  ${P} .dm-sd-periodi button[aria-selected="true"]{color:#fff;background:var(--sal);border-color:var(--sal)}
+  ${P} .dm-sd-blocco{display:grid;gap:10px}
+  ${P} .dm-sd-blocco h4{margin:4px 0 0;font-size:12px;font-weight:850;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim,#64748b)}
+  ${P} .dm-sd-riassunto{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px}
+  ${P} .dm-sd-riassunto span,${P} .dm-sd-casella{display:grid;gap:2px;padding:10px 12px;border-radius:14px;
+    background:color-mix(in srgb,var(--sal) 7%,var(--card-background-color,#fff));border:1px solid color-mix(in srgb,var(--sal) 14%,transparent)}
+  ${P} .dm-sd-riassunto small,${P} .dm-sd-casella small{font-size:11px;font-weight:800;color:var(--text-dim,#64748b);text-transform:uppercase;letter-spacing:.04em}
+  ${P} .dm-sd-riassunto b,${P} .dm-sd-casella b{font-size:18px;font-weight:900;white-space:nowrap}
+  ${P} .dm-sd-casella em{font-style:normal;font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+  ${P} .dm-sd-caselle{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+  ${P} .dm-sd-colonne{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:4px;align-items:end;color:var(--sal)}
+  ${P} .dm-sd-colonne.fitte{gap:2px}
+  ${P} .dm-sd-colonna{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+  ${P} .dm-sd-colonna > span{position:relative;display:block;width:100%;height:120px}
+  ${P} .dm-sd-colonna i{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:28px;border-radius:4px 4px 0 0;
+    background:currentColor;opacity:.8}
+  ${P} .dm-sd-colonna[role="button"]:hover i,${P} .dm-sd-colonna[role="button"]:active i{opacity:1}
+  ${P} .dm-sd-colonna small{font-size:10.5px;font-weight:800;color:var(--text-dim,#64748b);text-transform:capitalize;white-space:nowrap;overflow:hidden;max-width:100%}
+  ${P} .dm-sd-linea{margin:0;color:var(--sal)}
+  ${P} .dm-sd-linea svg{display:block;width:100%;height:120px}
+  ${P} .dm-sd-linea figcaption{display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;color:var(--text-dim,#64748b)}
+  ${P} .dm-sd-elenco{display:grid;border-top:1px solid var(--card-border,#e2e8f0)}
+  ${P} .dm-sd-riga{display:flex;justify-content:space-between;gap:10px;padding:11px 2px;border:0;border-bottom:1px solid var(--card-border,#e2e8f0);
+    background:transparent;font:inherit;font-size:14px;color:var(--text,#0f172a);cursor:pointer;text-align:left}
+  ${P} .dm-sd-riga span{text-transform:capitalize;font-weight:700}
+  ${P} .dm-sd-riga b{font-weight:900;white-space:nowrap}
+  ${P} .dm-sd-vuoto{margin:0;padding:16px 4px;font-size:14px;font-weight:700;color:var(--text-dim,#64748b);text-align:center}
+  `;
+}
+
 /* ── l'installazione ───────────────────────────────────────────────────── */
 
 export function installSalute() {
   if (!doc || state.installed) return false;
   state.installed = true;
   installStyle("dm-salute-style", foglioSalute(`#${SALUTE_PAGE_ID}`));
+  installStyle("dm-salute-dettaglio-style", foglioDettaglio());
   installAvatar3dStyle();
   registraTitoloDiPagina(SALUTE_PAGE_ID, titoloDellaPagina);
   /* Come lo sport: quando la plancia ridisegna la barra, la voce si rimette
