@@ -410,3 +410,41 @@ export function giorniDalleStatistiche(righe = [], classe = "") {
     .filter(Boolean)
     .sort((a, b) => a.inizio - b.inizio);
 }
+
+/**
+ * Il riassunto di una serie di giorni (o di ore): `{media, minimo, massimo,
+ * totale, quanti}`, sui soli punti con un valore. Per una misura che si somma
+ * (passi, calorie, distanza) il totale ha senso; per le altre no, e vale
+ * `null`.
+ */
+export function riassuntoDeiGiorni(giorni = [], classe = "") {
+  const valori = (Array.isArray(giorni) ? giorni : [])
+    .map((g) => numero(g?.valore))
+    .filter((v) => v !== null);
+  if (!valori.length) return { media: null, minimo: null, massimo: null, totale: null, quanti: 0 };
+  const somma = valori.reduce((a, b) => a + b, 0);
+  return {
+    media: somma / valori.length,
+    minimo: Math.min(...valori),
+    massimo: Math.max(...valori),
+    totale: /^total/.test(clean(classe)) ? somma : null,
+    quanti: valori.length,
+  };
+}
+
+/** I punti delle statistiche con anche il minimo e il massimo del periodo (per la fascia del battito). */
+export function puntiConFascia(righe = [], classe = "") {
+  const somma = /^total/.test(clean(classe));
+  const conFascia = new Map(
+    (Array.isArray(righe) ? righe : []).map((r) => [
+      istante(r?.start),
+      { minimo: numero(r?.min), massimo: numero(r?.max) },
+    ]),
+  );
+  return giorniDalleStatistiche(righe, classe).map((g) => {
+    const f = somma ? null : conFascia.get(g.inizio);
+    return f && f.minimo !== null && f.massimo !== null
+      ? { ...g, minimo: f.minimo, massimo: f.massimo }
+      : g;
+  });
+}
