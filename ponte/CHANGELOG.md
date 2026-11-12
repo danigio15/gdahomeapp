@@ -10,6 +10,39 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.18.25
+
+_App GdAHome e Home Assistant._
+
+**La Salute:**
+
+- **Lo storico a un tocco**: toccando una scheda — passi, battito,
+  pressione, peso, sonno, ossigeno, calorie — si apre la sua storia: gli
+  ultimi 7, 30 o 90 giorni, con media, minimo e massimo (e il totale dei
+  passi e delle calorie), il grafico e i giorni uno per uno. Toccando un
+  giorno, anche nelle colonne dei passi, si vede quel giorno: tutte le misure,
+  e passi e battito ora per ora.
+
+**Da fuori casa:**
+
+- **La casa accesa due volte si riconosce davvero**: se la stessa casa gira
+  su due macchine (un backup di Home Assistant ripristinato altrove, una
+  vecchia installazione rimasta accesa), da fuori l'app si collegava e si
+  scollegava di continuo. Il riconoscimento della 1.18.20 non scattava mai:
+  adesso GdAHome se ne accorge, lascia il posto all'altra copia e lo dice
+  nella console dell'add-on, con cosa fare. E nel registro ogni caduta dice
+  il suo motivo, non più solo «filo chiuso».
+
+**Nell'app, il navigatore:**
+
+- **Il traffico dei due sensi, ognuno nella sua metà di strada**: senza un
+  percorso, sulle strade a doppio senso le linee del traffico si
+  sovrapponevano e facevano una treccia rossa e gialla. Adesso le code di un
+  senso e dell'altro stanno affiancate, ognuna dal suo lato, anche in curva.
+
+Per lo storico della Salute e per la casa doppia va aggiornato l'add-on in
+Home Assistant; per il navigatore, l'app.
+
 ## 1.18.24
 
 _App GdAHome._
