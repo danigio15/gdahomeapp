@@ -1,0 +1,2817 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="it" xml:lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Manuale d'uso di GdAHome</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <style>
+  @font-face { font-family: Inter; src: url(file:///home/user/gdahomeapp/app/assets/carattere/Inter-400.ttf); font-weight: 400; }
+  @font-face { font-family: Inter; src: url(file:///home/user/gdahomeapp/app/assets/carattere/Inter-600.ttf); font-weight: 600; }
+  @font-face { font-family: Inter; src: url(file:///home/user/gdahomeapp/app/assets/carattere/Inter-700.ttf); font-weight: 700; }
+  @font-face { font-family: Inter; src: url(file:///home/user/gdahomeapp/app/assets/carattere/Inter-800.ttf); font-weight: 800; }
+  :root { --blu: #1d4ed8; --testo: #0f172a; --tenue: #475569; --fondo: #f1f5f9; --rosso: #e11d48; }
+  @page { size: A4; margin: 16mm 14mm 16mm 14mm; }
+  html { font-family: Inter, system-ui, sans-serif; color: var(--testo); font-size: 10.5pt; line-height: 1.5; }
+  body { max-width: 860px; margin: 0 auto; padding: 0 12px; background: #fff; }
+  h1 { font-size: 28pt; font-weight: 800; color: var(--blu); margin: 10px 0 6px; text-align: center; }
+  h2 { font-size: 17pt; font-weight: 800; color: var(--blu); border-bottom: 3px solid var(--blu); padding-bottom: 4px; margin-top: 0; padding-top: 4px; break-before: page; }
+  h3 { font-size: 12.5pt; font-weight: 700; margin: 18px 0 6px; color: #1e293b; break-after: avoid; }
+  p, li { orphans: 3; widows: 3; }
+  a { color: var(--blu); text-decoration: none; }
+  hr { display: none; }
+  code, pre { font-family: ui-monospace, Menlo, monospace; background: var(--fondo); border-radius: 6px; }
+  code { padding: 1px 5px; font-size: 92%; } pre { padding: 8px 12px; }
+  p[align="center"] { text-align: center; break-inside: avoid; margin: 12px 0; }
+  p[align="center"] img { border-radius: 14px; box-shadow: 0 1px 2px rgba(0,0,0,.12), 0 4px 14px rgba(15,23,42,.12); margin: 4px 6px; vertical-align: top; border: 1px solid #e2e8f0; }
+  p[align="center"] img[width="680"], p[align="center"] img[width="700"], p[align="center"] img[width="560"] { max-width: 100%; height: auto; }
+  sub { font-size: 9pt; color: var(--tenue); vertical-align: baseline; }
+  blockquote { margin: 12px 0; padding: 8px 14px; background: #fff7ed; border-left: 4px solid #f59e0b; border-radius: 6px; break-inside: avoid; }
+  blockquote p { margin: 4px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 9.5pt; break-inside: auto; }
+  th { background: var(--blu); color: #fff; text-align: left; font-weight: 600; }
+  th, td { padding: 5px 8px; border: 1px solid #cbd5e1; vertical-align: top; }
+  tr { break-inside: avoid; }
+  tr:nth-child(even) td { background: #f8fafc; }
+  p > strong:only-child { color: var(--rosso); }
+  ol, ul { padding-left: 22px; } li { margin: 2px 0; }
+  #indice + ol, h2#indice { break-before: page; }
+  .copertina { text-align: center; }
+  p[align="center"] img:not([width="680"]):not([width="700"]):not([width="560"]):not([width="520"]):not([width="420"]) { width: 30%; height: auto; }
+  p[align="center"] img:only-child:not([width="680"]):not([width="700"]):not([width="560"]):not([width="520"]):not([width="420"]) { width: 40%; }
+  p[align="center"] img[width="200"], p[align="center"] img[width="180"] { width: 23%; }
+  p[align="center"] img[width="420"] { width: 75%; height: auto; }
+  </style>
+</head>
+<body>
+<h1 id="manuale-duso-di-gdahome">Manuale d'uso di GdAHome</h1>
+<p align="center"><img src="../immagini/banner.png" alt="GdAHome" width="520"></p>
+
+<p>Questo manuale spiega <strong>passo per passo, con le schermate
+vere</strong>, come si installa e come si usa GdAHome: l'add-on in Home
+Assistant, l'app sul telefono, la plancia e tutte le sue funzioni.</p>
+<p><strong>Come leggere le schermate.</strong> Su molte immagini ci sono
+dei <strong>cerchi rossi numerati</strong> con un riquadro attorno a un
+elemento. Sotto ogni immagine la <strong>legenda</strong> spiega cosa
+sono: ① corrisponde al cerchio 1, ② al 2 e così via.</p>
+<p><strong>Altre convenzioni</strong></p>
+<ul>
+<li>I nomi tra «virgolette basse» sono le parole scritte sullo
+schermo.</li>
+<li>La freccia → indica il percorso da seguire, un tocco dopo
+l'altro.</li>
+<li><strong>(Premium)</strong> segna le funzioni che richiedono GdAHome
+Premium (<a href="#16-gdahome-premium-e-licenze">capitolo 16</a>). Tutto
+il resto è compreso nella versione gratuita, <strong>Base</strong>.</li>
+</ul>
+<blockquote>
+<p>Le schermate vengono da una <strong>casa di prova</strong> con nomi
+d'esempio («Casa del collaudo», «Persona 1», «Faretti soggiorno»…).
+Nella tua app vedrai i nomi della tua casa.</p>
+</blockquote>
+<hr />
+<h2 id="indice">Indice</h2>
+<ol type="1">
+<li><a href="#1-cosè-gdahome">Cos'è GdAHome</a></li>
+<li><a href="#2-cosa-serve">Cosa serve</a></li>
+<li><a href="#3-installare-ladd-on-in-home-assistant">Installare
+l'add-on in Home Assistant</a></li>
+<li><a href="#4-abbinare-il-telefono-alla-casa">Abbinare il telefono
+alla casa</a></li>
+<li><a href="#5-il-menu-dellapp">Il menu dell'app</a></li>
+<li><a href="#6-la-plancia-usarla-tutti-i-giorni">La plancia: usarla
+tutti i giorni</a></li>
+<li><a href="#7-configurare-la-plancia">Configurare la plancia</a></li>
+<li><a href="#8-più-plance-a-muro-colpo-docchio-casa-3d">Più plance: a
+muro, Colpo d'occhio, Casa 3D</a></li>
+<li><a href="#9-più-case-e-il-collegamento-da-fuori-casa">Più case e il
+collegamento da fuori casa</a></li>
+<li><a href="#10-le-notifiche">Le notifiche</a></li>
+<li><a href="#11-il-riepilogo-della-sera-e-la-tua-giornata">Il riepilogo
+della sera e «La tua giornata»</a></li>
+<li><a href="#12-la-salute-dallorologio">La Salute
+dall'orologio</a></li>
+<li><a
+href="#13-dispositivi-integrazioni-aiutanti-e-zigbee">Dispositivi,
+integrazioni, aiutanti e Zigbee</a></li>
+<li><a href="#14-automazioni-e-pianificatore">Automazioni e
+Pianificatore</a></li>
+<li><a
+href="#15-in-auto-e-al-polso-gdanav-android-auto-carplay-orologi">In
+auto e al polso: GdANav, Android Auto, CarPlay, orologi</a></li>
+<li><a href="#16-gdahome-premium-e-licenze">GdAHome Premium e
+licenze</a></li>
+<li><a
+href="#17-impostazioni-dellapp-lucchetto-e-diagnostica">Impostazioni
+dell'app, lucchetto e diagnostica</a></li>
+<li><a href="#18-aggiornamenti-e-riavvio-della-casa">Aggiornamenti e
+riavvio della casa</a></li>
+<li><a href="#19-segnalazioni-e-assistenza">Segnalazioni e
+assistenza</a></li>
+<li><a href="#20-la-pagina-configura-gdahome-in-home-assistant">La
+pagina «Configura GdAHome» in Home Assistant</a></li>
+<li><a href="#21-le-opzioni-delladd-on">Le opzioni dell'add-on</a></li>
+<li><a href="#22-se-la-casa-te-lha-montata-un-installatore">Se la casa
+te l'ha montata un installatore</a></li>
+<li><a href="#23-per-chi-installa-il-cruscotto">Per chi installa: il
+cruscotto</a></li>
+<li><a href="#24-se-qualcosa-non-va">Se qualcosa non va</a></li>
+<li><a href="#25-domande-frequenti">Domande frequenti</a></li>
+<li><a href="#26-privacy-contatti-e-chi-cè-dietro">Privacy, contatti e
+chi c'è dietro</a></li>
+</ol>
+<hr />
+<h2 id="1-cosè-gdahome">1. Cos'è GdAHome</h2>
+<p>GdAHome porta Home Assistant sul telefono in <strong>una pagina sola
+fatta per essere guardata</strong>: la <strong>plancia</strong>. In alto
+ci sono il meteo, l'antifurto e chi è in casa; sotto ci sono le sezioni
+(luci, clima, tapparelle, telecamere, consumi, persone e una trentina di
+altre), divise per stanza.</p>
+<p>GdAHome è fatta di <strong>due pezzi che lavorano
+insieme</strong>:</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: center;"></th>
+<th>Pezzo</th>
+<th>Cosa fa</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">🏠</td>
+<td><strong>L'add-on</strong>, dentro Home Assistant</td>
+<td>Contiene la plancia, abbina i telefoni e custodisce il segreto di
+Home Assistant, che non esce mai da lì. Nella barra laterale di Home
+Assistant compare come <strong>«Configura GdAHome»</strong>.</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">📱</td>
+<td><strong>L'app</strong>, sul telefono</td>
+<td>Per Android e iPhone/iPad, e anche dal browser su <a
+href="https://webapp.gdahome.org">webapp.gdahome.org</a>. Si abbina
+<strong>inquadrando un QR code</strong>: niente indirizzi, password o
+token da copiare.</td>
+</tr>
+</tbody>
+</table>
+<p align="center">
+  <img src="img/a-home.jpg" width="230" alt="L'app con la plancia">
+  <img src="img/p-luci.jpg" width="230" alt="La sezione Luci">
+  <img src="img/p-clima.jpg" width="230" alt="La sezione Clima">
+</p>
+<p align="center"><sub>L'app aperta sulla plancia, la sezione Luci e la sezione Clima.</sub></p>
+
+<hr />
+<h2 id="2-cosa-serve">2. Cosa serve</h2>
+<p><strong>Un Home Assistant con il Supervisor</strong>:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Home Assistant</th>
+<th style="text-align: center;">GdAHome</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>OS</strong>: il sistema completo, su Raspberry, mini PC o
+macchina virtuale</td>
+<td style="text-align: center;">✅</td>
+</tr>
+<tr class="even">
+<td><strong>Supervised</strong>: Debian con l'installatore
+ufficiale</td>
+<td style="text-align: center;">✅</td>
+</tr>
+<tr class="odd">
+<td><strong>Container</strong>: solo l'immagine Docker</td>
+<td style="text-align: center;">❌ nessun add-on, di nessuno</td>
+</tr>
+<tr class="even">
+<td><strong>Core</strong>: in un ambiente Python</td>
+<td style="text-align: center;">❌ idem</td>
+</tr>
+</tbody>
+</table>
+<p>Su Container e Core il negozio degli add-on non esiste: non dipende
+da GdAHome. Chi ha Container può passare a Supervised sulla stessa
+macchina, perché Docker c'è già.</p>
+<p>Servono anche:</p>
+<ul>
+<li><strong>un telefono o un tablet</strong>, Android o iPhone/iPad,
+oppure un browser (l'app nel browser è compresa in Premium);</li>
+<li><strong>nessun account</strong>: GdAHome non ne chiede.</li>
+</ul>
+<blockquote>
+<p>GdAHome è un <strong>add-on</strong>, non un'integrazione:
+<strong>HACS non lo accetta</strong>. Si installa dal negozio degli
+add-on.</p>
+</blockquote>
+<hr />
+<h2 id="3-installare-ladd-on-in-home-assistant">3. Installare l'add-on
+in Home Assistant</h2>
+<h3 id="31-aggiungere-larchivio">3.1 Aggiungere l'archivio</h3>
+<ol type="1">
+<li>In Home Assistant apri <strong>Impostazioni → Add-on → Negozio degli
+add-on</strong>.</li>
+<li>Tocca i <strong>tre puntini</strong> in alto a destra →
+<strong>Archivi</strong>.</li>
+<li>Incolla questo indirizzo e premi <strong>Aggiungi</strong>:
+<pre><code>https://github.com/danigio15/gdahomeapp</code></pre></li>
+<li>Chiudi la finestra.</li>
+</ol>
+<h3 id="32-installare-e-avviare">3.2 Installare e avviare</h3>
+<ol type="1">
+<li>Nell'elenco compare la sezione <strong>GdAHome</strong>: apri
+l'add-on.</li>
+<li>Premi <strong>Installa</strong>. La prima volta ci vogliono alcuni
+minuti, <strong>anche dieci su un Raspberry</strong>.</li>
+<li>Premi <strong>Avvia</strong>.</li>
+<li>Accendi <strong>Mostra nella barra laterale</strong>: comparirà la
+voce <strong>«Configura GdAHome»</strong>.</li>
+</ol>
+<h3 id="33-il-primo-controllo">3.3 Il primo controllo</h3>
+<p>Apri <strong>«Configura GdAHome»</strong> dalla barra laterale. Si
+apre la sezione <strong>Casa</strong>:</p>
+<p align="center"><img src="img/console-casa.jpg" width="680" alt="La sezione Casa della pagina dell'add-on"></p>
+
+<p><strong>Legenda</strong></p>
+<ul>
+<li>① <strong>Le schede</strong>: Casa, Telefoni, Plance, Licenza,
+Avanzate. Su un telefono diventano un elenco, e si torna indietro con
+«‹».</li>
+<li>② <strong>Lo stato della casa</strong>: «Tutto a posto» quando
+funziona tutto, «C'è una cosa da sistemare» quando c'è un problema.
+Sotto ci sono le righe dei controlli (Home Assistant, Da fuori
+casa…).</li>
+<li>③ <strong>«Collega l'app»</strong>: abbina un telefono nuovo
+(capitolo 4).</li>
+<li>④ <strong>«I tuoi telefoni»</strong>: i telefoni abbinati.</li>
+<li>⑤ <strong>«Le plance»</strong>: le plance della casa.</li>
+<li>⑥ <strong>«Licenza»</strong>: Base o Premium.</li>
+<li>⑦ <strong>«Avanzate»</strong>: versione, link per il browser,
+diagnostica.</li>
+</ul>
+<p><strong>Se c'è scritto «Serve riavviare Home Assistant una
+volta»</strong> (succede la prima volta):</p>
+<ol type="1">
+<li>Vai in <strong>Impostazioni → Sistema</strong>.</li>
+<li>In alto a destra tocca <strong>⏻ → Riavvia Home
+Assistant</strong>.</li>
+<li>Entro un minuto dal riavvio la plancia compare da sola fra le
+Dashboard.</li>
+</ol>
+<h3 id="34-se-avevi-lintegrazione-dashboardmodern">3.4 Se avevi
+l'integrazione DashboardModern</h3>
+<p>Non serve più: la plancia è già nell'add-on, e <strong>alla prima
+apertura GdAHome prende la configurazione che avevi</strong>.
+Disinstalla l'integrazione da HACS e togli la sua voce da
+<strong>Impostazioni → Dashboard</strong>. Se la lasci, quella voce
+mostra «Errore di configurazione».</p>
+<h3 id="35-aggiornare-ladd-on">3.5 Aggiornare l'add-on</h3>
+<p>Si aggiorna come ogni altro add-on: <strong>Impostazioni → Add-on →
+GdAHome → Aggiorna</strong>. Puoi farlo anche dall'app, dalla pagina <a
+href="#18-aggiornamenti-e-riavvio-della-casa">Aggiornamenti</a>.</p>
+<hr />
+<h2 id="4-abbinare-il-telefono-alla-casa">4. Abbinare il telefono alla
+casa</h2>
+<h3 id="41-scaricare-lapp">4.1 Scaricare l'app</h3>
+<ul>
+<li><strong>Android</strong>: <a
+href="https://play.google.com/store/apps/details?id=com.gdahome.gdahome">Google
+Play</a>, cerca «GdAHome».</li>
+<li><strong>iPhone e iPad</strong>: <a
+href="https://apps.apple.com/app/id6816421418">App Store</a>.</li>
+<li><strong>Browser</strong>: <a
+href="https://webapp.gdahome.org">webapp.gdahome.org</a> (si abbina
+scrivendo il codice).</li>
+</ul>
+<h3 id="42-generare-il-qr-code-in-home-assistant">4.2 Generare il QR
+code (in Home Assistant)</h3>
+<ol type="1">
+<li>Apri <strong>«Configura GdAHome»</strong> e premi la tessera blu
+<strong>«Collega l'app»</strong>. Si apre la pagina <strong>«Collega
+l'app GdAHome»</strong>, con tre passi.</li>
+</ol>
+<p align="center"><img src="img/console-abbina-1.jpg" width="680" alt="Collega l'app: prima di generare"></p>
+
+<p><strong>Legenda</strong></p>
+<ul>
+<li>① <strong>«Per chi è l'app?»</strong>: scegli dall'elenco l'utente
+di Home Assistant che userà il telefono. L'app vedrà <strong>quello che
+vede quella persona</strong>.</li>
+<li>② <strong>«Genera il QR code»</strong>: resta grigio finché non hai
+scelto la persona.</li>
+<li>③ Qui comparirà il QR code.</li>
+</ul>
+<ol start="2" type="1">
+<li>Scegli la persona in ①.</li>
+<li>Premi ②, <strong>«Genera il QR code»</strong>.</li>
+</ol>
+<p align="center"><img src="img/console-abbina-2.jpg" width="680" alt="Collega l'app: QR code pronto"></p>
+
+<p><strong>Legenda</strong></p>
+<ul>
+<li>① <strong>L'anteprima</strong>: dice quali plance vedrà il telefono,
+per esempio «Vedrà la plancia «GdAHome».».</li>
+<li>② <strong>Il QR code</strong> da inquadrare con l'app.</li>
+<li>③ <strong>Il conto alla rovescia</strong>: «Vale ancora 4:58». Il
+codice vale <strong>5 minuti e una volta sola</strong>.</li>
+<li>④ <strong>«Non riesci a inquadrarlo?»</strong>: mostra i
+<strong>sedici caratteri</strong> da scrivere a mano, in quattro
+gruppi.</li>
+<li>⑤ <strong>«Un QR code nuovo»</strong>: se è scaduto, ne crea un
+altro.</li>
+<li>⑥ <strong>«Annulla»</strong>: cancella subito il codice.</li>
+</ul>
+<h3 id="43-inquadrarlo-con-lapp">4.3 Inquadrarlo con l'app</h3>
+<p align="center">
+  <img src="img/a-collega.jpg" width="250" alt="Colleghiamo la casa">
+  <img src="img/a-modulo.jpg" width="250" alt="Il codice scritto a mano">
+</p>
+
+<p><strong>Legenda</strong> (schermata a sinistra)</p>
+<ul>
+<li>① <strong>«Inquadra il QR code»</strong>: apre la fotocamera.</li>
+<li>② <strong>«Come si chiama»</strong>: il nome della casa nell'app,
+per esempio «Casa» o «Casa al mare».</li>
+<li>③ <strong>«Di chi è questo telefono?»</strong>: il tuo nome
+(facoltativo). Serve a riconoscere il telefono fra quelli abbinati.</li>
+<li>④ <strong>«Non puoi inquadrarlo? Inserisci il codice»</strong>: per
+scrivere il codice a mano.</li>
+</ul>
+<p><strong>Con il QR code</strong></p>
+<ol type="1">
+<li>Apri l'app: compare <strong>«Colleghiamo la casa»</strong>.</li>
+<li>Se vuoi, cambia il nome ② e scrivi il tuo nome ③.</li>
+<li>Premi ① e consenti l'uso della fotocamera. Al buio c'è il tasto
+<strong>«Torcia»</strong>.</li>
+<li>Inquadra il QR code sullo schermo di Home Assistant.</li>
+</ol>
+<p>Fatto: la plancia si apre. 🔒 <strong>Non ti verrà mai chiesta la
+password di Home Assistant.</strong></p>
+<p><strong>Con il codice a mano</strong> (schermata a destra)</p>
+<ol type="1">
+<li>Premi ④.</li>
+<li>In <strong>«Inserisci il codice mostrato»</strong> scrivi i sedici
+caratteri, un gruppo alla volta.</li>
+<li>Lascia vuoto <strong>«Indirizzo di casa (facoltativo)»</strong>.
+Scrivilo solo se l'app lo chiede: è l'indirizzo di Home Assistant sulla
+rete di casa, per esempio <code>192.168.1.50</code>.</li>
+<li>Premi <strong>«Abbina»</strong>.</li>
+</ol>
+<h3 id="44-errori-possibili">4.4 Errori possibili</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Messaggio</th>
+<th>Cosa fare</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>«Non trovo la casa. Controlla che l'add-on sia acceso, e che il
+codice non sia scaduto…»</td>
+<td>Controlla che l'add-on sia avviato e genera un QR nuovo.</td>
+</tr>
+<tr class="even">
+<td>«Non trovo GdAHome a quell'indirizzo…»</td>
+<td>Collegati al Wi-Fi di casa e controlla l'indirizzo.</td>
+</tr>
+<tr class="odd">
+<td>«GdAHome non ha il permesso di usare la fotocamera…»</td>
+<td>Consenti la fotocamera nelle impostazioni del telefono, oppure usa
+il codice a mano.</td>
+</tr>
+<tr class="even">
+<td>«L'accesso remoto di Home Assistant non arriva agli add-on…»</td>
+<td>Collegati al Wi-Fi di casa e scrivi l'indirizzo locale.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="45-da-sapere">4.5 Da sapere</h3>
+<ul>
+<li>Ogni telefono ha <strong>il suo abbinamento</strong> e si toglie con
+un tasto (capitolo 20).</li>
+<li>Un telefono vede <strong>le plance della persona</strong> per cui è
+stato abbinato.</li>
+<li>Con <strong>Base</strong> si abbinano <strong>fino a 2
+telefoni</strong>; con <strong>Premium</strong>, quanti ne vuoi.</li>
+<li>Se avevi abbinato il telefono prima che esistesse il nome del
+proprietario, l'app te lo chiede una volta, con il foglio <strong>«Di
+chi è questo telefono?»</strong>: scrivi il nome e premi
+<strong>«Salva»</strong>, oppure <strong>«Più tardi»</strong>.</li>
+</ul>
+<hr />
+<h2 id="5-il-menu-dellapp">5. Il menu dell'app</h2>
+<h3 id="51-aprire-e-chiudere-il-menu">5.1 Aprire e chiudere il menu</h3>
+<p>Il menu si apre in tre modi:</p>
+<ul>
+<li>toccando i <strong>tre trattini</strong> in alto a sinistra della
+plancia;</li>
+<li>toccando <strong>☰</strong> in alto a sinistra nelle altre
+pagine;</li>
+<li>premendo <strong>Indietro</strong> su Android. Con il menu aperto,
+un altro Indietro esce dall'app.</li>
+</ul>
+<p>Il menu si chiude toccando una voce, trascinandolo verso sinistra,
+oppure da solo dopo qualche secondo.</p>
+<p align="center">
+  <img src="img/a-menu.jpg" width="250" alt="Il menu">
+  <img src="img/a-plance.jpg" width="250" alt="Il selettore delle plance">
+  <img src="img/a-menu-lucchetti.jpg" width="250" alt="Il menu completo con i lucchetti">
+</p>
+
+<p><strong>Legenda</strong> (prima schermata)</p>
+<ul>
+<li>① <strong>Il nome della casa</strong>, e sotto come sei collegato:
+«in casa» (verde) o «da fuori».</li>
+<li>② <strong>⇄ Le tue case</strong>: per passare a un'altra casa o
+aggiungerne una (capitolo 9).</li>
+<li>③ <strong>«Cerca una sezione»</strong>: scrivi un nome per trovare
+subito la voce.</li>
+<li>④ <strong>«Plancia»</strong>: torna alla plancia.</li>
+<li>⑤ <strong>⇕ Quale plancia</strong>: tocca qui per cambiare plancia.
+L'elenco «PLANCE DI QUESTA CASA» è nella seconda schermata; le plance
+con il lucchetto richiedono Premium.</li>
+<li>⑥ <strong>Una voce Premium</strong>: con Premium ha il bollino «✨
+PREMIUM», con Base un lucchetto.</li>
+</ul>
+<p>La terza schermata è il menu completo <strong>sul telefono</strong>.
+Alcune voci ci sono solo nell'app e non nel browser: GdANav, Notifiche,
+Salute, Zigbee e Impostazioni app.</p>
+<h3 id="52-tutte-le-voci">5.2 Tutte le voci</h3>
+<p><strong>Gruppo «Casa»</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th>Voce</th>
+<th>A cosa serve</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Plancia</td>
+<td>Torna alla plancia</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Dispositivi</td>
+<td>Dispositivi stanza per stanza e integrazioni</td>
+<td>Premium, solo amministratori</td>
+</tr>
+<tr class="odd">
+<td>GdANav</td>
+<td>Il navigatore</td>
+<td>Solo app</td>
+</tr>
+<tr class="even">
+<td>Configurazione plancia</td>
+<td>Cambia la plancia dal telefono</td>
+<td>Premium</td>
+</tr>
+<tr class="odd">
+<td>Aggiornamenti</td>
+<td>Aggiornamenti di Home Assistant, degli add-on e dei firmware;
+riavvio</td>
+<td>Il numero indica quanti sono in attesa</td>
+</tr>
+<tr class="even">
+<td>Notifiche</td>
+<td>Cosa ricevere su questo telefono</td>
+<td>Solo app</td>
+</tr>
+<tr class="odd">
+<td>Salute</td>
+<td>Le misure dell'orologio inviate alla casa</td>
+<td>Solo app, Premium</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Gruppo «Avanzate»</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th>Voce</th>
+<th>A cosa serve</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Automazioni</td>
+<td>Automazioni e Pianificatore</td>
+<td>Premium, solo amministratori</td>
+</tr>
+<tr class="even">
+<td>Aiutanti</td>
+<td>Interruttori, numeri, timer, sensori calcolati</td>
+<td>Premium, solo amministratori</td>
+</tr>
+<tr class="odd">
+<td>Zigbee</td>
+<td>Abbinare dispositivi Zigbee</td>
+<td>Solo app, Premium, solo con ZHA o Zigbee2MQTT</td>
+</tr>
+<tr class="even">
+<td>Gestione installatore</td>
+<td>Il cruscotto di chi installa</td>
+<td>Solo sugli impianti degli installatori</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Gruppo «Aiuto»</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th>Voce</th>
+<th>A cosa serve</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Impostazioni app</td>
+<td>Plancia leggera e lucchetto con volto o impronta</td>
+</tr>
+<tr class="even">
+<td>Diagnostica app</td>
+<td>Come sta andando l'app</td>
+</tr>
+<tr class="odd">
+<td>Segnalazioni</td>
+<td>Un problema, un'idea o una domanda</td>
+</tr>
+<tr class="even">
+<td>Assistenza</td>
+<td>Chat privata con chi fa l'app</td>
+</tr>
+<tr class="odd">
+<td>GdAHome Premium</td>
+<td>Abbonamento, prova gratuita, codice regalo</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="6-la-plancia-usarla-tutti-i-giorni">6. La plancia: usarla tutti
+i giorni</h2>
+<h3 id="61-comè-fatta">6.1 Com'è fatta</h3>
+<p align="center">
+  <img src="img/p-home.jpg" width="260" alt="La Home della plancia">
+  <img src="img/p-stanze.jpg" width="260" alt="Le stanze">
+</p>
+
+<p><strong>Legenda</strong></p>
+<ul>
+<li>① <strong>Il menu della plancia</strong> (tre trattini). Nell'app
+apre il menu dell'app.</li>
+<li>② <strong>La testata</strong>: nome della casa, meteo, ora, stato
+del collegamento.</li>
+</ul>
+<p>In fondo allo schermo c'è la <strong>barra delle sezioni</strong>:
+scorrila e tocca una sezione per aprirla. In ogni sezione, <strong>«←
+HOME»</strong> in alto riporta alla Home.</p>
+<p>Nella Home trovi, dall'alto in basso:</p>
+<ul>
+<li>i blocchi di riepilogo: rifiuti di domani, antifurto, avvisi;</li>
+<li><strong>Persone</strong>: chi è in casa e chi è fuori, con batteria
+e posizione;</li>
+<li><strong>Assistente di casa</strong>: le cose da fare, per esempio
+una batteria scarica;</li>
+<li><strong>Widget</strong>: i riquadri con i numeri della casa (luci
+accese, clima, aggiornamenti…).</li>
+</ul>
+<p>La seconda schermata è la sezione <strong>Stanze</strong>: ogni
+stanza mostra quante luci sono accese, la temperatura e cosa c'è dentro.
+Toccala per aprirla.</p>
+<h3 id="62-come-si-comanda">6.2 Come si comanda</h3>
+<ul>
+<li><strong>Un tocco</strong> su una luce la accende o la spegne.
+<strong>Trascinando la barra</strong> sotto la luce ne cambi la
+luminosità.</li>
+<li><strong>Un tocco</strong> su una tapparella, un termostato o una
+telecamera apre i suoi comandi o il video dal vivo.</li>
+<li>I tasti come <strong>«Accendi tutte» / «Spegni tutte»</strong>
+agiscono su tutta la sezione.</li>
+<li><strong>Porte e cancelli</strong> si aprono dalla sezione «Apri
+porte» e, se l'hai impostato, chiedono il <strong>PIN</strong>.</li>
+</ul>
+<p align="center">
+  <img src="img/p-sicurezza.jpg" width="230" alt="Sicurezza">
+  <img src="img/p-finestre.jpg" width="230" alt="Finestre">
+  <img src="img/p-energia.jpg" width="230" alt="Energia">
+</p>
+<p align="center"><sub>Sicurezza (antifurto con i modi Casa, Fuori, Notte…), Finestre (tapparelle con Apri, Stop, Chiudi) ed Energia (il flusso fra sole, rete, batteria e casa).</sub></p>
+
+<p align="center">
+  <img src="img/p-porte.jpg" width="230" alt="Apri porte e cancelli">
+  <img src="img/p-elettrodomestici.jpg" width="230" alt="Elettrodomestici">
+  <img src="img/p-auto.jpg" width="230" alt="Auto elettrica">
+</p>
+<p align="center"><sub>Apri porte e cancelli («Apri», «Blocca», «Sblocca»), Elettrodomestici (cicli e consumi) e Auto (batteria, autonomia, ricarica).</sub></p>
+
+<p align="center">
+  <img src="img/p-meteo.jpg" width="230" alt="Meteo">
+  <img src="img/p-presenza.jpg" width="230" alt="Presenza">
+  <img src="img/p-salute.jpg" width="230" alt="Salute">
+</p>
+<p align="center"><sub>Meteo, Presenza (stanze libere e ultimi passaggi) e Salute (le misure dell'orologio, capitolo 12).</sub></p>
+
+<h3 id="63-le-sezioni-della-plancia">6.3 Le sezioni della plancia</h3>
+<p>Le sezioni si accendono e si spengono dalla Configurazione (capitolo
+7). Una sezione senza contenuto non compare nella barra.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Sezione</th>
+<th>Cosa contiene</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>🏠 Home</td>
+<td>Il riepilogo della casa e i widget</td>
+</tr>
+<tr class="even">
+<td>⚡ Energia</td>
+<td>Fotovoltaico, rete, accumulo, consumi, tariffe, report</td>
+</tr>
+<tr class="odd">
+<td>🚗 Auto</td>
+<td>Auto elettrica, colonnina, evcc, ricarica di notte</td>
+</tr>
+<tr class="even">
+<td>🧭 GdANav</td>
+<td>Viaggi pianificati, che ritrovi nel navigatore</td>
+</tr>
+<tr class="odd">
+<td>🌞 Gestione termica</td>
+<td>Solare termico, scaldabagno, caldaia, pellet</td>
+</tr>
+<tr class="even">
+<td>🛡️ Sicurezza</td>
+<td>Antifurto, telecamere, sensori di fumo e gas</td>
+</tr>
+<tr class="odd">
+<td>🖥️ MiniPC (Server e rete)</td>
+<td>Server, container, rete</td>
+</tr>
+<tr class="even">
+<td>🌡️ Temperatura</td>
+<td>Le temperature delle stanze</td>
+</tr>
+<tr class="odd">
+<td>🌦️ Meteo</td>
+<td>Condizioni, previsioni, radar</td>
+</tr>
+<tr class="even">
+<td>⚽ Sport</td>
+<td>Squadra del cuore, Formula 1, MotoGP</td>
+</tr>
+<tr class="odd">
+<td>❤️ Salute</td>
+<td>Le misure dall'orologio</td>
+</tr>
+<tr class="even">
+<td>❄️ Clima</td>
+<td>Termostati, condizionatori, VMC</td>
+</tr>
+<tr class="odd">
+<td>🪟 Finestre</td>
+<td>Tapparelle e finestre</td>
+</tr>
+<tr class="even">
+<td>🏊 Piscina · 💧 Irrigazione · 🪴 Piante</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>🧺 Elettrodomestici</td>
+<td>Lavatrice, lavastoviglie e altri, con cicli e costi</td>
+</tr>
+<tr class="even">
+<td>🤖 Robot</td>
+<td>Aspirapolvere robot</td>
+</tr>
+<tr class="odd">
+<td>🐾 Animali</td>
+<td>Anche acquari e terrari</td>
+</tr>
+<tr class="even">
+<td>💡 Luci · 🔌 Prese · 🛋️ Stanze</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>📅 Agenda · 🗑️ Rifiuti · ⛈️ Allerte</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>🔌 UPS</td>
+<td>Gruppi di continuità</td>
+</tr>
+<tr class="odd">
+<td>🚪 Varchi · 🏃 Presenza</td>
+<td>Porte e finestre aperte, movimento</td>
+</tr>
+<tr class="even">
+<td>🔓 Apri porte</td>
+<td>Porte e cancelli, con PIN</td>
+</tr>
+<tr class="odd">
+<td>📮 Citofono</td>
+<td>Campanello e posta</td>
+</tr>
+<tr class="even">
+<td>🎵 Musica</td>
+<td>Lettori, radio, Alexa</td>
+</tr>
+<tr class="odd">
+<td>🔋 Batterie</td>
+<td>Le batterie dei dispositivi</td>
+</tr>
+<tr class="even">
+<td>🖨️ Stampanti · 💧 Acqua e gas</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>⭐ Le tue sezioni</td>
+<td>Sezioni create da te</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="7-configurare-la-plancia">7. Configurare la plancia</h2>
+<p><strong>(Premium dall'app; dal browser è sempre disponibile
+all'amministratore.)</strong></p>
+<h3 id="71-aprire-la-configurazione">7.1 Aprire la Configurazione</h3>
+<ul>
+<li>Dall'app: menu → <strong>«Configurazione plancia»</strong>.</li>
+<li>Dalla plancia: la voce <strong>CONFIG</strong> in fondo alla barra
+delle sezioni.</li>
+</ul>
+<p>La Configurazione si apre solo all'utente indicato come «Utente
+admin».</p>
+<p align="center"><img src="img/p-config.jpg" width="270" alt="La pagina Configurazione"></p>
+
+<p><strong>Legenda</strong></p>
+<ul>
+<li>① <strong>«Configura Entità»</strong>: l'editor completo della
+plancia. Qui si sceglie cosa va in ogni sezione.</li>
+<li>② <strong>«Tema»</strong>: Chiaro, Scuro, Auto e le tavolozze (Notte
+blu, Grafite, Bosco…). Vale solo per questo dispositivo.</li>
+<li>③ <strong>«Barra di navigazione»</strong>: «A scomparsa» o «Fissa».
+Vale solo per questo dispositivo.</li>
+<li>④ <strong>«Segnalazioni»</strong>: per segnalare un problema senza
+uscire dalla plancia.</li>
+</ul>
+<h3 id="72-leditor-come-è-organizzato">7.2 L'editor: come è
+organizzato</h3>
+<p>Tocca ① <strong>«Configura Entità»</strong>: si apre l'<strong>EDITOR
+DASHBOARD</strong>.</p>
+<p align="center">
+  <img src="img/p-cfg-editor.jpg" width="260" alt="L'editor, scheda Impostazioni">
+  <img src="img/p-cfg-sezioni.jpg" width="260" alt="L'elenco delle sezioni">
+</p>
+
+<p><strong>Legenda</strong> (schermata a sinistra)</p>
+<ul>
+<li>① <strong>Le famiglie</strong>: Plancia, Energia, Clima e acqua,
+Casa, Sicurezza, Avvisi, Alexa, Macchine e rete, oppure «Tutte». Toccane
+una per vedere solo le sue schede.</li>
+<li>② <strong>Le schede</strong>: la colonna di icone a sinistra. Ogni
+icona è una scheda (Impostazioni, Home, Luci, Clima…). In cima c'è la
+casella «Cerca in tutta la configurazione».</li>
+<li>③ <strong>«💾 Salva generali»</strong>: salva il nome della plancia
+e l'utente amministratore.</li>
+</ul>
+<p><strong>Legenda</strong> (schermata a destra: «Le sezioni della
+plancia», più in basso nella scheda Impostazioni)</p>
+<ul>
+<li>① <strong>L'interruttore</strong> verde: accende o spegne la sezione
+nella plancia.</li>
+<li>② <strong>«Configura»</strong>: apre la scheda di quella
+sezione.</li>
+</ul>
+<h3 id="73-mettere-un-dispositivo-in-una-sezione-esempio-una-luce">7.3
+Mettere un dispositivo in una sezione (esempio: una luce)</h3>
+<p align="center">
+  <img src="img/p-cfg-luci.jpg" width="250" alt="Scheda Luci">
+  <img src="img/p-cfg-stanze.jpg" width="250" alt="Scheda Stanze">
+  <img src="img/p-cfg-azioni.jpg" width="250" alt="Scheda Azioni rapide">
+</p>
+
+<ol type="1">
+<li>Nell'editor apri la scheda <strong>Luci</strong> (famiglia
+Casa).</li>
+<li>Nella riga di una luce scegli quale entità di Home Assistant
+mostrare.</li>
+<li>Dalla tendina della riga scegli la <strong>stanza</strong> (per
+esempio «Soggiorno»).</li>
+<li>Per aggiungere un'altra luce usa il tasto <strong>+</strong>; per
+toglierla, il cestino.</li>
+<li>Premi <strong>Salva</strong> in fondo alla scheda.</li>
+</ol>
+<p>Se lasci la scheda senza salvare, compare <strong>«Ricordati di
+salvare»</strong> con tre scelte: salvare, uscire senza salvare,
+restare.</p>
+<p><strong>Le altre schede che si usano di più:</strong></p>
+<ul>
+<li><strong>Stanze</strong> (al centro): l'anteprima e l'ordine delle
+stanze. Le stanze vengono dalle aree di Home Assistant e si riordinano
+trascinandole.</li>
+<li><strong>Azioni</strong> (a destra): i tasti rapidi della Home, per
+esempio «Esco», che spegne tutto. Sono anche i comandi proposti in auto
+e sull'orologio.</li>
+</ul>
+<h3 id="74-le-tue-sezioni-le-persone-gli-annunci">7.4 Le tue sezioni, le
+persone, gli annunci</h3>
+<p align="center">
+  <img src="img/p-cfg-tuesezioni.jpg" width="250" alt="Le tue sezioni">
+  <img src="img/p-cfg-persone.jpg" width="250" alt="Persone">
+  <img src="img/p-cfg-notifiche.jpg" width="250" alt="Notifiche su Echo">
+</p>
+
+<ul>
+<li><strong>Le tue sezioni</strong> (a sinistra): crea una sezione nuova
+con titolo e icona e mettici le entità che vuoi (nell'esempio,
+«Acquario»). La sezione compare nella barra.</li>
+<li><strong>Le tue entità</strong>: aggiunge entità in fondo a una
+sezione esistente.</li>
+<li><strong>Persone</strong> (al centro): le persone della Home. Usa
+<strong>«+ Aggiungi persona»</strong> oppure <strong>«Importa da Home
+Assistant»</strong>.</li>
+<li><strong>Notifiche</strong> (a destra, famiglia Alexa): fa dire le
+notifiche dagli altoparlanti Echo, se in Home Assistant c'è
+l'integrazione Alexa.</li>
+</ul>
+<h3 id="75-backup-e-ripristino-della-plancia">7.5 Backup e ripristino
+della plancia</h3>
+<p align="center"><img src="img/p-cfg-backup.jpg" width="250" alt="Backup"></p>
+
+<ol type="1">
+<li>Apri la scheda <strong>Backup</strong>.</li>
+<li><strong>«Scarica il file»</strong> salva tutta la configurazione in
+un file JSON; <strong>«Copia negli appunti»</strong> la copia come
+testo.</li>
+<li>Per ripristinare: <strong>«Scegli il file»</strong> (oppure incolla
+il testo) e conferma. Il ripristino <strong>non cancella</strong> quello
+che nel file non c'è.</li>
+</ol>
+<hr />
+<h2 id="8-più-plance-a-muro-colpo-docchio-casa-3d">8. Più plance: a
+muro, Colpo d'occhio, Casa 3D</h2>
+<p>Con <strong>Base</strong> c'è una plancia, la principale. Con
+<strong>Premium</strong> puoi averne <strong>fino a 30 per
+casa</strong>, per esempio una per la famiglia, una per il tablet in
+cucina e una per l'ufficio.</p>
+<h3 id="81-creare-una-plancia">8.1 Creare una plancia</h3>
+<p>Le plance si creano dalla pagina dell'add-on in Home Assistant:
+<strong>«Configura GdAHome» → Plance</strong>.</p>
+<p align="center"><img src="img/console-plance.jpg" width="680" alt="Le plance"></p>
+
+<p><strong>Legenda</strong></p>
+<ul>
+<li>① <strong>«Aggiungi una plancia»</strong>: apre il modulo per una
+plancia nuova.</li>
+<li>② <strong>«Apri»</strong>: apre la plancia in Home Assistant.</li>
+<li>③ <strong>«Gestisci»</strong>: chi la vede, rinomina, togli.</li>
+</ul>
+<p align="center"><img src="img/console-plance-nuova.jpg" width="680" alt="Una plancia nuova"></p>
+
+<p><strong>Legenda</strong></p>
+<ul>
+<li>① <strong>«Nome»</strong>: fino a 40 caratteri, per esempio «Casa al
+mare».</li>
+<li>② <strong>«Tipo»</strong>:
+<ul>
+<li><strong>📟 A muro</strong>: per tablet a muro e NSPanel. Comandi
+grandi, una schermata sola. Nasce già pronta, con le stanze e le scene
+della principale.</li>
+<li><strong>👁️ Colpo d'occhio</strong>: una pagina sola con il meteo e
+riquadri grandi.</li>
+<li><strong>🧊 Casa 3D</strong>: la casa in tre dimensioni.</li>
+<li><strong>🏠 Classica</strong>: una plancia completa, da preparare da
+zero.</li>
+</ul></li>
+<li>③ <strong>«Chi la vede»</strong>: spunta gli utenti che possono
+vederla. <strong>Nessuna spunta = la vedono tutti.</strong> Per un
+tablet a muro, spunta l'utente con cui è entrato il tablet.</li>
+<li>④ <strong>«Aggiungi la plancia»</strong>: crea la plancia.</li>
+</ul>
+<p>Nell'app la nuova plancia compare nel <strong>selettore delle
+plance</strong> del menu (⇕, capitolo 5).</p>
+<h3 id="82-chi-vede-una-plancia">8.2 Chi vede una plancia</h3>
+<p>Premi <strong>Gestisci</strong> accanto alla plancia:</p>
+<p align="center"><img src="img/console-plance-gestisci.jpg" width="680" alt="Gestisci una plancia"></p>
+
+<p><strong>Legenda</strong></p>
+<ul>
+<li>① <strong>«Chi la vede»</strong>: la frase dice chi la vede
+adesso.</li>
+<li>② <strong>«Solo gli amministratori della casa»</strong>: la riserva
+agli amministratori. Sotto, <strong>«e anche, solo questi
+utenti»</strong> permette di spuntare singole persone. Le scelte si
+salvano subito.</li>
+<li>③ <strong>«Rinomina»</strong>. Per le plance aggiunte c'è anche
+<strong>«Togli la plancia»</strong>, che cancella anche sezioni e stanze
+e non si può annullare.</li>
+</ul>
+<p>Chi non vede nessuna plancia legge nell'app «Non hai plance associate
+alla tua utenza».</p>
+<h3 id="83-la-plancia-a-muro-premium">8.3 La plancia a muro
+(Premium)</h3>
+<p>Trasforma un tablet fisso o un <strong>Sonoff NSPanel</strong> in un
+pannello con comandi grandi, <strong>fino a 8 pagine</strong>.</p>
+<p align="center"><img src="img/p-cfg-muro.jpg" width="260" alt="Scheda A muro"></p>
+
+<ol type="1">
+<li>Apri la plancia del tablet e vai in <strong>Configurazione →
+Configura Entità → scheda «A muro»</strong>.</li>
+<li>Accendi <strong>«Usa questa plancia a muro»</strong>.</li>
+<li>In <strong>«Prende le cose da»</strong> scegli se usare stanze,
+luci, clima e antifurto di questa plancia o della
+<strong>principale</strong>.</li>
+<li>In <strong>«Le pagine di questo tablet»</strong> premi <strong>«+
+Aggiungi una pagina»</strong> e scegli il tipo: Stanza, Scene, Ingresso,
+Personalizzata, Tutte le luci, Clima, Tutte le tapparelle, Ambienti,
+Telecamere, Energia, Musica, Meteo, Mixer audio…</li>
+<li>Per ogni pagina scegli quanti riquadri: da 4 a 24 (di serie 6).</li>
+<li>In <strong>«Altre impostazioni»</strong> regola orientamento, tema,
+riposo, notte (schermo nero), luminosità, chi c'è vicino (sensore di
+presenza) e il <strong>PIN per uscire</strong> dal pannello.</li>
+<li>Premi <strong>«Salva»</strong>. Finché non salvi, il tablet non vede
+le modifiche.</li>
+</ol>
+<p>Sul tablet si passa da una pagina all'altra con le linguette o
+facendo scorrere il dito. Dopo qualche minuto senza tocchi resta
+l'orologio.</p>
+<h3 id="84-colpo-docchio-premium">8.4 Colpo d'occhio (Premium)</h3>
+<p>Una pagina sola: nome della casa e ora, meteo, e i riquadri grandi
+<strong>Fotovoltaico</strong>, <strong>Telecamere</strong>,
+<strong>Antifurto</strong> e <strong>Cancello</strong>. Si accende in
+Configurazione → scheda <strong>«Colpo d'occhio»</strong> →
+<strong>«Accesa: questa plancia si apre a colpo d'occhio»</strong>.</p>
+<h3 id="85-casa-3d-premium">8.5 Casa 3D (Premium)</h3>
+<ol type="1">
+<li>Crea una plancia di tipo <strong>🧊 Casa 3D</strong> e aprila.</li>
+<li>Premi <strong>«Crea la tua casa»</strong> e segui gli <strong>8
+passi</strong>:
+<ol type="1">
+<li><strong>Planimetria</strong>: una foto anche storta, un PDF, un DWG,
+le misure a mano o le foto delle stanze.</li>
+<li><strong>Scala</strong>: segna due punti di cui conosci la
+distanza.</li>
+<li><strong>Muri</strong>: riconosciuti da soli; li ritocchi con muro,
+gomma, porta, finestra.</li>
+<li><strong>Stanze</strong>: i nomi dalle aree di Home Assistant o
+scritti da te.</li>
+<li><strong>Foto delle stanze</strong>: arredi e dispositivi
+riconosciuti.</li>
+<li><strong>Dispositivi</strong>: collega ogni oggetto alla sua
+entità.</li>
+<li><strong>Esterno</strong>: villa o palazzo, tetto, colori.</li>
+<li><strong>Casa 3D</strong>: salva e apri, oppure aggiungi un
+piano.</li>
+</ol></li>
+</ol>
+<p>Nella casa 3D un tocco accende le luci, muove le tapparelle o apre le
+telecamere. Le foto restano sul dispositivo da cui le carichi.</p>
+<blockquote>
+<p>Con Base la plancia a muro resta una plancia normale, e Colpo
+d'occhio e Casa 3D mostrano un avviso. <strong>La configurazione resta
+salvata.</strong></p>
+</blockquote>
+<hr />
+<h2 id="9-più-case-e-il-collegamento-da-fuori-casa">9. Più case e il
+collegamento da fuori casa</h2>
+<h3 id="91-le-tue-case-premium-fino-a-10">9.1 Le tue case (Premium: fino
+a 10)</h3>
+<p>Apri il menu e tocca <strong>⇄</strong> (② nella prima schermata del
+capitolo 5).</p>
+<p align="center">
+  <img src="img/a-le-case.jpg" width="250" alt="Le tue case">
+  <img src="img/a-case-lucchetto.jpg" width="250" alt="Aggiungere una casa con Base">
+</p>
+
+<ul>
+<li><strong>Passare a un'altra casa</strong>: tocca il suo nome. Sotto
+il nome c'è da dove la raggiungi: «in casa adesso», «da fuori adesso»,
+«solo sotto il Wi-Fi di casa».</li>
+<li><strong>Aggiungere una casa</strong>: premi
+<strong>«Aggiungi»</strong> e ripeti l'abbinamento (capitolo 4)
+sull'Home Assistant dell'altra casa. Con Base il tasto ha il lucchetto
+(schermata a destra).</li>
+<li><strong>Togliere una casa dal telefono</strong>: tocca il
+<strong>cestino</strong> e conferma con <strong>«Elimina»</strong>. Per
+toglierla anche dalla parte della casa: «Configura GdAHome» → Telefoni →
+⋯ → «Togli da questa casa».</li>
+</ul>
+<h3 id="92-da-fuori-casa-premium">9.2 Da fuori casa (Premium)</h3>
+<p>Sul Wi-Fi di casa l'app parla direttamente con l'add-on. <strong>Con
+Premium</strong> la casa si raggiunge da qualunque posto:</p>
+<ul>
+<li><strong>senza aprire porte sul router</strong>, senza VPN e senza
+indirizzo pubblico;</li>
+<li><strong>cifrato da un capo all'altro</strong>;</li>
+<li><strong>in automatico</strong>: appena esci di casa l'app cambia
+strada da sola.</li>
+</ul>
+<p>L'opzione dell'add-on <strong>«Da fuori casa»</strong> deve essere
+accesa (lo è di serie).</p>
+<p align="center">
+  <img src="../immagini/fuori-casa-serve-premium.png" width="230" alt="Fuori casa serve Premium">
+  <img src="img/a-riconnessione.jpg" width="230" alt="Riconnessione">
+</p>
+<p align="center"><sub>A sinistra: con Base, fuori dal Wi-Fi di casa. A destra: mentre l'add-on si aggiorna o Home Assistant si riavvia, l'app riprova da sola.</sub></p>
+
+<h3 id="93-lapp-dal-browser-premium">9.3 L'app dal browser
+(Premium)</h3>
+<p>Apri <a href="https://webapp.gdahome.org">webapp.gdahome.org</a> e
+abbinala con il <strong>codice a mano</strong> (paragrafo 4.3).
+L'indirizzo esatto lo trovi anche in «Configura GdAHome» → Avanzate →
+«GdAHome nel browser».</p>
+<hr />
+<h2 id="10-le-notifiche">10. Le notifiche</h2>
+<p>La casa ti avvisa <strong>anche ad app chiusa</strong>: l'antifurto
+che scatta, il campanello, la lavatrice che ha finito.</p>
+<ul>
+<li><strong>Le regole stanno nell'add-on</strong>: è la casa a guardare
+i sensori e a decidere quando scriverti.</li>
+<li><strong>Sul telefono scegli quali</strong> notifiche ricevere.</li>
+<li>Le notifiche partono <strong>già cifrate</strong> con la chiave del
+tuo telefono: né il centralino, né Google, né Apple le possono
+leggere.</li>
+</ul>
+<blockquote>
+<p><strong>Con Base</strong> arrivano solo gli <strong>avvisi di
+sicurezza</strong>: fumo, gas, allagamento, antifurto scattato e
+campanello. <strong>Tutto il resto è Premium</strong>, e nella pagina è
+segnato con un lucchetto.</p>
+</blockquote>
+<h3 id="101-attivarle">10.1 Attivarle</h3>
+<ol type="1">
+<li>La prima volta che entri in una casa compare <strong>«Le notifiche
+di casa»</strong>: premi <strong>«Attiva»</strong> e consenti le
+notifiche al telefono. Se avevi scelto «Non ora», le attivi dalla pagina
+Notifiche.</li>
+<li>Apri menu → <strong>«Notifiche»</strong>.</li>
+</ol>
+<p align="center"><img src="img/a-notifiche-1.jpg" width="280" alt="La pagina Notifiche"></p>
+
+<p><strong>Legenda</strong></p>
+<ul>
+<li>① <strong>Per quale casa</strong>: ogni casa ha le sue notifiche.
+Tocca il nome della casa per cui stai scegliendo.</li>
+<li>② <strong>«Notifiche di GdAHome»</strong>: l'interruttore
+principale. Sotto devono comparire <strong>«Attive su questo
+iPhone»</strong> (o telefono) e <strong>«Cifrate»</strong>.</li>
+<li>③ <strong>«Come le vuoi»</strong>:
+<ul>
+<li><strong>«Semplici»</strong>: solo testo (di serie);</li>
+<li><strong>«Elaborate»</strong> (Premium): con il grafico e le foto
+delle telecamere.</li>
+</ul></li>
+<li>④ <strong>L'avviso di Base</strong>: con Base arrivano solo gli
+avvisi di sicurezza.</li>
+</ul>
+<ol start="3" type="1">
+<li>Accendi ②.</li>
+<li>In fondo alla pagina premi <strong>«Manda una notifica di
+prova»</strong>. Se leggi «Partita: arriva fra qualche secondo»,
+funziona.</li>
+</ol>
+<p><strong>Requisiti:</strong></p>
+<ul>
+<li>l'opzione dell'add-on <strong>«Da fuori casa»</strong> deve essere
+accesa, perché le notifiche passano dal centralino;</li>
+<li>il telefono deve essere abbinato a un utente di Home Assistant.</li>
+</ul>
+<p>Se manca qualcosa, la pagina lo dice con una scheda gialla e spiega
+cosa fare.</p>
+<h3 id="102-cosa-puoi-ricevere">10.2 Cosa puoi ricevere</h3>
+<p>Scorri la pagina: ogni voce ha un interruttore, e di serie sono tutte
+accese.</p>
+<p align="center">
+  <img src="img/a-notifiche-2.jpg" width="230" alt="Urgenti e Sicurezza">
+  <img src="img/a-notifiche-3.jpg" width="230" alt="Casa, Persone, Assistente">
+  <img src="img/a-notifiche-4.jpg" width="230" alt="Personalizzate e Quando">
+</p>
+
+<table>
+<thead>
+<tr class="header">
+<th>Categoria</th>
+<th>Voce</th>
+<th>Quando arriva</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Urgenti</strong> (suonano anche in silenzioso)</td>
+<td>Antifurto scattato</td>
+<td>Subito, con la zona</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>Allagamento, fumo, gas</td>
+<td>Dal primo sensore che se ne accorge</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td>Campanello</td>
+<td>Con la foto della porta e «Apri cancello»</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>Manca la corrente</td>
+<td>Dagli UPS: autonomia, e quando torna</td>
+</tr>
+<tr class="odd">
+<td><strong>Sicurezza</strong></td>
+<td>Antifurto inserito o disinserito</td>
+<td>Totale, notte, parziale, vacanza</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>Uscito senza antifurto</td>
+<td>L'ultimo esce e l'antifurto è spento</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td>Porta o garage aperti</td>
+<td>Di notte, o con la casa vuota</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>Movimento davanti alle telecamere</td>
+<td>Con la foto, a casa vuota o di notte</td>
+</tr>
+<tr class="odd">
+<td><strong>Casa</strong></td>
+<td>Elettrodomestico finito</td>
+<td>Durata, kWh e costo</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>Freezer e frigo</td>
+<td>Troppo caldi, o porta aperta</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td>Pioggia con finestre aperte</td>
+<td>Mezz'ora prima</td>
+</tr>
+<tr class="even">
+<td></td>
+<td>La pappa degli animali</td>
+<td>Quando è ora</td>
+</tr>
+<tr class="odd">
+<td><strong>Persone</strong></td>
+<td>Arrivi e uscite</td>
+<td>Solo per le persone che scegli</td>
+</tr>
+<tr class="even">
+<td><strong>Assistente di casa</strong></td>
+<td>Suggerimenti</td>
+<td>Luci o clima accesi con la casa vuota, ecc.</td>
+</tr>
+<tr class="odd">
+<td><strong>Manutenzione</strong></td>
+<td>Riepilogo serale</td>
+<td>Ogni sera all'ora scelta</td>
+</tr>
+<tr class="even">
+<td><strong>Viaggi</strong></td>
+<td>Quando partire</td>
+<td>I viaggi pianificati in GdANav</td>
+</tr>
+</tbody>
+</table>
+<p>In fondo alla pagina (terza schermata) trovi:</p>
+<ul>
+<li>le <strong>«Notifiche personalizzate»</strong> (paragrafo
+10.5);</li>
+<li>la scheda <strong>«Quando»</strong>, con:
+<ul>
+<li><strong>«Ore di silenzio»</strong>: accese di serie, dalle 23:00
+alle 07:00. Tocca gli orari per cambiarli. <strong>Le urgenti passano
+comunque.</strong></li>
+<li><strong>«Solo quando sono fuori casa»</strong>: quando sei in casa,
+le notifiche di «Casa» e «Assistente» restano zitte.</li>
+</ul></li>
+</ul>
+<h3 id="103-regolare-una-singola-notifica">10.3 Regolare una singola
+notifica</h3>
+<p><strong>Tocca il nome di una voce</strong> (non l'interruttore): si
+apre il suo foglio. Le scelte valgono <strong>solo per quella notifica,
+su questo telefono</strong>, e si salvano subito.</p>
+<p align="center">
+  <img src="img/a-notifica-foglio.jpg" width="230" alt="Foglio di una notifica">
+  <img src="img/a-notifica-quali.jpg" width="230" alt="Quali telecamere">
+  <img src="img/a-notifica-video.jpg" width="230" alt="Mini video">
+</p>
+
+<table>
+<thead>
+<tr class="header">
+<th>Scelta</th>
+<th>Cosa fa</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Stile</strong></td>
+<td>Come tutte, Semplice oppure Elaborata</td>
+</tr>
+<tr class="even">
+<td><strong>Quali</strong></td>
+<td>Quali elettrodomestici, UPS o telecamere seguire. Si apre un elenco
+con «Cerca», le spunte e «Fatto» (seconda schermata)</td>
+</tr>
+<tr class="odd">
+<td><strong>Quando</strong> (Movimento)</td>
+<td>«Casa vuota o notte» (di serie), «Casa vuota», «Di notte»,
+«Sempre»</td>
+</tr>
+<tr class="even">
+<td><strong>Video</strong> (Movimento, Premium)</td>
+<td>«Mini video del movimento»: 5 secondi prima e 5 dopo (terza
+schermata)</td>
+</tr>
+<tr class="odd">
+<td><strong>Solo se</strong></td>
+<td>Per esempio «Solo se il ciclo costa più di … €»</td>
+</tr>
+<tr class="even">
+<td><strong>Suono</strong></td>
+<td>«Muta», «Normale», «Il suo suono»</td>
+</tr>
+<tr class="odd">
+<td><strong>Orari</strong></td>
+<td>«Sempre» oppure «Solo in queste ore»</td>
+</tr>
+<tr class="even">
+<td><strong>Come</strong></td>
+<td>«Subito» oppure «Nel riepilogo della sera» (Premium)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>«Prova: mandamela adesso»</strong> ti manda subito un
+esempio.</p>
+<blockquote>
+<p>Le notifiche <strong>urgenti</strong> non si possono silenziare:
+arrivano sempre e subito.</p>
+</blockquote>
+<h3 id="104-comè-una-notifica-e-cosa-fare-quando-arriva">10.4 Com'è una
+notifica, e cosa fare quando arriva</h3>
+<p align="center">
+  <img src="img/a-n-antifurto.jpg" width="200" alt="Antifurto">
+  <img src="img/a-n-lavatrice.jpg" width="200" alt="Lavatrice">
+  <img src="img/a-n-movimento.jpg" width="200" alt="Movimento">
+  <img src="img/a-n-campanello.jpg" width="200" alt="Campanello">
+</p>
+<p align="center"><sub>Quattro notifiche aperte nell'app: antifurto inserito, lavatrice finita (con il costo e la parte presa dal sole), movimento davanti a una telecamera, campanello a tutto schermo.</sub></p>
+
+<p><strong>Toccando la notifica</strong> si apre la pagina giusta:
+Sicurezza, la telecamera, Elettrodomestici, Energia, Persone, Meteo, «La
+tua giornata» o GdANav.</p>
+<p><strong>I tasti nelle notifiche</strong> (valgono 2 ore):</p>
+<table>
+<thead>
+<tr class="header">
+<th>Notifica</th>
+<th>Tasti</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Antifurto scattato</td>
+<td>«Spegni sirena», «Disinserisci», «Guarda»</td>
+</tr>
+<tr class="even">
+<td>Campanello</td>
+<td>«Apri cancello» / «Apri», «Ignora»</td>
+</tr>
+<tr class="odd">
+<td>Uscito senza antifurto</td>
+<td>«Inserisci», «Più tardi»</td>
+</tr>
+<tr class="even">
+<td>Porta o garage aperti</td>
+<td>«Chiudi», «Va bene così», «Più tardi»</td>
+</tr>
+<tr class="odd">
+<td>Movimento</td>
+<td>«Guarda», «Inserisci antifurto»</td>
+</tr>
+<tr class="even">
+<td>Luci con casa vuota</td>
+<td>«Spegni», «Restano così», «Più tardi»</td>
+</tr>
+<tr class="odd">
+<td>Riepilogo serale</td>
+<td>«Apri la giornata», «OK»</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>«Va bene così»</strong> zittisce quel suggerimento per 12
+ore.</li>
+<li><strong>«Più tardi»</strong> lo rimanda di un'ora.</li>
+<li>Con il lucchetto dell'app acceso, i tasti chiedono prima volto o
+impronta.</li>
+</ul>
+<p><strong>Il campanello</strong> si presenta a tutto schermo, come una
+telefonata, con la foto dal vivo della porta e i tasti
+<strong>«Ignora»</strong> e <strong>«Apri»</strong>. «Apri» chiede prima
+di sbloccare il telefono. Resta valido per 60 secondi.</p>
+<p align="center">
+  <img src="img/a-n-telecamera.jpg" width="200" alt="Telecamera">
+  <img src="img/a-n-video.jpg" width="200" alt="Mini video">
+  <img src="img/a-n-luci.jpg" width="200" alt="Assistente: luci">
+  <img src="img/a-n-garage.jpg" width="200" alt="Assistente: garage">
+</p>
+<p align="center"><sub>Da una notifica di movimento: la foto del momento, «Guarda dal vivo» e il mini video. A destra due suggerimenti dell'assistente («Nessuno in casa da 1 h» con «Spegni le 2 luci», e il garage aperto con «Chiudi»).</sub></p>
+
+<h3 id="105-notifiche-personalizzate-premium">10.5 Notifiche
+personalizzate (Premium)</h3>
+<p>Sono regole tue, per esempio «quando il freezer va sopra i -12 °C per
+10 minuti, avvisami».</p>
+<ol type="1">
+<li>Notifiche → <strong>«Notifiche personalizzate»</strong> →
+<strong>«Aggiungi»</strong>.</li>
+</ol>
+<p align="center">
+  <img src="img/a-editor-1.jpg" width="270" alt="Nuova notifica">
+  <img src="img/a-editor-2.jpg" width="270" alt="Nuova notifica, seconda parte">
+</p>
+
+<p><strong>Legenda</strong> (schermata a sinistra)</p>
+<ul>
+<li>① <strong>I tre passi</strong>: Entità → Condizione →
+Messaggio.</li>
+<li>② <strong>L'entità</strong> da controllare: toccala e cerca il
+sensore.</li>
+<li>③ <strong>La condizione e il valore</strong>: «sopra», «sotto»,
+«uguale a» o «diverso da», e il valore (per esempio -12 °C).</li>
+<li>④ <strong>Per quanto tempo</strong>: subito, 1, 5, 10, 15, 30 minuti
+o 1 ora.</li>
+<li>⑤ <strong>Il valore di adesso</strong> («tutto a posto» o
+«scatterebbe») e il <strong>grafico delle ultime 24 ore</strong>, con la
+soglia tratteggiata.</li>
+<li>⑥ <strong>«Titolo»</strong> del messaggio (obbligatorio).</li>
+<li>⑦ <strong>«Prova adesso»</strong>: la ricevi subito, solo tu.</li>
+<li>⑧ <strong>«Salva»</strong>.</li>
+</ul>
+<ol start="2" type="1">
+<li>Compila ②, ③ e ④.</li>
+<li>Scrivi il <strong>Titolo</strong> ⑥ e, se vuoi, il testo «Sotto il
+titolo».</li>
+<li>Nella seconda parte (a destra) scegli:
+<ul>
+<li><strong>«Urgenza»</strong>: «Bassa», «Normale» oppure «Urgente»
+(passa anche in silenzioso);</li>
+<li><strong>«Chi la riceve»</strong>: di serie solo tu; un
+amministratore può scegliere altre persone;</li>
+<li><strong>«Non ripetere per»</strong>: al massimo una volta ogni 15
+min, 30 min, 1 h, 3 h, 12 h o 24 h.</li>
+</ul></li>
+<li>Premi <strong>⑦ «Prova adesso»</strong> per vedere com'è, poi
+<strong>⑧ «Salva»</strong>.</li>
+</ol>
+<p>Ogni casa può avere fino a 40 notifiche personalizzate. Per toglierne
+una: aprila → <strong>«Togli questa notifica»</strong>.</p>
+<h3 id="106-le-notifiche-che-già-mandi-con-home-assistant-premium">10.6
+Le notifiche che già mandi con Home Assistant (Premium)</h3>
+<p>Se hai automazioni di Home Assistant che mandano notifiche alla sua
+app, GdAHome le trova e le elenca nella scheda <strong>«Da Home
+Assistant»</strong>.</p>
+<p align="center">
+  <img src="img/a-da-ha-1.jpg" width="230" alt="Da Home Assistant">
+  <img src="img/a-da-ha-foglio.jpg" width="230" alt="Una automazione di Home Assistant">
+</p>
+
+<ol type="1">
+<li>Premi <strong>«Accendi quelle di questo telefono»</strong>, oppure
+tocca una singola automazione (seconda schermata).</li>
+<li>Scegli <strong>«Chi la riceve»</strong> e se deve <strong>«Rispetta
+le ore di silenzio»</strong>.</li>
+<li>Premi <strong>«Ricevila anche in GdAHome»</strong>.</li>
+</ol>
+<p>Arrivano nello stesso momento e con lo stesso testo, ma cifrate.
+L'app di Home Assistant continua a riceverle: se non le vuoi doppie,
+spegnile lì.</p>
+<hr />
+<h2 id="11-il-riepilogo-della-sera-e-la-tua-giornata">11. Il riepilogo
+della sera e «La tua giornata»</h2>
+<h3 id="111-il-riepilogo-serale-premium">11.1 Il riepilogo serale
+(Premium)</h3>
+<p>Ogni sera, all'ora che scegli (di serie <strong>20:30</strong>),
+arriva <strong>una notifica sola</strong> con la giornata della casa:
+energia dal sole, soldi spesi e risparmiati, chi ha consumato di più, un
+consiglio per domani e le cose da sistemare.</p>
+<p align="center"><img src="img/a-scheda-giornata.jpg" width="420" alt="La scheda del riepilogo"></p>
+
+<p><strong>Per cambiare l'ora:</strong> Notifiche → Manutenzione →
+<strong>«Riepilogo serale»</strong> → tocca l'orario <strong>«Ogni sera
+alle»</strong>.</p>
+<h3 id="112-la-pagina-la-tua-giornata-premium">11.2 La pagina «La tua
+giornata» (Premium)</h3>
+<p>Si apre toccando il riepilogo serale (o <strong>«Apri la
+giornata»</strong>), oppure da Notifiche → Manutenzione → <strong>«La
+tua giornata»</strong>. Per aggiornarla, tira la pagina verso il
+basso.</p>
+<p align="center">
+  <img src="img/a-giornata-1.jpg" width="180" alt="La tua giornata 1">
+  <img src="img/a-giornata-2.jpg" width="180" alt="La tua giornata 2">
+  <img src="img/a-giornata-3.jpg" width="180" alt="La tua giornata 3">
+  <img src="img/a-giornata-4.jpg" width="180" alt="La tua giornata 4">
+</p>
+<p align="center"><sub>La pagina intera, dall'alto in basso.</sub></p>
+
+<table>
+<thead>
+<tr class="header">
+<th>Sezione</th>
+<th>Cosa racconta</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>In breve</td>
+<td>Tre o quattro fatti della giornata</td>
+</tr>
+<tr class="even">
+<td>Energia</td>
+<td>Ora per ora, chi ha consumato di più, i soldi, la batteria di
+casa</td>
+</tr>
+<tr class="odd">
+<td>Clima di casa</td>
+<td>Temperature per stanza, quanto è stato acceso il riscaldamento</td>
+</tr>
+<tr class="even">
+<td>Acqua calda</td>
+<td>Il solare termico e quanto ha fatto risparmiare</td>
+</tr>
+<tr class="odd">
+<td>Auto e consumi</td>
+<td>Ricariche, chilometri, acqua e gas</td>
+</tr>
+<tr class="even">
+<td>La casa</td>
+<td>Porte aperte, automazioni eseguite, avvisi</td>
+</tr>
+<tr class="odd">
+<td>Rispetto a</td>
+<td>Ieri, la settimana, il mese</td>
+</tr>
+<tr class="even">
+<td>Domani</td>
+<td>Il meteo e le ore di sole</td>
+</tr>
+<tr class="odd">
+<td>Da sistemare</td>
+<td>Le cose che chiedono attenzione</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="12-la-salute-dallorologio">12. La Salute dall'orologio</h2>
+<p><strong>(Premium, solo nell'app sul telefono.)</strong> Passi,
+battito, pressione, peso, sonno e le altre misure dell'orologio arrivano
+a casa e diventano sensori di Home Assistant. Funziona con:</p>
+<ul>
+<li><strong>Apple Salute</strong>: iPhone e Apple Watch;</li>
+<li><strong>Health Connect</strong> su Android: Galaxy Watch, Pixel
+Watch, Fitbit, Amazfit e gli altri. Serve Android 8 o successivo.</li>
+</ul>
+<p align="center">
+  <img src="img/a-salute-1.jpg" width="250" alt="Salute, parte alta">
+  <img src="img/a-salute-2.jpg" width="250" alt="Salute, parte bassa">
+  <img src="img/p-salute.jpg" width="250" alt="La pagina Salute della plancia">
+</p>
+
+<h3 id="121-attivarla">12.1 Attivarla</h3>
+<ol type="1">
+<li>Menu → <strong>«Salute»</strong>.</li>
+<li>Su Android, se manca Health Connect, premi <strong>«Installa Health
+Connect»</strong>.</li>
+<li>Accendi <strong>«Manda le misure alla casa»</strong> e concedi il
+permesso di lettura della salute.</li>
+<li>Lascia acceso <strong>«Manda anche ad app chiusa»</strong>.</li>
+<li>In <strong>«Come ti chiama la casa»</strong> scrivi il tuo nome: con
+questo nome le tue misure compaiono nella plancia.</li>
+<li>In <strong>«Cosa mandare»</strong> spunta le misure: Passi,
+Distanza, Piani saliti, Battito, Battito a riposo, Peso, Massa grassa,
+Pressione, Ossigeno, Sonno, Calorie…</li>
+<li>Premi <strong>«Manda adesso»</strong> per il primo invio.</li>
+</ol>
+<p>Ogni persona di famiglia fa lo stesso <strong>sul proprio
+telefono</strong>. Nella sezione Salute della plancia (terza schermata)
+compare una persona per telefono. Toccando una scheda apri lo storico a
+7, 30 o 90 giorni.</p>
+<h3 id="122-se-una-misura-non-arriva">12.2 Se una misura non arriva</h3>
+<ul>
+<li><strong>Android</strong>: premi <strong>«Dai i permessi che
+mancano»</strong>. Se la richiesta non compare, vai in
+<strong>Impostazioni → Health Connect → Autorizzazioni app →
+GdAHome</strong>.</li>
+<li><strong>iPhone</strong>: vai in <strong>Impostazioni → Salute →
+Accesso ai dati e dispositivi → GdAHome</strong>.</li>
+</ul>
+<p><strong>Privacy.</strong> Le misure vanno <strong>solo alla tua
+casa</strong>, cifrate. GdAHome non scrive mai in Salute. Spegnendo
+l'interruttore, la casa cancella le tue misure.</p>
+<blockquote>
+<p>Chiunque possa aprire la plancia con la sezione Salute vede le
+misure. Se vuoi tenerle riservate, metti la sezione in una plancia
+visibile solo a te («Chi la vede», capitolo 8).</p>
+</blockquote>
+<hr />
+<h2 id="13-dispositivi-integrazioni-aiutanti-e-zigbee">13. Dispositivi,
+integrazioni, aiutanti e Zigbee</h2>
+<p>Queste pagine <strong>cambiano Home Assistant</strong>: sono
+<strong>Premium</strong> e solo per <strong>chi amministra Home
+Assistant</strong>. Gli altri utenti non le vedono nel menu.</p>
+<h3 id="131-dispositivi">13.1 Dispositivi</h3>
+<p>Menu → <strong>«Dispositivi»</strong>.</p>
+<p align="center">
+  <img src="img/p-dispositivi.jpg" width="250" alt="Dispositivi">
+  <img src="img/p-disp-foglio.jpg" width="250" alt="Un dispositivo">
+</p>
+
+<p><strong>Legenda</strong> (schermata a sinistra)</p>
+<ul>
+<li>In cima, i tre riquadri: quanti <strong>dispositivi</strong>, quante
+<strong>entità</strong>, quanti <strong>non rispondono</strong>.</li>
+<li>⑤ <strong>Un dispositivo</strong>: nome, marca e modello, e a destra
+il suo comando o il suo stato. «Non risponde» in rosso vuol dire
+scollegato.</li>
+<li>Sopra l'elenco ci sono le schede <strong>«Dispositivi»</strong> e
+<strong>«Integrazioni»</strong>, il raggruppamento <strong>«Per stanza»
+/ «Per integrazione»</strong> e la casella <strong>«Cerca un
+dispositivo…»</strong>.</li>
+</ul>
+<p><strong>Toccando un dispositivo</strong> si apre il suo foglio (a
+destra): marca, modello, integrazione, <strong>tutte le sue
+entità</strong> con i comandi, e <strong>«↻ Ricarica
+l'integrazione»</strong>.</p>
+<h3 id="132-integrazioni">13.2 Integrazioni</h3>
+<p>Tocca la scheda <strong>«Integrazioni»</strong>.</p>
+<p align="center">
+  <img src="img/p-integrazioni.jpg" width="250" alt="Integrazioni">
+  <img src="img/p-integr-foglio.jpg" width="250" alt="Una integrazione">
+</p>
+
+<p><strong>Legenda</strong></p>
+<ul>
+<li>① <strong>I riquadri</strong>: «Installate», «Dispositivi» e «Da
+sistemare».</li>
+<li><strong>«Da guardare»</strong> raccoglie le integrazioni con un
+problema. Per esempio «Casa · errore auth» vuol dire che
+<strong>l'accesso va rifatto</strong>: tocca ↻ o «Ripara».</li>
+<li><strong>«＋ Aggiungi»</strong> aggiunge un'integrazione nuova.</li>
+</ul>
+<p><strong>Aggiungere un'integrazione</strong></p>
+<ol type="1">
+<li>Premi <strong>«＋ Aggiungi»</strong>.</li>
+<li>Cerca il nome (per esempio «Shelly», «Hue», «Sonos»).</li>
+<li>Rispondi alle domande della procedura guidata di Home Assistant, una
+alla volta.</li>
+</ol>
+<p>Toccando un'integrazione trovi <strong>«Ricarica»</strong>,
+<strong>«⚙️ Opzioni»</strong>, <strong>«Disattiva»</strong> ed
+<strong>«Elimina»</strong>.</p>
+<blockquote>
+<p><strong>«Elimina»</strong> toglie l'integrazione con tutti i suoi
+dispositivi, e le automazioni che li usano smettono di funzionare. Non
+si torna indietro.</p>
+</blockquote>
+<h3 id="133-aiutanti">13.3 Aiutanti</h3>
+<p>Menu → <strong>«Aiutanti»</strong>: interruttori, numeri, elenchi,
+timer e sensori «fatti in casa», da usare nelle automazioni.</p>
+<p align="center">
+  <img src="img/p-aiutanti.jpg" width="230" alt="Aiutanti">
+  <img src="img/p-aiut-nuovo.jpg" width="230" alt="Nuovo aiutante: il tipo">
+  <img src="img/p-aiut-modulo.jpg" width="230" alt="Nuovo aiutante: il modulo">
+</p>
+
+<p><strong>Legenda</strong> (prima schermata)</p>
+<ul>
+<li>① <strong>«Per tipo» / «Tutti»</strong>: come raggruppare
+l'elenco.</li>
+<li>② <strong>«Cerca un aiutante…»</strong>.</li>
+<li>③ <strong>Un gruppo</strong> (Interruttori): gli aiutanti di quel
+tipo. Toccane uno per cambiarne subito il valore, modificarlo o
+eliminarlo.</li>
+</ul>
+<p><strong>Creare un aiutante</strong></p>
+<ol type="1">
+<li>Premi <strong>«＋ Nuovo»</strong>.</li>
+<li>Scegli il tipo (seconda schermata): Interruttori, Numeri, Elenchi,
+Testi, Date e ore, Pulsanti, Timer, Contatori, Programmi.</li>
+<li>Compila il modulo (terza schermata): <strong>Nome</strong>,
+<strong>Icona</strong> e i campi del tipo scelto.</li>
+<li>Premi <strong>«Salva in Home Assistant»</strong>.</li>
+</ol>
+<h3 id="134-zigbee-aggiungere-un-dispositivo-dal-telefono">13.4 Zigbee:
+aggiungere un dispositivo dal telefono</h3>
+<p><strong>(Premium, solo app.)</strong> La voce
+<strong>«Zigbee»</strong> compare se in casa c'è <strong>ZHA</strong> o
+<strong>Zigbee2MQTT</strong>.</p>
+<p align="center">
+  <img src="img/a-zigbee.jpg" width="250" alt="Zigbee">
+  <img src="img/p-dove-lo-metto.jpg" width="250" alt="Dove lo metto?">
+</p>
+
+<ol type="1">
+<li>Menu → <strong>«Zigbee»</strong> (prima schermata).</li>
+<li>Leggi <strong>«Prima di cominciare»</strong>:
+<ul>
+<li>porta il dispositivo <strong>vicino a una presa o a una lampadina
+già in casa</strong>;</li>
+<li><strong>tienilo spento</strong>.</li>
+</ul></li>
+<li>Premi <strong>«Apri la rete»</strong>. Parte un conto alla rovescia
+di circa 4 minuti, poi la rete si richiude da sola.</li>
+<li><strong>Accendi il dispositivo</strong> e mettilo in abbinamento.
+Quasi sempre si tiene premuto il tasto per cinque secondi, finché la
+spia non lampeggia.</li>
+<li>Aspetta. Quando compare <strong>«È entrato»</strong>, scrivi un nome
+chiaro in <strong>«Come lo chiami»</strong> (per esempio «Luce
+comodino») e premi <strong>«Chiamalo così»</strong>.</li>
+<li>Premi <strong>«Adesso mettilo nella plancia»</strong>: si apre
+<strong>«Dove lo metto?»</strong> (seconda schermata).</li>
+<li>La plancia ti propone la sezione giusta e ti dice perché (qui: «è
+una lampadina»).
+<ul>
+<li>Scegli la <strong>«Stanza»</strong>.</li>
+<li>Se preferisci, sotto <strong>«Oppure»</strong> scegli un'altra
+sezione.</li>
+</ul></li>
+<li>Premi <strong>«Mettilo in Luci»</strong> (o nella sezione scelta).
+<strong>«Più tardi»</strong> rimanda.</li>
+</ol>
+<p>Dalla pagina Zigbee, toccando un dispositivo già presente, puoi
+rinominarlo (<strong>«Salva il nome»</strong>), metterlo nella plancia o
+toglierlo dalla rete (<strong>«Togli dalla rete»</strong>).
+<strong>«Guarda la rete»</strong> disegna la mappa della rete.</p>
+<hr />
+<h2 id="14-automazioni-e-pianificatore">14. Automazioni e
+Pianificatore</h2>
+<p><strong>(Premium, solo amministratori.)</strong> Sono <strong>vere
+automazioni di Home Assistant</strong>: le esegue la casa anche ad app
+chiusa. Le ritrovi anche in Home Assistant, in <strong>Impostazioni →
+Automazioni</strong>.</p>
+<h3 id="141-lelenco">14.1 L'elenco</h3>
+<p>Menu → <strong>«Automazioni»</strong>.</p>
+<p align="center">
+  <img src="img/p-automazioni.jpg" width="250" alt="Automazioni">
+  <img src="img/p-automazioni-aperte.jpg" width="250" alt="Elenco delle automazioni">
+</p>
+
+<p><strong>Legenda</strong> (schermata a sinistra)</p>
+<ul>
+<li>① <strong>«Automazioni»</strong> e ②
+<strong>«Pianificatore»</strong>: le due schede della pagina.</li>
+<li>I riquadri <strong>«Attive»</strong>, <strong>«Spente»</strong> e
+<strong>«Prossima»</strong> (la prossima che scatta a un orario).</li>
+<li>③ <strong>«N proposte per la tua casa»</strong>: idee pensate sui
+tuoi dispositivi. Tocca <strong>«Vedi ›»</strong>; per ognuna scegli
+<strong>«Crea»</strong> o <strong>«No, grazie»</strong>.</li>
+<li>④ <strong>Come raggruppare</strong>: «Per categoria», «Per tipo»,
+«Per stanza».</li>
+<li>A destra della ricerca c'è <strong>«＋ Nuova»</strong>, per crearne
+una.</li>
+</ul>
+<p>Nell'elenco (a destra), ogni automazione ha il suo
+<strong>interruttore</strong> per accenderla o spegnerla. Toccandola
+trovi <strong>«Esegui ora»</strong>, <strong>«✏️ Modifica»</strong>,
+<strong>«Duplica»</strong> ed <strong>«Elimina»</strong>.</p>
+<h3 id="142-creare-unautomazione">14.2 Creare un'automazione</h3>
+<ol type="1">
+<li>Premi <strong>«＋ Nuova»</strong>.</li>
+<li>Scegli un modello pronto oppure <strong>«Da zero»</strong> (prima
+schermata qui sotto).</li>
+</ol>
+<p align="center">
+  <img src="img/p-aut-nuova.jpg" width="230" alt="Nuova automazione: i modelli">
+  <img src="img/p-aut-editor.jpg" width="230" alt="L'editor: Quando e Solo se">
+  <img src="img/p-aut-editor-2.jpg" width="230" alt="L'editor: Allora e Salva">
+</p>
+
+<p>I modelli sono: «Luce col movimento», «Tapparelle a orario», «Clima
+spento con finestra aperta», «Avvisami quando la lavatrice ha finito»,
+«Tutti fuori: spegni tutto», «Bentornato a casa», «Cronotermostato»,
+«Routine a orari», «Calendario a fasce» e «Da zero».</p>
+<ol start="3" type="1">
+<li>Compila i tre blocchi dell'editor (seconda e terza schermata):
+<ul>
+<li><strong>QUANDO</strong> (cosa la fa partire): a un orario, una porta
+che si apre, c'è movimento, un valore che sale o scende, qualcuno che
+arriva o esce, l'antifurto, un elettrodomestico che finisce…</li>
+<li><strong>SOLO SE</strong> (facoltativo): è notte, fra due orari,
+certi giorni, chi è in casa, un'entità in un certo stato. Aggiungi con
+<strong>«+ Un'altra condizione»</strong>.</li>
+<li><strong>ALLORA</strong> (cosa fare): accendi, spegni, tapparella,
+clima, notifica, aspetta… Ogni azione ha il suo numero (1, 2, 3);
+aggiungi con <strong>«+ Aggiungi un'azione»</strong>.</li>
+</ul></li>
+<li>Controlla la frase <strong>«Si legge così:»</strong>, che racconta
+l'automazione in italiano. Per esempio: «quando c'è movimento in
+Movimento giardino, solo se di notte, accendi Faretti soggiorno al 30%,
+aspetta 2 min e spegni Faretti soggiorno».</li>
+<li>Premi <strong>«💾 SALVA IN HOME ASSISTANT»</strong>.</li>
+</ol>
+<h3 id="143-il-pianificatore-routine-a-orari-e-calendari-a-fasce">14.3
+Il Pianificatore: routine a orari e calendari a fasce</h3>
+<p>Tocca la scheda <strong>«Pianificatore»</strong>.</p>
+<p align="center">
+  <img src="img/p-pianificatore.jpg" width="230" alt="Pianificatore vuoto">
+  <img src="img/p-pian-nuova.jpg" width="230" alt="Nuova nel Pianificatore">
+  <img src="img/p-pian-fasce.jpg" width="230" alt="Calendario a fasce">
+</p>
+
+<ol type="1">
+<li>Premi <strong>«＋ Crea la prima»</strong> (o <strong>«＋
+Nuova»</strong>).</li>
+<li>Scegli il tipo (seconda schermata):
+<ul>
+<li><strong>«Routine a orari»</strong>: a ogni orario le sue azioni. Per
+esempio «alle 6:30 caldaia, alle 7 tapparelle su».</li>
+<li><strong>«Calendario a fasce»</strong>: tiene accesa una cosa nelle
+fasce che disegni.</li>
+</ul></li>
+</ol>
+<p><strong>Calendario a fasce</strong> (terza schermata)</p>
+<ol type="1">
+<li>Scrivi il <strong>«Nome»</strong> e scegli in <strong>«Cosa
+accende»</strong> l'entità (per esempio la caldaia o l'antifurto).</li>
+<li>In <strong>«Quando vale»</strong> scegli <strong>«Tutto
+l'anno»</strong> oppure un periodo.</li>
+<li>In <strong>«Le fasce»</strong> <strong>trascina il dito</strong>
+sulle barre dei giorni per segnare quando è acceso.</li>
+<li>Per fare prima usa <strong>«Copia lun su mar–ven»</strong> e
+<strong>«Copia sab su dom»</strong>; <strong>«Svuota»</strong> cancella
+tutto.</li>
+<li>Salva.</li>
+</ol>
+<p><strong>Routine a orari</strong></p>
+<ol type="1">
+<li>Scegli i <strong>giorni</strong>.</li>
+<li>Premi <strong>«＋ Aggiungi un orario»</strong> e, per ogni orario,
+scegli le azioni.</li>
+<li>Scegli <strong>«Quando vale»</strong> e salva.</li>
+</ol>
+<hr />
+<h2 id="15-in-auto-e-al-polso-gdanav-android-auto-carplay-orologi">15.
+In auto e al polso: GdANav, Android Auto, CarPlay, orologi</h2>
+<h3 id="151-gdanav-il-navigatore">15.1 GdANav, il navigatore</h3>
+<p>Nell'app c'è <strong>GdANav</strong>, un navigatore pensato per
+l'auto elettrica che va bene anche a benzina o a gasolio. Offre:</p>
+<ul>
+<li>percorso con guida vocale e lo svincolo ingrandito agli
+incroci;</li>
+<li>distributori con i prezzi del giorno;</li>
+<li>traffico, autovelox e meteo lungo la strada;</li>
+<li>segnalazioni degli utenti: incidenti, polizia, lavori, strade
+chiuse.</li>
+</ul>
+<p align="center">
+  <img src="img/s-guida-svincolo.jpg" width="200" alt="Lo svincolo">
+  <img src="img/s-viaggio-soste.jpg" width="200" alt="Le soste di ricarica">
+  <img src="img/s-distributori-prezzi.jpg" width="200" alt="Distributori e prezzi">
+  <img src="img/s-segnala.jpg" width="200" alt="Segnalare">
+</p>
+<p align="center"><sub>La guida con lo svincolo, il viaggio con le soste alle colonnine, i distributori con i prezzi e le segnalazioni.</sub></p>
+
+<p><strong>Aprirlo</strong></p>
+<ul>
+<li>Menu → <strong>«GdANav»</strong>, oppure tocca la tessera GdANav in
+cima al menu.</li>
+<li><strong>«A casa»</strong> e <strong>«Al lavoro»</strong> partono
+subito, se quei luoghi sono impostati nel navigatore.</li>
+<li>GdANav si accende da solo quando colleghi il telefono all'auto.</li>
+</ul>
+<p><strong>Segnalare</strong> qualcosa sulla strada: tocca il
+<strong>triangolo giallo</strong> e scegli cosa (traffico, polizia,
+incidente, pericolo, lavori, strada chiusa, autovelox).</p>
+<p><strong>L'auto elettrica.</strong> GdANav usa l'auto della sezione
+<strong>Auto</strong> della plancia e ne legge dal vivo batteria e
+autonomia.</p>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th style="text-align: center;">GdANav (gratis)</th>
+<th style="text-align: center;">GdANav Premium (compreso in GdAHome
+Premium)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Auto a benzina o gasolio</td>
+<td style="text-align: center;">completa</td>
+<td style="text-align: center;">completa</td>
+</tr>
+<tr class="even">
+<td>Auto elettrica</td>
+<td style="text-align: center;">batteria scritta a mano, percorso senza
+soste</td>
+<td style="text-align: center;">batteria <strong>letta
+dall'auto</strong>, <strong>soste alle colonnine</strong></td>
+</tr>
+<tr class="odd">
+<td>Traffico, autovelox, meteo</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: center;">✅</td>
+</tr>
+<tr class="even">
+<td>Home Assistant, Android Auto, CarPlay</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">✅</td>
+</tr>
+</tbody>
+</table>
+<h3 id="152-pianificare-un-viaggio-gdanav-premium">15.2 Pianificare un
+viaggio (GdANav Premium)</h3>
+<p>I viaggi si pianificano dal telefono (tessera GdANav →
+<strong>«Pianifica i viaggi»</strong>) oppure dal computer, nella
+sezione <strong>GdANav</strong> della plancia. Li ritrovi nel
+navigatore, su CarPlay e su Android Auto.</p>
+<p align="center">
+  <img src="img/p-gdanav.jpg" width="250" alt="GdANav nella plancia">
+  <img src="img/p-gdanav-nuovo.jpg" width="250" alt="Nuovo viaggio">
+</p>
+
+<ol type="1">
+<li>Premi <strong>«+ Nuovo viaggio»</strong>.</li>
+<li>Scegli <strong>«Una volta»</strong>, <strong>«Ogni
+settimana»</strong> oppure <strong>«A tappe»</strong>.</li>
+<li>Se vuoi, scrivi un nome (per esempio «Giro clienti»).</li>
+<li>Controlla la <strong>partenza</strong> («Casa», oppure
+<strong>«Cambia»</strong>) e scrivi <strong>«Dove vai?»</strong>. Scegli
+il suggerimento con 📍.</li>
+<li>Scegli <strong>«Quando»</strong> e <strong>«Arrivo entro»</strong>
+oppure <strong>«Parto alle»</strong>, con l'orario.</li>
+<li>Con l'auto elettrica, nella scheda <strong>«L'auto»</strong> scegli
+la carica alla partenza e quella minima all'arrivo. Il piano mostra le
+<strong>soste di ricarica</strong>.</li>
+<li>In <strong>«Avvisi»</strong> scegli quanti minuti prima di partire
+vuoi l'avviso.</li>
+<li>In <strong>«Prepara l'auto e la casa»</strong> puoi:
+<ul>
+<li>accendere il <strong>clima dell'auto</strong> 10 minuti prima;</li>
+<li>avere nell'avviso un tasto per aprire il <strong>garage</strong>
+(non si apre mai da solo).</li>
+</ul></li>
+<li>Premi <strong>«Salva il viaggio»</strong>.</li>
+</ol>
+<h3 id="153-la-casa-in-android-auto-e-carplay-premium">15.3 La casa in
+Android Auto e CarPlay (Premium)</h3>
+<p>Sullo schermo dell'auto si apre la mappa di GdANav. Il tasto con la
+<strong>casetta</strong> apre i <strong>«Comandi rapidi»</strong>: una
+griglia di tasti di casa (6 su ogni auto, fino a 12 sugli schermi
+grandi). Da lì trovi anche:</p>
+<ul>
+<li><strong>«Dispositivi»</strong>;</li>
+<li><strong>«Azioni rapide»</strong>;</li>
+<li><strong>«Come sta la casa»</strong> (energia e chi è in casa).</li>
+</ul>
+<p><strong>Scegliere i tasti per l'auto (cancello,
+portone…)</strong></p>
+<ol type="1">
+<li>Sul telefono apri <strong>GdANav</strong> → menu ☰ →
+<strong>«Comandi rapidi in auto»</strong>.</li>
+<li>La prima volta la pagina è già compilata con le azioni rapide della
+plancia, il cancello e il garage.</li>
+<li>In <strong>«I TUOI COMANDI»</strong> (fino a 12):
+<ul>
+<li><strong>tocca</strong> un comando per cambiare nome, icona e
+<strong>«Chiedi conferma in auto»</strong>, poi
+<strong>«Salva»</strong>;</li>
+<li><strong>tieni premuto</strong> per spostarlo: i primi 6 si vedono su
+ogni auto;</li>
+<li>il tasto <strong>meno</strong> lo toglie.</li>
+</ul></li>
+<li>Per aggiungerne altri:
+<ul>
+<li><strong>«AZIONI RAPIDE DELLA PLANCIA»</strong> →
+<strong>«Aggiungi»</strong>;</li>
+<li><strong>«DALLA CASA»</strong> → cerca e tocca;</li>
+<li>oppure <strong>«Crea un comando»</strong>:
+<ol type="1">
+<li>scegli il dispositivo;</li>
+<li>scegli cosa fa (per esempio «Apri»);</li>
+<li>scrivi il nome sul tasto;</li>
+<li>premi <strong>«Aggiungi in auto»</strong>.</li>
+</ol></li>
+</ul></li>
+</ol>
+<p>Le modifiche si salvano da sole. Le serrature chiedono sempre
+conferma.</p>
+<p><strong>«Quasi a casa»</strong>: nella stessa pagina scegli quale
+comando proporre arrivando (per esempio «Apri cancello») e
+<strong>«Quanto prima di arrivare»</strong> (100 m – 2 km, di serie 500
+m). Arrivando, l'auto chiede <strong>«Quasi a casa»</strong> con
+<strong>«Fallo»</strong> / <strong>«Non ora»</strong>. Perché funzioni,
+imposta <strong>«Casa»</strong> nel navigatore.</p>
+<p>Su iPhone puoi usare <strong>Siri</strong>: «Portami a casa con
+GdAHome», «Portami al lavoro con GdAHome», «Naviga con GdAHome».</p>
+<h3 id="154-al-polso-apple-watch-e-wear-os-premium">15.4 Al polso: Apple
+Watch e Wear OS (Premium)</h3>
+<p>L'orologio <strong>non ha impostazioni sue</strong>: i suoi tasti
+sono gli stessi <strong>«Comandi rapidi in auto»</strong>.</p>
+<ol type="1">
+<li>Apri GdAHome sul telefono <strong>una volta</strong> con l'orologio
+collegato.</li>
+<li>Sull'orologio trovi:
+<ul>
+<li>i comandi rapidi;</li>
+<li><strong>«Dispositivi»</strong>;</li>
+<li><strong>«Azioni rapide»</strong>;</li>
+<li><strong>«Come sta la casa»</strong>;</li>
+<li>il <strong>«Navigatore»</strong>: «Portami a casa» e «Al lavoro», e
+durante la guida la freccia con la distanza.</li>
+</ul></li>
+</ol>
+<p>Se l'orologio dice «Il telefono non risponde», tieni il telefono
+vicino. Su Wear OS controlla anche il Bluetooth.</p>
+<hr />
+<h2 id="16-gdahome-premium-e-licenze">16. GdAHome Premium e licenze</h2>
+<h3 id="161-base-e-premium-a-confronto">16.1 Base e Premium a
+confronto</h3>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th style="text-align: center;"><strong>Base</strong><br>gratis, per
+sempre</th>
+<th style="text-align: center;"><strong>Premium</strong><br>4,99 € al
+mese · 49,99 € all'anno</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>L'add-on e la plancia in Home Assistant</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: center;">✅</td>
+</tr>
+<tr class="even">
+<td>Plance</td>
+<td style="text-align: center;">una, la principale</td>
+<td style="text-align: center;">fino a <strong>30</strong> per casa</td>
+</tr>
+<tr class="odd">
+<td>Telefoni abbinati alla casa</td>
+<td style="text-align: center;">fino a 2</td>
+<td style="text-align: center;"><strong>senza limite</strong></td>
+</tr>
+<tr class="even">
+<td>Case nell'app</td>
+<td style="text-align: center;">una</td>
+<td style="text-align: center;">fino a <strong>10</strong></td>
+</tr>
+<tr class="odd">
+<td>Dove funziona</td>
+<td style="text-align: center;">sul Wi-Fi di casa</td>
+<td style="text-align: center;"><strong>anche da fuori</strong>,
+cifrato</td>
+</tr>
+<tr class="even">
+<td>L'app dal browser</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">✅</td>
+</tr>
+<tr class="odd">
+<td>Configurare la plancia dal telefono</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">✅</td>
+</tr>
+<tr class="even">
+<td>Dispositivi, integrazioni, aiutanti, automazioni</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">✅</td>
+</tr>
+<tr class="odd">
+<td>Zigbee dall'app</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">✅</td>
+</tr>
+<tr class="even">
+<td>Notifiche</td>
+<td style="text-align: center;">solo sicurezza</td>
+<td style="text-align: center;">tutte, elaborate, mini video, riepilogo
+serale</td>
+</tr>
+<tr class="odd">
+<td>La tua giornata</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">✅</td>
+</tr>
+<tr class="even">
+<td>Plancia a muro, Colpo d'occhio, Casa 3D</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">✅</td>
+</tr>
+<tr class="odd">
+<td>La Salute dall'orologio</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">✅</td>
+</tr>
+<tr class="even">
+<td>Al polso e in auto</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">✅</td>
+</tr>
+<tr class="odd">
+<td>GdANav</td>
+<td style="text-align: center;">gratis</td>
+<td style="text-align: center;"><strong>Premium compreso</strong></td>
+</tr>
+<tr class="even">
+<td>Segnalazioni, assistenza, aggiornamenti, lucchetto</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: center;">✅</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>I primi 14 giorni di Premium sono gratis</strong>, la prima
+volta. Se non ti serve, disdici dal Play Store o dall'App Store prima
+che finiscano.</p>
+</blockquote>
+<p><strong>Premium è della casa, non del telefono.</strong> Si attiva
+<strong>una volta per la casa</strong>: tutti i telefoni abbinati, e
+anche l'app nel browser, diventano Premium insieme. Chi abita con te
+<strong>non paga un'altra volta</strong>.</p>
+<h3 id="162-attivare-premium-dallapp">16.2 Attivare Premium
+dall'app</h3>
+<p align="center">
+  <img src="img/a-premium.jpg" width="260" alt="La pagina Premium">
+  <img src="img/a-premium-attivo.jpg" width="260" alt="Premium attivo">
+</p>
+
+<p><strong>Legenda</strong> (schermata a sinistra)</p>
+<ul>
+<li>① <strong>Cosa comprende Premium.</strong></li>
+<li>② <strong>«Annuale»</strong>: 49,99 € all'anno (si risparmia il
+17%).</li>
+<li>③ <strong>«Mensile»</strong>: 4,99 € al mese.</li>
+<li>④ <strong>«Prova gratis per 14 giorni»</strong>: avvia la prova e
+poi l'abbonamento.</li>
+</ul>
+<ol type="1">
+<li>Menu → <strong>«GdAHome Premium»</strong>.</li>
+<li>Scegli ② o ③.</li>
+<li>Premi ④ e conferma con Google Play o con l'App Store.</li>
+<li>Compare <strong>«Fatto: ora la casa è Premium.»</strong>. La pagina
+diventa come quella a destra.</li>
+</ol>
+<p>Più in basso nella pagina ci sono altri tre tasti:</p>
+<ul>
+<li><strong>«Gestisci abbonamento»</strong>: apre l'abbonamento nel
+negozio, per cambiarlo o disdirlo.</li>
+<li><strong>«Ripristina abbonamento»</strong>: dopo un cambio di
+telefono. Un abbonamento vale per <strong>una casa alla
+volta</strong>.</li>
+<li><strong>«Ho un codice regalo»</strong>: vedi qui sotto.</li>
+</ul>
+<p><strong>Dal browser non si compra</strong>: compri dal telefono, e
+vale anche nel browser.</p>
+<h3 id="163-con-un-codice-regalo">16.3 Con un codice regalo</h3>
+<p>I codici sono fatti così: <code>GDA-XXXX-XXXX-XXXX</code> e
+<strong>valgono una volta sola</strong>.</p>
+<p align="center"><img src="img/d-codice-regalo.jpg" width="250" alt="Codice regalo"></p>
+
+<p><strong>Dall'app (anche dal browser)</strong></p>
+<ol type="1">
+<li>Menu → <strong>«GdAHome Premium»</strong> → <strong>«Ho un codice
+regalo»</strong>.</li>
+<li>Scrivi il codice.</li>
+<li>Premi <strong>«Riscatta»</strong>.</li>
+</ol>
+<p><strong>Dalla pagina dell'add-on</strong>: «Configura GdAHome» →
+<strong>Licenza</strong> → casella ③ e tasto ④ (vedi capitolo 20.4).</p>
+<h3 id="164-dal-tuo-installatore">16.4 Dal tuo installatore</h3>
+<p>Se l'impianto te l'ha fatto un installatore, può:</p>
+<ul>
+<li><strong>assegnare Premium direttamente alla tua casa</strong>: non
+devi fare niente;</li>
+<li><strong>mandarti un codice regalo</strong>, che riscatti come
+sopra.</li>
+</ul>
+<h3 id="165-quando-premium-finisce">16.5 Quando Premium finisce</h3>
+<p><strong>Non si perde niente.</strong> La casa torna Base:</p>
+<ul>
+<li>la plancia principale resta; le altre <strong>restano
+salvate</strong> e tornano con Premium;</li>
+<li>restano abbinati <strong>i due telefoni usati più di
+recente</strong>, gli altri si staccano;</li>
+<li>una casa senza internet resta Premium per <strong>fino a 8
+giorni</strong>.</li>
+</ul>
+<hr />
+<h2 id="17-impostazioni-dellapp-lucchetto-e-diagnostica">17.
+Impostazioni dell'app, lucchetto e diagnostica</h2>
+<h3 id="171-impostazioni-app">17.1 Impostazioni app</h3>
+<p>Menu → <strong>«Impostazioni app»</strong> (solo nell'app sul
+telefono).</p>
+<p align="center"><img src="img/a-impostazioni.jpg" width="280" alt="Impostazioni app"></p>
+
+<p><strong>Legenda</strong></p>
+<ul>
+<li>① <strong>«Plancia leggera»</strong> (spenta di serie): ferma le
+animazioni e toglie le sfocature. Accendila solo se il telefono va a
+scatti.</li>
+<li>② <strong>«Composizione ibrida»</strong> (Android): prova a
+spegnerla solo se, con lei accesa, l'app va peggio.</li>
+<li>③ <strong>«Chiedilo quando apro l'app»</strong>: il
+<strong>lucchetto</strong>. L'app si apre solo con il volto o
+l'impronta.</li>
+<li>④ <strong>«Anche quando ci torno»</strong>: lo chiede di nuovo se
+hai lasciato l'app per più di un minuto.</li>
+</ul>
+<p><strong>Accendere il lucchetto</strong></p>
+<ol type="1">
+<li>Accendi ③.</li>
+<li>Più sotto, in <strong>«Con che cosa»</strong>, scegli
+<strong>«Volto»</strong> e/o <strong>«Impronta»</strong>.</li>
+<li>In <strong>«E una seconda volta prima di»</strong> puoi chiederlo
+anche per:
+<ul>
+<li>«Aprire le pagine di gestione»;</li>
+<li>«Comandare dalla scheda Dispositivi»;</li>
+<li>«Togliere una casa dall'app».</li>
+</ul></li>
+</ol>
+<p>Volto e impronta <strong>non escono dal telefono</strong>: GdAHome
+riceve solo un «sì».</p>
+<h3 id="172-diagnostica-app">17.2 Diagnostica app</h3>
+<p align="center"><img src="img/a-diagnostica.jpg" width="250" alt="Diagnostica app"></p>
+
+<p>Menu → <strong>«Diagnostica app»</strong>: una pagina di sola lettura
+su come va l'app nell'ultimo minuto. Mostra fotogrammi lenti, il
+collegamento con la casa e quanto ci mettono i dati. <strong>Se l'app va
+a scatti</strong>, fai una foto di questa pagina e allegala a una
+segnalazione.</p>
+<hr />
+<h2 id="18-aggiornamenti-e-riavvio-della-casa">18. Aggiornamenti e
+riavvio della casa</h2>
+<p>Menu → <strong>«Aggiornamenti»</strong>. Il numero sulla voce dice
+quanti aggiornamenti sono in attesa.</p>
+<p align="center">
+  <img src="img/a-aggiornamenti.jpg" width="250" alt="Aggiornamenti">
+  <img src="img/a-aggiornamenti-foglio.jpg" width="250" alt="Cosa cambia">
+</p>
+
+<p><strong>Installare un aggiornamento</strong></p>
+<ol type="1">
+<li>In <strong>«Da fare»</strong> ci sono gli aggiornamenti di Home
+Assistant, degli add-on, di GdAHome e dei firmware.</li>
+<li>Tocca <strong>«Cosa cambia»</strong> per leggere le novità
+(schermata a destra).</li>
+<li>Premi <strong>«Installa»</strong> e conferma con
+<strong>«Aggiorna»</strong>.</li>
+</ol>
+<p>Quelli segnati <strong>«riavvia la casa»</strong> riavviano Home
+Assistant: per qualche minuto l'app resta senza collegamento, poi si
+ricollega da sola.</p>
+<p><strong>Riavviare Home Assistant</strong> (quando qualcosa non
+risponde e non si capisce perché)</p>
+<ol type="1">
+<li>In fondo, scheda <strong>«Riavvia Home Assistant»</strong> →
+<strong>«Riavvia»</strong>.</li>
+<li>Conferma.</li>
+<li>Per qualche minuto luci, tapparelle e automazioni non
+rispondono.</li>
+</ol>
+<p><strong>Aggiornare l'app.</strong> L'app si aggiorna dal Play Store o
+dall'App Store. Se è troppo vecchia, compare <strong>«C'è una versione
+nuova di GdAHome»</strong>: premi il tasto e aggiorna. Case e plance
+restano come sono.</p>
+<p align="center"><img src="img/a-aggiorna-app.jpg" width="220" alt="C'è una versione nuova"></p>
+
+<hr />
+<h2 id="19-segnalazioni-e-assistenza">19. Segnalazioni e assistenza</h2>
+<h3 id="191-segnalazioni">19.1 Segnalazioni</h3>
+<p>Servono per un <strong>problema</strong>, un'<strong>idea</strong> o
+una <strong>domanda</strong>. Arrivano a chi fa l'app con le
+informazioni tecniche già allegate, e la risposta torna nell'app.</p>
+<blockquote>
+<p><strong>Le segnalazioni sono pubbliche</strong>: diventano pagine su
+GitHub che chiunque può leggere. Non scriverci password, dati personali
+o indirizzi.</p>
+</blockquote>
+<p align="center">
+  <img src="img/a-segnalazioni.jpg" width="230" alt="Le tue segnalazioni">
+  <img src="img/a-segn-nuova.jpg" width="230" alt="Nuova segnalazione">
+  <img src="img/a-segn-finestra.jpg" width="230" alt="Foto e video pubblici">
+</p>
+
+<ol type="1">
+<li>Menu → <strong>«Segnalazioni»</strong> → <strong>«Nuova
+segnalazione»</strong>.</li>
+<li>Scegli il tipo: <strong>«Problema»</strong>, <strong>«Idea»</strong>
+oppure <strong>«Domanda»</strong>.</li>
+<li>Scrivi il titolo <strong>«In due parole»</strong> (per esempio «La
+luce del salotto non risponde»).</li>
+<li>In <strong>«Racconta»</strong> spiega cosa stavi facendo, cosa ti
+aspettavi e cosa è successo.</li>
+<li>Se serve, allega <strong>foto e video</strong> con
+<strong>«Foto»</strong>, <strong>«Scatta»</strong> o
+<strong>«Video»</strong> (massimo 10 MB). La prima volta l'app ricorda
+che foto e video saranno pubblici (terza schermata): premi <strong>«Ho
+capito»</strong>.</li>
+<li>Premi <strong>«Manda»</strong>.</li>
+</ol>
+<p>In <strong>«Le tue segnalazioni»</strong> (prima schermata) le filtri
+per <strong>«Da lavorare»</strong>, <strong>«In lavorazione»</strong>,
+<strong>«Chiuse»</strong>, <strong>«Tutte»</strong>. Apri una
+segnalazione per leggere le risposte e aggiungere messaggi.</p>
+<h3 id="192-assistenza">19.2 Assistenza</h3>
+<p align="center"><img src="img/a-assistenza.jpg" width="230" alt="Assistenza"></p>
+
+<p>Menu → <strong>«Assistenza»</strong>: una <strong>chat
+privata</strong> con chi fa l'app, che non finisce su nessuna pagina
+pubblica.</p>
+<ol type="1">
+<li>Scrivi nella casella <strong>«Scrivi a chi fa l'app…»</strong> e
+invia.</li>
+<li>La risposta arriva qui sotto.</li>
+</ol>
+<p>Con il messaggio partono da sole le versioni di plancia, add-on e
+app. <strong>È la strada più veloce per chiedere aiuto.</strong></p>
+<hr />
+<h2 id="20-la-pagina-configura-gdahome-in-home-assistant">20. La pagina
+«Configura GdAHome» in Home Assistant</h2>
+<p>Nella barra laterale di Home Assistant c'è <strong>«Configura
+GdAHome»</strong>. Qui gestisci telefoni, plance e licenza. La pagina
+<strong>Casa</strong> è nel capitolo 3.3, l'abbinamento nel capitolo
+4.2, le plance nel capitolo 8.</p>
+<p align="center"><img src="img/d-addon-scheda.jpg" width="680" alt="La pagina dell'add-on con i telefoni abbinati"></p>
+<p align="center"><sub>La pagina con due telefoni abbinati.</sub></p>
+
+<h3 id="201-telefoni">20.1 Telefoni</h3>
+<p>Scheda <strong>Telefoni</strong>: i telefoni e i tablet abbinati, con
+il contatore (per esempio «2 di 10»). Ogni riga mostra:</p>
+<ul>
+<li>il nome e il proprietario;</li>
+<li><strong>«Collegato adesso»</strong> oppure quando è stato visto
+l'ultima volta;</li>
+<li>il modello e la versione dell'app.</li>
+</ul>
+<p>Il menu <strong>«⋯»</strong> della riga ha due voci:</p>
+<ul>
+<li><strong>«Rinomina»</strong>: scrivi il nome e premi
+<strong>Salva</strong>.</li>
+<li><strong>«Togli da questa casa»</strong>: il telefono <strong>esce
+subito</strong>. Per rientrare dovrà abbinarsi di nuovo con un QR
+nuovo.</li>
+</ul>
+<blockquote>
+<p><strong>Hai perso il telefono?</strong> Toglilo da qui: da quel
+momento non entra più.</p>
+</blockquote>
+<h3 id="202-licenza">20.2 Licenza</h3>
+<p align="center"><img src="img/console-licenza.jpg" width="680" alt="Licenza"></p>
+
+<p><strong>Legenda</strong></p>
+<ul>
+<li>① <strong>Lo stato</strong>: «Base», oppure «Premium attivo» con la
+scadenza e la provenienza (abbonamento, regalo, installatore).</li>
+<li>② <strong>«Ricontrolla adesso»</strong>: chiede subito la licenza.
+Usalo dopo aver appena comprato Premium. La casa la ricontrolla comunque
+da sola ogni 6 ore.</li>
+<li>③ <strong>La casella del codice regalo</strong>
+(<code>GDA-XXXX-XXXX-XXXX</code>).</li>
+<li>④ <strong>«Attiva»</strong>: riscatta il codice.</li>
+<li>⑤ <strong>«Matricola della casa»</strong>: il codice da mandare a
+chi ti vuole regalare Premium (con il tasto
+<strong>Copia</strong>).</li>
+</ul>
+<p>Al centro, la tabella <strong>«Base e Premium»</strong> segna con «il
+tuo» il piano della tua casa.</p>
+<p align="center"><img src="img/d-licenza-premium.jpg" width="560" alt="Licenza Premium"></p>
+<p align="center"><sub>La stessa scheda con Premium attivo.</sub></p>
+
+<h3 id="203-avanzate">20.3 Avanzate</h3>
+<p align="center"><img src="img/console-avanzate.jpg" width="680" alt="Avanzate"></p>
+
+<p><strong>Legenda</strong></p>
+<ul>
+<li>① <strong>«Versione e aggiornamenti»</strong>: la versione
+dell'add-on. Gli aggiornamenti arrivano da Home Assistant.</li>
+<li>② <strong>«GdAHome nel browser»</strong>: l'indirizzo dell'app dal
+browser, con <strong>«Apri nel browser»</strong>. Con Premium funziona
+da casa e da fuori.</li>
+</ul>
+<hr />
+<h2 id="21-le-opzioni-delladd-on">21. Le opzioni dell'add-on</h2>
+<p>In Home Assistant: <strong>Impostazioni → Add-on → GdAHome →
+Configurazione</strong>. Dopo ogni cambio premi <strong>Salva</strong>:
+l'add-on si riavvia da solo.</p>
+<h3 id="211-la-casa-le-opzioni-che-contano">21.1 «La casa»: le opzioni
+che contano</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Opzione</th>
+<th>Di serie</th>
+<th>Cosa fa</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Da fuori casa</strong></td>
+<td>acceso</td>
+<td>L'app entra anche da fuori passando dal centralino. Serve anche per
+notifiche e segnalazioni.</td>
+</tr>
+<tr class="even">
+<td><strong>Il codice di chi ti ha fatto l'impianto</strong></td>
+<td>vuoto</td>
+<td>Lascialo vuoto, a meno che un installatore non ti abbia dato un
+codice (capitolo 22).</td>
+</tr>
+<tr class="odd">
+<td><strong>Ogni quanto parte un rapporto</strong></td>
+<td>1 minuto</td>
+<td>Conta solo se il codice sopra è scritto.</td>
+</tr>
+<tr class="even">
+<td><strong>Lascia che chi ti ha fatto l'impianto aggiorni da
+lontano</strong></td>
+<td>spento</td>
+<td>Può solo installare aggiornamenti già in attesa e riavviare Home
+Assistant.</td>
+</tr>
+<tr class="odd">
+<td><strong>Lascia che chi ti ha fatto l'impianto configuri la plancia
+da lontano</strong></td>
+<td>spento</td>
+<td>Può vedere e cambiare com'è fatta la plancia.</td>
+</tr>
+<tr class="even">
+<td><strong>Lascia che la plancia porti il marchio di chi ti ha fatto
+l'impianto</strong></td>
+<td>acceso</td>
+<td>Il nome e il logo dell'installatore sulla plancia.</td>
+</tr>
+<tr class="odd">
+<td><strong>Quanto vive un QR di abbinamento</strong></td>
+<td>5 minuti</td>
+<td>Da 1 a 60.</td>
+</tr>
+<tr class="even">
+<td><strong>Dopo quanto un telefono va riabbinato</strong></td>
+<td>90 giorni</td>
+<td>0 = mai.</td>
+</tr>
+<tr class="odd">
+<td><strong>Quanti telefoni insieme</strong></td>
+<td>10</td>
+<td>Con Base al massimo 2; con Premium senza limite.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="212-le-altre-sezioni">21.2 Le altre sezioni</h3>
+<ul>
+<li><strong>«Chi installa»</strong>: solo per chi monta GdAHome nelle
+case degli altri. In casa tua lascia tutto com'è.</li>
+<li><strong>«Chi gestisce il cruscotto»</strong> e
+<strong>«L'assistenza»</strong>: servono a una sola casa al mondo.
+<strong>Lasciale vuote.</strong></li>
+<li><strong>«Avanzate»</strong>:
+<ul>
+<li>la porta dell'app (8098): cambiala solo se è già usata da un altro
+programma;</li>
+<li><strong>«Quanto scrive il registro»</strong>: lascia «info».</li>
+</ul></li>
+</ul>
+<hr />
+<h2 id="22-se-la-casa-te-lha-montata-un-installatore">22. Se la casa te
+l'ha montata un installatore</h2>
+<p>Il tuo installatore può tenere d'occhio l'impianto <strong>senza
+entrare in casa tua</strong>. Decidi tu, con interruttori che puoi
+spegnere quando vuoi.</p>
+<h3 id="221-collegare-la-casa-allinstallatore">22.1 Collegare la casa
+all'installatore</h3>
+<ol type="1">
+<li>L'installatore ti dà un <strong>codice di abbinamento</strong>: 16
+caratteri, valido un giorno.</li>
+<li>In Home Assistant apri <strong>Impostazioni → Add-on → GdAHome →
+Configurazione</strong>.</li>
+<li>Incolla il codice in <strong>«Il codice di chi ti ha fatto
+l'impianto»</strong> e premi <strong>Salva</strong>.</li>
+</ol>
+<h3 id="222-cosa-vede-e-cosa-non-vede">22.2 Cosa vede e cosa non
+vede</h3>
+<table>
+<thead>
+<tr class="header">
+<th>L'installatore vede</th>
+<th>L'installatore <strong>non</strong> vede</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Come sta la macchina: processore, memoria, disco, temperatura</td>
+<td>Se le luci sono accese o le porte aperte</td>
+</tr>
+<tr class="even">
+<td>Rete e internet</td>
+<td>Chi è in casa e dove sono le persone</td>
+</tr>
+<tr class="odd">
+<td>Versioni, add-on, aggiornamenti in attesa</td>
+<td>Cosa riprendono le telecamere</td>
+</tr>
+<tr class="even">
+<td>Quanti telefoni e i nomi delle plance</td>
+<td>Il nome del tuo Wi-Fi</td>
+</tr>
+<tr class="odd">
+<td>I nomi dei dispositivi che non rispondono, le batterie scariche,
+l'ultimo backup</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Il rapporto lo leggi parola per parola in <strong>«Configura GdAHome»
+→ Installatore → «Leggi l'ultimo rapporto, parola per
+parola»</strong>.</p>
+<h3 id="223-i-permessi-in-più-spenti-di-serie">22.3 I permessi in più
+(spenti di serie)</h3>
+<ul>
+<li><strong>«…aggiorni da lontano»</strong>: può installare gli
+aggiornamenti già pronti (sempre dopo un backup) e riavviare Home
+Assistant. Nient'altro.</li>
+<li><strong>«…configuri la plancia da lontano»</strong>: può sistemare
+la plancia senza venire. Vede i nomi di stanze, dispositivi ed entità,
+<strong>mai</strong> le telecamere né gli stati dei sensori.</li>
+<li><strong>«…porti il marchio»</strong> (acceso di serie): la plancia
+mostra il suo nome e il suo logo.</li>
+</ul>
+<h3 id="224-smettere">22.4 Smettere</h3>
+<p>In <strong>«Configura GdAHome» → Installatore</strong> premi
+<strong>«Smetti di mandarlo»</strong> e conferma con
+<strong>Smetti</strong>.</p>
+<hr />
+<h2 id="23-per-chi-installa-il-cruscotto">23. Per chi installa: il
+cruscotto</h2>
+<p>Chi monta impianti per i clienti ha il <strong>cruscotto per
+installatori</strong> (<strong>«Gestione installatore»</strong>): tutti
+gli impianti in una pagina e le licenze Premium da dare ai clienti.</p>
+<p align="center"><img src="img/d-cruscotto.jpg" width="700" alt="Il cruscotto per installatori"></p>
+
+<h3 id="231-come-si-comincia">23.1 Come si comincia</h3>
+<ol type="1">
+<li><strong>Chiedi l'accesso</strong> su <a
+href="https://gdahome.org/#contatti">gdahome.org/#contatti</a>: ricevi
+il codice del cruscotto e il pacchetto di licenze.</li>
+<li>Sul <strong>tuo</strong> Home Assistant (mai su quello di un
+cliente) apri le opzioni dell'add-on, sezione <strong>«Chi
+installa»</strong>.</li>
+<li>Accendi l'interruttore, scrivi il codice e premi
+<strong>Salva</strong>.</li>
+<li>Compare <strong>«Gestione installatore»</strong> nella barra
+laterale e nel menu dell'app.</li>
+</ol>
+<p>Il cruscotto ha quattro schede: <strong>Impianti · Aggiornamenti ·
+Abbinamento · Licenze</strong>.</p>
+<h3 id="232-collegare-un-cliente">23.2 Collegare un cliente</h3>
+<ol type="1">
+<li>Scheda <strong>Abbinamento</strong> → <strong>«Genera
+codice»</strong> e <strong>copialo</strong>. Vale un giorno e per un
+solo impianto.</li>
+<li>A casa del cliente: <strong>Impostazioni → Add-on → GdAHome →
+Configurazione</strong> → incolla in <strong>«Il codice di chi ti ha
+fatto l'impianto»</strong> → <strong>Salva</strong>.</li>
+<li>Entro un minuto l'impianto compare in <strong>«Nuovi
+impianti»</strong>: dagli un nome e premi <strong>Salva</strong>.</li>
+</ol>
+<h3 id="233-tenere-docchio-gli-impianti">23.3 Tenere d'occhio gli
+impianti</h3>
+<ul>
+<li>La scheda <strong>Impianti</strong> colora ogni impianto: <strong>in
+ordine</strong>, <strong>da verificare</strong>,
+<strong>offline</strong>.</li>
+<li><strong>«Da verificare ora»</strong> mette in cima quelli che
+chiedono qualcosa.</li>
+<li>Ogni impianto ha <strong>dieci controlli</strong> al giorno:
+plancia, telefoni, collegamento da fuori, dispositivi, aggiornamenti,
+add-on, rete, macchina, backup, batterie.</li>
+<li>Ricevi un avviso quando una casa smette di farsi sentire e quando
+riprende.</li>
+</ul>
+<p>Se il cliente l'ha permesso, dalla scheda dell'impianto puoi
+<strong>installare gli aggiornamenti</strong> (uno alla volta, dopo il
+backup) e <strong>riavviare Home Assistant</strong>.</p>
+<h3 id="234-le-licenze-per-i-clienti">23.4 Le licenze per i clienti</h3>
+<p>Nella scheda <strong>Licenze</strong>, scegli <strong>App</strong> e
+<strong>Durata</strong>, poi una delle due strade:</p>
+<ul>
+<li><strong>«Assegna all'impianto»</strong>: la casa è Premium
+subito;</li>
+<li><strong>«Genera un codice»</strong>: lo mandi al cliente, che lo
+scrive in <strong>«Ho un codice regalo»</strong>.</li>
+</ul>
+<p>Una licenza tolta o un codice annullato <strong>torna nel tuo
+pacchetto</strong>.</p>
+<hr />
+<h2 id="24-se-qualcosa-non-va">24. Se qualcosa non va</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Cosa succede</th>
+<th>Cosa fare</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Il QR non funziona</td>
+<td>Vale 5 minuti e una volta sola: generane uno nuovo, oppure usa il
+codice a mano (4.3).</td>
+</tr>
+<tr class="even">
+<td>«Fuori casa serve GdAHome Premium»</td>
+<td>Con Base la casa si apre solo dal Wi-Fi di casa.</td>
+</tr>
+<tr class="odd">
+<td>Da fuori non entro, ma ho Premium</td>
+<td>In «Configura GdAHome» → Casa leggi il motivo sotto «Da fuori casa».
+Controlla che l'opzione «Da fuori casa» sia accesa.</td>
+</tr>
+<tr class="even">
+<td>«Da fuori casa: cade di continuo»</td>
+<td>C'è un'altra copia della casa accesa (per esempio un backup
+ripristinato su un'altra macchina): spegni GdAHome sulla copia.</td>
+</tr>
+<tr class="odd">
+<td>«Riconnessione…»</td>
+<td>L'add-on si sta aggiornando o Home Assistant si sta riavviando:
+l'app riprova da sola.</td>
+</tr>
+<tr class="even">
+<td>«Questo telefono è stato staccato»</td>
+<td>Riabbinalo con un QR nuovo.</td>
+</tr>
+<tr class="odd">
+<td>«Con Base si abbinano al massimo 2 telefoni»</td>
+<td>Sono rimasti i due usati più di recente. Con Premium riabbini anche
+questo.</td>
+</tr>
+<tr class="even">
+<td>«Non hai plance associate alla tua utenza»</td>
+<td>L'amministratore deve abilitarti: «Configura GdAHome» → Plance →
+Gestisci → «Chi la vede».</td>
+</tr>
+<tr class="odd">
+<td>La plancia dice che Home Assistant va riavviato</td>
+<td>Riavvia Home Assistant (3.3).</td>
+</tr>
+<tr class="even">
+<td>Le notifiche non arrivano</td>
+<td>Controlla l'interruttore principale, il permesso del telefono e
+l'opzione «Da fuori casa», poi premi «Manda una notifica di prova».</td>
+</tr>
+<tr class="odd">
+<td>La Salute non arriva</td>
+<td>Paragrafo 12.2.</td>
+</tr>
+<tr class="even">
+<td>L'app va a scatti</td>
+<td>Accendi «Plancia leggera» (17.1); se non basta, manda una
+segnalazione con la foto di «Diagnostica app».</td>
+</tr>
+<tr class="odd">
+<td>Manca la voce «Zigbee»</td>
+<td>Serve ZHA o Zigbee2MQTT, Premium, e l'app sul telefono.</td>
+</tr>
+<tr class="even">
+<td>Mancano Dispositivi, Automazioni, Aiutanti</td>
+<td>Sono solo per chi amministra Home Assistant, e con Premium.</td>
+</tr>
+<tr class="odd">
+<td>Ho perso il telefono</td>
+<td>«Configura GdAHome» → Telefoni → ⋯ → «Togli da questa casa».</td>
+</tr>
+</tbody>
+</table>
+<p>Se il problema resta, scrivi in <strong>Assistenza</strong> o apri
+una <strong>Segnalazione</strong> (capitolo 19).</p>
+<hr />
+<h2 id="25-domande-frequenti">25. Domande frequenti</h2>
+<p><strong>Si installa su Home Assistant in Docker?</strong> No: su
+Container e Core gli add-on non esistono. Serve OS o Supervised.</p>
+<p><strong>L'add-on serve solo per l'app?</strong> No: la plancia si usa
+anche in Home Assistant, da qualunque browser di casa.</p>
+<p><strong>Devo installare anche l'integrazione
+DashboardModern?</strong> No: la plancia è già nell'add-on.</p>
+<p><strong>Siamo in quattro in casa: paghiamo quattro volte?</strong>
+No. Premium è della casa: tutti i telefoni abbinati sono Premium
+insieme.</p>
+<p><strong>Il mio installatore mi ha dato un codice. Dove lo
+metto?</strong> Dipende dal codice:</p>
+<ul>
+<li><strong>codice regalo</strong> (<code>GDA-…</code>): nell'app,
+«GdAHome Premium» → «Ho un codice regalo»;</li>
+<li><strong>codice di abbinamento</strong> (16 caratteri): nelle opzioni
+dell'add-on, in «Il codice di chi ti ha fatto l'impianto».</li>
+</ul>
+<p><strong>Devo creare un account?</strong> No.</p>
+<p><strong>Qualcuno può vedere le mie telecamere?</strong> No. Da fuori
+i messaggi viaggiano cifrati fra telefono e casa, e il segreto di Home
+Assistant non lascia mai l'add-on.</p>
+<p><strong>Le automazioni create dall'app funzionano ad app
+chiusa?</strong> Sì: sono automazioni di Home Assistant e le esegue la
+casa.</p>
+<p><strong>Cosa succede se disdico Premium?</strong> Non perdi niente:
+la casa torna Base e quello che hai preparato resta salvato.</p>
+<p><strong>L'app parla inglese?</strong> Sì: sceglie da sola la lingua
+del telefono (italiano o inglese).</p>
+<hr />
+<h2 id="26-privacy-contatti-e-chi-cè-dietro">26. Privacy, contatti e chi
+c'è dietro</h2>
+<p><strong>I tuoi dati restano in casa.</strong> Nessun account, nessuna
+pubblicità, nessun tracciamento. Per sapere se una casa è Premium,
+l'add-on manda solo un identificativo anonimo. I pagamenti li gestiscono
+Google e Apple. I dettagli sono nell'<a
+href="https://gdahome.org/privacy.html">informativa sulla privacy</a> e
+nei <a href="../TERMINI.md">termini d'uso</a>.</p>
+<p><strong>Contatti</strong></p>
+<ul>
+<li>Nell'app: <strong>Assistenza</strong> (la via più veloce) e
+<strong>Segnalazioni</strong>.</li>
+<li>Sito: <a href="https://gdahome.org">gdahome.org</a>.</li>
+<li>Email: <strong><a
+href="mailto:domotica@crvgroup.it">domotica@crvgroup.it</a></strong>.</li>
+</ul>
+<p><strong>Chi c'è dietro.</strong> GdAHome la fa <strong>CRV
+Immobiliare S.r.l.</strong>, impresa di impianti elettrici e tecnologici
+di Aversa (CE).</p>
+<hr />
+<p><sub>Manuale aggiornato a GdAHome 1.19.1. Le schermate vengono da una
+casa di prova: nella tua app vedrai i nomi della tua casa.</sub></p>
+</body>
+</html>
