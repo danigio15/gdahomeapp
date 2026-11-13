@@ -106,6 +106,26 @@ function eLaNostra(stato) {
  * @returns {Array<{entity:string,nome:string,da:string,a:string,nostra:boolean,
  *   installabile:boolean,inCorso:boolean,note:string}>}
  */
+/**
+ * Un indirizzo da mettere in un link, solo se e' una pagina web.
+ *
+ * `release_url` lo scrive chi pubblica l'entita' (un'integrazione, un
+ * messaggio MQTT): con «javascript:…» toccare «Note» faceva girare quel
+ * codice dentro la plancia. Passano solo http e https; il resto e' vuoto.
+ * @param {unknown} x
+ * @returns {string}
+ */
+export function indirizzoWeb(x) {
+  const testo = pulito(x);
+  if (!testo) return "";
+  try {
+    const u = new URL(testo);
+    return u.protocol === "https:" || u.protocol === "http:" ? u.href : "";
+  } catch (_errore) {
+    return "";
+  }
+}
+
 export function aggiornamentiDaFare(states) {
   const dentro = states && typeof states === "object" ? Object.values(states) : [];
   return dentro
@@ -120,7 +140,7 @@ export function aggiornamentiDaFare(states) {
       inCorso: staAndando(stato.attributes),
       /* Dove sono scritte le note di questa versione: e' l'indirizzo che Home
        * Assistant si porta dietro, non uno che indoviniamo noi. */
-      note: pulito(stato.attributes?.release_url),
+      note: indirizzoWeb(stato.attributes?.release_url),
     }))
     .sort((una, altra) => {
       if (una.nostra !== altra.nostra) return una.nostra ? -1 : 1;
