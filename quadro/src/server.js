@@ -476,6 +476,14 @@ export function costruisciIlServer({
     for (const casa of [...aspettano.keys()]) sveglia(casa, {});
     for (const una of [...cuciture]) una.chiudi(1001, "il quadro si spegne");
   };
+  /* Gli editor aperti da uno, chiusi adesso: quando lo si congela, gli si
+   * rifa' la chiave o lo si elimina. Il filo ricontrolla anche da solo a
+   * ogni messaggio (`cucitura-cieca.js`), ma una pagina aperta che tace non
+   * deve restare li' a dire «sei dentro». 1008 e' «per la politica»: la
+   * pagina non ribussa. */
+  const chiudiGliEditorDi = (chi, perche) => {
+    for (const una of [...cuciture]) if (una.chi === chi) una.chiudi(1008, perche);
+  };
 
   /* Il filo dell'editor della plancia: la pagina crede di parlare con Home
    * Assistant, e parla con la cucitura cieca (`cucitura-cieca.js`), che di
@@ -524,6 +532,7 @@ export function costruisciIlServer({
        * chiave del cruscotto qui non entra (`biglietti.js`). */
       riconosci: (segno) => gettoni.riconosci(segno, salita[1], salita[2]),
       congelato: (chi) => installatori.congelato(chi),
+      esiste: (chi) => Boolean(installatori.quello(chi)),
       registro,
       da,
     });
@@ -1422,9 +1431,12 @@ export function costruisciIlServer({
       }
       if (quale === "riscatta") {
         /* Il freno stretto, prima di guardare il codice: per indirizzo, e
-         * per soggetto — chi ha mille indirizzi ha comunque una casa sola. */
-        const sogDetto = String(detto.casa ?? detto.telefono ?? "");
-        const aspetta = frenoDeiCodici.passa(`da:${da}`) || frenoDeiCodici.passa(`sog:${sogDetto}`);
+         * per soggetto — chi ha mille indirizzi ha comunque una casa sola.
+         * Quello per soggetto si conta solo **dopo** averlo riconosciuto col
+         * suo segreto: contato prima, chiunque conoscesse l'identificativo di
+         * una casa — e non e' un segreto — le consumava i tentativi senza
+         * saperne il segreto, e la casa vera restava fuori. */
+        const aspetta = frenoDeiCodici.passa(`da:${da}`);
         if (aspetta) {
           frenato(risposta, aspetta);
           return;
@@ -1433,6 +1445,11 @@ export function costruisciIlServer({
           detto.casa !== undefined
             ? licenze.riconosci(detto.casa, detto.segreto, CASA)
             : licenze.riconosci(detto.telefono, detto.segreto, TELEFONO);
+        const delSoggetto = frenoDeiCodici.passa(`sog:${sog}`);
+        if (delSoggetto) {
+          frenato(risposta, delSoggetto);
+          return;
+        }
         const una = licenze.riscatta(detto.codice, sog);
         registro.info(`un codice regalo riscattato: ${una.app} per ${sog}`);
         json(risposta, licenze.perIlSoggetto(sog));
@@ -2165,6 +2182,7 @@ export function costruisciIlServer({
       const suoi = chiavi.toglieTutto(chi);
       const quante = case_.toglieTutto(chi);
       gettoni.dimentica(chi);
+      chiudiGliEditorDi(chi, "questo installatore non c'e' piu'");
       /* Il suo pacchetto se ne va con lui; le licenze che ha dato restano: le
        * case dei suoi clienti non perdono il Premium perche' lui non c'e' piu'. */
       licenze.dimenticaIlPacchetto(chi);
@@ -2193,6 +2211,10 @@ export function costruisciIlServer({
       }
       const congela = metodo === "POST";
       const cambiato = congela ? installatori.congela(gelo[1]) : installatori.scongela(gelo[1]);
+      if (congela) {
+        gettoni.dimentica(gelo[1]);
+        chiudiGliEditorDi(gelo[1], "utenza congelata");
+      }
       if (cambiato) {
         registro.info(
           congela
@@ -2328,6 +2350,7 @@ export function costruisciIlServer({
       }
       /* Una chiave nuova chiude anche gli editor aperti con quella di prima. */
       gettoni.dimentica(chiave[1]);
+      chiudiGliEditorDi(chiave[1], "la chiave e' stata rifatta");
       registro.info(`chiave rifatta per ${chiave[1]}: quella di prima non apre piu'`);
       json(risposta, { chiave: nuova });
       return;

@@ -134,6 +134,13 @@ export const SOLO_PER_ABBINARSI = Object.freeze({
 /* Un messaggio piu' lungo di cosi' non e' un comando a Home Assistant. */
 export const MESSAGGIO_MASSIMO = 1024 * 1024;
 
+/* Quanto puo' dire una casa prima di essersi fatta riconoscere. Il `sono-io`
+ * e' l'identificativo, il segreto e i due gettoni delle licenze, che il ponte
+ * accetta fino a quattro kilobyte l'uno (`ponte/src/gettone.js`): sedici
+ * bastano con margine, e un filo senza nome non si tiene in memoria un
+ * megabyte. */
+export const PRESENTAZIONE_MASSIMA = 16 * 1024;
+
 /* Quello che puo' mandare un telefono, in un messaggio solo.
  *
  * Meno di quello della casa, e apposta: il messaggio del telefono non arriva
@@ -161,6 +168,20 @@ export const ATTESA_DELLA_PRIMA_PAROLA = 15_000;
  * molti telefoni — ma non infinito. */
 export const PRESE_IN_TUTTO = 10_000;
 export const PRESE_PER_INDIRIZZO = 200;
+
+/* I posti tenuti da parte per le case. Una casa e' un filo solo, e senza di
+ * lei i suoi telefoni non servono a niente: chi riempie i posti con fili di
+ * telefono — a casa o in abbinamento, che si aprono senza dire chi si e' —
+ * non deve lasciare fuori le case vere. I telefoni si fermano prima, a
+ * `PRESE_IN_TUTTO - RISERVA_PER_LE_CASE`. */
+export const RISERVA_PER_LE_CASE = 1000;
+
+/* Quanto puo' tacere un telefono gia' entrato. L'app manda un colpetto (il
+ * `ping` di Home Assistant) ogni trenta secondi, anche ferma sulla home
+ * (`app/lib/ponte/filo.dart`, `_colpo`), e una scheda del browser nascosta
+ * lo manda almeno una volta al minuto. Cinque minuti senza niente non sono un
+ * telefono vivo: sono un posto occupato. */
+export const SILENZIO_DEL_TELEFONO = 5 * 60 * 1000;
 
 /* Quanto puo' restare in coda, non ancora partito, verso un filo solo. Chi
  * non legge — un telefono che si e' fermato senza chiudere — farebbe
@@ -225,6 +246,8 @@ export class Centralino {
     attesaDellaLicenzaDaFuori = ATTESA_DELLA_LICENZA_DA_FUORI,
     preseInTutto = PRESE_IN_TUTTO,
     presePerIndirizzo = PRESE_PER_INDIRIZZO,
+    riservaPerLeCase = RISERVA_PER_LE_CASE,
+    silenzioDelTelefono = SILENZIO_DEL_TELEFONO,
     codaMassima = CODA_MASSIMA,
     /* La chiave con cui si verificano i gettoni delle licenze. Vuota vuol
      * dire controllo spento. Si passa solo nelle prove. */
@@ -298,6 +321,8 @@ export class Centralino {
     this.attesaDellaLicenzaDaFuori = attesaDellaLicenzaDaFuori;
     this.preseInTutto = preseInTutto;
     this.presePerIndirizzo = presePerIndirizzo;
+    this.riservaPerLeCase = Math.min(Math.max(0, riservaPerLeCase), preseInTutto);
+    this.silenzioDelTelefono = silenzioDelTelefono;
     this.codaMassima = codaMassima;
     this.attesaDellaRicevuta = attesaDellaRicevuta;
 
@@ -478,8 +503,9 @@ export class Centralino {
   /* Se c'e' posto per un filo in piu' da questo indirizzo. Si chiede prima
    * di rispondere alla stretta di mano: un filo che non c'e' posto per
    * tenere non si apre nemmeno. */
-  cePostoPer(da) {
-    if (this.prese >= this.preseInTutto) return false;
+  cePostoPer(da, { casa = false } = {}) {
+    const tetto = casa ? this.preseInTutto : this.preseInTutto - this.riservaPerLeCase;
+    if (this.prese >= tetto) return false;
     return (this.presePer.get(da) || 0) < this.presePerIndirizzo;
   }
 
@@ -810,6 +836,12 @@ export class Centralino {
       if (this.impone && casa.dicelaLicenza && !this.ePremium(casa.id)) {
         casa.chiudiITelefoni(PREMIUM_RICHIESTO.codice, PREMIUM_RICHIESTO.motivo);
       }
+      /* I telefoni zitti da troppo: vedi `SILENZIO_DEL_TELEFONO`. Chiudere
+       * la presa basta, il resto lo fa `onChiusa` del canale. */
+      for (const canale of [...casa.canali.values()]) {
+        if (ora - canale.vistoIl > this.silenzioDelTelefono)
+          canale.presa.chiudi(CHIUSURA.normale, "nessun segno dal telefono");
+      }
       casa.presa.ping();
     }
   }
@@ -979,6 +1011,9 @@ class CasaCollegata {
       return;
     }
     clearTimeout(this._attesa);
+    /* Riconosciuta: da qui i messaggi possono essere lunghi quanto quelli di
+     * una casa (`PRESENTAZIONE_MASSIMA`). */
+    this.presa.presentata?.();
 
     /* Una casa sola per identificativo. Chi arriva secondo prende il posto del
      * primo, e non il contrario: il primo puo' essere un filo morto che
@@ -1225,7 +1260,14 @@ class CasaCollegata {
      * per poterli contare separati. Alla casa non serve e non si manda: lei
      * parla col telefono allo stesso modo in tutti e due i casi, e un dato in
      * piu' sul filo sarebbe un dato in piu' senza motivo. */
-    const canale = { numero, presa: presaDelTelefono, da, via, che };
+    const canale = {
+      numero,
+      presa: presaDelTelefono,
+      da,
+      via,
+      che,
+      vistoIl: this.centralino.adesso(),
+    };
     this.canali.set(numero, canale);
 
     /* La porta dell'abbinamento serve a una stretta di mano, e una stretta di
@@ -1242,6 +1284,7 @@ class CasaCollegata {
 
     presaDelTelefono.onMessaggio = (testo, eraTesto = typeof testo === "string") => {
       haParlato();
+      canale.vistoIl = this.centralino.adesso();
       if (this.chiusa) return;
       /* Il telefono parla in testo, sempre: un telaio binario non e' suo. */
       if (!eraTesto || typeof testo !== "string") {

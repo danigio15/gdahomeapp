@@ -26,8 +26,8 @@ import { readFileSync } from "node:fs";
 import { createServer } from "node:http";
 
 import { CASA_VALIDA } from "./case.js";
-import { MESSAGGIO_DEL_TELEFONO, MESSAGGIO_MASSIMO } from "./centralino.js";
-import { daChi, eDaDentro, reteDi } from "./indirizzo.js";
+import { MESSAGGIO_DEL_TELEFONO, MESSAGGIO_MASSIMO, PRESENTAZIONE_MASSIMA } from "./centralino.js";
+import { daChi, eDaDentro, reteLargaDi } from "./indirizzo.js";
 import { accetta, eUnaSalita } from "./presa.js";
 import { laSoglia } from "./soglia.js";
 import { json } from "./sportello.js";
@@ -301,10 +301,14 @@ export function costruisciIlServer({
      * per indirizzo, ed e' quello che la casa si vede dire all'apertura di un
      * canale. */
     const da = daChi(richiesta);
-    /* I fili si contano per rete (in IPv6 un /64 intero e' di una persona
-     * sola), ma alla casa si dice l'indirizzo com'e'. */
-    const rete = reteDi(da);
-    if (centralino.cePostoPer && !centralino.cePostoPer(rete)) {
+    /* I fili si contano per rete, ma alla casa si dice l'indirizzo com'e'.
+     * In IPv6 la rete e' il /48 e non il /64: un /48 costa a chiunque quanto
+     * un /64, e dentro ce ne sono sessantacinquemila — contati uno per uno,
+     * i posti di tutti finivano a uno solo (`reteLargaDi`). */
+    const rete = reteLargaDi(da);
+    /* Le case hanno i loro posti tenuti da parte (`RISERVA_PER_LE_CASE`). */
+    const perUnaCasa = via === "/casa" || /^\/casa\/[A-Za-z0-9_]+$/.test(via);
+    if (centralino.cePostoPer && !centralino.cePostoPer(rete, { casa: perUnaCasa })) {
       socket.end("HTTP/1.1 503 Service Unavailable\r\nretry-after: 30\r\n\r\n");
       return;
     }
@@ -321,10 +325,11 @@ export function costruisciIlServer({
      * mettono lo stesso (`ponte/src/chiamata.js`), e qui si accetta: e' la
      * forma del contratto, e un centralino che instrada prima di accettare il
      * filo non ha altro da guardare. */
-    if (via === "/casa" || /^\/casa\/[A-Za-z0-9_]+$/.test(via)) {
+    if (perUnaCasa) {
       const presa = contaLaPresa(
         accetta(richiesta, socket, {
           messaggioMassimo: MESSAGGIO_MASSIMO,
+          primaDiPresentarsi: PRESENTAZIONE_MASSIMA,
           onGuasto: ilGuasto("una casa"),
         }),
       );

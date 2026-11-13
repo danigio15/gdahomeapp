@@ -140,6 +140,9 @@ export async function alzaIlCentralino({
         ? leggiLaChiaveDiFirebase({ percorso: percorsoDellaChiaveDiFirebase, registro })
         : chiaveDiFirebase,
   });
+  /* I gettoni delle case che non ci sono piu' — potate, o mai nate qui — se
+   * ne vanno subito, e poi a ogni giro di potatura. */
+  spinte.potatura((casa) => case_.viva(casa));
   /* Le istantanee delle notifiche elaborate: in memoria, dieci minuti. */
   const foto = new FotoDiPassaggio();
   const centralino = new Centralino({
@@ -268,6 +271,8 @@ export async function alzaIlCentralino({
   const giro = setInterval(() => {
     const andate = case_.potatura();
     if (andate) registro.info(`${andate} case addormentate perche' sparite da troppo tempo`);
+    const senzaGettoni = spinte.potatura((casa) => case_.viva(casa));
+    if (senzaGettoni) registro.info(`${senzaGettoni} case potate lasciano i loro gettoni`);
     const chiuse = chat.archivio.potatura();
     if (chiuse) registro.info(`${chiuse} conversazioni chiuse perche' ferme da sei mesi`);
   }, POTATURA);
@@ -279,6 +284,7 @@ export async function alzaIlCentralino({
     centralino.chiudiTutto();
     await new Promise((ok) => server.close(ok));
     case_.chiudi();
+    spinte.chiudi();
     chat.archivio.chiudi();
   };
 

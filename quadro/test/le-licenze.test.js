@@ -2406,6 +2406,69 @@ test("il freno dei codici ferma chi prova a raffica", async () => {
   }
 });
 
+test("il freno dei codici di una casa non lo consuma chi non ne sa il segreto", async () => {
+  const b = await banco();
+  try {
+    assert.equal((await b.fuori("casa", { casa: UNA, segreto: SEGRETO })).stato, 200);
+    /* Chi conosce l'identificativo e non il segreto prova a raffica, da
+     * indirizzi sempre nuovi: si sente dire 403, e basta. */
+    for (let i = 0; i < 10; i += 1) {
+      const sbagliato = await b.fuori("riscatta", {
+        codice: "GDA-AAAA-BBBB-CCCC",
+        casa: UNA,
+        segreto: "un-segreto-che-non-e-quello-della-casa",
+      });
+      assert.equal(sbagliato.stato, 403);
+    }
+    /* La casa vera intanto riscatta: il codice non c'e', ma non e' frenata. */
+    const vera = await b.fuori("riscatta", {
+      codice: "GDA-AAAA-BBBB-CCCC",
+      casa: UNA,
+      segreto: SEGRETO,
+    });
+    assert.notEqual(vera.stato, 429);
+  } finally {
+    await b.chiudi();
+  }
+});
+
+test("i soggetti nuovi hanno un tetto all'ora, e il file non si riscrive a ogni visita", () => {
+  const cartella = mkdtempSync(join(tmpdir(), "quadro-soggetti-"));
+  try {
+    let ora = Date.now();
+    const licenze = new Licenze({
+      cartella,
+      chiave: PRIVATA,
+      adesso: () => ora,
+      soggettiNuoviAllOra: 2,
+      scritturaAlPiuOgni: 60_000,
+    });
+    const file = join(cartella, "licenze.json");
+    assert.equal(licenze.riconosci(UNA, SEGRETO), UNA);
+    /* La prima scrittura parte subito: c'e' l'impronta. */
+    assert.ok(UNA in JSON.parse(readFileSync(file, "utf8")).soggetti);
+    assert.equal(licenze.riconosci(ALTRA, SEGRETO), ALTRA);
+    /* La seconda aspetta il giro: sul disco non c'e' ancora. */
+    assert.ok(!(ALTRA in JSON.parse(readFileSync(file, "utf8")).soggetti));
+    assert.throws(
+      () => licenze.riconosci(TERZA, SEGRETO),
+      (errore) => errore.stato === 429 && errore.errore === "troppi-soggetti-nuovi",
+    );
+    /* Chi c'e' gia' entra lo stesso. */
+    assert.equal(licenze.riconosci(UNA, SEGRETO), UNA);
+    /* Passata l'ora, si nasce di nuovo. */
+    ora += 60 * 60 * 1000;
+    assert.equal(licenze.riconosci(TERZA, SEGRETO), TERZA);
+    /* Chiudendo, tutto quello che aspettava finisce sul disco, e un quadro
+     * riacceso lo ritrova. */
+    licenze.chiudi();
+    const riletti = new Licenze({ cartella, chiave: PRIVATA }).archivio.dati.soggetti;
+    assert.deepEqual(Object.keys(riletti).sort(), [UNA, ALTRA, TERZA].sort());
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
 test("un gettone firmato a mano con una chiave che non e' quella non passa", () => {
   const { privateKey } = generateKeyPairSync("ed25519");
   const falso = firmaIlGettone(privateKey, {
