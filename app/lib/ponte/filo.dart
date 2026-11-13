@@ -105,6 +105,7 @@ class Filo {
     bool legameGiaVisto = false,
     this.quandoLega,
     this.quandoDiceNo,
+    this.quandoEStaccato,
   }) : _trovaLApprodo = approdo,
        _apri = apri ?? PresaSuWebSocket.apri,
        _legameVisto = legameGiaVisto;
@@ -182,6 +183,14 @@ class Filo {
   /// serve GdAHome Premium» se la vedeva cambiare in «Non trovo la casa» alla
   /// prima ribussata: due cose diverse per lo stesso no.
   final void Function(PremiumRichiesto no)? quandoDiceNo;
+
+  /// Chi va avvisato quando la casa dice, dentro il cifrato, che questo
+  /// telefono e' stato staccato ([SegnoRifiutato]) mentre il filo ribussava
+  /// da solo: chi aspetta in [apri] lo sa gia', e questo serve a quando il
+  /// filo era gia' aperto — per esempio una casa tornata GdAHome Base che
+  /// tiene solo i suoi due telefoni piu' recenti. Senza, la pagina restava
+  /// a «ricollegamento» per sempre.
+  final void Function(SegnoRifiutato no)? quandoEStaccato;
 
   /// Se questa casa il legame l'ha gia' ripetuto, con una busta aperta a
   /// provarlo: da qui in poi lo si pretende.
@@ -758,6 +767,7 @@ class Filo {
                 it: 'il segno non è più valido',
                 en: 'the token is no longer valid',
               ),
+          motivo: detto['motivo'] is String ? detto['motivo'] as String : null,
         );
       case 'result':
         _risposta(detto);
@@ -1311,13 +1321,15 @@ class Filo {
   }
 
   /// Il segno non vale: non si riprova, perche' non cambierebbe niente.
-  void _segnoNonVale(String perche) {
+  void _segnoNonVale(String perche, {String? motivo}) {
     _spentoApposta = true;
     _stacca();
-    final errore = SegnoRifiutato(perche);
+    final errore = SegnoRifiutato(perche, motivo: motivo);
     _faFallireLeRichieste(errore);
     if (_stretta != null && !_stretta!.isCompleted) {
       _stretta!.completeError(errore);
+    } else {
+      quandoEStaccato?.call(errore);
     }
     _cambia(StatoDelFilo.spento);
   }

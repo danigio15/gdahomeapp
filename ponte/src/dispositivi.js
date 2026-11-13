@@ -144,11 +144,17 @@ export class Dispositivi {
     cartella = "/data",
     massimi = 10,
     giorniDiSilenzio = 90,
+    /* Se i telefoni della casa di prova stanno nei massimi anche loro: un
+     * si' o un no, o una funzione che lo dice adesso. Di serie no, come
+     * sempre. Con gdahome Base si' (`index.js`): vedi «I telefoni di prova
+     * con Base». */
+    provaNeiMassimi = false,
     adesso = () => Date.now(),
   } = {}) {
     /* Un numero, o una funzione che lo dice adesso: con le licenze il
      * massimo cambia mentre il ponte gira (`Licenze.telefoniMassimi`). */
     this.massimi = massimi;
+    this.provaNeiMassimi = provaNeiMassimi;
     this.giorniDiSilenzio = giorniDiSilenzio;
     this.adesso = adesso;
     this.archivio = new Archivio(join(cartella, "dispositivi.json"), { dispositivi: [] });
@@ -198,14 +204,29 @@ export class Dispositivi {
     return typeof chiave === "string" && chiave.length === 64 ? chiave : null;
   }
 
+  /* Perche' un telefono staccato e' stato staccato: `""` se non lo si sa, o
+   * se non lo si ricorda piu' (vedi `chiaveRevocataDi`). */
+  perCheEStaccato(id) {
+    const limite = this.adesso() - GIORNI_DEI_REVOCATI * GIORNO;
+    const trovato = this._revocati.find((uno) => uno.id === id && (uno.staccatoIl || 0) >= limite);
+    return typeof trovato?.perche === "string" ? trovato.perche : "";
+  }
+
   /* Si ricorda la chiave di questi telefoni, e dimentica quelle troppo
    * vecchie o di troppo. Non salva: lo fa chi chiama, una volta sola. */
-  _ricordaStaccati(andati) {
+  _ricordaStaccati(andati, { perche = "" } = {}) {
     const ora = this.adesso();
     const limite = ora - GIORNI_DEI_REVOCATI * GIORNO;
     const nuovi = andati
       .filter((uno) => typeof uno?.chiave === "string" && uno.chiave.length === 64)
-      .map((uno) => ({ id: uno.id, chiave: uno.chiave, staccatoIl: ora }));
+      .map((uno) => ({
+        id: uno.id,
+        chiave: uno.chiave,
+        staccatoIl: ora,
+        /* Perche' e' stato staccato, quando lo si sa dire: il portiere lo
+         * dice al telefono dentro il cifrato (`limite-telefoni-base`). */
+        ...(perche ? { perche } : {}),
+      }));
     const tenuti = [
       ...this._revocati.filter(
         (uno) => (uno.staccatoIl || 0) >= limite && !nuovi.some((nuovo) => nuovo.id === uno.id),
@@ -311,13 +332,41 @@ export class Dispositivi {
     return this._vivi.filter((uno) => Number.isFinite(uno.finoA)).length;
   }
 
+  /* ─── I telefoni di prova con Base ────────────────────────────────────
+   *
+   * Fuori dai massimi i telefoni di prova ci stanno perche' la casa di prova
+   * e' una sola — quella di chi tiene la Gestione — e la rivedono Apple e
+   * Google. Ma il «sei la casa del gestore» il ponte lo sa solo dalla
+   * casella `chiave_della_gestione` delle opzioni, che nessuno controlla:
+   * chiunque ci scrivesse una parola qualsiasi poteva fare una casa di prova,
+   * allungarla ogni settimana, e abbinare quanti telefoni voleva a una casa
+   * Base, oltre i due. Con Base, allora, contano anche loro: i telefoni sono
+   * due in tutto, di casa o di prova. Con Premium e a licenze spente resta
+   * come prima. */
+  get _provaNeiMassimi() {
+    try {
+      const detto =
+        typeof this.provaNeiMassimi === "function" ? this.provaNeiMassimi() : this.provaNeiMassimi;
+      return detto === true;
+    } catch (_errore) {
+      return false;
+    }
+  }
+
+  /* Quanti posti sono presi, per un telefono che entra adesso: quelli di
+   * casa, o con Base tutti quanti. */
+  postiPresi() {
+    return this._provaNeiMassimi ? this.quanti() : this.quantiDiCasa();
+  }
+
   /* Abbina un telefono e restituisce il segno.
    *
    * Il segno esce da qui una volta sola, adesso. Chi lo perde riabbina: non
    * c'e' nessuna strada per rileggerlo, ed e' voluto. */
   abbina({ nome, sistema, utente = "", finoA = null, ...detto } = {}) {
     const massimi = this.massimi;
-    if (!Number.isFinite(finoA) && this.quantiDiCasa() >= massimi) {
+    const diProva = Number.isFinite(finoA);
+    if ((!diProva || this._provaNeiMassimi) && this.postiPresi() >= massimi) {
       throw new TroppiDispositivi(`sono gia' abbinati ${massimi} dispositivi`);
     }
     const segno = segnoNuovo();
@@ -353,7 +402,45 @@ export class Dispositivi {
     };
     this.lista.push(dispositivo);
     this.archivio.salva();
+    /* Chi vuole sapere che un telefono e' entrato (`index.js`: con Base si
+     * riguarda il tetto dei due). Un guasto suo non disfa l'abbinamento. */
+    try {
+      this.dopoLAbbinamento?.();
+    } catch (_errore) {
+      /* Si rifa' al giro della sentinella. */
+    }
     return { dispositivo: this._pulito(dispositivo), segno, chiave };
+  }
+
+  /* ─── Con Base, due telefoni e non di piu' ────────────────────────────
+   *
+   * «Con Base i telefoni abbinati prima del limite non restano: massimo 2,
+   * sempre.» Una casa che e' Base e ha piu' telefoni di `massimi` tiene i
+   * piu' recenti — quelli che si sono fatti vedere per ultimi, `vistoIl`, e a
+   * parita' quelli abbinati per ultimi — e gli altri si staccano davvero: il
+   * segno se ne va, della chiave del filo si tiene memoria per dirgli di no
+   * cifrato, e col perche' (`limite-telefoni-base`), che l'app legge per
+   * portare alla pagina Premium. Contano tutti i telefoni abbinati, anche
+   * quelli della casa di prova e il tablet a muro con l'app: ognuno e' un
+   * telefono abbinato. Gli orologi no: non si abbinano, passano dal
+   * telefono. Torna gli identificativi staccati, cosi' chi chiama chiude i
+   * loro fili. */
+  tieniIPiuRecenti(massimi, { perche = PERCHE_LIMITE_DI_BASE } = {}) {
+    if (typeof massimi !== "number" || !Number.isFinite(massimi) || massimi < 0) return [];
+    const vivi = this._vivi;
+    if (vivi.length <= massimi) return [];
+    const via = [...vivi]
+      .sort(
+        (uno, altro) =>
+          (Number(altro.vistoIl) || 0) - (Number(uno.vistoIl) || 0) ||
+          (Number(altro.natoIl) || 0) - (Number(uno.natoIl) || 0),
+      )
+      .slice(Math.floor(massimi));
+    const ids = new Set(via.map((uno) => uno.id));
+    this.archivio.dati.dispositivi = this.lista.filter((uno) => !ids.has(uno.id));
+    this._ricordaStaccati(via, { perche });
+    this.archivio.salva();
+    return [...ids];
   }
 
   /* La chiave del filo di un telefono, per cifrare quello che gli si manda.
@@ -497,3 +584,21 @@ export class Dispositivi {
 }
 
 export class TroppiDispositivi extends Error {}
+
+/** Il perche' di un telefono staccato perche' con Base i telefoni sono due. */
+export const PERCHE_LIMITE_DI_BASE = "limite-telefoni-base";
+
+/**
+ * La regola dei due telefoni di Base, fatta valere adesso: con le licenze
+ * accese, la casa non Premium, e il quadro gia' chiesto almeno una volta da
+ * quando il ponte e' acceso (`Licenze.chiesta`), chi e' oltre i massimi si
+ * stacca (`tieniIPiuRecenti`) e i suoi fili aperti si chiudono col perche'.
+ * Con Premium, a licenze spente, o prima della prima domanda: niente. Torna
+ * gli identificativi staccati.
+ */
+export function telefoniOltreBase({ licenze, dispositivi, ponte = null }) {
+  if (!licenze?.attive || licenze.premium || licenze.chiesta !== true) return [];
+  const via = dispositivi.tieniIPiuRecenti(dispositivi.massimi);
+  for (const id of via) ponte?.scollega?.(id, PERCHE_LIMITE_DI_BASE);
+  return via;
+}

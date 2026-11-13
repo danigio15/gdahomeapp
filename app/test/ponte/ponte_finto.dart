@@ -53,6 +53,10 @@ class PonteFinto {
   /// cifrato invece che in chiaro.
   bool staccatoConLaChiave = false;
 
+  /// Il perche' che la casa dice insieme allo stacco (`motivo` di
+  /// `auth_invalid`), come `limite-telefoni-base`. `null`: non lo dice.
+  String? motivoDelloStacco;
+
   /// Quando c'e', la casa decide cosa rispondere a chi bussa e poi aspetta
   /// questo prima di dirlo. Serve a far arrivare due risposte nell'ordine
   /// che vuole la prova, qualunque sia la velocita' della macchina.
@@ -122,6 +126,11 @@ class PonteFinto {
   /// La versione minima dell'app, come la sa l'add-on dal centralino
   /// (`ponte/src/versione-minima.js`). Zero: entrano tutti.
   int versioneMinima = 0;
+
+  /// La casa e' GdAHome Base e chi bussa non sta sulla sua rete: come il
+  /// portiere vero (`ponte/src/portiere.js`), il telefono gia' abbinato si
+  /// ferma alla prima parola con `premium-richiesto`. Chi si abbina no.
+  bool soloDaCasa = false;
 
   static Future<PonteFinto> alza() async {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
@@ -1655,6 +1664,20 @@ class TelefonoCollegato {
       return;
     }
 
+    if (_ponte.soloDaCasa) {
+      _presa.add(
+        jsonEncode({
+          'v': versioneDelProtocollo,
+          'no':
+              'Fuori casa serve GdAHome Premium: con Base la casa si apre '
+              'solo dalla sua rete',
+          'motivo': 'premium-richiesto',
+        }),
+      );
+      unawaited(chiudi(perche: 'premium-richiesto'));
+      return;
+    }
+
     final rifiuta = !_ponte.conosceIlTelefono && !_ponte.staccatoConLaChiave;
     final cancello = _ponte.cancello;
     if (cancello != null) await cancello.future;
@@ -1704,6 +1727,8 @@ class TelefonoCollegato {
       _ponte._manda(this, {
         'type': 'auth_invalid',
         'message': 'questo telefono è stato staccato da questa casa',
+        if (_ponte.motivoDelloStacco != null)
+          'motivo': _ponte.motivoDelloStacco,
       });
       unawaited(chiudi());
       return;

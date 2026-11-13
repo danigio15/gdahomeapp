@@ -295,7 +295,22 @@ export function costruisciLaPortaDellApp({
   plancia = null,
   /* Quanti fili senza nome si tengono aperti: vedi `SaliteSenzaNome`. */
   salite = new SaliteSenzaNome(),
+  /* La rete di casa come la dice il Supervisor (`ritorno.js`, `reteDiCasa`):
+   * con lei «da casa» vuol dire la stessa sottorete della macchina, e non
+   * un indirizzo privato qualunque (`da-casa.js`). Di serie nessuna. */
+  reteDiCasa = () => null,
 }) {
+  /* Se chi bussa sta sulla rete di casa. Una rete che non si legge non fa
+   * cadere niente: si decide senza. */
+  const daCasa = (richiesta) => {
+    let rete = null;
+    try {
+      rete = reteDiCasa?.() ?? null;
+    } catch (_errore) {
+      rete = null;
+    }
+    return arrivaDaCasa(richiesta, rete);
+  };
   const server = createServer(async (richiesta, risposta) => {
     mettiLeIntestazioni(risposta, PER_TUTTI);
     /* Qui, e **solo** qui.
@@ -356,9 +371,9 @@ export function costruisciLaPortaDellApp({
     if (metodo === "GET" && via === "/salute") {
       /* `da_casa`: se chi chiede sta sulla rete di casa (`da-casa.js`). Dice a
        * chi bussa una cosa di se', non della casa: con gdahome Base l'app
-       * prende l'indirizzo pubblico solo quando qui si arriva da casa — la
-       * web app aperta in casa con l'indirizzo di fuori. */
-      json(risposta, { vivo: true, da_casa: arrivaDaCasa(richiesta) });
+       * prova un indirizzo solo quando qui si arriva da casa, ed e' la stessa
+       * regola con cui il portiere poi apre o chiude il filo. */
+      json(risposta, { vivo: true, da_casa: daCasa(richiesta) });
       return;
     }
 
@@ -394,7 +409,9 @@ export function costruisciLaPortaDellApp({
     /* Anche in casa si passa dal portiere: la rete di casa non e' cifrata, e
      * chi ci sta sopra non deve poter leggere piu' di chi sta sul centralino.
      * E soprattutto: cosi' l'app ha **una strada sola** invece di due. */
-    if (presa) portiere.accogli(presa, { da, daCasa: arrivaDaCasa(richiesta) });
+    /* E da dove arriva: con gdahome Base il portiere ferma chi non e' in
+     * casa (`da-casa.js`), qualunque strada abbia fatto per arrivare qui. */
+    if (presa) portiere.accogli(presa, { da, daCasa: daCasa(richiesta) });
   });
   /* Un errore sulla presa di chi bussa e' suo, non del ponte. */
   server.on("clientError", (_errore, socket) => {
@@ -618,8 +635,13 @@ export function costruisciLaConsole({
 
     /* La pagina della console, a chi non amministra, non si serve: gli si
      * dice perche'. I suoi fogli e i suoi disegni si', che non contengono
-     * niente. */
-    if ((via === "/" || via === "" || via === "/index.html") && !(await amministra(richiesta))) {
+     * niente. Il percorso si guarda come lo guarda `servi`, normalizzato:
+     * `/.//index.html` e' la stessa pagina di `/index.html`. */
+    const pagina = normalize(via || "/");
+    if (
+      (pagina === "/" || pagina === "." || pagina === "/index.html") &&
+      !(await amministra(richiesta))
+    ) {
       soloChiAmministra(risposta);
       return;
     }
@@ -1370,7 +1392,9 @@ async function api({
 
   if (via === "/api/codice" && metodo === "POST") {
     const massimi = dispositivi.massimi ?? opzioni.dispositiviMassimi;
-    if (dispositivi.quantiDiCasa() >= massimi) {
+    /* Con Base contano anche i telefoni della casa di prova (`postiPresi`). */
+    const presi = dispositivi.postiPresi?.() ?? dispositivi.quantiDiCasa();
+    if (presi >= massimi) {
       male(risposta, 409, `sono gia' abbinati ${massimi} dispositivi`);
       return;
     }

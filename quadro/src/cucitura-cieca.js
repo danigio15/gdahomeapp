@@ -41,6 +41,13 @@ import { haFlussi, PLANCIA_MASSIMA } from "./plance.js";
  * presentato. */
 export const ASPETTA_LA_CHIAVE = 15000;
 
+/* Quanto resta aperto, al massimo, un editor entrato. Chi lavora alla plancia
+ * di un cliente ci sta un pomeriggio, non una settimana; e il gettone con cui
+ * e' entrato vale mezz'ora (`biglietti.js`): passate dodici ore il filo si
+ * chiude, e per riaprirlo serve un gettone nuovo, cioe' un installatore che
+ * c'e' ancora e ha ancora la chiave. */
+export const DURATA_MASSIMA = 12 * 60 * 60 * 1000;
+
 const VUOTO = Object.freeze({ stati: [], entita: [], dispositivi: [], stanze: [], piani: [] });
 
 const si = (id, result) => ({ id, type: "result", success: true, result });
@@ -76,9 +83,13 @@ export class CucituraCieca {
      * `GettoniDellEditor` in `biglietti.js`. */
     riconosci,
     congelato = () => false,
+    /* Se l'installatore c'e' ancora: uno eliminato non scrive piu', nemmeno
+     * dall'editor che aveva gia' aperto. */
+    esiste = () => true,
     registro = { info() {}, attenzione() {}, errore() {} },
     adesso = () => Date.now(),
     aspettaLaChiave = ASPETTA_LA_CHIAVE,
+    durataMassima = DURATA_MASSIMA,
     da = "?",
   }) {
     this.presa = presa;
@@ -88,6 +99,9 @@ export class CucituraCieca {
     this.case = case_;
     this.riconosci = riconosci;
     this.congelato = congelato;
+    this.esiste = esiste;
+    this.durataMassima = durataMassima;
+    this._scade = null;
     this.registro = registro;
     this.adesso = adesso;
     this.da = da;
@@ -127,6 +141,15 @@ export class CucituraCieca {
       this._entra(detto);
       return;
     }
+    /* Quello che valeva all'ingresso si ridomanda a ogni messaggio: chi
+     * entra e poi viene congelato, eliminato, o perde la casa, non deve
+     * poter continuare a leggere e a scrivere dal filo che aveva aperto. */
+    const perche = this._nonPuoPiu(this.chi);
+    if (perche) {
+      this.registro.attenzione(`l'editor di ${this.chi} su ${this.casa} si chiude: ${perche}`);
+      this._fuori(perche);
+      return;
+    }
     let risposta;
     try {
       risposta = this._rispondi(detto);
@@ -143,25 +166,38 @@ export class CucituraCieca {
       return;
     }
     const chi = this.riconosci(String(detto.access_token || ""));
-    if (!chi || this.congelato(chi)) {
+    if (!chi) {
       this._fuori("la chiave non va bene");
       return;
     }
-    const sua = this.case.quella(this.casa);
-    if (!sua || sua.di !== chi) {
-      this._fuori("questa casa non la segui tu");
-      return;
-    }
-    if (sua.carta?.configurazione !== true) {
-      this._fuori("questo impianto non lascia configurare la plancia da lontano");
+    const perche = this._nonPuoPiu(chi);
+    if (perche) {
+      this._fuori(perche);
       return;
     }
     this.chi = chi;
     clearTimeout(this._orologio);
+    this._scade = setTimeout(
+      () => this._fuori("l'editor e' aperto da troppo: riaprilo dal cruscotto"),
+      this.durataMassima,
+    );
+    this._scade.unref?.();
     this.registro.info(
       `${chi} ha aperto l'editor della plancia «${this.profilo}» di ${this.casa} da ${this.da}`,
     );
     this._manda({ type: "auth_ok", ha_version: "gdahome" });
+  }
+
+  /* Perche' `chi` su questo filo non puo' (piu') stare, o `null` se puo':
+   * le stesse domande dell'ingresso, tranne il gettone, che vale mezz'ora e
+   * serve solo a entrare. */
+  _nonPuoPiu(chi) {
+    if (!this.esiste(chi) || this.congelato(chi)) return "la chiave non va bene";
+    const sua = this.case.quella(this.casa);
+    if (!sua || sua.di !== chi) return "questa casa non la segui tu";
+    if (sua.carta?.configurazione !== true)
+      return "questo impianto non lascia configurare la plancia da lontano";
+    return null;
   }
 
   _rispondi(detto) {
@@ -392,12 +428,14 @@ export class CucituraCieca {
   _laPaginaSeNEAndata() {
     this.chiusa = true;
     clearTimeout(this._orologio);
+    clearTimeout(this._scade);
   }
 
   chiudi(codice = 1000, perche = "") {
     if (this.chiusa) return;
     this.chiusa = true;
     clearTimeout(this._orologio);
+    clearTimeout(this._scade);
     try {
       this.presa.chiudi(codice, perche);
     } catch (_errore) {

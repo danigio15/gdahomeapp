@@ -292,8 +292,10 @@ scheda dell'add-on, e il codice regalo si può scrivere lì.
 
 Non si perde niente. La casa torna Base: la plancia principale resta, e le
 plance in più restano salvate dove sono — si rivedono appena Premium torna,
-anche fra le Plance di Home Assistant. I telefoni già abbinati restano; per
-abbinarne uno nuovo, con Base, devono essere meno di due.
+anche fra le Plance di Home Assistant. Dei telefoni, con Base, ne restano
+abbinati al massimo due: i due usati più di recente. Gli altri si staccano, e
+l'app su quei telefoni lo dice e porta alla pagina Premium; con Premium si
+riabbinano.
 
 ### GdANav da solo
 

@@ -160,8 +160,11 @@ export class Ponte {
   /* Un telefono ha appena aperto una presa. */
   /* `chi` e' il telefono con cui la stretta di mano ha fatto la chiave di
    * questo filo (`portiere.js`): da li' in poi su questo filo entra solo lui. */
-  accogli(presa, { da = "?", mucchio = false, chi = null } = {}) {
-    const collegamento = new Collegamento(this, presa, da, { mucchio, chi });
+  /* `daCasa` e' quello che il portiere ha saputo alla stretta di mano
+   * (`da-casa.js`): serve a `chiudiQuelliDaFuori`. Di serie si', come per chi
+   * entrava prima che lo si dicesse. */
+  accogli(presa, { da = "?", mucchio = false, chi = null, daCasa = true } = {}) {
+    const collegamento = new Collegamento(this, presa, da, { mucchio, chi, daCasa });
     this.collegamenti.add(collegamento);
     collegamento.avvia();
     return collegamento;
@@ -182,11 +185,28 @@ export class Ponte {
 
   /* Butta giu' i fili di un telefono staccato dalla console. Senza questo, un
    * telefono revocato resterebbe dentro finche' non chiude lui. */
-  scollega(idDelDispositivo) {
+  scollega(idDelDispositivo, perche = "") {
     let quanti = 0;
     for (const uno of [...this.collegamenti]) {
       if (uno.dispositivo?.id !== idDelDispositivo) continue;
-      uno.chiudi(1008, "questo dispositivo e' stato staccato");
+      /* Col perche', quando c'e' (`limite-telefoni-base`): il telefono
+       * ribussa, e il portiere glielo dice cifrato (`auth_invalid`). */
+      uno.chiudi(1008, perche || "questo dispositivo e' stato staccato");
+      quanti += 1;
+    }
+    return quanti;
+  }
+
+  /* Butta giu' i fili arrivati da fuori casa: la casa e' appena tornata
+   * gdahome Base (un gettone scaduto, un abbonamento finito), e chi era
+   * entrato da fuori con Premium non resta dentro fino a quando chiude lui.
+   * Col numero e la parola del centralino (`4402 premium-richiesto`), che
+   * l'app sa leggere. */
+  chiudiQuelliDaFuori(codice = 4402, motivo = "premium-richiesto") {
+    let quanti = 0;
+    for (const uno of [...this.collegamenti]) {
+      if (uno.daCasa) continue;
+      uno.chiudi(codice, motivo);
       quanti += 1;
     }
     return quanti;
@@ -207,10 +227,11 @@ function leggi(testo) {
 }
 
 class Collegamento {
-  constructor(ponte, presa, da, { mucchio = false, chi = null } = {}) {
+  constructor(ponte, presa, da, { mucchio = false, chi = null, daCasa = true } = {}) {
     this.ponte = ponte;
     this.presa = presa;
     this.da = da;
+    this.daCasa = daCasa !== false;
     this.chi = typeof chi === "string" && chi ? chi : null;
     this.dispositivo = null;
     this.filo = null;
@@ -223,6 +244,8 @@ class Collegamento {
     /* Se chi sta dall'altra parte amministra la casa, deciso alla stretta di
      * mano: vedi `_amministra`. */
     this._amministraAllaStretta = false;
+    /* Se un `auth` sta gia' aspettando la casa: vedi `_dalTelefono`. */
+    this._autenticando = false;
     /* Gli eventi si raggruppano solo se tutte e due le cose sono vere: il
      * telefono sa spacchettare un mucchio (l'ha detto nella stretta di mano)
      * e questo filo passa dal centralino, dove ogni messaggio e' una
@@ -344,7 +367,16 @@ class Collegamento {
       this._rifiuta("prima bisogna autenticarsi");
       return;
     }
-    this._autentica(String(detto.access_token || ""));
+    /* Un'autenticazione alla volta. Mentre la prima aspetta Home Assistant,
+     * un secondo `auth` apriva un secondo filo verso la casa, e il primo
+     * restava aperto senza nessuno: cento `auth` di fila, cento fili. Quelli
+     * che arrivano nel frattempo si lasciano cadere, come si lasciano cadere
+     * dopo (`passaLaDogana`). */
+    if (this._autenticando) return;
+    this._autenticando = true;
+    this._autentica(String(detto.access_token || "")).finally(() => {
+      this._autenticando = false;
+    });
   }
 
   /* Le commissioni le riconosce chi le fa; un ponte senza commissioni

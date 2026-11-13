@@ -216,6 +216,23 @@ export function contoDellaCasa(sog) {
 export const CASA_SPARITA = 30 * 24 * 60 * 60 * 1000;
 const RICORDA_LA_VISTA_OGNI = 60 * 60 * 1000;
 
+/* Quanti soggetti nuovi possono nascere in un'ora, in tutto. Un soggetto
+ * nasce una volta nella vita — una casa che si installa, un telefono che
+ * compra — e nasce gratis: senza un tetto, chi se li fabbrica a raffica
+ * gonfia `licenze.json` finche' ogni scrittura costa secondi. Oltre il tetto
+ * si risponde 429, che il ponte legge come «riprova piu' tardi». La regola
+ * della prima volta resta la stessa: chi arriva primo si tiene l'impronta. */
+export const SOGGETTI_NUOVI_ALL_ORA = 1000;
+const UN_ORA = 60 * 60 * 1000;
+
+/* Quanto al piu' spesso finiscono sul disco i soggetti nuovi e le loro
+ * visite. L'archivio riscrive il file intero, fermando tutto il resto: come
+ * in `case.js`, la prima scrittura parte subito e quelle che arrivano subito
+ * dopo aspettano insieme il giro successivo. Le licenze, i codici e i
+ * pacchetti invece si scrivono subito, come sempre, e si portano dietro anche
+ * i soggetti che aspettavano. Spegnendo si scrive tutto (`chiudi`). */
+const SOGGETTI_SUL_DISCO_AL_PIU_OGNI = 2_000;
+
 export class NoLicenza extends Error {
   constructor(stato, errore) {
     super(errore);
@@ -703,8 +720,21 @@ export class Licenze {
    * @param {string} opzioni.cartella dove sta l'archivio
    * @param {string} opzioni.chiave il `d` della privata, in base64url; vuoto spegne tutto
    */
-  constructor({ cartella = "./dati", chiave = "", adesso = () => Date.now() } = {}) {
+  constructor({
+    cartella = "./dati",
+    chiave = "",
+    adesso = () => Date.now(),
+    soggettiNuoviAllOra = SOGGETTI_NUOVI_ALL_ORA,
+    scritturaAlPiuOgni = SOGGETTI_SUL_DISCO_AL_PIU_OGNI,
+  } = {}) {
     this.adesso = adesso;
+    this.soggettiNuoviAllOra = soggettiNuoviAllOra;
+    this.scritturaAlPiuOgni = scritturaAlPiuOgni;
+    /* Quando sono nati i soggetti dell'ultima ora: in memoria e basta, un
+     * riavvio lo azzera ed e' giusto — e' un limite di velocita'. */
+    this._nuovi = [];
+    this._scrittaIl = 0;
+    this._daScrivere = null;
     this.privata = chiavePrivataDa(chiave);
     this.pubblica = this.privata ? laPubblicaDi(this.privata) : "";
     this.archivio = new Archivio(join(cartella, "licenze.json"), {
@@ -752,12 +782,17 @@ export class Licenze {
     const suo = this.archivio.dati.soggetti[chi];
     const segno = impronta(detto);
     if (!suo) {
+      const ora = this.adesso();
+      while (this._nuovi.length && ora - this._nuovi[0] >= UN_ORA) this._nuovi.shift();
+      if (this._nuovi.length >= this.soggettiNuoviAllOra)
+        throw new NoLicenza(429, "troppi-soggetti-nuovi");
+      this._nuovi.push(ora);
       this.archivio.dati.soggetti[chi] = {
         impronta: segno,
-        da: this.adesso(),
-        visto: this.adesso(),
+        da: ora,
+        visto: ora,
       };
-      this.archivio.salva();
+      this._salvaPresto();
       return chi;
     }
     if (!stessoSegreto(suo.impronta, segno)) throw new NoLicenza(403, "segreto-sbagliato");
@@ -766,9 +801,46 @@ export class Licenze {
     const ora = this.adesso();
     if (!(ora - (Number(suo.visto) || 0) < RICORDA_LA_VISTA_OGNI)) {
       suo.visto = ora;
-      this.archivio.salva();
+      this._salvaPresto();
     }
     return chi;
+  }
+
+  /* Subito, se l'ultima scrittura dei soggetti e' abbastanza lontana; se no,
+   * una sola al giro dopo per tutti quelli arrivati nel frattempo. Il tempo
+   * e' quello vero e non `adesso`: e' un'attesa, non una data. La scrittura
+   * e' quella dell'archivio, di fianco e poi rinominata: un file a meta' non
+   * c'e' mai. */
+  _salvaPresto() {
+    if (this._daScrivere) return;
+    const passato = Date.now() - this._scrittaIl;
+    if (passato >= this.scritturaAlPiuOgni) {
+      this._salvaISoggetti();
+      return;
+    }
+    this._daScrivere = setTimeout(() => {
+      try {
+        this._salvaISoggetti();
+      } catch (_errore) {
+        /* Un disco che dice no dentro un'attesa non deve far cadere il
+         * quadro: i soggetti restano in memoria, e la prossima scrittura li
+         * porta tutti. */
+      }
+    }, this.scritturaAlPiuOgni - passato);
+    this._daScrivere.unref?.();
+  }
+
+  _salvaISoggetti() {
+    clearTimeout(this._daScrivere);
+    this._daScrivere = null;
+    this._scrittaIl = Date.now();
+    this.archivio.salva();
+  }
+
+  /* Quello che aspetta di essere scritto si scrive adesso: chi spegne il
+   * quadro non deve perdere i soggetti nati nell'ultimo secondo. */
+  chiudi() {
+    if (this._daScrivere) this._salvaISoggetti();
   }
 
   /* Se una casa si e' fatta vedere negli ultimi trenta giorni. Una casa di
@@ -1695,6 +1767,58 @@ export class Licenze {
       lic: uno.lic || null,
       annullato: uno.annullato || null,
     };
+  }
+
+  /**
+   * Le case e la loro gdahome, una riga per casa: per la vista «per casa»
+   * della Gestione (`telefoni-per-casa.js`).
+   *
+   * Ci sono le case che hanno chiesto le licenze almeno una volta (i
+   * soggetti `casa_…`) e quelle che una licenza ce l'hanno o l'hanno avuta.
+   * Di ognuna: quando ha chiesto i gettoni l'ultima volta (`chiesto`, scritto
+   * al piu' una volta l'ora) e da quando la si conosce (`da`); la licenza che
+   * vale adesso, quella che dura di piu' — la stessa che finisce nel gettone
+   * (`perIlSoggetto`) — con da dove viene; e quante ne ha avute che non
+   * valgono piu' (`finite`). Le righe «spostata» non sono licenze e non si
+   * contano. Niente segreti: l'impronta resta qui.
+   */
+  perLeCase(ora = this.adesso()) {
+    const righe = new Map();
+    const fini = new Map();
+    const di = (sog) => {
+      if (!righe.has(sog))
+        righe.set(sog, { casa: sog, chiesto: null, da: null, gdahome: null, finite: 0 });
+      return righe.get(sog);
+    };
+    for (const [sog, suo] of Object.entries(this.archivio.dati.soggetti || {})) {
+      if (!CASA.test(sog)) continue;
+      const riga = di(sog);
+      riga.chiesto = Number(suo?.visto) || null;
+      riga.da = Number(suo?.da) || null;
+    }
+    for (const una of this.licenze) {
+      if (una.app !== "gdahome" || !CASA.test(String(una.sog)) || una.origine === "spostata")
+        continue;
+      const riga = di(una.sog);
+      if (!this.vale(una, ora)) {
+        riga.finite += 1;
+        continue;
+      }
+      const fine = this.fineDi(una) ?? Infinity;
+      if (riga.gdahome && fini.get(una.sog) >= fine) continue;
+      fini.set(una.sog, fine);
+      riga.gdahome = {
+        lic: una.lic,
+        origine: una.origine,
+        prova: Boolean(una.prova),
+        sandbox: Boolean(una.negozio?.abbonamento?.sandbox),
+        codice: Boolean(una.codice),
+        installatore: una.installatore || null,
+        piattaforma: una.negozio?.piattaforma || null,
+        scade: una.scade,
+      };
+    }
+    return [...righe.values()];
   }
 
   /** Tutto, per il gestore: le piu' nuove prima. */

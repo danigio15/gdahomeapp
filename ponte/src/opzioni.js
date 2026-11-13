@@ -263,6 +263,12 @@ export function leggiLeOpzioni(cartella = process.env.PONTE_ARCHIVIO || "/data")
      * E' la stessa che sta fra i segreti del centralino: non si inventa qui,
      * si copia da li'. */
     chiaveDellaConsole: String(process.env.PONTE_CHIAVE_CONSOLE || scritte.chiave_console || ""),
+    /* Solo il banco di prova la scrive (`app/test/integrazione`): vuota spegne
+     * le licenze, come nelle prove del ponte. Le opzioni dell'add-on non ce
+     * l'hanno, e senza vale la chiave del codice (`chiave-licenze.js`). */
+    ...(typeof process.env.PONTE_CHIAVE_LICENZE === "string"
+      ? { chiaveDelleLicenze: process.env.PONTE_CHIAVE_LICENZE }
+      : {}),
     /* Questo Home Assistant e' di chi installa.
      *
      * Due condizioni, e servono tutt'e due: l'interruttore acceso **e** il

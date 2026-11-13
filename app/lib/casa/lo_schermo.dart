@@ -19,7 +19,10 @@
 ///   spegne da solo (di notte resta al minimo). Vale solo col pannello
 ///   acceso: spento il pannello, lo spegnimento torna del sistema.
 /// - `sveglia`: suona il campanello. La luce torna piena e, su Android, uno
-///   schermo spento si riaccende sopra il blocco — solo col pannello acceso.
+///   schermo spento si riaccende sopra il blocco — solo col pannello acceso,
+///   e solo per [quantoDuraLoSquillo]: poi, o appena il pannello si spegne,
+///   il blocco di Android torna davanti. Prima restava sopra per sempre, e
+///   dal tablet bloccato si comandava la casa senza sbloccarlo.
 /// - `luce:<0-100>` / `luce:no` (#224): la luminosita' che il pannello ha
 ///   deciso — piena con qualcuno vicino, bassa a riposo, quasi niente di
 ///   notte. Sale in fretta e scende piano; `no` la rende al sistema. Su
@@ -56,7 +59,20 @@ bool _aMuro = false;
 bool _chiosco = false;
 bool _spento = false;
 bool _accesoChiesto = false;
-bool _accesoDetto = false;
+
+/* L'ultima parola detta ad Android sullo schermo che resta acceso. `null`
+ * finche' non si e' detto niente: all'avvio non si sa com'e' la finestra, e
+ * la prima volta si dice comunque — prima partiva da «no», e un «no» non si
+ * diceva mai. */
+bool? _accesoDetto;
+
+/* Sopra il blocco di Android: lo chiede lo squillo del pannello, a tempo, e
+ * ogni campanello di una notifica aperto a tutto schermo, finche' e' aperto.
+ * L'ultima parola detta ad Android, come sopra, parte da «non si sa». */
+bool _sopraPerLoSquillo = false;
+int _campanelliAperti = 0;
+bool? _sopraDetto;
+Timer? _fineDelloSquillo;
 
 /* La luminosita' del pannello (#224): quella voluta, quella mandata per
  * ultima alla finestra, e il giro della dissolvenza in corso — una nuova
@@ -99,8 +115,10 @@ Future<void> loSchermoDice(String detto, {DiciAllaPagina? allaPagina}) async {
       if (barreNascoste != prima) await _applica();
       if (!_aMuro && _spento) await _luminosita(false);
       if (!_aMuro) await _laLuce('no');
+      if (!_aMuro) _finisceLoSquillo();
       await _accordaISensori();
       await _tieniAcceso();
+      await _accordaIlBlocco();
     case 'acceso:si':
     case 'acceso:no':
       _accesoChiesto = detto == 'acceso:si';
@@ -160,7 +178,9 @@ bool get schermoTenutoAcceso => _aMuro && _accesoChiesto;
 
 /* Lo schermo che non si spegne: su Android la finestra lo dichiara
  * (`FLAG_KEEP_SCREEN_ON`), sull'iPhone si ferma il timer del riposo. Si
- * chiede solo quando cambia. */
+ * chiede quando cambia, e la prima volta sempre. Lo dice solo questo file:
+ * il campanello di una notifica non lo tocca, se no spegnerebbe quello che
+ * il pannello aveva chiesto e la parola detta qui non sarebbe piu' vera. */
 Future<void> _tieniAcceso() async {
   final voluto = schermoTenutoAcceso;
   if (voluto == _accesoDetto) return;
@@ -173,22 +193,91 @@ Future<void> _tieniAcceso() async {
   }
 }
 
+/// Quanto il pannello resta sopra il blocco dopo uno squillo: il tempo di
+/// arrivare allo schermo e guardare chi c'e'. Lo stesso minuto dopo cui il
+/// campanello di una notifica non suona piu' (`campanello.dart`).
+@visibleForTesting
+Duration quantoDuraLoSquillo = const Duration(seconds: 60);
+
+/// Se adesso l'app deve passare sopra il blocco di Android.
+bool get schermoSopraIlBlocco => _sopraPerLoSquillo || _campanelliAperti > 0;
+
 /* Suona il campanello: la luce piena subito, e su Android lo schermo spento
- * si riaccende e passa sopra il blocco. Fuori dal pannello a muro no: un
- * telefono in tasca non si accende per un campanello. */
+ * si riaccende e passa sopra il blocco — per [quantoDuraLoSquillo], non di
+ * piu'. Fuori dal pannello a muro no: un telefono in tasca non si accende
+ * per un campanello. */
 Future<void> _sveglia() async {
   if (!_aMuro) return;
   await _luminosita(false);
-  if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
-  try {
-    await canaleDellaFinestra.invokeMethod<void>('sveglia');
-  } catch (_) {
-    /* Un pacchetto di prima: si sveglia la pagina, lo schermo no. */
-  }
+  if (!_android) return;
+  _sopraPerLoSquillo = true;
+  _fineDelloSquillo?.cancel();
+  _fineDelloSquillo = Timer(quantoDuraLoSquillo, () {
+    _fineDelloSquillo = null;
+    _sopraPerLoSquillo = false;
+    unawaited(_accordaIlBlocco());
+  });
+  await _svegliaAndroid();
   /* La sveglia di Android rende la luce al sistema: con la luminosita' del
    * pannello accesa si rimette la sua, che il pannello alza da se'. */
   final voluta = _luceVoluta;
   if (voluta != null) await _mandaLaLuce(voluta);
+}
+
+/* Lo squillo del pannello e' finito prima del tempo: il pannello si e'
+ * spento. */
+void _finisceLoSquillo() {
+  _fineDelloSquillo?.cancel();
+  _fineDelloSquillo = null;
+  _sopraPerLoSquillo = false;
+}
+
+/* `sveglia` sul canale della finestra: Android riaccende lo schermo e passa
+ * sopra il blocco da se' (`MainActivity.kt`), e qui lo si segna. */
+Future<void> _svegliaAndroid() async {
+  try {
+    await canaleDellaFinestra.invokeMethod<void>('sveglia');
+    _sopraDetto = true;
+  } catch (_) {
+    /* Un pacchetto di prima: si sveglia la pagina, lo schermo no. */
+  }
+}
+
+/* Sopra il blocco o no: si dice ad Android quando cambia, e la prima volta
+ * sempre. Si toglie a fine squillo, col pannello spento e alla chiusura
+ * dell'ultimo campanello. */
+Future<void> _accordaIlBlocco() async {
+  final voluto = schermoSopraIlBlocco;
+  if (voluto == _sopraDetto) return;
+  _sopraDetto = voluto;
+  if (!_android) return;
+  try {
+    await canaleDellaFinestra.invokeMethod<void>('sopraIlBlocco', voluto);
+  } catch (_) {
+    /* Un pacchetto senza `sopraIlBlocco`: non c'e' altro da fare. */
+  }
+}
+
+/// Il campanello di una notifica si apre a tutto schermo, come una chiamata
+/// (`campanello.dart`): su Android lo schermo si riaccende e l'app passa
+/// sopra il blocco finche' quel campanello resta aperto. Passa da qui, e non
+/// dal canale, perche' sopra il blocco e schermo acceso li tiene in mano
+/// questo file solo — e alla chiusura ([loSchermoChiudeIlCampanello]) li
+/// rimette come li vuole il pannello, non tutti spenti.
+Future<void> loSchermoApreIlCampanello() async {
+  _campanelliAperti++;
+  if (!_android) return;
+  if (_aMuro) await _luminosita(false);
+  await _svegliaAndroid();
+  final voluta = _luceVoluta;
+  if (_aMuro && voluta != null) await _mandaLaLuce(voluta);
+}
+
+/// Il campanello di una notifica si chiude: se nessun altro lo vuole, l'app
+/// torna sotto il blocco. Lo schermo acceso del pannello non si tocca.
+Future<void> loSchermoChiudeIlCampanello() async {
+  if (_campanelliAperti > 0) _campanelliAperti--;
+  await _accordaIlBlocco();
 }
 
 bool get _androidOApple =>
@@ -393,7 +482,10 @@ void loSchermoDaCapo() {
   _chiosco = false;
   _spento = false;
   _accesoChiesto = false;
-  _accesoDetto = false;
+  _accesoDetto = null;
+  _finisceLoSquillo();
+  _campanelliAperti = 0;
+  _sopraDetto = null;
   _luceVoluta = null;
   _luceAdesso = null;
   _giroDellaLuce++;

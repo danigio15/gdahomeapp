@@ -91,10 +91,15 @@ import {
   VERSIONE_DELL_ABBINAMENTO,
 } from "./cifra.js";
 import { CodiceSbagliato, TroppiTentativi } from "./abbinamento.js";
-import { TroppiDispositivi } from "./dispositivi.js";
+import { PERCHE_LIMITE_DI_BASE, TroppiDispositivi } from "./dispositivi.js";
 import { impronta, stessoSegreto } from "./segreti.js";
 
 const CHIUSA_PER_REGOLA = 1008;
+
+/* Il numero con cui il centralino chiude il telefono di una casa senza
+ * Premium (`docs/LICENZE.md`): lo stesso qui, cosi' l'app lo riconosce anche
+ * se il no in chiaro si perde per strada. */
+export const CHIUSA_SENZA_PREMIUM = 4402;
 
 /* ─── I messaggi grandi ────────────────────────────────────────────────────
  *
@@ -149,9 +154,10 @@ export class Portiere {
     chiamata,
     ritorno,
     attesaDellaStretta = ATTESA_DELLA_STRETTA,
-    /* Se questa casa sta nei limiti di gdahome Base (`licenze.js`,
-     * `limitata`). Una funzione, perche' cambia mentre il ponte gira; di
-     * serie no, che e' come stanno le licenze finche' la chiave e' vuota. */
+    /* Se questa casa si apre solo dalla sua rete: gdahome Base
+     * (`licenze.js`, `soloDaCasa`). Una funzione, perche' cambia mentre il
+     * ponte gira; di serie no, che e' come stanno le licenze finche' la
+     * chiave e' vuota. */
     soloInCasa = () => false,
     /* La versione minima dell'app (`versione-minima.js`). Di serie nessuna:
      * entrano tutti, come prima. */
@@ -177,8 +183,8 @@ export class Portiere {
    * gia' abbinato, passando dal centralino). Di difetto si', perche' in casa
    * l'abbinamento passa proprio da qui. */
   /* `daCasa` dice se la presa arriva dalla rete di casa (`da-casa.js`): va
-   * nel `pronto`, e con gdahome Base l'app chiude il filo che arriva da
-   * fuori. Dal centralino non si e' mai in casa. */
+   * nel `pronto`, e con gdahome Base chi non e' in casa si ferma qui (vedi
+   * `_laPrimaParola`). Dal centralino non si e' mai in casa. */
   accogli(presa, { da = "?", abbina = true, daCasa = !String(da).startsWith("centralino") } = {}) {
     const timer = this._aTempo(presa, "la stretta di mano non e' arrivata");
     presa.onMessaggio = (testo) => {
@@ -254,24 +260,33 @@ export class Portiere {
 
     /* ─── Da fuori casa, con gdahome Base ─────────────────────────────────
      *
-     * Il collegamento da fuori e' Premium (`docs/LICENZE.md`). Il taglio sta
-     * **qui**, e non sul filo col centralino, per una ragione sola: su quel
-     * filo passa anche l'abbinamento, e l'abbinamento resta aperto a tutti —
-     * chi inquadra il QR stando fuori casa deve poter abbinare il telefono, e
-     * poi usarlo in casa. Quindi il filo della casa resta su, i canali si
-     * aprono, e un canale arrivato dal centralino si ferma alla prima parola
-     * se non e' un abbinamento.
+     * Il collegamento da fuori e' Premium (`docs/LICENZE.md`), e con Base
+     * l'app si apre solo dalla rete di casa: **qualunque** strada abbia fatto
+     * la presa. Il centralino (`da` comincia per «centralino», e `daCasa` e'
+     * falso), ma anche la porta dell'app raggiunta da fuori — una porta aperta
+     * sul router, un proxy, una VPN — che la porta dell'app riconosce e
+     * segna (`da-casa.js`). Il taglio sta **qui**, alla prima parola, per una
+     * ragione sola: l'abbinamento resta aperto a tutti — chi inquadra il QR
+     * stando fuori casa deve poter abbinare il telefono, e poi usarlo in
+     * casa — e un filo d'abbinamento si chiude da solo appena ha consegnato
+     * il segno.
      *
      * Il centralino fa lo stesso da parte sua — chiude con `4402` il telefono
      * di una casa senza gettone — ma questa riga non si fida di lui: un
-     * centralino vecchio, o uno di qualcun altro, non lo sa fare. Il no va in
-     * chiaro come tutti quelli della stretta di mano: non dice niente che chi
-     * sta in mezzo non sappia gia', e all'app serve il `motivo` per portare
-     * alla pagina Premium invece di dire «non trovo la casa». */
-    if (String(da).startsWith("centralino") && this._soloInCasa()) {
-      this._no(presa, "con GdAHome Base questa casa si apre solo da casa", {
-        motivo: MOTIVO.premium,
-      });
+     * centralino vecchio, o uno di qualcun altro, non lo sa fare. Ne' si fida
+     * dell'app, che il `da_casa` del `pronto` lo legge e basta: un'app
+     * modificata lo ignorerebbe. Il no va in chiaro come tutti quelli della
+     * stretta di mano: non dice niente che chi sta in mezzo non sappia gia',
+     * e all'app serve il `motivo` per portare alla pagina Premium invece di
+     * dire «non trovo la casa». */
+    if (daCasa !== true && this._soloInCasa()) {
+      this.registro.info?.(`un telefono da fuori casa (${da}) e' rimasto fuori: GdAHome Base`);
+      this._no(
+        presa,
+        "Fuori casa serve GdAHome Premium: con Base la casa si apre solo dalla sua rete",
+        { motivo: MOTIVO.premium },
+        { codice: CHIUSA_SENZA_PREMIUM, motivo: MOTIVO.premium },
+      );
       return;
     }
 
@@ -329,7 +344,7 @@ export class Portiere {
        * `chi` e' il telefono con la cui chiave del filo si e' appena fatta la
        * chiave di questo collegamento: chi riesce ad aprire le buste e' lui, e
        * non un altro che dica di esserlo. */
-      { da, mucchio: detto.mucchio === true, chi },
+      { da, mucchio: detto.mucchio === true, chi, daCasa: daCasa === true },
     );
   }
 
@@ -394,10 +409,18 @@ export class Portiere {
     }
     presa.manda(pronto);
     const cifrata = new PresaCifrata(presa, chiaveDiQuestoFilo);
+    /* Col perche', quando la casa lo sa: `limite-telefoni-base` vuol dire
+     * «con Base i telefoni sono due, e questo era di troppo», e l'app porta
+     * alla pagina Premium invece di dire soltanto di riabbinare. */
+    const perche = this.dispositivi.perCheEStaccato?.(String(detto?.chi ?? "")) || "";
     cifrata.manda(
       JSON.stringify({
         type: "auth_invalid",
-        message: "questo telefono e' stato staccato da questa casa: riabbinalo",
+        message:
+          perche === PERCHE_LIMITE_DI_BASE
+            ? "con GdAHome Base si abbinano al massimo 2 telefoni: questo telefono e' stato staccato"
+            : "questo telefono e' stato staccato da questa casa: riabbinalo",
+        ...(perche ? { motivo: perche } : {}),
       }),
     );
     cifrata.chiudi(CHIUSA_PER_REGOLA, "staccato");
@@ -682,9 +705,9 @@ export class Portiere {
     }
   }
 
-  _no(presa, perche, altro = {}) {
+  _no(presa, perche, altro = {}, { codice = CHIUSA_PER_REGOLA, motivo = perche } = {}) {
     presa.manda(JSON.stringify({ v: VERSIONE, no: perche, ...altro }));
-    presa.chiudi(CHIUSA_PER_REGOLA, perche);
+    presa.chiudi(codice, motivo);
   }
 }
 

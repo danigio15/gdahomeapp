@@ -490,7 +490,34 @@ export function telecamereNominate(detto) {
   else if (tipo === "auth/sign_path") dove = typeof detto.path === "string" ? detto.path : "";
   else if (tipo === "call_service" && String(detto.domain || "") === "camera")
     dove = JSON.stringify(detto);
+  /* E le telecamere viste come media (`media-source://camera/camera.x`):
+   * `media_source/resolve_media` ne da' l'indirizzo HLS firmato, e lo stesso
+   * indirizzo lo si puo' chiedere passando da un lettore
+   * (`media_player/browse_media`, `media_player.play_media`). */
+  for (const uno of indirizziDelleTelecamereMedia(detto)) dove += ` ${uno}`;
   return new Set((dove.match(TELECAMERA) || []).map((una) => una.toLowerCase()));
+}
+
+/* La cartella delle telecamere fra i media di Home Assistant: ogni telecamera
+ * ci sta come `media-source://camera/<entita'>`. */
+const MEDIA_DELLE_TELECAMERE = /^media-source:\/\/camera(?:[/?#]|$)/i;
+
+/* Gli indirizzi `media-source://camera…` che un messaggio porta: da solo
+ * (`media_source/*`, `media_player/browse_media`) o dentro i dati di un
+ * servizio (`media_player.play_media`). */
+function indirizziDelleTelecamereMedia(detto) {
+  if (!detto || typeof detto !== "object") return [];
+  const dati =
+    detto.service_data && typeof detto.service_data === "object" ? detto.service_data : {};
+  return [detto.media_content_id, dati.media_content_id].filter(
+    (uno) => typeof uno === "string" && MEDIA_DELLE_TELECAMERE.test(uno.trim()),
+  );
+}
+
+/* Se un messaggio apre la cartella delle telecamere senza nominarne una: la
+ * radice `media-source://camera`, che le elenca tutte. */
+function apreLaCartellaDelleTelecamere(detto) {
+  return indirizziDelleTelecamereMedia(detto).some((uno) => !uno.match(TELECAMERA));
 }
 
 /* Se fra quelle nominate ce n'e' una chiusa a chi chiede. */
@@ -532,7 +559,10 @@ export function perche(
    * intestassero a un utente — non vede nessuna telecamera: «non si sa» non
    * e' un si' (la promessa 1 delle telecamere, `commissioni.js`). Vale prima
    * di «chi amministra», perche' quel telefono passa per uno che amministra. */
-  if (senzaTelecamere && telecamereNominate(detto).size > 0)
+  if (
+    senzaTelecamere &&
+    (telecamereNominate(detto).size > 0 || apreLaCartellaDelleTelecamere(detto))
+  )
     return "le telecamere si mostrano solo a chi e' entrato con un utente";
 
   if (admin) return null;
@@ -540,8 +570,11 @@ export function perche(
   /* Una telecamera messa solo in una plancia riservata a qualcun altro non si
    * apre a chi quella plancia non la vede (`commissioni.js`,
    * `telecamereChiuse`). Chi amministra non c'entra: in Home Assistant le
-   * telecamere le vede comunque tutte. */
+   * telecamere le vede comunque tutte. E chi ne ha di chiuse non sfoglia la
+   * cartella delle telecamere fra i media: le elencherebbe tutte, chiuse
+   * comprese. */
   if (apreUnaChiusa(telecamereNominate(detto), telecamereChiuse)) return LA_TELECAMERA_E_CHIUSA;
+  if (telecamereChiuse?.size && apreLaCartellaDelleTelecamere(detto)) return LA_TELECAMERA_E_CHIUSA;
 
   /* I comandi della plancia li fa il ponte (`commissioni.js`), con le sue
    * regole su chi puo' cosa. Uno che arriva fin qui non l'ha preso lui, e a
@@ -743,6 +776,11 @@ export function perLaVia({
     /^\/api\/image_proxy\/(image\.[a-z0-9_]+)/.exec(via);
   if (dellaTelecamera && apreUnaChiusa(new Set([dellaTelecamera[1]]), telecamereChiuse))
     return LA_TELECAMERA_E_CHIUSA;
+  /* Il flusso HLS non dice di quale telecamera e': nel percorso c'e' solo il
+   * gettone del flusso. A chi ha telecamere chiuse non si puo' dire quale
+   * gli si apre, e allora non gli si apre nessuno: le sue le vede col WebRTC
+   * e con le istantanee, che la telecamera la nominano. */
+  if (telecamereChiuse?.size && sottoLaVia(via, "/api/hls")) return LA_TELECAMERA_E_CHIUSA;
   /* `GET /api/states` e `/api/config` da soli sono letture che un utente
    * qualunque fa; scriverli, o entrare sotto `/api/config/`, no. */
   if (verbo === "GET" && (via === "/api/states" || via.startsWith("/api/states/"))) return null;

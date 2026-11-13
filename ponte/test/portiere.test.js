@@ -69,7 +69,7 @@ function dispositiviFinti({ chiavi = {}, revocate = {} } = {}) {
   };
 }
 
-function unPortiere({ dispositivi = dispositiviFinti(), attesaDellaStretta } = {}) {
+function unPortiere({ dispositivi = dispositiviFinti(), attesaDellaStretta, soloInCasa } = {}) {
   const abbinamento = new Abbinamento({});
   const accolti = [];
   const portiere = new Portiere({
@@ -78,6 +78,7 @@ function unPortiere({ dispositivi = dispositiviFinti(), attesaDellaStretta } = {
     abbinamento,
     registro: null,
     ...(attesaDellaStretta ? { attesaDellaStretta } : {}),
+    ...(soloInCasa ? { soloInCasa } : {}),
   });
   return { portiere, abbinamento, dispositivi, accolti };
 }
@@ -391,6 +392,21 @@ test("un telefono staccato di cui la casa ha la chiave lo sa dentro il cifrato",
   assert.ok(presa.chiusa);
 });
 
+test("un telefono staccato per il limite di Base lo sa, col perche', dentro il cifrato", () => {
+  const vecchia = chiaveDelFiloNuova();
+  const dispositivi = {
+    ...dispositiviFinti({ revocate: { dm_via: vecchia } }),
+    perCheEStaccato: (id) => (id === "dm_via" ? "limite-telefoni-base" : ""),
+  };
+  const { portiere } = unPortiere({ dispositivi });
+  const presa = presaFinta();
+  portiere.accogli(presa, { da: "192.168.1.20" });
+  const [detto] = unTelefono(presa, { chi: "dm_via", chiaveDelFilo: vecchia }).lette();
+  assert.equal(detto.type, "auth_invalid");
+  assert.equal(detto.motivo, "limite-telefoni-base");
+  assert.match(detto.message, /al massimo 2 telefoni/);
+});
+
 test("un telefono che non si conosce proprio riceve il no in chiaro, come prima", () => {
   const { portiere } = unPortiere();
   const presa = presaFinta();
@@ -453,6 +469,68 @@ test("il pronto dice se il filo arriva dalla rete di casa", () => {
     const telefono = unTelefono(presa, { chi: "dm_qui", chiaveDelFilo: chiave });
     assert.equal(telefono.pronto?.da_casa, atteso, JSON.stringify(come));
     assert.equal(accolti.length, 1, "la casa non chiude: lo dice e basta");
+  }
+});
+
+test("con GdAHome Base chi non e' in casa si ferma alla prima parola, da qualunque strada", () => {
+  /* Il centralino, ma anche la porta dell'app raggiunta da fuori: una porta
+   * aperta sul router, un proxy, una VPN. Lo decide la porta dell'app
+   * (`da-casa.js`) e lo fa valere il portiere, non l'app. */
+  const chiave = chiaveDelFiloNuova();
+  const dispositivi = dispositiviFinti({ chiavi: { dm_qui: chiave } });
+  for (const come of [
+    { da: "centralino 93.40.1.2" },
+    { da: "93.40.1.2", daCasa: false },
+    { da: "172.30.33.4", daCasa: false },
+    { da: "100.101.102.103", daCasa: false },
+  ]) {
+    const { portiere, accolti } = unPortiere({ dispositivi, soloInCasa: () => true });
+    const presa = presaFinta();
+    portiere.accogli(presa, come);
+    const telefono = unTelefono(presa, { chi: "dm_qui", chiaveDelFilo: chiave });
+    assert.equal(telefono.pronto, null, `nessuna stretta di mano: ${JSON.stringify(come)}`);
+    assert.equal(accolti.length, 0, JSON.stringify(come));
+    const [no] = presa.inChiaro;
+    assert.equal(no.motivo, "premium-richiesto", JSON.stringify(come));
+    /* Lo stesso numero e la stessa parola del centralino. */
+    assert.deepEqual(presa.chiusa, { codice: 4402, motivo: "premium-richiesto" });
+  }
+});
+
+test("con GdAHome Base chi e' in casa entra, e chi e' fuori si abbina lo stesso", async () => {
+  const chiave = chiaveDelFiloNuova();
+  const dispositivi = dispositiviFinti({ chiavi: { dm_qui: chiave } });
+  {
+    const { portiere, accolti } = unPortiere({ dispositivi, soloInCasa: () => true });
+    const presa = presaFinta();
+    portiere.accogli(presa, { da: "192.168.1.20", daCasa: true });
+    const telefono = unTelefono(presa, { chi: "dm_qui", chiaveDelFilo: chiave });
+    assert.equal(telefono.pronto?.da_casa, true);
+    assert.equal(accolti.length, 1);
+    assert.equal(accolti[0].come.daCasa, true, "il ponte sa che e' di casa");
+  }
+  {
+    /* Chi inquadra il QR stando fuori si abbina, e poi usa il telefono in
+     * casa: il filo d'abbinamento consegna il segno e si chiude. */
+    const { portiere, abbinamento, accolti } = unPortiere({ soloInCasa: () => true });
+    const { codice } = abbinamento.nuovo();
+    const presa = presaFinta();
+    portiere.accogli(presa, { da: "93.40.1.2", daCasa: false });
+    const telefono = unTelefono(presa, { codice });
+    telefono.manda({ t: "conferma", telefono: telefono.mia, casa: telefono.sua, nome: "Pixel" });
+    await giro();
+    assert.equal(telefono.lette()[0]?.t, "ecco");
+    assert.equal(accolti.length, 0, "nessun filo con la casa");
+    assert.equal(presa.chiusa.codice, 1000);
+  }
+  {
+    /* Premium, o licenze spente: da fuori si entra, e il ponte sa da dove. */
+    const { portiere, accolti } = unPortiere({ dispositivi, soloInCasa: () => false });
+    const presa = presaFinta();
+    portiere.accogli(presa, { da: "93.40.1.2", daCasa: false });
+    unTelefono(presa, { chi: "dm_qui", chiaveDelFilo: chiave });
+    assert.equal(accolti.length, 1);
+    assert.equal(accolti[0].come.daCasa, false);
   }
 });
 

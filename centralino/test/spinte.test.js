@@ -205,6 +205,9 @@ test("i gettoni: per casa, chiusi a 600, e via quando la casa li toglie o Fireba
     /* L'elenco vuoto toglie tutto. */
     spinte.elenco(casa, []);
     assert.deepEqual(spinte.gettoniDi(casa), {});
+    /* Il disco si scrive al piu' ogni tanto: chiudendo, quello che aspetta
+     * si scrive adesso. */
+    spinte.chiudi();
     assert.deepEqual(JSON.parse(readFileSync(file, "utf8")).case, {});
 
     /* E nel registro non c'e' ne' un gettone, ne' una chiave. */
@@ -331,6 +334,98 @@ test("dal filo della casa: l'elenco, la spinta, e il gettone morto detto alla ca
     centralino.chiudiTutto();
     await new Promise((ok) => server.close(ok));
     await firebase.spegni();
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("l'elenco dei gettoni: niente zavorra, un freno per casa, un tetto in tutto, e il disco non si riscrive a ogni messaggio", () => {
+  const cartella = mkdtempSync(join(tmpdir(), "spinte-"));
+  try {
+    const spinte = new Spinte({
+      cartella,
+      elenchiPerCasa: 3,
+      caseAlPiu: 2,
+      gettoniInTutto: 5,
+      scritturaAlPiuOgni: 60_000,
+    });
+    const casa = `casa_${randomBytes(16).toString("hex")}`;
+    const telefono = unTelefono();
+    /* Un gettone vero di Firebase e' sui duecento caratteri, e passa; uno da
+     * quattro kilobyte e' zavorra, e no. */
+    const vero = `f${randomBytes(8).toString("hex")}:APA91b${"x".repeat(160)}`;
+    assert.equal(spinte.elenco(casa, [{ telefono, gettone: vero }]), true);
+    assert.equal(spinte.gettoniDi(casa)[telefono], vero);
+    const file = join(cartella, "spinte.json");
+    const scrittoPrima = readFileSync(file, "utf8");
+    assert.equal(spinte.elenco(casa, [{ telefono, gettone: "A".repeat(4096) }]), true);
+    assert.deepEqual(spinte.gettoniDi(casa), {}, "un gettone da 4 KB non si tiene");
+
+    /* Il secondo cambiamento non ha riscritto il file: aspetta il giro. */
+    assert.equal(readFileSync(file, "utf8"), scrittoPrima);
+
+    /* Oltre tre elenchi in dieci minuti, la casa non viene ascoltata. */
+    assert.equal(spinte.elenco(casa, [{ telefono, gettone: unGettone() }]), true);
+    assert.equal(spinte.elenco(casa, [{ telefono, gettone: unGettone() }]), "troppi");
+    assert.equal(Object.keys(spinte.gettoniDi(casa)).length, 1);
+
+    /* Il tetto delle case: la seconda entra, la terza no. */
+    const seconda = `casa_${randomBytes(16).toString("hex")}`;
+    const terza = `casa_${randomBytes(16).toString("hex")}`;
+    assert.equal(
+      spinte.elenco(seconda, [
+        { telefono: unTelefono(), gettone: unGettone() },
+        { telefono: unTelefono(), gettone: unGettone() },
+      ]),
+      true,
+    );
+    assert.equal(spinte.elenco(terza, [{ telefono: unTelefono(), gettone: unGettone() }]), "pieno");
+    /* E quello dei gettoni: la seconda non puo' crescere oltre cinque in tutto. */
+    const tanti = Array.from({ length: 5 }, () => ({
+      telefono: unTelefono(),
+      gettone: unGettone(),
+    }));
+    assert.equal(spinte.elenco(seconda, tanti), "pieno");
+    assert.equal(spinte.quanti(), 3);
+
+    /* Chiudendo, il file si scrive con l'ultimo stato. */
+    spinte.chiudi();
+    const sulDisco = JSON.parse(readFileSync(file, "utf8")).case;
+    assert.deepEqual(Object.keys(sulDisco).sort(), [casa, seconda].sort());
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
+
+test("i gettoni delle case potate se ne vanno con loro", () => {
+  const cartella = mkdtempSync(join(tmpdir(), "spinte-"));
+  try {
+    let ora = Date.now();
+    const case_ = new Case({ cartella, adesso: () => ora });
+    const viva = `casa_${randomBytes(16).toString("hex")}`;
+    const zitta = `casa_${randomBytes(16).toString("hex")}`;
+    const segreto = randomBytes(32).toString("hex");
+    assert.ok(case_.riconosci(zitta, segreto));
+    ora += 200 * 24 * 60 * 60 * 1000;
+    assert.ok(case_.riconosci(viva, segreto));
+    const spinte = new Spinte({ cartella });
+    spinte.elenco(viva, [{ telefono: unTelefono(), gettone: unGettone() }]);
+    spinte.elenco(zitta, [{ telefono: unTelefono(), gettone: unGettone() }]);
+    assert.equal(case_.potatura(), 1);
+    assert.equal(case_.viva(zitta), false);
+    assert.equal(
+      spinte.potatura((casa) => case_.viva(casa)),
+      1,
+    );
+    assert.deepEqual(spinte.gettoniDi(zitta), {});
+    assert.equal(Object.keys(spinte.gettoniDi(viva)).length, 1);
+    assert.equal(spinte.quanti(), 1);
+    spinte.chiudi();
+    case_.chiudi();
+    assert.deepEqual(
+      Object.keys(JSON.parse(readFileSync(join(cartella, "spinte.json"), "utf8")).case),
+      [viva],
+    );
+  } finally {
     rmSync(cartella, { recursive: true, force: true });
   }
 });

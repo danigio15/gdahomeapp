@@ -19,7 +19,10 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { CaseSeguite } from "../src/case.js";
+import { CucituraCieca } from "../src/cucitura-cieca.js";
 import { alzaIlQuadro } from "../src/index.js";
+import { PlanceDelleCase } from "../src/plance.js";
 import { BASE, istanzaDi, PlanciaServita } from "../src/plancia-servita.js";
 
 const QUI = dirname(fileURLToPath(import.meta.url));
@@ -180,6 +183,7 @@ async function banco() {
   };
   return {
     dove,
+    gestore,
     retro,
     iscritti,
     unCodice,
@@ -568,4 +572,112 @@ test("il cruscotto apre l'editor in un riquadro sopra la pagina, e la gestione n
   /* La casella di JSON non c'e' piu'. */
   assert.doesNotMatch(CRUSCOTTO, /textarea\.configurazione|data-plancia-testo|lEditorDi/);
   assert.doesNotMatch(GESTIONE, /editor-plancia|plancia-da-lontano|data-configura-plancia/);
+});
+
+test("congelato, eliminato o con la chiave rifatta, l'editor gia' aperto si chiude", async () => {
+  for (const [come, via, metodo] of [
+    ["congelato", "/congela", "POST"],
+    ["chiave rifatta", "/chiave", "POST"],
+    ["eliminato", "", "DELETE"],
+  ]) {
+    const b = await banco();
+    try {
+      const codice = await b.unCodice();
+      await b.deposita(codice);
+      await b.manda(codice, { profilo: "primary", titolo: "Casa", revisione: 12, valori: VALORI });
+      const filo = await b.filo();
+      assert.equal((await filo.entra()).type, "auth_ok");
+      const fatto = await b.gestore(`/installatore/${b.iscritti[0].chi}${via}`, { method: metodo });
+      assert.equal(fatto.status, 200, come);
+      /* Il filo si chiude da se', senza aspettare che la pagina parli. */
+      const chiusa = await Promise.race([
+        filo.chiusa.then(() => true),
+        new Promise((ok) => setTimeout(() => ok(false), 2000)),
+      ]);
+      assert.equal(chiusa, true, `${come}: l'editor resta aperto`);
+    } finally {
+      await b.chiudi();
+    }
+  }
+});
+
+/* La cucitura da sola, come la usa il quadro: quello che valeva all'ingresso
+ * si ridomanda a ogni messaggio. */
+function unaCucitura({ durataMassima } = {}) {
+  const cartella = mkdtempSync(join(tmpdir(), "cucitura-"));
+  const case_ = new CaseSeguite({ cartella });
+  const scatti = new PlanceDelleCase({ cartella });
+  const chi = "inst_0000000000000001";
+  case_.deposita(UNA, { configurazione: true, plance: { elenco: [{ profilo: "primary" }] } }, chi);
+  const stato = { congelati: new Set(), eliminati: new Set() };
+  const mandati = [];
+  let chiusaCon = null;
+  const presa = {
+    manda: (testo) => mandati.push(JSON.parse(testo)),
+    chiudi: (codice, perche) => (chiusaCon = { codice, perche }),
+  };
+  const cucitura = new CucituraCieca({
+    presa,
+    casa: UNA,
+    profilo: "primary",
+    scatti,
+    case: case_,
+    riconosci: (gettone) => (gettone === "buono" ? chi : null),
+    congelato: (uno) => stato.congelati.has(uno),
+    esiste: (uno) => !stato.eliminati.has(uno),
+    ...(durataMassima ? { durataMassima } : {}),
+  });
+  presa.onMessaggio(JSON.stringify({ type: "auth", access_token: "buono" }));
+  assert.equal(mandati.at(-1).type, "auth_ok");
+  const scrivi = () =>
+    presa.onMessaggio(
+      JSON.stringify({
+        id: 7,
+        type: "dashboardmodern/config/set",
+        profile: "primary",
+        snapshot: { values: { titolo: "scritto da chi non puo' piu'" } },
+      }),
+    );
+  return {
+    chi,
+    case_,
+    scatti,
+    stato,
+    mandati,
+    cucitura,
+    scrivi,
+    chiusaCon: () => chiusaCon,
+    via: () => rmSync(cartella, { recursive: true, force: true }),
+  };
+}
+
+test("chi e' congelato, eliminato o perde la casa non scrive piu' dal filo che aveva aperto", () => {
+  for (const come of ["congelato", "eliminato", "senza casa"]) {
+    const c = unaCucitura();
+    try {
+      if (come === "congelato") c.stato.congelati.add(c.chi);
+      if (come === "eliminato") c.stato.eliminati.add(c.chi);
+      if (come === "senza casa") c.case_.toglieTutto(c.chi);
+      c.scrivi();
+      assert.equal(c.mandati.at(-1).type, "auth_invalid", come);
+      assert.equal(c.chiusaCon()?.codice, 1008, come);
+      assert.equal(c.case_.quella(UNA)?.lavoro ?? null, null, `${come}: nessun lavoro in coda`);
+      assert.equal(c.scatti.chiesta(UNA, "primary"), null, `${come}: niente da ritirare`);
+    } finally {
+      c.cucitura.chiudi();
+      c.via();
+    }
+  }
+});
+
+test("l'editor non resta aperto per sempre", async () => {
+  const c = unaCucitura({ durataMassima: 30 });
+  try {
+    await new Promise((ok) => setTimeout(ok, 80));
+    assert.equal(c.mandati.at(-1).type, "auth_invalid");
+    assert.equal(c.chiusaCon()?.codice, 1008);
+  } finally {
+    c.cucitura.chiudi();
+    c.via();
+  }
 });

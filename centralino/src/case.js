@@ -106,6 +106,13 @@ export class Case {
     return this.lista.length;
   }
 
+  /* Se la casa e' tra le vive: quelle addormentate no. Serve a chi tiene
+   * qualcosa per conto delle case e deve lasciarlo andare con la potatura
+   * (`spinte.js`). */
+  viva(id) {
+    return this._perId.has(id);
+  }
+
   /* La casa con quell'identificativo, sveglia o addormentata: per chi chiede
    * «e' di qualcuno?» la risposta e' la stessa. */
   quella(id) {

@@ -34,8 +34,8 @@ void main() {
       expect(sistema.last.arguments, 'SystemUiMode.immersiveSticky');
 
       await loSchermoDice('spento:si');
-      expect(finestra.single.method, 'luminosita');
-      expect(finestra.single.arguments, 0.0);
+      final luce = finestra.where((c) => c.method == 'luminosita');
+      expect(luce.single.arguments, 0.0);
 
       /* Spento il pannello, la luce torna quella del sistema. */
       await loSchermoDice('muro:no');
@@ -79,6 +79,7 @@ void main() {
   test(
     'col campanello lo schermo resta acceso, e quando suona si sveglia',
     () async {
+      loSchermoDaCapo();
       final finestra = <MethodCall>[];
       final messaggero =
           TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
@@ -96,17 +97,18 @@ void main() {
       ];
 
       /* Senza pannello a muro non si tiene acceso niente, e non si sveglia
-       * niente: un telefono in tasca non si accende per un campanello. */
+       * niente: un telefono in tasca non si accende per un campanello. La
+       * prima volta il «no» si dice: all'avvio non si sa com'e' la finestra. */
       await loSchermoDice('acceso:si');
       await loSchermoDice('sveglia');
-      expect(acceso(), isEmpty);
+      expect(acceso(), [false]);
       expect(finestra.where((c) => c.method == 'sveglia'), isEmpty);
       expect(schermoTenutoAcceso, isFalse);
 
       /* Col pannello si': una volta sola, finche' non cambia. */
       await loSchermoDice('muro:si');
       await loSchermoDice('acceso:si');
-      expect(acceso(), [true]);
+      expect(acceso(), [false, true]);
       expect(schermoTenutoAcceso, isTrue);
 
       /* Di notte la luce va al minimo; lo squillo la rimette piena e chiede
@@ -119,12 +121,110 @@ void main() {
 
       /* Spento il pannello, lo schermo torna del sistema. */
       await loSchermoDice('muro:no');
-      expect(acceso(), [true, false]);
+      expect(acceso(), [false, true, false]);
       expect(schermoTenutoAcceso, isFalse);
       await loSchermoDice('acceso:no');
-      expect(acceso(), [true, false]);
+      expect(acceso(), [false, true, false]);
     },
   );
+
+  /* Il pannello a muro restava sopra il blocco di Android: lo squillo lo
+   * metteva, e l'unico modo di toglierlo era un `acceso: false` che non
+   * partiva mai — il pannello senza `acceso:si` partiva gia' da «no». Da li'
+   * il tablet bloccato comandava la casa senza sbloccarlo. */
+  group('sopra il blocco', () {
+    late List<MethodCall> finestra;
+    List<Object?> sopra() => [
+      for (final c in finestra)
+        if (c.method == 'sopraIlBlocco') c.arguments,
+    ];
+    List<Object?> acceso() => [
+      for (final c in finestra)
+        if (c.method == 'acceso') c.arguments,
+    ];
+
+    setUp(() {
+      loSchermoDaCapo();
+      finestra = [];
+      final messaggero =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      messaggero.setMockMethodCallHandler(canaleDellaFinestra, (c) async {
+        finestra.add(c);
+        return null;
+      });
+      messaggero.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (c) async => null,
+      );
+    });
+    tearDown(() {
+      quantoDuraLoSquillo = const Duration(seconds: 60);
+      loSchermoDaCapo();
+    });
+
+    test('il pannello che si spegne toglie lo squillo dal blocco', () async {
+      await loSchermoDice('muro:si');
+      /* Il pannello senza `acceso:si`: lo schermo acceso si dice lo stesso,
+       * «no», che e' la verita'. */
+      expect(acceso(), [false]);
+      await loSchermoDice('sveglia');
+      expect(finestra.map((c) => c.method), contains('sveglia'));
+      expect(schermoSopraIlBlocco, isTrue);
+
+      await loSchermoDice('muro:no');
+      expect(schermoSopraIlBlocco, isFalse);
+      expect(sopra().last, false);
+    });
+
+    test('lo squillo resta sopra il blocco solo per poco', () async {
+      quantoDuraLoSquillo = const Duration(milliseconds: 20);
+      await loSchermoDice('muro:si');
+      await loSchermoDice('sveglia');
+      expect(schermoSopraIlBlocco, isTrue);
+      final prima = sopra().length;
+
+      await Future<void>.delayed(const Duration(milliseconds: 60));
+      expect(schermoSopraIlBlocco, isFalse);
+      expect(sopra().length, prima + 1);
+      expect(sopra().last, false);
+      /* Il pannello resta acceso: e' solo il blocco che torna davanti. */
+      expect(acceso(), [false]);
+    });
+
+    test(
+      'il campanello di una notifica passa da qui, e non spegne il pannello',
+      () async {
+        await loSchermoDice('muro:si');
+        await loSchermoDice('acceso:si');
+        expect(acceso(), [false, true]);
+
+        await loSchermoApreIlCampanello();
+        expect(finestra.map((c) => c.method), contains('sveglia'));
+        expect(schermoSopraIlBlocco, isTrue);
+
+        await loSchermoChiudeIlCampanello();
+        expect(schermoSopraIlBlocco, isFalse);
+        expect(sopra().last, false);
+        /* Prima il campanello diceva `acceso: false` da se', e spegneva lo
+         * schermo acceso che il pannello aveva chiesto. */
+        expect(acceso(), [false, true]);
+        expect(schermoTenutoAcceso, isTrue);
+      },
+    );
+
+    test(
+      'due campanelli: sotto il blocco quando si chiude l\'ultimo',
+      () async {
+        await loSchermoApreIlCampanello();
+        await loSchermoApreIlCampanello();
+        await loSchermoChiudeIlCampanello();
+        expect(schermoSopraIlBlocco, isTrue);
+        expect(sopra(), isEmpty);
+        await loSchermoChiudeIlCampanello();
+        expect(sopra(), [false]);
+      },
+    );
+  });
 
   /* La luminosita' del pannello (#224): il pannello dice un numero, l'app lo
    * porta alla finestra — salendo in fretta, scendendo piano — e la rende al

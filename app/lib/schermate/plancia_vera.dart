@@ -477,6 +477,53 @@ class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
             en: 'Add one to get started.',
           ),
         );
+      case ComeVa.segnoScaduto when collegamento.staccatoPerIlLimiteDiBase:
+        /* La casa e' GdAHome Base e i telefoni sono al massimo due: sono
+         * rimasti i due usati piu' di recente, e questo no. */
+        return _Stato(
+          collegamento: collegamento,
+          vaiAlleCase: widget.vaiAlleCase,
+          inCima: inCima,
+          icona: Icons.link_off_rounded,
+          titolo: inLingua(
+            it: 'Con Base si abbinano al massimo 2 telefoni',
+            en: 'Base allows at most 2 paired phones',
+          ),
+          sotto: inLingua(
+            it:
+                '«${collegamento.casa?.nome ?? 'Questa casa'}» usa GdAHome '
+                'Base, e aveva più di 2 telefoni abbinati: sono rimasti i 2 '
+                'usati più di recente, e questo è stato staccato. Con '
+                'GdAHome Premium i telefoni sono senza limite: attivalo, poi '
+                'riabbina questo telefono con un QR code nuovo.',
+            en:
+                '“${collegamento.casa?.nome ?? 'This home'}” uses GdAHome '
+                'Base and had more than 2 paired phones: the 2 used most '
+                'recently were kept, and this one was unpaired. With GdAHome '
+                'Premium there is no limit on phones: get it, then pair this '
+                'phone again with a new QR code.',
+          ),
+          azione: FilledButton.icon(
+            onPressed: () => unawaited(
+              apriLaPaginaPremium(
+                context,
+                collegamento,
+                perche: PerchePremium.telefoni,
+              ),
+            ),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(0, 48),
+              padding: const EdgeInsets.symmetric(horizontal: 22),
+            ),
+            icon: const Icon(Icons.star_rounded),
+            label: Text(
+              inLingua(
+                it: 'Scopri GdAHome Premium',
+                en: 'Discover GdAHome Premium',
+              ),
+            ),
+          ),
+        );
       case ComeVa.segnoScaduto:
         return _Stato(
           collegamento: collegamento,

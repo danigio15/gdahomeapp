@@ -43,9 +43,15 @@ jobs:
     permissions:
       contents: write
     steps:
+      # Senza lasciare la chiave della corsa in `.git/config`: piu' giu' girano
+      # le prove del commit scelto, cioe' codice di quel commit, e quel codice
+      # non deve trovarsi in mano una chiave che scrive sulla repository. La
+      # chiave si passa solo a chi la usa — il `fetch` di main e il `push` del
+      # segno — e solo per quel comando.
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
@@ -58,8 +64,14 @@ jobs:
         id: quale
         env:
           SCELTO: ${{ inputs.commit }}
+          CHIAVE: ${{ github.token }}
+          SERVER: ${{ github.server_url }}
         run: |
           set -euo pipefail
+          # Main com'e' adesso, per sapere se il commit scelto ci sta dentro.
+          intestazione="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$CHIAVE" | base64 -w0)"
+          git -c "http.$SERVER/.extraheader=$intestazione" \
+            fetch --no-tags --quiet origin "+refs/heads/main:refs/remotes/origin/main"
           scelto="$SCELTO"
           if [ -z "$scelto" ]; then
             # Quello su cui gira questa corsa: il bottone si preme dal ramo
@@ -82,6 +94,13 @@ jobs:
             exit 1
           }
           intero="$(git rev-parse --verify --end-of-options "$scelto^{commit}")"
+          # Solo un commit che sta su main: un commit di un altro ramo — o di
+          # una richiesta di modifica mai entrata — non e' stato rivisto, e in
+          # produzione non ci va, anche se chi preme il bottone lo scrive.
+          if ! git merge-base --is-ancestor "$intero" refs/remotes/origin/main; then
+            echo "«$scelto» non e' su main: in produzione va solo quello che e' su main." >&2
+            exit 1
+          fi
           echo "sha=$intero" >>"$GITHUB_OUTPUT"
           echo "corto=${intero:0:8}" >>"$GITHUB_OUTPUT"
 
@@ -125,6 +144,8 @@ jobs:
         env:
           SHA: ${{ steps.quale.outputs.sha }}
           CHIUSA: ${{ steps.busta.outputs.chiusa }}
+          CHIAVE: ${{ github.token }}
+          SERVER: ${{ github.server_url }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
@@ -141,7 +162,12 @@ jobs:
             git tag -f tramite "$SHA"
           fi
           rm -f "$RUNNER_TEMP/busta.txt" "$RUNNER_TEMP/messaggio.txt"
-          git push -f origin tramite
+          # La chiave solo qui, solo per github.com, e senza i ganci di git:
+          # le prove di prima hanno girato in questa cartella, e un gancio
+          # lasciato li' non deve partire con la chiave in mano.
+          intestazione="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$CHIAVE" | base64 -w0)"
+          git -c core.hooksPath=/dev/null -c "http.$SERVER/.extraheader=$intestazione" \
+            push -f origin tramite
 
       - name: Cosa e' successo
         env:

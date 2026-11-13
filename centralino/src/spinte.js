@@ -72,8 +72,36 @@ export const URGENTI_PER_CASA_AL_MINUTO = 20;
  * apra la busta. */
 export const FRASE_DI_RISERVA = Object.freeze({ titolo: "GdAHome", testo: "nuova notifica" });
 
+/* Quante volte una casa puo' ridire l'elenco dei suoi gettoni, in dieci
+ * minuti. Il ponte lo dice quando entra e quando cambia un telefono: una
+ * casa vera ne manda uno ogni tanto. Oltre, l'elenco si lascia cadere, e la
+ * casa lo ridice al prossimo ingresso. */
+export const ELENCHI_PER_CASA = 20;
+const DIECI_MINUTI = 10 * MINUTO;
+
+/* Quante case possono tenere gettoni qui, e quanti gettoni in tutto. Le case
+ * si fabbricano gratis, e ognuna puo' dire fino a venti gettoni: senza un
+ * tetto, chi ne fabbrica a migliaia riempie il disco e la memoria del
+ * centralino. Una casa che c'e' gia' puo' sempre cambiare il suo elenco; una
+ * nuova, a tetto pieno, resta senza notifiche finche' non si fa posto. */
+export const CASE_CON_GETTONI_AL_PIU = 20_000;
+export const GETTONI_IN_TUTTO = 100_000;
+
+/* Quanto al piu' spesso `spinte.json` finisce sul disco. L'archivio riscrive
+ * il file intero fermando tutto il resto: un elenco cambiato ogni tanto non
+ * se ne accorge nessuno, cento al secondo si'. Come in `case.js`: la prima
+ * scrittura parte subito, quelle che arrivano subito dopo aspettano insieme
+ * il giro successivo. */
+const SCRITTURA_AL_PIU_OGNI = 10_000;
+
 const TELEFONO_BUONO = /^dm_[0-9a-f]{16}$/;
-const GETTONE_BUONO = /^[A-Za-z0-9_:\-.]{20,4096}$/;
+/* Un gettone di Firebase e' sui centosessanta, duecento caratteri (l'app lo
+ * chiede a `FirebaseMessaging.getToken()`, anche sull'iPhone); uno di Apple
+ * sono sessantaquattro cifre esadecimali. Cinquecentododici lasciano il
+ * margine per un gettone che un giorno si allunghi, e non per quattro
+ * kilobyte di zavorra a telefono. */
+export const GETTONE_MASSIMO = 512;
+const GETTONE_BUONO = new RegExp(`^[A-Za-z0-9_:\\-.]{20,${GETTONE_MASSIMO}}$`);
 const BUSTA_BUONA = /^[A-Za-z0-9+/]+=*$/;
 export const BUSTA_MASSIMA = 3500;
 
@@ -274,6 +302,10 @@ export class Spinte {
     perCasaAlMinuto = SPINTE_PER_CASA_AL_MINUTO,
     urgentiPerCasaAllOra = URGENTI_PER_CASA_ALL_ORA,
     urgentiPerCasaAlMinuto = URGENTI_PER_CASA_AL_MINUTO,
+    elenchiPerCasa = ELENCHI_PER_CASA,
+    caseAlPiu = CASE_CON_GETTONI_AL_PIU,
+    gettoniInTutto = GETTONI_IN_TUTTO,
+    scritturaAlPiuOgni = SCRITTURA_AL_PIU_OGNI,
   } = {}) {
     this.registro = registro ?? { info() {}, attenzione() {}, errore() {} };
     this.adesso = adesso;
@@ -290,7 +322,16 @@ export class Spinte {
       adesso,
     });
     this.urgentiAlMinuto = new Freno({ perChi: urgentiPerCasaAlMinuto, finestra: MINUTO, adesso });
-    this.conti = { partite: 0, morte: 0, frenate: 0, errori: 0 };
+    this.elenchi = new Freno({ perChi: elenchiPerCasa, finestra: DIECI_MINUTI, adesso });
+    this.caseAlPiu = caseAlPiu;
+    this.gettoniInTutto = gettoniInTutto;
+    this.scritturaAlPiuOgni = scritturaAlPiuOgni;
+    this._scrittaIl = 0;
+    this._daScrivere = null;
+    this._quanti = 0;
+    for (const telefoni of Object.values(this.archivio.dati.case))
+      this._quanti += Object.keys(telefoni || {}).length;
+    this.conti = { partite: 0, morte: 0, frenate: 0, errori: 0, elenchiFermati: 0 };
     this._dettoLErrore = false;
   }
 
@@ -300,47 +341,116 @@ export class Spinte {
 
   /* Quanti gettoni in tutto, per `/salute` da dentro. */
   quanti() {
-    let quanti = 0;
-    for (const telefoni of Object.values(this.archivio.dati.case))
-      quanti += Object.keys(telefoni).length;
-    return quanti;
+    return this._quanti;
+  }
+
+  /* Quante case hanno gettoni qui. */
+  quanteCase() {
+    return Object.keys(this.archivio.dati.case).length;
   }
 
   gettoniDi(casa) {
     return { ...(this.archivio.dati.case[casa] || {}) };
   }
 
-  /* L'elenco intero dei gettoni di una casa: quello di prima se ne va. */
+  /* L'elenco intero dei gettoni di una casa: quello di prima se ne va.
+   *
+   * Torna `true` se l'elenco e' stato preso, `"troppi"` se la casa ne ha
+   * detti troppi in poco tempo, `"pieno"` se e' una casa nuova e i tetti
+   * sono gia' pieni, `false` se la casa non e' una casa. */
   elenco(casa, telefoni) {
     if (!CASA_VALIDA.test(String(casa ?? ""))) return false;
+    if (!this.elenchi.concedi(casa)) {
+      this.conti.elenchiFermati += 1;
+      return "troppi";
+    }
     const nuovi = {};
+    let quanti = 0;
     for (const uno of Array.isArray(telefoni) ? telefoni : []) {
-      if (Object.keys(nuovi).length >= GETTONI_PER_CASA) break;
+      if (quanti >= GETTONI_PER_CASA) break;
       if (!TELEFONO_BUONO.test(String(uno?.telefono ?? ""))) continue;
       if (!GETTONE_BUONO.test(String(uno?.gettone ?? ""))) continue;
+      if (!Object.hasOwn(nuovi, uno.telefono)) quanti += 1;
       nuovi[uno.telefono] = uno.gettone;
     }
-    const prima = JSON.stringify(this.archivio.dati.case[casa] || {});
-    if (Object.keys(nuovi).length) this.archivio.dati.case[casa] = nuovi;
+    const vecchi = this.archivio.dati.case[casa];
+    const primaQuanti = vecchi ? Object.keys(vecchi).length : 0;
+    /* I tetti valgono per chi cresce: una casa che c'e' gia' puo' sempre
+     * accorciare il suo elenco, o cambiarlo restando com'e'. */
+    if (quanti > primaQuanti) {
+      const nuovaCasa = !vecchi;
+      if (
+        (nuovaCasa && this.quanteCase() >= this.caseAlPiu) ||
+        this._quanti - primaQuanti + quanti > this.gettoniInTutto
+      ) {
+        this.conti.elenchiFermati += 1;
+        return "pieno";
+      }
+    }
+    const prima = JSON.stringify(vecchi || {});
+    if (quanti) this.archivio.dati.case[casa] = nuovi;
     else delete this.archivio.dati.case[casa];
-    if (prima !== JSON.stringify(nuovi)) this._salva();
+    this._quanti += quanti - primaQuanti;
+    if (prima !== JSON.stringify(nuovi)) this._salvaPresto();
     return true;
+  }
+
+  /* Le case che non ci sono piu' si portano via i loro gettoni: una casa
+   * potata (`case.js`, `potatura`) non manda notifiche, e i suoi telefoni
+   * non devono restare qui per sempre. `eViva(casa)` dice se la casa conta
+   * ancora; quando torna, il ponte ridice l'elenco entrando. Torna quante
+   * case sono state tolte. */
+  potatura(eViva) {
+    if (typeof eViva !== "function") return 0;
+    let tolte = 0;
+    for (const [casa, telefoni] of Object.entries(this.archivio.dati.case)) {
+      if (eViva(casa)) continue;
+      this._quanti -= Object.keys(telefoni || {}).length;
+      delete this.archivio.dati.case[casa];
+      tolte += 1;
+    }
+    if (tolte) this._salvaPresto();
+    return tolte;
   }
 
   _togli(casa, telefono) {
     const telefoni = this.archivio.dati.case[casa];
     if (!telefoni?.[telefono]) return;
     delete telefoni[telefono];
+    this._quanti -= 1;
     if (!Object.keys(telefoni).length) delete this.archivio.dati.case[casa];
-    this._salva();
+    this._salvaPresto();
+  }
+
+  /* Subito, se l'ultima scrittura e' abbastanza lontana; se no, una sola al
+   * giro dopo per tutto quello che e' cambiato nel frattempo. Il tempo e'
+   * quello vero e non `adesso`: e' un'attesa, non una data. */
+  _salvaPresto() {
+    if (this._daScrivere) return;
+    const passato = Date.now() - this._scrittaIl;
+    if (passato >= this.scritturaAlPiuOgni) {
+      this._salva();
+      return;
+    }
+    this._daScrivere = setTimeout(() => this._salva(), this.scritturaAlPiuOgni - passato);
+    this._daScrivere.unref?.();
   }
 
   _salva() {
+    clearTimeout(this._daScrivere);
+    this._daScrivere = null;
+    this._scrittaIl = Date.now();
     try {
       this.archivio.salva();
     } catch (_errore) {
       this.registro.errore("i gettoni delle notifiche non si salvano");
     }
+  }
+
+  /* Quello che aspetta di essere scritto si scrive adesso: chi spegne il
+   * centralino non deve perdere i gettoni detti nell'ultimo giro. */
+  chiudi() {
+    if (this._daScrivere) this._salva();
   }
 
   /* Una notifica di una casa per un suo telefono. Torna l'esito, e non

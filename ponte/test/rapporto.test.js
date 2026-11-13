@@ -545,7 +545,35 @@ test("i telefoni: conta di piu' quanti si sono visti che quanti sono abbinati", 
     abbinati: 3,
     visti7gg: 2,
     versioni: [{ negozio: "", versione: "", costruzione: 0, quanti: 2 }],
+    diProva: 0,
   });
+});
+
+test("i telefoni: quanti di prova, quanti se ne abbinano e la licenza come la vede la casa", async () => {
+  const adesso = Date.parse("2026-11-13T09:00:00Z");
+  const fatto = (massimi, licenza) =>
+    fabbricaIlRapporto({
+      identita: { casa: "casa_abc" },
+      casa: { chiedi: async () => [] },
+      ferro: ferroFinto(null),
+      dispositivi: {
+        elenco: () => [{ vistoIl: adesso }, { vistoIl: adesso, finoA: adesso + 1000 }],
+        massimi,
+      },
+      licenza: () => licenza,
+      registro: ZITTO,
+      adesso: () => adesso,
+    })();
+  const base = (await fatto(2, "base")).telefoni;
+  assert.equal(base.diProva, 1);
+  assert.equal(base.massimi, 2);
+  assert.equal(base.licenza, "base");
+  /* Premium: senza limite, che in JSON si scrive `null`. */
+  const premium = (await fatto(Infinity, "premium")).telefoni;
+  assert.equal(premium.massimi, null);
+  assert.equal(premium.licenza, "premium");
+  /* Una parola che non e' delle tre non passa. */
+  assert.equal("licenza" in (await fatto(10, "gratis")).telefoni, false);
 });
 
 test("le versioni dell'app: quanti telefoni per negozio e versione, solo quelli della settimana e senza dire quali", async () => {

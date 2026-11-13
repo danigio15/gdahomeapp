@@ -216,6 +216,12 @@ export async function alzaIlQuadro({
         } catch (_errore) {
           /* Al massimo si perde il conto di un rapporto. */
         }
+        /* E i soggetti delle licenze nati nell'ultimo giro (`licenze.js`). */
+        try {
+          licenze.chiudi();
+        } catch (_errore) {
+          /* Al massimo un soggetto si ripresenta e rinasce. */
+        }
         server.close(ok);
       }),
   };

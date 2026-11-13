@@ -198,3 +198,41 @@ test("il tastierino non si prova a forza: cinque sbagliati e per un minuto no", 
     rmSync(casa.cartella, { recursive: true, force: true });
   }
 });
+
+test("e nemmeno a forza di richieste insieme: il tentativo si conta prima di aspettare", async () => {
+  const casa = unaCasa();
+  try {
+    /* Diecimila codici partiti tutti insieme: prima il conto si leggeva prima
+     * dell'`await` e si aggiornava dopo, e passavano tutti — il giusto
+     * compreso. Adesso ne passano cinque, e gli altri sono un no. */
+    const tutte = await Promise.all(
+      Array.from({ length: 10000 }, (_, n) =>
+        codice(casa, RUSTICO, String(n).padStart(4, "0")).then((risposta) => ({ n, risposta })),
+      ),
+    );
+    const guardati = tutte.filter((una) => una.risposta.success === true);
+    assert.equal(guardati.length, 5);
+    assert.equal(
+      tutte.some((una) => una.risposta.result?.giusto === true),
+      false,
+      "il codice giusto non si trova a forza di richieste",
+    );
+    assert.equal(
+      tutte.filter((una) => una.risposta.error?.code === "rate_limited").length,
+      10000 - 5,
+    );
+  } finally {
+    rmSync(casa.cartella, { recursive: true, force: true });
+  }
+});
+
+test("un tasto che non c'e', o un pannello che non si vede, non consumano tentativi", async () => {
+  const casa = unaCasa();
+  try {
+    for (let volta = 0; volta < 10; volta += 1)
+      assert.equal((await codice(casa, RUSTICO, "0000", "inventato")).error.code, "not_found");
+    assert.equal((await codice(casa, RUSTICO, "1234")).result.giusto, true);
+  } finally {
+    rmSync(casa.cartella, { recursive: true, force: true });
+  }
+});

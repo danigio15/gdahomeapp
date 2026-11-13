@@ -80,6 +80,47 @@ const VOCI_MASSIME = 500;
 /* Una foto da plancia: dieci megabyte bastano e avanzano. */
 export const FOTO_MASSIMA = 10 * 1024 * 1024;
 
+/* E tutte insieme, le foto caricate: trecento megabyte. Sono sul disco
+ * dell'add-on (`/data`), lo stesso della configurazione e dei registri, e un
+ * disco pieno vuol dire una configurazione che non si salva piu'. Le foto di
+ * tutte le stanze e di tutti gli sfondi di una casa ci stanno larghe; chi
+ * carica a ripetizione si ferma qui. */
+export const TETTO_DELLE_FOTO = 300 * 1024 * 1024;
+
+/* La cartella delle foto e' arrivata al tetto: il messaggio e' per chi carica. */
+export class CartellaDelleFotoPiena extends Error {
+  constructor() {
+    super(
+      "Lo spazio per le foto caricate e' pieno (300 MB): togline qualcuna prima di caricarne altre.",
+    );
+    this.name = "CartellaDelleFotoPiena";
+  }
+}
+
+/* Quanto pesano i file sotto una cartella, sottocartelle comprese. I
+ * collegamenti non si seguono: quello che conta e' quello che sta qui. */
+function quantoPesa(cartella) {
+  let totale = 0;
+  let voci;
+  try {
+    voci = readdirSync(cartella, { withFileTypes: true });
+  } catch (_errore) {
+    return 0;
+  }
+  for (const voce of voci) {
+    const dove = join(cartella, voce.name);
+    if (voce.isDirectory()) totale += quantoPesa(dove);
+    else if (voce.isFile()) {
+      try {
+        totale += statSync(dove).size;
+      } catch (_errore) {
+        /* Sparito fra l'elenco e la domanda: non pesa piu'. */
+      }
+    }
+  }
+  return totale;
+}
+
 const PEZZO_BUONO = /^[A-Za-z0-9_\-.@+~ ]+$/;
 
 /* La firma nei primi byte, non il nome: un file rinominato .png resta
@@ -118,7 +159,7 @@ export class Foto {
   /** [base] e' il prefisso degli indirizzi che scrive; [scrivibile] dice se ci
    * si puo' caricare sopra. La cartella di Home Assistant si legge e basta:
    * quella e' roba di chi ci abita, non nostra da riordinare. */
-  constructor({ cartella, base = BASE_DELLE_FOTO, scrivibile = true }) {
+  constructor({ cartella, base = BASE_DELLE_FOTO, scrivibile = true, tetto = TETTO_DELLE_FOTO }) {
     /* Una cartella che non c'e' e' un magazzino vuoto, non un errore.
      *
      * Non e' un dettaglio: la cartella di Home Assistant esiste solo se il
@@ -129,6 +170,8 @@ export class Foto {
     this.cartella = cartella ? resolve(cartella) : "";
     this.base = base;
     this.scrivibile = scrivibile;
+    /* Quanto possono pesare, tutte insieme, le foto caricate qui. */
+    this.tetto = tetto;
   }
 
   /* Elenca cartelle e immagini sotto la cartella delle foto.
@@ -219,7 +262,9 @@ export class Foto {
 
   /* Mette via una foto e ne da' l'indirizzo. `null` per un file che non e'
    * un'immagine, o troppo grande, o per una cartella che non e' nell'elenco
-   * (`CARTELLE_DEI_CARICAMENTI`). Senza cartella va dove e' sempre andata. */
+   * (`CARTELLE_DEI_CARICAMENTI`). Senza cartella va dove e' sempre andata.
+   * Solleva [CartellaDelleFotoPiena] se con questa si passerebbe il tetto
+   * (`TETTO_DELLE_FOTO`). */
   carica(nomeFile, byte, { cartella: dentro = "" } = {}) {
     if (!this.cartella) return null;
     /* Nella cartella di Home Assistant non si scrive. E' roba di chi ci abita
@@ -234,6 +279,7 @@ export class Foto {
     if (dentro !== "" && !CARTELLE_DEI_CARICAMENTI.includes(dentro)) return null;
     const relativa = dentro ? `${SOTTOCARTELLA}/${dentro}` : SOTTOCARTELLA;
     const cartella = join(this.cartella, ...relativa.split("/"));
+    if (quantoPesa(this.cartella) + byte.length > this.tetto) throw new CartellaDelleFotoPiena();
     mkdirSync(cartella, { recursive: true });
     const radice = nome.slice(0, nome.length - extname(nome).length);
     const suffisso = extname(nome);

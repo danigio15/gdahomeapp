@@ -26,7 +26,8 @@ library;
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb;
+import 'package:flutter/foundation.dart'
+    show ValueListenable, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'
     show SystemNavigator, SystemUiOverlayStyle;
@@ -53,6 +54,7 @@ import 'menu.dart';
 import 'campanello.dart';
 import 'notifiche.dart';
 import '../notifiche/consegna.dart';
+import '../notifiche/dietro_il_velo.dart';
 import '../notifiche/dove_apre.dart';
 import '../notifiche/postino.dart';
 import 'impostazioni_app.dart';
@@ -75,6 +77,7 @@ class Home extends StatefulWidget {
     required this.plancia,
     required this.impostazioni,
     required this.guardia,
+    this.veloSu,
   });
 
   final Collegamento collegamento;
@@ -89,6 +92,10 @@ class Home extends StatefulWidget {
   /// Come si apre la plancia vera: il servitore e il riquadro. Sostituibile
   /// nelle prove.
   final FabbricaDellaPlancia plancia;
+
+  /// Se il velo del lucchetto e' su (`main.dart`): i tasti delle notifiche
+  /// aspettano che scenda ([DietroIlVelo]). Senza, partono subito.
+  final ValueListenable<bool>? veloSu;
 
   @override
   State<Home> createState() => _HomeState();
@@ -170,19 +177,25 @@ class _HomeState extends State<Home> {
   Timer? _giroDegliAggiornamenti;
   bool _aggiornamentiChiesti = false;
 
-  /* Le notifiche toccate, e il campanello ad app aperta (`postino.dart`). */
+  /* Le notifiche toccate, e il campanello ad app aperta (`postino.dart`).
+   * Col velo del lucchetto su aspettano: un «Disinserisci» toccato dalla
+   * tendina non parte prima del volto (`notifiche/dietro_il_velo.dart`). */
   StreamSubscription<ToccoDellaNotifica>? _tocchi;
+  late final _dietroIlVelo = DietroIlVelo<ToccoDellaNotifica>(
+    widget.veloSu,
+    _unTocco,
+  );
   bool _notificheChieste = false;
 
   void _ascoltaLeNotifiche() {
     final postino = Postino.istanza;
     if (postino == null) return;
     if (_tocchi == null) {
-      _tocchi = postino.tocchi.listen(_unTocco);
+      _tocchi = postino.tocchi.listen(_dietroIlVelo.arriva);
       postino.inSospeso.addListener(_ascoltaLeNotifiche);
     }
     for (final tocco in postino.prendiInSospeso()) {
-      _unTocco(tocco);
+      _dietroIlVelo.arriva(tocco);
     }
   }
 
@@ -268,6 +281,7 @@ class _HomeState extends State<Home> {
     Postino.pronto.removeListener(_ascoltaLeNotifiche);
     Postino.istanza?.inSospeso.removeListener(_ascoltaLeNotifiche);
     _tocchi?.cancel();
+    _dietroIlVelo.chiudi();
     _giroDegliAggiornamenti?.cancel();
     _richiedi?.cancel();
     inMacchina.removeListener(_inMacchinaECambiato);
@@ -862,15 +876,26 @@ class _HomeState extends State<Home> {
                                 Sezione.dispositivi => const SizedBox.shrink(),
                                 Sezione.aiutanti => const SizedBox.shrink(),
                                 /* gdanav: si accende la prima volta che ci si
-                           * entra, e poi resta acceso come le altre. */
-                                Sezione.navigatore => IlNavigatore(
-                                  visibile: _sezione == Sezione.navigatore,
-                                  navigatore: _navigatore,
-                                  menuOspite: () => _barra.currentState?.apri(),
-                                  apriIlMenu: _menuDiGdanav,
-                                  apriIlPianificatore: _pianificatoreDiGdanav,
-                                  /* L'auto della plancia va a gdanav da qui. */
-                                  collegamento: collegamento,
+                           * entra, e poi resta acceso come le altre.
+                           *
+                           * Con un messaggero suo: gli avvisi di gdanav
+                           * (SnackBar) prendevano quello dell'app e
+                           * comparivano sulla sezione che si vede. Dal campo:
+                           * «3D aumentato non è disponibile…» sulla pagina
+                           * Energia, dalla guida aperta dall'auto nel
+                           * navigatore nascosto. Adesso restano qui, e si
+                           * vedono quando si apre il navigatore. */
+                                Sezione.navigatore => ScaffoldMessenger(
+                                  child: IlNavigatore(
+                                    visibile: _sezione == Sezione.navigatore,
+                                    navigatore: _navigatore,
+                                    menuOspite: () =>
+                                        _barra.currentState?.apri(),
+                                    apriIlMenu: _menuDiGdanav,
+                                    apriIlPianificatore: _pianificatoreDiGdanav,
+                                    /* L'auto della plancia va a gdanav da qui. */
+                                    collegamento: collegamento,
+                                  ),
                                 ),
                                 /* La Configurazione qui non ha una schermata: la
                            * voce apre la pagina della plancia, dentro il

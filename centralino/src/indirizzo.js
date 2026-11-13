@@ -42,7 +42,7 @@ export function eDaDentro(richiesta) {
  * non verrebbe mai contato due volte, e intanto riempirebbe i tetti di tutti.
  * Allora in IPv6 si conta la rete, i primi sessantaquattro bit. Un IPv4
  * scritto alla IPv6 (`::ffff:1.2.3.4`) e' un IPv4, e si conta come tale. */
-export function reteDi(indirizzo) {
+export function reteDi(indirizzo, { bit = 64 } = {}) {
   let testo = String(indirizzo ?? "")
     .trim()
     .toLowerCase();
@@ -58,8 +58,19 @@ export function reteDi(indirizzo) {
     ? [...davanti, ...Array(mancano).fill("0"), ...dietro]
     : davanti;
   const rete = gruppi
-    .slice(0, 4)
+    .slice(0, bit / 16)
     .map((uno) => (uno || "0").replace(/^0+(?=.)/, ""))
     .join(":");
-  return `${rete}::/64`;
+  return `${rete}::/${bit}`;
+}
+
+/* La stessa cosa, ma in IPv6 per /48: per i posti del centralino.
+ *
+ * Il /64 basta per i freni di chi bussa e riprova. Per i fili aperti insieme
+ * no: un fornitore di macchine a noleggio da' un /48 a chi lo chiede, e dentro
+ * ci sono sessantacinquemila /64. Contati uno per uno, duecento fili a testa
+ * diventavano tutti i posti del centralino. Il /48 e' il pezzo piu' piccolo
+ * che a un cliente si da' come «sito», e lo si conta come un indirizzo solo. */
+export function reteLargaDi(indirizzo) {
+  return reteDi(indirizzo, { bit: 48 });
 }

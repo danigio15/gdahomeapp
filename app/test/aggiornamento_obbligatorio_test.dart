@@ -288,5 +288,24 @@ void main() {
       cifrata.messaggi.listen((_) {}, onError: (Object _) {});
       await cifrata.chiudi();
     });
+
+    /* Con GdAHome Base la casa ferma da se' chi non e' sulla sua rete,
+     * qualunque strada abbia fatto (`ponte/src/da-casa.js`): e' lo stesso no
+     * del centralino, e porta alla pagina Premium, non a «non trovo la
+     * casa». */
+    test('la casa Base ferma chi e\' fuori con premium-richiesto', () async {
+      ponte.soloDaCasa = true;
+      final presa = await PresaSuWebSocket.apri(ponte.indirizzo.filo);
+      await expectLater(
+        stringiLaMano(presa, chi: chiBuono, chiaveDelFilo: chiaveBuona),
+        throwsA(
+          isA<PremiumRichiesto>().having(
+            (errore) => errore is AddonDaAggiornare,
+            'e\' l\'add-on vecchio',
+            isFalse,
+          ),
+        ),
+      );
+    });
   });
 }

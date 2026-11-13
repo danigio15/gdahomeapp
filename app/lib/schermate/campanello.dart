@@ -35,6 +35,8 @@ import 'package:flutter/services.dart';
 import '../aggiornamento_obbligatorio.dart' show apriIlNegozio;
 import '../casa/collegamento.dart';
 import '../casa/la_finestra.dart';
+import '../casa/lo_schermo.dart'
+    show loSchermoApreIlCampanello, loSchermoChiudeIlCampanello;
 import '../notifiche/consegna.dart';
 import '../notifiche/dove_apre.dart';
 import '../notifiche/il_filmato.dart';
@@ -870,11 +872,9 @@ class _StatoDelCampanello extends State<SchermataDelCampanello> {
   void initState() {
     super.initState();
     _foto = widget.fotoIniziale;
-    if (widget.sopraIlBlocco) {
-      unawaited(
-        canaleDellaFinestra.invokeMethod<void>('sveglia').catchError((_) {}),
-      );
-    }
+    /* Sopra il blocco e schermo acceso li tiene `lo_schermo.dart`: e' li'
+     * che si sa anche cosa vuole il pannello a muro. */
+    if (widget.sopraIlBlocco) unawaited(loSchermoApreIlCampanello());
     final camera = _notifica.camera;
     if (camera != null && widget.fotoIniziale == null) {
       unawaited(_unaFoto(camera));
@@ -900,13 +900,9 @@ class _StatoDelCampanello extends State<SchermataDelCampanello> {
   @override
   void dispose() {
     _giro?.cancel();
-    if (widget.sopraIlBlocco) {
-      unawaited(
-        canaleDellaFinestra
-            .invokeMethod<void>('acceso', false)
-            .catchError((_) {}),
-      );
-    }
+    /* Si torna sotto il blocco; lo schermo acceso del pannello resta com'e'
+     * (prima qui si diceva `acceso: false`, e il pannello si spegneva). */
+    if (widget.sopraIlBlocco) unawaited(loSchermoChiudeIlCampanello());
     super.dispose();
   }
 

@@ -11,7 +11,7 @@
  *   - la casa diventa Premium: il gettone arriva al centralino da solo, e il
  *     telefono entra;
  *   - un centralino che non sa niente di licenze (chiave vuota, o vecchio):
- *     la casa non taglia niente — il fuori casa lo chiude solo il centralino;
+ *     la casa Base taglia lo stesso, da se' (`licenze.js`, `soloDaCasa`);
  *   - chi compra fuori casa: la ricevuta firmata dal telefono passa dal
  *     centralino alla casa, la casa diventa Premium, e il telefono entra.
  *
@@ -160,7 +160,7 @@ async function catena({ chiaveDelCentralino = PUBBLICA_DI_PROVA } = {}) {
     dispositivi,
     abbinamento,
     registro: null,
-    soloInCasa: () => licenze.limitata,
+    soloInCasa: () => licenze.soloDaCasa,
   });
   const chiamata = new Chiamata({ dove: doveIlCentralino, identita, portiere, attesaMassima: 200 });
   portiere.chiamata = chiamata;
@@ -280,23 +280,27 @@ test("il gettone si ridice a ogni rientro: un centralino riavviato non se lo sco
   }
 });
 
-test("un centralino che non guarda le licenze: la casa Base non taglia niente", async () => {
-  /* Chiave vuota al centralino — com'e' un centralino di ieri — e casa Base:
-   * il telefono passa il centralino e passa anche il portiere. Il fuori casa
-   * lo chiude il centralino e basta: la casa non limita niente, e i lucchetti
-   * di Base li mette l'app. */
+test("un centralino che non guarda le licenze: la casa Base taglia lo stesso", async () => {
+  /* Chiave vuota al centralino — com'e' un centralino di ieri, o uno di
+   * qualcun altro — e casa Base: il telefono passa il centralino, ma non il
+   * portiere. Con Base l'app si apre solo dalla rete di casa, e a farlo
+   * valere e' la casa, non il centralino ne' l'app. */
   const c = await catena({ chiaveDelCentralino: "" });
   try {
     assert.equal(c.licenze.premium, false);
     const { telefono } = daFuori(c);
-    await telefono.dentro;
-    assert.equal((await telefono.aspetta("auth_required")).type, "auth_required");
-    assert.equal(
-      telefono.inChiaro.some((uno) => uno.no),
-      false,
-      "nessun no della casa",
-    );
-    telefono.chiudi();
+    await assert.rejects(telefono.dentro);
+    const no = telefono.inChiaro.find((uno) => uno.no);
+    assert.equal(no?.motivo, "premium-richiesto");
+    /* Il filo della casa resta su: e' da li' che passa l'abbinamento. */
+    assert.equal(c.chiamata.dentro, true);
+
+    /* Premium: adesso entra. */
+    await c.diventaPremium();
+    const dopo = daFuori(c);
+    await dopo.telefono.dentro;
+    assert.equal((await dopo.telefono.aspetta("auth_required")).type, "auth_required");
+    dopo.telefono.chiudi();
   } finally {
     await c.spegni();
   }

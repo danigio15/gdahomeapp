@@ -133,15 +133,22 @@ class MainActivity : FlutterFragmentActivity() {
                     }
                     /* Il campanello a muro (`lib/casa/lo_schermo.dart`): lo
                      * schermo che non si spegne mentre il pannello lo chiede.
-                     * Spento il pannello torna del sistema, e l'app smette
-                     * anche di passare sopra il blocco. */
+                     * Spento il pannello torna del sistema. Sopra il blocco
+                     * e' un'altra parola, qui sotto. */
                     "acceso" -> {
                         if (chiamata.arguments == true) {
                             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                         } else {
                             window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                            sopraIlBlocco(false)
                         }
+                        risposta.success(null)
+                    }
+                    /* Sopra il blocco o no (`lib/casa/lo_schermo.dart`): lo
+                     * mette `sveglia`, lo toglie Dart a fine squillo, col
+                     * pannello spento e alla chiusura del campanello. Tutto
+                     * quello che non e' `true` vale «no». */
+                    "sopraIlBlocco" -> {
+                        sopraIlBlocco(chiamata.arguments == true)
                         risposta.success(null)
                     }
                     /* Suona il campanello: luce piena, e uno schermo spento si

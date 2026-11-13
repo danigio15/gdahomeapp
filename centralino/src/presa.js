@@ -168,6 +168,28 @@ export function staccaIlTelaio(
   return { tipo, finito, carico, consumati: finaMaschera + lunghezza };
 }
 
+/* Quanti byte servono, in tutto, per il telaio che comincia in testa al
+ * buffer: la testa, la maschera e il carico annunciato. Se la testa non e'
+ * ancora intera, quanti ne servono per leggerla. Si chiama solo dopo che
+ * `staccaIlTelaio` ha detto «non bastano»: i controlli sulla lunghezza li ha
+ * gia' fatti lui. */
+function byteDelTelaio(buffer) {
+  if (buffer.length < 2) return 2;
+  const mascherato = (buffer[1] & 0x80) !== 0;
+  let lunghezza = buffer[1] & 0x7f;
+  let inizio = 2;
+  if (lunghezza === 126) {
+    if (buffer.length < 4) return 4;
+    lunghezza = buffer.readUInt16BE(2);
+    inizio = 4;
+  } else if (lunghezza === 127) {
+    if (buffer.length < 10) return 10;
+    lunghezza = Number(buffer.readBigUInt64BE(2));
+    inizio = 10;
+  }
+  return inizio + (mascherato ? 4 : 0) + lunghezza;
+}
+
 export class ErroreDiProtocollo extends Error {}
 export class ErroreDiCarico extends Error {}
 
@@ -188,6 +210,13 @@ export class Presa {
        * stava dentro, e in nessuno dei due registri una riga. */
       onGuasto,
       messaggioMassimo = MESSAGGIO_MASSIMO,
+      /* Quanto puo' essere lungo un messaggio prima che chi sta sopra dica
+       * `presentata()`. Chi bussa senza essersi ancora fatto riconoscere non
+       * ha niente di lungo da dire — una presentazione e' qualche centinaio
+       * di byte — e un megabyte a testa, moltiplicato per tutti i fili senza
+       * nome, e' memoria regalata. Di serie nessun tetto in piu': lo mette
+       * chi sa cosa arriva prima della presentazione. */
+      primaDiPresentarsi = Infinity,
       /* `true` quando questa presa e' quella di chi **ha chiamato**: allora
        * maschera quello che manda e si aspetta senza maschera quello che
        * riceve. E' l'unica differenza fra le due parti, e sta tutta qui. */
@@ -200,6 +229,8 @@ export class Presa {
     this.onPong = onPong || (() => {});
     this.onGuasto = onGuasto || (() => {});
     this.massimo = messaggioMassimo;
+    this.primaDiPresentarsi = primaDiPresentarsi;
+    this._presentata = false;
     this.daCliente = daCliente;
     this.viva = true;
     this.hoRisposto = false;
@@ -211,7 +242,15 @@ export class Presa {
      * segno rifiutato o davvero la rete. */
     this.motivo = "";
 
-    this._avanzo = Buffer.alloc(0);
+    /* I pezzi di rete arrivati e non ancora diventati un telaio, col loro
+     * totale, e quanti byte servono perche' il prossimo telaio sia intero.
+     * Si uniscono solo quando bastano: unirli a ogni pezzo voleva dire
+     * ricopiare tutto quello che era gia' arrivato, e un messaggio da un
+     * megabyte in pezzi da duecento byte costava cinquemila copie sempre
+     * piu' lunghe. */
+    this._inArrivo = [];
+    this._byteInArrivo = 0;
+    this._servono = 0;
     this._pezzi = [];
     this._tipoInCorso = null;
     this._lunghezzaInCorso = 0;
@@ -281,13 +320,26 @@ export class Presa {
     this._avvisa();
   }
 
+  /* Il tetto di adesso: quello di sempre, o quello di chi non si e' ancora
+   * presentato. */
+  get _massimoAdesso() {
+    return this._presentata ? this.massimo : Math.min(this.massimo, this.primaDiPresentarsi);
+  }
+
   _arrivano(pezzo) {
-    if (!this.viva) return;
-    this._avanzo = this._avanzo.length ? Buffer.concat([this._avanzo, pezzo]) : pezzo;
+    if (!this.viva || !pezzo?.length) return;
+    this._inArrivo.push(pezzo);
+    this._byteInArrivo += pezzo.length;
+    /* Il telaio annunciato non e' ancora intero: si aspetta senza copiare. */
+    if (this._byteInArrivo < this._servono) return;
+    let avanzo = this._inArrivo.length === 1 ? this._inArrivo[0] : Buffer.concat(this._inArrivo);
+    this._inArrivo = [];
+    this._byteInArrivo = 0;
+    this._servono = 0;
     for (;;) {
       let telaioLetto;
       try {
-        telaioLetto = staccaIlTelaio(this._avanzo, this.massimo, {
+        telaioLetto = staccaIlTelaio(avanzo, this._massimoAdesso, {
           vuoleLaMaschera: !this.daCliente,
         });
       } catch (errore) {
@@ -297,8 +349,15 @@ export class Presa {
         );
         return;
       }
-      if (!telaioLetto) return;
-      this._avanzo = this._avanzo.subarray(telaioLetto.consumati);
+      if (!telaioLetto) {
+        if (avanzo.length) {
+          this._inArrivo.push(avanzo);
+          this._byteInArrivo = avanzo.length;
+          this._servono = byteDelTelaio(avanzo);
+        }
+        return;
+      }
+      avanzo = avanzo.subarray(telaioLetto.consumati);
       if (!this._gestisci(telaioLetto)) return;
     }
   }
@@ -367,7 +426,7 @@ export class Presa {
      * messaggio spezzato in mille telai da un megabyte l'uno passerebbe il
      * controllo sul singolo telaio e riempirebbe la memoria lo stesso. */
     this._lunghezzaInCorso += carico.length;
-    if (this._lunghezzaInCorso > this.massimo) {
+    if (this._lunghezzaInCorso > this._massimoAdesso) {
       this.chiudi(CHIUSURA.troppoGrande, "messaggio troppo grande");
       return false;
     }
@@ -407,6 +466,7 @@ export class Presa {
   /* Chi sta sopra dice che su questo filo si e' presentato qualcuno con un
    * segno buono: vedi `SaliteSenzaNome`. */
   presentata() {
+    this._presentata = true;
     const avvisa = this._quandoPresentata;
     this._quandoPresentata = null;
     avvisa?.();

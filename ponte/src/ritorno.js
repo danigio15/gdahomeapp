@@ -35,6 +35,8 @@
  * qui non deve impedire un abbinamento.
  */
 
+import { laReteDiCasa } from "./da-casa.js";
+
 /* La rete fra gli add-on e il Supervisor. Non e' la rete di casa, e un
  * telefono li' sopra non ci arriva. */
 const RETE_DEGLI_ADDON = /^172\.30\./;
@@ -69,6 +71,27 @@ export class Ritorno {
 
     this._indirizzi = null;
     this._chiestoIl = 0;
+    /* La rete di casa come la dice il Supervisor (`da-casa.js`,
+     * `laReteDiCasa`): serve alla porta dell'app per dire se un telefono e'
+     * in casa. `null` finche' non l'ha detta; se poi smette di rispondere
+     * resta l'ultima buona. */
+    this.rete = null;
+    this._chiedendo = null;
+  }
+
+  /* La rete di casa adesso, senza aspettare: la chiede chi deve decidere
+   * su una presa appena arrivata, che non si tiene appesa. Se e' vecchia si
+   * richiede dietro, e la prossima presa trova quella nuova. */
+  reteDiCasa() {
+    const vecchia = !this._indirizzi || this.adesso() - this._chiestoIl >= this.quantoDura;
+    if (!this._chiedendo && vecchia) {
+      this._chiedendo = this.indirizzi()
+        .catch(() => {})
+        .finally(() => {
+          this._chiedendo = null;
+        });
+    }
+    return this.rete;
   }
 
   /* Quello che si dice a un telefono che si e' appena abbinato. */
@@ -104,6 +127,8 @@ export class Ritorno {
         return [];
       }
       const detto = await risposta.json();
+      const rete = laReteDiCasa(detto?.data);
+      if (rete) this.rete = rete;
       return leggiGliIndirizzi(detto?.data, this.porta);
     } catch (errore) {
       this.registro.attenzione(

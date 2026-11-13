@@ -20,6 +20,7 @@ import { Chiamata } from "./chiamata.js";
 import { Commissioni } from "./commissioni.js";
 import { Catalogo } from "./catalogo.js";
 import { Configurazione } from "./configurazione.js";
+import { portaNellaPrincipale } from "./la-plancia-di-base.js";
 import { Ferro } from "./ferro.js";
 import { BASE_DI_CASA, Foto } from "./foto.js";
 import { inventarioSenzaDati } from "./inventario.js";
@@ -36,7 +37,7 @@ import { laRicevutaDaFuori } from "./ricevuta-da-fuori.js";
 import { VersioneMinima } from "./versione-minima.js";
 import { UltimeDellApp, ULTIME_DI_SERIE } from "./ultime-dell-app.js";
 import { CHIAVE_PUBBLICA_LICENZE } from "./chiave-licenze.js";
-import { Dispositivi } from "./dispositivi.js";
+import { Dispositivi, telefoniOltreBase } from "./dispositivi.js";
 import { leggiLeOpzioni } from "./opzioni.js";
 import { Ponte } from "./ponte.js";
 import { Portiere } from "./portiere.js";
@@ -184,6 +185,9 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   /* E i telefoni: con Base due, con Premium senza limite, con le licenze
    * spente quelli delle opzioni (`Licenze.telefoniMassimi`). */
   dispositivi.massimi = () => licenze.telefoniMassimi(opzioni.dispositiviMassimi);
+  /* E con Base i telefoni della casa di prova stanno nei due anche loro:
+   * vedi «I telefoni di prova con Base» in `dispositivi.js`. */
+  dispositivi.provaNeiMassimi = () => licenze.attive && !licenze.premium;
   /* Le segnalazioni e la chat dell'app: dal ponte al centralino, e da li' a
    * chi mantiene il progetto. */
   const segnalazioni = new Segnalazioni({
@@ -321,11 +325,23 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * altre restano nel ponte, e tornano nella barra il giorno che la casa e'
    * Premium. Si rifa' quando la licenza cambia da una all'altra. */
   planceInCasa.soloLaPrincipale = () => licenze.soloLaPrincipaleNellApp;
+  /* E se con Base la principale e' vuota ma il lavoro sta in un'altra, lo
+   * si riporta nella principale (`la-plancia-di-base.js`). */
+  const portaLaPlanciaDiBase = () => {
+    if (!licenze.soloLaPrincipaleNellApp) return;
+    try {
+      portaNellaPrincipale({ plance, configurazione, registro });
+    } catch (errore) {
+      registro.attenzione(`la plancia di Base: ${errore?.message || errore}`);
+    }
+  };
+  portaLaPlanciaDiBase();
   let soloLaPrincipalePrima = licenze.soloLaPrincipaleNellApp;
   licenze.on("cambio", () => {
     const adesso = licenze.soloLaPrincipaleNellApp;
     if (adesso === soloLaPrincipalePrima) return;
     soloLaPrincipalePrima = adesso;
+    portaLaPlanciaDiBase();
     planceInCasa.sistema();
   });
 
@@ -469,10 +485,11 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     abbinamento,
     registro,
     ritorno,
-    /* Da fuori casa si entra con gdahome Premium, ma a chiudere e' il
-     * centralino, non la casa: `limitata` e' sempre falso, e questo taglio
-     * resta spento (`licenze.js`). */
-    soloInCasa: () => licenze.limitata,
+    /* Da fuori casa si entra con gdahome Premium: con Base il portiere
+     * ferma chi non sta sulla rete di casa, qualunque strada abbia fatto
+     * (`licenze.js`, `soloDaCasa`; `da-casa.js`). Con le licenze spente non
+     * ferma nessuno. */
+    soloInCasa: () => licenze.soloDaCasa,
     versioneMinima,
     casaDiProva,
   });
@@ -663,6 +680,9 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     plance,
     configurazione,
     dispositivi,
+    /* La licenza come la vede la casa, accanto ai telefoni: il quadro la
+     * scrive nella vista «per casa» della Gestione. */
+    licenza: () => (!licenze.attive ? "spente" : licenze.premium ? "premium" : "base"),
     chiamata,
     versioni: {
       ponte: opzioni.versione,
@@ -675,6 +695,9 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   const app = costruisciLaPortaDellApp({
     portiere,
     registro,
+    /* Su quali reti sta questa casa, per dire se un telefono e' in casa
+     * (`da-casa.js`): lo sa il Supervisor, e lo chiede gia' il Ritorno. */
+    reteDiCasa: () => ritorno.reteDiCasa(),
     /* I file — dell'app e della plancia — anche da questa porta: e' l'unica
      * che si raggiunge dalla rete di casa, ed e' quella che fa aprire gdahome
      * in un browser senza fare il giro del centralino. La pagina della
@@ -749,6 +772,9 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * gira, ma nelle prove si chiede la zero e la sceglie il sistema, e un
    * indirizzo con dentro la porta zero non porterebbe da nessuna parte. */
   ritorno.porta = app.address().port;
+  /* E la rete di casa si chiede subito, con la porta giusta: il primo
+   * telefono che bussa la trova gia' saputa. */
+  void ritorno.indirizzi();
 
   registro.info(`la porta dell'app e' la ${opzioni.portaDellApp}`);
   /* Una riga sola, e solo dove serve: la chiave della console ce l'ha una
@@ -840,12 +866,55 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   }, SPAZZINO_DELLA_PROVA);
   spazzino.unref?.();
 
+  /* Chi era entrato da fuori con Premium, quando la casa torna Base: fuori
+   * anche lui, e non solo chi bussa dopo (`ponte.js`, `chiudiQuelliDaFuori`).
+   * Subito quando la licenza cambia, e ogni minuto per il gettone che scade
+   * senza che nessuno dica niente. */
+  const fuoriQuelliDaFuori = () => {
+    try {
+      if (!licenze.soloDaCasa) return;
+      const quanti = ponte.chiudiQuelliDaFuori();
+      if (quanti) registro.info(`${quanti} telefoni fuori casa chiusi: GdAHome Base`);
+    } catch (errore) {
+      registro.errore(`i telefoni fuori casa: ${errore?.message || errore}`);
+    }
+  };
+  licenze.on("cambio", fuoriQuelliDaFuori);
+
+  /* Con Base i telefoni sono due, sempre: chi e' di troppo si stacca
+   * davvero, e restano i due usati piu' di recente (`dispositivi.js`,
+   * `tieniIPiuRecenti`). Quando la licenza cambia, a ogni minuto (un gettone
+   * che scade non lo dice nessuno) e dopo ogni abbinamento. Mai prima che
+   * il quadro sia stato chiesto almeno una volta: appena acceso, «Base» puo'
+   * voler dire «non ancora letta», e una casa Premium non perde i telefoni
+   * per un riavvio. Con Premium e a licenze spente non fa niente. */
+  const dueTelefoniConBase = () => {
+    try {
+      const via = telefoniOltreBase({ licenze, dispositivi, ponte });
+      if (via.length) {
+        registro.info(
+          `${via.length} telefoni staccati: con GdAHome Base restano i ${dispositivi.massimi} usati più di recente`,
+        );
+      }
+    } catch (errore) {
+      registro.errore(`i telefoni di Base: ${errore?.message || errore}`);
+    }
+  };
+  licenze.on("cambio", dueTelefoniConBase);
+  dispositivi.dopoLAbbinamento = dueTelefoniConBase;
+  const sentinellaDiFuori = setInterval(() => {
+    fuoriQuelliDaFuori();
+    dueTelefoniConBase();
+  }, 60 * 1000);
+  sentinellaDiFuori.unref?.();
+
   const abbassa = async () => {
     registro.info("il ponte si abbassa");
     planceInCasa.smettiDiSorvegliare();
     for (const una of leVoci) una.ferma();
     clearInterval(giro);
     clearInterval(spazzino);
+    clearInterval(sentinellaDiFuori);
     telefoniAlTramite.ferma();
     chiamata.spegni();
     notifiche.ferma();

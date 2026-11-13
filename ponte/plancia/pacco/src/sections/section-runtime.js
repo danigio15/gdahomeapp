@@ -572,7 +572,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-HU4JC76T.js";
+} from "../../chunk-5YB27Y5C.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -51999,6 +51999,16 @@ function eLaNostra(stato3) {
   const attributi2 = stato3?.attributes || {};
   return pulito37(attributi2.title).toLowerCase().replace(/\s+/g, "").includes(NOSTRA) || pulito37(stato3?.entity_id).toLowerCase().includes(NOSTRA);
 }
+function indirizzoWeb(x) {
+  const testo5 = pulito37(x);
+  if (!testo5) return "";
+  try {
+    const u = new URL(testo5);
+    return u.protocol === "https:" || u.protocol === "http:" ? u.href : "";
+  } catch (_errore) {
+    return "";
+  }
+}
 function aggiornamentiDaFare(states) {
   const dentro3 = states && typeof states === "object" ? Object.values(states) : [];
   return dentro3.filter(aspettaDiEssereFatto).map((stato3) => ({
@@ -52011,7 +52021,7 @@ function aggiornamentiDaFare(states) {
     inCorso: staAndando(stato3.attributes),
     /* Dove sono scritte le note di questa versione: e' l'indirizzo che Home
      * Assistant si porta dietro, non uno che indoviniamo noi. */
-    note: pulito37(stato3.attributes?.release_url)
+    note: indirizzoWeb(stato3.attributes?.release_url)
   })).sort((una, altra) => {
     if (una.nostra !== altra.nostra) return una.nostra ? -1 : 1;
     return una.nome.localeCompare(altra.nome);

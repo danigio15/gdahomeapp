@@ -176,6 +176,15 @@ class Collegamento {
   /// Se non si entra perche' da fuori casa serve gdahome Premium.
   bool get fuoriCasaSenzaPremium => _fuoriSenzaPremium;
 
+  /* Questo telefono e' stato staccato perche' con GdAHome Base i telefoni
+   * sono al massimo due (`auth_invalid` col motivo `limite-telefoni-base`).
+   * La plancia lo dice, col tasto per la pagina Premium. */
+  bool _staccatoPerIlLimite = false;
+
+  /// Se questo telefono e' stato staccato dalla casa perche' con Base i
+  /// telefoni abbinati sono al massimo due.
+  bool get staccatoPerIlLimiteDiBase => _staccatoPerIlLimite;
+
   /* La casa non si trova, ed era Premium da poco: si sta ricollegando. */
   bool _siRiconnette = false;
 
@@ -389,6 +398,7 @@ class Collegamento {
     _daDove = null;
     _perche = null;
     _fuoriSenzaPremium = false;
+    _staccatoPerIlLimite = false;
     _siRiconnette = false;
     /* Le licenze che si sanno gia', dall'archivio: servono prima di bussare,
      * perche' decidono da dove. */
@@ -453,6 +463,16 @@ class Collegamento {
        * «Fuori casa serve GdAHome Premium», col tasto per comprarlo. Prima
        * quel no finiva solo fra le cadute, e alla ribussata la pagina
        * diventava «Non trovo la casa»: due cose diverse per lo stesso no. */
+      /* La casa ha staccato questo telefono mentre il filo era aperto (con
+       * Base restano solo i due telefoni usati piu' di recente): si dice,
+       * invece di restare a ricollegarsi per sempre. */
+      quandoEStaccato: (no) {
+        if (_filo != filo) return;
+        _prova = null;
+        _perche = no.spiegazione;
+        _staccatoPerIlLimite = no.perIlLimiteDiBase;
+        _vai(ComeVa.segnoScaduto);
+      },
       quandoDiceNo: (no) {
         if (_filo != filo || _comeVa == ComeVa.aperta) return;
         _fuoriSenzaPremium = true;
@@ -525,6 +545,7 @@ class Collegamento {
       if (_filo != filo) return;
       _prova = null;
       _perche = errore.spiegazione;
+      _staccatoPerIlLimite = errore.perIlLimiteDiBase;
       _vai(ComeVa.segnoScaduto);
       return;
     } on ErroreDelPonte catch (errore) {
