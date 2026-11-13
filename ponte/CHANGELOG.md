@@ -10,6 +10,19 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.19.1
+
+_App GdAHome._
+
+**Nell'app, gli orologi (Apple Watch e Wear OS):**
+
+- **Lo stato giusto al polso**: dopo un comando il tasto si gira subito, e
+  poi l'orologio controlla lo stato vero della casa finché non è quello
+  giusto. Prima la luce si accendeva ma sull'orologio restava «spenta»,
+  soprattutto con le luci collegate a un'altra entità nella plancia.
+- Con l'app aperta al polso lo stato si aggiorna da solo anche quando un
+  dispositivo cambia da un'altra parte.
+
 ## 1.19.0
 
 _App GdAHome e add-on._
