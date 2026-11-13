@@ -877,4 +877,176 @@ void main() {
       expect((await laRiga('light.sala'))['acceso'], isFalse);
     });
   });
+  group('la riga al polso dice com\'e\' la casa adesso', () {
+    /* «Il comando arriva, la luce si accende, ma sull'orologio il tasto
+     * resta spento.» Le volte prima si era sistemato chi esegue il comando;
+     * qui si guarda la riga, che e' quello che si vede al polso. */
+
+    test(
+      'una luce rimappata nella plancia: la riga si accende lo stesso',
+      () async {
+        /* La tessera scrive l'entita' come l'ha configurata chi abita la casa
+       * (`light.vecchia`), la ricetta quella vera dopo `resolveEntity`
+       * (`light.sala`). Il comando gira quella vera, e lo stato nuovo arriva
+       * per quella vera: la riga col nome di prima non si trovava, e al
+       * polso restava «Spenta» per sempre. */
+        final tutta = jsonDecode(dallaPlancia) as Map<String, dynamic>;
+        final rimappata = jsonEncode({
+          ...tutta,
+          'dispositivi': [
+            {
+              'id': 'light.vecchia',
+              'nome': 'Lampada',
+              'genere': 'luce',
+              'acceso': false,
+              'stato': 'Spenta',
+              'polso': true,
+            },
+          ],
+          'ricette': [
+            {
+              'id': 'light.vecchia',
+              'dominio': 'light',
+              'servizio': 'toggle',
+              'entita': 'light.sala',
+              'dati': <String, Object?>{},
+            },
+          ],
+        });
+        expect(
+          await lasciaLaFotoAllAuto(rimappata, casa: 'Casa di prova'),
+          isTrue,
+        );
+        await tocca('light.vecchia');
+        expect(await aSchermoSpento(), ComeEFinitaInAuto.fatto);
+        await ilSeguitoDeiComandi();
+        expect(casa.statoDi('light.sala'), 'on');
+        final riga = await laRiga('light.vecchia');
+        expect(riga['acceso'], isTrue);
+        expect(riga['stato'], 'Accesa');
+      },
+    );
+
+    test('una luce accesa dal muro mentre si guarda l\'orologio', () async {
+      /* Nessun comando: la casa cambia da se'. Col telefono in tasca la
+       * plancia non guarda, e nessuno riscriveva la riga. */
+      await lasciaLaFotoAllAuto(dallaPlancia, casa: 'Casa di prova');
+      expect((await laRiga('light.sala'))['acceso'], isFalse);
+      expect((await laRiga('switch.presa_tv'))['acceso'], isTrue);
+      ponte.entita = [
+        for (final una in ponte.entita)
+          switch (una['entity_id']) {
+            'light.sala' => PonteFinto.unaEntita('light.sala', 'on'),
+            'switch.presa_tv' => PonteFinto.unaEntita('switch.presa_tv', 'off'),
+            _ => una,
+          },
+      ];
+      dettoAllOrologio = 0;
+      expect(
+        await guardaLaCasaPerIlPolso(apriLaCasa: unFilo),
+        ComeEFinitaInAuto.fatto,
+      );
+      expect((await laRiga('light.sala'))['acceso'], isTrue);
+      expect((await laRiga('light.sala'))['stato'], 'Accesa');
+      expect((await laRiga('switch.presa_tv'))['acceso'], isFalse);
+      /* Quello che Home Assistant non raggiunge resta com'era. */
+      expect((await laRiga('light.studio'))['acceso'], isFalse);
+      expect((await laRiga('light.studio'))['stato'], 'Spenta');
+      await pumpEventQueue();
+      expect(dettoAllOrologio, 1, reason: 'e l\'orologio lo viene a sapere');
+      expect(casa.chiamati, isEmpty, reason: 'guardare non comanda niente');
+      /* E il filo aperto per guardare si richiude. */
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+      expect(ponte.prese, isEmpty);
+    });
+
+    test('una luce lenta: il comando dice fatto prima, e chi guarda dopo la '
+        'trova accesa', () async {
+      /* Una lampadina che dice di essersi accesa dopo che il telefono ha
+       * gia' smesso di aspettarla (il seguito finito, o il telefono fermato
+       * dal sistema): e' l'orologio che richiede, e la riga si corregge. */
+      casa.ritardoDelloStato = const Duration(milliseconds: 600);
+      await lasciaLaFotoAllAuto(dallaPlancia, casa: 'Casa di prova');
+      await tocca('light.sala');
+      expect(
+        await eseguiIlComandoDellAuto(
+          apriLaCasa: unFilo,
+          /* Il telefono che non scrive piu' niente dopo la risposta. */
+          aggiornaLaFoto: (_) async {},
+        ),
+        ComeEFinitaInAuto.fatto,
+      );
+      await ilSeguitoDeiComandi();
+      expect((await laRiga('light.sala'))['acceso'], isFalse);
+      await Future<void>.delayed(const Duration(milliseconds: 700));
+      expect(
+        await guardaLaCasaPerIlPolso(apriLaCasa: unFilo),
+        ComeEFinitaInAuto.fatto,
+      );
+      expect((await laRiga('light.sala'))['acceso'], isTrue);
+    });
+
+    test('col filo dell\'app: si guarda su quello, e resta aperto', () async {
+      await lasciaLaFotoAllAuto(dallaPlancia, casa: 'Casa di prova');
+      final dellApp = unFilo();
+      await dellApp.apri();
+      final prima = ponte.collegamenti;
+      ponte.entita = [
+        for (final una in ponte.entita)
+          una['entity_id'] == 'light.sala'
+              ? PonteFinto.unaEntita('light.sala', 'on')
+              : una,
+      ];
+      expect(
+        await guardaLaCasaPerIlPolso(laCasaDellApp: () => dellApp),
+        ComeEFinitaInAuto.fatto,
+      );
+      expect((await laRiga('light.sala'))['acceso'], isTrue);
+      expect(ponte.collegamenti, prima, reason: 'nessun filo nuovo');
+      expect(dellApp.dentro, isTrue);
+    });
+
+    test('senza Premium non si apre niente', () async {
+      await lasciaLaFotoAllAuto(dallaPlancia, casa: 'Casa di prova');
+      expect(
+        await guardaLaCasaPerIlPolso(
+          apriLaCasa: unFilo,
+          premium: () async => false,
+        ),
+        ComeEFinitaInAuto.senzaPremium,
+      );
+      expect(aperti, isEmpty);
+    });
+
+    test(
+      'il colpetto con «stato» guarda, e non esegue il comando lasciato',
+      () async {
+        /* E' la stessa strada del comando (`IlPonteDellAuto.kt`,
+       * `LaCasaInCarPlay.swift`): la parola accanto decide. */
+        await lasciaLaFotoAllAuto(dallaPlancia, casa: 'Casa di prova');
+        ponte.entita = [
+          for (final una in ponte.entita)
+            una['entity_id'] == 'light.sala'
+                ? PonteFinto.unaEntita('light.sala', 'on')
+                : una,
+        ];
+        final dellApp = unFilo();
+        ascoltaIlColpetto(laCasaDellApp: () => dellApp);
+        final risposta = await messaggero.handlePlatformMessage(
+          canaleDellAuto,
+          const StandardMethodCodec().encodeMethodCall(
+            const MethodCall('guarda', guardaLoStato),
+          ),
+          null,
+        );
+        expect(
+          const StandardMethodCodec().decodeEnvelope(risposta!),
+          ComeEFinitaInAuto.fatto.name,
+        );
+        expect((await laRiga('light.sala'))['acceso'], isTrue);
+        expect(casa.chiamati, isEmpty);
+        const MethodChannel(canaleDellAuto).setMethodCallHandler(null);
+      },
+    );
+  });
 }

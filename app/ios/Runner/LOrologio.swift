@@ -73,6 +73,11 @@ final class LOrologio: NSObject, WCSessionDelegate {
       let casa = LaCasaInCarPlay.laFoto() ?? [:]
       foto["casa"] = casa["casa"] as? String ?? ""
       foto["quando"] = casa["quando"] ?? 0
+      /* Quando il file e' stato scritto l'ultima volta: «quando» e' il
+       * momento dello scatto della plancia, e non cambia se il Dart ne
+       * corregge una riga. L'orologio lo usa per non farsi riportare
+       * indietro da una fotografia piu' vecchia arrivata dopo. */
+      foto["agg"] = LaCasaInCarPlay.quandoEScrittaLaFoto()
       foto["comandi"] = LaCasaInCarPlay.iComandi().comandi.map {
         ["id": $0.id, "nome": $0.nome, "disegno": $0.disegno, "conferma": $0.conferma]
       }
@@ -128,6 +133,27 @@ final class LOrologio: NSObject, WCSessionDelegate {
       return risposta(["ok": false, "testo": "Serve GdAHome Premium"])
     }
     switch cosa {
+    case "stato":
+      /* «Com'e' la casa adesso», dal polso: dopo un comando, finche' la riga
+       * non dice lo stato atteso, e ogni tanto mentre l'orologio e' acceso.
+       * Il Dart lo chiede a Home Assistant e corregge la fotografia; la
+       * risposta la porta, comunque sia andata. Il tempo lo si chiede a iOS,
+       * come per un comando: col telefono in tasca l'app e' sospesa. */
+      let app = UIApplication.shared
+      var tempo = UIBackgroundTaskIdentifier.invalid
+      var detta = false
+      let rispondi = {
+        guard !detta else { return }
+        detta = true
+        risposta(["ok": true, "foto": self.fotografia()])
+        if tempo != .invalid {
+          app.endBackgroundTask(tempo)
+          tempo = .invalid
+        }
+      }
+      tempo = app.beginBackgroundTask(withName: "gdahome:polso-stato") { rispondi() }
+      LaCasaInCarPlay.guardaLoStato { _ in DispatchQueue.main.async { rispondi() } }
+      DispatchQueue.main.asyncAfter(deadline: .now() + 9) { rispondi() }
     case "comando":
       let id = (messaggio["id"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
       guard !id.isEmpty else { return risposta(["ok": false, "testo": "Comando sconosciuto"]) }

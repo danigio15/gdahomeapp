@@ -17,6 +17,7 @@ import android.os.Handler
 import android.os.Looper
 import com.gdahome.gdahome.auto.IlPonteDellAuto
 import com.gdahome.gdahome.auto.LaLicenzaInAuto
+import com.gdahome.gdahome.auto.fileDellaFoto
 import com.gdahome.gdahome.auto.lasciaIlComando
 import com.gdahome.gdahome.auto.leggiIComandi
 import com.gdahome.gdahome.auto.leggiLaFoto
@@ -82,6 +83,11 @@ object IlTramiteDellOrologio {
         val casa = leggiLaFoto(context, perIlPolso = true)
         foto.put("casa", casa?.casa ?: "")
         foto.put("quando", casa?.quando ?: 0L)
+        /* Quando il file e' stato scritto l'ultima volta: «quando» e' il
+         * momento in cui la plancia l'ha scattata, e non cambia se il Dart ne
+         * corregge una riga. L'orologio lo usa per non lasciarsi riportare
+         * indietro da una fotografia piu' vecchia arrivata dopo (`IlTelefono.kt`). */
+        foto.put("agg", runCatching { fileDellaFoto(context).lastModified() }.getOrDefault(0L))
         foto.put(
             "comandi",
             JSONArray(
@@ -184,6 +190,9 @@ object IlTramiteDellOrologio {
     fun esegui(context: Context, detto: String, finito: (String) -> Unit) {
         val messaggio = runCatching { JSONObject(detto) }.getOrNull() ?: JSONObject()
         fun risposta(ok: Boolean, testo: String) = JSONObject().put("ok", ok).put("testo", testo).toString()
+        if (messaggio.optString("cosa", "") == "stato" && LaLicenzaInAuto.premium(context)) {
+            return guardaLaCasa(context, finito)
+        }
         if (messaggio.optString("cosa", "") != "comando" || !LaLicenzaInAuto.premium(context)) {
             return finito(subito(context, messaggio))
         }
@@ -227,6 +236,42 @@ object IlTramiteDellOrologio {
         val detta = comEFinita(com)
         if (com != "fatto") return detta
         return runCatching { JSONObject(detta).put("foto", fotografia(context)).toString() }.getOrDefault(detta)
+    }
+
+    /**
+     * «Com'e' la casa adesso», chiesto dal polso: dopo un comando, finche' la
+     * riga non dice lo stato atteso, e ogni tanto mentre l'orologio e' acceso.
+     *
+     * «Il comando arriva, la luce si accende, ma al polso il tasto resta
+     * spento.» Il Dart correggeva la fotografia solo nei secondi dopo il
+     * comando, e solo se il telefono restava sveglio: una lampadina lenta, o
+     * il sistema che congela l'app appena la risposta e' partita, e la riga
+     * restava quella di prima. Qui il Dart chiede a Home Assistant lo stato
+     * dei dispositivi della fotografia e la corregge
+     * (`guardaLaCasaPerIlPolso` in `in_auto.dart`); la risposta porta la
+     * fotografia di adesso, comunque sia andata.
+     */
+    private fun guardaLaCasa(context: Context, finito: (String) -> Unit) {
+        principale.post {
+            var detta = false
+            val rispondi = {
+                if (!detta) {
+                    detta = true
+                    val foto = runCatching { fotografia(context) }.getOrNull()
+                    val r = JSONObject().put("ok", true)
+                    if (foto != null) r.put("foto", foto)
+                    finito(r.toString())
+                }
+            }
+            val tardi = Runnable { rispondi() }
+            principale.postDelayed(tardi, ATTESA_MS)
+            IlPonteDellAuto.sveglia(context, guardaLoStato = true) {
+                principale.post {
+                    principale.removeCallbacks(tardi)
+                    rispondi()
+                }
+            }
+        }
     }
 
     /** Quello che si dice al polso, da com'e' finito il comando nel Dart (`ComeEFinitaInAuto`). */

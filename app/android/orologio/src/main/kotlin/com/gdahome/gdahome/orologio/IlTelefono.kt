@@ -29,12 +29,25 @@ private const val TOCCO = "/gdahome/tocco"
 private const val TELEFONO = "gdahome_telefono"
 
 /* Per quanto si crede alla riga girata al tocco, se il telefono non la
- * conferma: il tempo che il telefono si da' per sentire lo stato nuovo dalla
- * casa (`quantoSiAspettaLoStato` in `lib/auto/in_auto.dart`), e un po'. */
-private const val QUANTO_SI_CREDE_AL_TOCCO_MS = 12_000L
+ * conferma: il tempo dei tre sguardi qui sotto, e un po'. Poi vale quello che
+ * dice la casa. */
+private const val QUANTO_SI_CREDE_AL_TOCCO_MS = 15_000L
 
-/* Dopo quanto, a comando andato, si chiede al telefono la fotografia. */
-private const val FRA_QUANTO_SI_RICHIEDE_MS = 4_000L
+/* A comando andato, quando si chiede al telefono com'e' la casa adesso
+ * (`guardaLaCasaPerIlPolso` in `lib/auto/in_auto.dart`): finche' la riga
+ * toccata non dice lo stato atteso. Una luce ci mette un attimo, una
+ * tapparella o una presa nel cloud qualche secondo. */
+private val SGUARDI_DOPO_IL_COMANDO_MS = longArrayOf(2_500L, 6_000L, 11_000L)
+
+/* Ogni quanto, mentre l'orologio e' acceso su GdAHome, si chiede com'e' la
+ * casa: una luce accesa dal muro si vede senza toccare niente. Lo schermo al
+ * polso resta acceso pochi secondi, e quando si spegne non si chiede piu'. */
+private const val OGNI_QUANTO_SI_GUARDA_MS = 20_000L
+
+/* Una fotografia scritta prima di quella che si ha non la sostituisce, se la
+ * differenza e' piccola; oltre, l'orologio del telefono e' stato spostato, e
+ * vale quella arrivata. */
+private const val QUANTO_INDIETRO_SI_CREDE_MS = 5L * 60L * 1000L
 
 class IlTelefono(context: Context, private val vetrina: Boolean = false) {
     private val contesto = context.applicationContext
@@ -63,6 +76,16 @@ class IlTelefono(context: Context, private val vetrina: Boolean = false) {
     /* Il comando in viaggio: se ha girato una riga, quale. */
     private var comandoInViaggio = false
     private var rigaGirata: String? = null
+
+    /* Se l'app e' davanti (tra `accendi` e `spegni`): solo allora si guarda. */
+    private var davanti = false
+    private val ogniTanto = object : Runnable {
+        override fun run() {
+            if (!davanti) return
+            guarda()
+            principale.postDelayed(this, OGNI_QUANTO_SI_GUARDA_MS)
+        }
+    }
 
     /** Com'e' andato l'ultimo tocco. Si toglie da solo. */
     var avviso by mutableStateOf<String?>(null)
@@ -98,12 +121,25 @@ class IlTelefono(context: Context, private val vetrina: Boolean = false) {
                 prendi(testo)
             }
         chiedi(JSONObject().put("cosa", "aggiorna"), zitto = true)
+        /* E com'e' la casa davvero, adesso e ogni tanto finche' si guarda. */
+        davanti = true
+        principale.removeCallbacks(ogniTanto)
+        principale.postDelayed(ogniTanto, 600)
     }
 
     fun spegni() {
         if (vetrina) return
+        davanti = false
+        principale.removeCallbacks(ogniTanto)
         Wearable.getDataClient(contesto).removeListener(ascolto)
     }
+
+    /**
+     * Chiede al telefono com'e' la casa adesso: il telefono lo chiede a Home
+     * Assistant, corregge la fotografia e la manda indietro. Zitto: al polso
+     * non si dice niente, cambia solo la riga.
+     */
+    private fun guarda() = chiedi(JSONObject().put("cosa", "stato"), zitto = true)
 
     fun premi(id: String) {
         if (vetrina) return
@@ -154,10 +190,19 @@ class IlTelefono(context: Context, private val vetrina: Boolean = false) {
     fun ferma() = chiedi(JSONObject().put("cosa", "ferma"))
 
     private fun prendi(testo: String?) {
-        LaFoto.leggi(testo)?.let {
-            vera = it
-            mostra()
+        val nuova = LaFoto.leggi(testo) ?: return
+        val prima = vera
+        /* «Lista vecchia che vince sulla nuova.» La risposta a un tocco porta
+         * la fotografia letta in quel momento, e puo' arrivare dopo quella
+         * corretta dal Data Layer: senza questo controllo la riga tornava
+         * indietro. */
+        if (prima != null && nuova.agg > 0 && prima.agg > 0 && nuova.agg < prima.agg &&
+            prima.agg - nuova.agg < QUANTO_INDIETRO_SI_CREDE_MS
+        ) {
+            return
         }
+        vera = nuova
+        mostra()
     }
 
     /* Al telefono vicino che ha gdahome: quello che si annuncia con la
@@ -199,7 +244,14 @@ class IlTelefono(context: Context, private val vetrina: Boolean = false) {
             .sendRequest(nodo, TOCCO, messaggio.toString().toByteArray(Charsets.UTF_8))
             .addOnSuccessListener { byte ->
                 val r = runCatching { JSONObject(String(byte, Charsets.UTF_8)) }.getOrNull() ?: JSONObject()
-                r.optString("foto", "").takeIf { it.isNotEmpty() }?.let { prendi(it) }
+                val foto = r.optString("foto", "")
+                if (foto.isNotEmpty()) {
+                    prendi(foto)
+                } else if (messaggio.optString("cosa") == "stato") {
+                    /* Un telefono con GdAHome di prima non sa guardare: almeno
+                     * la fotografia che ha. */
+                    chiedi(JSONObject().put("cosa", "aggiorna"), zitto = true)
+                }
                 if (!zitto) {
                     val ok = r.optBoolean("ok", false)
                     finito(ok, r.optString("testo", "").ifEmpty { if (ok) "Fatto" else "Non è partito" })
@@ -231,10 +283,18 @@ class IlTelefono(context: Context, private val vetrina: Boolean = false) {
         /* Il colpetto del tocco c'e' gia' stato: qui si sente solo il no. */
         if (!(bene && eraUnComando)) vibra(bene)
         principale.postDelayed({ if (avviso == testo) avviso = null }, 3_000)
-        /* Lo stato nuovo il telefono lo manda da se' quando la casa lo dice;
-         * se per strada si perde, fra poco lo si chiede. */
+        /* Lo stato nuovo il telefono lo manda da se' quando la casa lo dice,
+         * ma non sempre ci riesce (il sistema lo ferma appena ha risposto, o
+         * la luce e' lenta): si chiede com'e' la casa, piu' volte, finche' la
+         * riga toccata non dice lo stato atteso. Per un'azione, che non ha una
+         * riga sua, si guarda due volte. */
         if (bene && eraUnComando) {
-            principale.postDelayed({ chiedi(JSONObject().put("cosa", "aggiorna"), zitto = true) }, FRA_QUANTO_SI_RICHIEDE_MS)
+            for ((i, dopo) in SGUARDI_DOPO_IL_COMANDO_MS.withIndex()) {
+                principale.postDelayed({
+                    val attende = girata != null && attese.containsKey(girata)
+                    if (attende || (girata == null && i <= 1)) guarda()
+                }, dopo)
+            }
         }
     }
 
