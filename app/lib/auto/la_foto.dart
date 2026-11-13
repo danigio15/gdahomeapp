@@ -304,11 +304,72 @@ class RicettaDellAzione {
   };
 }
 
+/* ─── Quello che una ricetta della pagina puo' fare ──────────────────────
+ *
+ * Le ricette di questo file arrivano dalla PAGINA, sul canale `gdahomeAuto`,
+ * e partono poi da sole dal tasto dell'orologio — anche col lucchetto acceso
+ * — o dell'auto. Su Android quel canale lo vede ogni riquadro della pagina,
+ * anche uno di un altro sito (il radar di Windy): `addJavascriptInterface` non
+ * guarda da dove si parla, e un messaggio non dice da quale riquadro arriva.
+ * La plancia ci scrive da se' (`la-foto-va-in-auto-section.js`), senza un
+ * passaggio dell'app in cui mettere un gettone. Allora si guarda il CONTENUTO:
+ * una ricetta della pagina fa solo quello che la plancia scrive davvero.
+ *
+ * La regola, prudente e corta:
+ *
+ *  - i servizi sono solo quelli che la plancia scrive (`la-foto-per-lauto.js`
+ *    con `azioni-servizio-giusto-section.js`): `toggle`, `turn_on`,
+ *    `turn_off`, `press`, `select_option`. Niente `unlock`, `open`,
+ *    `open_cover`, `alarm_disarm`, `secondo_lo_stato` — quello che apre casa
+ *    non parte da una ricetta scritta da una pagina;
+ *  - mai serrature e antifurto (`lock`, `alarm_control_panel`), ne' come
+ *    dominio ne' fra le entita': la plancia non li scrive comunque (vogliono
+ *    lo stato di adesso, o un codice), e un `homeassistant.toggle` su una
+ *    serratura e' un'altra strada per aprirla.
+ *
+ * Restano luci, prese e interruttori, clima, scene, script, pulsanti, menu e
+ * i varchi (`cover.toggle`): il cancello dall'auto e' la ragione per cui
+ * tutto questo esiste, e lo scrive la plancia proprio cosi'. Chi vuole aprire
+ * una serratura dall'auto la sceglie lui, sul telefono, fra i comandi rapidi
+ * (`i_comandi.dart`): quelli li scrive l'app, non la pagina, e qui non
+ * passano. */
+
+/// I servizi che una ricetta della pagina puo' chiamare.
+const Set<String> serviziDaUnaRicetta = {
+  'toggle',
+  'turn_on',
+  'turn_off',
+  'press',
+  'select_option',
+};
+
+/// I domini che una ricetta della pagina non tocca mai.
+const Set<String> dominiMaiDaUnaRicetta = {'lock', 'alarm_control_panel'};
+
+/// Se una ricetta arrivata dalla pagina si puo' tenere. Vedi sopra.
+bool laRicettaSiPuoTenere({
+  required String dominio,
+  required String servizio,
+  required String entita,
+}) {
+  if (!serviziDaUnaRicetta.contains(servizio.trim().toLowerCase())) {
+    return false;
+  }
+  final domini = {
+    dominio.trim().toLowerCase(),
+    for (final una in entita.split(','))
+      if (una.contains('.')) una.trim().split('.').first.toLowerCase(),
+  };
+  return domini.every((uno) => !dominiMaiDaUnaRicetta.contains(uno));
+}
+
 /// Le ricette che stanno dentro quello che la plancia ha mandato.
 ///
 /// Si rileggono campo per campo come tutto il resto: quello che arriva da una
 /// pagina non si copia come viene, e qui dentro c'e' il nome di un servizio che
-/// poi si chiama davvero. Non solleva mai.
+/// poi si chiama davvero. Si tengono solo quelle che [laRicettaSiPuoTenere]:
+/// vale scrivendo e anche rileggendo il file, cosi' una ricetta scritta prima
+/// di questa regola non parte. Non solleva mai.
 List<RicettaDellAzione> leRicetteDaScrivere(String detto) {
   if (detto.isEmpty || detto.length > _quantoGrande) return const [];
   final letto = _prova(detto);
@@ -325,7 +386,12 @@ List<RicettaDellAzione> leRicetteDaScrivere(String detto) {
     if (id.isEmpty ||
         dominio.isEmpty ||
         servizio.isEmpty ||
-        !entita.contains('.')) {
+        !entita.contains('.') ||
+        !laRicettaSiPuoTenere(
+          dominio: dominio,
+          servizio: servizio,
+          entita: entita,
+        )) {
       continue;
     }
     /* Una voce sola, e una stringa: e' l'unico dato che un'azione rapida porta

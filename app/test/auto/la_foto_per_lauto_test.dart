@@ -295,6 +295,42 @@ void main() {
       }
     });
 
+    test('una ricetta della pagina non apre casa', () {
+      /* Il canale `gdahomeAuto` lo vede anche un riquadro di un altro sito:
+         una ricetta che apre la serratura, scritta da li', partiva dal tasto
+         dell'orologio anche col lucchetto acceso. */
+      String una(String dominio, String servizio, String entita) =>
+          '{"ricette":[{"id":"0|X","dominio":"$dominio",'
+          '"servizio":"$servizio","entita":"$entita"}]}';
+      for (final vietata in <String>[
+        una('lock', 'unlock', 'lock.portone'),
+        una('lock', 'open', 'lock.portone'),
+        una('lock', 'toggle', 'lock.portone'),
+        una('alarm_control_panel', 'alarm_disarm', 'alarm_control_panel.casa'),
+        una('alarm_control_panel', 'toggle', 'alarm_control_panel.casa'),
+        una('cover', 'open_cover', 'cover.garage'),
+        una('cover', 'secondo_lo_stato', 'cover.garage'),
+        una('homeassistant', 'toggle', 'lock.portone'),
+        una('light', 'toggle', 'light.a,lock.portone'),
+        una('homeassistant', 'restart', 'light.a'),
+        una('script', 'reload', 'script.x'),
+      ]) {
+        expect(leRicetteDaScrivere(vietata), isEmpty, reason: vietata);
+      }
+      /* Quello che la plancia scrive davvero passa com'era. */
+      for (final buona in <String>[
+        una('light', 'toggle', 'light.a,switch.giardino'),
+        una('cover', 'toggle', 'cover.cancello'),
+        una('switch', 'toggle', 'switch.cancello'),
+        una('scene', 'turn_on', 'scene.sera'),
+        una('script', 'turn_on', 'script.buonanotte'),
+        una('button', 'press', 'button.campanello'),
+        una('climate', 'turn_off', 'climate.sala'),
+      ]) {
+        expect(leRicetteDaScrivere(buona), hasLength(1), reason: buona);
+      }
+    });
+
     test('della ricetta passa solo quello che serve a chiamare', () {
       const con =
           '{"ricette":[{"id":"0|Modo","dominio":"select",'

@@ -543,6 +543,10 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
   /// Dove si alza il velo, se c'e' chi lo disegna sopra il navigatore.
   ValueNotifier<Widget?>? _sopra;
 
+  /// Se il velo e' su, per la home: i tasti delle notifiche aspettano che
+  /// scenda (`notifiche/dietro_il_velo.dart`).
+  final _veloSu = ValueNotifier<bool>(false);
+
   /// Le impostazioni lette dal disco: il lucchetto si decide su di loro.
   late final Future<void> _caricate;
   StreamSubscription<void>? _ascoltoDelleImpostazioni;
@@ -788,6 +792,7 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
   }
 
   void _mostraIlVelo() {
+    _veloSu.value = _chiuso || _coperto;
     final sopra = _sopra;
     if (sopra == null) return;
     sopra.value = (_chiuso || _coperto) && _pronto ? _ilVelo() : null;
@@ -984,6 +989,7 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
     _ascolto?.cancel();
     _ascoltoDelleImpostazioni?.cancel();
     navigatore.inMacchina.removeListener(_inMacchinaECambiato);
+    _veloSu.dispose();
     /* Il velo e' di questo portone: andandosene, non resta a coprire. */
     final sopra = _sopra;
     if (sopra != null) {
@@ -1063,6 +1069,7 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
       plancia: _plancia,
       impostazioni: _impostazioni,
       guardia: _guardia,
+      veloSu: _veloSu,
       vaiAlleCase: () async {
         await Navigator.of(context).push<void>(
           MaterialPageRoute(
