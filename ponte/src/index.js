@@ -482,10 +482,11 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     abbinamento,
     registro,
     ritorno,
-    /* Da fuori casa si entra con gdahome Premium, ma a chiudere e' il
-     * centralino, non la casa: `limitata` e' sempre falso, e questo taglio
-     * resta spento (`licenze.js`). */
-    soloInCasa: () => licenze.limitata,
+    /* Da fuori casa si entra con gdahome Premium: con Base il portiere
+     * ferma chi non sta sulla rete di casa, qualunque strada abbia fatto
+     * (`licenze.js`, `soloDaCasa`; `da-casa.js`). Con le licenze spente non
+     * ferma nessuno. */
+    soloInCasa: () => licenze.soloDaCasa,
     versioneMinima,
     casaDiProva,
   });
@@ -688,6 +689,9 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   const app = costruisciLaPortaDellApp({
     portiere,
     registro,
+    /* Su quali reti sta questa casa, per dire se un telefono e' in casa
+     * (`da-casa.js`): lo sa il Supervisor, e lo chiede gia' il Ritorno. */
+    reteDiCasa: () => ritorno.reteDiCasa(),
     /* I file — dell'app e della plancia — anche da questa porta: e' l'unica
      * che si raggiunge dalla rete di casa, ed e' quella che fa aprire gdahome
      * in un browser senza fare il giro del centralino. La pagina della
@@ -762,6 +766,9 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * gira, ma nelle prove si chiede la zero e la sceglie il sistema, e un
    * indirizzo con dentro la porta zero non porterebbe da nessuna parte. */
   ritorno.porta = app.address().port;
+  /* E la rete di casa si chiede subito, con la porta giusta: il primo
+   * telefono che bussa la trova gia' saputa. */
+  void ritorno.indirizzi();
 
   registro.info(`la porta dell'app e' la ${opzioni.portaDellApp}`);
   /* Una riga sola, e solo dove serve: la chiave della console ce l'ha una
@@ -853,12 +860,30 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   }, SPAZZINO_DELLA_PROVA);
   spazzino.unref?.();
 
+  /* Chi era entrato da fuori con Premium, quando la casa torna Base: fuori
+   * anche lui, e non solo chi bussa dopo (`ponte.js`, `chiudiQuelliDaFuori`).
+   * Subito quando la licenza cambia, e ogni minuto per il gettone che scade
+   * senza che nessuno dica niente. */
+  const fuoriQuelliDaFuori = () => {
+    try {
+      if (!licenze.soloDaCasa) return;
+      const quanti = ponte.chiudiQuelliDaFuori();
+      if (quanti) registro.info(`${quanti} telefoni fuori casa chiusi: GdAHome Base`);
+    } catch (errore) {
+      registro.errore(`i telefoni fuori casa: ${errore?.message || errore}`);
+    }
+  };
+  licenze.on("cambio", fuoriQuelliDaFuori);
+  const sentinellaDiFuori = setInterval(fuoriQuelliDaFuori, 60 * 1000);
+  sentinellaDiFuori.unref?.();
+
   const abbassa = async () => {
     registro.info("il ponte si abbassa");
     planceInCasa.smettiDiSorvegliare();
     for (const una of leVoci) una.ferma();
     clearInterval(giro);
     clearInterval(spazzino);
+    clearInterval(sentinellaDiFuori);
     telefoniAlTramite.ferma();
     chiamata.spegni();
     notifiche.ferma();

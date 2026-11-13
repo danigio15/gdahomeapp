@@ -160,8 +160,11 @@ export class Ponte {
   /* Un telefono ha appena aperto una presa. */
   /* `chi` e' il telefono con cui la stretta di mano ha fatto la chiave di
    * questo filo (`portiere.js`): da li' in poi su questo filo entra solo lui. */
-  accogli(presa, { da = "?", mucchio = false, chi = null } = {}) {
-    const collegamento = new Collegamento(this, presa, da, { mucchio, chi });
+  /* `daCasa` e' quello che il portiere ha saputo alla stretta di mano
+   * (`da-casa.js`): serve a `chiudiQuelliDaFuori`. Di serie si', come per chi
+   * entrava prima che lo si dicesse. */
+  accogli(presa, { da = "?", mucchio = false, chi = null, daCasa = true } = {}) {
+    const collegamento = new Collegamento(this, presa, da, { mucchio, chi, daCasa });
     this.collegamenti.add(collegamento);
     collegamento.avvia();
     return collegamento;
@@ -192,6 +195,21 @@ export class Ponte {
     return quanti;
   }
 
+  /* Butta giu' i fili arrivati da fuori casa: la casa e' appena tornata
+   * gdahome Base (un gettone scaduto, un abbonamento finito), e chi era
+   * entrato da fuori con Premium non resta dentro fino a quando chiude lui.
+   * Col numero e la parola del centralino (`4402 premium-richiesto`), che
+   * l'app sa leggere. */
+  chiudiQuelliDaFuori(codice = 4402, motivo = "premium-richiesto") {
+    let quanti = 0;
+    for (const uno of [...this.collegamenti]) {
+      if (uno.daCasa) continue;
+      uno.chiudi(codice, motivo);
+      quanti += 1;
+    }
+    return quanti;
+  }
+
   chiudiTutto() {
     for (const uno of [...this.collegamenti]) uno.chiudi(1001, "il ponte si sta spegnendo");
   }
@@ -207,10 +225,11 @@ function leggi(testo) {
 }
 
 class Collegamento {
-  constructor(ponte, presa, da, { mucchio = false, chi = null } = {}) {
+  constructor(ponte, presa, da, { mucchio = false, chi = null, daCasa = true } = {}) {
     this.ponte = ponte;
     this.presa = presa;
     this.da = da;
+    this.daCasa = daCasa !== false;
     this.chi = typeof chi === "string" && chi ? chi : null;
     this.dispositivo = null;
     this.filo = null;

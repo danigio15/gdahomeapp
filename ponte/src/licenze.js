@@ -33,18 +33,20 @@
  *
  * Con la chiave la casa fa la sua parte e basta: bussa al quadro, tiene la
  * licenza, gira le ricevute di chi compra dall'app, e dice com'e' messa a chi
- * lo chiede. Non chiude niente: le plance, Home Assistant e i telefoni da
- * fuori restano come sempre. I lucchetti di Base li mettono l'app e il
- * browser, leggendo la licenza da qui; il fuori casa, a suo tempo, lo chiude
- * il centralino (`docs/ACCENDERE-GLI-ACQUISTI.md`). E' la scelta del 29
- * settembre: «base funziona e anche addon funziona». `limitata` resta falso.
+ * lo chiede. Home Assistant resta come sempre. I lucchetti di Base li
+ * mettono l'app e il browser, leggendo la licenza da qui; il fuori casa lo
+ * chiude il centralino (`docs/ACCENDERE-GLI-ACQUISTI.md`). E' la scelta del
+ * 29 settembre: «base funziona e anche addon funziona». `limitata` resta
+ * falso — tranne le regole qui sotto.
  *
- * Due regole le fa valere anche la casa, perche' l'app da sola non basta
+ * Tre regole le fa valere anche la casa, perche' l'app da sola non basta
  * (un'app modificata la saltava): con Base la plancia e' una, la principale
  * che l'add-on mette in Home Assistant — all'app, nel browser e fra le Plance
- * di Home Assistant (`soloLaPrincipaleNellApp`) — e di telefoni se ne
- * abbinano due (`telefoniMassimi`). Le plance in piu' restano sul disco, e i
- * telefoni gia' abbinati restano: tornano e si aggiungono con Premium.
+ * di Home Assistant (`soloLaPrincipaleNellApp`) — di telefoni se ne
+ * abbinano due (`telefoniMassimi`), e l'app si apre solo dalla rete di casa
+ * (`soloDaCasa`): da fuori non entra ne' dal centralino ne' da nessun'altra
+ * strada che porti alla porta dell'app. Le plance in piu' restano sul disco,
+ * e i telefoni gia' abbinati restano: tornano e si aggiungono con Premium.
  */
 
 import { EventEmitter } from "node:events";
@@ -230,9 +232,9 @@ export class Licenze extends EventEmitter {
   /* Se questa casa sta nei limiti di Base: mai.
    *
    * E' la domanda che fanno le plance, il portiere e le commissioni, e la
-   * risposta e' sempre no — con la chiave o senza, Premium o Base. La casa
-   * non chiude niente: i lucchetti di Base li mettono l'app e il browser, e
-   * il fuori casa lo chiudera' il centralino (vedi in cima). */
+   * risposta e' sempre no — con la chiave o senza, Premium o Base. Le regole
+   * di Base che la casa fa valere hanno ciascuna la sua domanda
+   * (`soloLaPrincipaleNellApp`, `telefoniMassimi`, `soloDaCasa`). */
   get limitata() {
     return false;
   }
@@ -248,6 +250,21 @@ export class Licenze extends EventEmitter {
    * riceveva. Adesso la chiede e si sente dire di no anche dal ponte. Con le
    * licenze spente e' sempre falso. */
   get soloLaPrincipaleNellApp() {
+    return this.attive && !this.premium;
+  }
+
+  /* La terza regola di Base che la casa fa valere da se': l'app si apre solo
+   * dalla rete di casa.
+   *
+   * Il fuori casa lo chiudeva il centralino e basta, e l'app non provava le
+   * altre strade. Ma le altre strade ci sono — una porta aperta sul router
+   * verso la porta dell'app, un proxy, una VPN — e un'app modificata le
+   * prova; e un centralino vecchio, o di qualcun altro, non chiude niente.
+   * Adesso il portiere ferma alla prima parola chi non e' sulla rete di casa
+   * (`portiere.js`, `da-casa.js`), da qualunque parte arrivi. L'abbinamento
+   * resta aperto: si abbina anche da fuori, e si usa in casa. Con le licenze
+   * spente e' sempre falso. */
+  get soloDaCasa() {
     return this.attive && !this.premium;
   }
 

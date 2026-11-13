@@ -123,6 +123,11 @@ class PonteFinto {
   /// (`ponte/src/versione-minima.js`). Zero: entrano tutti.
   int versioneMinima = 0;
 
+  /// La casa e' GdAHome Base e chi bussa non sta sulla sua rete: come il
+  /// portiere vero (`ponte/src/portiere.js`), il telefono gia' abbinato si
+  /// ferma alla prima parola con `premium-richiesto`. Chi si abbina no.
+  bool soloDaCasa = false;
+
   static Future<PonteFinto> alza() async {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     final ponte = PonteFinto._(server);
@@ -1652,6 +1657,20 @@ class TelefonoCollegato {
 
     if (detto.containsKey('abbina')) {
       await _perAbbinare(detto, testo);
+      return;
+    }
+
+    if (_ponte.soloDaCasa) {
+      _presa.add(
+        jsonEncode({
+          'v': versioneDelProtocollo,
+          'no':
+              'Fuori casa serve GdAHome Premium: con Base la casa si apre '
+              'solo dalla sua rete',
+          'motivo': 'premium-richiesto',
+        }),
+      );
+      unawaited(chiudi(perche: 'premium-richiesto'));
       return;
     }
 

@@ -382,6 +382,8 @@ test("con la chiave la casa tiene la licenza e gira le ricevute, ma non limita n
   assert.equal(licenze.attive, true);
   assert.equal(licenze.premium, false);
   assert.equal(licenze.limitata, false, "con Base la casa non si limita");
+  /* Ma l'app si apre solo dalla rete di casa: lo fa valere il portiere. */
+  assert.equal(licenze.soloDaCasa, true);
   const base = licenze.stato();
   assert.equal(base.attive, true);
   /* Per la console si': con Base la plancia e' una e i telefoni due. */
@@ -401,6 +403,7 @@ test("con la chiave la casa tiene la licenza e gira le ricevute, ma non limita n
   assert.equal(dopo.gdahome.attiva, true);
   assert.equal(licenze.premium, true);
   assert.equal(licenze.limitata, false);
+  assert.equal(licenze.soloDaCasa, false, "con Premium si entra anche da fuori");
 });
 
 test("un rinnovo lento non scavalca un acquisto: le domande al quadro vanno in fila", async () => {
@@ -795,6 +798,7 @@ test("con Base vera il ponte da' all'app solo la principale, anche se l'app chie
 test("a licenze spente l'app vede tutte le plance", () => {
   const { licenze } = leLicenze({ chiave: "" });
   assert.equal(licenze.soloLaPrincipaleNellApp, false);
+  assert.equal(licenze.soloDaCasa, false, "e si entra da dove si vuole");
 });
 
 test("i telefoni: due con Base, senza limite con Premium, quelli delle opzioni a licenze spente", async () => {

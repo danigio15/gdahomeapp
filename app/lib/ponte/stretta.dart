@@ -90,6 +90,7 @@ import '../parole.dart';
 import '../versione.dart';
 import 'cifra.dart';
 import 'errori.dart';
+import 'parole_del_centralino.dart';
 import 'presa.dart';
 
 /// Il `motivo` con cui la casa rifiuta un'app troppo vecchia: lo stesso di
@@ -221,6 +222,14 @@ Future<PresaCifrata> stringiLaMano(
                   ),
             minima: minima is int ? minima : null,
           );
+        }
+        /* La casa e' GdAHome Base, e da li' questo telefono non risulta
+         * sulla sua rete: il centralino, una porta aperta sul router, un
+         * proxy, una VPN (`ponte/src/da-casa.js`). E' lo stesso no del
+         * centralino, e porta alla stessa pagina. */
+        final motivo = detto['motivo'];
+        if (!perAbbinarsi && motivo is String && eIlNoDelPremium(motivo)) {
+          throw PremiumRichiesto(fuoriCasaServePremium);
         }
         if (perAbbinarsi) throw rifiutoDellAbbinamento(detto, no);
         throw detto['riabbina'] == true
