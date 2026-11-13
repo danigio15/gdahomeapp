@@ -20,6 +20,7 @@ import { Chiamata } from "./chiamata.js";
 import { Commissioni } from "./commissioni.js";
 import { Catalogo } from "./catalogo.js";
 import { Configurazione } from "./configurazione.js";
+import { portaNellaPrincipale } from "./la-plancia-di-base.js";
 import { Ferro } from "./ferro.js";
 import { BASE_DI_CASA, Foto } from "./foto.js";
 import { inventarioSenzaDati } from "./inventario.js";
@@ -321,11 +322,23 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * altre restano nel ponte, e tornano nella barra il giorno che la casa e'
    * Premium. Si rifa' quando la licenza cambia da una all'altra. */
   planceInCasa.soloLaPrincipale = () => licenze.soloLaPrincipaleNellApp;
+  /* E se con Base la principale e' vuota ma il lavoro sta in un'altra, lo
+   * si riporta nella principale (`la-plancia-di-base.js`). */
+  const portaLaPlanciaDiBase = () => {
+    if (!licenze.soloLaPrincipaleNellApp) return;
+    try {
+      portaNellaPrincipale({ plance, configurazione, registro });
+    } catch (errore) {
+      registro.attenzione(`la plancia di Base: ${errore?.message || errore}`);
+    }
+  };
+  portaLaPlanciaDiBase();
   let soloLaPrincipalePrima = licenze.soloLaPrincipaleNellApp;
   licenze.on("cambio", () => {
     const adesso = licenze.soloLaPrincipaleNellApp;
     if (adesso === soloLaPrincipalePrima) return;
     soloLaPrincipalePrima = adesso;
+    portaLaPlanciaDiBase();
     planceInCasa.sistema();
   });
 
