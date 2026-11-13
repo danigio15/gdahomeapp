@@ -392,6 +392,21 @@ test("un telefono staccato di cui la casa ha la chiave lo sa dentro il cifrato",
   assert.ok(presa.chiusa);
 });
 
+test("un telefono staccato per il limite di Base lo sa, col perche', dentro il cifrato", () => {
+  const vecchia = chiaveDelFiloNuova();
+  const dispositivi = {
+    ...dispositiviFinti({ revocate: { dm_via: vecchia } }),
+    perCheEStaccato: (id) => (id === "dm_via" ? "limite-telefoni-base" : ""),
+  };
+  const { portiere } = unPortiere({ dispositivi });
+  const presa = presaFinta();
+  portiere.accogli(presa, { da: "192.168.1.20" });
+  const [detto] = unTelefono(presa, { chi: "dm_via", chiaveDelFilo: vecchia }).lette();
+  assert.equal(detto.type, "auth_invalid");
+  assert.equal(detto.motivo, "limite-telefoni-base");
+  assert.match(detto.message, /al massimo 2 telefoni/);
+});
+
 test("un telefono che non si conosce proprio riceve il no in chiaro, come prima", () => {
   const { portiere } = unPortiere();
   const presa = presaFinta();

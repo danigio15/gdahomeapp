@@ -48,8 +48,20 @@ class TroppiDispositivi extends ErroreDelPonte {
 /// Il segno non vale piu': staccato dalla console, o mai stato valido.
 /// L'unica cosa da fare e' riabbinare.
 class SegnoRifiutato extends ErroreDelPonte {
-  const SegnoRifiutato(super.spiegazione);
+  const SegnoRifiutato(super.spiegazione, {this.motivo});
+
+  /// Perche' la casa l'ha staccato, quando lo dice (`motivo` di
+  /// `auth_invalid`): `limite-telefoni-base` vuol dire che con GdAHome Base i
+  /// telefoni sono due, e questo era di troppo.
+  final String? motivo;
+
+  /// Staccato perche' con Base i telefoni sono al massimo due.
+  bool get perIlLimiteDiBase => motivo == motivoLimiteDiBase;
 }
+
+/// Il `motivo` di un telefono staccato perche' con GdAHome Base i telefoni
+/// abbinati sono al massimo due (`ponte/src/dispositivi.js`).
+const String motivoLimiteDiBase = 'limite-telefoni-base';
 
 /// La casa non ha stretto la mano.
 ///

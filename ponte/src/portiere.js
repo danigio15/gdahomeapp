@@ -91,7 +91,7 @@ import {
   VERSIONE_DELL_ABBINAMENTO,
 } from "./cifra.js";
 import { CodiceSbagliato, TroppiTentativi } from "./abbinamento.js";
-import { TroppiDispositivi } from "./dispositivi.js";
+import { PERCHE_LIMITE_DI_BASE, TroppiDispositivi } from "./dispositivi.js";
 import { impronta, stessoSegreto } from "./segreti.js";
 
 const CHIUSA_PER_REGOLA = 1008;
@@ -409,10 +409,18 @@ export class Portiere {
     }
     presa.manda(pronto);
     const cifrata = new PresaCifrata(presa, chiaveDiQuestoFilo);
+    /* Col perche', quando la casa lo sa: `limite-telefoni-base` vuol dire
+     * «con Base i telefoni sono due, e questo era di troppo», e l'app porta
+     * alla pagina Premium invece di dire soltanto di riabbinare. */
+    const perche = this.dispositivi.perCheEStaccato?.(String(detto?.chi ?? "")) || "";
     cifrata.manda(
       JSON.stringify({
         type: "auth_invalid",
-        message: "questo telefono e' stato staccato da questa casa: riabbinalo",
+        message:
+          perche === PERCHE_LIMITE_DI_BASE
+            ? "con GdAHome Base si abbinano al massimo 2 telefoni: questo telefono e' stato staccato"
+            : "questo telefono e' stato staccato da questa casa: riabbinalo",
+        ...(perche ? { motivo: perche } : {}),
       }),
     );
     cifrata.chiudi(CHIUSA_PER_REGOLA, "staccato");

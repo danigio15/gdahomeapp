@@ -1392,7 +1392,9 @@ async function api({
 
   if (via === "/api/codice" && metodo === "POST") {
     const massimi = dispositivi.massimi ?? opzioni.dispositiviMassimi;
-    if (dispositivi.quantiDiCasa() >= massimi) {
+    /* Con Base contano anche i telefoni della casa di prova (`postiPresi`). */
+    const presi = dispositivi.postiPresi?.() ?? dispositivi.quantiDiCasa();
+    if (presi >= massimi) {
       male(risposta, 409, `sono gia' abbinati ${massimi} dispositivi`);
       return;
     }

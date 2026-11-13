@@ -7720,7 +7720,7 @@
                   : schermata === "abbonamenti"
                     ? gliAbbonamenti()
                     : schermata === "versioni"
-                      ? leVersioniDellApp()
+                      ? leVersioniDellApp() + leCaseEITelefoni()
                       : laPanoramica()) + ilFoglioDisegnato;
 
         if (primaVolta) {
@@ -10492,6 +10492,102 @@
           }
           ${/* già HTML */ leMute}
           <p class="minuta piede-sezione">Il numero fra parentesi lo dice l'app dalla 1.18.8: le app di prima compaiono come «numero non detto».</p>`;
+      }
+
+      /* ─── Le case, la licenza e i telefoni ──────────────────────────────
+       *
+       * «Vorrei capire per ogni casa premium quanti telefoni sono abbinati e
+       * quanti hanno il base.» Una riga per casa: la licenza secondo il
+       * quadro (e da dove viene), i telefoni abbinati e visti nella settimana
+       * secondo il rapporto della casa, l'add-on e l'ultimo contatto. Delle
+       * case senza rapporto i telefoni non si sanno, e si dice. I dati li fa
+       * `telefoni-per-casa.js` e arrivano con gli abbonamenti. */
+      const LA_PROVENIENZA = {
+        acquisto: "acquisto",
+        prova: "prova gratuita",
+        sandbox: "acquisto di prova (sandbox)",
+        regalo: "regalo",
+        codice: "codice regalo",
+        installatore: "installatore",
+        altro: "altro",
+      };
+      function leCaseEITelefoni() {
+        const P = ABBONAMENTI?.telefoniPerCasa;
+        if (!P)
+          return `
+          <div class="capo-sezione">
+            <div><h2>Case, licenze e telefoni</h2></div>
+          </div>
+          <section class="scheda">
+            <div class="vuoto"><b>Le case non sono arrivate</b> Arrivano con gli abbonamenti: riprova fra poco, o premi «Aggiorna».</div>
+          </section>`;
+        const R = P.riepilogo || {};
+        const ilNome = (una) =>
+          CONTI?.nomi?.get(una.casa) &&
+          !String(CONTI.nomi.get(una.casa)).startsWith("Casa senza nome")
+            ? CONTI.nomi.get(una.casa)
+            : una.nome || `Casa · ${una.corto}`;
+        const laLicenza = (una) =>
+          una.licenza === "premium"
+            ? `Premium · ${LA_PROVENIENZA[una.origine] || "altro"}${una.scade ? ` · fino ${conLArticolo("al", una.scade)}` : ""}`
+            : una.licenza === "base"
+              ? "Base"
+              : "Licenza sconosciuta";
+        const iTelefoni = (una) => {
+          const t = una.telefoni;
+          if (!t) return "telefoni non detti (rapporto spento)";
+          const pezzi = [plurale(t.abbinati, "telefono abbinato", "telefoni abbinati")];
+          if (t.diProva) pezzi.push(`${numero(t.diProva)} di prova`);
+          if (t.visti7gg !== null) pezzi.push(`${numero(t.visti7gg)} visti in 7 giorni`);
+          if (t.massimi === null) pezzi.push("senza limite");
+          else if (Number.isInteger(t.massimi)) pezzi.push(`al massimo ${numero(t.massimi)}`);
+          if (t.licenza && t.licenza !== una.licenza)
+            pezzi.push(`per la casa ${t.licenza === "spente" ? "licenze spente" : t.licenza}`);
+          if (una.telefoniVecchi && una.rapportoIl)
+            pezzi.push(`al ${ilGiornoCorto(una.rapportoIl)}`);
+          return pezzi.join(" · ");
+        };
+        const riga = (una) => `
+          <li data-apri-casa="${testo(una.casa)}" data-casa-e-telefoni="${testo(una.licenza)}" role="button" tabindex="0">
+            <span class="tondino">${LE_ICONE["telefono"]}</span>
+            <span class="riga-testo">
+              <b>${testo(ilNome(una))}</b>
+              <span>${testo(laLicenza(una))}</span>
+              <span>${testo(iTelefoni(una))}</span>
+              <span>${testo(una.ponte ? "add-on " + una.ponte : "add-on non detto")} · ${testo(una.ultimo ? `ultimo contatto ${daQuanto(una.ultimo)}` : "mai sentita")}</span>
+            </span>
+            <span class="pastiglia ${una.oltre ? "guardare" : una.licenza === "premium" ? "posto" : ""}">${una.oltre ? "Base oltre 2" : una.licenza === "premium" ? "Premium" : una.licenza === "base" ? "Base" : "?"}</span>
+            <span class="freccina">${LE_ICONE["freccia"]}</span>
+          </li>`;
+        const origini = Object.entries(R.origini || {})
+          .map(([chiave, quante]) => `${numero(quante)} ${LA_PROVENIENZA[chiave] || chiave}`)
+          .join(", ");
+        const ilRiepilogo = `${plurale(R.premium || 0, "casa Premium", "case Premium")}${origini ? " (" + origini + ")" : ""}, ${plurale(R.base || 0, "casa Base", "case Base")}, ${plurale(R.sconosciute || 0, "casa con licenza sconosciuta", "case con licenza sconosciuta")}. I telefoni li dice solo il rapporto della casa: si sanno per ${numero(R.premiumConTelefoni || 0)} Premium (${plurale(R.telefoniPremium || 0, "telefono", "telefoni")}) e ${numero(R.baseConTelefoni || 0)} Base (${plurale(R.telefoniBase || 0, "telefono", "telefoni")}).`;
+        const case_ = Array.isArray(P.case) ? P.case : [];
+        return `
+          <div class="capo-sezione">
+            <div>
+              <h2>Case, licenze e telefoni</h2>
+              <p>${testo(ilRiepilogo)}</p>
+            </div>
+          </div>
+          <section class="scheda" data-riepilogo-per-casa>
+            <p class="servizio-titolo">Case Base con più di 2 telefoni</p>
+            <p class="minuta"><b>${testo(numero(R.baseOltre || 0))}</b> ${testo(
+              R.baseOltre
+                ? "fra quelle che mandano il rapporto. Con l'add-on nuovo i telefoni di troppo si staccano da soli: restano i 2 usati più di recente."
+                : "fra quelle che mandano il rapporto.",
+            )}</p>
+            ${
+              case_.length
+                ? `<details class="apri-riga">
+                     <summary>Casa per casa · ${numero(R.tutte || case_.length)}<span class="freccina">${LE_ICONE["freccia"]}</span></summary>
+                     <ul class="elenco si-tocca">${case_.map(riga).join("")}</ul>
+                     ${R.tagliate ? `<p class="minuta">E altre ${numero(R.tagliate)}, non elencate.</p>` : ""}
+                   </details>`
+                : `<div class="vuoto"><b>Nessuna casa</b> Arrivano quando chiedono le licenze o mandano il rapporto.</div>`
+            }
+          </section>`;
       }
 
       /* Le case che il quadro conosce per nome: quelle degli installatori.

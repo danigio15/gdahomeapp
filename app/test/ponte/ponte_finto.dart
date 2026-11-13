@@ -53,6 +53,10 @@ class PonteFinto {
   /// cifrato invece che in chiaro.
   bool staccatoConLaChiave = false;
 
+  /// Il perche' che la casa dice insieme allo stacco (`motivo` di
+  /// `auth_invalid`), come `limite-telefoni-base`. `null`: non lo dice.
+  String? motivoDelloStacco;
+
   /// Quando c'e', la casa decide cosa rispondere a chi bussa e poi aspetta
   /// questo prima di dirlo. Serve a far arrivare due risposte nell'ordine
   /// che vuole la prova, qualunque sia la velocita' della macchina.
@@ -1723,6 +1727,8 @@ class TelefonoCollegato {
       _ponte._manda(this, {
         'type': 'auth_invalid',
         'message': 'questo telefono è stato staccato da questa casa',
+        if (_ponte.motivoDelloStacco != null)
+          'motivo': _ponte.motivoDelloStacco,
       });
       unawaited(chiudi());
       return;

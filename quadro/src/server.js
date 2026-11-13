@@ -135,6 +135,7 @@ import { Biglietti, GettoniDellEditor } from "./biglietti.js";
 import { laFormaDel, leRigheDeiSegni } from "./forma-del-rapporto.js";
 import { Freno } from "./freno.js";
 import { leVersioniDelleApp } from "./versioni-delle-app.js";
+import { iTelefoniPerCasa } from "./telefoni-per-casa.js";
 import { UltimeDellApp } from "./ultime-dell-app.js";
 import { daChiSiConta, eDaQui } from "./indirizzo.js";
 import {
@@ -2261,16 +2262,20 @@ export function costruisciIlServer({
        * Connect e nella Play Console, con l'ultima volta che ne e' arrivato
        * uno. La gestione e' di chi tiene il quadro: il segreto lo vede solo
        * lui. */
+      const tutteLeCase = case_.elenco(TUTTE);
       json(risposta, {
         ...licenze.abbonamenti(),
         /* Le versioni dell'app sui telefoni, dai rapporti delle case e dal
          * tramite, che le sente da tutte le case accese anche col rapporto
          * spento: solo quanti per versione, mai quali telefoni. */
         versioniDelleApp: leVersioniDelleApp(
-          case_.elenco(TUTTE),
+          tutteLeCase,
           ultime.tutte(),
           (await iNumeriDelTramite())?.versioniApp ?? null,
         ),
+        /* Le case una per riga: la licenza, e i telefoni dove il rapporto li
+         * dice (`telefoni-per-casa.js`). */
+        telefoniPerCasa: iTelefoniPerCasa(tutteLeCase, licenze.perLeCase()),
         ultimeDellApp: ultime.tutte(),
         avvisi: {
           apple: "/v1/negozi/apple",

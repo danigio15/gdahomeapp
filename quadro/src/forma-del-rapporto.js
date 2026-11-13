@@ -234,6 +234,13 @@ const LA_FORMA = oggetto({
       }),
       30,
     ),
+    /* Quanti sono della casa di prova, quanti se ne possono abbinare
+     * (`null`: senza limite) e la licenza come la vede la casa. Li dicono
+     * gli add-on dopo la 1.19.0: prima mancano, e il quadro scrive «non lo
+     * dice». */
+    diProva: numero,
+    massimi: numero,
+    licenza: fatta(/^(premium|base|spente)$/, 10),
   }),
   fuori: oggetto({ acceso: siNo, filo: siNo }),
   entita: oggetto({

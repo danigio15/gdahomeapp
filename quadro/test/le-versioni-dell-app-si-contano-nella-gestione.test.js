@@ -100,7 +100,7 @@ test("senza nessun numero di costruzione nessuno e' «indietro»", () => {
 test("la gestione le chiede con gli abbonamenti, e la pagina le scrive negozio per negozio senza fidarsi", () => {
   assert.match(
     SERVER,
-    /versioniDelleApp: leVersioniDelleApp\(\s*case_\.elenco\(TUTTE\),\s*ultime\.tutte\(\),\s*\(await iNumeriDelTramite\(\)\)\?\.versioniApp \?\? null,?\s*\)/,
+    /versioniDelleApp: leVersioniDelleApp\(\s*tutteLeCase,\s*ultime\.tutte\(\),\s*\(await iNumeriDelTramite\(\)\)\?\.versioniApp \?\? null,?\s*\)/,
   );
   assert.match(GESTORE, /Versioni dell'app sui telefoni/);
   assert.match(GESTORE, /unNegozio\("apple"\)/);

@@ -185,11 +185,13 @@ export class Ponte {
 
   /* Butta giu' i fili di un telefono staccato dalla console. Senza questo, un
    * telefono revocato resterebbe dentro finche' non chiude lui. */
-  scollega(idDelDispositivo) {
+  scollega(idDelDispositivo, perche = "") {
     let quanti = 0;
     for (const uno of [...this.collegamenti]) {
       if (uno.dispositivo?.id !== idDelDispositivo) continue;
-      uno.chiudi(1008, "questo dispositivo e' stato staccato");
+      /* Col perche', quando c'e' (`limite-telefoni-base`): il telefono
+       * ribussa, e il portiere glielo dice cifrato (`auth_invalid`). */
+      uno.chiudi(1008, perche || "questo dispositivo e' stato staccato");
       quanti += 1;
     }
     return quanti;

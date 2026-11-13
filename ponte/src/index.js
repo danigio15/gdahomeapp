@@ -37,7 +37,7 @@ import { laRicevutaDaFuori } from "./ricevuta-da-fuori.js";
 import { VersioneMinima } from "./versione-minima.js";
 import { UltimeDellApp, ULTIME_DI_SERIE } from "./ultime-dell-app.js";
 import { CHIAVE_PUBBLICA_LICENZE } from "./chiave-licenze.js";
-import { Dispositivi } from "./dispositivi.js";
+import { Dispositivi, telefoniOltreBase } from "./dispositivi.js";
 import { leggiLeOpzioni } from "./opzioni.js";
 import { Ponte } from "./ponte.js";
 import { Portiere } from "./portiere.js";
@@ -185,6 +185,9 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   /* E i telefoni: con Base due, con Premium senza limite, con le licenze
    * spente quelli delle opzioni (`Licenze.telefoniMassimi`). */
   dispositivi.massimi = () => licenze.telefoniMassimi(opzioni.dispositiviMassimi);
+  /* E con Base i telefoni della casa di prova stanno nei due anche loro:
+   * vedi «I telefoni di prova con Base» in `dispositivi.js`. */
+  dispositivi.provaNeiMassimi = () => licenze.attive && !licenze.premium;
   /* Le segnalazioni e la chat dell'app: dal ponte al centralino, e da li' a
    * chi mantiene il progetto. */
   const segnalazioni = new Segnalazioni({
@@ -677,6 +680,9 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     plance,
     configurazione,
     dispositivi,
+    /* La licenza come la vede la casa, accanto ai telefoni: il quadro la
+     * scrive nella vista «per casa» della Gestione. */
+    licenza: () => (!licenze.attive ? "spente" : licenze.premium ? "premium" : "base"),
     chiamata,
     versioni: {
       ponte: opzioni.versione,
@@ -874,7 +880,32 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     }
   };
   licenze.on("cambio", fuoriQuelliDaFuori);
-  const sentinellaDiFuori = setInterval(fuoriQuelliDaFuori, 60 * 1000);
+
+  /* Con Base i telefoni sono due, sempre: chi e' di troppo si stacca
+   * davvero, e restano i due usati piu' di recente (`dispositivi.js`,
+   * `tieniIPiuRecenti`). Quando la licenza cambia, a ogni minuto (un gettone
+   * che scade non lo dice nessuno) e dopo ogni abbinamento. Mai prima che
+   * il quadro sia stato chiesto almeno una volta: appena acceso, «Base» puo'
+   * voler dire «non ancora letta», e una casa Premium non perde i telefoni
+   * per un riavvio. Con Premium e a licenze spente non fa niente. */
+  const dueTelefoniConBase = () => {
+    try {
+      const via = telefoniOltreBase({ licenze, dispositivi, ponte });
+      if (via.length) {
+        registro.info(
+          `${via.length} telefoni staccati: con GdAHome Base restano i ${dispositivi.massimi} usati più di recente`,
+        );
+      }
+    } catch (errore) {
+      registro.errore(`i telefoni di Base: ${errore?.message || errore}`);
+    }
+  };
+  licenze.on("cambio", dueTelefoniConBase);
+  dispositivi.dopoLAbbinamento = dueTelefoniConBase;
+  const sentinellaDiFuori = setInterval(() => {
+    fuoriQuelliDaFuori();
+    dueTelefoniConBase();
+  }, 60 * 1000);
   sentinellaDiFuori.unref?.();
 
   const abbassa = async () => {

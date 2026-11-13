@@ -148,6 +148,29 @@ void main() {
     await filo.chiudi();
   });
 
+  test(
+    'un telefono staccato per il limite di Base lo sa, col suo perché',
+    () async {
+      ponte
+        ..conosceIlTelefono = false
+        ..staccatoConLaChiave = true
+        ..motivoDelloStacco = 'limite-telefoni-base';
+      final filo = filoCon();
+
+      await expectLater(
+        filo.apri(),
+        throwsA(
+          isA<SegnoRifiutato>().having(
+            (e) => e.perIlLimiteDiBase,
+            'perIlLimiteDiBase',
+            isTrue,
+          ),
+        ),
+      );
+      await filo.chiudi();
+    },
+  );
+
   test('un telefono staccato mentre è collegato viene buttato fuori', () async {
     final filo = filoCon();
     await filo.apri();

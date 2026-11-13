@@ -407,6 +407,10 @@ export function fabbricaIlRapporto({
   plance = null,
   configurazione = null,
   dispositivi = null,
+  /* Com'e' messa la licenza, per come la vede la casa: «premium», «base»
+   * o «spente» (`index.js`). Va coi telefoni: e' quello che decide quanti
+   * se ne abbinano. Di serie non si dice. */
+  licenza = () => null,
   /* L'anagrafe della casa, condivisa con chi risponde alla plancia. Vedi
    * `registri.js`. */
   registri = null,
@@ -551,7 +555,7 @@ export function fabbricaIlRapporto({
       plance: plance
         ? lePlance(plance, configurazione, { conRevisione: configurazionePlancia() === true })
         : null,
-      telefoni: dispositivi ? iTelefoni(dispositivi, adesso) : null,
+      telefoni: dispositivi ? iTelefoni(dispositivi, adesso, { licenza }) : null,
       fuori: chiamata ? { acceso: Boolean(chiamata.dove), filo: chiamata.accesa === true } : null,
       entita: quelli ? leEntita(quelli, { registri: registriOra }) : null,
       batterie: quelli ? leBatterie(quelli) : null,
@@ -689,14 +693,35 @@ function lePlance(plance, configurazione, { conRevisione = false } = {}) {
  * e versione — niente nomi, modelli o di chi e':
  * al quadro serve sapere chi e' rimasto indietro, non chi e'. Un telefono che
  * non l'ha mai detta conta sotto una versione vuota. */
-export function iTelefoni(dispositivi, adesso) {
+export function iTelefoni(dispositivi, adesso, { licenza = null } = {}) {
   const elenco = typeof dispositivi.elenco === "function" ? dispositivi.elenco() : [];
   const settimana = adesso() - 7 * 24 * 60 * 60 * 1000;
   const visti = elenco.filter((uno) => Number(uno.vistoIl || 0) >= settimana);
+  /* Quanti dei telefoni sono della casa di prova, e quanti se ne possono
+   * abbinare (`null`: senza limite, Premium), con la licenza come la vede la
+   * casa. Sono i tre numeri con cui il quadro dice, casa per casa, se una
+   * casa Base ha piu' telefoni di quanti dovrebbe — e perche': abbinati
+   * prima del limite, o della casa di prova. Solo numeri, come il resto. */
+  const diProva = elenco.filter((uno) => Number.isFinite(uno.finoA)).length;
+  let massimi;
+  try {
+    massimi = dispositivi.massimi;
+  } catch (_errore) {
+    massimi = undefined;
+  }
+  let detta = null;
+  try {
+    detta = typeof licenza === "function" ? licenza() : null;
+  } catch (_errore) {
+    detta = null;
+  }
   return {
     abbinati: elenco.length,
     visti7gg: visti.length,
     versioni: leVersioniDellApp(visti),
+    diProva,
+    ...(typeof massimi === "number" ? { massimi: Number.isFinite(massimi) ? massimi : null } : {}),
+    ...(["premium", "base", "spente"].includes(detta) ? { licenza: detta } : {}),
   };
 }
 

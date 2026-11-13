@@ -101,7 +101,9 @@ ogni sei ore. Una casa senza internet resta Premium per otto giorni.
   tuo nome › Abbonamenti, su Android dal Play Store › Pagamenti e abbonamenti ›
   Abbonamenti. Nell'app, «Gestisci abbonamento» ti porta lì, e lì si cambia
   anche piano. Si disdice quando vuoi: Premium resta fino alla fine del
-  periodo già pagato, e poi la casa torna a Base.
+  periodo già pagato, e poi la casa torna a Base. Con Base restano abbinati
+  al massimo due telefoni, i due usati più di recente: gli altri si staccano,
+  e si riabbinano con Premium.
 - **Il pagamento lo incassa il negozio**, e i rimborsi li decide e li fa il
   negozio, con le sue regole: Apple da <https://reportaproblem.apple.com>,
   Google dalla cronologia degli ordini di Google Play. Se hai un problema con

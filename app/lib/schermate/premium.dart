@@ -122,6 +122,15 @@ abstract final class PerchePremium {
         'and sleep brought into your home — is part of GdAHome Premium.',
   );
 
+  static String get telefoni => inLingua(
+    it:
+        'Con GdAHome Base si abbinano al massimo 2 telefoni per casa. Con '
+        'Premium i telefoni sono senza limite.',
+    en:
+        'With GdAHome Base you can pair at most 2 phones per home. With '
+        'Premium there is no limit on phones.',
+  );
+
   static String get fuoriCasa => inLingua(
     it:
         'Fuori casa serve GdAHome Premium. Sotto il Wi-Fi di casa si entra '

@@ -42,11 +42,12 @@
  * Tre regole le fa valere anche la casa, perche' l'app da sola non basta
  * (un'app modificata la saltava): con Base la plancia e' una, la principale
  * che l'add-on mette in Home Assistant — all'app, nel browser e fra le Plance
- * di Home Assistant (`soloLaPrincipaleNellApp`) — di telefoni se ne
- * abbinano due (`telefoniMassimi`), e l'app si apre solo dalla rete di casa
+ * di Home Assistant (`soloLaPrincipaleNellApp`) — di telefoni ce ne sono
+ * due al massimo (`telefoniMassimi`), e l'app si apre solo dalla rete di casa
  * (`soloDaCasa`): da fuori non entra ne' dal centralino ne' da nessun'altra
- * strada che porti alla porta dell'app. Le plance in piu' restano sul disco,
- * e i telefoni gia' abbinati restano: tornano e si aggiungono con Premium.
+ * strada che porti alla porta dell'app. Le plance in piu' restano sul disco;
+ * dei telefoni restano i due usati piu' di recente, e gli altri si staccano
+ * (`Dispositivi.tieniIPiuRecenti`): con Premium si riabbinano.
  */
 
 import { EventEmitter } from "node:events";
@@ -151,6 +152,17 @@ export class Licenze extends EventEmitter {
     /* Le firme gia' guardate, per gettone: vedi `_valido`. */
     this._firmati = new Map();
     this._premiumPrima = this.premium;
+    /* Quanti giri di domande al quadro sono finiti, andati bene o male: vedi
+     * `chiesta`. */
+    this._giri = 0;
+  }
+
+  /** Se, da quando il ponte e' acceso, si e' gia' chiesto al quadro almeno
+   * una volta (andata bene o male). Prima di allora «Base» puo' voler dire
+   * solo «non ancora letta»: chi stacca dei telefoni per Base aspetta questo
+   * (`index.js`). */
+  get chiesta() {
+    return this._giri > 0;
   }
 
   /* ─── Quello che si chiede ─────────────────────────────────────────────── */
@@ -274,9 +286,9 @@ export class Licenze extends EventEmitter {
    * Base che la casa fa valere da se', per la stessa ragione della plancia
    * (l'abbinamento lo fa la casa, non l'app). `diSerie` e' quello scritto
    * nelle opzioni dell'add-on: con le licenze spente vale lui, come sempre.
-   * Con Base vale il piu' piccolo dei due. Chi era gia' abbinato resta: non
-   * si stacca nessuno, solo non se ne aggiungono altri finche' non si scende
-   * sotto. Senza limite e' `Infinity`. */
+   * Con Base vale il piu' piccolo dei due, e chi e' di troppo si stacca
+   * (`Dispositivi.tieniIPiuRecenti`, da `index.js`): restano i piu' recenti.
+   * Senza limite e' `Infinity`. */
   telefoniMassimi(diSerie) {
     if (!this.attive) return diSerie;
     if (this.premium) return Infinity;
@@ -375,6 +387,7 @@ export class Licenze extends EventEmitter {
         this.registro.attenzione(`licenze: ${errore?.message || errore}`);
       } finally {
         this._inCorso = null;
+        this._giri += 1;
       }
       return this.stato();
     })();

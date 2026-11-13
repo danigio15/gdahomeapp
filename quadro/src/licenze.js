@@ -1769,6 +1769,58 @@ export class Licenze {
     };
   }
 
+  /**
+   * Le case e la loro gdahome, una riga per casa: per la vista «per casa»
+   * della Gestione (`telefoni-per-casa.js`).
+   *
+   * Ci sono le case che hanno chiesto le licenze almeno una volta (i
+   * soggetti `casa_…`) e quelle che una licenza ce l'hanno o l'hanno avuta.
+   * Di ognuna: quando ha chiesto i gettoni l'ultima volta (`chiesto`, scritto
+   * al piu' una volta l'ora) e da quando la si conosce (`da`); la licenza che
+   * vale adesso, quella che dura di piu' — la stessa che finisce nel gettone
+   * (`perIlSoggetto`) — con da dove viene; e quante ne ha avute che non
+   * valgono piu' (`finite`). Le righe «spostata» non sono licenze e non si
+   * contano. Niente segreti: l'impronta resta qui.
+   */
+  perLeCase(ora = this.adesso()) {
+    const righe = new Map();
+    const fini = new Map();
+    const di = (sog) => {
+      if (!righe.has(sog))
+        righe.set(sog, { casa: sog, chiesto: null, da: null, gdahome: null, finite: 0 });
+      return righe.get(sog);
+    };
+    for (const [sog, suo] of Object.entries(this.archivio.dati.soggetti || {})) {
+      if (!CASA.test(sog)) continue;
+      const riga = di(sog);
+      riga.chiesto = Number(suo?.visto) || null;
+      riga.da = Number(suo?.da) || null;
+    }
+    for (const una of this.licenze) {
+      if (una.app !== "gdahome" || !CASA.test(String(una.sog)) || una.origine === "spostata")
+        continue;
+      const riga = di(una.sog);
+      if (!this.vale(una, ora)) {
+        riga.finite += 1;
+        continue;
+      }
+      const fine = this.fineDi(una) ?? Infinity;
+      if (riga.gdahome && fini.get(una.sog) >= fine) continue;
+      fini.set(una.sog, fine);
+      riga.gdahome = {
+        lic: una.lic,
+        origine: una.origine,
+        prova: Boolean(una.prova),
+        sandbox: Boolean(una.negozio?.abbonamento?.sandbox),
+        codice: Boolean(una.codice),
+        installatore: una.installatore || null,
+        piattaforma: una.negozio?.piattaforma || null,
+        scade: una.scade,
+      };
+    }
+    return [...righe.values()];
+  }
+
   /** Tutto, per il gestore: le piu' nuove prima. */
   elenco() {
     const ora = this.adesso();
