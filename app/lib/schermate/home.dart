@@ -862,15 +862,26 @@ class _HomeState extends State<Home> {
                                 Sezione.dispositivi => const SizedBox.shrink(),
                                 Sezione.aiutanti => const SizedBox.shrink(),
                                 /* gdanav: si accende la prima volta che ci si
-                           * entra, e poi resta acceso come le altre. */
-                                Sezione.navigatore => IlNavigatore(
-                                  visibile: _sezione == Sezione.navigatore,
-                                  navigatore: _navigatore,
-                                  menuOspite: () => _barra.currentState?.apri(),
-                                  apriIlMenu: _menuDiGdanav,
-                                  apriIlPianificatore: _pianificatoreDiGdanav,
-                                  /* L'auto della plancia va a gdanav da qui. */
-                                  collegamento: collegamento,
+                           * entra, e poi resta acceso come le altre.
+                           *
+                           * Con un messaggero suo: gli avvisi di gdanav
+                           * (SnackBar) prendevano quello dell'app e
+                           * comparivano sulla sezione che si vede. Dal campo:
+                           * «3D aumentato non è disponibile…» sulla pagina
+                           * Energia, dalla guida aperta dall'auto nel
+                           * navigatore nascosto. Adesso restano qui, e si
+                           * vedono quando si apre il navigatore. */
+                                Sezione.navigatore => ScaffoldMessenger(
+                                  child: IlNavigatore(
+                                    visibile: _sezione == Sezione.navigatore,
+                                    navigatore: _navigatore,
+                                    menuOspite: () =>
+                                        _barra.currentState?.apri(),
+                                    apriIlMenu: _menuDiGdanav,
+                                    apriIlPianificatore: _pianificatoreDiGdanav,
+                                    /* L'auto della plancia va a gdanav da qui. */
+                                    collegamento: collegamento,
+                                  ),
                                 ),
                                 /* La Configurazione qui non ha una schermata: la
                            * voce apre la pagina della plancia, dentro il
