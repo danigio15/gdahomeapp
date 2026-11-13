@@ -25,6 +25,7 @@ import {
   EVIDENZA_CONFIG_KEY,
   WIDGETS_CONFIG_KEY,
   renderHomeWidgets,
+  tesseraConSezione,
   tessereDellAnteprima,
   widgetPreferences,
 } from "./home-widgets-section.js";
@@ -359,7 +360,8 @@ function sorgenteMarkup(key) {
 
 /* «Solo quando c'e' qualcosa acceso» (#355): la tessera delle Luci, delle
  * Prese o degli Elettrodomestici sparisce dalla Home quando e' tutto spento,
- * e torna appena qualcosa si accende. Spento di serie: chi non lo tocca vede
+ * e torna appena qualcosa si accende. Quella dell'UPS sparisce a rete
+ * presente e torna quando un gruppo va a batteria o da' l'allarme. Spento di serie: chi non lo tocca vede
  * la Home di sempre. */
 function soloAccesoMarkup(key) {
   if (!TESSERE_A_SCOMPARSA.includes(key)) return "";
@@ -367,8 +369,20 @@ function soloAccesoMarkup(key) {
   const parola =
     key === "elettrodomestici"
       ? t("Solo quando uno è in funzione", "Only while one is running")
-      : t("Solo quando qualcosa è acceso", "Only while something is on");
+      : key === "ups"
+        ? t("Solo quando va a batteria o c'è un avviso", "Only while on battery or alerting")
+        : t("Solo quando qualcosa è acceso", "Only while something is on");
   return `<label class="dm-widget-solo-acceso"><input type="checkbox" data-widget-solo-acceso="${esc(key)}"${acceso ? " checked" : ""}><span>${esc(parola)}</span></label>`;
+}
+
+/* «Il tocco apre la sezione» (#156): «intendevo la possibilita' di saltare
+ * direttamente dal widget alla sezione aperta». Tessera per tessera, spento di
+ * serie, e solo dove c'e' una sezione in cui andare: gli allagamenti e le
+ * entita' in evidenza, per dire, vivono soltanto in Home. */
+function direttaMarkup(key) {
+  if (!tesseraConSezione(key)) return "";
+  const acceso = widgetPreferences().dirette.includes(key);
+  return `<label class="dm-widget-solo-acceso dm-widget-diretta"><input type="checkbox" data-widget-diretta="${esc(key)}"${acceso ? " checked" : ""}><span>${esc(t("Il tocco apre la sezione", "Tap opens the section"))}</span></label>`;
 }
 
 /* Gli avvisi personalizzati che si fanno vedere da soli (#445).
@@ -413,7 +427,7 @@ function tessereMarkup() {
           t(`Sposta ${label}: trascina, o usa le frecce su e giù`, `Move ${label}: drag, or use the up and down arrows`),
         )}" title="${t("Trascina per spostare", "Drag to move")}">⠿</button>
         <span class="dm-widget-pref-icon" aria-hidden="true">${oggettoWidget(key, icon, `pref-${key}`)}</span>
-        <span class="ed-row-main"><strong class="ed-row-new">${esc(label)}</strong>${sorgenteMarkup(key)}${soloAccesoMarkup(key)}</span>
+        <span class="ed-row-main"><strong class="ed-row-new">${esc(label)}</strong>${sorgenteMarkup(key)}${soloAccesoMarkup(key)}${direttaMarkup(key)}</span>
         <button type="button" class="ed-del dm-widget-move" data-widget-up aria-label="${t("Più in alto", "Move up")}"${index === 0 ? " disabled" : ""}>▲</button>
         <button type="button" class="ed-del dm-widget-move" data-widget-down aria-label="${t("Più in basso", "Move down")}"${index === rows.length - 1 ? " disabled" : ""}>▼</button>
         <button type="button" class="dm-widget-shown" data-widget-shown data-on="${!hidden.has(key)}" aria-label="${t("Visibile in Home", "Shown on Home")}"><i></i></button>
@@ -712,6 +726,16 @@ function onClick(event) {
     if (soloAcceso.checked) scelte.add(chiave);
     else scelte.delete(chiave);
     scriviPreferenze({ soloAccese: [...scelte] });
+    return;
+  }
+  /* Lo stesso per «il tocco apre la sezione» (#156). */
+  const diretta = event.target.closest("[data-widget-diretta]");
+  if (diretta) {
+    const chiave = clean(diretta.dataset.widgetDiretta);
+    const scelte = new Set(widgetPreferences().dirette);
+    if (diretta.checked) scelte.add(chiave);
+    else scelte.delete(chiave);
+    scriviPreferenze({ dirette: [...scelte] });
     return;
   }
   if (event.target.closest(".dm-widget-solo-acceso")) return;

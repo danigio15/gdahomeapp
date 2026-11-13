@@ -1213,6 +1213,24 @@ export function onEditorRedraw(marker, callback) {
 }
 
 /**
+ * Il riquadro «📹 Telecamere» della scheda Sicurezza del Config, o `null`.
+ *
+ * Tre blocchi gli vanno sotto — i rilevamenti, le telecamere riservate (#81) e
+ * l'interruttore che le spegne tutte — e lo cercavano con
+ * `[data-ref="cd_cameras"], [data-editor="cameras"]`: due segni che la scheda
+ * non scrive da nessuna parte. Non trovando niente, ognuno dei tre si toglieva
+ * di mezzo in silenzio, e la spunta «si vede solo a casa vuota» non c'era:
+ * «non trovo la spunta o l'impostazione sotto telecamere».
+ *
+ * Il riquadro si riconosce dal campo dell'entita' della telecamera, che ha un
+ * nome suo (`ed-cam-ent`) e non cambia con la lingua come il titolo.
+ */
+export function riquadroDelleTelecamere() {
+  const campo = doc?.querySelector?.("#ed-body #ed-cam-ent");
+  return campo?.closest?.("details.ed-acc") || null;
+}
+
+/**
  * Tiene un blocco aggiunto alla scheda del Config, comunque la scheda cambi.
  *
  * `onEditorRedraw` avvisa quando la scheda si rifa' per due strade — la

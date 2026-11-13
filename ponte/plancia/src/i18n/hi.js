@@ -7754,6 +7754,7 @@ export default Object.freeze({
   "The standings": "अंक तालिका",
   "Only while something is on": "केवल तब जब कुछ चालू हो",
   "Only while one is running": "केवल तब जब कोई चल रहा हो",
+  "Only while on battery or alerting": "केवल बैटरी पर चलने या चेतावनी होने पर",
   "Browse the library": "लाइब्रेरी ब्राउज़ करें",
   "This player's playlists, artists and stations": "इस प्लेयर की प्लेलिस्ट, कलाकार और स्टेशन",
   "This player cannot search.": "यह प्लेयर खोज नहीं कर सकता।",
@@ -8183,4 +8184,5 @@ export default Object.freeze({
   "Systolic": "सिस्टोलिक",
   "These sensors keep no history in Home Assistant.": "ये सेंसर Home Assistant में इतिहास नहीं रखते।",
   "This sensor keeps no history in Home Assistant.": "यह सेंसर Home Assistant में इतिहास नहीं रखता।",
+  "Tap opens the section": "छूने पर अनुभाग खुलता है",
 });

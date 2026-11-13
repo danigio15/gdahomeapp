@@ -7745,6 +7745,7 @@ export default Object.freeze({
   "The standings": "순위표",
   "Only while something is on": "무언가 켜져 있을 때만",
   "Only while one is running": "하나라도 작동 중일 때만",
+  "Only while on battery or alerting": "배터리로 작동 중이거나 경고가 있을 때만",
   "Browse the library": "라이브러리 둘러보기",
   "This player's playlists, artists and stations": "이 플레이어의 재생목록, 아티스트, 방송국",
   "This player cannot search.": "이 플레이어는 검색할 수 없습니다.",
@@ -8174,4 +8175,5 @@ export default Object.freeze({
   "Systolic": "수축기",
   "These sensors keep no history in Home Assistant.": "이 센서들은 Home Assistant에 기록을 남기지 않습니다.",
   "This sensor keeps no history in Home Assistant.": "이 센서는 Home Assistant에 기록을 남기지 않습니다.",
+  "Tap opens the section": "탭하면 섹션이 열림",
 });

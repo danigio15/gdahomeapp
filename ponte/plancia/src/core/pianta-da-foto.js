@@ -338,8 +338,10 @@ export function prospettiva(im) {
   return { T, larghezza: ow, altezza: oh, sposta, righe: { oriz, vert } };
 }
 
-/** La foto raddrizzata con la trasformazione di `prospettiva`. */
-export function raddrizza(im, { T, larghezza, altezza }) {
+/** La foto raddrizzata con la trasformazione di `prospettiva`. `fondo` e' il
+ * colore di quello che resta fuori dalla foto (la pianta pulita di un render
+ * lo vuole bianco, come la sua carta). */
+export function raddrizza(im, { T, larghezza, altezza }, fondo = [59, 58, 55]) {
   const { width: w, height: h, data } = im;
   const I = inversa(T);
   const out = new Uint8ClampedArray(larghezza * altezza * 4);
@@ -352,9 +354,9 @@ export function raddrizza(im, { T, larghezza, altezza }) {
       const x0 = Math.floor(sx),
         y0 = Math.floor(sy);
       if (x0 < 0 || y0 < 0 || x0 >= w - 1 || y0 >= h - 1) {
-        out[o] = 59;
-        out[o + 1] = 58;
-        out[o + 2] = 55;
+        out[o] = fondo[0];
+        out[o + 1] = fondo[1];
+        out[o + 2] = fondo[2];
         out[o + 3] = 255;
         continue;
       }
@@ -578,9 +580,14 @@ function nucleoDeiMuri(g, w, h, r, carta = cartaDi(g)) {
  * Lo spessore che conta e' quello del grigio col suo contorno, che nelle
  * piante dell'architetto viene circa 42 cm.
  *
+ * Un render (leggiIlRender, in fondo) disegna i muri al loro spessore vero,
+ * senza contorno: li' i muri di fuori sono piu' vicini ai 30 cm (`muro`), e
+ * nella pianta pulita non ci sono righe da scartare: le strisce contano da
+ * `minimo` pixel (la casa piccola nella schermata ha i muri sottili).
+ *
  * Torna `{ mpp, spessore }` (metri per pixel, spessore in pixel) o `null`.
  */
-export function scalaDaiMuri(im) {
+export function scalaDaiMuri(im, { muro = 0.42, minimo: piuCorto = 0 } = {}) {
   const { width: w, height: h } = im;
   const guess = (0.06 * 350) / Math.max(w, h);
   const pieni = muriPieni(im, guess);
@@ -605,7 +612,7 @@ export function scalaDaiMuri(im) {
   corse(h, w, (a, b) => a * w + b);
   corse(w, h, (a, b) => b * w + a);
   /* il picco piu' alto fra le strisce larghe (non le righe, non i tramezzi) */
-  const minimo = Math.max(18, Math.round(Math.max(w, h) / 110)),
+  const minimo = piuCorto || Math.max(18, Math.round(Math.max(w, h) / 110)),
     massimo = Math.round(Math.max(w, h) / 10);
   let meglio = -1,
     alto = 0;
@@ -617,7 +624,7 @@ export function scalaDaiMuri(im) {
     }
   }
   if (meglio < 0 || alto < 150) return null;
-  return { mpp: 0.42 / meglio, spessore: meglio };
+  return { mpp: muro / meglio, spessore: meglio };
 }
 
 /** I m² di muro pieno oltre i quali la pianta e' «a muri pieni». */
@@ -1458,9 +1465,17 @@ export function grigliaDeiMuri(
 export function grigliaDallaFoto(
   im,
   mpp,
-  { vetri = null, porte = null, disegno = false, pianoDaFoto = true } = {},
+  { vetri = null, porte = null, disegno = false, pianoDaFoto = true, render = false } = {},
 ) {
   const { width: w, height: h } = im;
+  /* Un render gia' pulito (leggiIlRender, in fondo): i muri e i vetri sono
+   * scritti nei colori, e la strada e' quella dei muri pieni. */
+  if (render && !disegno) {
+    const { ink, linee } = mappeDelRender(im);
+    return Object.assign(grigliaDaMuriPieni(ink, linee, w, h, mpp, { render: true }), {
+      strada: "render",
+    });
+  }
   const aRighe = () =>
     Object.assign(grigliaDeiMuri(inchiostro(im), w, h, mpp, { vetri, porte, disegno }), {
       strada: "righe",
@@ -1491,7 +1506,7 @@ export function grigliaDallaFoto(
  *   4. scale: almeno quattro righe parallele, lunghe e a passo regolare
  *      (i gradini).
  */
-export function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
+export function grigliaDaMuriPieni(ink, linee, w, h, mpp, { render = false } = {}) {
   const lato = PASSO / mpp,
     W = Math.max(1, Math.floor(w / lato)),
     H = Math.max(1, Math.floor(h / lato)),
@@ -1754,7 +1769,8 @@ export function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
     vetroMax = Math.round(3 / PASSO),
     varcoUnLato = Math.round(1.0 / PASSO),
     mezzo = Math.round(0.5 / PASSO),
-    tratto = Math.round(0.2 / PASSO);
+    tratto = Math.round(0.2 / PASSO),
+    mezzoMuro = Math.round(0.35 / PASSO);
   const corre = (i, passo, fino) => {
     let n = 0;
     for (let j = i; n < fino && j >= 0 && j < N && muro[j]; j += passo) n++;
@@ -1796,6 +1812,27 @@ export function grigliaDaMuriPieni(ink, linee, w, h, mpp) {
             )
           )
             righe++;
+        }
+        /* Nel render il telaio della finestra non sta nella fila del muro:
+         * la vista inclinata lo sposta di lato, e si vede a pezzi (i
+         * montanti). Basta che nel varco, entro mezzo muro di qua e di la',
+         * ci sia il nero del telaio per un terzo della larghezza. */
+        if (render && fa && fb && k <= vetroMax) {
+          righe = 0;
+          for (let q = b; q < e; q++) {
+            const c = at(a, q);
+            for (let d = -mezzoMuro; d <= mezzoMuro; d++) {
+              const z = c + d * largo;
+              if (z >= 0 && z < N && riga[z]) {
+                righe++;
+                break;
+              }
+            }
+          }
+          if (righe >= k * 0.3) {
+            for (let q = b; q < e; q++) vetro[at(a, q)] = 1;
+            continue;
+          }
         }
         if (fa && fb && k <= vetroMax && righe >= k * 0.5)
           for (let q = b; q < e; q++) vetro[at(a, q)] = 1;
@@ -2995,4 +3032,385 @@ export function scalaScritta(testo) {
     /\b1\s*:\s*(50|100|200|250|500)\b/.exec(t);
   const n = m ? Number(m[1]) : 0;
   return n >= 20 && n <= 2000 ? n : 0;
+}
+
+/* ── la pianta da un render: la casa disegnata in 3D, vista dall'alto ──────
+ *
+ * «Inserisco già la pianta in 3d ma quando crea i muri, sbaglia locali e muri
+ * di stranezze.» Le piante che fanno i programmi d'arredo e le agenzie non
+ * sono a righe nere su carta bianca: i muri sono grigi e pieni, i pavimenti
+ * sono di parquet e di piastrelle, ai muri si vedono le facce di lato (la
+ * vista e' un po' inclinata), e spesso tutto sta in un riquadro bianco su
+ * uno sfondo nero (la schermata del telefono). Il riconoscimento pensato per
+ * la carta prendeva per muro mezzo pavimento (il parquet e' scuro quanto la
+ * «carta» di una foto in ombra), le finestre per porte, e le facce di lato
+ * per stanzine larghe un palmo.
+ *
+ * Qui il render si riporta a una pianta come quelle che il riconoscimento
+ * conosce gia':
+ *
+ *   1. il fondo: quello che tocca il bordo dell'immagine ed e' uniforme
+ *      (il nero della schermata, il riquadro bianco) se ne va, e la foto si
+ *      ritaglia attorno alla casa;
+ *   2. e' un render se i pavimenti hanno colore (il parquet, il cotto, le
+ *      stanze colorate): una pianta a righe fotografata e' quasi grigia;
+ *   3. i muri sono la classe scura che c'e' di piu' fra le cose spesse — le
+ *      cime dei muri, tutte alla stessa altezza e dello stesso grigio. Il
+ *      resto del chiaro (pavimenti, facce di lato, davanzali, ombre leggere)
+ *      diventa carta: le facce di lato diventano pavimento della stanza
+ *      accanto, che e' quello che sono nella pianta;
+ *   4. le finestre: nei render il telaio e' piu' scuro dei muri (nero); dove
+ *      c'e' quel nero c'e' il vetro, e il varco e' una finestra, non una
+ *      porta.
+ *
+ * La pianta pulita esce colorata in tre: muro grigio scuro, vetro giallo
+ * (chiaro per chi guarda la luminosita', riconoscibile per chi lo cerca),
+ * carta bianca.
+ */
+
+/** Lo spessore dei muri di fuori in un render, in metri: disegnati al loro
+ * spessore vero, senza il contorno delle piante dell'architetto (42 cm). */
+export const SPESSORE_DEL_RENDER = 0.3;
+
+/** Il grigio del muro nella pianta pulita. */
+export const MURO_PULITO = [40, 40, 40];
+/** Il vetro delle finestre nella pianta pulita. */
+export const VETRO_PULITO = [255, 255, 0];
+/** La carta della pianta pulita. */
+export const CARTA_PULITA = [250, 250, 250];
+
+const luce = (d, i) => 0.3 * d[i * 4] + 0.59 * d[i * 4 + 1] + 0.11 * d[i * 4 + 2];
+const colore = (d, i) =>
+  Math.max(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]) - Math.min(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]);
+
+/**
+ * Il fondo uniforme che tocca il bordo del riquadro `r` (tutta l'immagine se
+ * manca): una mappa (1 = fondo) con la sua luce, o `null` se il bordo non e'
+ * uniforme (una foto del foglio sul tavolo di legno, una pianta che arriva
+ * fino al bordo).
+ *
+ * Si allarga a passi piccoli (uno sfumato, come l'ombra sotto un riquadro, ci
+ * sta) ma senza allontanarsi troppo dalla luce del bordo, e senza colore.
+ */
+export function fondoDelBordo(im, r = null) {
+  const { width: w, height: h, data } = im;
+  const x0 = r ? r.x0 : 0,
+    y0 = r ? r.y0 : 0,
+    x1 = r ? r.x1 : w,
+    y1 = r ? r.y1 : h;
+  if (x1 - x0 < 8 || y1 - y0 < 8) return null;
+  const bordo = [];
+  for (let x = x0; x < x1; x++) bordo.push(y0 * w + x, (y1 - 1) * w + x);
+  for (let y = y0 + 1; y < y1 - 1; y++) bordo.push(y * w + x0, y * w + x1 - 1);
+  const luci = bordo.map((i) => luce(data, i)).sort((a, b) => a - b);
+  const seme = luci[luci.length >> 1];
+  const vicini = luci.filter((v) => Math.abs(v - seme) <= 30).length;
+  if (vicini < luci.length * 0.85) return null;
+  const fondo = new Uint8Array(w * h),
+    pila = [];
+  const buono = (i) => Math.abs(luce(data, i) - seme) <= 45 && colore(data, i) <= 40;
+  for (const i of bordo)
+    if (!fondo[i] && buono(i) && Math.abs(luce(data, i) - seme) <= 30) {
+      fondo[i] = 1;
+      pila.push(i);
+    }
+  while (pila.length) {
+    const i = pila.pop(),
+      x = i % w,
+      y = (i - x) / w,
+      v = luce(data, i);
+    for (const j of [
+      x > x0 ? i - 1 : -1,
+      x < x1 - 1 ? i + 1 : -1,
+      y > y0 ? i - w : -1,
+      y < y1 - 1 ? i + w : -1,
+    ])
+      if (j >= 0 && !fondo[j] && buono(j) && Math.abs(luce(data, j) - v) <= 8) {
+        fondo[j] = 1;
+        pila.push(j);
+      }
+  }
+  return { fondo, luce: seme };
+}
+
+/* Il riquadro di quello che non e' fondo, dentro r. I pezzetti attaccati al
+ * bordo non contano: sono l'orlo sfumato del fondo di prima (gli angoli tondi
+ * del riquadro bianco), non la casa. */
+function contenuto(w, r, fondo) {
+  const piccolo = (r.x1 - r.x0) * (r.y1 - r.y0) * 0.01,
+    via = new Uint8Array(fondo.length);
+  const dentro = (i) => {
+    const x = i % w,
+      y = (i - x) / w;
+    return x >= r.x0 && x < r.x1 && y >= r.y0 && y < r.y1;
+  };
+  const bordo = [];
+  for (let x = r.x0; x < r.x1; x++) bordo.push(r.y0 * w + x, (r.y1 - 1) * w + x);
+  for (let y = r.y0; y < r.y1; y++) bordo.push(y * w + r.x0, y * w + r.x1 - 1);
+  for (const s of bordo) {
+    if (fondo[s] || via[s]) continue;
+    const pezzo = [s];
+    via[s] = 1;
+    for (let t = 0; t < pezzo.length && pezzo.length <= piccolo; t++) {
+      const i = pezzo[t];
+      for (const j of [i - 1, i + 1, i - w, i + w])
+        if (j >= 0 && j < fondo.length && !fondo[j] && !via[j] && dentro(j)) {
+          via[j] = 1;
+          pezzo.push(j);
+        }
+    }
+    /* un pezzo grande attaccato al bordo e' la casa che ci arriva: resta */
+    if (pezzo.length > piccolo) for (const i of pezzo) via[i] = 2;
+  }
+  let a = r.x1,
+    b = r.y1,
+    c = r.x0 - 1,
+    d = r.y0 - 1;
+  for (let y = r.y0; y < r.y1; y++)
+    for (let x = r.x0; x < r.x1; x++) {
+      const i = y * w + x;
+      if (!fondo[i] && via[i] !== 1) {
+        if (x < a) a = x;
+        if (x > c) c = x;
+        if (y < b) b = y;
+        if (y > d) d = y;
+      }
+    }
+  return c < a ? null : { x0: a, y0: b, x1: c + 1, y1: d + 1 };
+}
+
+/**
+ * Dove ritagliare la foto: attorno a quello che resta togliendo, uno dopo
+ * l'altro, i fondi uniformi attaccati al bordo (il nero della schermata, poi
+ * il riquadro bianco con gli angoli tondi). Con un margine, perche' i muri di
+ * fuori non tocchino il bordo.
+ *
+ * Torna `{ x0, y0, x1, y1, scuro }` in pixel (`scuro`: almeno uno dei fondi
+ * tolti era scuro, cioe' non era carta) oppure `null` se non c'e' niente da
+ * togliere.
+ */
+export function ritaglioDellaFoto(im) {
+  const { width: w, height: h } = im;
+  let r = { x0: 0, y0: 0, x1: w, y1: h },
+    scuro = false,
+    tolto = false;
+  const tutti = new Uint8Array(w * h);
+  for (let giro = 0; giro < 3; giro++) {
+    /* Il bordo di un fondo tolto e' sfumato (il riquadro disegnato col bordo
+     * morbido): il fondo dopo si guarda qualche pixel piu' in dentro. */
+    const k = giro ? Math.max(2, Math.round(Math.max(w, h) * 0.004)) : 0,
+      dentro = { x0: r.x0 + k, y0: r.y0 + k, x1: r.x1 - k, y1: r.y1 - k };
+    const f = fondoDelBordo(im, dentro);
+    if (!f) break;
+    /* i fondi di prima restano fondo (gli angoli tondi del riquadro, neri) */
+    for (let i = 0; i < tutti.length; i++) if (f.fondo[i]) tutti[i] = 1;
+    const c = contenuto(w, dentro, tutti);
+    if (!c) break;
+    const area = (q) => (q.x1 - q.x0) * (q.y1 - q.y0);
+    /* troppo poco da togliere, o quasi tutto (allora il «fondo» era altro) */
+    if (area(c) > area(r) * 0.95 || area(c) < area(r) * 0.04) break;
+    if (f.luce < 130) scuro = true;
+    tolto = true;
+    r = c;
+  }
+  if (!tolto) return null;
+  /* un margine, preso da quello che si e' tolto */
+  const m = Math.round(Math.max(r.x1 - r.x0, r.y1 - r.y0) * 0.04) + 2;
+  return {
+    x0: Math.max(0, r.x0 - m),
+    y0: Math.max(0, r.y0 - m),
+    x1: Math.min(w, r.x1 + m),
+    y1: Math.min(h, r.y1 + m),
+    scuro,
+  };
+}
+
+/* La soglia di Otsu di un istogramma a 256 valori. */
+function otsu(ist) {
+  let n = 0,
+    s = 0;
+  for (let v = 0; v < 256; v++) {
+    n += ist[v];
+    s += v * ist[v];
+  }
+  let nb = 0,
+    sb = 0,
+    meglio = 0,
+    soglia = 128;
+  for (let v = 0; v < 256; v++) {
+    nb += ist[v];
+    sb += v * ist[v];
+    const nf = n - nb;
+    if (!nb || !nf) continue;
+    const mb = sb / nb,
+      mf = (s - sb) / nf,
+      t = nb * nf * (mb - mf) ** 2;
+    if (t > meglio) {
+      meglio = t;
+      soglia = v + 1;
+    }
+  }
+  return soglia;
+}
+
+/**
+ * Se l'immagine e' un render della pianta (o una pianta coi pavimenti
+ * colorati), la pianta pulita: muri, vetri e carta (vedi in cima). Se e' una
+ * pianta a righe, `null`: per lei va bene la strada di sempre.
+ *
+ * Torna `{ im, muro, soglia, vetri }`: l'immagine pulita, il grigio dei muri
+ * trovato, la soglia fra scuro e chiaro, e quanti pixel di vetro.
+ */
+export function leggiIlRender(im) {
+  const { width: w, height: h, data } = im,
+    N = w * h;
+  const fondo = fondoDelBordo(im)?.fondo || new Uint8Array(N);
+  const g = new Uint8Array(N);
+  let dentro = 0,
+    colorati = 0;
+  const ist = new Float64Array(256);
+  for (let i = 0; i < N; i++) {
+    g[i] = Math.round(luce(data, i));
+    if (fondo[i]) continue;
+    dentro++;
+    ist[g[i]]++;
+    if (g[i] >= 60 && colore(data, i) >= 40) colorati++;
+  }
+  /* Una pianta a righe (anche fotografata gialla sotto la lampada) ha poco
+   * colore vero: il parquet, il cotto, le stanze campite si', e tanto. */
+  if (dentro < 1000 || colorati < dentro * 0.12) return null;
+  const T = otsu(ist);
+  /* Le cime dei muri: lo scuro spesso, cioe' scuro con tutto attorno scuro
+   * (un quadrato di 5 pixel). Il loro grigio piu' comune e' il muro. */
+  const scuro = new Uint8Array(N);
+  for (let i = 0; i < N; i++) scuro[i] = !fondo[i] && g[i] < T ? 1 : 0;
+  const spessi = new Float64Array(256);
+  for (let y = 2; y < h - 2; y++)
+    for (let x = 2; x < w - 2; x++) {
+      const i = y * w + x;
+      if (!scuro[i]) continue;
+      let tutto = true;
+      for (let dy = -2; dy <= 2 && tutto; dy++)
+        for (let dx = -2; dx <= 2; dx++)
+          if (!scuro[i + dy * w + dx]) {
+            tutto = false;
+            break;
+          }
+      if (tutto) spessi[g[i]]++;
+    }
+  let m = -1,
+    alto = 0;
+  for (let v = 0; v < T; v++) {
+    let s = 0;
+    for (let d = -3; d <= 3; d++) s += spessi[v + d] || 0;
+    if (s > alto) {
+      alto = s;
+      m = v;
+    }
+  }
+  if (m < 0) return null;
+  /* Il colore del muro: le cime sono di un grigio solo. Il parquet o le
+   * piastrelle in ombra, vicino ai muri, sono scuri quasi uguale ma hanno il
+   * loro colore, e non sono muro. */
+  const tinte = new Float64Array(256);
+  for (let i = 0; i < N; i++) if (scuro[i] && Math.abs(g[i] - m) <= 6) tinte[colore(data, i)]++;
+  let tinta = 0;
+  {
+    let tot = 0,
+      acc = 0;
+    for (let v = 0; v < 256; v++) tot += tinte[v];
+    for (let v = 0; v < 256; v++) {
+      acc += tinte[v];
+      if (acc >= tot * 0.9) {
+        tinta = v;
+        break;
+      }
+    }
+  }
+  /* Piu' scuro del muro di un bel po': il telaio delle finestre. Se i muri
+   * sono gia' neri, di piu' scuro non c'e' niente, e va bene cosi'. Piu'
+   * chiaro di un po': l'orlo sfumato del muro, ma non l'ombra sul pavimento. */
+  const sotto = Math.max(15, Math.min(35, Math.round((T - m) * 0.5))),
+    sopra = Math.max(20, Math.min(45, Math.round((T - m) * 0.6)));
+  const classe = new Uint8Array(N); // 1 muro, 2 vetro
+  for (let i = 0; i < N; i++) {
+    if (fondo[i] || g[i] >= T) continue;
+    if (g[i] < m - sotto && colore(data, i) <= tinta + 30) classe[i] = 2;
+    else if (g[i] <= m + sopra && colore(data, i) <= tinta + 20) classe[i] = 1;
+  }
+  /* I muri hanno uno spessore: i tramezzi la meta', non meno. Una riga di
+   * qualche pixel dello stesso grigio (l'ombra dove la casa tocca terra, il
+   * filo di un parapetto, una quota) non e' un muro. */
+  const spessore = spessoreDeiMuri(classe, w, h);
+  const r = Math.max(1, Math.floor(spessore / 5));
+  const muro = new Uint8Array(N);
+  for (let i = 0; i < N; i++) muro[i] = classe[i] === 1 ? 1 : 0;
+  const aperto = allarga(stringi(muro, w, h, r), w, h, r);
+  const out = new Uint8ClampedArray(N * 4);
+  let vetri = 0;
+  for (let i = 0; i < N; i++) {
+    let c = CARTA_PULITA;
+    if (classe[i] === 2) {
+      c = VETRO_PULITO;
+      vetri++;
+    } else if (aperto[i]) c = MURO_PULITO;
+    out[i * 4] = c[0];
+    out[i * 4 + 1] = c[1];
+    out[i * 4 + 2] = c[2];
+    out[i * 4 + 3] = 255;
+  }
+  return { im: { width: w, height: h, data: out }, muro: m, soglia: T, vetri, spessore };
+}
+
+/* Lo spessore dei muri in pixel: la corsa piena piu' comune, in orizzontale e
+ * in verticale, fra quelle di almeno 8 pixel. Un muro lungo L e spesso s fa
+ * L corse lunghe s di traverso e solo s corse lunghe L per il lungo: la piu'
+ * comune e' lo spessore (dei tramezzi, se di tramezzi ce n'e' di piu'). */
+function spessoreDeiMuri(classe, w, h) {
+  const conta = new Float64Array(512);
+  const corse = (n, m, at) => {
+    for (let a = 0; a < n; a += 2) {
+      let b = 0;
+      while (b < m) {
+        if (classe[at(a, b)] !== 1) {
+          b++;
+          continue;
+        }
+        let e = b;
+        while (e < m && classe[at(a, e)] === 1) e++;
+        if (e - b < 510) conta[e - b]++;
+        b = e;
+      }
+    }
+  };
+  corse(h, w, (a, b) => a * w + b);
+  corse(w, h, (a, b) => b * w + a);
+  let meglio = 0,
+    alto = 0;
+  for (let L = 8; L < 509; L++) {
+    const v = conta[L - 1] + conta[L] + conta[L + 1];
+    if (v > alto) {
+      alto = v;
+      meglio = L;
+    }
+  }
+  return meglio || 8;
+}
+
+/**
+ * Dalla pianta pulita (anche girata e raddrizzata, coi grigi di mezzo) le due
+ * mappe che servono ai muri pieni: `ink` i muri, `linee` il vetro.
+ */
+export function mappeDelRender(im) {
+  const { width: w, height: h, data } = im,
+    N = w * h;
+  const ink = new Uint8Array(N),
+    linee = new Uint8Array(N);
+  for (let i = 0; i < N; i++) {
+    const r = data[i * 4],
+      b = data[i * 4 + 2];
+    if (r < 145) ink[i] = 1;
+    else if (b < 125) linee[i] = 1;
+  }
+  return { ink, linee };
 }

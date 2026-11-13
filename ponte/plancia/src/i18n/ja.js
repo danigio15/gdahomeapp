@@ -7773,6 +7773,7 @@ export default Object.freeze({
   "The standings": "順位表",
   "Only while something is on": "何かがオンのときだけ",
   "Only while one is running": "どれかが動作中のときだけ",
+  "Only while on battery or alerting": "バッテリー駆動中または警告があるときだけ",
   "Browse the library": "ライブラリを見る",
   "This player's playlists, artists and stations": "このプレーヤーのプレイリスト、アーティスト、ステーション",
   "This player cannot search.": "このプレーヤーは検索できません。",
@@ -8202,4 +8203,5 @@ export default Object.freeze({
   "Systolic": "収縮期",
   "These sensors keep no history in Home Assistant.": "これらのセンサーは Home Assistant に履歴を保存しません。",
   "This sensor keeps no history in Home Assistant.": "このセンサーは Home Assistant に履歴を保存しません。",
+  "Tap opens the section": "タップでセクションを開く",
 });

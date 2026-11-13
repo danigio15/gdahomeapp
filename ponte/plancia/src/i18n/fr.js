@@ -7851,6 +7851,7 @@ export default Object.freeze({
   "The standings": "Les classements",
   "Only while something is on": "Seulement quand quelque chose est allumé",
   "Only while one is running": "Seulement quand l'un d'eux fonctionne",
+  "Only while on battery or alerting": "Seulement sur batterie ou en cas d'alerte",
   "Browse the library": "Parcourir la bibliothèque",
   "This player's playlists, artists and stations": "Les playlists, artistes et stations de ce lecteur",
   "This player cannot search.": "Ce lecteur ne sait pas chercher.",
@@ -8280,4 +8281,5 @@ export default Object.freeze({
   "Systolic": "Systolique",
   "These sensors keep no history in Home Assistant.": "Ces capteurs ne gardent pas d’historique dans Home Assistant.",
   "This sensor keeps no history in Home Assistant.": "Ce capteur ne garde pas d’historique dans Home Assistant.",
+  "Tap opens the section": "Le toucher ouvre la section",
 });

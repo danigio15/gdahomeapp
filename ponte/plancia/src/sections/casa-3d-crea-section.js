@@ -50,11 +50,14 @@ import {
 } from "../core/crea-casa.js";
 import {
   PASSO,
+  SPESSORE_DEL_RENDER,
   grigliaDallaFoto,
   inchiostro,
+  leggiIlRender,
   prospettiva,
   raddrizza,
   riconosciDaFoto,
+  ritaglioDellaFoto,
   scalaDaiMuri,
   scalaScritta,
   stimaInclinazione,
@@ -184,6 +187,8 @@ function statoNuovo(salvata, livello = 0) {
     livello,
     img: null,
     dritta: null,
+    pulita: null,
+    render: false,
     angolo: 0,
     punti: [],
     metri: null,
@@ -1605,6 +1610,8 @@ function esciDalleFoto() {
     Object.assign(S, {
       img: null,
       dritta: null,
+      pulita: null,
+      render: false,
       griglia: null,
       casa: null,
       mpp: null,
@@ -1937,6 +1944,8 @@ function creaLaPiantaDalleFoto() {
     passo: P.muri,
     img: tela,
     dritta: tela,
+    pulita: null,
+    render: false,
     disegno: true,
     pianoDaFoto: false,
     prospettiva: false,
@@ -2146,67 +2155,126 @@ async function usaPlanimetria(src) {
   await new Promise((ok) => setTimeout(ok, 30));
   try {
     let img = typeof src === "string" ? await immagine(src) : src;
+    const originale = img;
     /* Il lato lungo a 2400 pixel: una foto enorme si rimpicciolisce, e una
      * pianta piccola (il PNG esportato dal CAD a 1200 pixel) si ingrandisce,
      * perche' con meno di due pixel per cella da 3 cm le righe sottili, gli
      * archi delle porte e il vetro delle finestre si perdono, e la stessa
      * pianta veniva diversa da quella provata. */
-    const lato = Math.max(img.width, img.height);
-    if (lato !== 2400 && typeof src === "string") {
-      const k = 2400 / lato,
-        c = tela2d(Math.round(img.width * k), Math.round(img.height * k));
+    const a2400 = (sorgente, x0 = 0, y0 = 0, w = sorgente.width, h = sorgente.height) => {
+      const k = 2400 / Math.max(w, h),
+        c = tela2d(Math.round(w * k), Math.round(h * k));
       const q = c.getContext("2d");
       q.imageSmoothingEnabled = true;
       q.imageSmoothingQuality = "high";
-      q.drawImage(img, 0, 0, c.width, c.height);
-      img = c;
-    } else if (lato > 2400) {
+      q.drawImage(sorgente, x0, y0, w, h, 0, 0, c.width, c.height);
+      return c;
+    };
+    const lato = Math.max(img.width, img.height);
+    if (lato !== 2400 && typeof src === "string") img = a2400(img);
+    else if (lato > 2400) {
       const k = 2400 / lato,
         c = tela2d(Math.round(img.width * k), Math.round(img.height * k));
       c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
       img = c;
     }
+    const datiDi = (tela) => {
+      const c = tela.getContext ? tela : tela2d(tela.width, tela.height);
+      if (c !== tela) c.getContext("2d").drawImage(tela, 0, 0);
+      return c.getContext("2d").getImageData(0, 0, c.width, c.height);
+    };
+    /* La pianta in 3D (il render dei programmi d'arredo, la schermata col
+     * fondo nero): via il fondo e la cornice, e se e' un render la pianta
+     * pulita — solo muri e vetri — per riconoscere; quella vera resta da
+     * guardare (leggiIlRender in pianta-da-foto.js). Una pianta a righe su carta bianca si
+     * lascia com'e'. */
+    let render = null;
+    if (typeof src === "string") {
+      try {
+        const dati = datiDi(img),
+          rq = ritaglioDellaFoto(dati);
+        if (rq) {
+          const k = originale.width / img.width,
+            ritagliata = a2400(
+              originale,
+              rq.x0 * k,
+              rq.y0 * k,
+              (rq.x1 - rq.x0) * k,
+              (rq.y1 - rq.y0) * k,
+            );
+          render = leggiIlRender(datiDi(ritagliata));
+          if (render || rq.scuro) img = ritagliata;
+        } else render = leggiIlRender(dati);
+      } catch (errore) {
+        root.console?.warn?.("[DashboardModern] Casa 3D: render", errore);
+        render = null;
+      }
+    }
     const c0 = tela2d(img.width, img.height),
       q = c0.getContext("2d");
     q.drawImage(img, 0, 0);
+    let p0 = null;
+    if (render) {
+      p0 = tela2d(img.width, img.height);
+      p0.getContext("2d").putImageData(
+        new ImageData(render.im.data, render.im.width, render.im.height),
+        0,
+        0,
+      );
+    }
     /* Un disegno (DWG, «Disegnala qui») e' gia' dritto: si raddrizzano solo
      * le foto. */
     S.angolo =
-      typeof src === "string" ? stimaInclinazione(q.getImageData(0, 0, c0.width, c0.height)) : 0;
-    const d = tela2d(img.width, img.height),
-      r = d.getContext("2d");
-    r.fillStyle = "#3b3a37";
-    r.fillRect(0, 0, d.width, d.height);
-    r.translate(d.width / 2, d.height / 2);
-    r.rotate((S.angolo * Math.PI) / 180);
-    r.drawImage(img, -img.width / 2, -img.height / 2);
+      typeof src === "string"
+        ? stimaInclinazione(render ? render.im : q.getImageData(0, 0, c0.width, c0.height))
+        : 0;
+    const girata = (sorgente, fondo) => {
+      const d = tela2d(img.width, img.height),
+        r = d.getContext("2d");
+      r.fillStyle = fondo;
+      r.fillRect(0, 0, d.width, d.height);
+      r.translate(d.width / 2, d.height / 2);
+      r.rotate((S.angolo * Math.PI) / 180);
+      r.drawImage(sorgente, -img.width / 2, -img.height / 2);
+      return d;
+    };
+    const d = girata(img, "#3b3a37"),
+      dp = p0 ? girata(p0, "#fafafa") : null;
     /* Il foglio fotografato di sbieco: i muri si raddrizzano anche in
-     * prospettiva, non solo girando la foto. */
-    let dritta = d;
+     * prospettiva, non solo girando la foto. Per un render la prospettiva si
+     * cerca sui muri puliti: il parquet e la cornice non la confondono. */
+    let dritta = d,
+      pulita = dp;
     S.prospettiva = false;
     S.pianoDaFoto = typeof src === "string";
     if (typeof src === "string") {
-      const dati = r.getImageData(0, 0, d.width, d.height),
-        p = prospettiva(dati);
+      const dati = d.getContext("2d").getImageData(0, 0, d.width, d.height),
+        datiP = dp ? dp.getContext("2d").getImageData(0, 0, dp.width, dp.height) : null,
+        p = prospettiva(datiP || dati);
       if (p && p.sposta > Math.max(d.width, d.height) * 0.01) {
-        const nuova = raddrizza(dati, p),
-          t2 = tela2d(nuova.width, nuova.height);
-        t2.getContext("2d").putImageData(
-          new ImageData(nuova.data, nuova.width, nuova.height),
-          0,
-          0,
-        );
-        dritta = t2;
+        const inTela = (nuova) => {
+          const t2 = tela2d(nuova.width, nuova.height);
+          t2.getContext("2d").putImageData(
+            new ImageData(nuova.data, nuova.width, nuova.height),
+            0,
+            0,
+          );
+          return t2;
+        };
+        dritta = inTela(raddrizza(dati, p));
+        if (datiP) pulita = inTela(raddrizza(datiP, p, [250, 250, 250]));
         S.prospettiva = true;
       }
     }
-    /* La scala dallo spessore dei muri esterni (~42 cm): basta da sola, e
-     * fa da controllo alla misura scritta a mano. */
+    /* La scala dallo spessore dei muri esterni (~42 cm, ~30 in un render):
+     * basta da sola, e fa da controllo alla misura scritta a mano. */
     let muri = null;
     if (typeof src === "string") {
       try {
+        const base = pulita || dritta;
         muri = scalaDaiMuri(
-          dritta.getContext("2d").getImageData(0, 0, dritta.width, dritta.height),
+          base.getContext("2d").getImageData(0, 0, base.width, base.height),
+          pulita ? { muro: SPESSORE_DEL_RENDER, minimo: 8 } : {},
         );
       } catch {
         muri = null;
@@ -2219,6 +2287,8 @@ async function usaPlanimetria(src) {
       centimetri: false,
       img,
       dritta,
+      pulita,
+      render: Boolean(pulita),
       vetri: null,
       porte: null,
       disegno: false,
@@ -2686,7 +2756,12 @@ function dwgScelta() {
 function riconosci() {
   const S = state.S;
   if (!S.griglia) {
-    const im = S.dritta.getContext("2d").getImageData(0, 0, S.dritta.width, S.dritta.height);
+    /* Un render si riconosce dalla sua pianta pulita (stesse misure). */
+    const base =
+      S.render && S.pulita?.width === S.dritta.width && S.pulita?.height === S.dritta.height
+        ? S.pulita
+        : S.dritta;
+    const im = base.getContext("2d").getImageData(0, 0, base.width, base.height);
     /* le tele a parte del disegno (infissi, porte), come mappe di pixel */
     const mappa = (tela) => {
       if (tela?.width !== im.width || tela.height !== im.height) return null;
@@ -2704,6 +2779,7 @@ function riconosci() {
       porte: mappa(S.porte),
       disegno: S.disegno === true,
       pianoDaFoto: S.pianoDaFoto === true,
+      render: base === S.pulita,
     });
   }
   ricalcola();
@@ -3687,6 +3763,8 @@ function riprendi(dato) {
     passo: P.muri,
     img: tela,
     dritta: tela,
+    pulita: null,
+    render: false,
     disegno: true,
     mpp: PASSO,
     punti: [

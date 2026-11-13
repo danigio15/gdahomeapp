@@ -7803,6 +7803,7 @@ export default Object.freeze({
   "The standings": "As classificações",
   "Only while something is on": "Só quando algo está ligado",
   "Only while one is running": "Só quando um está a funcionar",
+  "Only while on battery or alerting": "Só quando está a bateria ou há um aviso",
   "Browse the library": "Explorar a biblioteca",
   "This player's playlists, artists and stations": "As playlists, os artistas e as estações deste leitor",
   "This player cannot search.": "Este leitor não sabe pesquisar.",
@@ -8232,4 +8233,5 @@ export default Object.freeze({
   "Systolic": "Sistólica",
   "These sensors keep no history in Home Assistant.": "Estes sensores não guardam histórico no Home Assistant.",
   "This sensor keeps no history in Home Assistant.": "Este sensor não guarda histórico no Home Assistant.",
+  "Tap opens the section": "Tocar abre a secção",
 });
