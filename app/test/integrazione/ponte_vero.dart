@@ -110,6 +110,9 @@ class PonteVero {
          * appena si accende: al banco bussa a una porta chiusa di questa
          * macchina, e mai al quadro vero. */
         'PONTE_QUADRO_DOVE': 'http://127.0.0.1:9',
+        /* Al banco si prova la strada, non la licenza: senza chiave il
+         * ponte non si limita, e la casa entra anche da fuori. */
+        'PONTE_CHIAVE_LICENZE': '',
       },
     );
 
