@@ -10,6 +10,46 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.19.0
+
+_App GdAHome e add-on._
+
+**Nell'app, il navigatore:**
+
+- **Zoom agli incroci**: arrivando a una svolta la mappa si avvicina, e in
+  marcia in città si allarga un poco, senza andare troppo lontano.
+- **La riga del viaggio in auto** non si taglia più nello schermo diviso, e
+  i km dell'auto sono quelli che resteranno all'arrivo.
+- **Meno calore e meno scatti**: il 3D si ferma quando il navigatore è
+  nascosto dietro un'altra sezione di GdAHome, e lo schermo non resta acceso
+  per lui; il passaggio fra giorno e notte non ricarica più tutta la scena;
+  il percorso non si ridisegna tutto ogni pochi secondi; il telefono che non
+  regge i 60 fotogrammi resta a 30; la memoria non cresce più nei viaggi
+  lunghi.
+- **I nomi sui ponti di notte** hanno i colori della notte.
+- **Gli avvisi del navigatore** («3D aumentato non è disponibile…») restano
+  nel navigatore, e non compaiono più sulle altre sezioni.
+- Dopo un ricalcolo la freccia è quella giusta, e «Prendila» non fa perdere
+  la linea del percorso; il traffico si conta una volta sola.
+- Le segnalazioni mandano una posizione arrotondata.
+
+**Nell'app:**
+
+- **Il pannello a muro** svegliato dal campanello non resta più sopra la
+  schermata di blocco: ci sta per lo squillo, e poi se ne va.
+- **Le ricette dell'orologio e dell'auto** non accettano più serrature e
+  antifurto.
+- **I tasti delle notifiche**, con il lucchetto dell'app attivo, partono solo
+  dopo il riconoscimento.
+
+**Nell'add-on:**
+
+- **Le telecamere riservate** restano chiuse anche fra i media di Home
+  Assistant e nelle risposte che li riportano.
+- Il link «Note» di un aggiornamento nella plancia apre solo pagine web.
+- Un tetto alle foto caricate e al codice del pannello a muro provato di
+  seguito.
+
 ## 1.18.26
 
 _App GdAHome._
