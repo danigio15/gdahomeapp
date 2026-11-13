@@ -16,6 +16,8 @@
   &nbsp;·&nbsp;
   <a href="#metterla-in-casa"><b>Come si installa</b></a>
   &nbsp;·&nbsp;
+  <a href="docs/MANUALE.md"><b>Manuale d'uso</b></a>
+  &nbsp;·&nbsp;
   <a href="#quanto-costa"><b>Prezzi</b></a>
   &nbsp;·&nbsp;
   <a href="#per-chi-installa"><b>Per chi installa</b></a>
