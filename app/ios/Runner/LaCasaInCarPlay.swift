@@ -171,6 +171,28 @@ enum LaCasaInCarPlay {
     return scritto
   }
 
+  /// Chiede al Dart com'e' la casa adesso, per l'orologio: lo stato dei
+  /// dispositivi della fotografia, da Home Assistant, e la fotografia
+  /// corretta (`guardaLaCasaPerIlPolso` in `lib/auto/in_auto.dart`). Lo
+  /// stesso colpetto del comando, con «stato» accanto. `finito` riceve
+  /// com'e' andata, o `nil` se il Dart non c'e'.
+  static func guardaLoStato(finito: @escaping (String?) -> Void) {
+    guard let guarda else { return finito(nil) }
+    guarda.invokeMethod("guarda", arguments: "stato") { risultato in
+      finito(risultato as? String)
+    }
+  }
+
+  /// Quando il Dart ha scritto la fotografia l'ultima volta, in millisecondi
+  /// (0 se non si sa): vedi `agg` in `LOrologio.fotografia`.
+  static func quandoEScrittaLaFoto() -> Int64 {
+    guard let url = cartella?.appendingPathComponent("gdahome-auto.json"),
+      let attributi = try? FileManager.default.attributesOfItem(atPath: url.path),
+      let data = attributi[.modificationDate] as? Date
+    else { return 0 }
+    return Int64(data.timeIntervalSince1970 * 1000)
+  }
+
   /// Una serratura chiede prima conferma: un tocco sbagliato guidando non
   /// deve aprire la porta di casa.
   private static func premiIlComando(_ c: Comando, _ controllore: CPInterfaceController?) {

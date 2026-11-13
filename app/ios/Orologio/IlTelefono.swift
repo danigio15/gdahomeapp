@@ -36,10 +36,26 @@ final class IlTelefono: NSObject, ObservableObject {
   private var attese: [String: (acceso: Bool, fino: Date)] = [:]
 
   /// Per quanto si crede alla riga girata al tocco, se il telefono non la
-  /// conferma: il tempo che il telefono si da' per sentire lo stato nuovo
-  /// dalla casa (`quantoSiAspettaLoStato` in `lib/auto/in_auto.dart`), e un
-  /// po'.
-  private let quantoSiCredeAlTocco: TimeInterval = 12
+  /// conferma: il tempo dei tre sguardi qui sotto, e un po'. Poi vale quello
+  /// che dice la casa.
+  private let quantoSiCredeAlTocco: TimeInterval = 15
+
+  /// A comando andato, quando si chiede al telefono com'e' la casa adesso
+  /// (`guardaLaCasaPerIlPolso` in `lib/auto/in_auto.dart`): finche' la riga
+  /// toccata non dice lo stato atteso.
+  private let sguardiDopoIlComando: [TimeInterval] = [2.5, 6, 11]
+
+  /// Ogni quanto, mentre GdAHome e' davanti al polso, si chiede com'e' la
+  /// casa: una luce accesa dal muro si vede senza toccare niente. Lo schermo
+  /// resta acceso pochi secondi, e quando si abbassa il polso si smette.
+  private let ogniQuantoSiGuarda: TimeInterval = 20
+
+  /// Una fotografia scritta prima di quella che si ha non la sostituisce, se
+  /// la differenza e' piccola; oltre, l'ora del telefono e' stata spostata.
+  private let quantoIndietroSiCrede: Double = 5 * 60 * 1000
+
+  /// Il giro dello sguardo periodico, mentre l'app e' davanti.
+  private var ilGiro: Task<Void, Never>?
 
   func accendi() {
     /* La vetrina (`Vetrina.swift`): la casa d'esempio, e nessun filo. */
@@ -60,6 +76,37 @@ final class IlTelefono: NSObject, ObservableObject {
       let testo = risposta["foto"] as? String
       Task { @MainActor in self?.prendi(testo) }
     } errorHandler: { _ in }
+  }
+
+  /// Chiede al telefono com'e' la casa adesso: il telefono lo chiede a Home
+  /// Assistant, corregge la fotografia e la manda indietro. Zitto: cambia
+  /// solo la riga. Un telefono con GdAHome di prima non lo sa fare: allora
+  /// almeno la fotografia che ha.
+  func guarda() {
+    guard Vetrina.schermata == nil else { return }
+    guard WCSession.default.activationState == .activated, WCSession.default.isReachable else { return }
+    WCSession.default.sendMessage(["cosa": "stato"]) { [weak self] risposta in
+      let testo = risposta["foto"] as? String
+      Task { @MainActor in
+        if testo == nil { self?.aggiorna() } else { self?.prendi(testo) }
+      }
+    } errorHandler: { _ in }
+  }
+
+  /// L'app al polso davanti o no: davanti si guarda subito e poi ogni
+  /// `ogniQuantoSiGuarda`; dietro si smette, per la batteria.
+  func davanti(_ si: Bool) {
+    ilGiro?.cancel()
+    ilGiro = nil
+    guard si, Vetrina.schermata == nil else { return }
+    let ogni = UInt64(ogniQuantoSiGuarda * 1_000_000_000)
+    ilGiro = Task { @MainActor [weak self] in
+      try? await Task.sleep(nanoseconds: 600_000_000)
+      while !Task.isCancelled {
+        self?.guarda()
+        try? await Task.sleep(nanoseconds: ogni)
+      }
+    }
   }
 
   func premi(_ id: String) { manda(["cosa": "comando", "id": id], comando: id) }
@@ -131,12 +178,18 @@ final class IlTelefono: NSObject, ObservableObject {
     if let foto { prendi(foto) }
     /* Il colpetto del tocco c'e' gia' stato: qui si sente solo il no. */
     dici(testo, bene: bene, colpetto: !(bene && eUnComando))
-    /* Lo stato nuovo il telefono lo manda da se' quando la casa lo dice; se
-     * per strada si perde, fra poco lo si chiede. */
+    /* Lo stato nuovo il telefono lo manda da se' quando la casa lo dice, ma
+     * non sempre ci riesce (iOS lo sospende, o la luce e' lenta): si chiede
+     * com'e' la casa, piu' volte, finche' la riga toccata non dice lo stato
+     * atteso. Per un'azione, che non ha una riga sua, si guarda due volte. */
     if bene, eUnComando {
-      Task { @MainActor [weak self] in
-        try? await Task.sleep(nanoseconds: 4_000_000_000)
-        self?.aggiorna()
+      for (i, dopo) in sguardiDopoIlComando.enumerated() {
+        Task { @MainActor [weak self] in
+          try? await Task.sleep(nanoseconds: UInt64(dopo * 1_000_000_000))
+          guard let self else { return }
+          let attende = girata.map { self.attese[$0] != nil } ?? false
+          if attende || (girata == nil && i <= 1) { self.guarda() }
+        }
       }
     }
   }
@@ -192,6 +245,14 @@ final class IlTelefono: NSObject, ObservableObject {
 
   fileprivate func prendi(_ testo: String?) {
     guard let nuova = LaFoto.leggi(testo) else { return }
+    /* «Lista vecchia che vince sulla nuova.» La risposta a un tocco porta la
+     * fotografia letta in quel momento, e puo' arrivare dopo quella corretta
+     * (`updateApplicationContext`): senza questo la riga tornava indietro. */
+    if let prima = vera, nuova.agg > 0, prima.agg > 0, nuova.agg < prima.agg,
+      prima.agg - nuova.agg < quantoIndietroSiCrede
+    {
+      return
+    }
     vera = nuova
     mostra()
   }
@@ -207,6 +268,7 @@ extension IlTelefono: WCSessionDelegate {
     Task { @MainActor [weak self] in
       self?.prendi(testo)
       self?.aggiorna()
+      self?.guarda()
     }
   }
 

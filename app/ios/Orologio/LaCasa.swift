@@ -7,15 +7,24 @@
  */
 import SwiftUI
 
+/* Ogni schermata disegna la fotografia di adesso, `telefono.foto`, e tiene
+ * quella ricevuta solo per quando non ce n'e' una. «Il tasto resta spento»:
+ * «Dispositivi» si apriva con la fotografia del momento in cui la si toccava
+ * (`NavigationLink { Dispositivi(foto: foto) }`), e da li' in poi
+ * ridisegnava quella — la riga girata al tocco e quella corretta dal
+ * telefono cambiavano `telefono.foto`, e lo schermo aperto non le vedeva. */
+
 struct LaCasa: View {
-  let foto: LaFoto
+  private let ricevuta: LaFoto
   @EnvironmentObject private var telefono: IlTelefono
   @State private var daConfermare: Comando?
 
   init(foto: LaFoto, daConfermareSubito: Comando? = nil) {
-    self.foto = foto
+    self.ricevuta = foto
     _daConfermare = State(initialValue: daConfermareSubito)
   }
+
+  private var foto: LaFoto { telefono.foto ?? ricevuta }
 
   var body: some View {
     List {
@@ -73,8 +82,12 @@ struct LaCasa: View {
 }
 
 struct Dispositivi: View {
-  let foto: LaFoto
+  private let ricevuta: LaFoto
   @EnvironmentObject private var telefono: IlTelefono
+
+  init(foto: LaFoto) { self.ricevuta = foto }
+
+  private var foto: LaFoto { telefono.foto ?? ricevuta }
 
   var body: some View {
     List {
@@ -107,8 +120,12 @@ struct Dispositivi: View {
 }
 
 struct Azioni: View {
-  let foto: LaFoto
+  private let ricevuta: LaFoto
   @EnvironmentObject private var telefono: IlTelefono
+
+  init(foto: LaFoto) { self.ricevuta = foto }
+
+  private var foto: LaFoto { telefono.foto ?? ricevuta }
 
   var body: some View {
     List {
@@ -141,7 +158,12 @@ struct Azioni: View {
 }
 
 struct ComeStaLaCasa: View {
-  let foto: LaFoto
+  private let ricevuta: LaFoto
+  @EnvironmentObject private var telefono: IlTelefono
+
+  init(foto: LaFoto) { self.ricevuta = foto }
+
+  private var foto: LaFoto { telefono.foto ?? ricevuta }
 
   var body: some View {
     List {

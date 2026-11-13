@@ -88,7 +88,7 @@ Future<void> inAuto() async {
    * partito. Adesso `IlTramiteDellOrologio.kt` aspetta questa risposta. */
   const canale = MethodChannel(canaleDellAuto);
   canale.setMethodCallHandler(
-    (_) async => (await eseguiIlComandoDellAuto()).name,
+    (chiamata) async => (await _ilColpetto(chiamata.arguments)).name,
   );
   final com = await eseguiIlComandoDellAuto();
   /* Il comando per cui il motore e' stato acceso: nessun colpetto l'ha
@@ -108,8 +108,11 @@ Future<void> inAuto() async {
 /// Watch lo dice al polso, invece di un «Fatto» detto prima che la casa
 /// sentisse (`ios/Runner/LOrologio.swift`).
 void ascoltaIlColpetto({Collegamento Function()? laCasaDellApp}) {
-  const MethodChannel(canaleDellAuto).setMethodCallHandler((_) async {
-    final com = await eseguiIlComandoDellAuto(laCasaDellApp: laCasaDellApp);
+  const MethodChannel(canaleDellAuto).setMethodCallHandler((chiamata) async {
+    final com = await _ilColpetto(
+      chiamata.arguments,
+      laCasaDellApp: laCasaDellApp,
+    );
     return com.name;
   });
   /* Un comando lasciato mentre questo motore partiva: il colpetto e' arrivato
@@ -415,6 +418,136 @@ Future<void> _ilSeguito({
   }
 }
 
+/// Il filo [aperto] in piedi, e gli occhi su [guardate]; `null` se la casa
+/// non si raggiunge. Non solleva per una casa che non risponde: torna `null`
+/// (solo il tempo scaduto passa come [TimeoutException]).
+///
+/// Il filo dell'app che c'era gia' ([condiviso]) va provato prima di
+/// affidargli qualcosa: col telefono in tasca resta «aperto» e non lo e'
+/// piu' (vedi `Filo.sveglia`). Se non da' un cenno lo si rifa' da capo, come
+/// fa l'app quando torna davanti (`main.dart`, `daRifare`), e si riguarda.
+/// Chi chiama non ha ancora mandato niente: non c'e' niente che possa partire
+/// due volte.
+Future<_Sguardo?> _ilFiloEGliOcchi(
+  Collegamento aperto,
+  List<String> guardate, {
+  required bool condiviso,
+}) async {
+  if (!aperto.archivio.aperto) await aperto.archivio.apri();
+  final cEraGia = condiviso && aperto.dentro && !aperto.aRiposo;
+  if (condiviso && aperto.aRiposo) aperto.sveglia();
+  /* Su un filo gia' aperto `apri` non fa niente; su uno che dorme o che si
+   * sta ricollegando lo rimette in piedi. */
+  await aperto.apri().timeout(quantoSiAspettaIlFilo);
+  if (!aperto.dentro || aperto.stato == null) return null;
+  final occhi = _Sguardo.su(aperto, guardate);
+  if (!cEraGia || await occhi.vivo()) return occhi;
+  await occhi.chiudi();
+  await aperto.apri(forza: true).timeout(quantoSiAspettaIlFilo);
+  if (!aperto.dentro || aperto.stato == null) return null;
+  return _Sguardo.su(aperto, guardate);
+}
+
+/// Cosa chiede il telefono quando l'orologio vuole sapere com'e' la casa
+/// adesso: lo stesso colpetto del comando, con questa parola accanto
+/// (`IlPonteDellAuto.kt`, `LaCasaInCarPlay.swift`).
+const String guardaLoStato = 'stato';
+
+/* Uno sguardo alla volta: l'orologio ne chiede uno ogni tanto, e due di fila
+ * sarebbero due fili per la stessa domanda. */
+bool _guardaInCorso = false;
+
+/// Com'e' adesso, per Home Assistant, ogni dispositivo che al polso ha una
+/// riga: si chiede, e la fotografia si corregge.
+///
+/// «Il comando arriva, la luce si accende, ma al polso il tasto resta
+/// spento.» La fotografia la riscrive la plancia, che pero' guarda la casa
+/// solo quando e' aperta sul telefono, e chi esegue un comando, che guarda
+/// solo le entita' di quel comando e per qualche secondo. Una lampadina lenta,
+/// un telefono che il sistema ferma subito dopo la risposta, una luce accesa
+/// dal muro mentre si guarda l'orologio: in tutti questi casi nessuno
+/// riscriveva la riga. Adesso l'orologio, finche' e' acceso e dopo ogni
+/// comando, chiede questo, e la riga dice la verita' di adesso.
+///
+/// Si chiede lo stato di **quelle** entita' e basta (`subscribe_entities`,
+/// come [_Sguardo]), e il filo si chiude appena arrivato. Quello che Home
+/// Assistant non raggiunge (`unavailable`, `unknown`) non si scrive: la riga
+/// resta com'era invece di diventare «spenta».
+Future<ComeEFinitaInAuto> guardaLaCasaPerIlPolso({
+  Collegamento Function()? laCasaDellApp,
+  Collegamento Function()? apriLaCasa,
+  Future<bool> Function()? premium,
+  Future<List<String>> Function()? iDispositivi,
+  Future<List<RicettaDellAzione>> Function()? leRicette,
+  AggiornaLaFoto? aggiornaLaFoto,
+}) async {
+  if (_guardaInCorso || _inCorso) return ComeEFinitaInAuto.niente;
+  _guardaInCorso = true;
+  Collegamento? collegamento;
+  _Sguardo? occhi;
+  void Function()? lascia;
+  final condiviso = laCasaDellApp != null;
+  try {
+    if (!await (premium ?? auto.laLicenzaDellAuto)()) {
+      return ComeEFinitaInAuto.senzaPremium;
+    }
+    final righe = await (iDispositivi ?? auto.iDispositiviDellaFoto)();
+    if (righe.isEmpty) return ComeEFinitaInAuto.niente;
+    /* La riga ha il nome scritto nella tessera; lo stato si chiede a quello
+     * vero, che e' nella sua ricetta (vedi `aggiornaLeRighe` in [_esegui]). */
+    final ricette = await (leRicette ?? auto.leRicetteDelPolso)();
+    final vera = <String, String>{
+      for (final riga in righe)
+        riga: switch (laRicettaDi(riga, ricette)?.leEntita) {
+          [final una] => una,
+          _ => riga,
+        },
+    };
+    final aperto = collegamento =
+        laCasaDellApp?.call() ??
+        apriLaCasa?.call() ??
+        Collegamento(archivio: ArchivioDelleCase(const CassaforteDelSistema()));
+    lascia = aperto.tieniIlFilo();
+    occhi = await _ilFiloEGliOcchi(
+      aperto,
+      vera.values.toSet().toList(),
+      condiviso: condiviso,
+    );
+    if (occhi == null) return ComeEFinitaInAuto.senzaCasa;
+    await occhi.loStatoDiAdesso();
+    if (occhi.cieco) return ComeEFinitaInAuto.niente;
+    const nonSiSa = {'unavailable', 'unknown', ''};
+    await (aggiornaLaFoto ?? auto.aggiornaIDispositiviNellaFoto)({
+      for (final MapEntry(key: riga, value: entita) in vera.entries)
+        if (occhi.adesso(entita) case final stato?
+            when !nonSiSa.contains(stato.trim().toLowerCase()))
+          riga: eAccesoPerLaFoto(stato),
+    });
+    return ComeEFinitaInAuto.fatto;
+  } on TimeoutException {
+    return ComeEFinitaInAuto.senzaCasa;
+  } catch (_) {
+    return ComeEFinitaInAuto.senzaCasa;
+  } finally {
+    await occhi?.chiudi();
+    final aperto = collegamento;
+    if (aperto != null && !condiviso) {
+      await aperto.chiudi().catchError((Object _) {});
+    }
+    lascia?.call();
+    _guardaInCorso = false;
+  }
+}
+
+/// Il colpetto, da chiunque arrivi: [guardaLoStato] vuol dire «com'e' la
+/// casa adesso», tutto il resto «esegui il comando lasciato».
+Future<ComeEFinitaInAuto> _ilColpetto(
+  Object? detto, {
+  Collegamento Function()? laCasaDellApp,
+}) => detto == guardaLoStato
+    ? guardaLaCasaPerIlPolso(laCasaDellApp: laCasaDellApp)
+    : eseguiIlComandoDellAuto(laCasaDellApp: laCasaDellApp);
+
 /// Da dove arriva il colpetto. Lo stesso nome sta in `IlPonteDellAuto.kt`: i
 /// due capi devono restare la stessa parola, perche' sbagliarli non da'
 /// nessun errore — da' un motore acceso che non fa niente.
@@ -533,17 +666,6 @@ Future<ComeEFinitaInAuto> _esegui(
     /* Finche' il comando e' in viaggio il filo non si rifa' da solo per
      * prendere la strada corta: vedi [Collegamento.tieniIlFilo]. */
     lascia = aperto.tieniIlFilo();
-    if (!aperto.archivio.aperto) await aperto.archivio.apri();
-    /* Il filo dell'app che c'era gia' va provato prima di affidargli il
-     * comando; uno appena aperto, qui sotto, e' vivo per forza. */
-    final cEraGia = condiviso && aperto.dentro && !aperto.aRiposo;
-    if (condiviso && aperto.aRiposo) aperto.sveglia();
-    /* Su un filo gia' aperto `apri` non fa niente; su uno che dorme o che si
-     * sta ricollegando lo rimette in piedi. */
-    await aperto.apri().timeout(quantoSiAspettaIlFilo);
-    if (!aperto.dentro || aperto.stato == null) {
-      return ComeEFinitaInAuto.senzaCasa;
-    }
     /* Le entita' del comando. Mai un elenco vuoto: per Home Assistant
      * vorrebbe dire «tutte». */
     final comandate = ricetta.leEntita.isEmpty
@@ -559,20 +681,29 @@ Future<ComeEFinitaInAuto> _esegui(
     }.toList();
     final serveLoStato = ricetta.servizio == secondoLoStato;
 
-    var occhi = sguardo = _Sguardo.su(aperto, guardate);
-    if (cEraGia && !await occhi.vivo()) {
-      /* Il filo dell'app non ha dato un cenno: col telefono in tasca resta
-       * «aperto» e non lo e' piu', e `apri` qui sopra gli ha creduto. Si
-       * rifa' da capo, come fa l'app quando torna davanti (`main.dart`,
-       * `daRifare`), e si riguarda. Il comando non e' ancora partito: non
-       * c'e' niente che possa partire due volte. */
-      await occhi.chiudi();
-      await aperto.apri(forza: true).timeout(quantoSiAspettaIlFilo);
-      if (!aperto.dentro || aperto.stato == null) {
-        return ComeEFinitaInAuto.senzaCasa;
-      }
-      occhi = sguardo = _Sguardo.su(aperto, guardate);
-    }
+    final occhi = sguardo = await _ilFiloEGliOcchi(
+      aperto,
+      guardate,
+      condiviso: condiviso,
+    );
+    if (occhi == null) return ComeEFinitaInAuto.senzaCasa;
+    /* La riga al polso porta il nome dell'entita' com'e' scritto nella
+     * tessera; la ricetta quello vero, quando chi configura l'ha rimappata
+     * (`resolveEntity` della plancia). Lo stato nuovo di quella vera va
+     * scritto anche sulla riga col nome di prima: se no la riga non si
+     * trova, e al polso la luce accesa resta «Spenta». */
+    final rigaDellaRicetta =
+        comandate.length == 1 &&
+            !ricetta.id.contains('|') &&
+            ricetta.id.contains('.') &&
+            ricetta.id != comandate.single
+        ? ricetta.id
+        : null;
+    Future<void> aggiornaLeRighe(Map<String, bool> accesi) => aggiornaLaFoto({
+      ...accesi,
+      if (rigaDellaRicetta != null && accesi[comandate.single] != null)
+        rigaDellaRicetta: accesi[comandate.single]!,
+    });
     final unaSola = comandate.length == 1 ? comandate.single : null;
     StatoDellaCasa? tutta;
     String? prima;
@@ -609,7 +740,7 @@ Future<ComeEFinitaInAuto> _esegui(
      * il seguito. */
     if (!diUnaScena && tutta == null && comandate.every(occhi.ferma)) {
       try {
-        await aggiornaLaFoto({
+        await aggiornaLeRighe({
           for (final id in comandate)
             if (occhi.adesso(id) case final adesso?)
               id: eAccesoPerLaFoto(adesso),
@@ -628,7 +759,7 @@ Future<ComeEFinitaInAuto> _esegui(
       diUnaScena: diUnaScena,
       tutta: tutta,
       prima: prima,
-      aggiornaLaFoto: aggiornaLaFoto,
+      aggiornaLaFoto: aggiornaLeRighe,
       allaFine: chiudiTutto,
     ).whenComplete(() => _seguiti.remove(seguito));
     _seguiti.add(seguito);

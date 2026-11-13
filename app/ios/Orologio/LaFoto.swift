@@ -88,6 +88,9 @@ struct LaFoto {
   var premium = false
   var casa = ""
   var quando: Date?
+  /// Quando il telefono ha scritto questa fotografia, in millisecondi
+  /// (`LOrologio.fotografia`): 0 se non lo dice.
+  var agg: Double = 0
   var comandi: [Comando] = []
   var dispositivi: [Dispositivo] = []
   var azioni: [Azione] = []
@@ -104,6 +107,7 @@ struct LaFoto {
     foto.premium = (json["premium"] as? Bool) == true
     foto.casa = parola(json["casa"])
     if let ms = numero(json["quando"]), ms > 0 { foto.quando = Date(timeIntervalSince1970: ms / 1000) }
+    foto.agg = max(numero(json["agg"]) ?? 0, 0)
     foto.comandi = elenco(json["comandi"]).compactMap { r in
       let id = parola(r["id"])
       let nome = parola(r["nome"])

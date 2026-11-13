@@ -65,6 +65,8 @@ data class LaFoto(
     val premium: Boolean = false,
     val casa: String = "",
     val quando: Long = 0L,
+    /** Quando il telefono ha scritto questa fotografia (`IlTramiteDellOrologio.kt`): 0 se non lo dice. */
+    val agg: Long = 0L,
     val comandi: List<Comando> = emptyList(),
     val dispositivi: List<Dispositivo> = emptyList(),
     val azioni: List<Azione> = emptyList(),
@@ -81,6 +83,7 @@ data class LaFoto(
                 premium = json.optBoolean("premium", false),
                 casa = json.optString("casa", "").trim(),
                 quando = json.optLong("quando", 0L),
+                agg = json.optLong("agg", 0L),
                 comandi = righe(json.optJSONArray("comandi")).mapNotNull { r ->
                     val id = r.optString("id", "").trim()
                     val nome = r.optString("nome", "").trim()

@@ -12,6 +12,7 @@ library;
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gdahome/auto/in_auto.dart';
 import 'package:gdahome/auto/sul_telefono.dart';
 
 String _leggi(String dove) => File(dove).readAsStringSync();
@@ -64,10 +65,9 @@ void main() {
   });
 
   test('e l\'orologio la prende da li\'', () {
-    expect(
-      _leggi('$_wear/IlTelefono.kt'),
-      contains('r.optString("foto", "").takeIf { it.isNotEmpty() }'),
-    );
+    final wear = _leggi('$_wear/IlTelefono.kt');
+    expect(wear, contains('val foto = r.optString("foto", "")'));
+    expect(wear, contains('prendi(foto)'));
     final apple = _leggi('ios/Orologio/IlTelefono.swift');
     expect(apple, contains('let foto = risposta["foto"] as? String'));
     expect(apple, contains('if let foto { prendi(foto) }'));
@@ -83,6 +83,80 @@ void main() {
       contains(
         'DispatchQueue.main.asyncAfter(deadline: .now() + 12) { chiudi() }',
       ),
+    );
+  });
+  test('la schermata aperta al polso disegna la fotografia di adesso', () {
+    /* «Il tasto resta spento.» La schermata dei dispositivi si apriva con
+     * la fotografia del momento in cui la si toccava, e ridisegnava quella:
+     * la riga girata al tocco e quella corretta dal telefono non si
+     * vedevano. Adesso ognuna legge quella viva del telefono. */
+    final apple = _leggi('ios/Orologio/LaCasa.swift');
+    expect(
+      apple,
+      contains('private var foto: LaFoto { telefono.foto ?? ricevuta }'),
+    );
+    for (final schermata in [
+      'LaCasa',
+      'Dispositivi',
+      'Azioni',
+      'ComeStaLaCasa',
+    ]) {
+      expect(
+        apple,
+        isNot(contains('struct $schermata: View {\n  let foto: LaFoto')),
+        reason: schermata,
+      );
+    }
+    final wear = _leggi('$_wear/AlPolso.kt');
+    expect(
+      wear,
+      contains('composable("dispositivi") { Dispositivi(telefono.foto ?: foto'),
+    );
+    expect(wear, isNot(contains('{ Dispositivi(foto, telefono) }')));
+  });
+
+  test('l\'orologio chiede com\'e\' la casa, e il telefono lo chiede al '
+      'Dart con la stessa parola', () {
+    expect(guardaLoStato, 'stato');
+    final wear = _leggi('$_wear/IlTelefono.kt');
+    expect(wear, contains('put("cosa", "stato")'));
+    expect(wear, contains('SGUARDI_DOPO_IL_COMANDO_MS'));
+    final apple = _leggi('ios/Orologio/IlTelefono.swift');
+    expect(apple, contains('sendMessage(["cosa": "stato"])'));
+    expect(apple, contains('sguardiDopoIlComando'));
+    expect(
+      _leggi('ios/Orologio/GdahomeOrologio.swift'),
+      contains('telefono.davanti(nuova == .active)'),
+    );
+
+    final android = _leggi('$_kotlin/orologio/IlTramiteDellOrologio.kt');
+    expect(android, contains('optString("cosa", "") == "stato"'));
+    final ponte = _leggi('$_kotlin/auto/IlPonteDellAuto.kt');
+    expect(ponte, contains('const val STATO = "$guardaLoStato"'));
+    /* Anche il motore acceso apposta: all'avvio esegue solo il comando
+     * lasciato, e lo sguardo glielo si chiede dopo. */
+    expect(ponte, contains('canale.invokeMethod(GUARDA, STATO, risposta)'));
+
+    expect(_leggi('ios/Runner/LOrologio.swift'), contains('case "stato":'));
+    expect(
+      _leggi('ios/Runner/LaCasaInCarPlay.swift'),
+      contains('invokeMethod("guarda", arguments: "$guardaLoStato")'),
+    );
+  });
+
+  test('una fotografia piu\' vecchia non riporta indietro la riga', () {
+    expect(
+      _leggi('$_kotlin/orologio/IlTramiteDellOrologio.kt'),
+      contains('foto.put("agg", '),
+    );
+    expect(
+      _leggi('ios/Runner/LOrologio.swift'),
+      contains('foto["agg"] = LaCasaInCarPlay.quandoEScrittaLaFoto()'),
+    );
+    expect(_leggi('$_wear/IlTelefono.kt'), contains('nuova.agg < prima.agg'));
+    expect(
+      _leggi('ios/Orologio/IlTelefono.swift'),
+      contains('nuova.agg < prima.agg'),
     );
   });
 }

@@ -65,7 +65,10 @@ struct Radice: View {
     .animation(.easeInOut(duration: 0.2), value: telefono.avviso)
     .onChange(of: fase) { nuova in
       if nuova == .active { telefono.aggiorna() }
+      /* Com'e' la casa adesso, finche' l'app e' davanti al polso. */
+      telefono.davanti(nuova == .active)
     }
+    .onAppear { telefono.davanti(fase == .active) }
   }
 }
 

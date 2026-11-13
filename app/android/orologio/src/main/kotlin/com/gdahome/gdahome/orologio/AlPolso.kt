@@ -85,15 +85,21 @@ private fun Radice(telefono: IlTelefono, vetrina: String = "") {
             when {
                 foto == null -> Spiegazione("Apri GdAHome", "Apri GdAHome sul telefono una volta: da lì in poi la casa la trovi qui.")
                 !foto.premium -> Spiegazione("GdAHome Premium", "La casa al polso è compresa in GdAHome Premium. Si attiva dall'app sul telefono.")
+                /* Ogni schermata legge la fotografia di adesso da [telefono],
+                 * dentro di se'. Prima la riceveva dal grafo, costruito con
+                 * quella del momento in cui si era entrati: la riga girata al
+                 * tocco e quella corretta dal telefono cambiavano [IlTelefono.foto],
+                 * e la schermata aperta poteva restare a disegnare quella di
+                 * prima — «il tasto resta spento». */
                 else -> SwipeDismissableNavHost(navController = nav, startDestination = "casa") {
-                    composable("casa") { LaCasa(foto, telefono, nav) }
-                    composable("navigatore") { IlNavigatore(foto.guida, telefono) }
-                    composable("dispositivi") { Dispositivi(foto, telefono) }
-                    composable("azioni") { Azioni(foto, telefono) }
-                    composable("come") { ComeStaLaCasa(foto) }
+                    composable("casa") { LaCasa(telefono.foto ?: foto, telefono, nav) }
+                    composable("navigatore") { IlNavigatore((telefono.foto ?: foto).guida, telefono) }
+                    composable("dispositivi") { Dispositivi(telefono.foto ?: foto, telefono) }
+                    composable("azioni") { Azioni(telefono.foto ?: foto, telefono) }
+                    composable("come") { ComeStaLaCasa(telefono.foto ?: foto) }
                     composable("conferma/{id}") { voce ->
                         val id = voce.arguments?.getString("id").orEmpty()
-                        Conferma(foto.comandi.firstOrNull { it.id == id }, telefono, nav)
+                        Conferma((telefono.foto ?: foto).comandi.firstOrNull { it.id == id }, telefono, nav)
                     }
                 }
             }

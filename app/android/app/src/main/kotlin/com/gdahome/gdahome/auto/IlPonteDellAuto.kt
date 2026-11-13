@@ -56,7 +56,7 @@ object IlPonteDellAuto {
      * o scade.
      */
     @Synchronized
-    fun sveglia(context: Context, finito: ((String?) -> Unit)? = null) {
+    fun sveglia(context: Context, guardaLoStato: Boolean = false, finito: ((String?) -> Unit)? = null) {
         /* Com'e' finita lo dice il Dart, al colpetto (`in_auto.dart`): chi lo
          * vuole sapere — l'orologio, che lo scrive al polso — passa [finito].
          * Si chiama una volta sola, anche se qualcosa va storto. */
@@ -67,6 +67,10 @@ object IlPonteDellAuto {
                 finito?.invoke(com)
             }
         }
+        /* «Com'e' la casa adesso», per l'orologio (`guardaLaCasaPerIlPolso` in
+         * `in_auto.dart`): lo stesso colpetto, con [STATO] accanto. Senza, il
+         * Dart esegue il comando lasciato scritto. */
+        val parola: String? = if (guardaLoStato) STATO else null
         val risposta = object : MethodChannel.Result {
             override fun success(result: Any?) = unaVolta(result as? String)
 
@@ -86,7 +90,7 @@ object IlPonteDellAuto {
             val dellApp = FlutterEngineCache.getInstance().get(IlNavigatoreInAuto.MOTORE)
             if (dellApp != null) {
                 MethodChannel(dellApp.dartExecutor.binaryMessenger, CANALE)
-                    .invokeMethod(GUARDA, null, risposta)
+                    .invokeMethod(GUARDA, parola, risposta)
                 return
             }
             val gia = motore
@@ -94,14 +98,21 @@ object IlPonteDellAuto {
                 /* Il motore c'e' gia' e sta li' ad aspettare: gli si dice di
                  * guardare, e ritrova il file appena scritto. */
                 MethodChannel(gia.dartExecutor.binaryMessenger, CANALE)
-                    .invokeMethod(GUARDA, null, risposta)
+                    .invokeMethod(GUARDA, parola, risposta)
                 return
             }
             val nuovo = FlutterEngine(context.applicationContext)
             /* Il motore appena acceso esegue da se' il comando che trova, e
              * poi dice com'e' finita con `finito` (`inAuto` in `in_auto.dart`). */
-            MethodChannel(nuovo.dartExecutor.binaryMessenger, CANALE).setMethodCallHandler { call, result ->
-                if (call.method == FINITO) unaVolta(call.arguments as? String)
+            val canale = MethodChannel(nuovo.dartExecutor.binaryMessenger, CANALE)
+            canale.setMethodCallHandler { call, result ->
+                if (call.method == FINITO) {
+                    /* Chi voleva lo stato della casa lo chiede adesso, che il
+                     * Dart ascolta: all'avvio ha eseguito solo il comando
+                     * lasciato, se c'era. */
+                    if (guardaLoStato) canale.invokeMethod(GUARDA, STATO, risposta)
+                    else unaVolta(call.arguments as? String)
+                }
                 result.success(null)
             }
             /* L'orologio. Dopo un comando il Dart corregge la fotografia — la
@@ -146,4 +157,5 @@ object IlPonteDellAuto {
     private const val CANALE = "gdahome/auto/guarda"
     private const val GUARDA = "guarda"
     private const val FINITO = "finito"
+    private const val STATO = "stato"
 }
