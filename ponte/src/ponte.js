@@ -223,6 +223,8 @@ class Collegamento {
     /* Se chi sta dall'altra parte amministra la casa, deciso alla stretta di
      * mano: vedi `_amministra`. */
     this._amministraAllaStretta = false;
+    /* Se un `auth` sta gia' aspettando la casa: vedi `_dalTelefono`. */
+    this._autenticando = false;
     /* Gli eventi si raggruppano solo se tutte e due le cose sono vere: il
      * telefono sa spacchettare un mucchio (l'ha detto nella stretta di mano)
      * e questo filo passa dal centralino, dove ogni messaggio e' una
@@ -344,7 +346,16 @@ class Collegamento {
       this._rifiuta("prima bisogna autenticarsi");
       return;
     }
-    this._autentica(String(detto.access_token || ""));
+    /* Un'autenticazione alla volta. Mentre la prima aspetta Home Assistant,
+     * un secondo `auth` apriva un secondo filo verso la casa, e il primo
+     * restava aperto senza nessuno: cento `auth` di fila, cento fili. Quelli
+     * che arrivano nel frattempo si lasciano cadere, come si lasciano cadere
+     * dopo (`passaLaDogana`). */
+    if (this._autenticando) return;
+    this._autenticando = true;
+    this._autentica(String(detto.access_token || "")).finally(() => {
+      this._autenticando = false;
+    });
   }
 
   /* Le commissioni le riconosce chi le fa; un ponte senza commissioni

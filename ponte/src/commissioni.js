@@ -97,7 +97,13 @@ import {
   STATO,
 } from "./configurazione.js";
 import { DISPOSITIVI_MASSIMI, ENTITA_MASSIME } from "./catalogo.js";
-import { BASE_DELLE_FOTO, BASE_DI_CASA, CARTELLE_DEI_CARICAMENTI, FOTO_MASSIMA } from "./foto.js";
+import {
+  BASE_DELLE_FOTO,
+  BASE_DI_CASA,
+  CARTELLE_DEI_CARICAMENTI,
+  CartellaDelleFotoPiena,
+  FOTO_MASSIMA,
+} from "./foto.js";
 import { BASE as BASE_DELLA_PLANCIA } from "./plancia.js";
 import { ChatHaDettoNo } from "./chat.js";
 import { I_MARCHI, QuestoNoNo, ilMarchioDi } from "./aggiornamenti.js";
@@ -112,7 +118,12 @@ import {
 } from "./plance.js";
 import { aggiungiUnaPlancia } from "./plancia-nuova.js";
 import { LicenzaNo } from "./licenze.js";
-import { eUnaViaDelleTelecamere, perLaVia, percorsoSenzaTrucchi } from "./dogana.js";
+import {
+  eUnaViaDelleTelecamere,
+  perLaVia,
+  percorsoSenzaTrucchi,
+  senzaIGettoniDelleTelecamere,
+} from "./dogana.js";
 import { iFili, iRami, laMappaDisegnata } from "./mappa-zigbee.js";
 import { comeSiPresenta } from "./zigbee.js";
 import {
@@ -277,6 +288,10 @@ const REVISIONI_AL_MASSIMO = 8;
 const CATALOGO = "dashboardmodern/integrations/catalog";
 const FOTO_ELENCO = "dashboardmodern/www/list";
 const FOTO_CARICA = "dashboardmodern/www/upload";
+/* Quante foto carica una persona in dieci minuti: piu' di quelle che servono
+ * a rifare tutte le stanze, meno di quelle che servono a riempire un disco. */
+const FOTO_PER_FINESTRA = 40;
+const FOTO_FINESTRA = 10 * 60 * 1000;
 /* Lo spegnimento programmato del clima (#364): nell'integrazione lo tiene
  * Home Assistant, qui lo tiene il ponte (`spegnimento.js`). */
 /* Cosa c'e' da aggiornare in casa, e i due tasti per farlo.
@@ -1129,13 +1144,13 @@ export class Commissioni {
           "la configurazione di questa plancia la cambia solo l'utente che la amministra",
         );
       }
-      return this._configurazione(detto, chiChiede);
+      return this._configurazione(detto, chiChiede, amministra, soloLaPrima);
     }
     if (tipo === CHI_SONO) return this._chiSono(detto, chiChiede, puoAmministrare);
     if (tipo === DOVE_TORNARE) return this._doveTornare(detto);
     if (tipo === CATALOGO) return this._catalogo(detto);
     if (tipo === FOTO_ELENCO) return this._elencoDelleFoto(detto);
-    if (tipo === FOTO_CARICA) return this._caricaUnaFoto(detto);
+    if (tipo === FOTO_CARICA) return this._caricaUnaFoto(detto, chiChiede);
     if (tipo === CHAT_STATO || tipo === CHAT_FILO || tipo === CHAT_MANDA || tipo === CHAT_DIMENTICA)
       return this._chat(detto);
     if (DI_CHI_RISPONDE.has(tipo)) return this._laConsoleDellaChat(detto);
@@ -1876,9 +1891,22 @@ export class Commissioni {
     const sbagliati = (this._codiciSbagliati.get(chi) || []).filter((t) => adesso - t < 60000);
     if (chi && sbagliati.length >= CODICI_SBAGLIATI_AL_MINUTO)
       return no(id, "rate_limited", "troppi codici sbagliati: riprova fra un minuto");
+    /* Il tentativo si conta subito, prima di aspettare la configurazione:
+     * contato dopo l'`await`, mille richieste partite insieme leggevano tutte
+     * lo stesso conto a zero e passavano tutte. Se poi il codice e' giusto, o
+     * non si e' nemmeno confrontato, il tentativo si toglie. */
+    sbagliati.push(adesso);
+    this._codiciSbagliati.set(chi, sbagliati);
+    const nonContato = () => {
+      const dove = sbagliati.indexOf(adesso);
+      if (dove >= 0) sbagliati.splice(dove, 1);
+    };
     try {
       const letta = await this._laOrigineDelMuro(detto, chiChiede, amministra, soloLaPrima);
-      if (letta.no) return letta.no;
+      if (letta.no) {
+        nonContato();
+        return letta.no;
+      }
       const modo = normalizzaModiSuMisura(
         (() => {
           try {
@@ -1889,14 +1917,15 @@ export class Commissioni {
           }
         })(),
       ).find((uno) => uno.id === String(detto?.modo ?? ""));
-      if (!modo) return no(id, "not_found", "quel tasto non c'e'");
+      if (!modo) {
+        nonContato();
+        return no(id, "not_found", "quel tasto non c'e'");
+      }
       const giusto = ilCodiceApreIlModo(modo, String(detto?.codice ?? ""));
-      if (!giusto) {
-        sbagliati.push(adesso);
-        this._codiciSbagliati.set(chi, sbagliati);
-      } else this._codiciSbagliati.delete(chi);
+      if (giusto) this._codiciSbagliati.delete(chi);
       return si(id, { giusto });
     } catch (errore) {
+      nonContato();
       this.registro.errore(`codice del pannello a muro: ${errore?.message || errore}`);
       return no(id, "ponte_config", "non ha funzionato");
     }
@@ -2166,7 +2195,7 @@ export class Commissioni {
     });
   }
 
-  async _configurazione(detto, chiChiede = "") {
+  async _configurazione(detto, chiChiede = "", amministra = null, soloLaPrima = false) {
     const id = detto.id ?? null;
     const cassetta = this.configurazione;
     if (!cassetta) return no(id, "unknown_command", `non conosco ${detto.type}`);
@@ -2175,6 +2204,24 @@ export class Commissioni {
       return no(id, "invalid_format", "profilo non valido");
     try {
       if (detto.type === CONFIG_GET) {
+        /* Leggere si', ma la plancia di un profilo che c'e'. Un profilo
+         * inventato rispondeva con lo scatto vuoto e, dentro, i nomi di tutte
+         * le plance della casa (`profiles`) — anche di quelle riservate ad
+         * altri — e ogni nome nuovo restava per sempre fra quelli gia'
+         * chiesti all'integrazione (`_giaChiesti`). E dei nomi si dicono solo
+         * quelli delle plance che chi chiede vede. */
+        if (this.plance) {
+          if (!this.plance.quale(profilo)) return no(id, "not_found", "quella plancia non c'e'");
+          await this._laPrendeDallIntegrazione(profilo);
+          const sue = new Set(
+            this._lePlanceSue(chiChiede, amministra, soloLaPrima).map((una) => una.profilo),
+          );
+          const letta = cassetta.leggi(profilo);
+          return si(id, {
+            ...letta,
+            profiles: (letta?.profiles || []).filter((uno) => sue.has(uno)),
+          });
+        }
         await this._laPrendeDallIntegrazione(profilo);
         return si(id, cassetta.leggi(profilo));
       }
@@ -2761,9 +2808,22 @@ export class Commissioni {
     });
   }
 
-  _caricaUnaFoto(detto) {
+  _caricaUnaFoto(detto, chiChiede = "") {
     const id = detto.id ?? null;
     if (!this.foto) return no(id, "unknown_command", `non conosco ${detto.type}`);
+    /* Quante foto si caricano, per chi carica: una stanza alla volta ne vuole
+     * qualcuna, non centinaia. Il tetto della cartella (`foto.js`,
+     * `TETTO_DELLE_FOTO`) tiene il disco; questo tiene chi ci prova. */
+    const chi = String(chiChiede || "").trim();
+    const adesso = Date.now();
+    this._fotoCaricate ??= new Map();
+    const caricate = (this._fotoCaricate.get(chi) || []).filter(
+      (quando) => adesso - quando < FOTO_FINESTRA,
+    );
+    if (caricate.length >= FOTO_PER_FINESTRA) {
+      this._fotoCaricate.set(chi, caricate);
+      return no(id, "rate_limited", "Troppe foto caricate di fila: riprova fra qualche minuto.");
+    }
     if (typeof detto.filename !== "string" || !detto.filename || detto.filename.length > 255)
       return no(id, "invalid_format", "manca il nome del file");
     if (typeof detto.data !== "string" || !detto.data || detto.data.length > FOTO_MASSIMA * 2)
@@ -2780,9 +2840,17 @@ export class Commissioni {
     } catch (_errore) {
       return no(id, "invalid_data", "La foto non e' leggibile.");
     }
-    const messa = this.foto.carica(detto.filename, byte, { cartella });
+    let messa;
+    try {
+      messa = this.foto.carica(detto.filename, byte, { cartella });
+    } catch (errore) {
+      if (errore instanceof CartellaDelleFotoPiena) return no(id, "storage_full", errore.message);
+      throw errore;
+    }
     if (!messa)
       return no(id, "invalid_upload", "Il file non e' un'immagine, o e' piu' grande di 10 MB.");
+    caricate.push(adesso);
+    this._fotoCaricate.set(chi, caricate);
     return si(id, messa);
   }
 
@@ -2957,7 +3025,10 @@ export class Commissioni {
      *
      * Il 501 del flusso MJPEG viene dopo tutto questo: prima si guarda chi
      * chiede, poi cosa. */
-    if (eUnaViaDelleTelecamere(percorso) && !(await this._vedeLeTelecamere(chiChiede))) {
+    if (
+      (eUnaViaDelleTelecamere(percorso) || /^\/api\/hls\//i.test(percorso)) &&
+      !(await this._vedeLeTelecamere(chiChiede))
+    ) {
       return no(id, "unauthorized", "le telecamere si mostrano solo a chi e' entrato in casa");
     }
 
@@ -3012,7 +3083,15 @@ export class Commissioni {
         massimo: RISPOSTA_MASSIMA,
         attesa: ATTESA,
       });
-      return si(id, impacchetta(stato, tipo, ricevuto, { senzaGzip }));
+      /* I gettoni delle telecamere escono anche dalle risposte REST
+       * (`GET /api/states`, `/api/history/…`), come dal filo (`ponte.js`,
+       * `senzaIGettoniDelleTelecamere`): senza un utente tutti, per chi non
+       * amministra quelli delle telecamere che non vede. */
+      const pulito =
+        percorso.startsWith("/api/") && /json/i.test(String(tipo || ""))
+          ? this._senzaIGettoni(ricevuto, chiChiede, amministra, puoAmministrare)
+          : ricevuto;
+      return si(id, impacchetta(stato, tipo, pulito, { senzaGzip }));
     } catch (errore) {
       this.registro.attenzione(
         `commissione fallita (${metodo} ${viaDaScrivere(percorso)}): ${errore?.message || errore}`,
@@ -3021,6 +3100,19 @@ export class Commissioni {
     } finally {
       this._finito();
     }
+  }
+
+  /* Il corpo JSON di una risposta di Home Assistant senza i gettoni delle
+   * telecamere chiuse a chi chiede. Chi amministra (ed e' entrato) le vede
+   * tutte; un corpo senza gettoni torna com'era. */
+  _senzaIGettoni(corpo, chiChiede = "", amministra = null, puoAmministrare = false) {
+    const chi = String(chiChiede || "").trim();
+    if (chi && puoAmministrare === true) return corpo;
+    const testo = Buffer.isBuffer(corpo) ? corpo.toString("utf8") : String(corpo ?? "");
+    if (!testo.includes("token")) return corpo;
+    const chiuse = chi ? this.telecamereChiuse(chi, amministra) : TUTTE_CHIUSE;
+    const pulito = senzaIGettoniDelleTelecamere(testo, chiuse);
+    return pulito === testo ? corpo : Buffer.from(pulito, "utf8");
   }
 
   /* Se chi chiede puo' vedere una telecamera: una persona di Home Assistant,

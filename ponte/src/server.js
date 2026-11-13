@@ -618,8 +618,13 @@ export function costruisciLaConsole({
 
     /* La pagina della console, a chi non amministra, non si serve: gli si
      * dice perche'. I suoi fogli e i suoi disegni si', che non contengono
-     * niente. */
-    if ((via === "/" || via === "" || via === "/index.html") && !(await amministra(richiesta))) {
+     * niente. Il percorso si guarda come lo guarda `servi`, normalizzato:
+     * `/.//index.html` e' la stessa pagina di `/index.html`. */
+    const pagina = normalize(via || "/");
+    if (
+      (pagina === "/" || pagina === "." || pagina === "/index.html") &&
+      !(await amministra(richiesta))
+    ) {
       soloChiAmministra(risposta);
       return;
     }
