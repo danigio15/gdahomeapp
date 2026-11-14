@@ -71,10 +71,43 @@ test("nessun marchio resta senza il suo segno", () => {
    * abbiamo disegnati noi o ripescati dalla versione che ce li aveva. L'unico
    * senza file e' Leapmotor, che il suo marchio ce l'ha dentro al codice. */
   const senza = CAR_BRANDS.filter(
-    (marchio) => !carBrandImageSource(marchio.name) && marchio.id !== "leapmotor",
+    (marchio) =>
+      !carBrandImageSource(marchio.name) &&
+      marchio.id !== "leapmotor" &&
+      !CON_LE_INIZIALI.includes(marchio.name),
   );
   assert.deepEqual(senza.map((marchio) => marchio.name), []);
   for (const marchio of CAR_BRANDS) assert.ok(marchio.initials, `${marchio.name} senza iniziali`);
+});
+
+/* Le marche arrivate col catalogo di novembre 2026. Nessuna versione di Simple
+ * Icons ha il loro marchio, e un marchio registrato copiato da un sito qualsiasi
+ * non e' un file che si puo' distribuire: restano col tondo delle iniziali, che
+ * e' disegnato da noi e lo dice. Chi trova un file libero lo aggiunge e toglie
+ * il nome da qui. */
+const CON_LE_INIZIALI = Object.freeze([
+  "Alpine",
+  "Denza",
+  "Firefly",
+  "Geely",
+  "Jaecoo",
+  "Lynk & Co",
+  "NIO",
+  "Omoda",
+  "Zeekr",
+]);
+
+test("le marche senza un logo libero hanno le loro iniziali, non il marchio di un'altra", () => {
+  for (const nome of CON_LE_INIZIALI) {
+    const marchio = CAR_BRANDS.find((voce) => voce.name === nome);
+    assert.ok(marchio, `${nome} e' nel catalogo`);
+    assert.equal(carBrandImageSource(nome), "", nome);
+    const segno = carBrandVisual(nome, 40);
+    assert.match(segno, new RegExp(`data-brand="${marchio.id}"`), nome);
+    assert.match(segno, /data-brand-source="fallback"/, nome);
+  }
+  assert.equal(CAR_BRANDS.find((voce) => voce.name === "Lynk & Co").initials, "LC");
+  assert.match(carBrandVisual("Lynk & Co", 40), />LC</);
 });
 
 test("ogni marchio porta la sua tinta, e il nero lo lascia decidere al tema", () => {

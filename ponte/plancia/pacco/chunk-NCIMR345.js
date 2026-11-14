@@ -6683,6 +6683,7 @@ var HomeAssistantBroker = class {
     }, attesa) || 0;
   }
   token() {
+    if (globalThis.__DASHBOARDMODERN_HOSTED__ === true) return "";
     const values = [
       globalThis.DASHBOARDMODERN_AUTH_TOKEN,
       globalThis.__DASHBOARDMODERN_REAL_TOKEN__,
@@ -10501,6 +10502,7 @@ function roomOptionsMarkup(selected = "", vuoto = "") {
   return [`<option value="">— ${esc(vuoto)} —</option>`, ...righe2.filter(Boolean)].join("");
 }
 function gettoneDiAccesso() {
+  if (root2.__DASHBOARDMODERN_HOSTED__ === true) return "";
   const valori = [
     root2.DASHBOARDMODERN_AUTH_TOKEN,
     root2.__DASHBOARDMODERN_REAL_TOKEN__,
@@ -17233,27 +17235,37 @@ var ROOM_CATALOG = Object.freeze(
 var CAR_NAMES = [
   "Abarth",
   "Alfa Romeo",
+  "Alpine",
   "Audi",
   "BMW",
   "BYD",
   "Citroën",
   "Cupra",
   "Dacia",
+  "Denza",
   "DS",
   "Fiat",
+  "Firefly",
   "Ford",
+  "Geely",
   "Honda",
   "Hyundai",
+  "Jaecoo",
   "Jeep",
   "Kia",
   "Lancia",
   "Leapmotor",
   "Lexus",
+  "Lynk & Co",
+  "Maserati",
   "Mazda",
   "Mercedes-Benz",
   "MG",
   "MINI",
+  "Mitsubishi",
   "Nissan",
+  "NIO",
+  "Omoda",
   "Opel",
   "Peugeot",
   "Polestar",
@@ -17268,14 +17280,15 @@ var CAR_NAMES = [
   "Toyota",
   "Volkswagen",
   "Volvo",
-  "XPeng"
+  "XPeng",
+  "Zeekr"
 ];
 var CAR_BRANDS = Object.freeze(
   CAR_NAMES.map(
     (name) => Object.freeze({
       id: normalized(name).replace(/[^a-z0-9]+/g, "-"),
       name,
-      initials: name.split(/[\s-]+/).map((part) => part[0]).join("").slice(0, 3).toUpperCase()
+      initials: name.split(/[\s-]+/).filter((part) => /[\p{L}\p{N}]/u.test(part)).map((part) => part[0]).join("").slice(0, 3).toUpperCase()
     })
   )
 );
@@ -17297,10 +17310,12 @@ var SIMPLE_ICON_SLUGS = Object.freeze({
   kia: "kia",
   lancia: "lancia",
   lexus: "lexus",
+  maserati: "maserati",
   mazda: "mazda",
   "mercedes-benz": "mercedesbenz",
   mg: "mg",
   mini: "mini",
+  mitsubishi: "mitsubishi",
   nissan: "nissan",
   opel: "opel",
   peugeot: "peugeot",
@@ -17336,6 +17351,7 @@ var CAR_BRAND_COLORS = Object.freeze({
   leapmotor: "#0B69C7",
   "mercedes-benz": "#00A19B",
   mg: "#FF0000",
+  mitsubishi: "#E60012",
   nissan: "#C3002F",
   opel: "#F7FF14",
   porsche: "#B12B28",
@@ -17367,10 +17383,12 @@ var LOGHI_IN_CASA = Object.freeze([
   "kia",
   "lancia",
   "lexus",
+  "maserati",
   "mazda",
   "mercedes-benz",
   "mg",
   "mini",
+  "mitsubishi",
   "nissan",
   "opel",
   "peugeot",
@@ -30471,29 +30489,39 @@ var state23 = root2[KEY22] ||= { installed: false, frame: 0, actionEditIndex: -1
 var CAR_MODELS = Object.freeze({
   "Abarth": ["500e", "600e"],
   "Alfa Romeo": ["Junior Elettrica", "Junior Ibrida", "Tonale Plug-In Hybrid Q4"],
-  "Audi": ["A3 TFSI e", "A5 e-hybrid", "A6 e-tron", "Q3 e-hybrid", "Q4 e-tron", "Q5 e-hybrid", "Q6 e-tron", "Q8 e-tron", "e-tron GT"],
+  "Alpine": ["A290", "A390"],
+  "Audi": ["A2 e-tron", "A3 TFSI e", "A5 e-hybrid", "A6 e-tron", "Q3 e-hybrid", "Q4 e-tron", "Q5 e-hybrid", "Q6 e-tron", "Q8 e-tron", "e-tron GT"],
   "BMW": ["iX1", "iX2", "i4", "i5", "i7", "iX", "iX3", "225e Active Tourer", "230e Active Tourer", "330e", "550e", "750e", "X1 xDrive25e", "X1 xDrive30e", "X3 30e", "X5 xDrive50e", "XM"],
-  "BYD": ["Dolphin Surf", "Dolphin", "Atto 2", "Atto 3", "Seal", "Seal U DM-i", "Sealion 7", "Tang", "Han"],
+  "BYD": ["Dolphin Surf", "Dolphin", "Atto 2", "Atto 2 DM-i", "Atto 3", "Atto 3 Evo", "Seal", "Seal 6 DM-i", "Seal U DM-i", "Sealion 5 DM-i", "Sealion 7", "Tang", "Han"],
   "Citroën": ["ë-C3", "C3 Hybrid", "ë-C3 Aircross", "C3 Aircross Hybrid", "ë-C4", "C4 Hybrid", "ë-C5 Aircross", "C5 Aircross Plug-In Hybrid", "ë-Berlingo", "ë-SpaceTourer"],
   "Cupra": ["Born", "Tavascan", "Terramar e-Hybrid", "Formentor e-Hybrid", "Leon e-Hybrid"],
   "Dacia": ["Spring", "Duster Hybrid", "Bigster Hybrid", "Jogger Hybrid"],
+  "Denza": ["Z9 GT", "D9 DM-i"],
   "DS": ["DS 3 E-Tense", "N°4 E-Tense", "N°4 Plug-In Hybrid", "DS 7 E-Tense", "N°8"],
   "Fiat": ["500e", "Grande Panda Electric", "Grande Panda Hybrid", "600e", "600 Hybrid"],
+  "Firefly": ["Firefly"],
   "Ford": ["Puma Gen-E", "Explorer EV", "Capri EV", "Mustang Mach-E", "Kuga Hybrid", "Kuga Plug-In Hybrid", "E-Tourneo Courier", "E-Tourneo Custom"],
+  "Geely": ["E2", "EX5"],
   "Honda": ["e:Ny1", "Civic e:HEV", "HR-V e:HEV", "ZR-V e:HEV", "CR-V e:HEV", "CR-V e:PHEV", "Prelude e:HEV"],
-  "Hyundai": ["Inster", "Kona Electric", "Kona Hybrid", "IONIQ 5", "IONIQ 6", "IONIQ 9", "Tucson Hybrid", "Tucson Plug-In Hybrid", "Santa Fe Hybrid", "Santa Fe Plug-In Hybrid"],
+  "Hyundai": ["Inster", "Kona Electric", "Kona Hybrid", "IONIQ 3", "IONIQ 5", "IONIQ 6", "IONIQ 9", "Tucson Hybrid", "Tucson Plug-In Hybrid", "Santa Fe Hybrid", "Santa Fe Plug-In Hybrid"],
+  "Jaecoo": ["Jaecoo 5 EV", "Jaecoo 7 SHS"],
   "Jeep": ["Avenger Electric", "Avenger e-Hybrid", "Avenger 4xe", "Compass e-Hybrid", "Compass 4xe", "Renegade 4xe", "Grand Cherokee 4xe", "Wagoneer S"],
-  "Kia": ["Niro EV", "Niro Hybrid", "Niro Plug-In Hybrid", "EV3", "EV4", "EV5", "EV6", "EV9", "PV5 Passenger", "Sportage Hybrid", "Sportage Plug-In Hybrid", "Sorento Hybrid", "Sorento Plug-In Hybrid"],
+  "Kia": ["Niro EV", "Niro Hybrid", "Niro Plug-In Hybrid", "EV2", "EV3", "EV4", "EV5", "EV6", "EV9", "PV5 Passenger", "Sportage Hybrid", "Sportage Plug-In Hybrid", "Sorento Hybrid", "Sorento Plug-In Hybrid"],
   "Lancia": ["Ypsilon Electric", "Ypsilon Hybrid"],
-  "Leapmotor": ["T03", "B10", "C10", "C10 REEV"],
-  "Lexus": ["LBX Hybrid", "UX 300e", "UX Hybrid", "NX 350h", "NX 450h+", "RZ", "RX 350h", "RX 450h+", "RX 500h", "ES 300h", "LM 350h"],
+  "Leapmotor": ["T03", "B03X", "B05", "B10", "B10 Hybrid EV", "C10", "C10 REEV"],
+  "Lexus": ["LBX Hybrid", "UX 300e", "UX Hybrid", "NX 350h", "NX 450h+", "RZ", "RX 350h", "RX 450h+", "RX 500h", "ES 300h", "ES 350e", "ES 500e", "LM 350h"],
+  "Lynk & Co": ["02", "01 Plug-In Hybrid", "08 Plug-In Hybrid"],
+  "Maserati": ["GranTurismo Folgore", "GranCabrio Folgore", "Grecale Folgore"],
   "Mazda": ["Mazda6e", "MX-30", "CX-60 Plug-In Hybrid", "CX-80 Plug-In Hybrid"],
-  "Mercedes-Benz": ["EQA", "EQB", "CLA Electric", "CLA Hybrid", "EQE", "EQS", "EQE SUV", "EQS SUV", "G 580 EQ", "C-Class Plug-In Hybrid", "E-Class Plug-In Hybrid", "GLA 250 e", "GLC Plug-In Hybrid", "GLE Plug-In Hybrid"],
-  "MG": ["MG4 Electric", "MG5 Electric", "MGS5 EV", "ZS Hybrid+", "HS Hybrid+", "HS Plug-In Hybrid", "Cyberster"],
+  "Mercedes-Benz": ["EQA", "EQB", "GLB Electric", "CLA Electric", "CLA Hybrid", "C-Class Electric", "EQE", "EQS", "EQE SUV", "EQS SUV", "G 580 EQ", "C-Class Plug-In Hybrid", "E-Class Plug-In Hybrid", "GLA 250 e", "GLC Plug-In Hybrid", "GLE Plug-In Hybrid"],
+  "MG": ["MG4 Electric", "MG4 Urban", "MG5 Electric", "MGS5 EV", "IM5", "IM6", "ZS Hybrid+", "HS Hybrid+", "HS Plug-In Hybrid", "Cyberster"],
   "MINI": ["Cooper Electric", "Aceman", "Countryman Electric"],
+  "Mitsubishi": ["Eclipse Cross EV", "Outlander Plug-In Hybrid", "Eclipse Cross Plug-In Hybrid", "ASX Hybrid", "Colt Hybrid"],
   "Nissan": ["Micra EV", "Leaf", "Ariya", "Juke Hybrid", "Qashqai e-POWER", "X-Trail e-POWER"],
-  "Opel": ["Corsa Electric", "Corsa Hybrid", "Mokka Electric", "Mokka Hybrid", "Astra Electric", "Astra Plug-In Hybrid", "Astra Hybrid", "Frontera Electric", "Frontera Hybrid", "Grandland Electric", "Grandland Plug-In Hybrid", "Grandland Hybrid", "Combo Electric", "Zafira Electric"],
-  "Peugeot": ["e-208", "208 Hybrid", "e-2008", "2008 Hybrid", "e-308", "308 Plug-In Hybrid", "308 Hybrid", "e-3008", "3008 Plug-In Hybrid", "3008 Hybrid", "e-5008", "5008 Plug-In Hybrid", "5008 Hybrid", "e-Rifter"],
+  "NIO": ["ET5", "ET5 Touring", "ET7", "EL6", "EL7", "EL8"],
+  "Omoda": ["Omoda E5", "Omoda 9 SHS"],
+  "Opel": ["Corsa Electric", "Corsa Hybrid", "Mokka Electric", "Mokka GSE", "Mokka Hybrid", "Astra Electric", "Astra Plug-In Hybrid", "Astra Hybrid", "Frontera Electric", "Frontera Hybrid", "Grandland Electric", "Grandland Plug-In Hybrid", "Grandland Hybrid", "Combo Electric", "Zafira Electric"],
+  "Peugeot": ["e-208", "e-208 GTi", "208 Hybrid", "e-2008", "2008 Hybrid", "e-308", "308 Plug-In Hybrid", "308 Hybrid", "e-3008", "3008 Plug-In Hybrid", "3008 Hybrid", "e-5008", "5008 Plug-In Hybrid", "5008 Hybrid", "e-Rifter"],
   "Polestar": ["Polestar 2", "Polestar 3", "Polestar 4", "Polestar 5"],
   "Porsche": ["Macan Electric", "Taycan", "Cayenne E-Hybrid", "Panamera E-Hybrid"],
   "Renault": ["5 E-Tech electric", "4 E-Tech electric", "Megane E-Tech electric", "Scenic E-Tech electric", "Captur E-Tech full hybrid", "Symbioz E-Tech full hybrid", "Austral E-Tech full hybrid", "Espace E-Tech full hybrid", "Rafale E-Tech full hybrid", "Rafale E-Tech 4x4 Plug-In Hybrid"],
@@ -30503,35 +30531,46 @@ var CAR_MODELS = Object.freeze({
   "Subaru": ["Solterra", "Uncharted", "E-Outback", "Forester e-BOXER", "Crosstrek e-BOXER"],
   "Suzuki": ["e VITARA", "Swift Hybrid", "Vitara Hybrid", "S-Cross Hybrid", "Across Plug-In Hybrid"],
   "Tesla": ["Model 3", "Model Y", "Model S", "Model X"],
-  "Toyota": ["Aygo X Hybrid", "Yaris Hybrid", "Yaris Cross Hybrid", "Corolla Hybrid", "C-HR Hybrid", "C-HR Plug-In Hybrid", "Prius Plug-In Hybrid", "bZ4X", "C-HR+", "Urban Cruiser", "RAV4 Hybrid", "RAV4 Plug-In Hybrid", "Highlander Hybrid"],
-  "Volkswagen": ["ID.3", "ID.4", "ID.5", "ID.7", "ID.7 Tourer", "ID. Buzz", "Golf eHybrid", "Golf GTE", "Passat eHybrid", "Tiguan eHybrid", "Tayron eHybrid"],
-  "Volvo": ["EX30", "EX40", "EC40", "EX60", "EX90", "XC40 Mild Hybrid", "XC60 Plug-In Hybrid", "XC90 Plug-In Hybrid"],
-  "XPeng": ["G6", "G9", "P7", "P7+", "L03"]
+  "Toyota": ["Aygo X Hybrid", "Yaris Hybrid", "Yaris Cross Hybrid", "Corolla Hybrid", "C-HR Hybrid", "C-HR Plug-In Hybrid", "Prius Plug-In Hybrid", "bZ4X", "bZ4X Touring", "C-HR+", "Urban Cruiser", "RAV4 Hybrid", "RAV4 Plug-In Hybrid", "Highlander Hybrid"],
+  "Volkswagen": ["ID. Polo", "ID. Cross", "ID.3", "ID.3 Neo", "ID.4", "ID.5", "ID.7", "ID.7 Tourer", "ID. Buzz", "Golf eHybrid", "Golf GTE", "Passat eHybrid", "Tiguan eHybrid", "Tayron eHybrid"],
+  "Volvo": ["EX30", "EX40", "EC40", "EX60", "EX90", "ES90", "XC40 Mild Hybrid", "XC60 Plug-In Hybrid", "XC90 Plug-In Hybrid"],
+  "XPeng": ["G6", "G9", "P7", "P7+", "X9", "L03"],
+  "Zeekr": ["001", "7X", "7GT", "Zeekr X"]
 });
 var CAR_MODELS_TERMICI = Object.freeze({
   "Abarth": ["500", "595", "695", "124 Spider", "Punto"],
   "Alfa Romeo": ["Giulia", "Stelvio", "Tonale", "Giulietta", "MiTo", "4C"],
+  "Alpine": ["A110"],
   "Audi": ["A1", "A3", "A4", "A5", "A6", "A7", "A8", "Q2", "Q3", "Q5", "Q7", "Q8", "TT", "R8"],
   "BMW": ["Serie 1", "Serie 2", "Serie 3", "Serie 4", "Serie 5", "Serie 7", "Serie 8", "X1", "X2", "X3", "X4", "X5", "X6", "X7", "Z4", "M2", "M3", "M4"],
   "BYD": [],
   "Citroën": ["C1", "C3", "C3 Aircross", "C4", "C4 X", "C5 Aircross", "C5 X", "Berlingo", "SpaceTourer", "Jumpy", "Jumper"],
   "Cupra": ["Formentor", "Leon", "Leon Sportstourer", "Ateca", "Terramar"],
   "Dacia": ["Sandero", "Sandero Stepway", "Logan", "Duster", "Jogger", "Bigster", "Lodgy", "Dokker"],
+  "Denza": [],
   "DS": ["DS 3", "DS 4", "DS 7", "DS 9"],
   "Fiat": ["Panda", "Grande Panda", "500", "500X", "500L", "600", "Tipo", "Punto", "Doblò", "Qubo", "Fiorino", "Scudo", "Ulysse", "Ducato"],
+  "Firefly": [],
   "Ford": ["Fiesta", "Focus", "Puma", "Kuga", "Mondeo", "EcoSport", "Mustang", "Ranger", "Bronco", "S-Max", "Galaxy", "Tourneo Courier", "Tourneo Connect", "Tourneo Custom", "Transit Custom", "Transit"],
+  "Geely": [],
   "Honda": ["Jazz", "Civic", "Civic Type R", "HR-V", "ZR-V", "CR-V"],
   "Hyundai": ["i10", "i20", "i20 N", "i30", "Bayon", "Kona", "Tucson", "Santa Fe", "Staria", "ix20", "ix35", "i40"],
+  "Jaecoo": ["Jaecoo 7"],
   "Jeep": ["Avenger", "Renegade", "Compass", "Cherokee", "Grand Cherokee", "Wrangler", "Gladiator", "Commander", "Wagoneer"],
   "Kia": ["Picanto", "Rio", "Stonic", "Ceed", "Ceed Sportswagon", "ProCeed", "XCeed", "Sportage", "Sorento", "Niro", "Soul", "Stinger", "Carens", "Venga", "Optima"],
   "Lancia": ["Ypsilon", "Delta", "Musa", "Thema", "Voyager"],
   "Leapmotor": [],
   "Lexus": ["IS", "LC", "RC", "GS"],
+  "Lynk & Co": [],
+  "Maserati": ["Grecale", "GranTurismo", "MC20", "Levante", "Ghibli", "Quattroporte"],
   "Mazda": ["Mazda2", "Mazda3", "Mazda6", "CX-3", "CX-30", "CX-5", "CX-60", "CX-80", "MX-5"],
   "Mercedes-Benz": ["Classe A", "Classe B", "Classe C", "Classe E", "Classe S", "CLA", "CLS", "GLA", "GLB", "GLC", "GLE", "GLS", "Classe G", "Classe T", "Classe V", "Vito", "Citan", "SL", "AMG GT"],
   "MG": ["MG3", "ZS", "HS"],
   "MINI": ["Cooper", "Cooper Cabrio", "Countryman", "Clubman", "Paceman"],
+  "Mitsubishi": ["Space Star", "Colt", "ASX", "Eclipse Cross", "Outlander", "L200"],
   "Nissan": ["Micra", "Juke", "Qashqai", "X-Trail", "Navara", "Townstar", "Note", "Pulsar", "Pathfinder", "370Z", "GT-R"],
+  "NIO": [],
+  "Omoda": ["Omoda 5"],
   "Opel": ["Corsa", "Astra", "Astra Sports Tourer", "Mokka", "Crossland", "Grandland", "Frontera", "Insignia", "Zafira", "Combo", "Vivaro", "Movano", "Adam", "Karl", "Meriva"],
   "Peugeot": ["108", "208", "2008", "308", "308 SW", "3008", "408", "5008", "508", "Rifter", "Partner", "Traveller", "Expert", "Boxer"],
   "Polestar": [],
@@ -30546,7 +30585,8 @@ var CAR_MODELS_TERMICI = Object.freeze({
   "Toyota": ["Aygo", "Aygo X", "Yaris", "Yaris Cross", "GR Yaris", "Corolla", "Corolla Touring Sports", "C-HR", "RAV4", "Hilux", "Land Cruiser", "Proace", "Proace City", "GR86", "GR Supra", "Auris", "Avensis", "Verso"],
   "Volkswagen": ["up!", "Polo", "Golf", "Golf Variant", "T-Cross", "Taigo", "T-Roc", "Tiguan", "Tayron", "Touareg", "Passat", "Passat Variant", "Arteon", "Touran", "Sharan", "Caddy", "Multivan", "Transporter", "Caravelle", "California", "Amarok", "Scirocco", "Beetle"],
   "Volvo": ["XC40", "XC60", "XC90", "V40", "V60", "V90", "S60", "S90"],
-  "XPeng": []
+  "XPeng": [],
+  "Zeekr": []
 });
 function gruppiPerMarca(brand) {
   const nome = clean14(brand);
@@ -40928,7 +40968,7 @@ function installSegnalazioniSection() {
 senzaCadere(installSegnalazioniSection);
 
 // legacy/build-info.js
-var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.19.4.1", "dashboardVersion": "1.19.4.1", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-11-14T17:45:32+00:00", "commit": "f04ead5d6af083374058b831036b7235472f5b40", "assetHash": "f1e1bb9d6b8b938c" });
+var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.19.4.1", "dashboardVersion": "1.19.4.1", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-11-14T21:21:23+00:00", "commit": "b97e9750faa40d3908ce8abce82fb03a9e0dfd58", "assetHash": "8483b84ac069ce11" });
 
 export {
   DEFAULT_LOCALE,

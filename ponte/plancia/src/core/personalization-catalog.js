@@ -282,27 +282,37 @@ export const ROOM_CATALOG = Object.freeze(
 const CAR_NAMES = [
   "Abarth",
   "Alfa Romeo",
+  "Alpine",
   "Audi",
   "BMW",
   "BYD",
   "Citroën",
   "Cupra",
   "Dacia",
+  "Denza",
   "DS",
   "Fiat",
+  "Firefly",
   "Ford",
+  "Geely",
   "Honda",
   "Hyundai",
+  "Jaecoo",
   "Jeep",
   "Kia",
   "Lancia",
   "Leapmotor",
   "Lexus",
+  "Lynk & Co",
+  "Maserati",
   "Mazda",
   "Mercedes-Benz",
   "MG",
   "MINI",
+  "Mitsubishi",
   "Nissan",
+  "NIO",
+  "Omoda",
   "Opel",
   "Peugeot",
   "Polestar",
@@ -318,6 +328,7 @@ const CAR_NAMES = [
   "Volkswagen",
   "Volvo",
   "XPeng",
+  "Zeekr",
 ];
 export const CAR_BRANDS = Object.freeze(
   CAR_NAMES.map((name) =>
@@ -326,6 +337,8 @@ export const CAR_BRANDS = Object.freeze(
       name,
       initials: name
         .split(/[\s-]+/)
+        /* «Lynk & Co» fa «LC»: la e commerciale non e' un'iniziale. */
+        .filter((part) => /[\p{L}\p{N}]/u.test(part))
         .map((part) => part[0])
         .join("")
         .slice(0, 3)
@@ -352,10 +365,12 @@ const SIMPLE_ICON_SLUGS = Object.freeze({
   kia: "kia",
   lancia: "lancia",
   lexus: "lexus",
+  maserati: "maserati",
   mazda: "mazda",
   "mercedes-benz": "mercedesbenz",
   mg: "mg",
   mini: "mini",
+  mitsubishi: "mitsubishi",
   nissan: "nissan",
   opel: "opel",
   peugeot: "peugeot",
@@ -399,6 +414,7 @@ const CAR_BRAND_COLORS = Object.freeze({
   leapmotor: "#0B69C7",
   "mercedes-benz": "#00A19B",
   mg: "#FF0000",
+  mitsubishi: "#E60012",
   nissan: "#C3002F",
   opel: "#F7FF14",
   porsche: "#B12B28",
@@ -446,10 +462,12 @@ const LOGHI_IN_CASA = Object.freeze([
   "kia",
   "lancia",
   "lexus",
+  "maserati",
   "mazda",
   "mercedes-benz",
   "mg",
   "mini",
+  "mitsubishi",
   "nissan",
   "opel",
   "peugeot",
