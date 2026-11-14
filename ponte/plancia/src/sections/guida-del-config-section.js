@@ -39,6 +39,7 @@ import {
   root,
   senzaCadere,
   t,
+  wrapFunction,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_GUIDA_CONFIG__";
@@ -419,18 +420,15 @@ export function ensureTastoDella3D() {
     if (chiudiLaProcedura) chiudiLaProcedura.before(tasto);
     else testa.append(tasto);
   }
-  const barra = procedura.querySelector(".c3c-passi");
-  if (barra && !barra.__dmGuidaGuarda && root.MutationObserver) {
-    barra.__dmGuidaGuarda = new root.MutationObserver(() => {
-      if (state.contesto !== "3d" || !state.aperta) return;
-      const ora = passo3dAperto();
-      if (ora === state.passo3d) return;
+  /* Il passo e' cambiato? Allora la guida diventa quella del passo nuovo. */
+  if (state.contesto === "3d" && state.aperta) {
+    const ora = passo3dAperto();
+    if (ora !== state.passo3d) {
       state.passo3d = ora;
       state.passo = -1;
       spegniLaLuce();
       disegna();
-    });
-    barra.__dmGuidaGuarda.observe(barra, { childList: true, subtree: true });
+    }
   }
   return true;
 }
@@ -451,8 +449,8 @@ function installaLoStile() {
   #editor-modal.dm-guida-con-foglio .ed-shell{margin-right:380px}}
 .dm-guida-testa{display:flex;align-items:center;justify-content:space-between;gap:8px;position:sticky;top:-12px;background:inherit;padding:4px 0 6px;font-size:15px}
 .dm-guida-testa button{border:0;background:rgba(15,23,42,.06);border-radius:50%;width:30px;height:30px;cursor:pointer;color:inherit}
-.dm-guida-scopo{margin:4px 0 10px;color:var(--text-secondary,#475569)}
-.dm-guida-nota{font-size:12px;color:var(--text-secondary,#64748b);margin:2px 0 8px}
+.dm-guida-scopo{margin:4px 0 10px;color:var(--text-dim,#475569)}
+.dm-guida-nota{font-size:12px;color:var(--text-dim,#64748b);margin:2px 0 8px}
 .dm-guida-passi{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
 .dm-guida-passo,.dm-guida-tappa{display:flex;gap:10px;align-items:flex-start;padding:8px;border-radius:12px;background:rgba(15,23,42,.04)}
 .dm-guida-attivo{background:rgba(225,29,72,.08);outline:2px solid rgba(225,29,72,.5)}
@@ -480,18 +478,38 @@ function installaLoStile() {
   );
 }
 
+/* Dopo un tocco o un'apertura si guarda piu' di una volta: la procedura si
+ * disegna con un attimo di ritardo, e certi tocchi cambiano passo dopo un
+ * lavoro lungo («Riconosci i muri» legge la pianta prima di andare avanti). */
+function ricontrolla() {
+  avvolgiLApertura();
+  for (const quando of [80, 600, 2000, 5000])
+    root.setTimeout?.(() => senzaCadere(ensureTastoDella3D, "guida-3d"), quando);
+}
+
+function avvolgiLApertura() {
+  return wrapFunction("__DM_CASA3D_CREA__", "__dmGuidaDella3D", ricontrolla);
+}
+
 export function installGuidaDelConfigSection() {
   if (!doc || state.installed) return false;
   state.installed = true;
   installaLoStile();
   ensureRigaDellaGuida();
-  /* La procedura della Casa 3D arriva e se ne va come figlia della pagina:
-   * basta guardare i figli diretti, senza scendere. */
-  if (root.MutationObserver && doc.body) {
-    new root.MutationObserver(() => senzaCadere(ensureTastoDella3D, "guida-3d")).observe(doc.body, {
-      childList: true,
-    });
-  }
+  /* La procedura della Casa 3D si apre, cambia passo e si chiude solo con un
+   * tocco (o un file scelto): subito dopo ogni tocco si guarda se c'e', se il
+   * tasto della guida c'e' e se il passo e' cambiato. Un ascolto e non un
+   * osservatore: la plancia ne tiene pochi e mai sull'intera pagina
+   * (`tests/runtime-import-graph.test.js`). */
+  const dopoUnTocco = () => ricontrolla();
+  doc.addEventListener("click", dopoUnTocco, true);
+  doc.addEventListener("change", dopoUnTocco, true);
+  /* E chi apre la procedura senza un tocco — la Casa 3D, l'editor, una prova —
+   * passa da `__DM_CASA3D_CREA__`: avvolto, il tasto c'e' appena lei c'e'.
+   * La procedura si installa dopo di noi: si riprova per qualche secondo, e
+   * comunque a ogni tocco. */
+  if (!avvolgiLApertura())
+    for (const quando of [0, 300, 1500, 5000]) root.setTimeout?.(avvolgiLApertura, quando);
   /* A ogni giro del Config — una scheda nuova, un salvataggio — la riga si
    * rimette al suo posto e il foglio, se è aperto, diventa la guida della
    * scheda di adesso. */

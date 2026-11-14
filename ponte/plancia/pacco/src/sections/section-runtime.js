@@ -573,7 +573,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-QZO5NSMW.js";
+} from "../../chunk-NWHBIM46.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -3005,6 +3005,7 @@ var SOURCE_INDEX = Object.freeze({
   "Avvia ${a.name} col sole": "Start ${a.name} on solar",
   "Avvia da solo se < (%)": "Start on its own if < (%)",
   "Avvia filtrazione": "Start filtration",
+  "Avvia l'autorilevamento: riempie da solo luci, clima, stanze e telecamere.": "Run auto-detection: it fills in lights, climate, rooms and cameras by itself.",
   "Avvia la filtrazione all'ora programmata": "Start filtration at the scheduled time",
   "Avvia programma": "Start schedule",
   "avviata alle": "started at",
@@ -3464,6 +3465,7 @@ var SOURCE_INDEX = Object.freeze({
   "clima prima": "climate first",
   "Clima spento con ${finestra} aperta": "Climate off with ${finestra} open",
   "Clima spento con finestra aperta": "Climate off with the window open",
+  "Clima: termostati e condizionatori.": "Climate: thermostats and air conditioners.",
   "Cloro": "Chlorine",
   "Cloro / Redox": "Chlorine / Redox",
   "cloro da correggere": "chlorine needs correcting",
@@ -3697,6 +3699,7 @@ var SOURCE_INDEX = Object.freeze({
   "Continuo": "Continuous",
   "Controlla e salva: finché non la salvi in Home Assistant non parte niente.": "Check and save: nothing runs until you save it in Home Assistant.",
   "Controlla le proposte negli accordion: puoi correggere o rimuovere tutto liberamente.": "Review the proposals in the accordions: you can freely edit or remove anything.",
+  "Controlla le stanze e il loro ordine: tutte le altre sezioni le usano.": "Check the rooms and their order: every other section uses them.",
   "Controlla questo campo.": "Check this field.",
   "Controlla URL e che HA sia raggiungibile da questo dispositivo. Se il file è aperto da un download, l'URL qui sopra è obbligatorio.": "Check the URL and that HA is reachable from this device. If the file was opened from a download, the URL above is required.",
   "Controlli di": "Controls for",
@@ -4215,6 +4218,7 @@ var SOURCE_INDEX = Object.freeze({
   "Energia venduta": "Sold energy",
   "Energia wallbox mese (kWh)": "Wallbox energy this month (kWh)",
   "Energia wallbox oggi (kWh)": "Wallbox energy today (kWh)",
+  "Energia: contatore della rete, fotovoltaico e tariffe.": "Energy: grid meter, solar and tariffs.",
   "Energy autoprodotta consumata": "Self-produced energy consumed",
   "Energy immessa oggi (kWh)": "Energy exported today (kWh)",
   "Energy prelevata oggi (kWh)": "Energy imported today (kWh)",
@@ -4354,6 +4358,7 @@ var SOURCE_INDEX = Object.freeze({
   "Fai dire le notifiche agli Echo": "Have the Echos say the notifications",
   "Fai partire adesso": "Run it now",
   "fai suonare ${chi}": "play ${chi}",
+  "Fai un backup, adesso che è tutto a posto.": "Make a backup, now that everything is in place.",
   "Falli": "Fouls",
   "Famiglia": "Family",
   "Fasce non impostate: uso la tariffa unica": "No time bands set: using the single rate",
@@ -4432,6 +4437,7 @@ var SOURCE_INDEX = Object.freeze({
   "Finestre aperte": "Open windows",
   "Finestre e porte chiuse": "Windows and doors closed",
   "Finestre e tapparelle": "Windows and shutters",
+  "Finestre e tapparelle.": "Windows and shutters.",
   "Finestrini (aperti/chiusi)": "Windows (open/closed)",
   "Finestrini aperti": "Windows open",
   "Finestrini chiusi": "Windows closed",
@@ -4705,6 +4711,7 @@ var SOURCE_INDEX = Object.freeze({
   "I tuoi viaggi": "Your trips",
   "I valori dell'acqua": "Water values",
   "I varchi di casa: porte, finestre, portone, basculante. Ogni varco ha la sua riga — l'entità del contatto, il nome che vuoi tu, il disegno — e la pagina Varchi mostra queste, in quest'ordine: verde chiuso, rosso aperto, e in cima quanti sono aperti adesso.": "The openings at home: doors, windows, front door, garage door. Each opening has its own row — the contact entity, the name you want, the drawing — and the Openings page shows these, in this order: green closed, red open, and how many are open right now on top.",
+  "I widget della Home: quali tessere e in che ordine.": "Home widgets: which tiles and in which order.",
   "Ibrida plug-in": "Plug-in hybrid",
   "Icona": "Icon",
   "Icona (es. ⚠️ 💧 🌡️)": "Icon (e.g. ⚠️ 💧 🌡️)",
@@ -5232,6 +5239,7 @@ var SOURCE_INDEX = Object.freeze({
   "La foto è salvata, ma il browser non riesce ad aprirla. Riprova a caricarla; se resta così, riavvia Home Assistant.": "The photo is saved, but the browser cannot open it. Try uploading it again; if it stays like this, restart Home Assistant.",
   "La foto si salva nell'add-on GdAHome, con le altre foto della plancia. Prima di partire il telefono la riduce a 1200 px; non passa da nessun server esterno.": "The photo is saved in the GdAHome add-on, with the dashboard's other photos. Before it leaves, the phone shrinks it to 1200 px; it goes through no outside server.",
   "la foto supera i 10 MB": "the photo exceeds 10 MB",
+  "La Home: l'ordine dei blocchi e le stanze in vista.": "Home: the order of the blocks and the rooms on show.",
   "La lavatrice ha finito": "The washer is done",
   "la lettiera": "the litter box",
   "La lettiera": "The litter box",
@@ -5362,6 +5370,7 @@ var SOURCE_INDEX = Object.freeze({
   "Le automazioni di Home Assistant si leggono con l'add-on GdAHome: qui non c'è.": "Home Assistant's automations are read through the GdAHome add-on: it is not here.",
   "Le automazioni le crea e le modifica chi amministra Home Assistant: qui si accendono e si spengono.": "Automations are created and edited by whoever administers Home Assistant: here you turn them on and off.",
   "Le azioni rapide": "The quick actions",
+  "Le azioni rapide: i tasti che fanno più cose insieme.": "Quick actions: buttons that do several things at once.",
   "Le batterie che vuoi tenere d'occhio. Ogni riga è una batteria — l'entità in percentuale, il nome che vuoi tu, il disegno — e la pagina Batterie le mostra dalla più scarica alla più piena, con in cima quante sono da cambiare.": "The batteries you want to keep an eye on. Each row is a battery — the entity in percent, the name you want, the drawing — and the Batteries page shows them from the flattest to the fullest, with how many need replacing on top.",
   "Le carte": "The cards",
   "Le caselle di una caldaia a pellet o a legna: la combustione, il serbatoio e l'obiettivo della centralina. Lasciale vuote se la tua caldaia va a gas: quello che non mappi non compare in pagina.": "The fields of a pellet or wood boiler: the combustion, the hopper and the controller's own target. Leave them empty if your boiler runs on gas: what you do not map does not appear on the page.",
@@ -5417,6 +5426,7 @@ var SOURCE_INDEX = Object.freeze({
   "Le pagine in una colonna di tasti grandi a sinistra, come sui pannelli di regia. Solo in orizzontale: in verticale e sugli schermi piccoli restano le linguette in alto": "The pages in a column of big buttons on the left, like on control-room panels. Landscape only: in portrait and on small screens the tabs at the top stay",
   "Le partite e i risultati": "The matches and the results",
   "Le persone": "The people",
+  "Le persone della famiglia, per sapere chi è in casa.": "The family members, to know who is home.",
   "Le persone di casa: dove sono, da quanto tempo, e la batteria del telefono. Ogni persona ha la sua card in cima alla Home, con una foto vera o un avatar. Le frecce cambiano l'ordine in cui compaiono; l'interruttore la toglie dalla Home senza cancellarla.": "The people of the house: where they are, for how long, and their phone battery. Each person gets a card at the top of Home, with a real photo or an avatar. The arrows change the order they appear in; the switch takes one off Home without deleting them.",
   "Le piante di casa, una per riga: il sensore dell'umidità della terra, il nome, il disegno, e se c'è la temperatura. La pagina Piante dice quali sono da innaffiare, quali aspettano la pioggia e quando toccherà alle altre.": "The plants at home, one per row: the soil moisture sensor, the name, the drawing, and the temperature if there is one. The Plant care page says which need watering, which are waiting for rain and when the others will be due.",
   "Le playlist, gli artisti e le radio di questo lettore": "This player's playlists, artists and stations",
@@ -7757,6 +7767,7 @@ var SOURCE_INDEX = Object.freeze({
   "Sì, vai": "Yes, go",
   "Sì: è già al ${lim}": "Yes: already at ${lim}",
   "Sicurezza": "Security",
+  "Sicurezza: centrale d'allarme, telecamere, sensori di fumo e gas.": "Security: alarm panel, cameras, smoke and gas sensors.",
   "Sicurezza: inserimenti, aperture, movimento": "Security: arming, openings, motion",
   "Siete fuori e ${g.name} è aperto": "You're out and ${g.name} is open",
   "Siete usciti con ${nomi(aperte, l)} aperta": "You left with ${nomi(aperte, l)} open",
@@ -7778,6 +7789,7 @@ var SOURCE_INDEX = Object.freeze({
   "SISTEMA CLIMATICO": "CLIMATE SYSTEM",
   "Sistema di sicurezza": "Security system",
   "SISTEMA DI SICUREZZA ELITE": "ELITE SECURITY SYSTEM",
+  "Sistema le luci, ognuna nella sua stanza.": "Arrange the lights, each one in its room.",
   "Sistema OK": "System OK",
   "SmartThings, Sonos, Chromecast, AirPlay… scegli il dispositivo e il lettore arriva già fatto: la sua entità, i comandi che l'integrazione pubblica accanto — l'interruttore di una TV, la tendina della sorgente — e le sue letture. Oppure, qui sotto, una casella alla volta.": "SmartThings, Sonos, Chromecast, AirPlay… pick the device and the player arrives ready-made: its entity, the controls the integration publishes next to it — a TV's power switch, the input dropdown — and its readings. Or, below, one field at a time.",
   "Smette di piovere verso le ${ora}": "Rain stops around ${ora}",
@@ -103864,18 +103876,14 @@ function ensureTastoDella3D() {
     if (chiudiLaProcedura2) chiudiLaProcedura2.before(tasto5);
     else testa2.append(tasto5);
   }
-  const barra3 = procedura2.querySelector(".c3c-passi");
-  if (barra3 && !barra3.__dmGuidaGuarda && root.MutationObserver) {
-    barra3.__dmGuidaGuarda = new root.MutationObserver(() => {
-      if (state85.contesto !== "3d" || !state85.aperta) return;
-      const ora8 = passo3dAperto();
-      if (ora8 === state85.passo3d) return;
+  if (state85.contesto === "3d" && state85.aperta) {
+    const ora8 = passo3dAperto();
+    if (ora8 !== state85.passo3d) {
       state85.passo3d = ora8;
       state85.passo = -1;
       spegniLaLuce();
       disegna7();
-    });
-    barra3.__dmGuidaGuarda.observe(barra3, { childList: true, subtree: true });
+    }
   }
   return true;
 }
@@ -103895,8 +103903,8 @@ function installaLoStile5() {
   #editor-modal.dm-guida-con-foglio .ed-shell{margin-right:380px}}
 .dm-guida-testa{display:flex;align-items:center;justify-content:space-between;gap:8px;position:sticky;top:-12px;background:inherit;padding:4px 0 6px;font-size:15px}
 .dm-guida-testa button{border:0;background:rgba(15,23,42,.06);border-radius:50%;width:30px;height:30px;cursor:pointer;color:inherit}
-.dm-guida-scopo{margin:4px 0 10px;color:var(--text-secondary,#475569)}
-.dm-guida-nota{font-size:12px;color:var(--text-secondary,#64748b);margin:2px 0 8px}
+.dm-guida-scopo{margin:4px 0 10px;color:var(--text-dim,#475569)}
+.dm-guida-nota{font-size:12px;color:var(--text-dim,#64748b);margin:2px 0 8px}
 .dm-guida-passi{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
 .dm-guida-passo,.dm-guida-tappa{display:flex;gap:10px;align-items:flex-start;padding:8px;border-radius:12px;background:rgba(15,23,42,.04)}
 .dm-guida-attivo{background:rgba(225,29,72,.08);outline:2px solid rgba(225,29,72,.5)}
@@ -103923,16 +103931,24 @@ function installaLoStile5() {
 `
   );
 }
+function ricontrolla() {
+  avvolgiLApertura();
+  for (const quando6 of [80, 600, 2e3, 5e3])
+    root.setTimeout?.(() => senzaCadere(ensureTastoDella3D, "guida-3d"), quando6);
+}
+function avvolgiLApertura() {
+  return wrapFunction("__DM_CASA3D_CREA__", "__dmGuidaDella3D", ricontrolla);
+}
 function installGuidaDelConfigSection() {
   if (!doc || state85.installed) return false;
   state85.installed = true;
   installaLoStile5();
   ensureRigaDellaGuida();
-  if (root.MutationObserver && doc.body) {
-    new root.MutationObserver(() => senzaCadere(ensureTastoDella3D, "guida-3d")).observe(doc.body, {
-      childList: true
-    });
-  }
+  const dopoUnTocco = () => ricontrolla();
+  doc.addEventListener("click", dopoUnTocco, true);
+  doc.addEventListener("change", dopoUnTocco, true);
+  if (!avvolgiLApertura())
+    for (const quando6 of [0, 300, 1500, 5e3]) root.setTimeout?.(avvolgiLApertura, quando6);
   onEditorRedraw("__dmGuidaDelConfig", () => {
     ensureRigaDellaGuida();
     if (state85.contesto === "3d") return;
@@ -108132,7 +108148,7 @@ function installStili() {
     `
   );
 }
-function avvolgiLApertura() {
+function avvolgiLApertura2() {
   const nome = "apriConfigEntita";
   const originale = root[nome];
   if (typeof originale !== "function" || originale.__dmAlberaturaApre) return false;
@@ -108161,7 +108177,7 @@ function installAlberatura() {
     root.setTimeout?.(ensureAlberatura, 0);
   };
   onEditorRedraw("__dmAlberatura", () => root.queueMicrotask?.(giro));
-  avvolgiLApertura();
+  avvolgiLApertura2();
   for (const evento of [
     "dashboardmodern:editor-rendered",
     "dashboardmodern:legacy-ready",
