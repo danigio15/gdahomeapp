@@ -1172,8 +1172,8 @@ export default Object.freeze({
   'Delete "${nome}"?': "删除“${nome}”？",
   "Delete ALL saved configuration?\n\n⚠️ The config is synced through Home Assistant: it will be removed from ALL linked devices. You will have to run the wizard again.":
     "要删除保存的全部配置吗？\n\n⚠️ 配置通过 Home Assistant 同步：它会从所有关联设备上消失。你需要重新走一遍向导。",
-  "Delete all DashboardModern configuration for this dashboard?":
-    "删除该面板的全部 DashboardModern 配置？",
+  "Delete all GdAHome configuration for this dashboard?":
+    "删除该面板的全部 GdAHome 配置？",
   "Delete failed:": "删除失败：",
   'Delete group "': "删除分组“",
   "Delete light": "删除灯光",
@@ -4186,8 +4186,8 @@ export default Object.freeze({
   "Write to whoever maintains the dashboard: a private conversation, not through GitHub":
     "写给维护此仪表板的人：一段不经过 GitHub 的私密对话",
   "Write your message…": "写下你的消息…",
-  "Written by DashboardModern with the entities you picked.":
-    "由 DashboardModern 用你选的实体写成。",
+  "Written by GdAHome with the entities you picked.":
+    "由 GdAHome 用你选的实体写成。",
   "Wrong PIN, try again.": "PIN 错误，请重试。",
   Year: "年",
   Yellow: "黄色",
@@ -5810,7 +5810,9 @@ export default Object.freeze({
   "${muti[0].name} is not answering": "${muti[0].name}没有响应",
   "${prima.name} is at ${livello}%.": "${prima.name}剩余${livello}%。",
   "${quando} and ${nomi(finestre, l)} is open": "${quando}，${nomi(finestre, l)}还开着",
+  "${quando} and ${nomi(finestre, l)} are open": "${quando}，${nomi(finestre, l)}都还开着",
   "${quando} and ${nomi(tende, l)} is out": "${quando}，${nomi(tende, l)}还展开着",
+  "${quando} and ${nomi(tende, l)} are out": "${quando}，${nomi(tende, l)}都还展开着",
   "${quanti} things to do": "${quanti}件待办",
   "${s.name} is cold: ${gradi}°": "${s.name}偏冷：${gradi}°",
   "${s.name} is hot: ${gradi}°": "${s.name}偏热：${gradi}°",
@@ -5830,6 +5832,7 @@ export default Object.freeze({
   "Ask the house…": "问问家里…",
   "Battery low: ${prima.name}": "电池电量不足：${prima.name}",
   "Better close it first.": "最好先关上。",
+  "Better close them first.": "最好先都关上。",
   "Charge ${auto} on solar": "用光伏给${auto}充电",
   "Close it?": "要关上吗？",
   "CO₂ at ${ppm} ppm: open a window for a few minutes.": "CO₂ ${ppm} ppm：开窗几分钟吧。",
@@ -5873,6 +5876,7 @@ export default Object.freeze({
   Reminders: "提醒",
   Retract: "收起",
   "Retract it?": "要收起吗？",
+  "Retract them?": "要都收起吗？",
   Safety: "安全",
   Savings: "节能",
   "see all": "查看全部",

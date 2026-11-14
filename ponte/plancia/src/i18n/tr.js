@@ -1193,8 +1193,8 @@ export default Object.freeze({
   'Delete "${nome}"?': '"${nome}" silinsin mi?',
   "Delete ALL saved configuration?\n\n⚠️ The config is synced through Home Assistant: it will be removed from ALL linked devices. You will have to run the wizard again.":
     "Kayıtlı yapılandırmanın TAMAMI silinsin mi?\n\n⚠️ Yapılandırma Home Assistant üzerinden eşitlenir: bağlı TÜM cihazlardan kalkar. Sihirbazı yeniden çalıştırmanız gerekir.",
-  "Delete all DashboardModern configuration for this dashboard?":
-    "Bu panonun tüm DashboardModern yapılandırması silinsin mi?",
+  "Delete all GdAHome configuration for this dashboard?":
+    "Bu panonun tüm GdAHome yapılandırması silinsin mi?",
   "Delete failed:": "Silinemedi:",
   'Delete group "': '" grubu silinsin mi: "',
   "Delete light": "Işığı sil",
@@ -4260,8 +4260,8 @@ export default Object.freeze({
   "Write to whoever maintains the dashboard: a private conversation, not through GitHub":
     "Panoyu sürdüren kişiye yaz: GitHub'dan geçmeyen özel bir konuşma",
   "Write your message…": "Mesajını yaz…",
-  "Written by DashboardModern with the entities you picked.":
-    "Seçtiğiniz varlıklarla DashboardModern tarafından yazıldı.",
+  "Written by GdAHome with the entities you picked.":
+    "Seçtiğiniz varlıklarla GdAHome tarafından yazıldı.",
   "Wrong PIN, try again.": "Yanlış PIN, tekrar dene.",
   Year: "Yıl",
   Yellow: "Sarı",
@@ -5913,7 +5913,9 @@ export default Object.freeze({
   "${muti[0].name} is not answering": "${muti[0].name} yanıt vermiyor",
   "${prima.name} is at ${livello}%.": "${prima.name}: %${livello}.",
   "${quando} and ${nomi(finestre, l)} is open": "${quando} ve ${nomi(finestre, l)} açık",
+  "${quando} and ${nomi(finestre, l)} are open": "${quando} ve ${nomi(finestre, l)} açık",
   "${quando} and ${nomi(tende, l)} is out": "${quando} ve ${nomi(tende, l)} açık",
+  "${quando} and ${nomi(tende, l)} are out": "${quando} ve ${nomi(tende, l)} açık",
   "${quanti} things to do": "Yapılacak ${quanti} şey",
   "${s.name} is cold: ${gradi}°": "${s.name} soğuk: ${gradi}°",
   "${s.name} is hot: ${gradi}°": "${s.name} sıcak: ${gradi}°",
@@ -5934,6 +5936,7 @@ export default Object.freeze({
   "Ask the house…": "Eve sor…",
   "Battery low: ${prima.name}": "Pil bitmek üzere: ${prima.name}",
   "Better close it first.": "Önceden kapatmak iyi olur.",
+  "Better close them first.": "Önceden kapatmak iyi olur.",
   "Charge ${auto} on solar": "${auto} güneşle şarj edilsin",
   "Close it?": "Kapatayım mı?",
   "CO₂ at ${ppm} ppm: open a window for a few minutes.":
@@ -5981,6 +5984,7 @@ export default Object.freeze({
   Reminders: "Hatırlatıcılar",
   Retract: "Topla",
   "Retract it?": "Toplayayım mı?",
+  "Retract them?": "Toplayayım mı?",
   Safety: "Güvenlik",
   Savings: "Tasarruf",
   "see all": "tümünü gör",

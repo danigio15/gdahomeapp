@@ -111,6 +111,14 @@ export const NOME_SCRITTO = "GdAHome";
  * la dashboard cambiasse il suo, questa e' la riga da cambiare. */
 export const NOME_DI_PRIMA = "DashboardModern";
 
+/* La parola di serie del velo, oggi. Dalla 1.5.9.x la pagina sul disco porta
+ * gia' il nostro marchio — logo, velo, segno di Configurazione — cosi' anche
+ * una strada che non passa da qui (la pagina servita da Home Assistant, una
+ * copia aperta a mano) mostra GdAHome. Il vestito resta: e' lui che mette il
+ * nome e il logo di chi installa. E riconosce tutte e due le forme, la vecchia
+ * e la nuova, perche' una plancia di prima puo' ancora arrivare. */
+const LA_PAROLA_DI_SERIE = "GDAHOME";
+
 const QUI = dirname(fileURLToPath(import.meta.url));
 const MARCHIO = join(QUI, "..", "marchio");
 
@@ -153,28 +161,29 @@ const IL_LOGO = "legacy/logo.png";
 const LIMMAGINE_DEL_VELO = /(<div id="cd-boot-overlay"><img src=")data:[^"]*(")/;
 
 /* La parola in maiuscolo sotto il logo del velo. */
-const LA_PAROLA_DEL_VELO = new RegExp(`(<b>)${NOME_DI_PRIMA}(</b>)`);
+const LA_PAROLA_DEL_VELO = new RegExp(`(<b>)(?:${NOME_DI_PRIMA}|${LA_PAROLA_DI_SERIE})(</b>)`);
 
 /* Il titolo della pagina. Quello che c'e' non e' un marchio — «Smart Home
  * Dashboard» — ma e' la scritta nella linguetta del browser, ed e' un posto
  * dove il nome del prodotto ci va. */
 const IL_TITOLO = /<title>[^<]*<\/title>/;
 
-/* L'`alt` del logo, dentro il runtime. Con lo spazio: li' e' scritto
- * «Dashboard Modern», in due parole. */
-const L_ALT_DEL_LOGO = /alt="Dashboard Modern"/g;
+/* L'`alt` del logo, dentro il runtime. Prima «Dashboard Modern», in due
+ * parole; oggi gia' «GdAHome», che qui diventa il nome di chi installa. */
+const L_ALT_DEL_LOGO = /alt="(?:Dashboard Modern|GdAHome)"/g;
 
 /* I numeri che la plancia dichiara di se' stessa. Sono dentro un `Object.freeze`
  * scritto su una riga sola, e si riconoscono per nome. */
 const IL_BUILD_INFO = "legacy/build-info.js";
 const LA_VERSIONE_DELLA_PLANCIA = /("(?:integrationVersion|dashboardVersion)":")[^"]*(")/g;
 
-/* Il segno in cima a Configurazione: una casetta azzurra disegnata dentro la
- * pagina. Si riconosce il contenitore — `cfg-hero-ico` — e si butta via quello
- * che c'e' dentro: quel disegno cambia a ogni versione della plancia, il nome
+/* Il segno in cima a Configurazione. Prima una casetta azzurra disegnata
+ * dentro la pagina, oggi gia' il nostro `logo.png`. Si riconosce il
+ * contenitore — `cfg-hero-ico` — e si butta via quello che c'e' dentro, il
+ * disegno o l'immagine: quello cambia a ogni versione della plancia, il nome
  * della classe no. */
 const IL_SEGNO_DI_CONFIGURAZIONE =
-  /(<div class="cfg-hero-ico"[^>]*>)\s*<svg[\s\S]*?<\/svg>\s*(<\/div>)/;
+  /(<div class="cfg-hero-ico"[^>]*>)\s*(?:<svg[\s\S]*?<\/svg>|<img[^>]*>)\s*(<\/div>)/;
 
 /* Lo script che, subito dopo il velo, gli cambia la parola se la pagina ne
  * porta una in testa (`window.__GDAHOME_VELO__`, messa dalle premesse: e' il
@@ -195,7 +204,9 @@ export const IL_VELO_SI_RIVESTE =
  * Il secondo pezzo ha un colore e le lettere spaziate: lasciandogli il suo
  * stile, «gda» e «home» si leggono come il nostro nome con la seconda meta'
  * in evidenza, che e' esattamente il disegno che c'era. */
-const LA_SCRITTA_DEL_LOGO = /(>)Dashboard(<\/span><span[^>]*>)MODERN(<\/span>)/g;
+/* Oggi sul disco c'e' gia' «GdA» e «Home»: si riconosce anche quella coppia,
+ * perche' e' qui che diventa il nome di chi installa. */
+const LA_SCRITTA_DEL_LOGO = /(>)(?:Dashboard|GdA)(<\/span><span[^>]*>)(?:MODERN|Home)(<\/span>)/g;
 
 /* I due file che portano il nome scritto dentro il programma. */
 const IL_RUNTIME = /^legacy\/dashboard-runtime-[a-z]{2}\.js$/;

@@ -238,7 +238,7 @@ export function mountLegacyHost(
   hostWindow.__DASHBOARDMODERN_UTENTE__ = utente;
   const frame = documentRef.createElement("iframe");
   frame.className = "dashboardmodern-legacy-host";
-  frame.setAttribute("title", "DashboardModern");
+  frame.setAttribute("title", "GdAHome");
   frame.setAttribute("allow", LEGACY_FRAME_PERMISSIONS);
   frame.dataset ||= {};
   const profileQuery = configProfile ? `&dmc=${encodeURIComponent(configProfile)}` : "";
@@ -290,7 +290,7 @@ export function mountLegacyHost(
   const boot = () =>
     loadHostedDocument(frame, { staticBase, file, instanceId, primary, configProfile, locale, utente, fetchRef: loader, hostWindow }).catch((error) => {
       console.error("[DashboardModern] hosted document bootstrap failed", error);
-      frame.srcdoc = `<main role="alert" style="padding:24px;font:16px sans-serif">DashboardModern: ${escapeAttribute(error.message)}</main>`;
+      frame.srcdoc = `<main role="alert" style="padding:24px;font:16px sans-serif">GdAHome: ${escapeAttribute(error.message)}</main>`;
       return false;
     });
 

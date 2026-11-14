@@ -1191,8 +1191,8 @@ export default Object.freeze({
   'Delete "${nome}"?': "«${nome}» हटाएँ?",
   "Delete ALL saved configuration?\n\n⚠️ The config is synced through Home Assistant: it will be removed from ALL linked devices. You will have to run the wizard again.":
     "सहेजा गया पूरा कॉन्फ़िगरेशन मिटाएँ?\n\n⚠️ कॉन्फ़िगरेशन Home Assistant के ज़रिए सिंक होता है: यह सभी जुड़े डिवाइसों से हट जाएगा। आपको विज़र्ड दोबारा चलाना होगा।",
-  "Delete all DashboardModern configuration for this dashboard?":
-    "इस डैशबोर्ड का सारा DashboardModern कॉन्फ़िगरेशन हटाएँ?",
+  "Delete all GdAHome configuration for this dashboard?":
+    "इस डैशबोर्ड का सारा GdAHome कॉन्फ़िगरेशन हटाएँ?",
   "Delete failed:": "मिटाया नहीं जा सका:",
   'Delete group "': 'समूह मिटाएँ "',
   "Delete light": "रोशनी हटाएँ",
@@ -4248,8 +4248,8 @@ export default Object.freeze({
   "Write to whoever maintains the dashboard: a private conversation, not through GitHub":
     "जो डैशबोर्ड बनाए रखता है उसे लिखें: GitHub से गुज़रे बिना एक निजी बातचीत",
   "Write your message…": "अपना संदेश लिखें…",
-  "Written by DashboardModern with the entities you picked.":
-    "आपकी चुनी हुई एंटिटी के साथ DashboardModern ने लिखी है।",
+  "Written by GdAHome with the entities you picked.":
+    "आपकी चुनी हुई एंटिटी के साथ GdAHome ने लिखी है।",
   "Wrong PIN, try again.": "गलत PIN, फिर से कोशिश करें।",
   Year: "साल",
   Yellow: "पीला",
@@ -5898,7 +5898,9 @@ export default Object.freeze({
   "${muti[0].name} is not answering": "${muti[0].name} जवाब नहीं दे रहा",
   "${prima.name} is at ${livello}%.": "${prima.name} ${livello}% पर है।",
   "${quando} and ${nomi(finestre, l)} is open": "${quando} और ${nomi(finestre, l)} खुली है",
+  "${quando} and ${nomi(finestre, l)} are open": "${quando} और ${nomi(finestre, l)} खुली हैं",
   "${quando} and ${nomi(tende, l)} is out": "${quando} और ${nomi(tende, l)} बाहर है",
+  "${quando} and ${nomi(tende, l)} are out": "${quando} और ${nomi(tende, l)} बाहर हैं",
   "${quanti} things to do": "करने को ${quanti} काम",
   "${s.name} is cold: ${gradi}°": "${s.name} ठंडा है: ${gradi}°",
   "${s.name} is hot: ${gradi}°": "${s.name} गर्म है: ${gradi}°",
@@ -5920,6 +5922,7 @@ export default Object.freeze({
   "Ask the house…": "घर से पूछें…",
   "Battery low: ${prima.name}": "बैटरी लगभग खत्म: ${prima.name}",
   "Better close it first.": "पहले बंद कर देना बेहतर है।",
+  "Better close them first.": "पहले इन्हें बंद कर देना बेहतर है।",
   "Charge ${auto} on solar": "${auto} को सौर से चार्ज करें",
   "Close it?": "बंद कर दूँ?",
   "CO₂ at ${ppm} ppm: open a window for a few minutes.":
@@ -5969,6 +5972,7 @@ export default Object.freeze({
   Reminders: "रिमाइंडर",
   Retract: "समेटें",
   "Retract it?": "समेट दूँ?",
+  "Retract them?": "इन्हें समेट दूँ?",
   Safety: "सुरक्षा",
   Savings: "बचत",
   "see all": "सब देखें",

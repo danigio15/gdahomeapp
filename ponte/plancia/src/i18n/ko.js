@@ -1193,8 +1193,8 @@ export default Object.freeze({
   'Delete "${nome}"?': '"${nome}"을(를) 삭제할까요?',
   "Delete ALL saved configuration?\n\n⚠️ The config is synced through Home Assistant: it will be removed from ALL linked devices. You will have to run the wizard again.":
     "저장된 설정을 모두 삭제할까요?\n\n⚠️ 설정은 Home Assistant를 통해 동기화됩니다. 연결된 모든 기기에서 사라집니다. 마법사를 다시 실행해야 합니다.",
-  "Delete all DashboardModern configuration for this dashboard?":
-    "이 대시보드의 DashboardModern 설정을 모두 삭제할까요?",
+  "Delete all GdAHome configuration for this dashboard?":
+    "이 대시보드의 GdAHome 설정을 모두 삭제할까요?",
   "Delete failed:": "삭제하지 못했습니다:",
   'Delete group "': '그룹 "',
   "Delete light": "조명 삭제",
@@ -4250,8 +4250,8 @@ export default Object.freeze({
   "Write to whoever maintains the dashboard: a private conversation, not through GitHub":
     "대시보드를 관리하는 사람에게 쓰기: GitHub을 거치지 않는 비공개 대화",
   "Write your message…": "메시지를 쓰세요…",
-  "Written by DashboardModern with the entities you picked.":
-    "당신이 고른 엔티티로 DashboardModern이 작성했습니다.",
+  "Written by GdAHome with the entities you picked.":
+    "당신이 고른 엔티티로 GdAHome이 작성했습니다.",
   "Wrong PIN, try again.": "PIN이 틀렸습니다. 다시 시도하세요.",
   Year: "연",
   Yellow: "노랑",
@@ -5894,7 +5894,9 @@ export default Object.freeze({
   "${prima.name} is at ${livello}%.": "${prima.name}: ${livello}%.",
   "${quando} and ${nomi(finestre, l)} is open":
     "${quando}, ${nomi(finestre, l)}이(가) 열려 있습니다",
+  "${quando} and ${nomi(finestre, l)} are open": "${quando}, ${nomi(finestre, l)}이(가) 모두 열려 있습니다",
   "${quando} and ${nomi(tende, l)} is out": "${quando}, ${nomi(tende, l)}이(가) 펼쳐져 있습니다",
+  "${quando} and ${nomi(tende, l)} are out": "${quando}, ${nomi(tende, l)}이(가) 모두 펼쳐져 있습니다",
   "${quanti} things to do": "할 일 ${quanti}개",
   "${s.name} is cold: ${gradi}°": "${s.name}이(가) 춥습니다: ${gradi}°",
   "${s.name} is hot: ${gradi}°": "${s.name}이(가) 덥습니다: ${gradi}°",
@@ -5916,6 +5918,7 @@ export default Object.freeze({
   "Ask the house…": "집에 물어보기…",
   "Battery low: ${prima.name}": "배터리 부족: ${prima.name}",
   "Better close it first.": "미리 닫아 두는 게 좋겠습니다.",
+  "Better close them first.": "미리 닫아 두는 게 좋겠습니다.",
   "Charge ${auto} on solar": "${auto}을(를) 태양광으로 충전",
   "Close it?": "닫을까요?",
   "CO₂ at ${ppm} ppm: open a window for a few minutes.":
@@ -5966,6 +5969,7 @@ export default Object.freeze({
   Reminders: "알림",
   Retract: "접기",
   "Retract it?": "접을까요?",
+  "Retract them?": "모두 접을까요?",
   Safety: "안전",
   Savings: "절약",
   "see all": "모두 보기",

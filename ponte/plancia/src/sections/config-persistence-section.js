@@ -1280,8 +1280,8 @@ function installStorageMutationBridge() {
 
 function resetConfirmation() {
   return t(
-    "Eliminare tutta la configurazione DashboardModern di questa plancia?",
-    "Delete all DashboardModern configuration for this dashboard?",
+    "Eliminare tutta la configurazione GdAHome di questa plancia?",
+    "Delete all GdAHome configuration for this dashboard?",
   );
 }
 

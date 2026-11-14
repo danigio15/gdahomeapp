@@ -1197,8 +1197,8 @@ export default Object.freeze({
   'Delete "${nome}"?': '¿Eliminar "${nome}"?',
   "Delete ALL saved configuration?\n\n⚠️ The config is synced through Home Assistant: it will be removed from ALL linked devices. You will have to run the wizard again.":
     "¿Borrar TODA la configuración guardada?\n\n⚠️ La configuración se sincroniza a través de Home Assistant: se eliminará de TODOS los dispositivos enlazados. Tendrás que volver a pasar por el asistente.",
-  "Delete all DashboardModern configuration for this dashboard?":
-    "¿Eliminar toda la configuración de DashboardModern de este panel?",
+  "Delete all GdAHome configuration for this dashboard?":
+    "¿Eliminar toda la configuración de GdAHome de este panel?",
   "Delete failed:": "No se ha podido borrar:",
   'Delete group "': '¿Borrar el grupo "',
   "Delete light": "Eliminar luz",
@@ -4283,8 +4283,8 @@ export default Object.freeze({
   "Write to whoever maintains the dashboard: a private conversation, not through GitHub":
     "Escribe a quien mantiene el panel: una conversación privada, sin pasar por GitHub",
   "Write your message…": "Escribe tu mensaje…",
-  "Written by DashboardModern with the entities you picked.":
-    "Escrita por DashboardModern con las entidades que has elegido.",
+  "Written by GdAHome with the entities you picked.":
+    "Escrita por GdAHome con las entidades que has elegido.",
   "Wrong PIN, try again.": "PIN incorrecto, inténtalo de nuevo.",
   Year: "Año",
   Yellow: "Amarillo",
@@ -5949,7 +5949,9 @@ export default Object.freeze({
   "${muti[0].name} is not answering": "${muti[0].name} no responde",
   "${prima.name} is at ${livello}%.": "${prima.name} está al ${livello} %.",
   "${quando} and ${nomi(finestre, l)} is open": "${quando} y ${nomi(finestre, l)} está abierta",
+  "${quando} and ${nomi(finestre, l)} are open": "${quando} y ${nomi(finestre, l)} están abiertas",
   "${quando} and ${nomi(tende, l)} is out": "${quando} y ${nomi(tende, l)} está extendido",
+  "${quando} and ${nomi(tende, l)} are out": "${quando} y ${nomi(tende, l)} están extendidos",
   "${quanti} things to do": "${quanti} cosas por hacer",
   "${s.name} is cold: ${gradi}°": "${s.name} está fría: ${gradi}°",
   "${s.name} is hot: ${gradi}°": "${s.name} está caliente: ${gradi}°",
@@ -5971,6 +5973,7 @@ export default Object.freeze({
   "Ask the house…": "Pregunta a la casa…",
   "Battery low: ${prima.name}": "Pila casi agotada: ${prima.name}",
   "Better close it first.": "Mejor cerrarla antes.",
+  "Better close them first.": "Mejor cerrarlas antes.",
   "Charge ${auto} on solar": "Carga ${auto} con el sol",
   "Close it?": "¿Lo cierro?",
   "CO₂ at ${ppm} ppm: open a window for a few minutes.":
@@ -6020,6 +6023,7 @@ export default Object.freeze({
   Reminders: "Recordatorios",
   Retract: "Recoger",
   "Retract it?": "¿Lo recojo?",
+  "Retract them?": "¿Los recojo?",
   Safety: "Seguridad",
   Savings: "Ahorro",
   "see all": "ver todos",

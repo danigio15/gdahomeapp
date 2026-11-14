@@ -703,7 +703,7 @@ const UNTRANSLATED_SHELL_TEXT = new Set([
   "CONNECTING...",
   "CPU",
   // Il nome del prodotto sul velo d'avvio: uguale in ogni lingua.
-  "DashboardModern",
+  "GDAHOME",
   "DEL",
   "Download",
   "EV",

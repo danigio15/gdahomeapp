@@ -29,6 +29,7 @@ import {
   suggerimentiDellaCasa,
 } from "../src/core/assistente-di-casa.js";
 import { CONFIG_KEYS } from "../src/core/chiavi-di-configurazione.js";
+import { loadCatalog } from "../src/core/i18n.js";
 
 const MINUTO = 60_000;
 const ORA = 60 * MINUTO;
@@ -389,6 +390,90 @@ test("pioggia fra mezz'ora con la finestra aperta e la tenda fuori", () => {
     casa(16, { meteo: { pioggiaFra: 90 }, finestre: [{ entity: "binary_sensor.f", name: "F" }] }),
   );
   assert.equal(poi.urgenza, "oggi");
+});
+
+/* «Pioggia fra 2 h e Bagno Grande e altre 4 è aperta. Meglio chiuderla
+ * prima.» — con cinque finestre. Una «è aperta», piu' d'una «sono aperte»; e
+ * lo stesso per le tende, in tutte le lingue della plancia. */
+test("la pioggia con piu' finestre aperte parla al plurale, in ogni lingua", async () => {
+  const finestre = ["Bagno Grande", "Cucina", "Studio", "Camera", "Sala"].map((name, i) => ({
+    entity: `binary_sensor.finestra_${i}`,
+    name,
+  }));
+  const tende = [
+    { entity: "cover.tenda_nord", name: "Tenda nord", aperta: true },
+    { entity: "cover.tenda_sud", name: "Tenda sud", aperta: true },
+  ];
+  const dice = (lingua, quali = finestre, tendeFuori = tende) => {
+    const fuori = suggerimentiDellaCasa(
+      casa(16, { meteo: { pioggiaFra: 120 }, finestre: quali, tende: tendeFuori }),
+      {},
+      {},
+      lingua,
+    );
+    return {
+      finestre: fuori.find((s) => s.entita.includes(quali[0]?.entity)),
+      tende: fuori.find((s) => s.entita.includes(tendeFuori[0]?.entity)),
+    };
+  };
+
+  const tante = dice("it");
+  assert.equal(tante.finestre.titolo, "Pioggia fra 2 h e Bagno Grande e altre 4 sono aperte");
+  assert.equal(tante.finestre.motivo, "Meglio chiuderle prima.");
+  assert.equal(tante.tende.titolo, "Pioggia fra 2 h e Tenda nord e Tenda sud sono fuori");
+  assert.equal(tante.tende.motivo, "Le ritiro?");
+  const una = dice("it", finestre.slice(0, 1), tende.slice(0, 1));
+  assert.equal(una.finestre.titolo, "Pioggia fra 2 h e Bagno Grande è aperta");
+  assert.equal(una.finestre.motivo, "Meglio chiuderla prima.");
+  assert.equal(una.tende.titolo, "Pioggia fra 2 h e Tenda nord è fuori");
+  assert.equal(una.tende.motivo, "La ritiro?");
+
+  const inglese = dice("en");
+  assert.equal(inglese.finestre.titolo, "Rain in 2 h and Bagno Grande and 4 more are open");
+  assert.equal(inglese.finestre.motivo, "Better close them first.");
+  assert.equal(inglese.tende.motivo, "Retract them?");
+
+  /* Le tredici lingue dei cataloghi: la frase al plurale e' tradotta — non
+   * torna l'inglese — e porta i nomi giusti. */
+  const plurali = {
+    de: ["sind offen", "Einfahren?"],
+    es: ["están abiertas", "¿Los recojo?"],
+    fr: ["sont ouvertes", "Je les replie ?"],
+    pt: ["estão abertas", "Recolho-os?"],
+    nl: ["staan open", "Inrollen?"],
+    pl: ["są otwarte", "Zwinąć je?"],
+    ru: ["открыты", "Сложить их?"],
+  };
+  for (const lingua of [
+    "ar",
+    "de",
+    "es",
+    "fr",
+    "hi",
+    "ja",
+    "ko",
+    "nl",
+    "pl",
+    "pt",
+    "ru",
+    "tr",
+    "zh-Hans",
+  ]) {
+    await loadCatalog(lingua);
+    const detto = dice(lingua);
+    assert.ok(
+      detto.finestre.titolo.includes("Bagno Grande"),
+      `${lingua}: ${detto.finestre.titolo}`,
+    );
+    assert.doesNotMatch(detto.finestre.titolo, / are open$/, `${lingua}: tradotta`);
+    assert.notEqual(detto.finestre.motivo, "Better close them first.", `${lingua}: tradotta`);
+    assert.notEqual(detto.tende.motivo, "Retract them?", `${lingua}: tradotta`);
+    const atteso = plurali[lingua];
+    if (atteso) {
+      assert.ok(detto.finestre.titolo.endsWith(atteso[0]), `${lingua}: ${detto.finestre.titolo}`);
+      assert.equal(detto.tende.motivo, atteso[1], lingua);
+    }
+  }
 });
 
 test("di notte le luci dove non c'e' nessuno", () => {

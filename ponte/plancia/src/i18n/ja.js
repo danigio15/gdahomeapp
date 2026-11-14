@@ -1195,8 +1195,8 @@ export default Object.freeze({
   'Delete "${nome}"?': "「${nome}」を削除しますか？",
   "Delete ALL saved configuration?\n\n⚠️ The config is synced through Home Assistant: it will be removed from ALL linked devices. You will have to run the wizard again.":
     "保存した設定をすべて削除しますか？\n\n⚠️ 設定は Home Assistant 経由で同期されます。連携しているすべての端末から消えます。ウィザードをやり直す必要があります。",
-  "Delete all DashboardModern configuration for this dashboard?":
-    "このダッシュボードの DashboardModern 設定をすべて削除しますか？",
+  "Delete all GdAHome configuration for this dashboard?":
+    "このダッシュボードの GdAHome 設定をすべて削除しますか？",
   "Delete failed:": "削除できませんでした:",
   'Delete group "': "グループ「",
   "Delete light": "照明を削除",
@@ -4262,8 +4262,8 @@ export default Object.freeze({
   "Write to whoever maintains the dashboard: a private conversation, not through GitHub":
     "ダッシュボードを管理している人に書く：GitHub を通さない個人的な会話",
   "Write your message…": "メッセージを書いてください…",
-  "Written by DashboardModern with the entities you picked.":
-    "あなたが選んだエンティティで DashboardModern が書きました。",
+  "Written by GdAHome with the entities you picked.":
+    "あなたが選んだエンティティで GdAHome が書きました。",
   "Wrong PIN, try again.": "PINが違います。もう一度お試しください。",
   Year: "年",
   Yellow: "黄",
@@ -5914,7 +5914,9 @@ export default Object.freeze({
   "${muti[0].name} is not answering": "${muti[0].name}が応答しません",
   "${prima.name} is at ${livello}%.": "${prima.name}は残り${livello}%です。",
   "${quando} and ${nomi(finestre, l)} is open": "${quando}、${nomi(finestre, l)}が開いています",
+  "${quando} and ${nomi(finestre, l)} are open": "${quando}、${nomi(finestre, l)}が開いています",
   "${quando} and ${nomi(tende, l)} is out": "${quando}、${nomi(tende, l)}が出ています",
+  "${quando} and ${nomi(tende, l)} are out": "${quando}、${nomi(tende, l)}が出ています",
   "${quanti} things to do": "やること${quanti}件",
   "${s.name} is cold: ${gradi}°": "${s.name}が寒いです：${gradi}°",
   "${s.name} is hot: ${gradi}°": "${s.name}が暑いです：${gradi}°",
@@ -5936,6 +5938,7 @@ export default Object.freeze({
   "Ask the house…": "家に聞く…",
   "Battery low: ${prima.name}": "電池残量わずか：${prima.name}",
   "Better close it first.": "先に閉めておきましょう。",
+  "Better close them first.": "先に閉めておきましょう。",
   "Charge ${auto} on solar": "${auto}を太陽光で充電",
   "Close it?": "閉めますか？",
   "CO₂ at ${ppm} ppm: open a window for a few minutes.":
@@ -5984,6 +5987,7 @@ export default Object.freeze({
   Reminders: "リマインダー",
   Retract: "収納",
   "Retract it?": "収納しますか？",
+  "Retract them?": "収納しますか？",
   Safety: "安全",
   Savings: "節約",
   "see all": "すべて見る",

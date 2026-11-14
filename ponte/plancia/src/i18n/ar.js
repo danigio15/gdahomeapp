@@ -1184,8 +1184,8 @@ export default Object.freeze({
   'Delete "${nome}"?': "هل تريد حذف «${nome}»؟",
   "Delete ALL saved configuration?\n\n⚠️ The config is synced through Home Assistant: it will be removed from ALL linked devices. You will have to run the wizard again.":
     "حذف كل الإعدادات المحفوظة؟\n\n⚠️ تُزامَن الإعدادات عبر Home Assistant: ستُزال من كل الأجهزة المرتبطة. وسيلزمك تشغيل المعالج من جديد.",
-  "Delete all DashboardModern configuration for this dashboard?":
-    "حذف كل إعدادات DashboardModern لهذه اللوحة؟",
+  "Delete all GdAHome configuration for this dashboard?":
+    "حذف كل إعدادات GdAHome لهذه اللوحة؟",
   "Delete failed:": "تعذّر الحذف:",
   'Delete group "': 'حذف المجموعة "',
   "Delete light": "حذف الضوء",
@@ -4227,8 +4227,8 @@ export default Object.freeze({
   "Write to whoever maintains the dashboard: a private conversation, not through GitHub":
     "اكتب إلى من يتولى صيانة اللوحة: محادثة خاصة لا تمر عبر GitHub",
   "Write your message…": "اكتب رسالتك…",
-  "Written by DashboardModern with the entities you picked.":
-    "كُتبت بواسطة DashboardModern بالكيانات التي اخترتها.",
+  "Written by GdAHome with the entities you picked.":
+    "كُتبت بواسطة GdAHome بالكيانات التي اخترتها.",
   "Wrong PIN, try again.": "رمز PIN خاطئ، حاول مجددًا.",
   Year: "السنة",
   Yellow: "أصفر",
@@ -5874,7 +5874,9 @@ export default Object.freeze({
   "${muti[0].name} is not answering": "${muti[0].name} لا يستجيب",
   "${prima.name} is at ${livello}%.": "${prima.name} عند ${livello}%.",
   "${quando} and ${nomi(finestre, l)} is open": "${quando} و${nomi(finestre, l)} مفتوحة",
+  "${quando} and ${nomi(finestre, l)} are open": "${quando} و${nomi(finestre, l)} مفتوحة",
   "${quando} and ${nomi(tende, l)} is out": "${quando} و${nomi(tende, l)} ممدودة",
+  "${quando} and ${nomi(tende, l)} are out": "${quando} و${nomi(tende, l)} ممدودة",
   "${quanti} things to do": "${quanti} أمور للقيام بها",
   "${s.name} is cold: ${gradi}°": "${s.name} باردة: ${gradi}°",
   "${s.name} is hot: ${gradi}°": "${s.name} حارة: ${gradi}°",
@@ -5894,6 +5896,7 @@ export default Object.freeze({
   "Ask the house…": "اسأل المنزل…",
   "Battery low: ${prima.name}": "البطارية شبه فارغة: ${prima.name}",
   "Better close it first.": "الأفضل أن تغلقها قبل ذلك.",
+  "Better close them first.": "الأفضل أن تغلقها قبل ذلك.",
   "Charge ${auto} on solar": "اشحن ${auto} بالطاقة الشمسية",
   "Close it?": "هل أغلقه؟",
   "CO₂ at ${ppm} ppm: open a window for a few minutes.":
@@ -5941,6 +5944,7 @@ export default Object.freeze({
   Reminders: "تذكيرات",
   Retract: "اطوِ",
   "Retract it?": "هل أطويها؟",
+  "Retract them?": "هل أطويها؟",
   Safety: "الأمان",
   Savings: "التوفير",
   "see all": "عرض الكل",

@@ -1196,8 +1196,8 @@ export default Object.freeze({
   'Delete "${nome}"?': "Удалить «${nome}»?",
   "Delete ALL saved configuration?\n\n⚠️ The config is synced through Home Assistant: it will be removed from ALL linked devices. You will have to run the wizard again.":
     "Удалить ВСЕ сохранённые настройки?\n\n⚠️ Настройки синхронизируются через Home Assistant: они исчезнут со ВСЕХ связанных устройств. Мастер придётся пройти заново.",
-  "Delete all DashboardModern configuration for this dashboard?":
-    "Удалить всю конфигурацию DashboardModern для этой панели?",
+  "Delete all GdAHome configuration for this dashboard?":
+    "Удалить всю конфигурацию GdAHome для этой панели?",
   "Delete failed:": "Не удалось удалить:",
   'Delete group "': 'Удалить группу "',
   "Delete light": "Удалить светильник",
@@ -4275,8 +4275,8 @@ export default Object.freeze({
   "Write to whoever maintains the dashboard: a private conversation, not through GitHub":
     "Напишите тому, кто поддерживает панель: личный разговор, без GitHub",
   "Write your message…": "Напишите своё сообщение…",
-  "Written by DashboardModern with the entities you picked.":
-    "Написана DashboardModern с выбранными вами сущностями.",
+  "Written by GdAHome with the entities you picked.":
+    "Написана GdAHome с выбранными вами сущностями.",
   "Wrong PIN, try again.": "Неверный PIN-код, попробуйте ещё раз.",
   Year: "Год",
   Yellow: "Жёлтый",
@@ -5934,7 +5934,9 @@ export default Object.freeze({
   "${muti[0].name} is not answering": "${muti[0].name} не отвечает",
   "${prima.name} is at ${livello}%.": "У ${prima.name} осталось ${livello}%.",
   "${quando} and ${nomi(finestre, l)} is open": "${quando}, а ${nomi(finestre, l)} открыто",
+  "${quando} and ${nomi(finestre, l)} are open": "${quando}, а ${nomi(finestre, l)} открыты",
   "${quando} and ${nomi(tende, l)} is out": "${quando}, а ${nomi(tende, l)} раскрыта",
+  "${quando} and ${nomi(tende, l)} are out": "${quando}, а ${nomi(tende, l)} раскрыты",
   "${quanti} things to do": "Дел: ${quanti}",
   "${s.name} is cold: ${gradi}°": "${s.name}: холодно, ${gradi}°",
   "${s.name} is hot: ${gradi}°": "${s.name}: жарко, ${gradi}°",
@@ -5955,6 +5957,7 @@ export default Object.freeze({
   "Ask the house…": "Спроси дом…",
   "Battery low: ${prima.name}": "Батарейка почти разряжена: ${prima.name}",
   "Better close it first.": "Лучше закрыть заранее.",
+  "Better close them first.": "Лучше закрыть их заранее.",
   "Charge ${auto} on solar": "Заряди ${auto} от солнца",
   "Close it?": "Закрыть?",
   "CO₂ at ${ppm} ppm: open a window for a few minutes.":
@@ -6001,6 +6004,7 @@ export default Object.freeze({
   Reminders: "Напоминания",
   Retract: "Сложить",
   "Retract it?": "Сложить?",
+  "Retract them?": "Сложить их?",
   Safety: "Безопасность",
   Savings: "Экономия",
   "see all": "все",

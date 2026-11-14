@@ -573,7 +573,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-DKONP5HF.js";
+} from "../../chunk-3O2GON5K.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -2213,7 +2213,9 @@ var SOURCE_INDEX = Object.freeze({
   "${proposal.undecided.length} campi hanno due candidati altrettanto probabili: li lascio a te, nelle altre schede.": "${proposal.undecided.length} fields have two equally likely candidates: those are left for you, in the other tabs.",
   "${quali} misura tutta la macchina, non una stanza sola: il report non lo divide fra le zone, e per quelle stanze le ore restano «non note».": '${quali} measures the whole machine, not a single room: the report does not split it between zones, and for those rooms the hours stay "unknown".',
   "${quando} e ${nomi(finestre, l)} è aperta": "${quando} and ${nomi(finestre, l)} is open",
+  "${quando} e ${nomi(finestre, l)} sono aperte": "${quando} and ${nomi(finestre, l)} are open",
   "${quando} e ${nomi(tende, l)} è fuori": "${quando} and ${nomi(tende, l)} is out",
+  "${quando} e ${nomi(tende, l)} sono fuori": "${quando} and ${nomi(tende, l)} are out",
   "${quante} aree insieme: i tasti valgono per tutte": "${quante} areas together: the buttons apply to all",
   "${quante} aspettano la pioggia": "${quante} waiting for rain",
   "${quante} azioni": "${quante} actions",
@@ -4158,7 +4160,7 @@ var SOURCE_INDEX = Object.freeze({
   "Eliminare «${v.titolo}»?": "Delete «${v.titolo}»?",
   'Eliminare il gruppo "': 'Delete group "',
   "Eliminare questo elettrodomestico?": "Delete this appliance?",
-  "Eliminare tutta la configurazione DashboardModern di questa plancia?": "Delete all DashboardModern configuration for this dashboard?",
+  "Eliminare tutta la configurazione GdAHome di questa plancia?": "Delete all GdAHome configuration for this dashboard?",
   "Eliminata: ${v.titolo}": "Deleted: ${v.titolo}",
   "Eliminate": "Eliminated",
   "Eliminato: ${nome}": "Deleted: ${nome}",
@@ -5415,6 +5417,7 @@ var SOURCE_INDEX = Object.freeze({
   "Le quattro temperature di una VMC dicono da sole se la macchina sta lavorando: l'aria entra da fuori, si scalda con quella che esce, e la differenza fra le due è il recupero. La pagina del Clima le mostra incrociate come i due flussi, con il bypass, la stagione e i filtri.": "The four temperatures of a heat-recovery unit tell you on their own whether the machine is doing its job: air comes in from outside, warms up with the air going out, and the difference between the two is the recovery. The Climate page shows them crossed like the two flows, with the bypass, the season and the filters.",
   "Le radio di Home Assistant non rispondono": "Home Assistant radio is not answering",
   "Le radio preferite": "Favourite stations",
+  "Le ritiro?": "Retract them?",
   "Le routine fanno delle cose a degli orari, nei giorni e nel periodo che scegli: «alle 6:30 caldaia, alle 7 tapparelle su». I calendari a fasce tengono accesa una cosa nelle fasce che disegni.": "Routines do things at set times, on the days and in the period you choose: «boiler at 6:30, shutters up at 7». Time-slot calendars keep something on in the slots you draw.",
   "Le routine fanno delle cose a degli orari; i calendari tengono accesa una cosa nelle fasce che disegni. Le esegue Home Assistant.": "Routines do things at set times; calendars keep something on in the slots you draw. Home Assistant runs them.",
   "Le segnalazioni partono a tuo nome: la prima volta serve un passaggio su GitHub.": "Reports go out under your name: the first time takes one step on GitHub.",
@@ -5650,6 +5653,7 @@ var SOURCE_INDEX = Object.freeze({
   "Medico": "Doctor",
   "Medio": "Moderate",
   "Meglio chiuderla prima.": "Better close it first.",
+  "Meglio chiuderle prima.": "Better close them first.",
   "Meglio controllare.": "Worth a check.",
   "Meglio dal computer: sul telefono potrebbe aprirsi l'app del fornitore.": "Better from a computer: on a phone the supplier's app may open.",
   "Memoria": "Memory",
@@ -7492,7 +7496,7 @@ var SOURCE_INDEX = Object.freeze({
   "Scorre da ${durata}": "Flowing for ${durata}",
   "Scorre da più di un giorno": "Flowing for over a day",
   "Scritta come Home Assistant la elenca, lettera per lettera.": "Spelled the way Home Assistant lists it, letter for letter.",
-  "Scritta da DashboardModern con le entità che hai scelto.": "Written by DashboardModern with the entities you picked.",
+  "Scritta da GdAHome con le entità che hai scelto.": "Written by GdAHome with the entities you picked.",
   "Scritte e quote non danno fastidio.": "Text and dimensions are fine.",
   "Scritto, il tasto apre il tastierino e parte solo col codice giusto — lo stesso tastierino della centrale. Vuoto, parte al tocco.": "When set, the button opens the keypad and only fires with the right code — the same keypad as the panel. Empty, it fires on tap.",
   "Scrivi": "Write",
@@ -52963,8 +52967,8 @@ function automazioneDiHomeAssistant(config, opzioni2 = {}) {
   );
   righe4.push(
     `# ${pick(
-      "Scritta da DashboardModern con le entità che hai scelto.",
-      "Written by DashboardModern with the entities you picked.",
+      "Scritta da GdAHome con le entità che hai scelto.",
+      "Written by GdAHome with the entities you picked.",
       locale3
     )}`
   );
@@ -56936,12 +56940,16 @@ rilevatore("pioggia", "comfort", (c, o, l) => {
     fuori.push({
       urgenza: fra2 <= 30 ? "urgente" : "oggi",
       disegno: "storm",
-      titolo: pick(
+      titolo: finestre.length === 1 ? pick(
         `${quando6} e ${nomi(finestre, l)} è aperta`,
         `${quando6} and ${nomi(finestre, l)} is open`,
         l
+      ) : pick(
+        `${quando6} e ${nomi(finestre, l)} sono aperte`,
+        `${quando6} and ${nomi(finestre, l)} are open`,
+        l
       ),
-      motivo: pick("Meglio chiuderla prima.", "Better close it first.", l),
+      motivo: finestre.length === 1 ? pick("Meglio chiuderla prima.", "Better close it first.", l) : pick("Meglio chiuderle prima.", "Better close them first.", l),
       azioni: [fatto(l)],
       entita: finestre.map((f) => f.entity)
     });
@@ -56949,12 +56957,16 @@ rilevatore("pioggia", "comfort", (c, o, l) => {
     fuori.push({
       urgenza: fra2 <= 30 ? "urgente" : "oggi",
       disegno: "storm",
-      titolo: pick(
+      titolo: tende.length === 1 ? pick(
         `${quando6} e ${nomi(tende, l)} è fuori`,
         `${quando6} and ${nomi(tende, l)} is out`,
         l
+      ) : pick(
+        `${quando6} e ${nomi(tende, l)} sono fuori`,
+        `${quando6} and ${nomi(tende, l)} are out`,
+        l
       ),
-      motivo: pick("La ritiro?", "Retract it?", l),
+      motivo: tende.length === 1 ? pick("La ritiro?", "Retract it?", l) : pick("Le ritiro?", "Retract them?", l),
       azioni: [
         {
           etichetta: pick("Ritira", "Retract", l),
@@ -101832,13 +101844,24 @@ var state88 = root[KEY92] ||= {
   attempts: 0,
   lastTry: 0,
   /* Il timer del guscio che questa sezione ha spento, contato. */
-  legacyTimersCancelled: 0
+  legacyTimersCancelled: 0,
+  /* Quando l'app ha detto l'ultima volta che il filo c'e'. */
+  filoProntoIl: 0,
+  /* Mentre e' vero, connect() puo' sostituire una presa aperta e muta. */
+  sostituisciLaMuta: false,
+  /* Le prese date per morte dalla prova del `ping`. */
+  preseMute: 0
 };
 var FIRST_DELAY = 2e3;
 var MAX_DELAY = 3e4;
 var MIN_GAP_MS = 4e3;
 var STALE_CONNECTING_MS = 8e3;
 var LEGACY_RECONNECT_DELAY_MS = 5e3;
+var STALE_OPEN_MS = 25e3;
+var FILO_GRACE_MS = 1500;
+var FILO_FRESCO_MS = 1e4;
+var PROBE_TIMEOUT_MS = 8e3;
+var EVENTO_DEL_FILO = "gdahome:filo";
 function legacyConnect() {
   const candidate = root.connect ?? lexicalGlobal("connect");
   return typeof candidate === "function" ? candidate : null;
@@ -101851,10 +101874,25 @@ function adoptSocket(socket) {
   if (!socket || typeof socket !== "object" || socket.__dmRecoveryOwned) return false;
   socket.__dmRecoveryOwned = true;
   socket.__dmOpenedAt = Date.now();
+  const legacyMessage = socket.onmessage;
+  if (typeof legacyMessage === "function") {
+    socket.onmessage = function ownedMessage(event) {
+      if (socket.__dmProva) {
+        root.clearTimeout?.(socket.__dmProva);
+        socket.__dmProva = 0;
+      }
+      return legacyMessage.call(this, event);
+    };
+  }
   const legacyClose = socket.onclose;
   if (typeof legacyClose !== "function") return false;
   socket.onclose = function ownedClose(event) {
+    if (socket.__dmProva) {
+      root.clearTimeout?.(socket.__dmProva);
+      socket.__dmProva = 0;
+    }
     if (socket.__dmSuperseded || (lexicalGlobal("ws") ?? root.ws) !== socket) return void 0;
+    const eraSu = connectionUp();
     const originalSetTimeout = root.setTimeout;
     const record2 = root.__DASHBOARDMODERN_LEGACY_RECONNECT__ ||= {
       timer: 0,
@@ -101880,7 +101918,8 @@ function adoptSocket(socket) {
       return legacyClose.call(this, event);
     } finally {
       if (root.setTimeout === droppingSetTimeout) root.setTimeout = originalSetTimeout;
-      watch(FIRST_DELAY);
+      if (eraSu) riparti(FIRST_DELAY);
+      else watch(FIRST_DELAY);
     }
   };
   return true;
@@ -101892,7 +101931,8 @@ function installConnectOwner() {
     const previous = lexicalGlobal("ws") ?? root.ws;
     if (previous && typeof previous === "object") {
       const readyState = previous.readyState;
-      if (readyState === socketConstant("OPEN", 1)) return void 0;
+      if (readyState === socketConstant("OPEN", 1) && (connectionUp() || !state88.sostituisciLaMuta))
+        return void 0;
       const fresh = Date.now() - (Number(previous.__dmOpenedAt) || 0) < STALE_CONNECTING_MS;
       if (readyState === socketConstant("CONNECTING", 0) && fresh) return void 0;
       if (readyState !== socketConstant("CLOSED", 3)) {
@@ -101921,8 +101961,27 @@ function socketReadyState() {
   const value = lexicalGlobal("ws")?.readyState;
   return typeof value === "number" ? value : null;
 }
-function reconnectDecision({ up, readyState, sinceLastTry, connecting = 0, eager = false }) {
+function socketAge() {
+  const nata = Number(lexicalGlobal("ws")?.__dmOpenedAt) || 0;
+  return nata ? Date.now() - nata : 0;
+}
+function reconnectDecision({
+  up,
+  readyState,
+  sinceLastTry,
+  connecting = 0,
+  open = 1,
+  sinceOpen = 0,
+  filoPronto = false,
+  eager = false
+}) {
   if (up) return { retry: false, reason: "connessa" };
+  if (readyState === open) {
+    if (sinceOpen >= STALE_OPEN_MS || filoPronto && sinceOpen >= FILO_GRACE_MS) {
+      return { retry: true, reason: "presa muta" };
+    }
+    return { retry: false, reason: "aspetta la casa" };
+  }
   if (readyState === connecting && sinceLastTry < STALE_CONNECTING_MS) {
     return { retry: false, reason: "sta gia' provando" };
   }
@@ -101942,6 +102001,9 @@ function attemptReconnect({ force = false, eager = false } = {}) {
     readyState: socketReadyState(),
     sinceLastTry: Date.now() - state88.lastTry,
     connecting: root.WebSocket?.CONNECTING ?? 0,
+    open: root.WebSocket?.OPEN ?? 1,
+    sinceOpen: socketAge(),
+    filoPronto: Date.now() - state88.filoProntoIl < FILO_FRESCO_MS,
     eager
   });
   if (!force && !decision.retry) return false;
@@ -101950,12 +102012,58 @@ function attemptReconnect({ force = false, eager = false } = {}) {
   state88.lastTry = Date.now();
   state88.attempts += 1;
   announceRetry();
+  state88.sostituisciLaMuta = decision.reason === "presa muta";
   try {
     connect();
   } catch (_error) {
     return false;
+  } finally {
+    state88.sostituisciLaMuta = false;
   }
   return true;
+}
+function riparti(delay = FIRST_DELAY) {
+  if (state88.timer) {
+    root.clearTimeout?.(state88.timer);
+    state88.timer = 0;
+  }
+  return watch(delay);
+}
+function verificaLaPresa() {
+  const socket = lexicalGlobal("ws") ?? root.ws;
+  if (!socket || typeof socket !== "object" || !connectionUp()) return false;
+  if (socket.readyState !== socketConstant("OPEN", 1) || socket.__dmProva) return false;
+  if (!socket.__dmRecoveryOwned || eIlPonteDelPannello(socket)) return false;
+  try {
+    socket.send(JSON.stringify({ id: 19e8 + state88.preseMute % 1e3, type: "ping" }));
+  } catch (_error) {
+    return false;
+  }
+  socket.__dmProva = root.setTimeout?.(() => {
+    socket.__dmProva = 0;
+    if ((lexicalGlobal("ws") ?? root.ws) !== socket || socket.__dmSuperseded) return;
+    state88.preseMute += 1;
+    doc?.getElementById?.("live-dot")?.classList?.remove("connected");
+    socket.__dmSuperseded = true;
+    try {
+      socket.close();
+    } catch (_error) {
+    }
+    attemptReconnect({ force: true, eager: true });
+    riparti(FIRST_DELAY);
+  }, PROBE_TIMEOUT_MS);
+  return true;
+}
+function eIlPonteDelPannello(socket) {
+  return typeof socket?._lineaCaduta === "function";
+}
+function filoTornato() {
+  state88.filoProntoIl = Date.now();
+  if (connectionUp()) return verificaLaPresa();
+  state88.attempts = 0;
+  const fatto2 = attemptReconnect({ eager: true });
+  riparti(FILO_GRACE_MS);
+  return fatto2;
 }
 function watch(delay = FIRST_DELAY) {
   if (!doc || state88.timer) return false;
@@ -101971,11 +102079,17 @@ function watch(delay = FIRST_DELAY) {
   return Boolean(state88.timer);
 }
 function resume() {
-  if (connectionUp()) return false;
+  if (connectionUp()) {
+    verificaLaPresa();
+    return false;
+  }
   state88.attempts = 0;
   attemptReconnect({ eager: true });
-  watch(FIRST_DELAY);
+  riparti(FIRST_DELAY);
   return true;
+}
+function dalMessaggio(event) {
+  if (event?.data?.gdahome === "filo") filoTornato();
 }
 function installConnectionRecoverySection() {
   if (!doc) return false;
@@ -101988,6 +102102,8 @@ function installConnectionRecoverySection() {
     for (const event of ["pageshow", "focus", "online", "dashboardmodern:legacy-ready"]) {
       root.addEventListener?.(event, resume);
     }
+    root.addEventListener?.(EVENTO_DEL_FILO, filoTornato);
+    root.addEventListener?.("message", dalMessaggio);
     root.addEventListener?.("dashboardmodern:legacy-ready", installConnectOwner);
   }
   watch(FIRST_DELAY);
@@ -137423,7 +137539,7 @@ function elencoDelleSoste(b2, partenza) {
   const auto = autoPerLaStrada(b2);
   const pillola2 = (testo5, classe3 = "") => `<span class="dm-gn-batt${classe3}">🔋 ${esc(testo5)}</span>`;
   const destra = (alle, sotto) => `<span class="dm-gn-fila-ora"><b>${alle ? esc(oraDi5(alle)) : ""}</b><small>${esc(sotto)}</small></span>`;
-  const riparti = (r) => {
+  const riparti2 = (r) => {
     if (!r.riparte || r.riparte === r.alle) return "";
     const alle = oraDi5(r.riparte);
     return t(`riparti ${alle}`, `leave ${alle}`);
@@ -137433,7 +137549,7 @@ function elencoDelleSoste(b2, partenza) {
       return `<li class="dm-gn-fila partenza"><span class="dm-gn-pallino verde">●</span><span class="dm-gn-col"><b>${esc(corto(b2.da) || t("Casa", "Home"))}</b>${auto ? pillola2(pct2(auto.batteria)) : ""}</span>${destra(r.alle, t("parti", "leave"))}</li>`;
     if (r.tipo === "tappa") {
       const km = r.km !== null ? cifre2(r.km) : "";
-      return `<li class="dm-gn-fila tappa"><span class="dm-gn-pallino viola">${r.n + 1}</span><span class="dm-gn-col"><b>${esc(corto(r.posto))}</b><small>${km ? esc(t(`dopo ${km} km`, `after ${km} km`)) : ""}</small></span>${destra(r.alle, riparti(r))}</li>`;
+      return `<li class="dm-gn-fila tappa"><span class="dm-gn-pallino viola">${r.n + 1}</span><span class="dm-gn-col"><b>${esc(corto(r.posto))}</b><small>${km ? esc(t(`dopo ${km} km`, `after ${km} km`)) : ""}</small></span>${destra(r.alle, riparti2(r))}</li>`;
     }
     if (r.tipo === "sosta") {
       const s = r.sosta;
@@ -137456,7 +137572,7 @@ function elencoDelleSoste(b2, partenza) {
         t(`dal ${da} all'${a} · ${min} min`, `from ${da} to ${a} · ${min} min`),
         " gialla"
       ) : "";
-      return `<li class="dm-gn-fila sosta" data-gn-sosta-di-ricarica="${n2}"><span class="dm-gn-pallino arancio">⚡</span><span class="dm-gn-col"><b>${esc(titolo3)}</b><small>${esc(sotto)}</small>${carica2}</span>${destra(r.alle, riparti(r))}</li>`;
+      return `<li class="dm-gn-fila sosta" data-gn-sosta-di-ricarica="${n2}"><span class="dm-gn-pallino arancio">⚡</span><span class="dm-gn-col"><b>${esc(titolo3)}</b><small>${esc(sotto)}</small>${carica2}</span>${destra(r.alle, riparti2(r))}</li>`;
     }
     return `<li class="dm-gn-fila arrivo"><span class="dm-gn-pallino rosso">🏁</span><span class="dm-gn-col"><b>${esc(corto(r.posto))}</b>${Number.isFinite(arrivo) ? pillola2(pct2(arrivo)) : ""}</span>${destra(r.alle, t("arrivi", "arrive"))}</li>`;
   });

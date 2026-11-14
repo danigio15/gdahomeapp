@@ -371,7 +371,7 @@ async function scena(page, numero, titolo, testo) {
         document.head.append(foglio);
         cartello = document.createElement("aside");
         cartello.id = "dm-video-scena";
-        cartello.innerHTML = "<b></b><div><h4></h4><p></p></div><i>DASHBOARD MODERN · 1.3.0</i>";
+        cartello.innerHTML = "<b></b><div><h4></h4><p></p></div><i>GDAHOME · 1.3.0</i>";
         document.body.append(cartello);
       }
       cartello.querySelector("b").textContent = String(numero);
@@ -479,7 +479,7 @@ test("il giro delle novita' della 1.3.0", async ({ page }, testInfo) => {
       const telo = document.createElement("div");
       telo.id = "dm-video-sipario";
       telo.innerHTML =
-        "<b>DASHBOARD MODERN</b><h1>Le novita&#39; della 1.3.0</h1>" +
+        "<b>GDAHOME</b><h1>Le novita&#39; della 1.3.0</h1>" +
         "<p>Colpo d&#39;occhio · Stanze · Energia a piu&#39; impianti · Antifurto · Auto · Ritratti</p>";
       telo.setAttribute(
         "style",
