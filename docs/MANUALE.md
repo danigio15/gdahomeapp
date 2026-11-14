@@ -3813,7 +3813,7 @@ sui tasti da premere. È lo stesso testo di questo capitolo.
   <img src="manuale/img/c3d-guida.jpg" width="520" alt="La guida dentro la procedura, sul computer">
   <img src="manuale/img/c3d-guida-tel.jpg" width="200" alt="La guida dentro la procedura, sul telefono">
 </p>
-<p align="center"><sub>«📖 Come si fa» al passo 1: sul computer la guida sta in basso a sinistra, sul telefono nella metà bassa. Qui «Comincia» ha acceso «Il piano» con il numero 1. Cambiando passo, la guida cambia con lui.</sub></p>
+<p align="center"><sub>«📖 Come si fa» al passo 1: sul computer la guida è una colonna a sinistra e la procedura le fa posto, sul telefono sta nella metà bassa. Qui «Comincia» ha acceso «Il piano» con il numero 1. Cambiando passo, la guida cambia con lui.</sub></p>
 
 In cima alla procedura c'è sempre la **barra dei passi** (1 Planimetria … 8
 Casa 3D): i passi fatti hanno la spunta ✓, e si può tornare a uno precedente

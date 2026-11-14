@@ -178,6 +178,10 @@ function chiudi() {
   doc?.getElementById?.(FOGLIO)?.remove();
   doc?.getElementById?.("editor-modal")?.classList?.remove("dm-guida-con-foglio");
   doc?.documentElement?.classList?.remove("dm-guida-aperta");
+  if (doc?.documentElement?.classList?.contains("dm-guida-in-3d")) {
+    doc.documentElement.classList.remove("dm-guida-in-3d");
+    root.dispatchEvent?.(new root.Event("resize"));
+  }
 }
 
 function htmlDellaScheda(scheda) {
@@ -202,7 +206,7 @@ function htmlDellaScheda(scheda) {
       return `<li class="dm-guida-passo${attivo}" data-indice="${i}">
         <span class="dm-guida-num">${i + 1}</span>
         <span class="dm-guida-testo">${passo.html}</span>
-        ${i === state.nonTrovato ? `<em class="dm-guida-nota">${esc(t("Questo campo compare dopo il passo prima (per esempio dopo «＋ Aggiungi»).", "This field appears after the previous step (for example after «＋ Add»)."))}</em>` : ""}
+        ${i === state.nonTrovato ? `<em class="dm-guida-nota">${esc(in3d ? t("Questo compare dopo il passo prima.", "This appears after the previous step.") : t("Questo campo compare dopo il passo prima (per esempio dopo «＋ Aggiungi»).", "This field appears after the previous step (for example after «＋ Add»)."))}</em>` : ""}
         ${mostrabile ? `<button type="button" class="dm-guida-mostra" data-guida="mostra" data-indice="${i}">👉 ${esc(t("Mostrami", "Show me"))}</button>` : ""}
       </li>`;
     })
@@ -284,6 +288,15 @@ function disegna() {
    * scorrere più su, se no i tasti in fondo («Avanti», «Salva») restano
    * coperti. Il posto in più lo dà questa classe, e solo mentre è aperto. */
   doc.documentElement.classList.add("dm-guida-aperta");
+  /* Sul computer la guida della Casa 3D e' una colonna a sinistra, e la
+   * procedura le fa posto: coperta, la planimetria non si potrebbe toccare
+   * proprio dove serve (i due punti della scala, i muri). La tela si rimisura
+   * da sola a un cambio di finestra, e glielo si dice. */
+  const in3d = state.contesto === "3d";
+  if (doc.documentElement.classList.contains("dm-guida-in-3d") !== in3d) {
+    doc.documentElement.classList.toggle("dm-guida-in-3d", in3d);
+    root.dispatchEvent?.(new root.Event("resize"));
+  }
   foglio.innerHTML = state.aperta === "percorso" ? htmlDelPercorso() : htmlDellaScheda(schedaAperta());
   if (state.contesto === "config") doc.getElementById("editor-modal")?.classList.add("dm-guida-con-foglio");
 }
@@ -432,7 +445,8 @@ function installaLoStile() {
   left:0;right:0;bottom:0;max-height:46vh;border-radius:18px 18px 0 0;padding:12px 16px 18px}
 .dm-guida-3d-tasto{border:1px solid rgba(124,58,237,.35);background:rgba(124,58,237,.1);color:#6d28d9;border-radius:999px;padding:8px 14px;font:600 13px/1.2 inherit;cursor:pointer;white-space:nowrap;margin-left:8px}
 @media (max-width:899px){html.dm-guida-aperta #ed-body,html.dm-guida-aperta #dm-c3c .c3c-pagina{padding-bottom:50vh !important}}
-@media (min-width:900px){.${FOGLIO}.dm-guida-3d{left:16px;right:auto;top:auto;bottom:16px;width:380px;max-height:70vh;border-radius:18px;box-shadow:0 8px 30px rgba(15,23,42,.35)}}
+@media (min-width:900px){.${FOGLIO}.dm-guida-3d{left:0;right:auto;top:0;bottom:0;width:380px;max-height:none;border-radius:0;box-shadow:6px 0 28px rgba(15,23,42,.22)}
+  html.dm-guida-aperta.dm-guida-in-3d #dm-c3c .c3c-pagina{margin-left:380px !important}}
 @media (min-width:900px){.${FOGLIO}{left:auto;top:0;bottom:0;width:380px;max-height:none;border-radius:0;box-shadow:-6px 0 28px rgba(15,23,42,.22)}
   #editor-modal.dm-guida-con-foglio .ed-shell{margin-right:380px}}
 .dm-guida-testa{display:flex;align-items:center;justify-content:space-between;gap:8px;position:sticky;top:-12px;background:inherit;padding:4px 0 6px;font-size:15px}
