@@ -54,10 +54,21 @@ test("dentro il pannello una richiesta senza credenziali non esce; firmata o col
     assert.equal(bussaSenzaCredenziali("/api/calendars/calendar.casa?start=a&authSig=eyJ.x.y"), false);
     /* Col gettone della telecamera: passa. */
     assert.equal(bussaSenzaCredenziali("/api/camera_proxy/camera.ingresso?token=abc&t=1"), false);
-    /* Con un gettone vero — la pagina servita da sola — passa tutto. */
-    globalThis.DASHBOARDMODERN_AUTH_TOKEN = "gettone-vero";
-    assert.equal(bussaSenzaCredenziali("/api/calendars/calendar.casa"), false);
+    /* Un gettone trovato in giro — una variabile, il salvataggio del
+     * collegamento — dentro il pannello non vale: la plancia ospitata un
+     * gettone suo non ce l'ha, e uno vecchio e' proprio la campanella
+     * (`ospitata-nessun-gettone-dal-salvataggio.test.js`). */
+    globalThis.DASHBOARDMODERN_AUTH_TOKEN = "gettone-vecchio";
+    assert.equal(bussaSenzaCredenziali("/api/calendars/calendar.casa"), true);
   });
+  /* Con un gettone vero, la pagina servita da sola: passa tutto. */
+  delete globalThis.__DASHBOARDMODERN_HOSTED__;
+  globalThis.DASHBOARDMODERN_AUTH_TOKEN = "gettone-vero";
+  try {
+    assert.equal(bussaSenzaCredenziali("/api/calendars/calendar.casa"), false);
+  } finally {
+    delete globalThis.DASHBOARDMODERN_AUTH_TOKEN;
+  }
 });
 
 test("la riparazione di fetch da' il 401 in casa, senza bussare", async () => {

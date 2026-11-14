@@ -104,7 +104,7 @@ test("room icons, live navbar names and brand-specific electrified models are ca
   assert.match(source, /const currentNames = sectionNames\(\)/);
   assert.match(source, /const persisted = clean\(currentNames\[key\]/);
   assert.match(source, /const CAR_MODELS = Object\.freeze/);
-  assert.match(source, /"Leapmotor": \["T03", "B10", "C10", "C10 REEV"\]/);
+  assert.match(source, /"Leapmotor": \["T03", "B03X", "B05", "B10", "B10 Hybrid EV", "C10", "C10 REEV"\]/);
   assert.match(source, /function modelBelongsToBrand/);
   assert.match(source, /const explicit = clean\(vehicle\.brand\)/);
   assert.match(source, /return explicit \|\| brandForModel/);

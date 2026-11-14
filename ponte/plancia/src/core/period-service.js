@@ -1248,6 +1248,10 @@ export class HomeAssistantBroker {
   }
 
   token() {
+    /* Ospitata la plancia un gettone non ce l'ha: uno vecchio rimasto nel
+     * salvataggio del collegamento farebbe solo un `auth` rifiutato
+     * (`sections/shared.js`, `gettoneDiAccesso`). */
+    if (globalThis.__DASHBOARDMODERN_HOSTED__ === true) return "";
     const values = [
       globalThis.DASHBOARDMODERN_AUTH_TOKEN,
       globalThis.__DASHBOARDMODERN_REAL_TOKEN__,
