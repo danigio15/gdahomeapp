@@ -9,6 +9,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
@@ -46,10 +47,16 @@ test("il logo servito e' quello di GdAHome, non quello della dashboard", (t) => 
   const nostro = readFileSync(fileURLToPath(new URL("../marchio/gdahome.png", import.meta.url)));
   assert.deepEqual(servito.corpo, nostro);
 
-  /* E non e' quello che sta sul disco dentro la plancia: quello e' rimasto
-   * dov'era, perche' la cartella non si tocca. */
+  /* E anche quello sul disco, dentro la plancia, non e' piu' la casetta col
+   * fulmine di DashboardModern: la plancia vive qui, e il suo logo e' il
+   * nostro anche dove non passa dal ponte (il sito, le fotografie del
+   * manuale). Si riconosce quella di prima dall'impronta. */
   const suo = readFileSync(fileURLToPath(new URL("../plancia/legacy/logo.png", import.meta.url)));
-  assert.notDeepEqual(servito.corpo, suo);
+  assert.notEqual(
+    createHash("md5").update(suo).digest("hex"),
+    "e2bd9e7f1a969aa25f2ecc1fed32ce62",
+    "in plancia/legacy/logo.png c'e' ancora il logo di DashboardModern",
+  );
 });
 
 test("l'alt del logo, dentro il runtime, dice GdAHome", (t) => {

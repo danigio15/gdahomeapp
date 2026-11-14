@@ -1200,8 +1200,8 @@ export default Object.freeze({
   'Delete "${nome}"?': '"${nome}" verwijderen?',
   "Delete ALL saved configuration?\n\n⚠️ The config is synced through Home Assistant: it will be removed from ALL linked devices. You will have to run the wizard again.":
     "ALLE opgeslagen configuratie verwijderen?\n\n⚠️ De configuratie wordt via Home Assistant gesynchroniseerd: hij verdwijnt van ALLE gekoppelde apparaten. Je moet de wizard opnieuw doorlopen.",
-  "Delete all DashboardModern configuration for this dashboard?":
-    "Alle DashboardModern-configuratie van dit dashboard verwijderen?",
+  "Delete all GdAHome configuration for this dashboard?":
+    "Alle GdAHome-configuratie van dit dashboard verwijderen?",
   "Delete failed:": "Verwijderen is mislukt:",
   'Delete group "': 'Groep "',
   "Delete light": "Lamp verwijderen",
@@ -4276,8 +4276,8 @@ export default Object.freeze({
   "Write to whoever maintains the dashboard: a private conversation, not through GitHub":
     "Schrijf aan degene die het dashboard onderhoudt: een privégesprek, niet via GitHub",
   "Write your message…": "Schrijf je bericht…",
-  "Written by DashboardModern with the entities you picked.":
-    "Geschreven door DashboardModern met de entiteiten die je hebt gekozen.",
+  "Written by GdAHome with the entities you picked.":
+    "Geschreven door GdAHome met de entiteiten die je hebt gekozen.",
   "Wrong PIN, try again.": "Verkeerde pincode, probeer opnieuw.",
   Year: "Jaar",
   Yellow: "Geel",

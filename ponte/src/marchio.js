@@ -153,7 +153,10 @@ const IL_LOGO = "legacy/logo.png";
 const LIMMAGINE_DEL_VELO = /(<div id="cd-boot-overlay"><img src=")data:[^"]*(")/;
 
 /* La parola in maiuscolo sotto il logo del velo. */
-const LA_PAROLA_DEL_VELO = new RegExp(`(<b>)${NOME_DI_PRIMA}(</b>)`);
+/* La parola in maiuscolo sotto il logo del velo: nei file della plancia adesso
+ * c'e' gia' la nostra, e quella di prima resta riconosciuta per le copie
+ * vecchie. Per chi installa la si cambia con la sua. */
+const LA_PAROLA_DEL_VELO = new RegExp(`(<b>)(?:${NOME_DI_PRIMA}|${NOME_SCRITTO})(</b>)`);
 
 /* Il titolo della pagina. Quello che c'e' non e' un marchio — «Smart Home
  * Dashboard» — ma e' la scritta nella linguetta del browser, ed e' un posto
@@ -162,7 +165,7 @@ const IL_TITOLO = /<title>[^<]*<\/title>/;
 
 /* L'`alt` del logo, dentro il runtime. Con lo spazio: li' e' scritto
  * «Dashboard Modern», in due parole. */
-const L_ALT_DEL_LOGO = /alt="Dashboard Modern"/g;
+const L_ALT_DEL_LOGO = /alt="(?:Dashboard Modern|GdAHome)"/g;
 
 /* I numeri che la plancia dichiara di se' stessa. Sono dentro un `Object.freeze`
  * scritto su una riga sola, e si riconoscono per nome. */
@@ -174,7 +177,7 @@ const LA_VERSIONE_DELLA_PLANCIA = /("(?:integrationVersion|dashboardVersion)":")
  * che c'e' dentro: quel disegno cambia a ogni versione della plancia, il nome
  * della classe no. */
 const IL_SEGNO_DI_CONFIGURAZIONE =
-  /(<div class="cfg-hero-ico"[^>]*>)\s*<svg[\s\S]*?<\/svg>\s*(<\/div>)/;
+  /(<div class="cfg-hero-ico"[^>]*>)\s*(?:<svg[\s\S]*?<\/svg>|<img src="\.\/logo\.png"[^>]*\/>)\s*(<\/div>)/;
 
 /* Lo script che, subito dopo il velo, gli cambia la parola se la pagina ne
  * porta una in testa (`window.__GDAHOME_VELO__`, messa dalle premesse: e' il

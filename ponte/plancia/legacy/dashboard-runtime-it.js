@@ -8,7 +8,7 @@
 /* ═══ v258: VERSIONE — visibile in console, wizard e pagina Config ═══ */
 const DASHBOARD_VERSION = '0.14.0';
 globalThis.DASHBOARD_VERSION = DASHBOARD_VERSION;
-console.log('%c🏠 Dashboard Modern v' + DASHBOARD_VERSION, 'font-size:14px; font-weight:bold; color:#0ea5e9;');
+console.log('%c🏠 GdAHome v' + DASHBOARD_VERSION, 'font-size:14px; font-weight:bold; color:#0ea5e9;');
 
 /* Quello che arriva da Home Assistant o dalla configurazione — nomi, stati,
    unita', icone, indirizzi — e' testo, non un pezzo di pagina. La pagina
@@ -506,10 +506,10 @@ function dmApplianceChoose(t){
 function cdBrandLogo(size, withWordmark) {
     size = size || 44;
     const uid = 'cdlg' + Math.random().toString(36).slice(2, 7);
-    const mark = '<img src="./logo.png" alt="Dashboard Modern" width="'+size+'" height="'+size+'" style="flex:0 0 auto;display:block;object-fit:contain;border-radius:12px;" onerror="this.style.display=&#39;none&#39;">';
+    const mark = '<img src="./logo.png" alt="GdAHome" width="'+size+'" height="'+size+'" style="flex:0 0 auto;display:block;object-fit:contain;border-radius:12px;" onerror="this.style.display=&#39;none&#39;">';
     if (!withWordmark) return mark;
     const fs = Math.round(size * 0.42);
-    return `<div style="display:flex; align-items:center; gap:12px;">${mark}<div style="display:flex; flex-direction:column; line-height:1.05;"><span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:${fs}px; letter-spacing:0.5px; color:var(--text,#0f172a);">Dashboard</span><span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:${fs}px; letter-spacing:2.5px; color:#0ea5e9;">MODERN</span></div></div>`;
+    return `<div style="display:flex; align-items:center; gap:12px;">${mark}<div style="display:flex; flex-direction:column; line-height:1.05;"><span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:${fs}px; letter-spacing:0.5px; color:var(--text,#0f172a);">${(window.__GDAHOME_TESTATA__||["GdA","Home"])[0]}</span><span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:${fs}px; letter-spacing:2.5px; color:#0ea5e9;">${(window.__GDAHOME_TESTATA__||["GdA","Home"])[1]}</span></div></div>`;
 }
 
 /* v0.9.7 (#4): avvisi personalizzati — etichetta condizione, valutazione, render nel Quadro Avvisi */

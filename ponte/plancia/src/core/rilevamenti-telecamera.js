@@ -270,8 +270,8 @@ export function automazioneDiHomeAssistant(config, opzioni = {}) {
   );
   righe.push(
     `# ${pick(
-      "Scritta da DashboardModern con le entità che hai scelto.",
-      "Written by DashboardModern with the entities you picked.",
+      "Scritta da GdAHome con le entità che hai scelto.",
+      "Written by GdAHome with the entities you picked.",
       locale,
     )}`,
   );
