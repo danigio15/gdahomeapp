@@ -16,8 +16,31 @@
  *
  * Qui non si apre nessuna presa: si richiama `connect()`, quello del runtime,
  * quando la plancia non e' connessa — al rientro dall'altra app, al ritorno
- * della rete, e intanto a intervalli che si allargano. Da connessi non resta
- * acceso niente.
+ * della rete, quando l'app dice che il suo filo con la casa c'e' di nuovo, e
+ * intanto a intervalli che si allargano. Da connessi non resta acceso niente.
+ *
+ * «Con l'ultimo aggiornamento quando riapro l'app resta il puntino rosso,
+ * devo fare refresh della plancia.» Il pallino restava rosso per tre buchi,
+ * tutti di questa sezione:
+ *
+ *  - **una presa aperta e muta non si cambiava mai.** `connect()` non apre
+ *    niente sopra una presa aperta, ed e' giusto per una presa che lavora; ma
+ *    dentro l'app la presa si apre verso il servitore del telefono, e
+ *    `auth_ok` arriva solo quando c'e' il filo con la casa. Una presa aperta
+ *    da un lato che dall'altro non c'era piu' — il telefono sospeso si
+ *    riprende le sue prese — restava li': aperta, senza `auth_ok`, senza
+ *    chiusura, e ogni giro diceva «c'e' gia' una presa». Rossa per sempre;
+ *  - **l'attesa non ripartiva da capo a una caduta.** Mentre si riprova la
+ *    scala si allunga fino a trenta secondi, e una chiusura arrivata in quel
+ *    mentre chiedeva due secondi a un timer che ne aveva gia' trenta: l'app
+ *    rifa' il filo piu' volte al rientro (la sveglia, la strada di casa,
+ *    l'orologio che chiede lo stato), e ogni volta la presa si chiudeva e la
+ *    plancia restava ad aspettare il suo turno a filo gia' tornato;
+ *  - **nessuno le diceva che il filo era tornato.** Lo sa l'app: adesso lo
+ *    dice (`gdahome:filo`, `schermate/plancia_vera.dart`), e la plancia si
+ *    ricollega subito invece di indovinare quando. E una presa che sembra
+ *    collegata si prova con un `ping`: se non risponde, il pallino torna
+ *    rosso e la presa si rifa' — il pallino dice come sta la presa davvero.
  */
 import {
   doc,
@@ -38,6 +61,12 @@ const state = (root[KEY] ||= {
   lastTry: 0,
   /* Il timer del guscio che questa sezione ha spento, contato. */
   legacyTimersCancelled: 0,
+  /* Quando l'app ha detto l'ultima volta che il filo c'e'. */
+  filoProntoIl: 0,
+  /* Mentre e' vero, connect() puo' sostituire una presa aperta e muta. */
+  sostituisciLaMuta: false,
+  /* Le prese date per morte dalla prova del `ping`. */
+  preseMute: 0,
 });
 
 /** Prima riprova, e il tetto oltre il quale l'attesa non cresce piu'. */
@@ -49,6 +78,23 @@ export const MIN_GAP_MS = 4000;
 export const STALE_CONNECTING_MS = 8000;
 /** L'attesa fissa con cui il runtime richiamava connect() dopo una chiusura. */
 export const LEGACY_RECONNECT_DELAY_MS = 5000;
+/* Una presa aperta che in tutto questo non ha detto `auth_ok` e' muta.
+ *
+ * Dentro l'app la cucitura aspetta il filo con la casa al piu' venti secondi
+ * (`app/lib/plancia/cucitura.dart`, `attesaDelFilo`) e poi chiude lei: oltre,
+ * dall'altra parte non c'e' piu' nessuno a chiuderla. */
+export const STALE_OPEN_MS = 25000;
+/** Detto dall'app che il filo c'e', una presa muta ha ancora questo per dire
+ * `auth_ok`: la cucitura lo manda appena trova il filo. */
+export const FILO_GRACE_MS = 1500;
+/** Per quanto vale «il filo e' tornato» detto dall'app. */
+export const FILO_FRESCO_MS = 10000;
+/** Quanto si aspetta una risposta al `ping` di prova: piu' dei sei secondi
+ * che il filo dell'app si da' al risveglio (`Filo.pazienzaAlRisveglio`), perche'
+ * da fuori il `pong` puo' fare la fila dietro gli stati. */
+export const PROBE_TIMEOUT_MS = 8000;
+/** L'avviso dell'app: il suo filo con la casa c'e' (di nuovo). */
+export const EVENTO_DEL_FILO = "gdahome:filo";
 
 function legacyConnect() {
   const candidate = root.connect ?? lexicalGlobal("connect");
@@ -83,12 +129,33 @@ function adoptSocket(socket) {
   if (!socket || typeof socket !== "object" || socket.__dmRecoveryOwned) return false;
   socket.__dmRecoveryOwned = true;
   socket.__dmOpenedAt = Date.now();
+  /* Qualunque cosa arrivi dice che la presa e' viva: e' la risposta alla
+   * prova del `ping` (vedi `verificaLaPresa`). Non si legge niente — un
+   * `get_states` da un megabyte non si apre due volte — si guarda solo che
+   * sia arrivato. */
+  const legacyMessage = socket.onmessage;
+  if (typeof legacyMessage === "function") {
+    socket.onmessage = function ownedMessage(event) {
+      if (socket.__dmProva) {
+        root.clearTimeout?.(socket.__dmProva);
+        socket.__dmProva = 0;
+      }
+      return legacyMessage.call(this, event);
+    };
+  }
   const legacyClose = socket.onclose;
   if (typeof legacyClose !== "function") return false;
   socket.onclose = function ownedClose(event) {
+    if (socket.__dmProva) {
+      root.clearTimeout?.(socket.__dmProva);
+      socket.__dmProva = 0;
+    }
     /* Una presa che non e' piu' quella corrente e' stata sostituita da
      * connect(): la sua chiusura non riguarda nessuno. */
     if (socket.__dmSuperseded || (lexicalGlobal("ws") ?? root.ws) !== socket) return undefined;
+    /* Era collegata davvero, prima di chiudersi: e' una caduta, non l'ennesimo
+     * tentativo andato a vuoto, e l'attesa riparte da capo. */
+    const eraSu = connectionUp();
     const originalSetTimeout = root.setTimeout;
     const record = (root.__DASHBOARDMODERN_LEGACY_RECONNECT__ ||= {
       timer: 0,
@@ -114,7 +181,8 @@ function adoptSocket(socket) {
       return legacyClose.call(this, event);
     } finally {
       if (root.setTimeout === droppingSetTimeout) root.setTimeout = originalSetTimeout;
-      watch(FIRST_DELAY);
+      if (eraSu) riparti(FIRST_DELAY);
+      else watch(FIRST_DELAY);
     }
   };
   return true;
@@ -127,7 +195,11 @@ export function installConnectOwner() {
     const previous = lexicalGlobal("ws") ?? root.ws;
     if (previous && typeof previous === "object") {
       const readyState = previous.readyState;
-      if (readyState === socketConstant("OPEN", 1)) return undefined;
+      /* Aperta e collegata: non si tocca. Aperta e muta si lascia stare lo
+       * stesso — la cucitura sta aspettando il filo — tranne quando chi
+       * chiama ha deciso che e' muta davvero (`reconnectDecision`). */
+      if (readyState === socketConstant("OPEN", 1) && (connectionUp() || !state.sostituisciLaMuta))
+        return undefined;
       const fresh = Date.now() - (Number(previous.__dmOpenedAt) || 0) < STALE_CONNECTING_MS;
       if (readyState === socketConstant("CONNECTING", 0) && fresh) return undefined;
       if (readyState !== socketConstant("CLOSED", 3)) {
@@ -166,12 +238,39 @@ export function socketReadyState() {
   return typeof value === "number" ? value : null;
 }
 
+/** Da quanto c'e' la presa del runtime, in millisecondi; zero se non si sa. */
+function socketAge() {
+  const nata = Number(lexicalGlobal("ws")?.__dmOpenedAt) || 0;
+  return nata ? Date.now() - nata : 0;
+}
+
 /* Se valga la pena richiamare connect(), e perche'.
  *
  * Separata dal resto perche' e' l'unico punto dove si decide qualcosa: il
  * contorno legge il documento e guarda l'orologio, questa no. */
-export function reconnectDecision({ up, readyState, sinceLastTry, connecting = 0, eager = false }) {
+export function reconnectDecision({
+  up,
+  readyState,
+  sinceLastTry,
+  connecting = 0,
+  open = 1,
+  sinceOpen = 0,
+  filoPronto = false,
+  eager = false,
+}) {
   if (up) return { retry: false, reason: "connessa" };
+  /* Aperta e senza `auth_ok`. Di solito e' la cucitura dell'app che aspetta
+   * il filo con la casa, e lo manda appena c'e': si aspetta. Ma se l'app ha
+   * detto che il filo c'e' e la presa tace lo stesso, o se tace da piu' di
+   * quanto la cucitura aspetti mai, dall'altra parte non c'e' nessuno: e'
+   * muta, e si cambia. Prima qui si diceva sempre «c'e' gia' una presa», e
+   * una presa cosi' teneva il pallino rosso per sempre. */
+  if (readyState === open) {
+    if (sinceOpen >= STALE_OPEN_MS || (filoPronto && sinceOpen >= FILO_GRACE_MS)) {
+      return { retry: true, reason: "presa muta" };
+    }
+    return { retry: false, reason: "aspetta la casa" };
+  }
   if (readyState === connecting && sinceLastTry < STALE_CONNECTING_MS) {
     return { retry: false, reason: "sta gia' provando" };
   }
@@ -205,6 +304,9 @@ export function attemptReconnect({ force = false, eager = false } = {}) {
     readyState: socketReadyState(),
     sinceLastTry: Date.now() - state.lastTry,
     connecting: root.WebSocket?.CONNECTING ?? 0,
+    open: root.WebSocket?.OPEN ?? 1,
+    sinceOpen: socketAge(),
+    filoPronto: Date.now() - state.filoProntoIl < FILO_FRESCO_MS,
     eager,
   });
   if (!force && !decision.retry) return false;
@@ -213,12 +315,84 @@ export function attemptReconnect({ force = false, eager = false } = {}) {
   state.lastTry = Date.now();
   state.attempts += 1;
   announceRetry();
+  state.sostituisciLaMuta = decision.reason === "presa muta";
   try {
     connect();
   } catch (_error) {
     return false;
+  } finally {
+    state.sostituisciLaMuta = false;
   }
   return true;
+}
+
+/* La scala riparte da capo: il timer che c'era, magari a trenta secondi, si
+ * butta, e se ne arma uno al primo gradino. */
+function riparti(delay = FIRST_DELAY) {
+  if (state.timer) {
+    root.clearTimeout?.(state.timer);
+    state.timer = 0;
+  }
+  return watch(delay);
+}
+
+/* La presa sembra collegata: lo e'?
+ *
+ * Si manda un `ping` — Home Assistant e il ponte rispondono `pong`, e dentro
+ * l'app passa dalla cucitura e dal filo fino alla casa — e qualunque cosa
+ * torni entro qualche secondo dice che la presa e' viva. Se non torna niente,
+ * il pallino verde mentiva: si spegne, la presa si lascia, e se ne apre una
+ * nuova. Solo sulle prese vere del browser: il ponte del pannello di Home
+ * Assistant (`legacy/bridge-socket.js`) vive nella stessa pagina e cade
+ * insieme alla connessione del pannello, che lo dice da se'. */
+export function verificaLaPresa() {
+  const socket = lexicalGlobal("ws") ?? root.ws;
+  if (!socket || typeof socket !== "object" || !connectionUp()) return false;
+  if (socket.readyState !== socketConstant("OPEN", 1) || socket.__dmProva) return false;
+  if (!socket.__dmRecoveryOwned || eIlPonteDelPannello(socket)) return false;
+  try {
+    socket.send(JSON.stringify({ id: 1_900_000_000 + (state.preseMute % 1000), type: "ping" }));
+  } catch (_error) {
+    return false;
+  }
+  socket.__dmProva = root.setTimeout?.(() => {
+    socket.__dmProva = 0;
+    if ((lexicalGlobal("ws") ?? root.ws) !== socket || socket.__dmSuperseded) return;
+    state.preseMute += 1;
+    /* Il pallino dice com'e', subito: la presa nuova lo riaccende col suo
+     * `auth_ok`. */
+    doc?.getElementById?.("live-dot")?.classList?.remove("connected");
+    socket.__dmSuperseded = true;
+    try {
+      socket.close();
+    } catch (_error) {}
+    attemptReconnect({ force: true, eager: true });
+    riparti(FIRST_DELAY);
+  }, PROBE_TIMEOUT_MS);
+  return true;
+}
+
+/* Il ponte del pannello (`legacy/bridge-socket.js`) si riconosce dal suo modo
+ * di cadere: lui non va provato. */
+function eIlPonteDelPannello(socket) {
+  return typeof socket?._lineaCaduta === "function";
+}
+
+/* L'app dice che il suo filo con la casa c'e' (`schermate/plancia_vera.dart`):
+ * dopo una sospensione, una caduta, un filo rifatto.
+ *
+ * Da collegati si prova che la presa sia viva; da scollegati ci si ricollega
+ * adesso, senza aspettare il turno: una presa aperta e muta ha un attimo per
+ * dire `auth_ok` — la cucitura lo manda appena trova il filo — e poi si
+ * cambia. Il ricollegamento rifa' tutto quello che fa un avvio: `get_states`
+ * e la sottoscrizione agli stati, che sono del runtime al suo `auth_ok`. */
+export function filoTornato() {
+  state.filoProntoIl = Date.now();
+  if (connectionUp()) return verificaLaPresa();
+  state.attempts = 0;
+  const fatto = attemptReconnect({ eager: true });
+  riparti(FILO_GRACE_MS);
+  return fatto;
 }
 
 /* Un solo timer, e solo mentre serve. */
@@ -236,13 +410,23 @@ function watch(delay = FIRST_DELAY) {
   return Boolean(state.timer);
 }
 
-/* Il rientro azzera l'attesa: chi ha appena riaperto l'app la sta guardando. */
+/* Il rientro azzera l'attesa: chi ha appena riaperto l'app la sta guardando.
+ * Da collegati si guarda che la presa sia viva davvero. */
 function resume() {
-  if (connectionUp()) return false;
+  if (connectionUp()) {
+    verificaLaPresa();
+    return false;
+  }
   state.attempts = 0;
   attemptReconnect({ eager: true });
-  watch(FIRST_DELAY);
+  riparti(FIRST_DELAY);
   return true;
+}
+
+/* Nel browser l'app sta fuori dal riquadro, di un'altra origine: bussa con
+ * un messaggio (`app/lib/schermate/riquadro/sul_web.dart`). */
+function dalMessaggio(event) {
+  if (event?.data?.gdahome === "filo") filoTornato();
 }
 
 export function installConnectionRecoverySection() {
@@ -256,6 +440,8 @@ export function installConnectionRecoverySection() {
     for (const event of ["pageshow", "focus", "online", "dashboardmodern:legacy-ready"]) {
       root.addEventListener?.(event, resume);
     }
+    root.addEventListener?.(EVENTO_DEL_FILO, filoTornato);
+    root.addEventListener?.("message", dalMessaggio);
     /* Il guscio dichiara le sue funzioni anche dopo di noi, nella plancia
      * ospitata: il padrone di connect() si prende appena c'e'. */
     root.addEventListener?.("dashboardmodern:legacy-ready", installConnectOwner);

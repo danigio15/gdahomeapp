@@ -65,6 +65,12 @@ class FabbricaDellaPlancia {
     String lingua = 'it',
   }) => _servitore ??= alzaIlServitore(filo: filo, lingua: lingua);
 
+  /// Dice alla pagina nel [riquadro] che il filo con la casa c'e', di nuovo:
+  /// si ricollega subito, o verifica la presa che ha (`riquadro/qui.dart`).
+  /// Nelle prove il riquadro non c'e', e si conta.
+  void ilFiloCE(GlobalKey<RiquadroDellaPlanciaState> riquadro) =>
+      riquadro.currentState?.ilFiloCE();
+
   /// Il riquadro che mostra una pagina.
   Widget riquadro(
     Uri pagina, {
@@ -175,6 +181,7 @@ class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
   String? _perche;
   StreamSubscription<void>? _ascoltoLeImpostazioni;
   StreamSubscription<void>? _ascoltoLaConfigurazione;
+  StreamSubscription<void>? _ascoltoIlFilo;
   late bool _leggera = widget.impostazioni.planciaLeggera;
   late bool _ibrida = widget.impostazioni.composizioneIbrida;
 
@@ -202,6 +209,13 @@ class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
     _ascoltoLaConfigurazione = widget.collegamento.planciaCambiata.listen(
       (_) => ricarica(),
     );
+    /* Il filo con la casa e' tornato — dopo la tasca, una caduta, un filo
+     * rifatto — e la pagina lo viene a sapere adesso, invece di scoprirlo al
+     * suo prossimo tentativo: si ricollega e si riabbona agli stati, senza
+     * ricaricarsi. */
+    _ascoltoIlFilo = widget.collegamento.filoTornato.listen(
+      (_) => _diAllaPaginaCheIlFiloCE(),
+    );
     if (!kIsWeb) unawaited(_accendi());
     WidgetsBinding.instance.addObserver(this);
   }
@@ -220,8 +234,27 @@ class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
     if (servitore == null) return;
     unawaited(() async {
       final rifatta = await servitore.rimettiInPiedi();
-      if (rifatta && mounted && identical(_servitore, servitore)) ricarica();
+      if (!mounted || !identical(_servitore, servitore)) return;
+      if (rifatta) {
+        ricarica();
+        return;
+      }
+      /* La porta c'e'. Se il filo e' gia' dentro — il colpetto del risveglio
+       * ha avuto risposta (`Filo.sveglia`) — la pagina si fa dire che puo'
+       * fidarsi, e prova la sua presa; se il filo si sta rifacendo, glielo
+       * dira' [Collegamento.filoTornato] appena c'e'. */
+      if (widget.collegamento.dentro) _diAllaPaginaCheIlFiloCE();
     }());
+  }
+
+  /* «Quando riapro l'app resta il puntino rosso, devo fare refresh della
+   * plancia.» Il pallino della plancia si riaccende solo quando la sua presa
+   * riceve `auth_ok`, e la presa al rientro si chiudeva (il filo si rifa') e
+   * riprovava coi tempi suoi, senza sapere quando il filo fosse tornato.
+   * Adesso lo sa: vedi `riquadro/sul_telefono.dart`, `ilFiloCE`. */
+  void _diAllaPaginaCheIlFiloCE() {
+    if (!mounted) return;
+    widget.fabbrica.ilFiloCE(_riquadro);
   }
 
   @override
@@ -229,6 +262,7 @@ class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _ascoltoLeImpostazioni?.cancel();
     _ascoltoLaConfigurazione?.cancel();
+    _ascoltoIlFilo?.cancel();
     _scadenzaDelVelo?.cancel();
     super.dispose();
   }
@@ -1203,6 +1237,12 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
     if (controllore != null) {
       unawaited(riquadro.ricarica(controllore, widget.pagina));
     }
+  }
+
+  /// Dice alla pagina che il filo con la casa c'e' (`riquadro/qui.dart`).
+  void ilFiloCE() {
+    final controllore = _controllore;
+    if (controllore != null) unawaited(riquadro.ilFiloCE(controllore));
   }
 
   /// Mette la plancia a riposo, o la riprende.

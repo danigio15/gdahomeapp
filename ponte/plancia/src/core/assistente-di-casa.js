@@ -586,29 +586,57 @@ rilevatore("pioggia", "comfort", (c, o, l) => {
     fra <= 5
       ? pick("Sta piovendo", "It's raining", l)
       : pick(`Pioggia fra ${durata(fra * MINUTO, l)}`, `Rain in ${durata(fra * MINUTO, l)}`, l);
+  /* Una finestra «è aperta», due o più «sono aperte».
+   *
+   * Dal campo, con la schermata: «Pioggia fra 2 h e Bagno Grande e altre 4 è
+   * aperta. Meglio chiuderla prima.» Il soggetto sono cinque finestre, e la
+   * frase le trattava come una. Le frasi sono due e intere, non un verbo
+   * attaccato a meta': ogni lingua le traduce come le dice lei (in polacco e
+   * in russo cambia anche il genere), e una frase spezzata non si traduce. */
   if (finestre.length)
     fuori.push({
       urgenza: fra <= 30 ? "urgente" : "oggi",
       disegno: "storm",
-      titolo: pick(
-        `${quando} e ${nomi(finestre, l)} è aperta`,
-        `${quando} and ${nomi(finestre, l)} is open`,
-        l,
-      ),
-      motivo: pick("Meglio chiuderla prima.", "Better close it first.", l),
+      titolo:
+        finestre.length === 1
+          ? pick(
+              `${quando} e ${nomi(finestre, l)} è aperta`,
+              `${quando} and ${nomi(finestre, l)} is open`,
+              l,
+            )
+          : pick(
+              `${quando} e ${nomi(finestre, l)} sono aperte`,
+              `${quando} and ${nomi(finestre, l)} are open`,
+              l,
+            ),
+      motivo:
+        finestre.length === 1
+          ? pick("Meglio chiuderla prima.", "Better close it first.", l)
+          : pick("Meglio chiuderle prima.", "Better close them first.", l),
       azioni: [fatto(l)],
       entita: finestre.map((f) => f.entity),
     });
+  /* E lo stesso per le tende: una «è fuori», piu' d'una «sono fuori». */
   if (tende.length)
     fuori.push({
       urgenza: fra <= 30 ? "urgente" : "oggi",
       disegno: "storm",
-      titolo: pick(
-        `${quando} e ${nomi(tende, l)} è fuori`,
-        `${quando} and ${nomi(tende, l)} is out`,
-        l,
-      ),
-      motivo: pick("La ritiro?", "Retract it?", l),
+      titolo:
+        tende.length === 1
+          ? pick(
+              `${quando} e ${nomi(tende, l)} è fuori`,
+              `${quando} and ${nomi(tende, l)} is out`,
+              l,
+            )
+          : pick(
+              `${quando} e ${nomi(tende, l)} sono fuori`,
+              `${quando} and ${nomi(tende, l)} are out`,
+              l,
+            ),
+      motivo:
+        tende.length === 1
+          ? pick("La ritiro?", "Retract it?", l)
+          : pick("Le ritiro?", "Retract them?", l),
       azioni: [
         {
           etichetta: pick("Ritira", "Retract", l),

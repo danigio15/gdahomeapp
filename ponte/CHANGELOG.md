@@ -18,6 +18,10 @@ _Add-on e app GdAHome._
   Assistant e in HACS, la schermata d'avvio della plancia, il segno in cima
   a Configurazione, la scritta accanto al logo e i messaggi d'errore della
   pagina.
+- **Riaprendo l'app la plancia si ricollega da sola**: il puntino in alto
+  non resta più rosso, e non serve ricaricare la pagina.
+- **L'Assistente di casa** dice bene il plurale: «Bagno e altre 4 sono
+  aperte. Meglio chiuderle prima.»
 
 ## 1.19.2
 

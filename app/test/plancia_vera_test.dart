@@ -50,6 +50,13 @@ class _PlanciaFinta extends FabbricaDellaPlancia {
   VoidCallback? caricata;
   VoidCallback? siVede;
 
+  /// Quante volte si e' detto alla pagina che il filo con la casa c'e'.
+  int filoDetto = 0;
+
+  @override
+  void ilFiloCE(GlobalKey<RiquadroDellaPlanciaState> riquadro) =>
+      filoDetto += 1;
+
   @override
   Future<ServitoreDiQuestoSistema?> servitore(
     Filo? Function() filo, {
@@ -253,6 +260,50 @@ void main() {
     expect(plancia.nati, 1, reason: 'la pagina è stata rifatta da capo');
     expect(find.byType(LinearProgressIndicator), findsNothing);
 
+    await chiudiLaCasa(tester);
+  });
+
+  testWidgets('tornando dalla tasca la pagina sa che il filo c\'è, e si '
+      'ricollega da sé senza ricaricarsi', (tester) async {
+    /* «Con l'ultimo aggiornamento quando riapro l'app resta il puntino rosso,
+     * devo fare refresh della plancia.» Il pallino della plancia lo accende
+     * la sua presa, che va al servitore e riceve `auth_ok` solo quando il
+     * filo c'e' (`plancia/cucitura.dart`). Al rientro il filo si rifa', la
+     * presa si chiude, e la pagina riprovava coi tempi suoi — fino a trenta
+     * secondi — senza che nessuno le dicesse che il filo era tornato. Si
+     * ricaricava a mano. Adesso glielo dice l'app, e la pagina resta quella. */
+    await apriLaCasa(tester);
+    final plancia = _PlanciaFinta();
+    await tester.pumpWidget(_laSchermata(collegamento, plancia, impostazioni));
+    await tester.pump();
+    await tester.pump();
+    expect(plancia.nati, 1);
+    final primaDelRiposo = plancia.filoDetto;
+
+    // In tasca: il filo va a riposo.
+    await tester.runAsync(collegamento.riposa);
+    await tester.pump();
+    expect(plancia.filoDetto, primaDelRiposo);
+
+    // Di nuovo davanti: il filo si riapre, e appena e' dentro la pagina lo sa.
+    await tester.runAsync(() async {
+      collegamento.sveglia();
+      await _finoA(() => collegamento.dentro);
+      await _finoA(() => plancia.filoDetto > primaDelRiposo);
+    });
+    await tester.pump();
+    expect(plancia.filoDetto, primaDelRiposo + 1, reason: 'una volta sola');
+
+    // E l'app che torna davanti col filo vivo glielo ridice: la pagina prova
+    // la sua presa invece di fidarsi del pallino.
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.runAsync(
+      () => _finoA(() => plancia.filoDetto == primaDelRiposo + 2),
+    );
+
+    expect(plancia.nati, 1, reason: 'niente ricaricamento completo');
+    expect(plancia.morti, 0);
     await chiudiLaCasa(tester);
   });
 
