@@ -573,7 +573,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-DKONP5HF.js";
+} from "../../chunk-TKYDH4VG.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -4158,7 +4158,7 @@ var SOURCE_INDEX = Object.freeze({
   "Eliminare «${v.titolo}»?": "Delete «${v.titolo}»?",
   'Eliminare il gruppo "': 'Delete group "',
   "Eliminare questo elettrodomestico?": "Delete this appliance?",
-  "Eliminare tutta la configurazione DashboardModern di questa plancia?": "Delete all DashboardModern configuration for this dashboard?",
+  "Eliminare tutta la configurazione GdAHome di questa plancia?": "Delete all GdAHome configuration for this dashboard?",
   "Eliminata: ${v.titolo}": "Deleted: ${v.titolo}",
   "Eliminate": "Eliminated",
   "Eliminato: ${nome}": "Deleted: ${nome}",
@@ -7492,7 +7492,7 @@ var SOURCE_INDEX = Object.freeze({
   "Scorre da ${durata}": "Flowing for ${durata}",
   "Scorre da più di un giorno": "Flowing for over a day",
   "Scritta come Home Assistant la elenca, lettera per lettera.": "Spelled the way Home Assistant lists it, letter for letter.",
-  "Scritta da DashboardModern con le entità che hai scelto.": "Written by DashboardModern with the entities you picked.",
+  "Scritta da GdAHome con le entità che hai scelto.": "Written by GdAHome with the entities you picked.",
   "Scritte e quote non danno fastidio.": "Text and dimensions are fine.",
   "Scritto, il tasto apre il tastierino e parte solo col codice giusto — lo stesso tastierino della centrale. Vuoto, parte al tocco.": "When set, the button opens the keypad and only fires with the right code — the same keypad as the panel. Empty, it fires on tap.",
   "Scrivi": "Write",
@@ -52963,8 +52963,8 @@ function automazioneDiHomeAssistant(config, opzioni2 = {}) {
   );
   righe4.push(
     `# ${pick(
-      "Scritta da DashboardModern con le entità che hai scelto.",
-      "Written by DashboardModern with the entities you picked.",
+      "Scritta da GdAHome con le entità che hai scelto.",
+      "Written by GdAHome with the entities you picked.",
       locale3
     )}`
   );

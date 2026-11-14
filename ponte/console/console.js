@@ -939,7 +939,9 @@
       return;
     }
     scheda.hidden = false;
-    var quale = plancia.versione ? "DashboardModern " + plancia.versione : "DashboardModern";
+    /* Il nome che si legge e' quello del prodotto: la plancia di GdAHome. */
+    var quale =
+      due("La plancia", "The dashboard") + (plancia.versione ? " " + plancia.versione : "");
     var spiega = trova("provenienza-spiega");
     var quali = trova("provenienza-quali");
     var acceso = plancia.stato === "originale" || plancia.stato === "non-firmata";

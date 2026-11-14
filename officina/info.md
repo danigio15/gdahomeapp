@@ -1,4 +1,4 @@
-![DashboardModern](https://raw.githubusercontent.com/danigio15/dashboardmodern-v2/main/brand/logo.png)
+![GdAHome](https://raw.githubusercontent.com/danigio15/gdahomeapp/main/officina/brand/logo.png)
 
 # DashboardModern v2
 

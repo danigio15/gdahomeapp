@@ -271,7 +271,7 @@ async function scena(page, numero, titolo, testo, attesa = 2800) {
         document.head.append(foglio);
         cartello = document.createElement("aside");
         cartello.id = "dm-video-scena";
-        cartello.innerHTML = `<b></b><div><h4></h4><p></p></div><i>DASHBOARD MODERN · ${versione}</i>`;
+        cartello.innerHTML = `<b></b><div><h4></h4><p></p></div><i>GDAHOME · ${versione}</i>`;
         document.body.append(cartello);
       }
       cartello.querySelector("b").textContent = String(numero);

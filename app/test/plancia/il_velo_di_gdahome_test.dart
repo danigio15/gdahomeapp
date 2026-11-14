@@ -23,6 +23,20 @@ void main() {
     );
   });
 
+  test('anche la parola di serie di oggi, «GDAHOME», prende quella scelta', () {
+    const oggi =
+        '<div id="cd-boot-overlay"><img src="data:image/webp;base64,AAAA" alt=""><b>GDAHOME</b><div class="s"></div>';
+    final fatto = colVeloDiGdahome(oggi, velo: 'Rossi impianti');
+    expect(fatto, contains('<b>Rossi impianti</b>'));
+    expect(fatto, contains('<img src="data:image/webp;base64,$logoDelVelo"'));
+  });
+
+  test('«GDAHOME» gia\' rivestita dal ponte, con lo script dopo, resta com\'e\'', () {
+    const rivestita =
+        '<div id="cd-boot-overlay"><img src="data:image/png;base64,LOGODELSUO" alt=""><b>GDAHOME</b><script>(function(){})()</script>';
+    expect(colVeloDiGdahome(rivestita, velo: 'Altro'), rivestita);
+  });
+
   test('una pagina gia\' rivestita dal ponte resta com\'e\', col suo logo', () {
     const rivestita =
         '<div id="cd-boot-overlay"><img src="data:image/png;base64,LOGODELSUO" alt=""><b>Rossi impianti</b>';
@@ -44,6 +58,7 @@ void main() {
     if (!pagina.existsSync()) return;
     final fatto = colVeloDiGdahome(pagina.readAsStringSync());
     expect(fatto, isNot(contains('<b>DashboardModern</b>')));
+    expect(fatto, contains('<b>GdAHome</b>'));
     expect(
       fatto,
       contains(

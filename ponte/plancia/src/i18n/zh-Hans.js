@@ -1172,8 +1172,8 @@ export default Object.freeze({
   'Delete "${nome}"?': "删除“${nome}”？",
   "Delete ALL saved configuration?\n\n⚠️ The config is synced through Home Assistant: it will be removed from ALL linked devices. You will have to run the wizard again.":
     "要删除保存的全部配置吗？\n\n⚠️ 配置通过 Home Assistant 同步：它会从所有关联设备上消失。你需要重新走一遍向导。",
-  "Delete all DashboardModern configuration for this dashboard?":
-    "删除该面板的全部 DashboardModern 配置？",
+  "Delete all GdAHome configuration for this dashboard?":
+    "删除该面板的全部 GdAHome 配置？",
   "Delete failed:": "删除失败：",
   'Delete group "': "删除分组“",
   "Delete light": "删除灯光",
@@ -4186,8 +4186,8 @@ export default Object.freeze({
   "Write to whoever maintains the dashboard: a private conversation, not through GitHub":
     "写给维护此仪表板的人：一段不经过 GitHub 的私密对话",
   "Write your message…": "写下你的消息…",
-  "Written by DashboardModern with the entities you picked.":
-    "由 DashboardModern 用你选的实体写成。",
+  "Written by GdAHome with the entities you picked.":
+    "由 GdAHome 用你选的实体写成。",
   "Wrong PIN, try again.": "PIN 错误，请重试。",
   Year: "年",
   Yellow: "黄色",

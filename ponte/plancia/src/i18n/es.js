@@ -1197,8 +1197,8 @@ export default Object.freeze({
   'Delete "${nome}"?': '¿Eliminar "${nome}"?',
   "Delete ALL saved configuration?\n\n⚠️ The config is synced through Home Assistant: it will be removed from ALL linked devices. You will have to run the wizard again.":
     "¿Borrar TODA la configuración guardada?\n\n⚠️ La configuración se sincroniza a través de Home Assistant: se eliminará de TODOS los dispositivos enlazados. Tendrás que volver a pasar por el asistente.",
-  "Delete all DashboardModern configuration for this dashboard?":
-    "¿Eliminar toda la configuración de DashboardModern de este panel?",
+  "Delete all GdAHome configuration for this dashboard?":
+    "¿Eliminar toda la configuración de GdAHome de este panel?",
   "Delete failed:": "No se ha podido borrar:",
   'Delete group "': '¿Borrar el grupo "',
   "Delete light": "Eliminar luz",
@@ -4283,8 +4283,8 @@ export default Object.freeze({
   "Write to whoever maintains the dashboard: a private conversation, not through GitHub":
     "Escribe a quien mantiene el panel: una conversación privada, sin pasar por GitHub",
   "Write your message…": "Escribe tu mensaje…",
-  "Written by DashboardModern with the entities you picked.":
-    "Escrita por DashboardModern con las entidades que has elegido.",
+  "Written by GdAHome with the entities you picked.":
+    "Escrita por GdAHome con las entidades que has elegido.",
   "Wrong PIN, try again.": "PIN incorrecto, inténtalo de nuevo.",
   Year: "Año",
   Yellow: "Amarillo",

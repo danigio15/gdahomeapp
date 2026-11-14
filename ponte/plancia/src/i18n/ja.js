@@ -1195,8 +1195,8 @@ export default Object.freeze({
   'Delete "${nome}"?': "「${nome}」を削除しますか？",
   "Delete ALL saved configuration?\n\n⚠️ The config is synced through Home Assistant: it will be removed from ALL linked devices. You will have to run the wizard again.":
     "保存した設定をすべて削除しますか？\n\n⚠️ 設定は Home Assistant 経由で同期されます。連携しているすべての端末から消えます。ウィザードをやり直す必要があります。",
-  "Delete all DashboardModern configuration for this dashboard?":
-    "このダッシュボードの DashboardModern 設定をすべて削除しますか？",
+  "Delete all GdAHome configuration for this dashboard?":
+    "このダッシュボードの GdAHome 設定をすべて削除しますか？",
   "Delete failed:": "削除できませんでした:",
   'Delete group "': "グループ「",
   "Delete light": "照明を削除",
@@ -4262,8 +4262,8 @@ export default Object.freeze({
   "Write to whoever maintains the dashboard: a private conversation, not through GitHub":
     "ダッシュボードを管理している人に書く：GitHub を通さない個人的な会話",
   "Write your message…": "メッセージを書いてください…",
-  "Written by DashboardModern with the entities you picked.":
-    "あなたが選んだエンティティで DashboardModern が書きました。",
+  "Written by GdAHome with the entities you picked.":
+    "あなたが選んだエンティティで GdAHome が書きました。",
   "Wrong PIN, try again.": "PINが違います。もう一度お試しください。",
   Year: "年",
   Yellow: "黄",

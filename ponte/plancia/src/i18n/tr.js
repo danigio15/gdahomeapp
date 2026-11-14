@@ -1193,8 +1193,8 @@ export default Object.freeze({
   'Delete "${nome}"?': '"${nome}" silinsin mi?',
   "Delete ALL saved configuration?\n\n⚠️ The config is synced through Home Assistant: it will be removed from ALL linked devices. You will have to run the wizard again.":
     "Kayıtlı yapılandırmanın TAMAMI silinsin mi?\n\n⚠️ Yapılandırma Home Assistant üzerinden eşitlenir: bağlı TÜM cihazlardan kalkar. Sihirbazı yeniden çalıştırmanız gerekir.",
-  "Delete all DashboardModern configuration for this dashboard?":
-    "Bu panonun tüm DashboardModern yapılandırması silinsin mi?",
+  "Delete all GdAHome configuration for this dashboard?":
+    "Bu panonun tüm GdAHome yapılandırması silinsin mi?",
   "Delete failed:": "Silinemedi:",
   'Delete group "': '" grubu silinsin mi: "',
   "Delete light": "Işığı sil",
@@ -4260,8 +4260,8 @@ export default Object.freeze({
   "Write to whoever maintains the dashboard: a private conversation, not through GitHub":
     "Panoyu sürdüren kişiye yaz: GitHub'dan geçmeyen özel bir konuşma",
   "Write your message…": "Mesajını yaz…",
-  "Written by DashboardModern with the entities you picked.":
-    "Seçtiğiniz varlıklarla DashboardModern tarafından yazıldı.",
+  "Written by GdAHome with the entities you picked.":
+    "Seçtiğiniz varlıklarla GdAHome tarafından yazıldı.",
   "Wrong PIN, try again.": "Yanlış PIN, tekrar dene.",
   Year: "Yıl",
   Yellow: "Sarı",
