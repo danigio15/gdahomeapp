@@ -10,6 +10,20 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.19.5
+
+_App GdAHome e add-on._
+
+- **Le auto elettriche nuove**: nella sezione Auto ci sono 11 marche in più
+  (fra cui Alpine, Denza, Geely, Maserati, Mitsubishi, Omoda, Jaecoo,
+  Zeekr) e le novità fino a novembre 2026, come Leapmotor B03X e B05, Kia
+  EV2, Hyundai IONIQ 3, Volkswagen ID. Polo, ID. Cross e ID.3 Neo, MG4
+  Urban, BYD Atto 3 Evo, Volvo ES90. Il navigatore ne conosce batteria e
+  ricarica per stimare consumi e autonomia.
+- **Niente più «login fallito»** all'apertura della plancia in Home
+  Assistant: telecamere e calendari non usano più un accesso vecchio
+  rimasto nel browser.
+
 ## 1.19.4.1
 
 _Solo Home Assistant: l'app sul telefono non cambia._
