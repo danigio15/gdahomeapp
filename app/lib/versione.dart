@@ -14,7 +14,7 @@ library;
 const String versioneDiQuestApp = "1.19.4";
 
 /// Il numero di costruzione, quello che vogliono i negozi.
-const int costruzioneDiQuestApp = 1190400;
+const int costruzioneDiQuestApp = 1190401;
 
 /// Come si scrive per chi legge: `1.4.30 (104301)`.
-const String numeroDiQuestApp = "1.19.4 (1190400)";
+const String numeroDiQuestApp = "1.19.4 (1190401)";

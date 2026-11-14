@@ -573,7 +573,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-XZL4GG2B.js";
+} from "../../chunk-ZWDLT4SO.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -104937,8 +104937,15 @@ function verificaLaPresa() {
   if (!socket || typeof socket !== "object" || !connectionUp()) return false;
   if (socket.readyState !== socketConstant("OPEN", 1) || socket.__dmProva) return false;
   if (!socket.__dmRecoveryOwned || eIlPonteDelPannello(socket)) return false;
+  let id = 0;
   try {
-    socket.send(JSON.stringify({ id: 19e8 + state89.preseMute % 1e3, type: "ping" }));
+    id = root.eval?.("msgId++");
+  } catch (_error) {
+    return false;
+  }
+  if (!Number.isSafeInteger(id) || id <= 0) return false;
+  try {
+    socket.send(JSON.stringify({ id, type: "ping" }));
   } catch (_error) {
     return false;
   }
