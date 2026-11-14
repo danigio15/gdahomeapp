@@ -91,6 +91,10 @@ const REACHED_OTHERWISE = new Set([
    * cataloghi importati e anche lui con le righe `{ it, en }`: le stesse che
    * scrivono la pagina Auto e la finestra dell'auto in Home. */
   "auto-termica-section.js",
+  /* E la guida del Config scrive, nel percorso «Da dove comincio», la frase di
+   * ogni tappa: sta in `src/core/guida-del-config.js` (`PERCORSO`), anche lui
+   * fra i cataloghi importati e con le righe `{ it, en }`. */
+  "guida-del-config-section.js",
 ]);
 
 /* L'elenco si legge dal sorgente, non si importa: l'estrattore riscrive i file

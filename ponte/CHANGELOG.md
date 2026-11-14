@@ -10,6 +10,32 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.19.3.1
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+**Nella plancia, la guida dentro il Config:**
+
+- **«📖 Come si configura questa scheda»**: nell'editor, sotto la ricerca,
+  apre la guida della scheda che stai guardando (in basso sul telefono, a
+  destra sul computer). A cosa serve, i passi uno alla volta con «Comincia»
+  e «Avanti», cosa trovi e i consigli. **«👉 Mostrami»** porta la scheda sul
+  campo di cui parla il passo e lo accende col numero del passo. Cambiando
+  scheda, la guida segue.
+- **«🧭 Da dove comincio»**: l'ordine consigliato per una casa nuova, con
+  «Vai ›» che apre la scheda con la sua guida e la spunta «Fatto» per
+  ricordarsi a che punto si è.
+- **La Casa 3D**: in «Crea la tua casa», accanto alla ✕, **«📖 Come si fa»**
+  apre la guida del passo in cui sei, e cambia con lui. Sul computer è una
+  colonna a sinistra e la planimetria resta libera.
+- Sul telefono, con la guida aperta, i tasti in fondo («Avanti», «Salva»)
+  si possono far salire sopra di lei.
+
+**Il manuale d'uso** (`docs/MANUALE.md`, anche in PDF): tutte le schede
+dell'editor una per una (capitolo 27) e la Casa 3D passo per passo
+(capitolo 28), con le schermate numerate. La guida dentro il Config dice le
+stesse parole del manuale: si prendono da lì.
+
 ## 1.19.3
 
 _Add-on e app GdAHome._

@@ -1,1 +1,4 @@
 custom_components/dashboardmodern/frontend/legacy/
+# Generato da strumenti/guida-dal-manuale.mjs dal manuale (docs/MANUALE.md):
+# non si formatta a mano, lo controlla ponte/test/guida-del-config.test.js.
+custom_components/dashboardmodern/frontend/src/core/guida-del-config-testi.js

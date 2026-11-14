@@ -323,6 +323,9 @@ const CATALOG_MODULES = Object.freeze([
      la scheda dell'auto scrive accanto a ogni casella, e la pagina Auto e la
      sua finestra in Home sopra ogni lettura. */
   "src/core/auto-termica.js",
+  /* Il percorso «Da dove comincio» della guida del Config: una frase per
+     tappa, che il foglio della guida scrive sotto il nome della scheda. */
+  "src/core/guida-del-config.js",
 ]);
 
 /*
