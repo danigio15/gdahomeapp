@@ -20,19 +20,34 @@
  *
  * ─── Le vie ──────────────────────────────────────────────────────────────
  *
- *   /os/info          la scheda (`board`: `odroid-n2`), la versione del sistema
- *   /host/info        i dischi, e `disk_life_time`
- *   /network/info     le interfacce — la stessa via che `ritorno.js` chiama gia'
- *   /addons           gli add-on, con `state` e `boot`
- *   /core/info        la versione di Home Assistant
- *   /supervisor/info  la versione del Supervisor
+ *   /os/info               la scheda (`board`: `odroid-n2`), la versione del sistema
+ *   /host/info             i dischi, e `disk_life_time`
+ *   /network/info          le interfacce — la stessa via che `ritorno.js` chiama gia'
+ *   /core/info             la versione di Home Assistant
+ *   /supervisor/info       la versione del Supervisor, **e l'elenco degli add-on**
+ *                          (`addons`: nome, slug, `state`, `update_available`)
+ *   /addons/<slug>/info    solo per gli add-on **fermi**: il loro `boot`
  *
- * Le vie in `/info` il Supervisor le apre a ogni add-on. `/addons` no: la apre
- * solo a chi dichiara `hassio_role: manager`, ed e' per lei che il manifesto
- * lo dichiara. Si chiede solo dove la casa ha messo il codice del suo
- * installatore — senza, questo pezzo non gira — perche' l'installatore deve
- * vedere tutto quello che la casa gli ha permesso di vedere: «c'e' un add-on
- * che parte all'avvio ed e' fermo?» e' una delle prime domande che si fa.
+ * **Tutte vie in `/info`, e non e' un caso.** Il Supervisor le apre a ogni
+ * add-on col ruolo di serie (`hassio_role: default`, l'espressione `/.+/info`
+ * in `supervisor/api/middleware/security.py`). Fino alla 1.19.3 qui si chiedeva
+ * `/addons`, l'elenco intero, che il Supervisor da' solo a un add-on
+ * `manager` — e per quella sola lettura il manifesto dichiarava `manager`, che
+ * pero' apre anche avviare, fermare, disinstallare e leggere le opzioni (cioe'
+ * le password) di **ogni** altro add-on della casa. Le stesse due cose che
+ * servono qui — chi gira, e chi dovrebbe girare — stanno gia' nelle vie in
+ * `/info`: l'elenco in `/supervisor/info`, e l'avvio automatico nella scheda
+ * di ciascuno. Il ruolo `manager` non serve piu', e il manifesto non lo chiede.
+ *
+ * Il `boot` si chiede solo per gli add-on fermi perche' e' l'unico caso in cui
+ * conta (`gliAddon` qui sotto, e il quadro che mostra «fermo» o «spento
+ * manualmente» solo per chi non gira): una domanda per add-on a ogni giro
+ * sarebbe venti righe al minuto nel registro del Supervisor per niente.
+ *
+ * Si chiede tutto solo dove la casa ha messo il codice del suo installatore —
+ * senza, questo pezzo non gira — perche' l'installatore deve vedere quello che
+ * la casa gli ha permesso di vedere: «c'e' un add-on che parte all'avvio ed e'
+ * fermo?» e' una delle prime domande che si fa.
  *
  * Le funzioni che leggono quelle risposte stanno fuori dalla classe e non
  * sanno cosa sia la rete: la forma di quelle risposte non la decidiamo noi, e
@@ -421,7 +436,11 @@ export function gliApparati(stati, { scelte = [] } = {}) {
 /**
  * Gli add-on, e la sola domanda che conta.
  *
- * `addons` e' il `data.addons` di `/addons`.
+ * `addons` e' il `data.addons` di `/supervisor/info`, col `boot` aggiunto da
+ * `Ferro` per gli add-on fermi (vedi in testa). Per uno che gira il `boot` non
+ * si chiede, e `allAvvio` resta `false`: non lo legge nessuno — il quadro lo
+ * guarda solo per chi e' fermo — e un «non chiesto» detto `false` costa meno
+ * di una domanda al Supervisor per ogni add-on acceso, ogni minuto.
  *
  * Non «quanti sono spenti»: **quanti partono all'avvio e sono fermi**. Nessuno
  * spegne un add-on lasciandogli l'avvio automatico, quindi quello li' si e'
@@ -451,8 +470,8 @@ export function gliAddon({ addons = [] } = {}) {
 /**
  * Chi va a chiedere tutto questo al Supervisor.
  *
- * Sei domande in parallelo e una risposta tenuta un minuto. Una che va male
- * non fa fallire le altre: un Supervisor senza il permesso della rete deve
+ * Cinque domande in parallelo, piu' una per ogni add-on fermo, e una risposta
+ * tenuta un minuto. Una che va male non fa fallire le altre: un Supervisor senza il permesso della rete deve
  * dare un rapporto senza la rete, non nessun rapporto.
  */
 export class Ferro {
@@ -478,7 +497,7 @@ export class Ferro {
     this._dettoIlGuaio = false;
   }
 
-  /** Le sei risposte grezze, o quello che si e' riusciti ad avere. */
+  /** Le risposte grezze, o quello che si e' riusciti ad avere. */
   async chiedi() {
     const ora = this.adesso();
     if (this._ultimo && ora - this._quando < this.quantoDura) return this._ultimo;
@@ -496,15 +515,15 @@ export class Ferro {
   }
 
   async _vai() {
-    const [os, host, network, addons, core, supervisor] = await Promise.all([
+    const [os, host, network, core, supervisor] = await Promise.all([
       this._via("/os/info"),
       this._via("/host/info"),
       this._via("/network/info"),
-      this._via("/addons"),
       this._via("/core/info"),
       this._via("/supervisor/info"),
     ]);
-    const nessuna = !os && !host && !network && !addons && !core && !supervisor;
+    const addons = await this._gliAddon(supervisor?.addons);
+    const nessuna = !os && !host && !network && !core && !supervisor;
     if (nessuna && !this._dettoIlGuaio) {
       this.registro.attenzione(
         "il Supervisor non risponde: il rapporto parte lo stesso, senza la macchina ne' la rete",
@@ -512,7 +531,28 @@ export class Ferro {
       this._dettoIlGuaio = true;
     }
     if (!nessuna) this._dettoIlGuaio = false;
-    return { os, host, network, addons: addons?.addons ?? [], core, supervisor };
+    return { os, host, network, addons, core, supervisor };
+  }
+
+  /* L'elenco di `/supervisor/info`, e per ogni add-on fermo il suo `boot`,
+   * chiesto alla sua scheda (`/addons/<slug>/info`, una via in `/info`).
+   *
+   * Lo slug arriva dal Supervisor, ma finisce in un indirizzo: si accetta solo
+   * la forma che il Supervisor stesso usa (`RE_SLUG`, lettere, cifre, `-`, `_`
+   * e `.`, senza `..`), e uno storto resta senza `boot` invece di diventare un
+   * altro percorso. Una scheda che non risponde lascia l'add-on senza `boot`:
+   * il rapporto parte lo stesso. */
+  async _gliAddon(elenco) {
+    if (!Array.isArray(elenco)) return [];
+    return Promise.all(
+      elenco.map(async (uno) => {
+        if (!unOggetto(uno) || pulito(uno.state) === "started") return uno;
+        const slug = pulito(uno.slug);
+        if (!/^[A-Za-z0-9_.-]+$/.test(slug) || slug.includes("..")) return uno;
+        const scheda = await this._via(`/addons/${slug}/info`);
+        return scheda && "boot" in scheda ? { ...uno, boot: scheda.boot } : uno;
+      }),
+    );
   }
 
   /* Svuotare la casella del quadro nelle opzioni dell'add-on.

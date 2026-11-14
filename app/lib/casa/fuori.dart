@@ -5,6 +5,8 @@
 /// dalla plancia, e l'indirizzo del quadro a cui si consegna il codice.
 library;
 
+import 'dart:convert';
+
 /// Un indirizzo che si puo' aprire nel browser: `http` o `https`, con una
 /// casa.
 ///
@@ -44,6 +46,78 @@ bool eUnQuadroSicuro(Uri quale) {
 
 bool _eQui(String casa) =>
     casa == 'localhost' || casa == '127.0.0.1' || casa == '::1';
+
+/// L'origine di un indirizzo come la scrive un browser in
+/// `location.origin`: schema, casa e porta — la porta solo se non e' quella
+/// di serie (80 per `http`, 443 per `https`).
+///
+/// `null` per tutto quello che un'origine web non ce l'ha o non la deve
+/// avere: uno schema che non e' `http`/`https`, un indirizzo senza casa, e
+/// uno con delle **credenziali** (`https://qualcuno@casa/`). Quelle un
+/// browser le toglie dall'origine, ma un indirizzo che le porta non e' mai
+/// uno che il quadro scrive: e' un modo di far sembrare una cosa un'altra.
+String? lOrigineDi(Uri quale) {
+  final schema = quale.scheme.toLowerCase();
+  if (schema != 'http' && schema != 'https') return null;
+  if (quale.host.isEmpty || quale.userInfo.isNotEmpty) return null;
+  final casa = quale.host.toLowerCase();
+  final scritta = casa.contains(':') ? '[$casa]' : casa;
+  /* `Uri.port` da' gia' la porta effettiva: quella scritta, o quella di
+   * serie dello schema. */
+  final diSerie = schema == 'https' ? 443 : 80;
+  final porta = quale.port;
+  return porta == diSerie ? '$schema://$scritta' : '$schema://$scritta:$porta';
+}
+
+/// Se due indirizzi stanno sulla **stessa origine**: schema, casa e porta
+/// effettiva. E' la regola del browser, ed e' quella che decide a quale
+/// pagina il riquadro del cruscotto da' fiducia.
+///
+/// Prima si guardavano solo casa e schema: una pagina sulla stessa casa ma su
+/// un'altra porta — un altro servizio, un altro proprietario — era «del
+/// quadro», si apriva nel riquadro e riceveva la chiave.
+bool eLaStessaOrigine(Uri quale, Uri dove) {
+  final una = lOrigineDi(quale);
+  return una != null && una == lOrigineDi(dove);
+}
+
+/// Il JavaScript che consegna la chiave alla pagina del quadro, o `null` se
+/// adesso non si consegna niente.
+///
+/// [adesso] e' l'indirizzo della pagina che il WebView ha in mano **in
+/// questo momento** (`currentUrl()`), letto subito prima di ogni colpo: la
+/// consegna si ripete dopo trecento millisecondi e dopo un secondo e mezzo,
+/// e in mezzo la pagina puo' essere cambiata. Se non e' sulla stessa origine
+/// di [pagina] — o se [pagina] non e' un quadro sicuro — non parte niente.
+///
+/// E lo script ricontrolla da se', dentro la pagina, perche' fra la lettura
+/// dell'indirizzo e l'esecuzione la pagina puo' cambiare ancora:
+///
+///  - consegna solo se la finestra e' quella principale (`window.top`) — una
+///    cornice dentro la pagina non e' la pagina;
+///  - consegna solo se `location.origin` e' esattamente quella del quadro;
+///  - e il secondo argomento di `postMessage` e' quell'origine, non `"*"`:
+///    se nel frattempo il documento fosse cambiato, il browser il messaggio
+///    lo butta.
+///
+/// Chiave e origine passano da `jsonEncode`: finiscono dentro un programma
+/// che si esegue.
+String? ilCodiceDellaConsegna({
+  required String chiave,
+  required Uri pagina,
+  required String? adesso,
+}) {
+  if (chiave.isEmpty || !eUnQuadroSicuro(pagina)) return null;
+  final origine = lOrigineDi(pagina);
+  if (origine == null) return null;
+  final dove = adesso == null ? null : Uri.tryParse(adesso);
+  if (dove == null || lOrigineDi(dove) != origine) return null;
+  final detto = jsonEncode({'gdahome': 'chiave', 'chiave': chiave});
+  return '(function(o,d){try{'
+      'if(window.top!==window||location.origin!==o)return;'
+      'window.postMessage(d,o);'
+      '}catch(e){}})(${jsonEncode(origine)},$detto)';
+}
 
 /// Un indirizzo del telefono stesso: `localhost`, `127.0.0.1` (o un altro
 /// `127.x`), `::1`.

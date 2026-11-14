@@ -26,7 +26,7 @@
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const qui = (relativo) => fileURLToPath(new URL(relativo, import.meta.url));
@@ -242,4 +242,92 @@ test("le sezioni hanno un titolo che dice di chi e' quella roba", () => {
 test("il manifesto lascia l'ingress a chi non amministra", () => {
   const scritto = readFileSync(qui("../config.yaml"), "utf8");
   assert.match(scritto, /^panel_admin: false$/m);
+});
+
+/* ─── I permessi dell'add-on ─────────────────────────────────────────────
+ *
+ * Il manifesto e' anche l'elenco di quello che l'add-on puo' fare alla casa,
+ * e quello non lo guarda nessuna altra prova. Queste righe si rompono se
+ * qualcuno rialza un permesso: non per vietarlo, ma perche' chi lo fa debba
+ * scrivere qui — e nel commento del manifesto — perche' serve.
+ *
+ * Il ruolo col Supervisor e' quello di serie: tutte le chiamate del ponte al
+ * Supervisor (`src/ferro.js`, `src/ritorno.js`, `src/casa.js`,
+ * `src/plance-in-casa.js`, le icone in `src/commissioni.js` e `src/segni.js`)
+ * sono vie in `/info`, le proprie (`/addons/self/…`) o le icone, che il ruolo
+ * di serie gia' apre. `manager` toglie un punto di sicurezza nella scheda
+ * dell'add-on e apre avviare, fermare e disinstallare gli altri add-on. */
+const iValoriDi = (testo, chiave) =>
+  [...testo.matchAll(new RegExp(`^${chiave}:[ \\t]*(.*)$`, "gm"))].map((una) =>
+    una[1].replace(/\s+#.*$/, "").trim(),
+  );
+
+test("il ruolo col Supervisor e' quello di serie, e nessun permesso largo e' acceso", () => {
+  const scritto = readFileSync(qui("../config.yaml"), "utf8");
+  assert.deepEqual(iValoriDi(scritto, "hassio_role"), ["default"]);
+  /* I permessi che danno all'add-on la macchina intera, o quasi. Nessuno
+   * serve, e nessuno deve comparire senza che questa prova cambi. */
+  for (const chiave of [
+    "full_access",
+    "docker_api",
+    "host_network",
+    "host_pid",
+    "host_uts",
+    "host_ipc",
+    "host_dbus",
+    "privileged",
+    "devices",
+    "uart",
+    "usb",
+    "gpio",
+    "kernel_modules",
+    "auth_api",
+  ]) {
+    assert.deepEqual(iValoriDi(scritto, chiave), [], `«${chiave}» non serve al ponte`);
+  }
+  /* AppArmor spento costa un punto e toglie la seconda linea di difesa. */
+  assert.ok(!/^apparmor:[ \t]*false/m.test(scritto), "AppArmor non si spegne");
+});
+
+test("si mappa la sola cartella di Home Assistant, perche' le plance stanno in www/gdahome", () => {
+  /* In scrittura per una ragione sola, detta nel manifesto: la pagina che apre
+   * le plance fra le «Plance» deve uscire dalla `www` di Home Assistant, e Home
+   * Assistant non sa montarne un pezzo solo. Che il ponte ci scriva soltanto
+   * `www/gdahome/` lo tiene `plance-in-casa.test.js`. Qualunque altra
+   * cartella — `share`, `backup`, `ssl`, `addons`, `all_addon_configs`… —
+   * deve passare da qui. */
+  const scritto = readFileSync(qui("../config.yaml"), "utf8");
+  const righe = scritto.split("\n");
+  const inizio = righe.indexOf("map:");
+  assert.notEqual(inizio, -1, "non c'e' nessun blocco «map:»");
+  const mappe = [];
+  for (const una of righe.slice(inizio + 1)) {
+    if (/^\S/.test(una) || una.trim() === "") break;
+    if (/^\s*#/.test(una)) continue;
+    mappe.push(una.trim());
+  }
+  assert.deepEqual(mappe, ["- homeassistant_config:rw"]);
+  assert.equal(righe.filter((una) => una === "map:").length, 1);
+});
+
+/* Il profilo AppArmor e' pronto, ma non e' acceso.
+ *
+ * Il Supervisor carica `apparmor.txt` da solo se lo trova accanto al
+ * manifesto, senza bisogno di nessuna riga in `config.yaml`: rinominare il
+ * file vuol dire accenderlo in tutte le case al prossimo aggiornamento. E un
+ * profilo sbagliato non dice niente: fa fallire una lettura o una connessione
+ * a meta'. La proposta sta in `sicurezza/apparmor.proposta.txt`, con scritto in
+ * cima come provarla su un Home Assistant OS vero; quando e' provata, si
+ * sposta e si cambia questa prova — insieme, apposta. */
+test("il profilo AppArmor non si accende per sbaglio", () => {
+  assert.ok(
+    !existsSync(qui("../apparmor.txt")),
+    "«ponte/apparmor.txt» accende il profilo in tutte le case: va provato prima (sicurezza/apparmor.proposta.txt)",
+  );
+  const proposta = readFileSync(qui("../sicurezza/apparmor.proposta.txt"), "utf8");
+  assert.match(proposta, /^profile gdahome flags=/m);
+  /* Le due cartelle che il ponte scrive davvero devono esserci, o il giorno
+   * che lo si accende le plance spariscono dalla barra di Home Assistant. */
+  assert.match(proposta, /^\s+\/data\/\*\* rwk,$/m);
+  assert.match(proposta, /^\s+\/homeassistant\/www\/gdahome\/\*\* rw,$/m);
 });

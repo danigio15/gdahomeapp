@@ -137,10 +137,16 @@ class CasaConosciuta {
   /// l'altra, perche' il filo da solo se lo ricorda solo finche' l'app resta
   /// aperta, e la prima stretta dopo l'apertura sarebbe quella scoperta.
   ///
+  /// Si accende anche **abbinandosi**: l'«ecco» dell'abbinamento, cifrato
+  /// col codice, dice se la casa sa legare (`Abbinato.legata`), e allora e'
+  /// gia' `true` dal primo collegamento — che altrimenti sarebbe proprio
+  /// quello scoperto.
+  ///
   /// Si accende e basta: non c'e' modo di spegnerlo se non togliendo la casa.
-  /// Riabbinarla rimette le chiavi nuove e lo riporta a `false` — ed e'
-  /// giusto: un add-on di prima si rimette con un abbinamento, non con un
-  /// ritocco per strada. Una casa mai vista legare resta `false` e si apre come sempre.
+  /// Riabbinarla rimette le chiavi nuove e lo riporta a quello che dice il
+  /// nuovo abbinamento — ed e' giusto: un add-on di prima si rimette con un
+  /// abbinamento, non con un ritocco per strada. Una casa mai vista legare
+  /// resta `false` e si apre come sempre.
   final bool legata;
 
   /// Il telefono di prima in questa casa, quando la si e' riabbinata: il suo

@@ -484,7 +484,7 @@ jobs:
           echo "Fra gli artefatti, «gdahome-android-cifrato»: si apre con la parola di PAROLA_DEL_PACCHETTO." >> "$GITHUB_STEP_SUMMARY"
       - name: Il pacchetto cifrato fra gli artefatti
         if: inputs.pacchetto_a_mano && steps.chiave.outputs.vera == 'si'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: gdahome-android-cifrato
           path: gdahome-android-cifrato.zip

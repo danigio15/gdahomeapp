@@ -31,8 +31,14 @@ jobs:
   safari:
     name: La testata su WebKit
     runs-on: ubuntu-latest
+    # L'immagine e' fissata al suo digest, come le azioni al loro commit: un
+    # nome di versione nel registro si puo' ripubblicare, un digest no. La
+    # versione resta scritta davanti per chi legge, e va tenuta uguale a quella
+    # di `@playwright/test` in `officina/package.json` (Dependabot qui non
+    # arriva: Playwright si aggiorna a mano, col digest nuovo preso da
+    # `mcr.microsoft.com/v2/playwright/manifests/<versione>`).
     container:
-      image: mcr.microsoft.com/playwright:v1.54.1-noble
+      image: mcr.microsoft.com/playwright:v1.54.1-noble@sha256:307ace13c8ba4349f790f4dfbc6eaa9fcafdeb29c218ff36129c7cacebb1e35f
     timeout-minutes: 30
     defaults:
       run:

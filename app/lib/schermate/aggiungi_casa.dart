@@ -286,6 +286,7 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
         approdoIniziale: entrata.daDentro != null
             ? DaDove.daDentro
             : DaDove.dalCentralino,
+        legata: abbinato.legata,
       );
       /* Di chi e' questo telefono, per la prossima casa e per non chiederlo
        * di nuovo: anche vuoto, che e' una risposta. */

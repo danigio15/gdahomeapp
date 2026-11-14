@@ -113,6 +113,11 @@ class PonteFinto {
   /// che la casa l'ha scritta — e l'ha messa nella sua chiave com'era.
   String Function(String pronto)? perStradaIlPronto;
 
+  /// Quando c'e', e' chi sta in mezzo dall'altra parte: riscrive la prima
+  /// riga del telefono prima che arrivi alla casa — per esempio togliendo il
+  /// `lega`. La casa la mette nella sua chiave com'e' arrivata.
+  String Function(String ciao)? perStradaLaStretta;
+
   /// Quando c'e', chiude appena qualcuno si collega, dicendo questo: e' il
   /// centralino che accetta il filo e lo chiude subito perche' la casa non gli
   /// e' attaccata. Da fuori e' identico a un ponte vero che chiude in faccia.
@@ -1639,7 +1644,8 @@ class TelefonoCollegato {
       return;
     }
 
-    final detto = jsonDecode(testo) as Map<String, dynamic>;
+    final ciao = _ponte.perStradaLaStretta?.call(testo) ?? testo;
+    final detto = jsonDecode(ciao) as Map<String, dynamic>;
     _ponte.strette.add(detto);
 
     /* Come il portiere: prima di tutto, abbinamento compreso, l'app troppo
@@ -1660,7 +1666,7 @@ class TelefonoCollegato {
     }
 
     if (detto.containsKey('abbina')) {
-      await _perAbbinare(detto, testo);
+      await _perAbbinare(detto, ciao);
       return;
     }
 
@@ -1713,7 +1719,7 @@ class TelefonoCollegato {
       dellaCasa: mia.pubblica,
       apertura: base64.decode(detto['apertura'] as String),
       chiaveDelFilo: chiaveBuona,
-      stretta: lega ? await improntaDellaStretta(testo, pronto) : null,
+      stretta: lega ? await improntaDellaStretta(ciao, pronto) : null,
     );
     if (!_mandaIlPronto(pronto)) return;
     /* Come il ponte vero: si comprime verso chi ha detto di saper aprire. */
@@ -1840,6 +1846,8 @@ class TelefonoCollegato {
       'chiave': chiaveBuona,
       'dispositivo': {'id': chiBuono, 'nome': detto['nome']},
       'ritorno': _ponte.ritorno,
+      /* Come il portiere: dentro il cifrato, che questa casa sa legare. */
+      if (_ponte.conosceIlLegame) 'lega': versioneDelLegame,
     });
     unawaited(chiudi());
   }

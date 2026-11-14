@@ -96,12 +96,22 @@ const ETICHETTA_ABBINAMENTO = "gdahome/abbinamento/v2";
  * cosi'; un'app di prima, o una casa di prima, si parlano come sempre.
  *
  * Chi togliesse il `lega` dalla prima riga, per riportare tutti alla chiave
- * di prima, ci riesce solo con un filo che quella casa non l'ha ancora vista
- * legare: il filo dell'app si ricorda se la casa l'ha gia' ripetuto — con una
- * busta aperta a provarlo — e da li' in poi una risposta senza non la accetta
- * (`app/lib/ponte/stretta.dart`, `filo.dart`). Per ora se lo ricorda finche'
- * l'app resta aperta: alla prima stretta dopo un'apertura da zero, chi sta in
- * mezzo puo' ancora togliere il legame. */
+ * di prima, trova due punte che se lo ricordano:
+ *
+ *   - il **telefono**: appena la casa l'ha ripetuto, con una busta aperta a
+ *     provarlo, lo scrive nel portachiavi accanto alla chiave di quella casa
+ *     (`CasaConosciuta.legata`), e da li' in poi — anche dopo che l'app si e'
+ *     riaperta da zero — una risposta senza non la accetta
+ *     (`app/lib/ponte/stretta.dart`). Abbinandosi lo sa gia' prima del primo
+ *     collegamento: l'«ecco», cifrato col codice, dice `lega: 1`;
+ *   - la **casa**: un telefono di cui si e' aperta una busta legata — o che
+ *     si e' abbinato col legame — e' segnato nell'archivio dei telefoni, e
+ *     una sua stretta senza `lega` si ferma alla prima parola
+ *     (`dispositivi.legaSempre`, `portiere.js`).
+ *
+ * Resta scoperto solo il primo collegamento di un telefono abbinato prima di
+ * questa regola, finche' non ha legato una volta; e una casa con un add-on di
+ * prima, che il legame non lo sa fare per niente. */
 export const VERSIONE_DEL_LEGAME = 1;
 
 const ETICHETTA_DEL_LEGAME = "gdahome/lega/v1";

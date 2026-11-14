@@ -667,7 +667,15 @@ test("le app non si pubblicano su GitHub: vanno solo nei negozi", () => {
     /* L'unica eccezione: il pacchetto Android da caricare a mano quando il
      * negozio non lo prende via API (Health Connect), solo se chiesto, solo
      * cifrato con la parola di un segreto, e per un giorno. */
-    const lasciati = workflow.split(/uses: actions\/upload-artifact@v\d+/).slice(1);
+    /* `@v4` o `@<commit> # v4.6.2`: le azioni sono fissate al commit, e una
+     * prova che cercasse solo `@v4` smetterebbe di vedere il passo il giorno
+     * che lo si fissa — e passerebbe, senza guardare niente. */
+    const lasciati = workflow
+      .split(/uses: actions\/upload-artifact@(?:v\d+|[0-9a-f]{40})\b/)
+      .slice(1);
+    if (nome === "app.yml") {
+      assert.equal(lasciati.length, 1, "app.yml lascia un artefatto solo, lo zip cifrato");
+    }
     for (const passo of lasciati) {
       const percorsi = [...passo.matchAll(/^\s+path: (.+)$/gm)].map((una) => una[1].trim());
       assert.equal(nome, "app.yml", `${nome} non deve lasciare pacchetti fra gli artefatti`);

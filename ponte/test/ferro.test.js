@@ -401,8 +401,11 @@ test("un Supervisor mezzo muto da' mezza rapporto, non nessuna", async () => {
     registro: ZITTO,
     async fetch(dove) {
       if (dove.endsWith("/network/info")) return { ok: false, status: 403 };
-      if (dove.endsWith("/addons"))
-        return { ok: true, json: async () => ({ data: { addons: [{ name: "gdahome" }] } }) };
+      if (dove.endsWith("/supervisor/info"))
+        return {
+          ok: true,
+          json: async () => ({ data: { version: "2026.11.0", addons: [{ name: "gdahome" }] } }),
+        };
       return { ok: true, json: async () => ({ data: { board: "odroid-n2" } }) };
     },
   });
@@ -441,10 +444,96 @@ test("una risposta vale un minuto: quaranta rapporti non fanno quaranta giri di 
   });
   await ferro.chiedi();
   await ferro.chiedi();
-  assert.equal(quante, 6, "sei vie, chieste una volta sola");
+  assert.equal(quante, 5, "cinque vie, chieste una volta sola");
   ora += 61_000;
   await ferro.chiedi();
-  assert.equal(quante, 12);
+  assert.equal(quante, 10);
+});
+
+/* ─── Il ruolo col Supervisor ────────────────────────────────────────────
+ *
+ * Fino alla 1.19.3 l'elenco degli add-on si chiedeva a `/addons`, che il
+ * Supervisor da' solo a un add-on `manager` — un ruolo che apre anche avviare,
+ * fermare e disinstallare gli altri add-on, e leggerne le opzioni. Adesso il
+ * manifesto non lo chiede piu', e queste prove tengono fermo che il ferro si
+ * accontenti delle vie che il ruolo di serie apre: quelle in `/info`
+ * (l'espressione `/.+/info` di `supervisor/api/middleware/security.py`). */
+
+/* Un Supervisor finto col ruolo di serie: risponde alle vie in `/info`, e a
+ * tutto il resto dice 403, come quello vero. Si segna tutto quello che gli
+ * arriva. */
+function unSupervisorDiSerie({ addons, schede = {} }) {
+  const chieste = [];
+  const fetch = async (dove) => {
+    const via = dove.replace("http://supervisor", "");
+    chieste.push(via);
+    if (!/^\/.+\/info$/.test(via)) return { ok: false, status: 403 };
+    if (via === "/supervisor/info") {
+      return { ok: true, json: async () => ({ data: { version: "2026.11.0", addons } }) };
+    }
+    const scheda = /^\/addons\/([^/]+)\/info$/.exec(via);
+    if (scheda) {
+      if (!(scheda[1] in schede)) return { ok: false, status: 404 };
+      return { ok: true, json: async () => ({ data: schede[scheda[1]] }) };
+    }
+    return { ok: true, json: async () => ({ data: {} }) };
+  };
+  return { chieste, fetch };
+}
+
+test("il ferro chiede solo vie in /info: col ruolo di serie il rapporto e' intero", async () => {
+  const supervisor = unSupervisorDiSerie({
+    addons: [
+      { name: "Mosquitto broker", slug: "core_mosquitto", state: "stopped" },
+      { name: "Studio Code Server", slug: "a0d7b954_vscode", state: "stopped" },
+      { name: "gdahome", slug: "local_gdahome", state: "started", update_available: true },
+    ],
+    schede: {
+      core_mosquitto: { boot: "auto" },
+      a0d7b954_vscode: { boot: "manual" },
+    },
+  });
+  const ferro = new Ferro({ segno: "s", registro: ZITTO, fetch: supervisor.fetch });
+  const detto = await ferro.chiedi();
+
+  for (const via of supervisor.chieste) {
+    assert.match(via, /^\/.+\/info$/, `«${via}» il ruolo di serie non la apre`);
+  }
+  assert.ok(!supervisor.chieste.includes("/addons"), "l'elenco intero vuole `manager`");
+  /* La scheda si chiede solo per chi e' fermo: per chi gira il `boot` non
+   * cambia niente. */
+  assert.deepEqual(supervisor.chieste.filter((via) => via.startsWith("/addons/")).sort(), [
+    "/addons/a0d7b954_vscode/info",
+    "/addons/core_mosquitto/info",
+  ]);
+
+  const conto = gliAddon({ addons: detto.addons });
+  assert.equal(conto.quanti, 3);
+  assert.equal(conto.accesi, 1);
+  assert.equal(conto.spentiCheDovrebbero, 1, "Mosquitto parte all'avvio ed e' fermo");
+  const gdahome = conto.elenco.find((uno) => uno.nome === "gdahome");
+  assert.equal(gdahome.aggiornabile, true);
+});
+
+test("uno slug storto non diventa un altro percorso, e una scheda muta non ferma il rapporto", async () => {
+  const supervisor = unSupervisorDiSerie({
+    addons: [
+      { name: "Storto", slug: "../../host", state: "stopped" },
+      { name: "Con la barra", slug: "uno/due", state: "stopped" },
+      { name: "Sparito", slug: "sparito", state: "stopped" },
+      { name: "Fermo", slug: "fermo", state: "error" },
+    ],
+    schede: { fermo: { boot: "auto" } },
+  });
+  const ferro = new Ferro({ segno: "s", registro: ZITTO, fetch: supervisor.fetch });
+  const detto = await ferro.chiedi();
+  assert.deepEqual(supervisor.chieste.filter((via) => via.startsWith("/addons/")).sort(), [
+    "/addons/fermo/info",
+    "/addons/sparito/info",
+  ]);
+  const conto = gliAddon({ addons: detto.addons });
+  assert.equal(conto.quanti, 4);
+  assert.equal(conto.spentiCheDovrebbero, 1);
 });
 
 /* ─── Il tasto «smetti» ──────────────────────────────────────────────────

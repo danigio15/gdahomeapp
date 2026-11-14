@@ -31,7 +31,8 @@
 ///
 /// ─── La riga che non si puo' sbagliare ────────────────────────────────────
 ///
-/// `_siPuoAndare` lascia passare **solo** le pagine del quadro. Un collegamento
+/// `_siPuoAndare` lascia passare **solo** le pagine del quadro: la sua
+/// origine esatta, schema, casa e porta. Un collegamento
 /// che porta altrove non si apre qui dentro: si apre fuori, nel browser. Un
 /// riquadro che segue qualunque indirizzo e' un browser senza barra degli
 /// indirizzi, cioe' un posto dove non si vede mai dove si e' finiti.
@@ -170,7 +171,10 @@ class _StatoDelCruscotto extends State<SchermataDelCruscotto> {
     final dove = _indirizzo;
     final quale = Uri.tryParse(indirizzo);
     if (dove == null || quale == null) return false;
-    if (quale.host == dove.host && quale.scheme == dove.scheme) return true;
+    /* L'origine intera — schema, casa **e porta** — e niente credenziali
+     * nell'indirizzo: la stessa casa su un'altra porta e' un altro sito, e
+     * qui dentro riceverebbe la chiave (vedi [eLaStessaOrigine]). */
+    if (eLaStessaOrigine(quale, dove)) return true;
     unawaited(_fuori(quale));
     return false;
   }
