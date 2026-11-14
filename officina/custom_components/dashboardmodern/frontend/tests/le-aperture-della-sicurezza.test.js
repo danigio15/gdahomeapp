@@ -20,6 +20,7 @@ import {
   isDoorEntity,
   normalizeDoorPin,
   normalizeSecurityDoors,
+  portaColPinPerLAzione,
 } from "../src/core/security-door-model.js";
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "src");
@@ -325,4 +326,43 @@ test("finché la voce manca, il giro degli stati riprova ad agganciarsi", () => 
   assert.match(dentro, /const senzaVoce = !doc\.querySelector\(/);
   assert.match(dentro, /if \(senzaVoce\) agganciaRender\(\);/);
   assert.match(dentro, /if \(paginaVisibile\(\) \|\| senzaVoce\) schedule\(\);/);
+});
+
+/* «Da azioni rapide, toggle entita' sulla mia serratura, non c'e' modo di
+ *  inserire il pin e non lo richiede al click» (#32). */
+test("l'azione rapida su una porta col PIN chiede il PIN di quella porta", () => {
+  const porte = normalizeSecurityDoors([
+    { id: "a", name: "Ingresso", entity: "lock.ingresso", pin: "2468" },
+    { id: "b", name: "Garage", entity: "cover.garage", pin: "1357" },
+    { id: "c", name: "Cancelletto", entity: "switch.cancelletto" },
+  ]);
+  /* Aprire chiede il PIN: e' la porta stessa che torna, col suo PIN. */
+  assert.equal(portaColPinPerLAzione(porte, ["lock.ingresso"], "unlock")?.id, "a");
+  assert.equal(portaColPinPerLAzione(porte, ["lock.ingresso"], "open")?.id, "a");
+  /* Chiudere no, come nella pagina delle porte. */
+  assert.equal(portaColPinPerLAzione(porte, ["lock.ingresso"], "lock"), null);
+  /* Il nome scritto o quello risolto: basta che uno dei due sia la porta. */
+  assert.equal(portaColPinPerLAzione(porte, ["serratura", "lock.ingresso"], "unlock")?.id, "a");
+  /* Il portone a motore col toggle: chiuso si apre (PIN), aperto si chiude. */
+  assert.equal(portaColPinPerLAzione(porte, "cover.garage", "", "closed")?.id, "b");
+  assert.equal(portaColPinPerLAzione(porte, "cover.garage", "", "open"), null);
+  assert.equal(portaColPinPerLAzione(porte, "cover.garage", "close_cover"), null);
+  /* Una porta senza PIN, o un'entita' che non e' una porta: niente da chiedere. */
+  assert.equal(portaColPinPerLAzione(porte, "switch.cancelletto", ""), null);
+  assert.equal(portaColPinPerLAzione(porte, "light.salone", ""), null);
+  assert.equal(portaColPinPerLAzione(porte, [], "unlock"), null);
+  assert.equal(portaColPinPerLAzione(null, "lock.ingresso", "unlock"), null);
+});
+
+test("l'azione rapida usa il tastierino della porta, e il PIN non esce di li'", () => {
+  const azioni = leggi("sections/azioni-servizio-giusto-section.js");
+  assert.match(azioni, /portaColPinPerLAzione\(/);
+  assert.match(azioni, /chiediIlPinDellaPorta\(porta, \(\) =>/);
+  /* Il PIN non si legge ne' si scrive nell'azione rapida. */
+  assert.doesNotMatch(azioni, /\.pin\b/);
+  const porte = leggi("sections/security-doors-section.js");
+  /* Il comando di chi chiama parte solo dal ramo del PIN giusto. */
+  const ok = porte.slice(porte.indexOf("if (doorPinMatches(door, state.typed))"));
+  assert.match(ok.slice(0, 600), /const dopo = state\.dopo;/);
+  assert.match(porte, /state\.dopo = null;/);
 });

@@ -38,7 +38,7 @@ for (const [name, locale] of [
     assert.equal(typeof listeners.error, "function");
     timeout();
     assert.equal(overlay.dataset.state, "error");
-    assert.match(overlay.innerHTML, /Errore durante il caricamento di DashboardModern/);
+    assert.match(overlay.innerHTML, /Errore durante il caricamento di GdAHome/);
 
     assert.match(runtime, /function cdHideBoot\(\) \{\s*window\.__DASHBOARDMODERN_READY__ = true;/);
     assert.match(runtime, /clearTimeout\(window\.__DASHBOARDMODERN_BOOT_TIMEOUT__\)/);

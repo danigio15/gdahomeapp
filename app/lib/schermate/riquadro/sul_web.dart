@@ -170,6 +170,25 @@ Future<void> parcheggia(
   bool parcheggiata,
 ) async {}
 
+/// Dice alla plancia che il filo dell'app con la casa c'e', di nuovo: vedi
+/// `sul_telefono.dart`. Qui il riquadro e' di un'altra origine, e si bussa
+/// con un messaggio, che la plancia ascolta accanto all'evento.
+Future<void> ilFiloCE(WebViewController controllore) async {
+  final riquadri = web.document.querySelectorAll('iframe');
+  for (var quale = 0; quale < riquadri.length; quale += 1) {
+    final uno = riquadri.item(quale);
+    if (uno == null || !uno.isA<web.HTMLIFrameElement>()) continue;
+    try {
+      (uno as web.HTMLIFrameElement).contentWindow?.postMessage(
+        {'gdahome': 'filo'}.jsify(),
+        '*'.toJS,
+      );
+    } catch (_) {
+      /* Quel riquadro non si raggiunge: si passa al prossimo. */
+    }
+  }
+}
+
 /// Consegna alla pagina del quadro il codice che apre il cruscotto.
 ///
 /// **Anche nel browser, e non era scontato.** Una stesura di questo file

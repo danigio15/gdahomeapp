@@ -214,6 +214,14 @@ class Collegamento {
    * il salvataggio avesse funzionato. */
   final _planciaCambiata = StreamController<void>.broadcast();
 
+  /* Il filo da dare agli altri e' dentro, e prima non lo era: vedi
+   * [filoTornato]. */
+  final _filoTornato = StreamController<void>.broadcast();
+
+  /* Il filo di cui si e' gia' detto che e' dentro: lo stesso filo dentro due
+   * volte di fila non si ridice. */
+  Filo? _dettoDentro;
+
   Filo? _filo;
   StatoDellaCasa? _stato;
   PannelloDellaPlancia? _pannello;
@@ -255,6 +263,31 @@ class Collegamento {
   /// arriverebbe una configurazione cambiata da **un altro** telefono, il
   /// giorno che il ponte la spingera'.
   Stream<void> get planciaCambiata => _planciaCambiata.stream;
+
+  /// Il filo con la casa e' dentro, e un momento fa non lo era: un filo
+  /// nuovo, o lo stesso che si e' rialzato da solo.
+  ///
+  /// Lo ascolta chi ci ha attaccato sopra qualcosa che da solo non se ne
+  /// accorge: la plancia. La sua presa va al servitore del telefono, e
+  /// `auth_ok` arriva solo quando c'e' il filo (`plancia/cucitura.dart`);
+  /// senza un avviso riprovava coi suoi tempi, e al rientro dalla tasca
+  /// restava col pallino rosso a filo gia' tornato, finche' non la si
+  /// ricaricava (`schermate/plancia_vera.dart`).
+  Stream<void> get filoTornato => _filoTornato.stream;
+
+  /* Si guarda a ogni cambiamento del filo e a ogni avviso: il filo che si da'
+   * agli altri ([filo]) e' dentro, ed e' un altro da quello di cui si e' gia'
+   * parlato — o e' lo stesso, ma nel frattempo era caduto. */
+  void _forseEDiNuovoDentro() {
+    final adesso = filo;
+    if (adesso == null || !adesso.dentro) {
+      _dettoDentro = null;
+      return;
+    }
+    if (identical(_dettoDentro, adesso)) return;
+    _dettoDentro = adesso;
+    if (!_filoTornato.isClosed) _filoTornato.add(null);
+  }
 
   /// Quanto e' passato sul filo da quando si e' entrati, in due parole. Per
   /// la diagnostica: dice se una casa e' silenziosa o un fiume in piena.
@@ -488,6 +521,7 @@ class Collegamento {
     _filo = filo;
 
     _guardaIlFilo = filo.stato.listen((stato) {
+      _forseEDiNuovoDentro();
       if (stato == StatoDelFilo.dentro) {
         /* **Ed e' tornato su.**
          *
@@ -1435,6 +1469,7 @@ class Collegamento {
   void _riprendiQuandoTorna(Filo filo) {
     _guardaIlFilo?.cancel();
     _guardaIlFilo = filo.stato.listen((stato) {
+      _forseEDiNuovoDentro();
       if (stato != StatoDelFilo.dentro) return;
       if (_stato != null) return;
       unawaited(() async {
@@ -1635,6 +1670,7 @@ class Collegamento {
     if (!_cambiamenti.isClosed) await _cambiamenti.close();
     if (!_entitaCambiate.isClosed) await _entitaCambiate.close();
     if (!_planciaCambiata.isClosed) await _planciaCambiata.close();
+    if (!_filoTornato.isClosed) await _filoTornato.close();
   }
 
   void _vai(ComeVa nuovo) {
@@ -1647,6 +1683,7 @@ class Collegamento {
   }
 
   void _avvisa() {
+    _forseEDiNuovoDentro();
     if (!_cambiamenti.isClosed) _cambiamenti.add(null);
   }
 }

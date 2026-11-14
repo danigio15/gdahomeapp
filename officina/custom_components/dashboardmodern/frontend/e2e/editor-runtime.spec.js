@@ -53,7 +53,7 @@ for (const variant of PRIMARY) {
     );
     await expect(
       page.locator('[role="alert"]', {
-        hasText: "Errore durante il caricamento di DashboardModern",
+        hasText: "Errore durante il caricamento di GdAHome",
       }),
     ).toHaveCount(0);
     expect(pageErrors).toEqual([]);
@@ -212,7 +212,7 @@ for (const variant of PRIMARY) {
     ]);
     await expect(
       page.locator('[role="alert"]', {
-        hasText: "Errore durante il caricamento di DashboardModern",
+        hasText: "Errore durante il caricamento di GdAHome",
       }),
     ).toHaveCount(0);
     /* Il seme e' sopravvissuto all'avvio?

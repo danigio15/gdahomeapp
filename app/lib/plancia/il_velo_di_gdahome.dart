@@ -80,11 +80,18 @@ const String logoDelVelo =
 final _immagine = RegExp(
   r'(<div id="cd-boot-overlay"><img src=")data:[^"]*(")',
 );
-const _parolaDiSerie = '<b>DashboardModern</b>';
+
+/// La parola del velo di serie: quella di prima, «DashboardModern», o quella
+/// che la pagina porta adesso sul disco, «GDAHOME». Una pagina rivestita dal
+/// ponte ha subito dopo lo script che rilegge la parola, e quella non e' di
+/// serie anche se dice «GDAHOME»: resta com'e'.
+final _parolaDiSerie = RegExp(
+  r'<b>(?:DashboardModern|GDAHOME)</b>(?!<script>)',
+);
 
 /// La [pagina] col velo di gdahome, e la parola [velo] se c'e'.
 String colVeloDiGdahome(String pagina, {String velo = ''}) {
-  if (!pagina.contains(_parolaDiSerie)) return pagina;
+  if (!_parolaDiSerie.hasMatch(pagina)) return pagina;
   final parola = velo.replaceAll(RegExp('[<>&]'), '').trim();
   return pagina
       .replaceFirstMapped(

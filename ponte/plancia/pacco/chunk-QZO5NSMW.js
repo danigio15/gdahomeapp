@@ -10863,6 +10863,10 @@ function onEditorRedraw(marker, callback) {
   }
   return avvolto;
 }
+function riquadroDelleTelecamere() {
+  const campo = doc?.querySelector?.("#ed-body #ed-cam-ent");
+  return campo?.closest?.("details.ed-acc") || null;
+}
 function tieniIlBloccoNellaScheda(marker, disegna3) {
   const registro = root2.__dmBlocchiDellaScheda ||= /* @__PURE__ */ new Map();
   const richiama = () => {
@@ -40924,7 +40928,7 @@ function installSegnalazioniSection() {
 senzaCadere(installSegnalazioniSection);
 
 // legacy/build-info.js
-var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.19.1", "dashboardVersion": "1.19.1", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-11-14T07:39:33+00:00", "commit": "076ab27b2ecaf63819c621ab121031f7201dabfc", "assetHash": "089a2d2df3e18c48" });
+var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.19.3.1", "dashboardVersion": "1.19.3.1", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-11-14T13:56:53+00:00", "commit": "f427168b0fe0d95b745c6cf2d15151cbf9112aab", "assetHash": "71e13a5ac7de30ab" });
 
 export {
   DEFAULT_LOCALE,
@@ -41233,6 +41237,7 @@ export {
   disegnoDiCasa,
   wrapFunction,
   onEditorRedraw,
+  riquadroDelleTelecamere,
   tieniIlBloccoNellaScheda,
   selectedPeriod,
   formatNumber,

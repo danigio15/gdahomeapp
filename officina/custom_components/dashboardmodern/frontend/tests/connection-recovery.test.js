@@ -3,9 +3,11 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
+  FILO_GRACE_MS,
   LEGACY_RECONNECT_DELAY_MS,
   MIN_GAP_MS,
   STALE_CONNECTING_MS,
+  STALE_OPEN_MS,
   installConnectOwner,
   reconnectDecision,
 } from "../src/sections/connection-recovery-section.js";
@@ -195,6 +197,44 @@ test("coming back to the app does not wait for the throttle", () => {
   // E da connessi non si tocca niente, per quanto si insista.
   assert.equal(
     reconnectDecision({ up: true, readyState: CLOSED, sinceLastTry: 10, eager: true }).retry,
+    false,
+  );
+});
+
+/* Una presa aperta senza `auth_ok`. Dentro l'app e' la cucitura che aspetta il
+ * filo con la casa: si aspetta. Ma non per sempre — prima qui la risposta era
+ * sempre «c'e' gia' una presa», e una presa aperta da un lato e sparita
+ * dall'altro teneva il pallino rosso finche' non si ricaricava la plancia. */
+test("an open socket that never authenticates is waited for, then replaced", () => {
+  const muta = { up: false, readyState: OPEN, sinceLastTry: 10 ** 6 };
+  assert.deepEqual(reconnectDecision({ ...muta, sinceOpen: 1000 }), {
+    retry: false,
+    reason: "aspetta la casa",
+  });
+  assert.equal(reconnectDecision({ ...muta, sinceOpen: 1000, eager: true }).retry, false);
+  assert.deepEqual(reconnectDecision({ ...muta, sinceOpen: STALE_OPEN_MS }), {
+    retry: true,
+    reason: "presa muta",
+  });
+  // L'app ha detto che il filo c'e': la cucitura manda `auth_ok` subito, e
+  // chi tace dopo un attimo e' muto.
+  assert.equal(
+    reconnectDecision({ ...muta, sinceOpen: FILO_GRACE_MS - 1, filoPronto: true }).retry,
+    false,
+  );
+  assert.equal(
+    reconnectDecision({ ...muta, sinceOpen: FILO_GRACE_MS, filoPronto: true }).reason,
+    "presa muta",
+  );
+  // Collegata, invece, non si tocca mai.
+  assert.equal(
+    reconnectDecision({
+      up: true,
+      readyState: OPEN,
+      sinceLastTry: 0,
+      sinceOpen: 10 ** 6,
+      filoPronto: true,
+    }).retry,
     false,
   );
 });

@@ -34,6 +34,7 @@ import {
   installStyle,
   readJson,
   root,
+  riquadroDelleTelecamere,
   t,
   tieniIlBloccoNellaScheda,
   writeJsonIfChanged,
@@ -133,8 +134,7 @@ function firmaDelle(camere, cEQualcuno) {
 function casellaDelleTelecamere() {
   const rilevamenti = doc?.getElementById?.("dm-rilevamenti");
   if (rilevamenti) return rilevamenti;
-  const slot = doc?.querySelector?.('[data-ref="cd_cameras"], [data-editor="cameras"]');
-  return slot?.closest?.(".ed-slot") || slot || null;
+  return riquadroDelleTelecamere();
 }
 
 export function ensureTelecamereRiservateBlock() {

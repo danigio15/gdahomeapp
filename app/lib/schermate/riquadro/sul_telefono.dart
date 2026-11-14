@@ -496,6 +496,26 @@ Future<void> parcheggia(
   }
 }
 
+/// Dice alla plancia che il filo dell'app con la casa c'e', di nuovo.
+///
+/// La plancia non lo puo' sapere da sola: la sua presa va al servitore del
+/// telefono, e `auth_ok` arriva solo quando c'e' il filo. Senza questo
+/// riprovava coi suoi tempi — una scala che sale fino a trenta secondi — e al
+/// rientro dalla tasca restava col pallino rosso a filo gia' tornato, finche'
+/// non la si ricaricava. Adesso si ricollega subito, e se si crede collegata
+/// lo verifica con un `ping` (`connection-recovery-section.js`, che ascolta
+/// `gdahome:filo`). Non ricarica niente.
+Future<void> ilFiloCE(WebViewController controllore) async {
+  try {
+    await controllore.runJavaScript(
+      'window.dispatchEvent(new CustomEvent("gdahome:filo"));',
+    );
+  } catch (_) {
+    /* La pagina non c'e' ancora, o se n'e' andata: quando arriva si collega
+     * da se'. */
+  }
+}
+
 /// Consegna alla pagina del quadro il codice che apre il cruscotto.
 ///
 /// **La stessa strada della tessera dentro Home Assistant**

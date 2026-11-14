@@ -15,8 +15,8 @@ import {
 
 const leggi = (percorso) => readFile(new URL(percorso, import.meta.url), "utf8");
 
-test("le tessere che sanno nascondersi sono luci, prese ed elettrodomestici", () => {
-  assert.deepEqual([...TESSERE_A_SCOMPARSA], ["luci", "prese", "elettrodomestici"]);
+test("le tessere che sanno nascondersi sono luci, prese, elettrodomestici e UPS", () => {
+  assert.deepEqual([...TESSERE_A_SCOMPARSA], ["luci", "prese", "elettrodomestici", "ups"]);
   /* La lista salvata si ripulisce: niente doppioni, niente tessere che non
    * sanno dire «e' tutto spento», niente rifiuti. */
   assert.deepEqual(soloAcceseValide(["luci", "luci", "meteo", "", null, " prese "]), [
@@ -48,10 +48,31 @@ test("accesa: con tutto spento sparisce, con qualcosa acceso torna", () => {
   assert.equal(tesseraDaMostrare({ key: "meteo" }, solo), true);
 });
 
+test("l'UPS si nasconde a rete presente e torna a batteria o con l'allarme", () => {
+  /* «Si potrebbe aggiungere anche alla schermata UPS» (#355). */
+  const solo = ["ups"];
+  const inRete = { lettura: { rete: true } };
+  assert.equal(tesseraDaMostrare({ key: "ups", gruppi: [inRete] }, solo), false);
+  assert.equal(tesseraDaMostrare({ key: "ups", gruppi: [inRete, inRete] }, solo), false);
+  /* Un gruppo solo a batteria basta, anche se l'altro e' in rete. */
+  assert.equal(
+    tesseraDaMostrare({ key: "ups", gruppi: [inRete, { lettura: { rete: false } }] }, solo),
+    true,
+  );
+  /* La batteria sotto la soglia a rete presente: c'e' qualcosa da dire. */
+  assert.equal(tesseraDaMostrare({ key: "ups", alert: true, gruppi: [inRete] }, solo), true);
+  /* Un gruppo che non risponde non e' «tutto a posto». */
+  assert.equal(tesseraDaMostrare({ key: "ups", gruppi: [{ lettura: { rete: null } }] }, solo), true);
+  /* Spenta di serie: a rete presente la tessera resta. */
+  assert.equal(tesseraDaMostrare({ key: "ups", gruppi: [inRete] }, []), true);
+});
+
 test("nel dubbio la tessera si mostra", () => {
   assert.equal(qualcosaAcceso(null), true);
   assert.equal(qualcosaAcceso({ key: "luci" }), true);
   assert.equal(qualcosaAcceso({ key: "elettrodomestici" }), true);
+  assert.equal(qualcosaAcceso({ key: "ups" }), true);
+  assert.equal(qualcosaAcceso({ key: "ups", gruppi: [] }), true);
 });
 
 test("la Home e il Config usano la scelta", async () => {
@@ -60,5 +81,6 @@ test("la Home e il Config usano la scelta", async () => {
   assert.match(home, /\.filter\(\(widget\) => tesseraDaMostrare\(widget, soloAccese\)\)/);
   const editor = await leggi("../src/sections/todo-editor-section.js");
   assert.match(editor, /data-widget-solo-acceso/);
+  assert.match(editor, /key === "ups"/);
   assert.match(editor, /scriviPreferenze\(\{ soloAccese: \[\.\.\.scelte\] \}\)/);
 });

@@ -63,6 +63,9 @@ const state = (root[KEY] ||= {
   typed: "",
   doorId: "",
   gesto: "",
+  /* Cosa fare dopo il PIN giusto, quando a chiederlo non e' questa pagina ma
+   * un'azione rapida (#32): lei sa cosa deve mandare, qui si sa la chiave. */
+  dopo: null,
   busy: new Set(),
 });
 
@@ -433,6 +436,22 @@ function closeKeypad() {
   state.doorId = "";
   state.gesto = "";
   state.typed = "";
+  state.dopo = null;
+}
+
+/**
+ * Il tastierino di questa porta, per chi la comanda da fuori (#32).
+ *
+ * Un'azione rapida sulla serratura di una porta col PIN chiede il PIN della
+ * porta, con questo stesso tastierino e lo stesso confronto: `poi` parte solo
+ * dopo il codice giusto. Il PIN non esce di qui e non si copia da nessuna
+ * parte: chi chiama dice soltanto quale porta e cosa fare dopo.
+ */
+export function chiediIlPinDellaPorta(door, poi) {
+  if (!doc?.body || !door?.pin || typeof poi !== "function") return false;
+  openKeypad(door, "");
+  state.dopo = poi;
+  return true;
 }
 
 function onKeypadClick(event) {
@@ -462,8 +481,15 @@ function onKeypadClick(event) {
     if (doorPinMatches(door, state.typed)) {
       /* Il gesto si legge prima di chiudere: chiudendo si dimentica. */
       const gesto = state.gesto;
+      const dopo = state.dopo;
       closeKeypad();
-      comandaLaPorta(door, gesto);
+      if (dopo) {
+        try {
+          dopo();
+        } catch (error) {
+          root.console?.error?.("[DashboardModern] door keypad", error);
+        }
+      } else comandaLaPorta(door, gesto);
     } else {
       /* PIN sbagliato: si azzera e si resta qui — l'errore va detto dov'e'
        * successo, non con la porta che non si apre e basta. */

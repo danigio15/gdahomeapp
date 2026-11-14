@@ -219,6 +219,40 @@ test("con un installatore la plancia porta il suo nome e il suo logo", () => {
   assert.equal(logo.tipo, "image/png");
 });
 
+test("la plancia sul disco e' gia' GdAHome, e il vestito la fa ancora dell'installatore", () => {
+  /* Il marchio di prima non deve vedersi nemmeno dove questo vestito non
+   * passa — la pagina servita da Home Assistant, una copia aperta a mano:
+   * per questo sul disco la plancia porta gia' il nostro logo, la nostra
+   * parola nel velo e il nostro nome accanto al logo. */
+  const runtime = readFileSync(
+    fileURLToPath(new URL("../plancia/legacy/dashboard-runtime-it.js", import.meta.url)),
+    "utf8",
+  );
+  assert.equal(runtime.includes('alt="Dashboard Modern"'), false);
+  assert.match(runtime, /alt="GdAHome"/);
+  assert.match(runtime, />GdA<\/span><span[^>]*>Home<\/span>/);
+  assert.match(
+    LA_PLANCIA,
+    /<div id="cd-boot-overlay"><img src="data:image\/webp;base64,[^"]+" alt=""><b>GDAHOME<\/b>/,
+  );
+  assert.equal(LA_PLANCIA.includes("<b>DashboardModern</b>"), false);
+
+  /* E chi installa continua a vedere il suo nome, anche partendo da qui. */
+  const suo = { nome: "Impianti Rossi", logo: PNG, tipo: "image/png", velo: "Casa Rossi" };
+  const vestito = vestiDiGdahome(
+    IL_RUNTIME,
+    Buffer.from(runtime, "utf8"),
+    "text/javascript",
+    suo,
+  ).corpo.toString("utf8");
+  assert.match(vestito, /alt="Impianti Rossi"/);
+  assert.equal(vestito.includes('alt="GdAHome"'), false);
+  assert.match(vestito, /\(window\.__GDAHOME_TESTATA__\|\|\["GdA","Home"\]\)\[0\]/);
+  const pagina = laPagina(LA_PLANCIA, suo);
+  assert.match(pagina, /<b>Casa Rossi<\/b><script>/);
+  assert.equal(pagina.includes("<b>GDAHOME</b>"), false);
+});
+
 test("un nome di una parola sola non si spezza a meta', e il nostro si spezza come si disegna", () => {
   assert.deepEqual(
     inDuePezzi("Elettrotecnica"),

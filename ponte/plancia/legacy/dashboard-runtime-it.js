@@ -509,7 +509,7 @@ function cdBrandLogo(size, withWordmark) {
     const mark = '<img src="./logo.png" alt="GdAHome" width="'+size+'" height="'+size+'" style="flex:0 0 auto;display:block;object-fit:contain;border-radius:12px;" onerror="this.style.display=&#39;none&#39;">';
     if (!withWordmark) return mark;
     const fs = Math.round(size * 0.42);
-    return `<div style="display:flex; align-items:center; gap:12px;">${mark}<div style="display:flex; flex-direction:column; line-height:1.05;"><span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:${fs}px; letter-spacing:0.5px; color:var(--text,#0f172a);">${(window.__GDAHOME_TESTATA__||["GdA","Home"])[0]}</span><span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:${fs}px; letter-spacing:2.5px; color:#0ea5e9;">${(window.__GDAHOME_TESTATA__||["GdA","Home"])[1]}</span></div></div>`;
+    return `<div style="display:flex; align-items:center; gap:12px;">${mark}<div style="display:flex; flex-direction:column; line-height:1.05;"><span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:${fs}px; letter-spacing:0.5px; color:var(--text,#0f172a);">GdA</span><span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:${fs}px; letter-spacing:2.5px; color:#0ea5e9;">Home</span></div></div>`;
 }
 
 /* v0.9.7 (#4): avvisi personalizzati — etichetta condizione, valutazione, render nel Quadro Avvisi */

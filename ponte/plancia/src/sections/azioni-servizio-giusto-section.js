@@ -48,6 +48,8 @@
  * strada in due posti, o farne prendere una seconda alla finestra.
  */
 import { SA } from "../core/media-player.js";
+import { portaColPinPerLAzione } from "../core/security-door-model.js";
+import { chiediIlPinDellaPorta, configuredSecurityDoors } from "./security-doors-section.js";
 import {
   allStates,
   clean,
@@ -327,7 +329,8 @@ function avvolgi() {
     if (!azione || ["luci_group", "builtin"].includes(azione.type))
       return originale.call(this, indice);
 
-    let entity = clean(azione.entity);
+    const scritta = clean(azione.entity);
+    let entity = scritta;
     try {
       entity = clean(root.resolveEntity?.(entity) || entity);
     } catch (_error) {}
@@ -337,11 +340,39 @@ function avvolgi() {
      * variabile sua, non su `window`, e cercarli li' voleva dire non trovarli
      * — e una serratura senza stato si sarebbe fatta chiudere invece che
      * aprire. */
-    const servizio = servizioPerEntita(entity, allStates());
+    const stati = allStates();
+    const servizio = servizioPerEntita(entity, stati);
+    const dati = datiPerEntita(entity, azione);
+
+    /* La stessa entita' di una porta col PIN chiede il PIN di quella porta
+     * (#32), col suo tastierino: un'azione rapida non e' un secondo ingresso
+     * senza chiave. Il PIN fa da conferma, come nella pagina delle porte; il
+     * comando parte solo col codice giusto. Se il tastierino non si puo'
+     * aprire, il comando non parte: meglio un tasto che non fa niente di una
+     * porta che si apre senza PIN. */
+    let porta = null;
+    try {
+      porta = portaColPinPerLAzione(
+        configuredSecurityDoors(),
+        [scritta, entity],
+        servizio,
+        stati?.[entity]?.state,
+      );
+    } catch (_error) {
+      porta = null;
+    }
+    if (porta) {
+      chiediIlPinDellaPorta(porta, () =>
+        servizio
+          ? chiama(entity.split(".")[0], servizio, entity, dati)
+          : originale.call(this, indice),
+      );
+      return undefined;
+    }
+
     // Dove `toggle` e' la risposta giusta non c'e' niente da correggere.
     if (!servizio) return originale.call(this, indice);
 
-    const dati = datiPerEntita(entity, azione);
     /* Un menu a tendina senza una voce fissata: la si sceglie adesso, dal
      * popup, che poi chiama lui il servizio. */
     if (E_UN_MENU.test(entity) && !dati.option) {

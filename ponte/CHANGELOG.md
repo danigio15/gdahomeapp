@@ -10,6 +10,67 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.19.3.1
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+**Nella plancia, la guida dentro il Config:**
+
+- **«📖 Come si configura questa scheda»**: nell'editor, sotto la ricerca,
+  apre la guida della scheda che stai guardando (in basso sul telefono, a
+  destra sul computer). A cosa serve, i passi uno alla volta con «Comincia»
+  e «Avanti», cosa trovi e i consigli. **«👉 Mostrami»** porta la scheda sul
+  campo di cui parla il passo e lo accende col numero del passo. Cambiando
+  scheda, la guida segue.
+- **«🧭 Da dove comincio»**: l'ordine consigliato per una casa nuova, con
+  «Vai ›» che apre la scheda con la sua guida e la spunta «Fatto» per
+  ricordarsi a che punto si è.
+- **La Casa 3D**: in «Crea la tua casa», accanto alla ✕, **«📖 Come si fa»**
+  apre la guida del passo in cui sei, e cambia con lui. Sul computer è una
+  colonna a sinistra e la planimetria resta libera.
+- Sul telefono, con la guida aperta, i tasti in fondo («Avanti», «Salva»)
+  si possono far salire sopra di lei.
+
+**Il manuale d'uso** (`docs/MANUALE.md`, anche in PDF): tutte le schede
+dell'editor una per una (capitolo 27) e la Casa 3D passo per passo
+(capitolo 28), con le schermate numerate. La guida dentro il Config dice le
+stesse parole del manuale: si prendono da lì.
+
+## 1.19.3
+
+_Add-on e app GdAHome._
+
+- **Il logo di GdAHome ovunque**: le icone dell'integrazione in Home
+  Assistant e in HACS, la schermata d'avvio della plancia, il segno in cima
+  a Configurazione, la scritta accanto al logo e i messaggi d'errore della
+  pagina.
+- **Riaprendo l'app la plancia si ricollega da sola**: il puntino in alto
+  non resta più rosso, e non serve ricaricare la pagina.
+- **Nell'app, il navigatore senza destinazione** segue chi cammina: la
+  freccia e la mappa vanno con te anche a passo lento, in 3D e in 2D.
+- **L'Assistente di casa** dice bene il plurale: «Bagno e altre 4 sono
+  aperte. Meglio chiuderle prima.»
+
+## 1.19.2
+
+_Add-on._
+
+**Nella plancia:**
+
+- **La Casa 3D dalla pianta in 3D**: una pianta già disegnata in 3D (vista
+  dall'alto un po' di sbieco, con i pavimenti colorati) adesso dà muri,
+  stanze, porte e finestre giusti. Prima il parquet in ombra diventava muro
+  e i lati dei muri diventavano stanze. Il fondo e la cornice di uno
+  screenshot si tolgono da soli. Le misure vanno sempre confermate al passo
+  «Scala».
+- **Le azioni rapide sulle porte col PIN** chiedono lo stesso PIN della
+  sezione Porte e cancelli; il PIN non si copia nell'azione.
+- **Le telecamere riservate**, i **Rilevamenti** e l'interruttore che spegne
+  le telecamere tornano in Config › Sicurezza: per un errore non si vedevano.
+- **I widget**: ogni tessera con una sezione può aprirla direttamente al
+  tocco, e la tessera dell'UPS può comparire solo quando va a batteria o c'è
+  un avviso.
+
 ## 1.19.1
 
 _App GdAHome._

@@ -5965,7 +5965,12 @@ export function widgetPreferences() {
   const avvisiInPopup = stored?.avvisiInPopup === true;
   /* Le tessere che si mostrano solo quando c'e' qualcosa acceso (#355). */
   const soloAccese = soloAcceseValide(stored?.soloAccese);
-  return { hidden, order, excluded, compatto, sorgenti, avvisiInPopup, soloAccese };
+  /* Le tessere che al tocco portano dritti nella loro sezione invece di aprire
+   * la finestra (#156). Spento di serie, tessera per tessera. */
+  const dirette = [
+    ...new Set((Array.isArray(stored?.dirette) ? stored.dirette : []).map(clean).filter(Boolean)),
+  ];
+  return { hidden, order, excluded, compatto, sorgenti, avvisiInPopup, soloAccese, dirette };
 }
 
 /** L'entita' scelta per una tessera che riassume, o «» per la media. */
@@ -9805,6 +9810,69 @@ function voceDellaSezione(chiave) {
   return voce;
 }
 
+/** Se la tessera con questa chiave di preferenza ha una sezione in cui
+ * portare: serve al Config, per offrire «il tocco apre la sezione» (#156) solo
+ * dove c'e' una sezione da aprire. Le «Sezioni mie» ce l'hanno tutte. */
+export function tesseraConSezione(chiave) {
+  const nome = clean(chiave);
+  if (!nome) return false;
+  if (nome === "mie") return true;
+  return Boolean(SEZIONE_DEL_WIDGET[famigliaDellaTessera(nome)]);
+}
+
+/* Si va nella sezione di una tessera: si chiude la finestra e si preme la voce
+ * in basso. La usano il tasto «Apri sezione» e, per chi l'ha scelto, il tocco
+ * sulla tessera stessa (#156). Torna `true` se c'era una voce da premere.
+ *
+ * L'ordine non e' un dettaglio. Finche' la finestra e' aperta il documento
+ * porta `dm-widget-popup-open`, che gli blocca lo scorrimento: premere la
+ * voce prima di chiudere lascerebbe la sezione nuova ferma a meta' pagina.
+ * E si preme la voce vera invece di accendere la pagina a mano, perche' e'
+ * il gesto che il guscio conosce — e per le pagine nate da un modulo, che
+ * hanno un ascolto tutto loro, e' l'unico che funziona. */
+function vaiAllaSezione(chiave, quale = "") {
+  const voce = voceDellaSezione(chiave);
+  /* La tessera di un impianto apre la sezione SU quell'impianto: chi tiene
+   * le linguette lo sceglie come se fosse stata premuta la sua (#286). */
+  const impianto = clean(quale);
+  if (impianto)
+    root.dispatchEvent?.(
+      new CustomEvent("dashboardmodern:energy-plant-requested", { detail: { plant: impianto } }),
+    );
+  /* L'accumulo non ha una pagina sua: sta nella linguetta «Batterie» di
+   * Energia, e la richiesta arriva prima del tocco sulla voce perché chi la
+   * apre aspetti la pagina accesa. */
+  if (clean(chiave) === "accumulo") root.dispatchEvent?.(new CustomEvent(EVENTO_APRI_ACCUMULO));
+  /* La cottura apre gli Elettrodomestici sulla Cottura, non su Panoramica. */
+  if (chiave === TESSERA_COTTURA) root.dispatchEvent?.(new CustomEvent(EVENTO_COTTURA));
+  chiudiPopup();
+  voce?.click();
+  return Boolean(voce);
+}
+
+/* Il tocco su una tessera che porta dritti nella sua sezione (#156).
+ *
+ * «Non intendevo il pulsante "Apri sezione": intendevo la possibilita' di
+ *  saltare direttamente dal widget alla sezione aperta.» Chi lo sceglie nel
+ * Config salta la finestra; se la sezione non c'e' — spenta, o senza niente
+ * da comandare — la tessera si apre come sempre, che e' meglio di un tocco
+ * che non fa niente. */
+function toccoCheApreLaSezione(chiave) {
+  const nome = clean(chiave);
+  if (!nome || !widgetPreferences().dirette.includes(chiaveDellaPreferenza({ key: nome })))
+    return false;
+  if (!voceDellaSezione(nome)) return false;
+  let impianto = "";
+  try {
+    impianto = clean(
+      modelliDelleTessere(allStates()).find((tessera) => tessera.key === nome)?.impianto,
+    );
+  } catch (_errore) {
+    impianto = "";
+  }
+  return vaiAllaSezione(nome, impianto);
+}
+
 /* Le briciole di questa sezione, in una riga sola. Le calcola un posto solo:
  * le scrive chi apre la finestra e le riscrive chi la aggiorna, e se i due non
  * dicono la stessa cosa il secondo cancella il primo. */
@@ -11057,35 +11125,12 @@ function onClick(event) {
       completeItem(list, clean(check.dataset.dmTodoUid), clean(check.dataset.dmTodoSummary));
     return;
   }
-  /* «Apri sezione»: si chiude la finestra e si preme la voce in basso.
-   *
-   * L'ordine non e' un dettaglio. Finche' la finestra e' aperta il documento
-   * porta `dm-widget-popup-open`, che gli blocca lo scorrimento: premere la
-   * voce prima di chiudere lascerebbe la sezione nuova ferma a meta' pagina.
-   * E si preme la voce vera invece di accendere la pagina a mano, perche' e'
-   * il gesto che il guscio conosce — e per le pagine nate da un modulo, che
-   * hanno un ascolto tutto loro, e' l'unico che funziona. */
+  /* «Apri sezione»: si chiude la finestra e si preme la voce in basso
+   * (`vaiAllaSezione`, dove sta scritto perche' in quest'ordine). */
   const sezione = event.target?.closest?.("[data-dm-w-sezione]");
   if (sezione) {
     event.preventDefault();
-    const voce = voceDellaSezione(sezione.dataset.dmWSezione);
-    /* La tessera di un impianto apre la sezione SU quell'impianto: chi tiene
-     * le linguette lo sceglie come se fosse stata premuta la sua (#286). */
-    const impianto = clean(sezione.dataset.dmWImpianto);
-    if (impianto)
-      root.dispatchEvent?.(
-        new CustomEvent("dashboardmodern:energy-plant-requested", { detail: { plant: impianto } }),
-      );
-    /* L'accumulo non ha una pagina sua: sta nella linguetta «Batterie» di
-     * Energia, e la richiesta arriva prima del tocco sulla voce perché chi la
-     * apre aspetti la pagina accesa. */
-    if (clean(sezione.dataset.dmWSezione) === "accumulo")
-      root.dispatchEvent?.(new CustomEvent(EVENTO_APRI_ACCUMULO));
-    /* La cottura apre gli Elettrodomestici sulla Cottura, non su Panoramica. */
-    if (sezione.dataset.dmWSezione === TESSERA_COTTURA)
-      root.dispatchEvent?.(new CustomEvent(EVENTO_COTTURA));
-    chiudiPopup();
-    voce?.click();
+    vaiAllaSezione(sezione.dataset.dmWSezione, sezione.dataset.dmWImpianto);
     return;
   }
   const tutte = event.target?.closest?.("[data-dm-w-lights-off]");
@@ -11410,6 +11455,8 @@ function onClick(event) {
   const tile = event.target?.closest?.("#dm-widgets [data-dm-widget]");
   if (tile) {
     event.preventDefault();
+    /* Chi l'ha scelto nel Config va dritto nella sezione (#156). */
+    if (toccoCheApreLaSezione(tile.dataset.dmWidget)) return;
     /* Anche la cottura (#71) apre la sua finestra, come tutte: li' ci sono
      * gia' i tasti — gradi, pausa, +1 min, stop — e la pagina intera resta a
      * un tocco, dal piede «Apri la cucina». Portare dritti in un'altra pagina

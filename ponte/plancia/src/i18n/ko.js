@@ -5894,7 +5894,9 @@ export default Object.freeze({
   "${prima.name} is at ${livello}%.": "${prima.name}: ${livello}%.",
   "${quando} and ${nomi(finestre, l)} is open":
     "${quando}, ${nomi(finestre, l)}이(가) 열려 있습니다",
+  "${quando} and ${nomi(finestre, l)} are open": "${quando}, ${nomi(finestre, l)}이(가) 모두 열려 있습니다",
   "${quando} and ${nomi(tende, l)} is out": "${quando}, ${nomi(tende, l)}이(가) 펼쳐져 있습니다",
+  "${quando} and ${nomi(tende, l)} are out": "${quando}, ${nomi(tende, l)}이(가) 모두 펼쳐져 있습니다",
   "${quanti} things to do": "할 일 ${quanti}개",
   "${s.name} is cold: ${gradi}°": "${s.name}이(가) 춥습니다: ${gradi}°",
   "${s.name} is hot: ${gradi}°": "${s.name}이(가) 덥습니다: ${gradi}°",
@@ -5916,6 +5918,7 @@ export default Object.freeze({
   "Ask the house…": "집에 물어보기…",
   "Battery low: ${prima.name}": "배터리 부족: ${prima.name}",
   "Better close it first.": "미리 닫아 두는 게 좋겠습니다.",
+  "Better close them first.": "미리 닫아 두는 게 좋겠습니다.",
   "Charge ${auto} on solar": "${auto}을(를) 태양광으로 충전",
   "Close it?": "닫을까요?",
   "CO₂ at ${ppm} ppm: open a window for a few minutes.":
@@ -5966,6 +5969,7 @@ export default Object.freeze({
   Reminders: "알림",
   Retract: "접기",
   "Retract it?": "접을까요?",
+  "Retract them?": "모두 접을까요?",
   Safety: "안전",
   Savings: "절약",
   "see all": "모두 보기",
@@ -7745,6 +7749,7 @@ export default Object.freeze({
   "The standings": "순위표",
   "Only while something is on": "무언가 켜져 있을 때만",
   "Only while one is running": "하나라도 작동 중일 때만",
+  "Only while on battery or alerting": "배터리로 작동 중이거나 경고가 있을 때만",
   "Browse the library": "라이브러리 둘러보기",
   "This player's playlists, artists and stations": "이 플레이어의 재생목록, 아티스트, 방송국",
   "This player cannot search.": "이 플레이어는 검색할 수 없습니다.",
@@ -8174,4 +8179,5 @@ export default Object.freeze({
   "Systolic": "수축기",
   "These sensors keep no history in Home Assistant.": "이 센서들은 Home Assistant에 기록을 남기지 않습니다.",
   "This sensor keeps no history in Home Assistant.": "이 센서는 Home Assistant에 기록을 남기지 않습니다.",
+  "Tap opens the section": "탭하면 섹션이 열림",
 });

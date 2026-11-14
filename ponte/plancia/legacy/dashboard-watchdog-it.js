@@ -1,6 +1,6 @@
 /* Extracted from dashboard.html; feature changes belong in src/sections. */
 (() => {
-    const message = "Errore durante il caricamento di DashboardModern. Controlla la console.";
+    const message = "Errore durante il caricamento di GdAHome. Controlla la console.";
     const fail = () => {
         if (window.__DASHBOARDMODERN_READY__) return;
         const overlay = document.getElementById('cd-boot-overlay');
