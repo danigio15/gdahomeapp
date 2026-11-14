@@ -1677,8 +1677,13 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // `sections/anteprima-della-plancia-section.js` (la cornice nella scheda,
   // la barra, e la modifica sempre accesa dentro la cornice). Sulla plancia
   // non c'e' piu' nessuna matita.
+  // 548 con la guida dentro il Config: `core/guida-del-config.js` (quale guida,
+  // quali parole cercare, il percorso), `core/guida-del-config-testi.js` (i
+  // testi, generati dal manuale da `strumenti/guida-dal-manuale.mjs`) e
+  // `sections/guida-del-config-section.js` (il foglio, «Mostrami», il tasto
+  // nella procedura della Casa 3D).
   assert.ok(
-    relative.length <= 545,
+    relative.length <= 548,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);
