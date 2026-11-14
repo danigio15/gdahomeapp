@@ -193,3 +193,41 @@ export function doorOpenCall(entity, state = null, gesto = "") {
 export function doorPinMatches(door, typed) {
   return ilCodiceCombacia(door?.pin, typed);
 }
+
+/* Le azioni rapide che comandano una porta col PIN (#32).
+ *
+ * «Nella sezione apri porte/cancelli ho configurato la mia serratura con il
+ *  PIN e funziona da li': mi chiede il PIN per aprire. Ma se da azioni rapide
+ *  faccio nuova azione, toggle entita', e seleziono la mia serratura, non c'e'
+ *  modo di inserire il PIN e non lo richiede al click.»
+ *
+ * Un PIN che si chiede da una parte e non dall'altra non protegge niente: e'
+ * una porta con due ingressi, uno chiuso a chiave. Quindi un'azione rapida
+ * sulla stessa entita' di una porta col PIN chiede LO STESSO PIN — quello della
+ * porta, mai una copia scritta nell'azione — e con la stessa regola: lo chiede
+ * per aprire, non per chiudere. Chiudere la propria porta non e' mai il verso
+ * pericoloso (vedi `security-doors-section.js`).
+ *
+ * `entita` sono i nomi con cui l'azione chiama la sua entita' (quello scritto e
+ * quello risolto), `servizio` quello che sta per chiedere a Home Assistant
+ * (vuoto per il `toggle` del guscio) e `stato` com'e' messa adesso. */
+const CHIUSURE = new Set(["lock", "close_cover"]);
+
+export function portaColPinPerLAzione(doors, entita, servizio = "", stato = "") {
+  const nomi = new Set((Array.isArray(entita) ? entita : [entita]).map(clean).filter(Boolean));
+  if (!nomi.size) return null;
+  const quale = clean(servizio).toLowerCase();
+  if (CHIUSURE.has(quale)) return null;
+  const porta =
+    (Array.isArray(doors) ? doors : []).find(
+      (door) => normalizeDoorPin(door?.pin) && nomi.has(clean(door?.entity)),
+    ) || null;
+  if (!porta) return null;
+  /* Una tapparella o un portone a motore scambiati col `toggle`: se adesso
+   * sono aperti, il tasto li chiude. */
+  const dominio = clean(porta.entity).split(".")[0].toLowerCase();
+  const adesso = clean(stato).toLowerCase();
+  if (dominio === "cover" && (!quale || quale === "toggle") && ["open", "opening"].includes(adesso))
+    return null;
+  return porta;
+}

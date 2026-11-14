@@ -7805,6 +7805,7 @@ export default Object.freeze({
   "The standings": "De standen",
   "Only while something is on": "Alleen als er iets aan staat",
   "Only while one is running": "Alleen als er een draait",
+  "Only while on battery or alerting": "Alleen op batterij of bij een waarschuwing",
   "Browse the library": "Bibliotheek bekijken",
   "This player's playlists, artists and stations": "De afspeellijsten, artiesten en zenders van deze speler",
   "This player cannot search.": "Deze speler kan niet zoeken.",
@@ -8234,4 +8235,5 @@ export default Object.freeze({
   "Systolic": "Systolisch",
   "These sensors keep no history in Home Assistant.": "Deze sensoren bewaren geen geschiedenis in Home Assistant.",
   "This sensor keeps no history in Home Assistant.": "Deze sensor bewaart geen geschiedenis in Home Assistant.",
+  "Tap opens the section": "Tikken opent de sectie",
 });

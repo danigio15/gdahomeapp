@@ -7833,6 +7833,7 @@ export default Object.freeze({
   "The standings": "Die Tabellen",
   "Only while something is on": "Nur wenn etwas an ist",
   "Only while one is running": "Nur wenn eines läuft",
+  "Only while on battery or alerting": "Nur im Akkubetrieb oder bei einer Warnung",
   "Browse the library": "Bibliothek durchsuchen",
   "This player's playlists, artists and stations": "Playlists, Künstler und Sender dieses Players",
   "This player cannot search.": "Dieser Player kann nicht suchen.",
@@ -8262,4 +8263,5 @@ export default Object.freeze({
   "Systolic": "Systolisch",
   "These sensors keep no history in Home Assistant.": "Diese Sensoren speichern in Home Assistant keinen Verlauf.",
   "This sensor keeps no history in Home Assistant.": "Dieser Sensor speichert in Home Assistant keinen Verlauf.",
+  "Tap opens the section": "Antippen öffnet den Bereich",
 });

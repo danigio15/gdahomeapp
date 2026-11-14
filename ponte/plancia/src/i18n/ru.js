@@ -7788,6 +7788,7 @@ export default Object.freeze({
   "The standings": "Турнирные таблицы",
   "Only while something is on": "Только когда что-то включено",
   "Only while one is running": "Только когда что-то работает",
+  "Only while on battery or alerting": "Только при работе от батареи или при предупреждении",
   "Browse the library": "Открыть библиотеку",
   "This player's playlists, artists and stations": "Плейлисты, исполнители и станции этого плеера",
   "This player cannot search.": "Этот плеер не умеет искать.",
@@ -8217,4 +8218,5 @@ export default Object.freeze({
   "Systolic": "Систолическое",
   "These sensors keep no history in Home Assistant.": "Эти датчики не хранят историю в Home Assistant.",
   "This sensor keeps no history in Home Assistant.": "Этот датчик не хранит историю в Home Assistant.",
+  "Tap opens the section": "Нажатие открывает раздел",
 });

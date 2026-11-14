@@ -10,6 +10,26 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.19.2
+
+_Add-on._
+
+**Nella plancia:**
+
+- **La Casa 3D dalla pianta in 3D**: una pianta già disegnata in 3D (vista
+  dall'alto un po' di sbieco, con i pavimenti colorati) adesso dà muri,
+  stanze, porte e finestre giusti. Prima il parquet in ombra diventava muro
+  e i lati dei muri diventavano stanze. Il fondo e la cornice di uno
+  screenshot si tolgono da soli. Le misure vanno sempre confermate al passo
+  «Scala».
+- **Le azioni rapide sulle porte col PIN** chiedono lo stesso PIN della
+  sezione Porte e cancelli; il PIN non si copia nell'azione.
+- **Le telecamere riservate**, i **Rilevamenti** e l'interruttore che spegne
+  le telecamere tornano in Config › Sicurezza: per un errore non si vedevano.
+- **I widget**: ogni tessera con una sezione può aprirla direttamente al
+  tocco, e la tessera dell'UPS può comparire solo quando va a batteria o c'è
+  un avviso.
+
 ## 1.19.1
 
 _App GdAHome._

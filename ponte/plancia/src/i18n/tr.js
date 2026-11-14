@@ -7771,6 +7771,7 @@ export default Object.freeze({
   "The standings": "Puan durumları",
   "Only while something is on": "Yalnızca bir şey açıkken",
   "Only while one is running": "Yalnızca biri çalışırken",
+  "Only while on battery or alerting": "Yalnızca pille çalışırken veya uyarı varken",
   "Browse the library": "Kitaplığa göz at",
   "This player's playlists, artists and stations": "Bu oynatıcının çalma listeleri, sanatçıları ve istasyonları",
   "This player cannot search.": "Bu oynatıcı arama yapamıyor.",
@@ -8200,4 +8201,5 @@ export default Object.freeze({
   "Systolic": "Sistolik",
   "These sensors keep no history in Home Assistant.": "Bu sensörler Home Assistant’ta geçmiş tutmuyor.",
   "This sensor keeps no history in Home Assistant.": "Bu sensör Home Assistant’ta geçmiş tutmuyor.",
+  "Tap opens the section": "Dokunmak bölümü açar",
 });

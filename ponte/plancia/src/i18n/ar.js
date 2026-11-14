@@ -7718,6 +7718,7 @@ export default Object.freeze({
   "The standings": "الترتيب",
   "Only while something is on": "فقط عندما يكون شيء ما قيد التشغيل",
   "Only while one is running": "فقط عندما يعمل أحدها",
+  "Only while on battery or alerting": "فقط أثناء العمل على البطارية أو عند وجود تنبيه",
   "Browse the library": "تصفح المكتبة",
   "This player's playlists, artists and stations": "قوائم التشغيل والفنانون والمحطات في هذا المشغل",
   "This player cannot search.": "هذا المشغل لا يستطيع البحث.",
@@ -8147,4 +8148,5 @@ export default Object.freeze({
   "Systolic": "الانقباضي",
   "These sensors keep no history in Home Assistant.": "هذه المستشعرات لا تحتفظ بسجل في Home Assistant.",
   "This sensor keeps no history in Home Assistant.": "هذا المستشعر لا يحتفظ بسجل في Home Assistant.",
+  "Tap opens the section": "اللمس يفتح القسم",
 });

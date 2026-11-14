@@ -7635,6 +7635,7 @@ export default Object.freeze({
   "The standings": "积分榜",
   "Only while something is on": "仅在有设备开启时",
   "Only while one is running": "仅在有电器运行时",
+  "Only while on battery or alerting": "仅在使用电池供电或有警报时",
   "Browse the library": "浏览媒体库",
   "This player's playlists, artists and stations": "此播放器的播放列表、艺人和电台",
   "This player cannot search.": "此播放器无法搜索。",
@@ -8064,4 +8065,5 @@ export default Object.freeze({
   "Systolic": "收缩压",
   "These sensors keep no history in Home Assistant.": "这些传感器在 Home Assistant 中不保存历史。",
   "This sensor keeps no history in Home Assistant.": "此传感器在 Home Assistant 中不保存历史。",
+  "Tap opens the section": "轻触打开该版块",
 });

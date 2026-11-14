@@ -40,6 +40,7 @@ import {
   installStyle,
   readJson,
   root,
+  riquadroDelleTelecamere,
   t,
   tieniIlBloccoNellaScheda,
   writeJsonIfChanged,
@@ -175,8 +176,7 @@ function firmaDelle(camere, tutte) {
 /* La casella delle telecamere nella scheda Sicurezza: e' quella sotto cui va
  * messo il blocco, perche' e' di quelle telecamere che si sta parlando. */
 function casellaDelleTelecamere() {
-  const slot = doc?.querySelector?.('[data-ref="cd_cameras"], [data-editor="cameras"]');
-  return slot?.closest?.(".ed-slot") || slot || null;
+  return riquadroDelleTelecamere();
 }
 
 export function ensureRilevamentiBlock() {
