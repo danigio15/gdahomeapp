@@ -710,35 +710,43 @@ class _LaTessera extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          if (ultima != null) ...[
-                            Text(
-                              '${ultima.batteria.round()}%',
-                              style: const TextStyle(
-                                fontFamily: 'Oswald',
-                                fontSize: 28,
-                                height: 1,
-                                fontWeight: FontWeight.w700,
-                                color: _verde,
+                      /* Alta come la batteria anche quando la batteria
+                       * ancora non c'e': arrivando dopo, faceva crescere la
+                       * tessera e spingeva giu' tutto il menu sotto. */
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: MediaQuery.textScalerOf(context).scale(28),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            if (ultima != null) ...[
+                              Text(
+                                '${ultima.batteria.round()}%',
+                                style: const TextStyle(
+                                  fontFamily: 'Oswald',
+                                  fontSize: 28,
+                                  height: 1,
+                                  fontWeight: FontWeight.w700,
+                                  color: _verde,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                            Expanded(
+                              child: Text(
+                                sotto,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
-                            const SizedBox(width: 8),
                           ],
-                          Expanded(
-                            child: Text(
-                              sotto,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Row(

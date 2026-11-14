@@ -188,10 +188,9 @@ Future<void> apriLaBarra(WidgetTester tester) async {
   await tester.pump(const Duration(seconds: 9));
   await tester.pumpAndSettle();
   tester.state<BarraDelleSezioniState>(find.byType(BarraDelleSezioni)).apri();
-  /* Un fotogramma perche' cominci a salire, e poi lo si lascia arrivare.
-   * Senza, `pumpAndSettle` da solo tornava col menu ancora chiuso: il menu
-   * chiuso non e' nell'albero — non si disegna affatto — e la prima
-   * ricostruzione e' quella che lo rimette. */
+  /* Un fotogramma perche' cominci a entrare, e poi lo si lascia arrivare.
+   * Il menu chiuso e' nell'albero ma fuori scena (`Offstage`): e' il primo
+   * fotogramma dell'animazione che lo rimette in scena. */
   await tester.pump();
   await tester.pumpAndSettle();
 }
@@ -202,6 +201,22 @@ Future<void> apriLaBarra(WidgetTester tester) async {
 Finder nellaBarra(String scritta) => find.descendant(
   of: find.byType(BarraDelleSezioni),
   matching: find.text(scritta),
+);
+
+/// L'elenco del menu, quello che scorre.
+///
+/// Non «l'ultimo Scrollable» della barra: dentro ce ne sono parecchi — la
+/// casella per cercare, e una griglia per ogni gruppo di mattonelle, che non
+/// scorrono — e l'ultimo e' la griglia in fondo. Tirando quella la prova
+/// passava per caso, finche' le voci cercate stavano gia' nello schermo.
+Finder elencoDellaBarra() => find.descendant(
+  of: find.byType(BarraDelleSezioni),
+  matching: find.byWidgetPredicate(
+    (quale) =>
+        quale is Scrollable &&
+        quale.axisDirection == AxisDirection.down &&
+        quale.physics is! NeverScrollableScrollPhysics,
+  ),
 );
 
 /// Tocca una voce del menu, facendola scorrere fin dove si vede: sotto la
@@ -614,12 +629,7 @@ void main() {
       expect(nellaBarra('CASA'), findsOneWidget);
       /* Le Automazioni stanno nella casa, accanto alla Configurazione: sono
        * una pagina della plancia, come lei. */
-      final ilMenu = find
-          .descendant(
-            of: find.byType(BarraDelleSezioni),
-            matching: find.byType(Scrollable),
-          )
-          .last;
+      final ilMenu = elencoDellaBarra();
       await tester.scrollUntilVisible(
         nellaBarra('Automazioni'),
         80,
@@ -632,16 +642,7 @@ void main() {
       await tester.scrollUntilVisible(
         nellaBarra('Aiutanti'),
         80,
-        /* L'**ultimo**, non il primo: dentro il menu di Scrollable ce ne
-         * sono due, e il primo e' quello della casella per cercare. Tirando
-         * quello non si muove niente, e la prova falliva dicendo che
-         * la voce non c'era. */
-        scrollable: find
-            .descendant(
-              of: find.byType(BarraDelleSezioni),
-              matching: find.byType(Scrollable),
-            )
-            .last,
+        scrollable: elencoDellaBarra(),
       );
       expect(nellaBarra('AVANZATE'), findsOneWidget);
       expect(nellaBarra('Aiutanti'), findsOneWidget);

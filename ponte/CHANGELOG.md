@@ -10,6 +10,34 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.19.4
+
+_App GdAHome e add-on._
+
+**Nell'app, il navigatore:**
+
+- **Le rotonde nel verso giusto**: l'icona della manovra gira in senso
+  antiorario e mostra l'uscita (destra, dritto, sinistra, indietro), anche
+  su Android Auto. Nel 3D il percorso non fa più la «V» all'ingresso della
+  rotonda e la freccia punta verso l'uscita.
+- **Le rotonde a raso restano a terra**: vicino a un ponte non vengono più
+  disegnate sopraelevate.
+- **L'auto sulla strada**: quando il GPS la dà accanto alla strada, la
+  freccia si mette sulla strada.
+- **In galleria la guida continua**: senza GPS la freccia va avanti lungo
+  il percorso alla velocità di prima, e si riallinea all'uscita.
+
+**Nell'app:**
+
+- **Il menu laterale** si apre una volta sola, scivolando come quando si
+  chiude, senza ridisegnarsi.
+- Controlli di sicurezza più stretti sulle pagine che si aprono dentro
+  l'app e sul collegamento con la casa.
+
+**Nell'add-on:**
+
+- Chiede a Home Assistant meno permessi: solo quelli che usa davvero.
+
 ## 1.19.3.1
 
 _Solo Home Assistant: l'app sul telefono non cambia._

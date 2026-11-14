@@ -30,7 +30,7 @@ import '../parole.dart';
 import 'errori.dart';
 import 'indirizzo.dart';
 import 'invito.dart';
-import 'cifra.dart' show codicePulito;
+import 'cifra.dart' show codicePulito, versioneDelLegame;
 import 'presa.dart';
 import 'stretta.dart';
 
@@ -61,6 +61,7 @@ class Abbinato {
     this.casaAlCentralino,
     this.centralino,
     this.indirizzi = const [],
+    this.legata = false,
   });
 
   /// Fa entrare. Il ponte ne tiene solo l'impronta.
@@ -82,6 +83,18 @@ class Abbinato {
 
   /// Dove si trova questa casa sulla rete locale.
   final List<IndirizzoDelPonte> indirizzi;
+
+  /// Se questa casa sa legare la chiave del filo alle due righe in chiaro
+  /// della stretta di mano (`lega`, vedi `stretta.dart`).
+  ///
+  /// Lo dice la casa **dentro** l'«ecco», che e' cifrato con la chiave del
+  /// codice: chi sta in mezzo — senza il codice — non lo puo' ne' togliere
+  /// ne' aggiungere. Vale anche una stretta d'abbinamento legata con l'«ecco»
+  /// aperto, che lo prova lo stesso. Chi abbina lo scrive accanto alla
+  /// chiave (`CasaConosciuta.legata`), e dal primo collegamento una risposta
+  /// senza legame non la si accetta: prima di questo il primo collegamento
+  /// dopo l'abbinamento era scoperto. `false` con un add-on di prima.
+  final bool legata;
 
   /* Ne' il segno ne' la chiave compaiono: `toString` finisce nei registri. */
   @override
@@ -302,6 +315,9 @@ class Abbinamento {
             'la casa non ha risposto al codice',
           ),
         ),
+        /* L'«ecco» si e' appena aperto: se la chiave era legata, il legame
+         * e' provato. */
+        legataEProvata: cifrata.legataEProvata,
       );
     } on ErroreDelPonte {
       rethrow;
@@ -443,7 +459,10 @@ class Abbinamento {
     return detta.future;
   }
 
-  static Abbinato _leggiLEcco(Map<String, dynamic> detto) {
+  static Abbinato _leggiLEcco(
+    Map<String, dynamic> detto, {
+    bool legataEProvata = false,
+  }) {
     if (detto['t'] == 'no') {
       final perche = detto['perche'] as String? ?? 'non ha funzionato';
       /* Il ponte dice il perche' con una parola apposta, `motivo`. */
@@ -461,10 +480,13 @@ class Abbinamento {
         'la casa ha risposto qualcosa che non capisco',
       );
     }
-    return _daJson(detto);
+    return _daJson(detto, legataEProvata: legataEProvata);
   }
 
-  static Abbinato _daJson(Map<String, dynamic> corpo) {
+  static Abbinato _daJson(
+    Map<String, dynamic> corpo, {
+    bool legataEProvata = false,
+  }) {
     final segno = corpo['segno'];
     final chiave = corpo['chiave'];
     final dispositivo = corpo['dispositivo'];
@@ -501,6 +523,7 @@ class Abbinamento {
             in (detto['indirizzi'] as List<dynamic>? ?? const []))
           if (IndirizzoDelPonte.leggi('$scritto') case final letto?) letto,
       ],
+      legata: legataEProvata || corpo['lega'] == versioneDelLegame,
     );
   }
 

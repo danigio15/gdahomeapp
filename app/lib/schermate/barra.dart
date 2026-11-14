@@ -79,6 +79,17 @@ const _daSola = Duration(seconds: 7);
 /// Quanto resta dopo che si e' scelto: il tempo di vedere che si e' premuto.
 const _dopoLaScelta = Duration(milliseconds: 700);
 
+/// Quanto ci mette a entrare, ed e' anche quanto ci mette a uscire.
+const _quantoCiMette = Duration(milliseconds: 300);
+
+/// La curva dell'entrata e dell'uscita: simmetrica, cosi' l'una e' lo
+/// specchio dell'altra, e parte piano tutte e due le volte — il primo
+/// fotogramma, se tarda, non si mangia meta' della strada.
+const Curve _curva = Curves.easeInOutCubic;
+
+/// Entro quanto una seconda richiesta di apertura e' un doppione della prima.
+const _doppione = Duration(milliseconds: 450);
+
 /// Quanto si scurisce la pagina dietro il menu aperto.
 ///
 /// Alto, perche' della pagina resta scoperta solo una striscia: o e' chiaro
@@ -213,12 +224,35 @@ class BarraDelleSezioni extends StatefulWidget {
 
 class BarraDelleSezioniState extends State<BarraDelleSezioni>
     with SingleTickerProviderStateMixin {
+  /* Entra e se ne va con **la stessa** animazione, una lo specchio
+   * dell'altra: stessa durata, stessa curva ([_curva]).
+   *
+   * «Il menu laterale fa un glitch, e' come se caricasse due volte», con un
+   * video: la chiusura scivolava, l'apertura no — il pannello compariva di
+   * colpo. Entrava in 340 millesimi su una curva che fa quasi tutta la
+   * strada nei primi fotogrammi (`easeOutCubic`: al quarto fotogramma era gia'
+   * a meta'), e usciva in 230 sulla stessa curva letta al contrario, che
+   * invece parte piano. Bastava che i primi fotogrammi dell'apertura
+   * tardassero — e tardavano: il menu si costruiva da zero proprio li', sopra
+   * una plancia composta dal sistema — perche' il pannello si vedesse gia'
+   * aperto. */
   late final AnimationController _molla = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 340),
-    reverseDuration: const Duration(milliseconds: 230),
+    duration: _quantoCiMette,
   );
   Timer? _daChiudere;
+
+  /// Quando si e' chiesto di aprirlo l'ultima volta: un'altra richiesta poco
+  /// dopo e' un doppione, e non lo riapre (vedi [apri]).
+  Timer? _appenaChiesto;
+
+  /// Se all'apertura che sta finendo va riletto l'elenco delle plance (vedi
+  /// [apri]).
+  bool _daRileggere = false;
+
+  /// Se l'elenco del menu e' stato fatto scorrere da quando e' aperto: solo
+  /// allora la plancia esce dalla scena (vedi [_seIlMenuCopre]).
+  bool _haScorso = false;
 
   final _scorrimento = ScrollController();
   final _scritto = TextEditingController();
@@ -242,8 +276,18 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
      * **quando e' arrivato in fondo**, non appena si chiude: se no lo si
      * vedrebbe cambiare mentre scende. */
     _molla.addStatusListener((come) {
-      if (come == AnimationStatus.dismissed && _scritto.text.isNotEmpty) {
-        _scritto.clear();
+      if (come == AnimationStatus.dismissed) {
+        if (_scritto.text.isNotEmpty) _scritto.clear();
+        /* Si riapre sempre **dall'inizio**, e lo si rimette in cima adesso
+         * che non si vede: il menu resta costruito anche chiuso, e
+         * riportarlo su all'apertura voleva dire un salto sotto gli occhi. */
+        if (_scorrimento.hasClients && _scorrimento.offset != 0) {
+          _scorrimento.jumpTo(0);
+        }
+      }
+      if (come == AnimationStatus.completed && _daRileggere) {
+        _daRileggere = false;
+        _rileggi();
       }
     });
     /* Mentre si scrive il conto alla rovescia non corre: si sta cercando, e
@@ -260,6 +304,7 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
   @override
   void dispose() {
     _daChiudere?.cancel();
+    _appenaChiesto?.cancel();
     /* Il menu se ne va, e quello che aveva spostato si rimette a posto: se no
      * la plancia resta a non prendere tocchi. */
     if (_copre) widget.daParte.siFaDaParte(false);
@@ -271,28 +316,45 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
     super.dispose();
   }
 
+  /// Apre il menu.
+  ///
+  /// **Una volta sola.** Un'apertura gia' in corso, o un menu gia' aperto, non
+  /// si rifanno: si fa solo ripartire il conto alla rovescia. E una richiesta
+  /// che arriva entro [_doppione] dalla precedente e' lo stesso tocco detto due
+  /// volte — la pagina della plancia e il tasto indietro, un tocco che la
+  /// pagina rimanda — e non riapre un menu che nel frattempo si e' cominciato
+  /// a chiudere.
   void apri() {
+    final doppione = _appenaChiesto?.isActive ?? false;
+    _appenaChiesto?.cancel();
+    _appenaChiesto = Timer(_doppione, () {});
+    final giaInViaggio =
+        _molla.status == AnimationStatus.forward ||
+        _molla.status == AnimationStatus.completed;
+    if (doppione || giaInViaggio) {
+      if (giaInViaggio) _rimanda(_daSola);
+      return;
+    }
+    /* L'elenco delle plance si rilegge **dopo**, a menu fermo: la risposta
+     * della casa fa ridisegnare tutta l'app, e a meta' animazione era il
+     * menu che si rifaceva mentre entrava. */
+    _daRileggere = true;
     _molla.forward();
     _rimanda(_daSola);
-    /* L'elenco delle plance si chiede di nuovo alla casa: le plance si
-     * aggiungono, si tolgono e cambiano chi le vede dalla console, mentre il
-     * telefono resta acceso. Prima l'elenco si leggeva solo collegandosi:
-     * un tablet a muro sempre acceso non vedeva la plancia nuova — niente
-     * freccine — finche' non gli si toglieva la corrente. */
+  }
+
+  /* L'elenco delle plance si chiede di nuovo alla casa: le plance si
+   * aggiungono, si tolgono e cambiano chi le vede dalla console, mentre il
+   * telefono resta acceso. Prima l'elenco si leggeva solo collegandosi: un
+   * tablet a muro sempre acceso non vedeva la plancia nuova — niente
+   * freccine — finche' non gli si toglieva la corrente. */
+  void _rileggi() {
     unawaited(widget.collegamento?.rileggiLaPlancia() ?? Future<void>.value());
-    /* Si riapre sempre **dall'inizio**.
-     *
-     * L'elenco tiene il punto dove si era arrivati a scorrere — se lo scrive
-     * da se', in `PageStorage` — e riaprendo il menu ci si ritrovava a meta',
-     * con la casa e le prime sezioni gia' scivolate via. Chi apre il menu
-     * vuole vedere la prima cosa, non l'ultima che aveva guardato. */
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && _scorrimento.hasClients) _scorrimento.jumpTo(0);
-    });
   }
 
   void chiudi() {
     _daChiudere?.cancel();
+    _daRileggere = false;
     _fuoco.unfocus();
     _molla.reverse();
   }
@@ -385,9 +447,17 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
    *
    * Si guarda a ogni scatto dell'animazione e a ogni ridisegno. */
   void _seIlMenuCopre() {
-    /* Aperto fino in fondo: la plancia dietro si toglie dalla scena, e il
-     * menu scorre senza scatti (`planciaCopertaDelTutto`). */
-    final tutta = widget.sopraLaPlancia && _molla.value >= 0.999;
+    /* Aperto fino in fondo **e fatto scorrere**: la plancia dietro si toglie
+     * dalla scena, e il menu scorre senza scatti (`planciaCopertaDelTutto`).
+     *
+     * Prima bastava aperto fino in fondo, e si vedeva: appena il pannello
+     * arrivava, la striscia di plancia a destra diventava un fondo piatto e
+     * il sistema rifaceva lo schermo senza la pagina composta da lui — il
+     * menu «ricompariva» una seconda volta subito dopo essere entrato. Chi
+     * apre il menu per toccare la seconda mattonella non scorre niente, e a
+     * lui la plancia non si toglie piu'. */
+    if (_molla.value < 0.999) _haScorso = false;
+    final tutta = widget.sopraLaPlancia && _molla.value >= 0.999 && _haScorso;
     if (tutta != _copreTutta) {
       _copreTutta = tutta;
       widget.daParte.copertaDelTutto(tutta);
@@ -437,71 +507,92 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
   @override
   Widget build(BuildContext context) {
     _seIlMenuCopre();
+    /* Il pannello si costruisce **qui**, una volta, e l'animazione lo sposta
+     * soltanto.
+     *
+     * Prima lo rifaceva il `builder` dell'animazione: a ogni fotogramma tutte
+     * le mattonelle, la tessera di gdanav, la casella — una ventina di volte
+     * per ogni apertura, sopra una plancia che il sistema ricompone a ogni
+     * fotogramma. E chiuso non c'era proprio: il primo fotogramma
+     * dell'apertura era anche quello in cui il menu si costruiva da zero, ed
+     * era quello che tardava. Adesso c'e' sempre, pronto, e a menu chiuso sta
+     * fuori scena (`Offstage`): non si disegna, non si tocca, non si legge —
+     * chi cerca «Dispositivi» sulla pagina della plancia non lo trova — e i
+     * suoi orologi sono fermi. */
+    final pannello = SizedBox(
+      width: _quantoLargoQui(context),
+      /* Il gesto sta qui e prende tutto il pannello, come in qualunque
+       * cassetto: si spinge verso sinistra da dove capita, e non solo da una
+       * maniglia che bisogna trovare. Orizzontale, quindi non litiga con
+       * l'elenco che scorre in verticale. */
+      child: GestureDetector(
+        onHorizontalDragUpdate: _spinto,
+        onHorizontalDragEnd: _lasciato,
+        child: Listener(
+          onPointerDown: (_) => _laStaUsando(),
+          onPointerMove: (_) => _laStaUsando(),
+          onPointerUp: (_) => _laStaUsando(),
+          onPointerSignal: (_) => _laStaUsando(),
+          /* Un livello suo: spostandolo, il disegno di dentro si riusa. */
+          child: RepaintBoundary(child: _IlFoglio(child: _dentro(context))),
+        ),
+      ),
+    );
     return AnimatedBuilder(
       animation: _molla,
-      builder: (context, _) {
-        /* Chiuso non si disegna affatto.
-         *
-         * Prima il menu stava nell'albero sempre, anche tutto fuori schermo:
-         * quattordici mattonelle disegnate per niente sopra ogni pagina
-         * dell'app, e — peggio — i nomi delle sezioni erano li' dentro anche
-         * a menu chiuso. Chi cerca «Dispositivi» sulla pagina della plancia
-         * lo trovava, e non c'era. */
-        if (_molla.value <= 0) return const SizedBox.shrink();
-        final quanto = Curves.easeOutCubic.transform(_molla.value.clamp(0, 1));
-        return Stack(
-          children: [
-            /* Il velo, e il tocco fuori che chiude.
-             *
-             * Il velo prima non c'era: il menu si apriva e la pagina restava
-             * accesa com'era, cosi' quello che ci passava sotto — i numeri
-             * grossi delle tessere, una mappa — si leggeva insieme alle voci.
-             * Un menu che copre e non scurisce non sembra un menu: sembra un
-             * foglietto appoggiato. Prende i tocchi solo quando c'e': a menu
-             * chiuso non deve rubare niente alla pagina. */
-            if (aperta)
-              Positioned.fill(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: chiudi,
-                  child: ColoredBox(
-                    color: Colors.black.withValues(alpha: _quantoVelo * quanto),
-                  ),
-                ),
-              ),
-            Positioned(
-              left: 0,
-              top: 0,
-              bottom: 0,
-              child: IgnorePointer(
-                ignoring: !aperta,
-                /* Scorre di tutta la sua larghezza: a zero e' fuori dal bordo
-                 * sinistro, a uno e' al suo posto. */
-                child: FractionalTranslation(
-                  translation: Offset(quanto - 1, 0),
-                  child: SizedBox(
-                    width: _quantoLargoQui(context),
-                    /* Il gesto sta qui e prende tutto il pannello, come in
-                     * qualunque cassetto: si spinge verso sinistra da dove
-                     * capita, e non solo da una maniglia che bisogna trovare.
-                     * Orizzontale, quindi non litiga con l'elenco che scorre
-                     * in verticale. */
+      child: pannello,
+      builder: (context, pannello) {
+        final chiusa = _molla.value <= 0;
+        final quanto = _curva.transform(_molla.value.clamp(0, 1));
+        /* Sempre gli stessi due figli, nello stesso ordine: se il velo
+         * comparisse e sparisse, il pannello cambierebbe posto nella pila e si
+         * rifarebbe da capo. */
+        return Offstage(
+          offstage: chiusa,
+          child: TickerMode(
+            enabled: !chiusa,
+            child: Stack(
+              children: [
+                /* Il velo, e il tocco fuori che chiude.
+                 *
+                 * Il velo prima non c'era: il menu si apriva e la pagina
+                 * restava accesa com'era, cosi' quello che ci passava sotto —
+                 * i numeri grossi delle tessere, una mappa — si leggeva
+                 * insieme alle voci. Un menu che copre e non scurisce non
+                 * sembra un menu: sembra un foglietto appoggiato. Prende i
+                 * tocchi solo quando c'e': a menu chiuso non deve rubare
+                 * niente alla pagina. */
+                Positioned.fill(
+                  child: IgnorePointer(
+                    ignoring: !aperta,
                     child: GestureDetector(
-                      onHorizontalDragUpdate: _spinto,
-                      onHorizontalDragEnd: _lasciato,
-                      child: Listener(
-                        onPointerDown: (_) => _laStaUsando(),
-                        onPointerMove: (_) => _laStaUsando(),
-                        onPointerUp: (_) => _laStaUsando(),
-                        onPointerSignal: (_) => _laStaUsando(),
-                        child: _IlFoglio(child: _dentro(context)),
+                      behavior: HitTestBehavior.opaque,
+                      onTap: chiudi,
+                      child: ColoredBox(
+                        color: Colors.black.withValues(
+                          alpha: _quantoVelo * quanto,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  child: IgnorePointer(
+                    ignoring: !aperta,
+                    /* Scorre di tutta la sua larghezza: a zero e' fuori dal
+                     * bordo sinistro, a uno e' al suo posto. */
+                    child: FractionalTranslation(
+                      translation: Offset(quanto - 1, 0),
+                      child: pannello,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         );
       },
     );
@@ -524,34 +615,29 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
           riscrivi: () => setState(() {}),
         ),
         Flexible(
-          child: ListView(
-            controller: _scorrimento,
-            shrinkWrap: true,
-            padding: const EdgeInsets.fromLTRB(14, 6, 14, 6),
-            children: [
-              if (widget.tessera case final t?) ...[
-                if (_cercato.isEmpty) ...[t, const SizedBox(height: 14)],
-              ],
-              if (trovate.isEmpty)
-                _NienteCosi(cercato: _scritto.text.trim())
-              else if (_cercato.isNotEmpty)
-                _LeMattonelle(
-                  sezioni: trovate,
-                  aperta: widget.aperta,
-                  scegli: _scelta,
-                  daAggiornare: widget.daAggiornare,
-                  collegamento: widget.collegamento,
-                  trattieni: _trattieni,
-                  lascia: _lascia,
-                  bloccate: widget.bloccate,
-                  apriPremium: widget.apriPremium,
-                )
-              else
-                for (final (i, gruppo) in _gruppi.indexed) ...[
-                  if (i > 0) const SizedBox(height: 16),
-                  _TitoloDelGruppo(gruppo.titolo.titolo),
+          /* Solo quando lo si fa scorrere col dito la plancia esce dalla
+           * scena (vedi [_seIlMenuCopre]). */
+          child: NotificationListener<ScrollStartNotification>(
+            onNotification: (inizio) {
+              if (inizio.dragDetails != null && !_haScorso) {
+                _haScorso = true;
+                _seIlMenuCopre();
+              }
+              return false;
+            },
+            child: ListView(
+              controller: _scorrimento,
+              shrinkWrap: true,
+              padding: const EdgeInsets.fromLTRB(14, 6, 14, 6),
+              children: [
+                if (widget.tessera case final t?) ...[
+                  if (_cercato.isEmpty) ...[t, const SizedBox(height: 14)],
+                ],
+                if (trovate.isEmpty)
+                  _NienteCosi(cercato: _scritto.text.trim())
+                else if (_cercato.isNotEmpty)
                   _LeMattonelle(
-                    sezioni: gruppo.sezioni,
+                    sezioni: trovate,
                     aperta: widget.aperta,
                     scegli: _scelta,
                     daAggiornare: widget.daAggiornare,
@@ -560,9 +646,25 @@ class BarraDelleSezioniState extends State<BarraDelleSezioni>
                     lascia: _lascia,
                     bloccate: widget.bloccate,
                     apriPremium: widget.apriPremium,
-                  ),
-                ],
-            ],
+                  )
+                else
+                  for (final (i, gruppo) in _gruppi.indexed) ...[
+                    if (i > 0) const SizedBox(height: 16),
+                    _TitoloDelGruppo(gruppo.titolo.titolo),
+                    _LeMattonelle(
+                      sezioni: gruppo.sezioni,
+                      aperta: widget.aperta,
+                      scegli: _scelta,
+                      daAggiornare: widget.daAggiornare,
+                      collegamento: widget.collegamento,
+                      trattieni: _trattieni,
+                      lascia: _lascia,
+                      bloccate: widget.bloccate,
+                      apriPremium: widget.apriPremium,
+                    ),
+                  ],
+              ],
+            ),
           ),
         ),
         /* Che versione e', **fissa** in fondo e fuori dall'elenco.

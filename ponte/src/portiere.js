@@ -37,7 +37,9 @@
  * e la casa lo ripete, le due righe intere, cosi' come sono passate, entrano
  * nella chiave, e chi le ritoccasse per strada — un `da_casa` girato, un
  * `gzip` tolto — fa si' che la prima busta non si apra. Chi non lo dice, o
- * non lo ripete, si parla come prima. E' scritto in `cifra.js`.
+ * non lo ripete, si parla come prima — tranne un telefono che ha gia' legato
+ * una volta: quello lega sempre, e senza non entra (`motivo: "legame"`).
+ * E' scritto in `cifra.js`.
  *
  * Dopo, ogni messaggio e' una busta.
  *
@@ -47,7 +49,7 @@
  * il `pronto` va cosi':
  *
  *   telefono → casa   busta {t:"conferma", telefono:"…", casa:"…", nome, sistema}
- *   casa → telefono   busta {t:"ecco", segno, chiave, dispositivo, ritorno}
+ *   casa → telefono   busta {t:"ecco", segno, chiave, dispositivo, ritorno, lega:1}
  *   casa → telefono   busta {t:"no", perche:"…", motivo:"…"}
  *   casa → telefono   {v:1, no:"codice sbagliato", motivo:"codice"}   in chiaro
  *
@@ -143,6 +145,8 @@ const MOTIVO = Object.freeze({
   tentativi: "tentativi",
   codice: "codice",
   telefoni: "telefoni",
+  /* Una stretta senza `lega` da un telefono che ha sempre legato. */
+  legame: "legame",
 });
 
 export class Portiere {
@@ -313,6 +317,25 @@ export class Portiere {
       return;
     }
 
+    /* ─── Il legame che non si toglie ─────────────────────────────────
+     *
+     * Questo telefono il legame l'ha gia' fatto, con una busta aperta a
+     * provarlo (`dispositivi.legaSempre`): e' un'app che lo sa fare, e non
+     * smette da sola. Una sua prima riga senza `lega` l'ha ritoccata chi sta
+     * in mezzo, per tornare alla chiave che non guarda le righe in chiaro —
+     * e allora non si risponde col `pronto`, che di quelle righe si
+     * potrebbe fidare. Il no va in chiaro come tutti quelli della stretta:
+     * chi sta in mezzo il filo lo poteva gia' tagliare, e non impara niente. */
+    if (!legame && this._legaSempre(chi)) {
+      this.registro.attenzione?.(
+        `una stretta di mano senza legame per ${chi}, che ha sempre legato: rifiutata`,
+      );
+      this._no(presa, "stretta di mano senza legame: non entri cosi'", {
+        motivo: MOTIVO.legame,
+      });
+      return;
+    }
+
     const mia = coppiaEffimera();
     /* La risposta si scrive **prima** della chiave: col legame, la chiave
      * dipende proprio da com'e' scritta. */
@@ -337,7 +360,12 @@ export class Portiere {
     /* Da qui in poi il ponte vede una presa qualunque, e non sa niente di
      * tutto questo. */
     this.ponte.accogli(
-      new PresaCifrata(presa, chiaveDiQuestoFilo, { comprime: detto.gzip === true }),
+      new PresaCifrata(presa, chiaveDiQuestoFilo, {
+        comprime: detto.gzip === true,
+        /* La prima busta del telefono si e' aperta con la chiave legata:
+         * il `lega` l'ha scritto lui. Da qui in poi lo si pretende. */
+        allaPrimaAperta: legame ? () => this._segnaIlLegame(chi) : null,
+      }),
       /* `mucchio: true` dice «so spacchettare un mucchio di eventi». Come il
        * gzip: chi non lo dice riceve un messaggio per evento, come prima.
        *
@@ -537,6 +565,7 @@ export class Portiere {
         prova: usato.prova,
         pubbliche,
         tentativo,
+        legata: Boolean(legame),
       }).catch((errore) => {
         this.registro.errore(`abbinamento andato storto: ${errore?.message || errore}`);
         cifrata.chiudi(1011, "");
@@ -545,7 +574,11 @@ export class Portiere {
     cifrata.onChiusa = () => clearTimeout(timer);
   }
 
-  async _laConferma(cifrata, testo, { da, codice, prova = false, pubbliche, tentativo = null }) {
+  async _laConferma(
+    cifrata,
+    testo,
+    { da, codice, prova = false, pubbliche, tentativo = null, legata = false },
+  ) {
     let detto;
     try {
       detto = JSON.parse(testo);
@@ -632,6 +665,9 @@ export class Portiere {
         proprietario: detto?.proprietario,
         utente: perChi,
         ...(finoA ? { finoA } : {}),
+        /* La conferma si e' appena aperta con la chiave legata: questo
+         * telefono lega, e lo si pretende gia' dal primo collegamento. */
+        lega: legata,
       });
     } catch (errore) {
       const telefoni = errore instanceof TroppiDispositivi;
@@ -661,10 +697,42 @@ export class Portiere {
      * Supervisor non risponde si va avanti lo stesso, con quello che c'e': un
      * abbinamento non si fa fallire per un indirizzo mancante. */
     const ritorno = (await this.ritorno?.cosaDire()) ?? null;
-    cifrata.manda(JSON.stringify({ t: "ecco", segno, chiave, dispositivo, ritorno }));
+    /* `lega`: che questa casa il legame lo sa fare. Sta **dentro** il
+     * cifrato, chiuso con la chiave del codice, e chi sta in mezzo non lo
+     * puo' ne' togliere ne' aggiungere: il telefono se lo scrive accanto
+     * alla chiave del filo, e dal primo collegamento non accetta una stretta
+     * senza — anche se a questa stretta d'abbinamento il `lega` gliel'hanno
+     * tolto per strada. Un'app di prima il campo non lo guarda. */
+    cifrata.manda(
+      JSON.stringify({
+        t: "ecco",
+        segno,
+        chiave,
+        dispositivo,
+        ritorno,
+        lega: VERSIONE_DEL_LEGAME,
+      }),
+    );
     /* Un filo di abbinamento serve a una cosa sola e poi si chiude. Il
      * telefono ritorna dalla porta normale, col segno appena avuto. */
     cifrata.chiudi(1000, "abbinato");
+  }
+
+  _legaSempre(chi) {
+    try {
+      return this.dispositivi.legaSempre?.(chi) === true;
+    } catch (_errore) {
+      return false;
+    }
+  }
+
+  _segnaIlLegame(chi) {
+    try {
+      this.dispositivi.segnaIlLegame?.(chi);
+    } catch (errore) {
+      /* Non scritto: lo si riscrive alla prossima stretta legata. */
+      this.registro.attenzione?.(`il legame di ${chi} non si e' scritto: ${errore?.message}`);
+    }
   }
 
   _soloInCasa() {
@@ -731,7 +799,14 @@ export class PresaCifrata {
    * prima busta resta per tutto il filo, e `quale` dice qual era: 0 la
    * principale, 1 la prima delle altre, e cosi' via. Dopo la prima busta non
    * si prova piu' niente: un filo ha una chiave sola. */
-  constructor(sotto, chiave, { comprime = false, onGuasta = null, altre = [] } = {}) {
+  /* `allaPrimaAperta`: chi vuole sapere, una volta sola, che la prima busta
+   * dall'altra parte si e' aperta — cioe' che chi parla ha davvero questa
+   * chiave. Serve al legame (`dispositivi.segnaIlLegame`). */
+  constructor(
+    sotto,
+    chiave,
+    { comprime = false, onGuasta = null, altre = [], allaPrimaAperta = null } = {},
+  ) {
     this.sotto = sotto;
     this.busta = new Busta(chiave, { io: "casa", comprime });
     this._altre = altre.map((una) => new Busta(una, { io: "casa", comprime }));
@@ -742,6 +817,7 @@ export class PresaCifrata {
      * dimostrato niente: vedi `INTERO_PRIMA_DI_FIDARSI`. */
     this._fidata = false;
     this._onGuasta = onGuasta;
+    this._allaPrimaAperta = allaPrimaAperta;
     this.onMessaggio = () => {};
     this.onChiusa = () => {};
     this.onPong = () => {};
@@ -811,6 +887,15 @@ export class PresaCifrata {
     }
     this._fidata = true;
     this._altre = [];
+    const primaAperta = this._allaPrimaAperta;
+    if (primaAperta) {
+      this._allaPrimaAperta = null;
+      try {
+        primaAperta();
+      } catch (_errore) {
+        /* Chi ascolta ha sbagliato: il filo resta. */
+      }
+    }
     try {
       this.onMessaggio(dentro);
     } catch (_errore) {

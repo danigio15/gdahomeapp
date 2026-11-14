@@ -363,7 +363,7 @@ export class Dispositivi {
    *
    * Il segno esce da qui una volta sola, adesso. Chi lo perde riabbina: non
    * c'e' nessuna strada per rileggerlo, ed e' voluto. */
-  abbina({ nome, sistema, utente = "", finoA = null, ...detto } = {}) {
+  abbina({ nome, sistema, utente = "", finoA = null, lega = false, ...detto } = {}) {
     const massimi = this.massimi;
     const diProva = Number.isFinite(finoA);
     if ((!diProva || this._provaNeiMassimi) && this.postiPresi() >= massimi) {
@@ -399,6 +399,10 @@ export class Dispositivi {
       /* Un telefono della casa di prova scade col codice con cui e' entrato:
        * vedi «I telefoni di prova». */
       ...(Number.isFinite(finoA) ? { finoA } : {}),
+      /* Che si e' abbinato con la chiave legata alle due righe in chiaro, e
+       * la conferma si e' aperta: da subito una stretta senza legame di
+       * questo telefono non passa (vedi «Il legame» qui sotto). */
+      ...(lega === true ? { lega: true } : {}),
     };
     this.lista.push(dispositivo);
     this.archivio.salva();
@@ -452,6 +456,31 @@ export class Dispositivi {
     const dispositivo = this._vivi.find((uno) => uno.id === id);
     const chiave = dispositivo?.chiave;
     return typeof chiave === "string" && chiave.length === 64 ? chiave : null;
+  }
+
+  /* ─── Il legame ──────────────────────────────────────────────────────
+   *
+   * Un telefono che ha legato una volta la chiave del filo alle due righe in
+   * chiaro della stretta di mano (`lega`, vedi `cifra.js`) e' un'app che lo
+   * sa fare: non lo dimentica da sola. Una sua stretta senza `lega` vuol dire
+   * che qualcuno l'ha tolto per strada, per tornare alle righe che si possono
+   * ritoccare, e il portiere la rifiuta (`portiere.js`).
+   *
+   * Si segna solo quando una busta del telefono si e' aperta con la chiave
+   * legata: il `lega` lo puo' aggiungere anche chi sta in mezzo alla riga di
+   * un'app di prima, e segnarlo prima vorrebbe dire chiudere fuori per
+   * sempre un telefono che non lo sa fare. Sta nell'archivio, e resta fra un
+   * riavvio e l'altro. Si spegne solo riabbinando: un telefono nuovo. */
+  segnaIlLegame(id) {
+    const dispositivo = this.lista.find((uno) => uno.id === id);
+    if (!dispositivo || dispositivo.lega === true) return false;
+    dispositivo.lega = true;
+    this.archivio.salva();
+    return true;
+  }
+
+  legaSempre(id) {
+    return this._vivi.find((uno) => uno.id === id)?.lega === true;
   }
 
   /* Chi bussa con un segno: `null` se non e' nessuno. */

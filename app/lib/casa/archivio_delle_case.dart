@@ -123,6 +123,10 @@ class ArchivioDelleCase {
     IndirizzoDelPonte? inCasa,
     IndirizzoDelPonte? daFuoriCasa,
     DaDove? approdoIniziale,
+    /* Se la casa, abbinandosi, ha detto di saper legare
+     * (`Abbinato.legata`): allora lo si pretende gia' dal primo
+     * collegamento, e non dal secondo. */
+    bool legata = false,
   }) async {
     final stessa = casaAlCentralino == null || casaAlCentralino.isEmpty
         ? -1
@@ -150,8 +154,9 @@ class ArchivioDelleCase {
         gettone: prima.gettone,
         gettonePremium: prima.gettonePremium,
         senzaLicenze: prima.senzaLicenze,
-        /* Chiavi nuove: il legame lo si deve rivedere. */
-        legata: false,
+        /* Chiavi nuove: il legame vale quello che ha detto questo
+         * abbinamento, non quello di prima. */
+        legata: legata,
         vecchioIdentificativo:
             vecchio?.identificativo ?? prima.vecchioIdentificativo,
         vecchioSegno: vecchio?.segno ?? prima.vecchioSegno,
@@ -175,6 +180,7 @@ class ArchivioDelleCase {
       inCasa: inCasa,
       daFuoriCasa: daFuoriCasa,
       ultimoApprodo: approdoIniziale,
+      legata: legata,
     );
     _case.add(casa);
     _attiva = casa.id;

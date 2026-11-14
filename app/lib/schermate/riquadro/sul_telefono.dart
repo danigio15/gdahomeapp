@@ -535,16 +535,18 @@ Future<void> ilFiloCE(WebViewController controllore) async {
 /// l'ascoltatore. Tre colpi a distanza crescente costano tre messaggi e
 /// tolgono una corsa che si perde in silenzio.
 ///
-/// [pagina] qui non serve — il WebView e' uno e la pagina dentro e' quella —
-/// sta nella firma perche' la firma e' una sola: nel browser e' quello che
-/// dice a quale riquadro consegnare (`sul_web.dart`).
+/// [pagina] e' il quadro a cui la chiave e' destinata, e **a ogni colpo** —
+/// anche quelli ritardati — si guarda prima quale pagina c'e' adesso nel
+/// WebView: se non e' sulla stessa origine (schema, casa, porta), quel colpo
+/// non parte. Lo script poi ricontrolla dentro la pagina, consegna solo alla
+/// finestra principale e con l'origine esatta al posto di `"*"`: vedi
+/// [ilCodiceDellaConsegna].
 Future<void> consegnaLaChiave(
   WebViewController controllore,
   String chiave, {
   required Uri pagina,
 }) async {
   if (chiave.isEmpty) return;
-  final detto = jsonEncode({'gdahome': 'chiave', 'chiave': chiave});
   for (final fra in const [
     Duration.zero,
     Duration(milliseconds: 300),
@@ -552,7 +554,13 @@ Future<void> consegnaLaChiave(
   ]) {
     if (fra > Duration.zero) await Future<void>.delayed(fra);
     try {
-      await controllore.runJavaScript('window.postMessage($detto,"*")');
+      final codice = ilCodiceDellaConsegna(
+        chiave: chiave,
+        pagina: pagina,
+        adesso: await controllore.currentUrl(),
+      );
+      if (codice == null) continue;
+      await controllore.runJavaScript(codice);
     } catch (_) {
       /* La pagina non c'e' ancora, o se n'e' andata: c'e' il colpo dopo. */
     }

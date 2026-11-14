@@ -14,7 +14,9 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/casa/archivio_delle_case.dart';
+import 'package:gdahome/casa/casa_conosciuta.dart';
 import 'package:gdahome/casa/cassaforte.dart';
+import 'package:gdahome/ponte/abbinamento.dart';
 import 'package:gdahome/ponte/cifra.dart';
 import 'package:gdahome/ponte/errori.dart';
 import 'package:gdahome/ponte/filo.dart';
@@ -299,6 +301,80 @@ void main() {
       expect(filo.dentro, isTrue);
       await filo.chiudi();
       expect(archivio.quella(casa.id)!.legata, isFalse);
+    });
+
+    /* L'abbinamento: il primo collegamento dopo e' proprio quello che chi
+     * sta in mezzo proverebbe a scoprire, e prima di questa regola era
+     * scoperto — la casa appena abbinata partiva da `legata: false`. Adesso
+     * l'«ecco», cifrato col codice, dice che la casa lega, e l'app lo scrive
+     * insieme alla chiave. */
+    Future<CasaConosciuta> abbinaEScrivi(ArchivioDelleCase archivio) async {
+      ponte.codiceVivo = 'ABCDEFGHJKMNPQRS';
+      final abbinato = await Abbinamento.chiedi(
+        dove: ponte.indirizzo,
+        codice: 'ABCD-EFGH-JKMN-PQRS',
+        nome: 'Telefono',
+        sistema: 'android',
+        apri: PresaSuWebSocket.apri,
+      );
+      return archivio.aggiungi(
+        nome: 'Casa',
+        segno: abbinato.segno,
+        identificativo: abbinato.identificativo,
+        chiave: abbinato.chiave,
+        inCasa: ponte.indirizzo,
+        legata: abbinato.legata,
+      );
+    }
+
+    test('abbinata a una casa che lega, il primo collegamento senza legame non '
+        'passa', () async {
+      final cassaforte = CassaforteInMemoria();
+      final archivio = ArchivioDelleCase(cassaforte);
+      await archivio.apri();
+      final casa = await abbinaEScrivi(archivio);
+      expect(casa.legata, isTrue, reason: 'lo sa dall\'abbinamento');
+
+      /* L'app si riapre, e alla prima stretta chi sta in mezzo toglie il
+         * `lega`: la casa risponde come una di prima. */
+      final riaperto = ArchivioDelleCase(cassaforte);
+      await riaperto.apri();
+      ponte
+        ..conosceIlLegame = false
+        ..perStradaIlPronto = (pronto) =>
+            pronto.replaceFirst(RegExp(r'}$'), ',"da_casa":true}');
+      final filo = ilFiloDi(riaperto, casa.id);
+      await expectLater(filo.apri(), throwsA(isA<LegameMancato>()));
+      expect(filo.dentro, isFalse);
+      await filo.chiudi();
+    });
+
+    test(
+      'anche se il legame l\'hanno tolto proprio all\'abbinamento',
+      () async {
+        /* Chi sta in mezzo toglie il `lega` dalla stretta d'abbinamento: la
+         * chiave dell'abbinamento non e' legata, ma l'«ecco» viaggia dentro
+         * il cifrato fatto col codice, e il suo `lega` non lo puo' toccare. */
+        ponte.perStradaLaStretta = (ciao) =>
+            ciao.replaceFirst(',"lega":$versioneDelLegame', '');
+        final archivio = ArchivioDelleCase(CassaforteInMemoria());
+        await archivio.apri();
+        final casa = await abbinaEScrivi(archivio);
+        expect(ponte.strette.last.containsKey('lega'), isFalse);
+        expect(casa.legata, isTrue);
+      },
+    );
+
+    test('abbinata a una casa di prima, si entra come sempre', () async {
+      ponte.conosceIlLegame = false;
+      final archivio = ArchivioDelleCase(CassaforteInMemoria());
+      await archivio.apri();
+      final casa = await abbinaEScrivi(archivio);
+      expect(casa.legata, isFalse);
+      final filo = ilFiloDi(archivio, casa.id);
+      await filo.apri();
+      expect(filo.dentro, isTrue);
+      await filo.chiudi();
     });
 
     test('togliere la casa si porta via anche il legame', () async {

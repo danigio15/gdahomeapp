@@ -1,0 +1,174 @@
+# Profilo AppArmor del ponte — PROPOSTA, NON ATTIVO.
+#
+# Il Supervisor carica un profilo personalizzato solo se trova un file che si
+# chiama esattamente `apparmor.txt` accanto a `config.yaml`
+# (`App.path_apparmor` nel Supervisor: `<cartella dell'add-on>/apparmor.txt`).
+# Questo file sta in `ponte/sicurezza/` e ha un altro nome apposta: qui non lo
+# legge nessuno, e l'add-on continua a girare col profilo di serie di Docker.
+# `test/manifesto.test.js` si rompe se `ponte/apparmor.txt` compare.
+#
+# PERCHE' NON E' ATTIVO: un profilo sbagliato non da' un errore leggibile, fa
+# fallire una lettura o una connessione nel mezzo — e lo fa in tutte le case
+# insieme al primo aggiornamento. Non e' mai stato provato su un Home Assistant
+# OS vero. Prima di attivarlo:
+#   1. copiarlo in `ponte/apparmor.txt` su una copia locale dell'add-on,
+#      con `flags=(attach_disconnected,mediate_deleted,complain)` su tutti e
+#      due i profili (in «complain» AppArmor non nega, scrive soltanto);
+#   2. far girare l'add-on almeno un giorno toccando tutto: abbinamento di un
+#      telefono, plancia nell'ingress e dalla porta 8098, plance nella barra
+#      laterale (scrive `www/gdahome/`), foto da `config/www`, una notifica
+#      con la foto 4K di una telecamera (djpeg/cjpeg), il centralino da fuori
+#      casa, il rapporto all'installatore, il tasto «smetti» della console,
+#      un riavvio e un aggiornamento dell'add-on;
+#   3. leggere quello che AppArmor avrebbe negato:
+#        journalctl _TRANSPORT="audit" -g 'apparmor="ALLOWED"'
+#      e aggiungere qui sotto quello che manca, con il perche';
+#   4. togliere `complain`, rifare il giro del punto 2 e controllare che il
+#      registro dell'audit non dica `apparmor="DENIED"`;
+#   5. solo allora rinominarlo in `ponte/apparmor.txt`, aggiornare la prova e
+#      dirlo nel CHANGELOG. Ogni pezzo nuovo che legge o scrive un file, o
+#      lancia un programma, da quel giorno deve passare anche da qui.
+#
+# Il modello e' quello della documentazione per sviluppatori di Home Assistant
+# (docs/apps/presentation.md, sezione «AppArmor»): la parte di s6-overlay e'
+# quella, il programma ha un profilo suo piu' stretto.
+
+#include <tunables/global>
+
+# Il nome del profilo lo riscrive il Supervisor con lo slug vero dell'add-on
+# (per un add-on di un negozio e' `<hash>_gdahome`): qui basta lo slug.
+profile gdahome flags=(attach_disconnected,mediate_deleted) {
+  #include <abstractions/base>
+
+  # ─── La parte di s6-overlay e bashio (come nella documentazione) ─────────
+  # Il profilo esterno e' quello di `/init` e di `run.sh`: largo sui file,
+  # perche' s6-overlay all'avvio tocca molti percorsi suoi, e la stretta vera
+  # sta nel profilo del ponte qui sotto, che e' quello esposto alla rete.
+  file,
+  # s6 ferma e riavvia i suoi figli con questi segnali.
+  signal (send) set=(kill,term,int,hup,cont),
+
+  # s6-overlay: il suo /init, i suoi programmi, i suoi file di stato.
+  /init ix,
+  /bin/** ix,
+  /usr/bin/** ix,
+  /run/{s6,s6-rc*,service}/** ix,
+  /package/** ix,
+  /command/** ix,
+  /etc/s6-overlay/** rwix,
+  /run/{,**} rwk,
+  /dev/tty rw,
+
+  # bashio, che `run.sh` usa per scrivere nel registro.
+  /usr/lib/bashio/** ix,
+  /tmp/** rwk,
+
+  # `/data/options.json` e il resto della cartella dell'add-on.
+  /data/** rw,
+
+  # `run.sh` finisce con `exec node /app/src/index.js`: da li' in poi il
+  # processo passa nel profilo `ponte`, qui sotto. Vince su `/usr/bin/** ix`
+  # perche' e' piu' specifica: AppArmor, fra due regole d'esecuzione, sceglie
+  # quella col percorso esatto (lo stesso schema dell'esempio ufficiale).
+  /usr/bin/node cx -> ponte,
+
+  profile ponte flags=(attach_disconnected,mediate_deleted) {
+    #include <abstractions/base>
+
+    # s6-overlay deve poter fermare il ponte quando l'add-on si spegne.
+    signal (receive) peer=*_gdahome,
+    signal (receive) peer=gdahome,
+    signal (receive) peer=unconfined,
+    # Il ponte stesso gestisce i propri figli (djpeg/cjpeg) e i suoi thread.
+    signal (send, receive) peer=@{profile_name},
+
+    # ─── Rete ───────────────────────────────────────────────────────────
+    # TCP: la porta 8098 e l'ingress 8099 in ascolto; Home Assistant e il
+    # Supervisor (`http://supervisor`), il centralino (TLS), i fornitori di
+    # energia, le icone dei marchi, il quadro dell'installatore in uscita.
+    network inet stream,
+    network inet6 stream,
+    # UDP: solo la risoluzione dei nomi (getaddrinfo verso il DNS di HA).
+    network inet dgram,
+    network inet6 dgram,
+    # getaddrinfo di musl e `os.networkInterfaces()` di Node chiedono le
+    # interfacce al kernel cosi'.
+    network netlink raw,
+    # Socket locali (libuv e il resolver li possono aprire).
+    network unix stream,
+    network unix dgram,
+
+    # ─── Il programma ───────────────────────────────────────────────────
+    # Node e le librerie che si porta dietro (su Alpine stanno in /usr/lib).
+    /usr/bin/node mr,
+    /usr/lib/** mr,
+    /lib/** mr,
+    # Il codice del ponte, la console, la plancia, l'app web, la cartina, il
+    # marchio e il manifesto (`versioneDelPonte()` legge `/app/config.yaml`).
+    /app/ r,
+    /app/** r,
+
+    # ─── I programmi lanciati con child_process ─────────────────────────
+    # Solo questi due, da `src/rimpicciolisci.js`, per rimpicciolire la foto
+    # 4K di una telecamera. Ereditano questo profilo (`ix`): non possono fare
+    # piu' di quanto possa fare il ponte. Nessuna shell: `spawn` senza `shell`.
+    /usr/bin/djpeg ix,
+    /usr/bin/cjpeg ix,
+
+    # ─── I file di sistema che Node e musl leggono ──────────────────────
+    # Nomi, indirizzi e certificati per le connessioni in uscita.
+    /etc/hosts r,
+    /etc/resolv.conf r,
+    /etc/nsswitch.conf r,
+    /etc/host.conf r,
+    /etc/services r,
+    /etc/protocols r,
+    /etc/passwd r,
+    /etc/group r,
+    /etc/localtime r,
+    # Fusi orari e dati ICU (Intl di Node, su Alpine li prende dal sistema).
+    /usr/share/** r,
+    /etc/ssl/** r,
+    /etc/ca-certificates/** r,
+    /etc/apk/** r,
+    # Node legge la memoria e i processori (libuv), e i limiti del
+    # contenitore dai cgroup per dimensionare l'heap.
+    @{PROC}/** r,
+    /sys/fs/cgroup/** r,
+    /sys/devices/system/cpu/** r,
+    /dev/null rw,
+    /dev/urandom r,
+    /dev/random r,
+    /dev/tty rw,
+    /dev/pts/* rw,
+    /dev/shm/** rwk,
+
+    # ─── Le cartelle dell'add-on ────────────────────────────────────────
+    # `/data`: opzioni, telefoni abbinati, plance, foto caricate, filmati,
+    # identita' — tutto quello che il ponte tiene. `k` per i lucchetti.
+    /data/ r,
+    /data/** rwk,
+    # Node e qualche libreria possono creare file temporanei.
+    /tmp/ r,
+    /tmp/** rwk,
+
+    # ─── La cartella di Home Assistant (`homeassistant_config:rw`) ──────
+    # Si legge solo la `www`: le foto, i loghi e gli sfondi che la Config
+    # dell'app fa scegliere (`index.js`, `fotoDiCasa`, sola lettura). Il
+    # resto della cartella — automazioni, `secrets.yaml`, `.storage` — al
+    # ponte non serve, e qui non si apre nemmeno in lettura.
+    /homeassistant/ r,
+    /homeassistant/www/ rw,
+    /homeassistant/www/** r,
+    # Si scrive una cartella sola: `www/gdahome/`, la pagina che apre le
+    # plance fra le «Plance» di Home Assistant, la cartina, il caricatore, il
+    # foglietto con la versione e il LEGGIMI (`src/plance-in-casa.js`).
+    # `www/` sopra e' `rw` perche' alla prima accensione il ponte la crea
+    # se non c'e' (`mkdirSync(..., { recursive: true })`).
+    /homeassistant/www/gdahome/ rw,
+    /homeassistant/www/gdahome/** rw,
+
+    # Niente /share, /ssl, /backup, /media, /addons: non sono mappate, e il
+    # ponte non le usa.
+  }
+}

@@ -43,7 +43,7 @@ name: GdAHome
 #
 # Quello che non cambia: nel negozio «Aggiorna» compare **solo** se questo
 # numero si alza.
-version: "1.19.3.1"
+version: "1.19.4"
 # L'immagine gia' pronta (la costruisce .github/workflows/immagini-add-on.yml,
 # una per architettura, col numero della versione): Home Assistant la scarica
 # invece di costruirla in casa, e lo scaricamento ha la percentuale.
@@ -125,6 +125,14 @@ homeassistant_api: true
 # e una prova tiene fermo che tutto quello che compare cominci per
 # `www/gdahome/`. Il resto lo guarda e non lo tocca; quello che si
 # carica dall'app finisce nella cartella dell'add-on, non nella loro.
+#
+# Perche' non `addon_config` o `share`, che sarebbero cartelle nostre: Home
+# Assistant serve sotto `/local/…` soltanto la sua `www`, e la pagina
+# d'apertura deve uscire da li', sul suo indirizzo. Messa altrove non la
+# servirebbe nessuno. Tornare a `:ro` vuol dire rinunciare alla voce delle
+# plance nella barra laterale di Home Assistant: e' una scelta possibile, ma e'
+# una funzione in meno, non una stretta gratis. Nessun'altra cartella e'
+# mappata, e una prova (`test/manifesto.test.js`) si rompe se se ne aggiunge una.
 map:
   - homeassistant_config:rw
 
@@ -149,7 +157,8 @@ map:
 # Impostazioni → Componenti aggiuntivi → gdahome → Aggiorna. Chi tiene una
 # copia a mano la aggiorna ricopiando la cartella (`COME_PROVARLA.md`).
 
-# Le domande al Supervisor, e sono tutte letture.
+# Le domande al Supervisor, e sono tutte letture (tranne una, sulle proprie
+# opzioni: qui sotto).
 #
 # Su quali indirizzi si trova questa casa sulla rete locale (`/network/info`),
 # per dirlo ai telefoni quando si abbinano, cosi' in casa l'app va dritta
@@ -160,21 +169,32 @@ map:
 # la macchina.
 hassio_api: true
 
-# Il ruolo con cui il Supervisor ascolta il ponte, e va detto chiaro invece che
-# nascosto: con `manager` il ponte parla al Supervisor come un amministratore.
+# Il ruolo con cui il Supervisor ascolta il ponte: quello di serie, il piu'
+# basso, ed e' scritto lo stesso perche' si veda.
 #
-# Serve all'installatore. Il rapporto che parte verso il suo quadro porta
-# l'elenco degli add-on col loro stato — quale gira, quale parte all'avvio ed
-# e' fermo — e quella lettura (`/addons`) il Supervisor la da' solo a un
-# add-on `manager`: col ruolo di serie si leggono le vie in `/info` e basta.
-# La casa che ha incollato il codice del suo installatore gli ha permesso di
-# vedere tutto questo, e l'installatore deve vederlo tutto. Dove quel codice
-# non c'e' il rapporto non parte, e `/addons` non lo chiede nessuno.
+# Fino alla 1.19.3 qui c'era `manager`, per una lettura sola: l'elenco degli
+# add-on del rapporto all'installatore (`/addons`). Ma `manager` apre molto di
+# piu' — avviare, fermare, disinstallare e ricostruire gli altri add-on,
+# leggerne le opzioni (cioe' le loro password), toccare backup, rete, host e
+# Supervisor — e Home Assistant lo fa pagare con un punto in meno di
+# sicurezza nella scheda dell'add-on. Le stesse informazioni stanno nelle vie
+# in `/info`, che il ruolo di serie apre (`/.+/info` in
+# `supervisor/api/middleware/security.py` del Supervisor): l'elenco in
+# `/supervisor/info`, l'avvio automatico nella scheda di ogni add-on
+# (`/addons/<slug>/info`). Il ferro adesso chiede quelle.
 #
-# Le chiamate al Supervisor stanno tutte in chiaro in `src/ferro.js`. Le
-# opzioni e la scheda di se stesso (`/addons/self/…`) e le icone degli add-on
-# non chiedono questo ruolo: il Supervisor le da' comunque.
-hassio_role: manager
+# Tutte le chiamate del ponte al Supervisor, e perche' il ruolo di serie basta:
+#   /network/info, /core/info, /os/info, /host/info, /supervisor/info,
+#   /addons/<slug>/info        vie in `/info`: il ruolo di serie le apre
+#   /addons/self/info, /addons/self/options
+#                              le proprie: aperte a ogni add-on, senza ruolo
+#   /addons/<slug>/icon|logo   le icone: il Supervisor non guarda nemmeno il segno
+#
+# **Non rialzarlo senza un motivo scritto qui.** Una prova
+# (`test/manifesto.test.js`) si rompe se il ruolo cambia: il ruolo e' fisso nel
+# manifesto, non si cambia mentre l'add-on gira, e quindi vale per tutte le
+# case — anche per le moltissime dove nessun installatore c'e'.
+hassio_role: default
 
 options:
   # ─────────────────────────────────────────────────────────────────────────
