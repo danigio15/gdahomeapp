@@ -20,6 +20,8 @@ _Add-on e app GdAHome._
   pagina.
 - **Riaprendo l'app la plancia si ricollega da sola**: il puntino in alto
   non resta più rosso, e non serve ricaricare la pagina.
+- **Nell'app, il navigatore senza destinazione** segue chi cammina: la
+  freccia e la mappa vanno con te anche a passo lento, in 3D e in 2D.
 - **L'Assistente di casa** dice bene il plurale: «Bagno e altre 4 sono
   aperte. Meglio chiuderle prima.»
 
