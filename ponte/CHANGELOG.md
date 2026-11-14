@@ -10,6 +10,15 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.19.3
+
+_Add-on e app GdAHome._
+
+- **Il logo di GdAHome ovunque**: le icone dell'integrazione in Home
+  Assistant e in HACS, la schermata d'avvio della plancia, il segno in cima
+  a Configurazione, la scritta accanto al logo e i messaggi d'errore della
+  pagina.
+
 ## 1.19.2
 
 _Add-on._
