@@ -572,7 +572,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-6X5RGQQM.js";
+} from "../../chunk-CRG6OXRZ.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -103078,7 +103078,277 @@ var GUIDE = Object.freeze({
     ],
     "consigli": [
       "Aiutanti, automazioni e script non compaiono: non hanno un apparecchio dietro.",
-      "Quando un dispositivo smette di rispondere, in Home compare anche la sua tessera. --- &lt;sub&gt;Manuale aggiornato a GdAHome 1.19.1. Le schermate vengono da una casa di prova: nella tua app vedrai i nomi della tua casa.&lt;/sub&gt;"
+      "Quando un dispositivo smette di rispondere, in Home compare anche la sua tessera. ---"
+    ]
+  }
+});
+var GUIDE_3D = Object.freeze({
+  "0": {
+    "titolo": "Planimetria",
+    "scopo": "Dai alla procedura la forma del piano: da qui vengono muri, porte, finestre e stanze. Si sceglie anche quale piano della casa si sta facendo.",
+    "campi": [
+      "<b>«Il piano»</b>: i tasti dei piani, dal seminterrato al terzo piano.",
+      "<b>«Carica una foto o un PDF della planimetria»</b>: il PDF del catasto va bene così com'è, la scala la legge dal foglio.",
+      "<b>«Carica il disegno DWG»</b>: scala e nomi delle stanze li prende dal disegno.",
+      "<b>«Disegnala qui»</b>: scrivi larghezza e profondità del piano in metri, poi dividi le stanze col «Muro dritto».",
+      "<b>«Dalle foto delle stanze»</b>: fotografi ogni stanza intera e la pianta si fa da sola, misurando le cose di misura nota (forno, WC, condizionatore…).",
+      "<b>«Consigli»</b>: foto dall'alto, foglio intero, buona luce."
+    ],
+    "passi": [
+      {
+        "testo": "Tocca il piano che stai facendo in «Il piano» (di solito «Piano terra»).",
+        "html": "Tocca il piano che stai facendo in «Il piano» (di solito «Piano terra»)."
+      },
+      {
+        "testo": "Premi «Carica una foto o un PDF della planimetria» e scegli il file. Se hai il disegno del tecnico, premi invece «Carica il disegno DWG».",
+        "html": "Premi «Carica una foto o un PDF della planimetria» e scegli il file. Se hai il disegno del tecnico, premi invece «Carica il disegno DWG»."
+      },
+      {
+        "testo": "Aspetta il messaggio «✓ Raddrizzata»: la foto è stata raddrizzata da sola.",
+        "html": "Aspetta il messaggio «✓ Raddrizzata»: la foto è stata raddrizzata da sola."
+      },
+      {
+        "testo": "Premi «Avanti →».",
+        "html": "Premi «Avanti →»."
+      },
+      {
+        "testo": "Senza planimetria: In «Non hai una planimetria?» scrivi le misure esterne del piano, per esempio 12 × 8 metri.",
+        "html": "<b>Senza planimetria</b>: In «Non hai una planimetria?» scrivi le misure esterne del piano, per esempio 12 × 8 metri."
+      },
+      {
+        "testo": "Premi «Disegnala qui», poi al passo dei muri dividi le stanze con «Muro dritto».",
+        "html": "Premi «Disegnala qui», poi al passo dei muri dividi le stanze con «Muro dritto»."
+      }
+    ],
+    "consigli": [
+      "La foto non deve essere dritta e le scritte non danno fastidio: conta che il foglio sia intero e ben illuminato.",
+      "Il PDF del catasto è il modo più preciso: la scala la legge da solo."
+    ]
+  },
+  "1": {
+    "titolo": "Scala",
+    "scopo": "Insegna alla procedura quanto è grande la casa: quanti pixel della foto fanno un metro. Senza la scala giusta le stanze vengono troppo grandi o troppo piccole.",
+    "campi": [
+      "La pianta, su cui si toccano i due estremi di una misura nota.",
+      "«Punti: 0 di 2», che diventa «✓ Due punti scelti».",
+      "La casella «metri» e la riga «1 metro = … pixel della foto».",
+      "Spesso la scala la trova da sola: «✓ Scala trovata dallo spessore dei muri»."
+    ],
+    "passi": [
+      {
+        "testo": "Tocca sulla pianta il primo estremo di una misura che conosci: una quota scritta, un muro intero, una porta (di solito 80 cm).",
+        "html": "Tocca sulla pianta il primo estremo di una misura che conosci: una quota scritta, un muro intero, una porta (di solito 80 cm)."
+      },
+      {
+        "testo": "Tocca il secondo estremo: compare «✓ Due punti scelti».",
+        "html": "Tocca il secondo estremo: compare «✓ Due punti scelti»."
+      },
+      {
+        "testo": "Scrivi nella casella «metri» quanto è lunga (per esempio 12,30).",
+        "html": "Scrivi nella casella «metri» quanto è lunga (per esempio 12,30)."
+      },
+      {
+        "testo": "Premi «Riconosci i muri →».",
+        "html": "Premi «Riconosci i muri →»."
+      }
+    ],
+    "consigli": [
+      "Scegli la misura più lunga che conosci, per esempio un lato intero della casa: l'errore si riduce.",
+      "Se alla fine le stanze hanno superfici strane, torna a «Scala» e rifai la misura."
+    ]
+  },
+  "2": {
+    "titolo": "Muri",
+    "scopo": "La procedura riconosce da sola muri, porte e finestre. Qui controlli il risultato e lo correggi: è il passo che decide quante stanze avrà la casa.",
+    "campi": [
+      "<b>«Muro dritto»</b>: trascina da un punto all'altro e il muro viene dritto.",
+      "<b>«Muro»</b>: trascina per disegnare un muro che divide due stanze unite.",
+      "<b>«Gomma»</b>: trascina per cancellare un pezzo di muro sbagliato.",
+      "<b>«Porta»</b>: tocca un muro per aprirci una porta (80 cm).",
+      "<b>«Finestra»</b>: tocca un muro per aprirci una finestra (120 cm).",
+      "La legenda dei colori: muro, porta, finestra, stanza."
+    ],
+    "passi": [
+      {
+        "testo": "Guarda la pianta colorata: ogni colore è una stanza.",
+        "html": "Guarda la pianta colorata: ogni colore è una stanza."
+      },
+      {
+        "testo": "Se due stanze sono unite, scegli «Muro dritto» e trascina il dito dove passa il muro che manca.",
+        "html": "Se due stanze sono unite, scegli «Muro dritto» e trascina il dito dove passa il muro che manca."
+      },
+      {
+        "testo": "Se c'è un muro di troppo, scegli «Gomma» e trascinala sopra.",
+        "html": "Se c'è un muro di troppo, scegli «Gomma» e trascinala sopra."
+      },
+      {
+        "testo": "Se manca una porta o una finestra, scegli «Porta» o «Finestra» e tocca il muro.",
+        "html": "Se manca una porta o una finestra, scegli «Porta» o «Finestra» e tocca il muro."
+      },
+      {
+        "testo": "Premi «Avanti →».",
+        "html": "Premi «Avanti →»."
+      }
+    ],
+    "consigli": [
+      "Le strisce sottili ai bordi della pianta sono di solito il margine del foglio: al passo dopo le segni come «fuori casa» con 🌳.",
+      "Una porta mancante fra due stanze non le unisce: è solo un buco nel muro."
+    ]
+  },
+  "3": {
+    "titolo": "Stanze",
+    "scopo": "Dai un nome a ogni stanza. Se in Home Assistant hai le aree, la procedura le propone: così luci e sensori di quell'area finiscono nella stanza giusta.",
+    "campi": [
+      "Una riga per stanza, con il suo colore, la superficie in m² e i tasti per il nome.",
+      "Il tasto 🌳 per dire che è fuori casa: le sue aperture diventano finestre."
+    ],
+    "passi": [
+      {
+        "testo": "Per ogni stanza scegli il nome da «— scegli un nome —», oppure scrivilo in «o scrivi un nome».",
+        "html": "Per ogni stanza scegli il nome da «— scegli un nome —», oppure scrivilo in «o scrivi un nome»."
+      },
+      {
+        "testo": "Tocca 🌳 sulle stanze che sono fuori: cortile, terrazzo, strisce di margine.",
+        "html": "Tocca 🌳 sulle stanze che sono fuori: cortile, terrazzo, strisce di margine."
+      },
+      {
+        "testo": "Controlla le superfici: se sono tutte troppo grandi o piccole, torna alla «Scala».",
+        "html": "Controlla le superfici: se sono tutte troppo grandi o piccole, torna alla «Scala»."
+      },
+      {
+        "testo": "Premi «Avanti →».",
+        "html": "Premi «Avanti →»."
+      }
+    ],
+    "consigli": [
+      "Usa gli stessi nomi delle aree di Home Assistant: ritroverai i dispositivi già al loro posto."
+    ]
+  },
+  "4": {
+    "titolo": "Foto stanze",
+    "scopo": "Dalle foto la procedura riconosce arredi e dispositivi (divano, letto, punti luce, telecamere, finestre…), con il loro colore e il loro posto. È facoltativo: puoi saltarlo e arredare dopo, in 3D.",
+    "campi": [
+      "I tasti delle stanze, con il numero di foto già messe.",
+      "«Aggiungi foto di …» per ogni stanza.",
+      "Per ogni foto: <b>«Verso dove guardavi?»</b>, cioè quale parete si vede di fronte (in alto nella pianta = ↑); gli oggetti riconosciuti, ognuno con ⚡ per collegarlo a un'entità e ✕ per toglierlo.",
+      "Se il riconoscimento automatico non è disponibile: «segna tu arredi e dispositivi toccandoli nella foto»."
+    ],
+    "passi": [
+      {
+        "testo": "Tocca una stanza.",
+        "html": "Tocca una stanza."
+      },
+      {
+        "testo": "Premi «Aggiungi foto di …» e scegli una foto della stanza intera.",
+        "html": "Premi «Aggiungi foto di …» e scegli una foto della stanza intera."
+      },
+      {
+        "testo": "Indica «Verso dove guardavi?».",
+        "html": "Indica «Verso dove guardavi?»."
+      },
+      {
+        "testo": "Controlla gli oggetti trovati. Per aggiungerne uno: «Scegli cosa e toccalo nella foto».",
+        "html": "Controlla gli oggetti trovati. Per aggiungerne uno: «Scegli cosa e toccalo nella foto»."
+      },
+      {
+        "testo": "Sugli oggetti che sono dispositivi (luci, telecamere…) premi ⚡ e scegli l'entità di Home Assistant.",
+        "html": "Sugli oggetti che sono dispositivi (luci, telecamere…) premi ⚡ e scegli l'entità di Home Assistant."
+      },
+      {
+        "testo": "Ripeti per le altre stanze, poi premi «Avanti →».",
+        "html": "Ripeti per le altre stanze, poi premi «Avanti →»."
+      }
+    ],
+    "consigli": [
+      "Una foto dall'angolo della stanza, che prenda due pareti, funziona meglio.",
+      "Puoi saltare questo passo: i dispositivi li aggiungi anche al passo dopo, e gli arredi in 3D con «Arreda»."
+    ]
+  },
+  "5": {
+    "titolo": "Dispositivi",
+    "scopo": "Collega ogni dispositivo della casa 3D alla sua entità di Home Assistant: è quello che fa accendere la luce in 3D quando è accesa davvero, e che permette di comandarla con un tocco.",
+    "campi": [
+      "«Dispositivi ed entità»: i dispositivi stanza per stanza, con il contatore «collegati · mancanti».",
+      "Per ognuno, la tendina dell'entità o la casella «o scrivi l'entità (es. light.salone)».",
+      "«Aggiungi un dispositivo»: Punto luce, Telecamera, Tapparella, Sensore finestra, Sensore porta, Sensore movimento, Sensore presenza, Termometro, Climatizzatore, Termostato, Rilevatore fumo, Sensore allagamento, Presa, TV, Altoparlante, Sirena."
+    ],
+    "passi": [
+      {
+        "testo": "Per ogni dispositivo già trovato, scegli l'entità dalla tendina.",
+        "html": "Per ogni dispositivo già trovato, scegli l'entità dalla tendina."
+      },
+      {
+        "testo": "Per aggiungerne uno: in «Aggiungi un dispositivo» scegli che cos'è e la stanza.",
+        "html": "Per aggiungerne uno: in «Aggiungi un dispositivo» scegli che cos'è e la stanza."
+      },
+      {
+        "testo": "Premi «Aggiungi senza foto»: il dispositivo va dove si monta di solito (soffitto, muro, angolo, finestra).",
+        "html": "Premi «Aggiungi senza foto»: il dispositivo va dove si monta di solito (soffitto, muro, angolo, finestra)."
+      },
+      {
+        "testo": "Scegli la sua entità.",
+        "html": "Scegli la sua entità."
+      },
+      {
+        "testo": "Premi «Avanti →».",
+        "html": "Premi «Avanti →»."
+      }
+    ],
+    "consigli": [
+      "Il posto esatto non conta adesso: in 3D lo sposti dove vuoi.",
+      "Un dispositivo senza entità si vede in 3D, ma non si accende e non si comanda."
+    ]
+  },
+  "6": {
+    "titolo": "Esterno",
+    "scopo": "Decide come si vede la casa da fuori: villa o palazzo, il tetto e i colori. A sinistra vedi subito l'anteprima.",
+    "campi": [
+      "«Com'è da fuori»: «🏡 Villa» o «🏢 Palazzo». Per il palazzo si scelgono anche quanti piani ha e a che piano è la tua casa.",
+      "«Tetto»: «A falde» o «Piano».",
+      "«Foto della facciata»: con una foto, «Scegli cosa, poi toccalo nella foto per prenderne il colore».",
+      "«Senza foto scegli i colori qui sotto»: Facciata, Persiane, Tetto."
+    ],
+    "passi": [
+      {
+        "testo": "Scegli «🏡 Villa» o «🏢 Palazzo».",
+        "html": "Scegli «🏡 Villa» o «🏢 Palazzo»."
+      },
+      {
+        "testo": "Scegli il «Tetto».",
+        "html": "Scegli il «Tetto»."
+      },
+      {
+        "testo": "Scegli i colori: dalla foto con «Aggiungi una foto da fuori», oppure toccando i pallini sotto Facciata, Persiane e Tetto.",
+        "html": "Scegli i colori: dalla foto con «Aggiungi una foto da fuori», oppure toccando i pallini sotto Facciata, Persiane e Tetto."
+      },
+      {
+        "testo": "Premi «Crea la casa →».",
+        "html": "Premi «Crea la casa →»."
+      }
+    ],
+    "consigli": []
+  },
+  "7": {
+    "titolo": "Casa 3D",
+    "scopo": "Controlli il riepilogo del piano e decidi: salvare e aprire la casa, aggiungere un altro piano, oppure rifare questo.",
+    "campi": [],
+    "passi": [
+      {
+        "testo": "Controlla il riepilogo: se manca qualcosa, torna indietro con «← Indietro».",
+        "html": "Controlla il riepilogo: se manca qualcosa, torna indietro con «← Indietro»."
+      },
+      {
+        "testo": "Se la casa ha altri piani, premi «➕ Aggiungi un altro piano» e ripeti i passi per quel piano.",
+        "html": "Se la casa ha altri piani, premi «➕ Aggiungi un altro piano» e ripeti i passi per quel piano."
+      },
+      {
+        "testo": "Quando hai finito, premi «🏠 Salva e apri la casa in 3D».",
+        "html": "Quando hai finito, premi «🏠 Salva e apri la casa in 3D»."
+      }
+    ],
+    "consigli": [
+      "Puoi sempre tornare qui: in 3D c'è «🏗️ Crea / modifica la casa».",
+      "In 3D sposti, ruoti e aggiungi quello che manca."
     ]
   }
 });
@@ -103089,6 +103359,10 @@ function guidaDi(scheda9) {
   const chiave2 = pulito56(scheda9);
   if (!chiave2) return null;
   return Object.prototype.hasOwnProperty.call(GUIDE, chiave2) ? GUIDE[chiave2] : null;
+}
+function guida3dDi(passo) {
+  const chiave2 = String(Number.isInteger(passo) ? passo : pulito56(passo));
+  return Object.prototype.hasOwnProperty.call(GUIDE_3D, chiave2) ? GUIDE_3D[chiave2] : null;
 }
 var ICONE = /[\p{Extended_Pictographic}\u{FE0F}\u{200D}]/gu;
 function normalizza4(testo5) {
@@ -103183,7 +103457,10 @@ var state85 = root[KEY89] ||= {
   aperta: "",
   // "", "scheda" o "percorso"
   passo: -1,
-  nonTrovato: -1
+  nonTrovato: -1,
+  contesto: "config",
+  // "config" o "3d", la procedura «Crea la tua casa»
+  passo3d: -1
 };
 var RIGA = "dm-guida-riga";
 var FOGLIO = "dm-guida-foglio";
@@ -103214,6 +103491,20 @@ function segnaFatta2(scheda9, si) {
     root.localStorage?.setItem(MEMORIA, JSON.stringify([...insieme3]));
   } catch (_errore) {
   }
+}
+var PROCEDURA_3D = "dm-c3c";
+var statoDella3D = () => root.__DASHBOARDMODERN_CASA3D_CREA__?.S || null;
+var passo3dAperto = () => {
+  const passo = Number(statoDella3D()?.passo);
+  return Number.isInteger(passo) ? passo : 0;
+};
+function guidaCorrente() {
+  if (state85.contesto === "3d") return guida3dDi(passo3dAperto());
+  return guidaDi(schedaAperta3());
+}
+function corpoCorrente() {
+  if (state85.contesto === "3d") return doc.getElementById(PROCEDURA_3D);
+  return doc.getElementById("ed-body");
 }
 function spegniLaLuce() {
   doc?.querySelectorAll?.(`.${LUCE}`).forEach((una) => una.classList.remove(LUCE));
@@ -103266,10 +103557,12 @@ function chiudi2() {
   spegniLaLuce();
   doc?.getElementById?.(FOGLIO)?.remove();
   doc?.getElementById?.("editor-modal")?.classList?.remove("dm-guida-con-foglio");
+  doc?.documentElement?.classList?.remove("dm-guida-aperta");
 }
 function htmlDellaScheda(scheda9) {
-  const guida = guidaDi(scheda9);
-  const nome = esc(nomeDellaScheda2(scheda9));
+  const in3d = state85.contesto === "3d";
+  const guida = guidaCorrente();
+  const nome = in3d ? esc(`${passo3dAperto() + 1}. ${guida?.titolo || ""}`) : esc(nomeDellaScheda2(scheda9));
   const avvisoLingua = activeLocale() !== "it" ? `<p class="dm-guida-nota">${esc(t("", "This guide is written in Italian for now."))}</p>` : "";
   if (!guida) {
     return `<div class="dm-guida-testa"><b>📖 ${nome}</b><button type="button" data-guida="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
@@ -103294,13 +103587,13 @@ function htmlDellaScheda(scheda9) {
         <span>${state85.passo >= 0 ? esc(t(`Passo ${state85.passo + 1} di ${totale}`, `Step ${state85.passo + 1} of ${totale}`)) : esc(t(`${totale} passi`, `${totale} steps`))}</span>
         <button type="button" data-guida="avanti" ${state85.passo >= totale - 1 ? "disabled" : ""}>${state85.passo < 0 ? esc(t("Comincia", "Start")) : esc(t("Avanti", "Next"))} ▶</button>
       </div>` : "";
-  return `<div class="dm-guida-testa"><b>📖 ${esc(t("Come si configura", "How to set up"))}: ${nome}</b><button type="button" data-guida="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
+  return `<div class="dm-guida-testa"><b>📖 ${in3d ? esc(t("Come si fa", "How to do it")) : esc(t("Come si configura", "How to set up"))}: ${nome}</b><button type="button" data-guida="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
     ${avvisoLingua}
     <p class="dm-guida-scopo">${guida.scopo}</p>
     ${naviga}
     <ol class="dm-guida-passi">${passi2}</ol>
     ${campi}${consigli}
-    <button type="button" class="dm-guida-btn dm-guida-tenue" data-guida="percorso">🧭 ${esc(t("Da dove comincio", "Where do I start"))}</button>`;
+    ${in3d ? "" : `<button type="button" class="dm-guida-btn dm-guida-tenue" data-guida="percorso">🧭 ${esc(t("Da dove comincio", "Where do I start"))}</button>`}`;
 }
 function htmlDelPercorso() {
   const gia = fatte();
@@ -103323,7 +103616,7 @@ function htmlDelPercorso() {
     <ol class="dm-guida-passi">${righe4}</ol>`;
 }
 function disegna7() {
-  const guscio3 = doc?.querySelector?.("#editor-modal .ed-shell");
+  const guscio3 = state85.contesto === "3d" ? doc?.getElementById?.(PROCEDURA_3D) : doc?.querySelector?.("#editor-modal .ed-shell");
   if (!guscio3 || !state85.aperta) {
     doc?.getElementById?.(FOGLIO)?.remove();
     return;
@@ -103339,16 +103632,18 @@ function disegna7() {
     foglio6.addEventListener("change", alTocco6);
     doc.body.append(foglio6);
   }
+  foglio6.classList.toggle("dm-guida-3d", state85.contesto === "3d");
+  doc.documentElement.classList.add("dm-guida-aperta");
   foglio6.innerHTML = state85.aperta === "percorso" ? htmlDelPercorso() : htmlDellaScheda(schedaAperta3());
-  doc.getElementById("editor-modal")?.classList.add("dm-guida-con-foglio");
+  if (state85.contesto === "config") doc.getElementById("editor-modal")?.classList.add("dm-guida-con-foglio");
 }
 function mostraIlPasso(indice) {
-  const guida = guidaDi(schedaAperta3());
+  const guida = guidaCorrente();
   if (!guida) return;
   state85.passo = Math.max(0, Math.min(indice, guida.passi.length - 1));
   state85.nonTrovato = -1;
   disegna7();
-  const corpo6 = doc.getElementById("ed-body");
+  const corpo6 = corpoCorrente();
   const parole5 = paroleDelPasso(guida.passi[state85.passo]);
   const campo6 = trovaIlCampo(corpo6, parole5);
   state85.nonTrovato = accendi(campo6, state85.passo + 1) || !parole5.length ? -1 : state85.passo;
@@ -103400,7 +103695,8 @@ function ensureRigaDellaGuida() {
     riga5.addEventListener("click", (evento) => {
       const quale = evento.target?.closest?.("[data-apri]")?.dataset?.apri;
       if (!quale) return;
-      if (state85.aperta === quale) return chiudi2();
+      if (state85.aperta === quale && state85.contesto === "config") return chiudi2();
+      state85.contesto = "config";
       state85.aperta = quale;
       state85.passo = -1;
       spegniLaLuce();
@@ -103415,14 +103711,61 @@ function ensureRigaDellaGuida() {
   }
   return true;
 }
+function ensureTastoDella3D() {
+  const procedura2 = doc?.getElementById?.(PROCEDURA_3D);
+  if (!procedura2) {
+    if (state85.contesto === "3d") {
+      chiudi2();
+      state85.contesto = "config";
+    }
+    return false;
+  }
+  installaLoStile5();
+  const testa2 = procedura2.querySelector(".c3c-testa");
+  if (testa2 && !testa2.querySelector(".dm-guida-3d-tasto")) {
+    const tasto5 = doc.createElement("button");
+    tasto5.type = "button";
+    tasto5.className = "dm-guida-3d-tasto";
+    tasto5.textContent = `📖 ${t("Come si fa", "How to do it")}`;
+    tasto5.addEventListener("click", () => {
+      if (state85.aperta && state85.contesto === "3d") return chiudi2();
+      state85.contesto = "3d";
+      state85.aperta = "scheda";
+      state85.passo = -1;
+      state85.passo3d = passo3dAperto();
+      spegniLaLuce();
+      disegna7();
+    });
+    const chiudiLaProcedura2 = testa2.querySelector(".c3c-chiudi");
+    if (chiudiLaProcedura2) chiudiLaProcedura2.before(tasto5);
+    else testa2.append(tasto5);
+  }
+  const barra3 = procedura2.querySelector(".c3c-passi");
+  if (barra3 && !barra3.__dmGuidaGuarda && root.MutationObserver) {
+    barra3.__dmGuidaGuarda = new root.MutationObserver(() => {
+      if (state85.contesto !== "3d" || !state85.aperta) return;
+      const ora8 = passo3dAperto();
+      if (ora8 === state85.passo3d) return;
+      state85.passo3d = ora8;
+      state85.passo = -1;
+      spegniLaLuce();
+      disegna7();
+    });
+    barra3.__dmGuidaGuarda.observe(barra3, { childList: true, subtree: true });
+  }
+  return true;
+}
 function installaLoStile5() {
   installStyle(
     STILE15,
     `
 .${RIGA}{display:flex;gap:8px;flex-wrap:wrap;padding:6px 0 2px}
 .${RIGA} button{flex:1 1 auto;border:1px solid rgba(124,58,237,.35);background:rgba(124,58,237,.08);color:#6d28d9;border-radius:999px;padding:7px 12px;font:600 13px/1.2 inherit;cursor:pointer}
-.${FOGLIO}{position:fixed;z-index:2147483000;background:var(--card-bg,#fff);color:var(--text,#0f172a);box-shadow:0 -6px 28px rgba(15,23,42,.28);overflow:auto;font-size:14px;line-height:1.45;
+.${FOGLIO}{position:fixed;z-index:2147483300;background:var(--card-bg,#fff);color:var(--text,#0f172a);box-shadow:0 -6px 28px rgba(15,23,42,.28);overflow:auto;font-size:14px;line-height:1.45;
   left:0;right:0;bottom:0;max-height:46vh;border-radius:18px 18px 0 0;padding:12px 16px 18px}
+.dm-guida-3d-tasto{border:1px solid rgba(124,58,237,.35);background:rgba(124,58,237,.1);color:#6d28d9;border-radius:999px;padding:8px 14px;font:600 13px/1.2 inherit;cursor:pointer;white-space:nowrap;margin-left:8px}
+@media (max-width:899px){html.dm-guida-aperta #ed-body,html.dm-guida-aperta #dm-c3c .c3c-pagina{padding-bottom:50vh !important}}
+@media (min-width:900px){.${FOGLIO}.dm-guida-3d{left:16px;right:auto;top:auto;bottom:16px;width:380px;max-height:70vh;border-radius:18px;box-shadow:0 8px 30px rgba(15,23,42,.35)}}
 @media (min-width:900px){.${FOGLIO}{left:auto;top:0;bottom:0;width:380px;max-height:none;border-radius:0;box-shadow:-6px 0 28px rgba(15,23,42,.22)}
   #editor-modal.dm-guida-con-foglio .ed-shell{margin-right:380px}}
 .dm-guida-testa{display:flex;align-items:center;justify-content:space-between;gap:8px;position:sticky;top:-12px;background:inherit;padding:4px 0 6px;font-size:15px}
@@ -103460,8 +103803,14 @@ function installGuidaDelConfigSection() {
   state85.installed = true;
   installaLoStile5();
   ensureRigaDellaGuida();
+  if (root.MutationObserver && doc.body) {
+    new root.MutationObserver(() => senzaCadere(ensureTastoDella3D, "guida-3d")).observe(doc.body, {
+      childList: true
+    });
+  }
   onEditorRedraw("__dmGuidaDelConfig", () => {
     ensureRigaDellaGuida();
+    if (state85.contesto === "3d") return;
     if (!doc.getElementById("editor-modal")) {
       chiudi2();
       return;

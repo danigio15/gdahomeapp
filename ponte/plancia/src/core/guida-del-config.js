@@ -19,7 +19,7 @@
  *  - l'ordine in cui conviene configurare una casa nuova (`PERCORSO`).
  */
 
-import { GUIDE } from "./guida-del-config-testi.js";
+import { GUIDE, GUIDE_3D } from "./guida-del-config-testi.js";
 
 const pulito = (valore) => String(valore ?? "").trim();
 
@@ -28,6 +28,18 @@ export function guidaDi(scheda) {
   const chiave = pulito(scheda);
   if (!chiave) return null;
   return Object.prototype.hasOwnProperty.call(GUIDE, chiave) ? GUIDE[chiave] : null;
+}
+
+/** La guida di un passo di «Crea la tua casa» (0 = Planimetria … 7 = Casa
+ * 3D), dal capitolo 28 del manuale, o `null`. */
+export function guida3dDi(passo) {
+  const chiave = String(Number.isInteger(passo) ? passo : pulito(passo));
+  return Object.prototype.hasOwnProperty.call(GUIDE_3D, chiave) ? GUIDE_3D[chiave] : null;
+}
+
+/** I passi della Casa 3D che hanno una guida. */
+export function passi3dConGuida() {
+  return Object.keys(GUIDE_3D).map(Number);
 }
 
 /** Le linguette che hanno una guida, nell'ordine del manuale. */

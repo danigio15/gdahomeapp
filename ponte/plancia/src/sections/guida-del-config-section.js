@@ -24,6 +24,7 @@
  */
 import {
   eLaParola,
+  guida3dDi,
   guidaDi,
   paroleDelPasso,
   percorsoPer,
@@ -46,6 +47,8 @@ const state = (root[KEY] ||= {
   aperta: "", // "", "scheda" o "percorso"
   passo: -1,
   nonTrovato: -1,
+  contesto: "config", // "config" o "3d", la procedura «Crea la tua casa»
+  passo3d: -1,
 });
 
 const RIGA = "dm-guida-riga";
@@ -88,6 +91,25 @@ function segnaFatta(scheda, si) {
   } catch (_errore) {
     /* Senza memoria la spunta non resta: pazienza. */
   }
+}
+
+/* ── Dove si e': il Config o la procedura della Casa 3D ─────────────────── */
+
+const PROCEDURA_3D = "dm-c3c";
+const statoDella3D = () => root.__DASHBOARDMODERN_CASA3D_CREA__?.S || null;
+const passo3dAperto = () => {
+  const passo = Number(statoDella3D()?.passo);
+  return Number.isInteger(passo) ? passo : 0;
+};
+
+function guidaCorrente() {
+  if (state.contesto === "3d") return guida3dDi(passo3dAperto());
+  return guidaDi(schedaAperta());
+}
+
+function corpoCorrente() {
+  if (state.contesto === "3d") return doc.getElementById(PROCEDURA_3D);
+  return doc.getElementById("ed-body");
 }
 
 /* ── Accendere il campo ─────────────────────────────────────────────────── */
@@ -155,11 +177,15 @@ function chiudi() {
   spegniLaLuce();
   doc?.getElementById?.(FOGLIO)?.remove();
   doc?.getElementById?.("editor-modal")?.classList?.remove("dm-guida-con-foglio");
+  doc?.documentElement?.classList?.remove("dm-guida-aperta");
 }
 
 function htmlDellaScheda(scheda) {
-  const guida = guidaDi(scheda);
-  const nome = esc(nomeDellaScheda(scheda));
+  const in3d = state.contesto === "3d";
+  const guida = guidaCorrente();
+  const nome = in3d
+    ? esc(`${passo3dAperto() + 1}. ${guida?.titolo || ""}`)
+    : esc(nomeDellaScheda(scheda));
   const avvisoLingua =
     activeLocale() !== "it"
       ? `<p class="dm-guida-nota">${esc(t("", "This guide is written in Italian for now."))}</p>`
@@ -199,13 +225,13 @@ function htmlDellaScheda(scheda) {
         <button type="button" data-guida="avanti" ${state.passo >= totale - 1 ? "disabled" : ""}>${state.passo < 0 ? esc(t("Comincia", "Start")) : esc(t("Avanti", "Next"))} ▶</button>
       </div>`
     : "";
-  return `<div class="dm-guida-testa"><b>📖 ${esc(t("Come si configura", "How to set up"))}: ${nome}</b><button type="button" data-guida="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
+  return `<div class="dm-guida-testa"><b>📖 ${in3d ? esc(t("Come si fa", "How to do it")) : esc(t("Come si configura", "How to set up"))}: ${nome}</b><button type="button" data-guida="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
     ${avvisoLingua}
     <p class="dm-guida-scopo">${guida.scopo}</p>
     ${naviga}
     <ol class="dm-guida-passi">${passi}</ol>
     ${campi}${consigli}
-    <button type="button" class="dm-guida-btn dm-guida-tenue" data-guida="percorso">🧭 ${esc(t("Da dove comincio", "Where do I start"))}</button>`;
+    ${in3d ? "" : `<button type="button" class="dm-guida-btn dm-guida-tenue" data-guida="percorso">🧭 ${esc(t("Da dove comincio", "Where do I start"))}</button>`}`;
 }
 
 function htmlDelPercorso() {
@@ -232,7 +258,10 @@ function htmlDelPercorso() {
 }
 
 function disegna() {
-  const guscio = doc?.querySelector?.("#editor-modal .ed-shell");
+  const guscio =
+    state.contesto === "3d"
+      ? doc?.getElementById?.(PROCEDURA_3D)
+      : doc?.querySelector?.("#editor-modal .ed-shell");
   if (!guscio || !state.aperta) {
     doc?.getElementById?.(FOGLIO)?.remove();
     return;
@@ -250,17 +279,22 @@ function disegna() {
      * dire fisso a lei, e il foglio scorrerebbe via con la scheda. */
     doc.body.append(foglio);
   }
+  foglio.classList.toggle("dm-guida-3d", state.contesto === "3d");
+  /* Sul telefono il foglio sta nella metà bassa: chi gli sta sotto deve poter
+   * scorrere più su, se no i tasti in fondo («Avanti», «Salva») restano
+   * coperti. Il posto in più lo dà questa classe, e solo mentre è aperto. */
+  doc.documentElement.classList.add("dm-guida-aperta");
   foglio.innerHTML = state.aperta === "percorso" ? htmlDelPercorso() : htmlDellaScheda(schedaAperta());
-  doc.getElementById("editor-modal")?.classList.add("dm-guida-con-foglio");
+  if (state.contesto === "config") doc.getElementById("editor-modal")?.classList.add("dm-guida-con-foglio");
 }
 
 function mostraIlPasso(indice) {
-  const guida = guidaDi(schedaAperta());
+  const guida = guidaCorrente();
   if (!guida) return;
   state.passo = Math.max(0, Math.min(indice, guida.passi.length - 1));
   state.nonTrovato = -1;
   disegna();
-  const corpo = doc.getElementById("ed-body");
+  const corpo = corpoCorrente();
   const parole = paroleDelPasso(guida.passi[state.passo]);
   const campo = trovaIlCampo(corpo, parole);
   /* Un passo che non nomina nessun campo («Scegli la stanza.») non ha niente
@@ -318,7 +352,8 @@ export function ensureRigaDellaGuida() {
     riga.addEventListener("click", (evento) => {
       const quale = evento.target?.closest?.("[data-apri]")?.dataset?.apri;
       if (!quale) return;
-      if (state.aperta === quale) return chiudi();
+      if (state.aperta === quale && state.contesto === "config") return chiudi();
+      state.contesto = "config";
       state.aperta = quale;
       state.passo = -1;
       spegniLaLuce();
@@ -337,14 +372,67 @@ export function ensureRigaDellaGuida() {
   return true;
 }
 
+/* ── Il tasto dentro «Crea la tua casa» ─────────────────────────────────── */
+
+/* La procedura della Casa 3D si disegna da sé, a tutto schermo, e cambia
+ * passo riscrivendo il suo corpo: la testata resta. Il tasto sta lì, accanto
+ * alla ✕, e la guida segue il passo guardando la barra dei passi. */
+export function ensureTastoDella3D() {
+  const procedura = doc?.getElementById?.(PROCEDURA_3D);
+  if (!procedura) {
+    if (state.contesto === "3d") {
+      chiudi();
+      state.contesto = "config";
+    }
+    return false;
+  }
+  installaLoStile();
+  const testa = procedura.querySelector(".c3c-testa");
+  if (testa && !testa.querySelector(".dm-guida-3d-tasto")) {
+    const tasto = doc.createElement("button");
+    tasto.type = "button";
+    tasto.className = "dm-guida-3d-tasto";
+    tasto.textContent = `📖 ${t("Come si fa", "How to do it")}`;
+    tasto.addEventListener("click", () => {
+      if (state.aperta && state.contesto === "3d") return chiudi();
+      state.contesto = "3d";
+      state.aperta = "scheda";
+      state.passo = -1;
+      state.passo3d = passo3dAperto();
+      spegniLaLuce();
+      disegna();
+    });
+    const chiudiLaProcedura = testa.querySelector(".c3c-chiudi");
+    if (chiudiLaProcedura) chiudiLaProcedura.before(tasto);
+    else testa.append(tasto);
+  }
+  const barra = procedura.querySelector(".c3c-passi");
+  if (barra && !barra.__dmGuidaGuarda && root.MutationObserver) {
+    barra.__dmGuidaGuarda = new root.MutationObserver(() => {
+      if (state.contesto !== "3d" || !state.aperta) return;
+      const ora = passo3dAperto();
+      if (ora === state.passo3d) return;
+      state.passo3d = ora;
+      state.passo = -1;
+      spegniLaLuce();
+      disegna();
+    });
+    barra.__dmGuidaGuarda.observe(barra, { childList: true, subtree: true });
+  }
+  return true;
+}
+
 function installaLoStile() {
   installStyle(
     STILE,
     `
 .${RIGA}{display:flex;gap:8px;flex-wrap:wrap;padding:6px 0 2px}
 .${RIGA} button{flex:1 1 auto;border:1px solid rgba(124,58,237,.35);background:rgba(124,58,237,.08);color:#6d28d9;border-radius:999px;padding:7px 12px;font:600 13px/1.2 inherit;cursor:pointer}
-.${FOGLIO}{position:fixed;z-index:2147483000;background:var(--card-bg,#fff);color:var(--text,#0f172a);box-shadow:0 -6px 28px rgba(15,23,42,.28);overflow:auto;font-size:14px;line-height:1.45;
+.${FOGLIO}{position:fixed;z-index:2147483300;background:var(--card-bg,#fff);color:var(--text,#0f172a);box-shadow:0 -6px 28px rgba(15,23,42,.28);overflow:auto;font-size:14px;line-height:1.45;
   left:0;right:0;bottom:0;max-height:46vh;border-radius:18px 18px 0 0;padding:12px 16px 18px}
+.dm-guida-3d-tasto{border:1px solid rgba(124,58,237,.35);background:rgba(124,58,237,.1);color:#6d28d9;border-radius:999px;padding:8px 14px;font:600 13px/1.2 inherit;cursor:pointer;white-space:nowrap;margin-left:8px}
+@media (max-width:899px){html.dm-guida-aperta #ed-body,html.dm-guida-aperta #dm-c3c .c3c-pagina{padding-bottom:50vh !important}}
+@media (min-width:900px){.${FOGLIO}.dm-guida-3d{left:16px;right:auto;top:auto;bottom:16px;width:380px;max-height:70vh;border-radius:18px;box-shadow:0 8px 30px rgba(15,23,42,.35)}}
 @media (min-width:900px){.${FOGLIO}{left:auto;top:0;bottom:0;width:380px;max-height:none;border-radius:0;box-shadow:-6px 0 28px rgba(15,23,42,.22)}
   #editor-modal.dm-guida-con-foglio .ed-shell{margin-right:380px}}
 .dm-guida-testa{display:flex;align-items:center;justify-content:space-between;gap:8px;position:sticky;top:-12px;background:inherit;padding:4px 0 6px;font-size:15px}
@@ -383,11 +471,19 @@ export function installGuidaDelConfigSection() {
   state.installed = true;
   installaLoStile();
   ensureRigaDellaGuida();
+  /* La procedura della Casa 3D arriva e se ne va come figlia della pagina:
+   * basta guardare i figli diretti, senza scendere. */
+  if (root.MutationObserver && doc.body) {
+    new root.MutationObserver(() => senzaCadere(ensureTastoDella3D, "guida-3d")).observe(doc.body, {
+      childList: true,
+    });
+  }
   /* A ogni giro del Config — una scheda nuova, un salvataggio — la riga si
    * rimette al suo posto e il foglio, se è aperto, diventa la guida della
    * scheda di adesso. */
   onEditorRedraw("__dmGuidaDelConfig", () => {
     ensureRigaDellaGuida();
+    if (state.contesto === "3d") return;
     if (!doc.getElementById("editor-modal")) {
       chiudi();
       return;

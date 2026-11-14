@@ -7,21 +7,23 @@ import test from "node:test";
 
 import {
   eLaParola,
+  guida3dDi,
   guidaDi,
   normalizza,
   paroleDelPasso,
   PERCORSO,
+  passi3dConGuida,
   percorsoPer,
   schedeConGuida,
 } from "../plancia/src/core/guida-del-config.js";
 import { SCHEDE } from "../plancia/src/core/alberatura-del-config.js";
-import { ilFile, leGuide } from "../../strumenti/guida-dal-manuale.mjs";
+import { ilFile, tutteLeGuide } from "../../strumenti/guida-dal-manuale.mjs";
 
 const MANUALE = new URL("../../docs/MANUALE.md", import.meta.url);
 const TESTI = new URL("../plancia/src/core/guida-del-config-testi.js", import.meta.url);
 
 test("i testi della guida sono quelli del manuale, rifatti dallo script", () => {
-  const atteso = ilFile(leGuide(readFileSync(MANUALE, "utf8")));
+  const atteso = ilFile(tutteLeGuide(readFileSync(MANUALE, "utf8")));
   assert.equal(
     readFileSync(TESTI, "utf8"),
     atteso,
@@ -80,4 +82,21 @@ test("il percorso porta solo a schede che ci sono", () => {
     percorsoPer(["visib", "luci"]).map((p) => p.scheda),
     ["visib", "luci"],
   );
+});
+
+test("ogni passo di «Crea la tua casa» ha la sua guida", () => {
+  /* Gli otto passi della procedura della Casa 3D, nell'ordine della barra. */
+  assert.deepEqual(passi3dConGuida(), [0, 1, 2, 3, 4, 5, 6, 7]);
+  for (const passo of passi3dConGuida()) {
+    const guida = guida3dDi(passo);
+    assert.ok(guida.scopo.length > 20, `passo ${passo}: manca «A cosa serve»`);
+    assert.ok(guida.passi.length > 0, `passo ${passo}: mancano i passi`);
+    assert.ok(
+      guida.passi.some((p) => paroleDelPasso(p).length),
+      `passo ${passo}: nessun passo da mostrare`,
+    );
+  }
+  assert.equal(guida3dDi(0).titolo, "Planimetria");
+  assert.equal(guida3dDi(8), null);
+  assert.equal(guida3dDi("x"), null);
 });

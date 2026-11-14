@@ -76,16 +76,20 @@ function elementi(righe, numerato) {
   return fuori;
 }
 
-/** Il capitolo 27, scheda per scheda. */
-export function leGuide(manuale) {
-  const capitolo = manuale.split(/^## 27\. /m)[1];
-  if (!capitolo) throw new Error("nel manuale non c'e' il capitolo 27");
+/** Un capitolo, sezione per sezione: il 27 (le schede del Config, segnate
+ * `<!-- scheda: … -->`) o il 28 (i passi della Casa 3D, `<!-- passo3d: … -->`). */
+export function leGuide(manuale, { capitolo: numero = "27", segno = "scheda" } = {}) {
+  const capitolo = manuale.split(new RegExp(`^## ${numero}\\. `, "m"))[1];
+  if (!capitolo) throw new Error(`nel manuale non c'e' il capitolo ${numero}`);
   const finito = capitolo.split(/^## \d+\. /m)[0];
   const guide = {};
-  for (const pezzo of finito.split(/^### 27\.\d+ /m).slice(1)) {
+  for (const intero of finito.split(new RegExp(`^### ${numero}\\.\\d+ `, "m")).slice(1)) {
+    /* La sezione finisce al titolo dopo, anche se non e' numerato («Usare la
+     * casa in 3D»): quello che c'e' sotto non e' piu' di questa scheda. */
+    const pezzo = intero.split(/^### /m)[0];
     const righe = pezzo.split("\n");
     const titolo = righe[0].replace(/\s*\([^)]*\)\s*$/, "").trim();
-    const scheda = /<!--\s*scheda:\s*([\w-]+)\s*-->/.exec(pezzo)?.[1];
+    const scheda = new RegExp(`<!--\\s*${segno}:\\s*([\\w-]+)\\s*-->`).exec(pezzo)?.[1];
     /* Senza linguetta (la 27.0, che spiega la guida stessa) non c'e' niente
      * da portare nel Config. */
     if (!scheda) continue;
@@ -147,18 +151,30 @@ export function leGuide(manuale) {
   return guide;
 }
 
-export function ilFile(guide) {
-  return `/* GENERATO da strumenti/guida-dal-manuale.mjs dal capitolo 27 di
+/** Le guide del Config (capitolo 27) e della Casa 3D (capitolo 28). */
+export function tutteLeGuide(manuale) {
+  return {
+    guide: leGuide(manuale),
+    guide3d: leGuide(manuale, { capitolo: "28", segno: "passo3d" }),
+  };
+}
+
+export function ilFile({ guide, guide3d }) {
+  return `/* GENERATO da strumenti/guida-dal-manuale.mjs dai capitoli 27 e 28 di
  * docs/MANUALE.md: non si scrive a mano. Si cambia il manuale e si rifà
  * girare lo script. Vedi core/guida-del-config.js. */
 
+/* Le schede dell'editor del Config, per linguetta (capitolo 27). */
 export const GUIDE = Object.freeze(${JSON.stringify(guide, null, 2)});
+
+/* I passi di «Crea la tua casa», la procedura della Casa 3D (capitolo 28). */
+export const GUIDE_3D = Object.freeze(${JSON.stringify(guide3d, null, 2)});
 `;
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  const guide = leGuide(readFileSync(MANUALE, "utf8"));
-  const nuovo = ilFile(guide);
+  const tutte = tutteLeGuide(readFileSync(MANUALE, "utf8"));
+  const nuovo = ilFile(tutte);
   let vecchio = "";
   try {
     vecchio = readFileSync(USCITA, "utf8");
@@ -175,6 +191,8 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     process.stdout.write("La guida del Config e' allineata al manuale.\n");
   } else {
     writeFileSync(USCITA, nuovo);
-    process.stdout.write(`Scritte ${Object.keys(guide).length} guide in ${USCITA}\n`);
+    process.stdout.write(
+      `Scritte ${Object.keys(tutte.guide).length} guide del Config e ${Object.keys(tutte.guide3d).length} della Casa 3D in ${USCITA}\n`,
+    );
   }
 }

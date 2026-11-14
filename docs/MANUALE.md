@@ -52,6 +52,7 @@ numerati** con un riquadro attorno a un elemento. Sotto ogni immagine la
 25. [Domande frequenti](#25-domande-frequenti)
 26. [Privacy, contatti e chi c'è dietro](#26-privacy-contatti-e-chi-cè-dietro)
 27. [Configurare la plancia, scheda per scheda](#27-configurare-la-plancia-scheda-per-scheda)
+28. [La Casa 3D, passo per passo](#28-la-casa-3d-passo-per-passo)
 
 ---
 
@@ -616,21 +617,12 @@ si apre a colpo d'occhio»**.
 
 ### 8.5 Casa 3D (Premium)
 
-1. Crea una plancia di tipo **🧊 Casa 3D** e aprila.
-2. Premi **«Crea la tua casa»** e segui gli **8 passi**:
-   1. **Planimetria**: una foto anche storta, un PDF, un DWG, le misure a mano
-      o le foto delle stanze.
-   2. **Scala**: segna due punti di cui conosci la distanza.
-   3. **Muri**: riconosciuti da soli; li ritocchi con muro, gomma, porta,
-      finestra.
-   4. **Stanze**: i nomi dalle aree di Home Assistant o scritti da te.
-   5. **Foto delle stanze**: arredi e dispositivi riconosciuti.
-   6. **Dispositivi**: collega ogni oggetto alla sua entità.
-   7. **Esterno**: villa o palazzo, tetto, colori.
-   8. **Casa 3D**: salva e apri, oppure aggiungi un piano.
+La tua casa in tre dimensioni, dalla planimetria: si crea con la procedura
+guidata **«Crea la tua casa»**, in 8 passi, e poi si arreda. È spiegata passo
+per passo, con le schermate, nel
+[capitolo 28](#28-la-casa-3d-passo-per-passo).
 
-Nella casa 3D un tocco accende le luci, muove le tapparelle o apre le
-telecamere. Le foto restano sul dispositivo da cui le carichi.
+<p align="center"><img src="manuale/img/c3d-9.jpg" width="560" alt="La casa in 3D"></p>
 
 > Con Base la plancia a muro resta una plancia normale, e Colpo d'occhio e
 > Casa 3D mostrano un avviso. **La configurazione resta salvata.**
@@ -3788,6 +3780,382 @@ qui quando tacciono tutte le sue entità.
   dietro.
 - Quando un dispositivo smette di rispondere, in Home compare anche la sua
   tessera.
+
+---
+
+## 28. La Casa 3D, passo per passo
+
+**(Premium; la crea solo chi amministra la plancia.)** La Casa 3D è una
+plancia che mostra la tua casa in tre dimensioni: da fuori, piano per piano,
+con le luci, le tapparelle e i sensori dal vivo. Si costruisce una volta, con
+la procedura guidata **«Crea la tua casa»**, in 8 passi.
+
+> 🔒 **Le foto restano sul tuo dispositivo.** Planimetria, foto delle stanze e
+> della facciata servono solo mentre la procedura è aperta: non si salvano e
+> non si mandano da nessuna parte. Nella configurazione vanno solo muri,
+> stanze, arredi, colori e dispositivi.
+
+**Prima di cominciare**
+1. Crea una plancia di tipo **🧊 Casa 3D**: «Configura GdAHome» → **Plance** →
+   **«Aggiungi una plancia»** → Tipo **«🧊 Casa 3D»** (capitolo 8.1). Non si
+   può accendere sulla plancia principale.
+2. Aprila (nell'app dal selettore delle plance, in Home Assistant fra le
+   Dashboard) e premi **«Crea la tua casa»**.
+3. Tieni a portata di mano la planimetria (una foto, il PDF del catasto o il
+   DWG del tecnico). Se non ce l'hai, va bene lo stesso: puoi disegnarla o
+   partire dalle foto delle stanze.
+
+**La guida dentro la procedura.** In alto, accanto ai passi, c'è il tasto
+**«📖 Come si fa»**: apre la guida del passo in cui sei, con «👉 Mostrami»
+sui tasti da premere. È lo stesso testo di questo capitolo.
+
+<p align="center">
+  <img src="manuale/img/c3d-guida.jpg" width="520" alt="La guida dentro la procedura, sul computer">
+  <img src="manuale/img/c3d-guida-tel.jpg" width="200" alt="La guida dentro la procedura, sul telefono">
+</p>
+<p align="center"><sub>«📖 Come si fa» al passo 1: sul computer la guida sta in basso a sinistra, sul telefono nella metà bassa. Qui «Comincia» ha acceso «Il piano» con il numero 1. Cambiando passo, la guida cambia con lui.</sub></p>
+
+In cima alla procedura c'è sempre la **barra dei passi** (1 Planimetria … 8
+Casa 3D): i passi fatti hanno la spunta ✓, e si può tornare a uno precedente
+toccandolo o con **«← Indietro»**.
+
+### 28.1 Planimetria (passo 1)
+<!-- passo3d: 0 -->
+
+<p align="center"><img src="manuale/img/c3d-1.jpg" width="680" alt="Passo 1: la planimetria"></p>
+
+**Legenda**
+- ① **La barra dei passi**: dove sei e cosa manca.
+- ② **«Il piano»**: Seminterrato, Piano terra, Primo, Secondo o Terzo piano.
+- ③ **«Carica una foto o un PDF della planimetria»**.
+- ④ **«Carica il disegno DWG»**: il file dell'architetto o del geometra.
+- ⑤ **«Non hai una planimetria?»**: la disegni tu, con le misure esterne.
+- ⑥ **«Dalle foto delle stanze»**: niente planimetria e niente misure.
+
+**A cosa serve.** Dai alla procedura la forma del piano: da qui vengono muri,
+porte, finestre e stanze. Si sceglie anche quale piano della casa si sta
+facendo.
+
+**Cosa trovi**
+- **«Il piano»**: i tasti dei piani, dal seminterrato al terzo piano.
+- **«Carica una foto o un PDF della planimetria»**: il PDF del catasto va bene
+  così com'è, la scala la legge dal foglio.
+- **«Carica il disegno DWG»**: scala e nomi delle stanze li prende dal disegno.
+- **«Disegnala qui»**: scrivi larghezza e profondità del piano in metri, poi
+  dividi le stanze col «Muro dritto».
+- **«Dalle foto delle stanze»**: fotografi ogni stanza intera e la pianta si
+  fa da sola, misurando le cose di misura nota (forno, WC, condizionatore…).
+- **«Consigli»**: foto dall'alto, foglio intero, buona luce.
+
+**Come si configura**
+1. Tocca il piano che stai facendo in «Il piano» (di solito «Piano terra»).
+2. Premi «Carica una foto o un PDF della planimetria» e scegli il file. Se hai
+   il disegno del tecnico, premi invece «Carica il disegno DWG».
+3. Aspetta il messaggio «✓ Raddrizzata»: la foto è stata raddrizzata da sola.
+4. Premi «Avanti →».
+
+**Senza planimetria**
+1. In «Non hai una planimetria?» scrivi le misure esterne del piano, per
+   esempio 12 × 8 metri.
+2. Premi «Disegnala qui», poi al passo dei muri dividi le stanze con «Muro
+   dritto».
+
+**Consigli**
+- La foto non deve essere dritta e le scritte non danno fastidio: conta che
+  il foglio sia intero e ben illuminato.
+- Il PDF del catasto è il modo più preciso: la scala la legge da solo.
+
+<p align="center"><img src="manuale/img/c3d-1b.jpg" width="680" alt="Passo 1: planimetria caricata"></p>
+<p align="center"><sub>La planimetria caricata: ① «✓ Raddrizzata», ② «Avanti →».</sub></p>
+
+### 28.2 Scala (passo 2)
+<!-- passo3d: 1 -->
+
+<p align="center"><img src="manuale/img/c3d-2.jpg" width="680" alt="Passo 2: la scala"></p>
+
+**Legenda**
+- ① **La misura segnata**: i due punti toccati sulla pianta, con la lunghezza.
+- ② **La casella dei «metri»**: quanto è lunga davvero quella misura.
+- ③ **«Riconosci i muri →»**: va al passo dei muri.
+
+**A cosa serve.** Insegna alla procedura quanto è grande la casa: quanti
+pixel della foto fanno un metro. Senza la scala giusta le stanze vengono
+troppo grandi o troppo piccole.
+
+**Cosa trovi**
+- La pianta, su cui si toccano i due estremi di una misura nota.
+- «Punti: 0 di 2», che diventa «✓ Due punti scelti».
+- La casella «metri» e la riga «1 metro = … pixel della foto».
+- Spesso la scala la trova da sola: «✓ Scala trovata dallo spessore dei muri».
+
+**Come si configura**
+1. Tocca sulla pianta il primo estremo di una misura che conosci: una quota
+   scritta, un muro intero, una porta (di solito 80 cm).
+2. Tocca il secondo estremo: compare «✓ Due punti scelti».
+3. Scrivi nella casella «metri» quanto è lunga (per esempio 12,30).
+4. Premi «Riconosci i muri →».
+
+**Consigli**
+- Scegli la misura più lunga che conosci, per esempio un lato intero della
+  casa: l'errore si riduce.
+- Se alla fine le stanze hanno superfici strane, torna a «Scala» e rifai la
+  misura.
+
+### 28.3 Muri (passo 3)
+<!-- passo3d: 2 -->
+
+<p align="center"><img src="manuale/img/c3d-3.jpg" width="680" alt="Passo 3: i muri"></p>
+
+**Legenda**
+- ① **Cosa ha trovato**, per esempio «Trovati 7 ambienti, 6 porte e 0
+  finestre». Sotto ci sono gli strumenti per correggere.
+
+**A cosa serve.** La procedura riconosce da sola muri, porte e finestre. Qui
+controlli il risultato e lo correggi: è il passo che decide quante stanze
+avrà la casa.
+
+**Cosa trovi**
+- **«Muro dritto»**: trascina da un punto all'altro e il muro viene dritto.
+- **«Muro»**: trascina per disegnare un muro che divide due stanze unite.
+- **«Gomma»**: trascina per cancellare un pezzo di muro sbagliato.
+- **«Porta»**: tocca un muro per aprirci una porta (80 cm).
+- **«Finestra»**: tocca un muro per aprirci una finestra (120 cm).
+- La legenda dei colori: muro, porta, finestra, stanza.
+
+**Come si configura**
+1. Guarda la pianta colorata: ogni colore è una stanza.
+2. Se due stanze sono unite, scegli «Muro dritto» e trascina il dito dove
+   passa il muro che manca.
+3. Se c'è un muro di troppo, scegli «Gomma» e trascinala sopra.
+4. Se manca una porta o una finestra, scegli «Porta» o «Finestra» e tocca il
+   muro.
+5. Premi «Avanti →».
+
+**Consigli**
+- Le strisce sottili ai bordi della pianta sono di solito il margine del
+  foglio: al passo dopo le segni come «fuori casa» con 🌳.
+- Una porta mancante fra due stanze non le unisce: è solo un buco nel muro.
+
+### 28.4 Stanze (passo 4)
+<!-- passo3d: 3 -->
+
+<p align="center"><img src="manuale/img/c3d-4.jpg" width="680" alt="Passo 4: le stanze"></p>
+
+**Legenda**
+- ① **«— scegli un nome —»**: il nome dall'elenco (o dalle aree di Home
+  Assistant).
+- ② **«o scrivi un nome»**: per scriverlo tu.
+- ③ **🌳**: la stanza è fuori casa (cortile, balcone, margine del foglio).
+
+**A cosa serve.** Dai un nome a ogni stanza. Se in Home Assistant hai le
+aree, la procedura le propone: così luci e sensori di quell'area finiscono
+nella stanza giusta.
+
+**Cosa trovi**
+- Una riga per stanza, con il suo colore, la superficie in m² e i tasti per il
+  nome.
+- Il tasto 🌳 per dire che è fuori casa: le sue aperture diventano finestre.
+
+**Come si configura**
+1. Per ogni stanza scegli il nome da «— scegli un nome —», oppure scrivilo in
+   «o scrivi un nome».
+2. Tocca 🌳 sulle stanze che sono fuori: cortile, terrazzo, strisce di
+   margine.
+3. Controlla le superfici: se sono tutte troppo grandi o piccole, torna alla
+   «Scala».
+4. Premi «Avanti →».
+
+**Consigli**
+- Usa gli stessi nomi delle aree di Home Assistant: ritroverai i dispositivi
+  già al loro posto.
+
+### 28.5 Foto stanze (passo 5)
+<!-- passo3d: 4 -->
+
+<p align="center"><img src="manuale/img/c3d-5.jpg" width="680" alt="Passo 5: le foto delle stanze"></p>
+
+**Legenda**
+- ① **Le stanze**: tocca quella di cui aggiungi le foto.
+- ② **«Aggiungi foto di …»**: scegli o scatta le foto della stanza.
+
+**A cosa serve.** Dalle foto la procedura riconosce arredi e dispositivi
+(divano, letto, punti luce, telecamere, finestre…), con il loro colore e il
+loro posto. È facoltativo: puoi saltarlo e arredare dopo, in 3D.
+
+**Cosa trovi**
+- I tasti delle stanze, con il numero di foto già messe.
+- «Aggiungi foto di …» per ogni stanza.
+- Per ogni foto: **«Verso dove guardavi?»**, cioè quale parete si vede di
+  fronte (in alto nella pianta = ↑); gli oggetti riconosciuti, ognuno con ⚡
+  per collegarlo a un'entità e ✕ per toglierlo.
+- Se il riconoscimento automatico non è disponibile: «segna tu arredi e
+  dispositivi toccandoli nella foto».
+
+**Come si configura**
+1. Tocca una stanza.
+2. Premi «Aggiungi foto di …» e scegli una foto della stanza intera.
+3. Indica «Verso dove guardavi?».
+4. Controlla gli oggetti trovati. Per aggiungerne uno: «Scegli cosa e
+   toccalo nella foto».
+5. Sugli oggetti che sono dispositivi (luci, telecamere…) premi ⚡ e scegli
+   l'entità di Home Assistant.
+6. Ripeti per le altre stanze, poi premi «Avanti →».
+
+**Consigli**
+- Una foto dall'angolo della stanza, che prenda due pareti, funziona meglio.
+- Puoi saltare questo passo: i dispositivi li aggiungi anche al passo dopo, e
+  gli arredi in 3D con «Arreda».
+
+### 28.6 Dispositivi (passo 6)
+<!-- passo3d: 5 -->
+
+<p align="center"><img src="manuale/img/c3d-6.jpg" width="680" alt="Passo 6: dispositivi ed entità"></p>
+
+**Legenda**
+- ① **Il dispositivo e la sua entità**: qui un punto luce nel Salone,
+  collegato a «Faretti soggiorno» (bollino «✓ collegato»).
+- ② **«Aggiungi un dispositivo»**: che cos'è (Punto luce, Telecamera,
+  Tapparella, Sensore…) e in quale stanza.
+- ③ **«Aggiungi senza foto»**.
+
+**A cosa serve.** Collega ogni dispositivo della casa 3D alla sua entità di
+Home Assistant: è quello che fa accendere la luce in 3D quando è accesa
+davvero, e che permette di comandarla con un tocco.
+
+**Cosa trovi**
+- «Dispositivi ed entità»: i dispositivi stanza per stanza, con il contatore
+  «collegati · mancanti».
+- Per ognuno, la tendina dell'entità o la casella «o scrivi l'entità (es.
+  light.salone)».
+- «Aggiungi un dispositivo»: Punto luce, Telecamera, Tapparella, Sensore
+  finestra, Sensore porta, Sensore movimento, Sensore presenza, Termometro,
+  Climatizzatore, Termostato, Rilevatore fumo, Sensore allagamento, Presa,
+  TV, Altoparlante, Sirena.
+
+**Come si configura**
+1. Per ogni dispositivo già trovato, scegli l'entità dalla tendina.
+2. Per aggiungerne uno: in «Aggiungi un dispositivo» scegli che cos'è e la
+   stanza.
+3. Premi «Aggiungi senza foto»: il dispositivo va dove si monta di solito
+   (soffitto, muro, angolo, finestra).
+4. Scegli la sua entità.
+5. Premi «Avanti →».
+
+**Consigli**
+- Il posto esatto non conta adesso: in 3D lo sposti dove vuoi.
+- Un dispositivo senza entità si vede in 3D, ma non si accende e non si
+  comanda.
+
+### 28.7 Esterno (passo 7)
+<!-- passo3d: 6 -->
+
+<p align="center"><img src="manuale/img/c3d-7.jpg" width="680" alt="Passo 7: com'è da fuori"></p>
+
+**Legenda**
+- ① **«🏡 Villa» / «🏢 Palazzo»**.
+- ② **«Tetto»**: «A falde» o «Piano».
+- ③ **«Aggiungi una foto da fuori»**: i colori li prende dalla foto.
+- ④ **I colori a mano**: Facciata, Persiane, Tetto.
+- ⑤ **«Crea la casa →»**.
+
+**A cosa serve.** Decide come si vede la casa da fuori: villa o palazzo, il
+tetto e i colori. A sinistra vedi subito l'anteprima.
+
+**Cosa trovi**
+- «Com'è da fuori»: «🏡 Villa» o «🏢 Palazzo». Per il palazzo si scelgono
+  anche quanti piani ha e a che piano è la tua casa.
+- «Tetto»: «A falde» o «Piano».
+- «Foto della facciata»: con una foto, «Scegli cosa, poi toccalo nella foto
+  per prenderne il colore».
+- «Senza foto scegli i colori qui sotto»: Facciata, Persiane, Tetto.
+
+**Come si configura**
+1. Scegli «🏡 Villa» o «🏢 Palazzo».
+2. Scegli il «Tetto».
+3. Scegli i colori: dalla foto con «Aggiungi una foto da fuori», oppure
+   toccando i pallini sotto Facciata, Persiane e Tetto.
+4. Premi «Crea la casa →».
+
+### 28.8 Casa 3D (passo 8)
+<!-- passo3d: 7 -->
+
+<p align="center"><img src="manuale/img/c3d-8.jpg" width="680" alt="Passo 8: il piano è pronto"></p>
+
+**Legenda**
+- ① **Il riepilogo**: stanze, porte e finestre, foto, arredi, dispositivi
+  collegati.
+- ② **«🏠 Salva e apri la casa in 3D»**.
+- ③ **«➕ Aggiungi un altro piano»**.
+- ④ **«↺ Rifai questo piano»**.
+
+**A cosa serve.** Controlli il riepilogo del piano e decidi: salvare e
+aprire la casa, aggiungere un altro piano, oppure rifare questo.
+
+**Come si configura**
+1. Controlla il riepilogo: se manca qualcosa, torna indietro con «←
+   Indietro».
+2. Se la casa ha altri piani, premi «➕ Aggiungi un altro piano» e ripeti i
+   passi per quel piano.
+3. Quando hai finito, premi «🏠 Salva e apri la casa in 3D».
+
+**Consigli**
+- Puoi sempre tornare qui: in 3D c'è «🏗️ Crea / modifica la casa».
+- In 3D sposti, ruoti e aggiungi quello che manca.
+
+### Usare la casa in 3D
+
+<p align="center"><img src="manuale/img/c3d-9.jpg" width="680" alt="La casa in 3D, da fuori"></p>
+
+**Legenda**
+- ① **«🏡 Esterno» / i piani**: guarda la casa da fuori o entra in un piano.
+- ② **«🎨 Arreda»**: arreda le stanze e rifinisci (solo chi amministra).
+- ③ **«🏗️ Crea / modifica la casa»**: riapre la procedura.
+- ④ **Il piano**: tocca per entrarci (anche toccando la casa).
+- ⑤ **«Tutta la casa»**: luci accese, finestre e porte aperte.
+
+- **Girare e ingrandire**: trascina con un dito per girare, due dita (o la
+  rotellina) per ingrandire; **−** e **+** in basso, **⌖** rimette la vista
+  com'era.
+- **Entrare in un piano**: tocca il piano, o il suo nome a sinistra.
+
+<p align="center"><img src="manuale/img/c3d-11.jpg" width="680" alt="Dentro il piano"></p>
+
+Dentro il piano, a destra c'è **«Dispositivi · Piano terra»**: ogni
+dispositivo con il suo stato e il tasto ⏻. In 3D:
+- **un tocco su una luce** (o su un climatizzatore) la accende o la spegne;
+- **un tocco su una tapparella** la apre o la chiude;
+- **un tocco su una telecamera** apre il video dal vivo.
+
+### Arredare e rifinire
+
+<p align="center">
+  <img src="manuale/img/c3d-12.jpg" width="330" alt="Arreda: le stanze">
+  <img src="manuale/img/c3d-13.jpg" width="330" alt="Arreda: una stanza">
+</p>
+
+1. Entra in un piano e premi **«🎨 Arreda»**: compaiono i nomi delle stanze.
+2. Tocca una stanza (a destra si apre il suo pannello, «Le modifiche si
+   salvano da sole»).
+3. Scegli la linguetta:
+   - **🛋️ Arredi**: i mobili per tipo di stanza (Soggiorno, Pranzo e cucina,
+     Camera, Bagno, Elettrodomestici, Studio e altro). Tocca un mobile per
+     metterlo nella stanza;
+   - **▦ Pavimento** e **🖌️ Pareti**: materiale e colore;
+   - **📷 Dispositivi**: i dispositivi della stanza.
+4. Trascina un mobile per spostarlo (si aggancia ogni 5 cm); **↺ ↻** lo
+   girano, il tasto **R** lo gira di 90°.
+5. Premi di nuovo **«🎨 Arreda»** per tornare alla vista normale.
+
+### Se qualcosa non torna
+
+| Cosa succede | Cosa fare |
+| --- | --- |
+| Le stanze sono troppo grandi o piccole | Torna a «Scala» e segna una misura più lunga. |
+| Due stanze sono una sola | Al passo «Muri», «Muro dritto» dove passa il muro. |
+| Ci sono stanze strette ai bordi | È il margine del foglio: al passo «Stanze» toccale con 🌳. |
+| Una luce in 3D non si accende | Al passo «Dispositivi» manca l'entità: collegala. |
+| La casa non compare | Deve essere una plancia «Casa 3D» (non la principale), con Premium. |
+| «La casa in 3D non si apre su questo dispositivo» | Il dispositivo non regge il 3D: usa un telefono o un computer più recente. |
 
 ---
 

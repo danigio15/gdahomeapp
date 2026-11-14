@@ -1,7 +1,8 @@
-/* GENERATO da strumenti/guida-dal-manuale.mjs dal capitolo 27 di
+/* GENERATO da strumenti/guida-dal-manuale.mjs dai capitoli 27 e 28 di
  * docs/MANUALE.md: non si scrive a mano. Si cambia il manuale e si rifà
  * girare lo script. Vedi core/guida-del-config.js. */
 
+/* Le schede dell'editor del Config, per linguetta (capitolo 27). */
 export const GUIDE = Object.freeze({
   "visib": {
     "titolo": "Impostazioni",
@@ -2112,7 +2113,279 @@ export const GUIDE = Object.freeze({
     ],
     "consigli": [
       "Aiutanti, automazioni e script non compaiono: non hanno un apparecchio dietro.",
-      "Quando un dispositivo smette di rispondere, in Home compare anche la sua tessera. --- &lt;sub&gt;Manuale aggiornato a GdAHome 1.19.1. Le schermate vengono da una casa di prova: nella tua app vedrai i nomi della tua casa.&lt;/sub&gt;"
+      "Quando un dispositivo smette di rispondere, in Home compare anche la sua tessera. ---"
+    ]
+  }
+});
+
+/* I passi di «Crea la tua casa», la procedura della Casa 3D (capitolo 28). */
+export const GUIDE_3D = Object.freeze({
+  "0": {
+    "titolo": "Planimetria",
+    "scopo": "Dai alla procedura la forma del piano: da qui vengono muri, porte, finestre e stanze. Si sceglie anche quale piano della casa si sta facendo.",
+    "campi": [
+      "<b>«Il piano»</b>: i tasti dei piani, dal seminterrato al terzo piano.",
+      "<b>«Carica una foto o un PDF della planimetria»</b>: il PDF del catasto va bene così com'è, la scala la legge dal foglio.",
+      "<b>«Carica il disegno DWG»</b>: scala e nomi delle stanze li prende dal disegno.",
+      "<b>«Disegnala qui»</b>: scrivi larghezza e profondità del piano in metri, poi dividi le stanze col «Muro dritto».",
+      "<b>«Dalle foto delle stanze»</b>: fotografi ogni stanza intera e la pianta si fa da sola, misurando le cose di misura nota (forno, WC, condizionatore…).",
+      "<b>«Consigli»</b>: foto dall'alto, foglio intero, buona luce."
+    ],
+    "passi": [
+      {
+        "testo": "Tocca il piano che stai facendo in «Il piano» (di solito «Piano terra»).",
+        "html": "Tocca il piano che stai facendo in «Il piano» (di solito «Piano terra»)."
+      },
+      {
+        "testo": "Premi «Carica una foto o un PDF della planimetria» e scegli il file. Se hai il disegno del tecnico, premi invece «Carica il disegno DWG».",
+        "html": "Premi «Carica una foto o un PDF della planimetria» e scegli il file. Se hai il disegno del tecnico, premi invece «Carica il disegno DWG»."
+      },
+      {
+        "testo": "Aspetta il messaggio «✓ Raddrizzata»: la foto è stata raddrizzata da sola.",
+        "html": "Aspetta il messaggio «✓ Raddrizzata»: la foto è stata raddrizzata da sola."
+      },
+      {
+        "testo": "Premi «Avanti →».",
+        "html": "Premi «Avanti →»."
+      },
+      {
+        "testo": "Senza planimetria: In «Non hai una planimetria?» scrivi le misure esterne del piano, per esempio 12 × 8 metri.",
+        "html": "<b>Senza planimetria</b>: In «Non hai una planimetria?» scrivi le misure esterne del piano, per esempio 12 × 8 metri."
+      },
+      {
+        "testo": "Premi «Disegnala qui», poi al passo dei muri dividi le stanze con «Muro dritto».",
+        "html": "Premi «Disegnala qui», poi al passo dei muri dividi le stanze con «Muro dritto»."
+      }
+    ],
+    "consigli": [
+      "La foto non deve essere dritta e le scritte non danno fastidio: conta che il foglio sia intero e ben illuminato.",
+      "Il PDF del catasto è il modo più preciso: la scala la legge da solo."
+    ]
+  },
+  "1": {
+    "titolo": "Scala",
+    "scopo": "Insegna alla procedura quanto è grande la casa: quanti pixel della foto fanno un metro. Senza la scala giusta le stanze vengono troppo grandi o troppo piccole.",
+    "campi": [
+      "La pianta, su cui si toccano i due estremi di una misura nota.",
+      "«Punti: 0 di 2», che diventa «✓ Due punti scelti».",
+      "La casella «metri» e la riga «1 metro = … pixel della foto».",
+      "Spesso la scala la trova da sola: «✓ Scala trovata dallo spessore dei muri»."
+    ],
+    "passi": [
+      {
+        "testo": "Tocca sulla pianta il primo estremo di una misura che conosci: una quota scritta, un muro intero, una porta (di solito 80 cm).",
+        "html": "Tocca sulla pianta il primo estremo di una misura che conosci: una quota scritta, un muro intero, una porta (di solito 80 cm)."
+      },
+      {
+        "testo": "Tocca il secondo estremo: compare «✓ Due punti scelti».",
+        "html": "Tocca il secondo estremo: compare «✓ Due punti scelti»."
+      },
+      {
+        "testo": "Scrivi nella casella «metri» quanto è lunga (per esempio 12,30).",
+        "html": "Scrivi nella casella «metri» quanto è lunga (per esempio 12,30)."
+      },
+      {
+        "testo": "Premi «Riconosci i muri →».",
+        "html": "Premi «Riconosci i muri →»."
+      }
+    ],
+    "consigli": [
+      "Scegli la misura più lunga che conosci, per esempio un lato intero della casa: l'errore si riduce.",
+      "Se alla fine le stanze hanno superfici strane, torna a «Scala» e rifai la misura."
+    ]
+  },
+  "2": {
+    "titolo": "Muri",
+    "scopo": "La procedura riconosce da sola muri, porte e finestre. Qui controlli il risultato e lo correggi: è il passo che decide quante stanze avrà la casa.",
+    "campi": [
+      "<b>«Muro dritto»</b>: trascina da un punto all'altro e il muro viene dritto.",
+      "<b>«Muro»</b>: trascina per disegnare un muro che divide due stanze unite.",
+      "<b>«Gomma»</b>: trascina per cancellare un pezzo di muro sbagliato.",
+      "<b>«Porta»</b>: tocca un muro per aprirci una porta (80 cm).",
+      "<b>«Finestra»</b>: tocca un muro per aprirci una finestra (120 cm).",
+      "La legenda dei colori: muro, porta, finestra, stanza."
+    ],
+    "passi": [
+      {
+        "testo": "Guarda la pianta colorata: ogni colore è una stanza.",
+        "html": "Guarda la pianta colorata: ogni colore è una stanza."
+      },
+      {
+        "testo": "Se due stanze sono unite, scegli «Muro dritto» e trascina il dito dove passa il muro che manca.",
+        "html": "Se due stanze sono unite, scegli «Muro dritto» e trascina il dito dove passa il muro che manca."
+      },
+      {
+        "testo": "Se c'è un muro di troppo, scegli «Gomma» e trascinala sopra.",
+        "html": "Se c'è un muro di troppo, scegli «Gomma» e trascinala sopra."
+      },
+      {
+        "testo": "Se manca una porta o una finestra, scegli «Porta» o «Finestra» e tocca il muro.",
+        "html": "Se manca una porta o una finestra, scegli «Porta» o «Finestra» e tocca il muro."
+      },
+      {
+        "testo": "Premi «Avanti →».",
+        "html": "Premi «Avanti →»."
+      }
+    ],
+    "consigli": [
+      "Le strisce sottili ai bordi della pianta sono di solito il margine del foglio: al passo dopo le segni come «fuori casa» con 🌳.",
+      "Una porta mancante fra due stanze non le unisce: è solo un buco nel muro."
+    ]
+  },
+  "3": {
+    "titolo": "Stanze",
+    "scopo": "Dai un nome a ogni stanza. Se in Home Assistant hai le aree, la procedura le propone: così luci e sensori di quell'area finiscono nella stanza giusta.",
+    "campi": [
+      "Una riga per stanza, con il suo colore, la superficie in m² e i tasti per il nome.",
+      "Il tasto 🌳 per dire che è fuori casa: le sue aperture diventano finestre."
+    ],
+    "passi": [
+      {
+        "testo": "Per ogni stanza scegli il nome da «— scegli un nome —», oppure scrivilo in «o scrivi un nome».",
+        "html": "Per ogni stanza scegli il nome da «— scegli un nome —», oppure scrivilo in «o scrivi un nome»."
+      },
+      {
+        "testo": "Tocca 🌳 sulle stanze che sono fuori: cortile, terrazzo, strisce di margine.",
+        "html": "Tocca 🌳 sulle stanze che sono fuori: cortile, terrazzo, strisce di margine."
+      },
+      {
+        "testo": "Controlla le superfici: se sono tutte troppo grandi o piccole, torna alla «Scala».",
+        "html": "Controlla le superfici: se sono tutte troppo grandi o piccole, torna alla «Scala»."
+      },
+      {
+        "testo": "Premi «Avanti →».",
+        "html": "Premi «Avanti →»."
+      }
+    ],
+    "consigli": [
+      "Usa gli stessi nomi delle aree di Home Assistant: ritroverai i dispositivi già al loro posto."
+    ]
+  },
+  "4": {
+    "titolo": "Foto stanze",
+    "scopo": "Dalle foto la procedura riconosce arredi e dispositivi (divano, letto, punti luce, telecamere, finestre…), con il loro colore e il loro posto. È facoltativo: puoi saltarlo e arredare dopo, in 3D.",
+    "campi": [
+      "I tasti delle stanze, con il numero di foto già messe.",
+      "«Aggiungi foto di …» per ogni stanza.",
+      "Per ogni foto: <b>«Verso dove guardavi?»</b>, cioè quale parete si vede di fronte (in alto nella pianta = ↑); gli oggetti riconosciuti, ognuno con ⚡ per collegarlo a un'entità e ✕ per toglierlo.",
+      "Se il riconoscimento automatico non è disponibile: «segna tu arredi e dispositivi toccandoli nella foto»."
+    ],
+    "passi": [
+      {
+        "testo": "Tocca una stanza.",
+        "html": "Tocca una stanza."
+      },
+      {
+        "testo": "Premi «Aggiungi foto di …» e scegli una foto della stanza intera.",
+        "html": "Premi «Aggiungi foto di …» e scegli una foto della stanza intera."
+      },
+      {
+        "testo": "Indica «Verso dove guardavi?».",
+        "html": "Indica «Verso dove guardavi?»."
+      },
+      {
+        "testo": "Controlla gli oggetti trovati. Per aggiungerne uno: «Scegli cosa e toccalo nella foto».",
+        "html": "Controlla gli oggetti trovati. Per aggiungerne uno: «Scegli cosa e toccalo nella foto»."
+      },
+      {
+        "testo": "Sugli oggetti che sono dispositivi (luci, telecamere…) premi ⚡ e scegli l'entità di Home Assistant.",
+        "html": "Sugli oggetti che sono dispositivi (luci, telecamere…) premi ⚡ e scegli l'entità di Home Assistant."
+      },
+      {
+        "testo": "Ripeti per le altre stanze, poi premi «Avanti →».",
+        "html": "Ripeti per le altre stanze, poi premi «Avanti →»."
+      }
+    ],
+    "consigli": [
+      "Una foto dall'angolo della stanza, che prenda due pareti, funziona meglio.",
+      "Puoi saltare questo passo: i dispositivi li aggiungi anche al passo dopo, e gli arredi in 3D con «Arreda»."
+    ]
+  },
+  "5": {
+    "titolo": "Dispositivi",
+    "scopo": "Collega ogni dispositivo della casa 3D alla sua entità di Home Assistant: è quello che fa accendere la luce in 3D quando è accesa davvero, e che permette di comandarla con un tocco.",
+    "campi": [
+      "«Dispositivi ed entità»: i dispositivi stanza per stanza, con il contatore «collegati · mancanti».",
+      "Per ognuno, la tendina dell'entità o la casella «o scrivi l'entità (es. light.salone)».",
+      "«Aggiungi un dispositivo»: Punto luce, Telecamera, Tapparella, Sensore finestra, Sensore porta, Sensore movimento, Sensore presenza, Termometro, Climatizzatore, Termostato, Rilevatore fumo, Sensore allagamento, Presa, TV, Altoparlante, Sirena."
+    ],
+    "passi": [
+      {
+        "testo": "Per ogni dispositivo già trovato, scegli l'entità dalla tendina.",
+        "html": "Per ogni dispositivo già trovato, scegli l'entità dalla tendina."
+      },
+      {
+        "testo": "Per aggiungerne uno: in «Aggiungi un dispositivo» scegli che cos'è e la stanza.",
+        "html": "Per aggiungerne uno: in «Aggiungi un dispositivo» scegli che cos'è e la stanza."
+      },
+      {
+        "testo": "Premi «Aggiungi senza foto»: il dispositivo va dove si monta di solito (soffitto, muro, angolo, finestra).",
+        "html": "Premi «Aggiungi senza foto»: il dispositivo va dove si monta di solito (soffitto, muro, angolo, finestra)."
+      },
+      {
+        "testo": "Scegli la sua entità.",
+        "html": "Scegli la sua entità."
+      },
+      {
+        "testo": "Premi «Avanti →».",
+        "html": "Premi «Avanti →»."
+      }
+    ],
+    "consigli": [
+      "Il posto esatto non conta adesso: in 3D lo sposti dove vuoi.",
+      "Un dispositivo senza entità si vede in 3D, ma non si accende e non si comanda."
+    ]
+  },
+  "6": {
+    "titolo": "Esterno",
+    "scopo": "Decide come si vede la casa da fuori: villa o palazzo, il tetto e i colori. A sinistra vedi subito l'anteprima.",
+    "campi": [
+      "«Com'è da fuori»: «🏡 Villa» o «🏢 Palazzo». Per il palazzo si scelgono anche quanti piani ha e a che piano è la tua casa.",
+      "«Tetto»: «A falde» o «Piano».",
+      "«Foto della facciata»: con una foto, «Scegli cosa, poi toccalo nella foto per prenderne il colore».",
+      "«Senza foto scegli i colori qui sotto»: Facciata, Persiane, Tetto."
+    ],
+    "passi": [
+      {
+        "testo": "Scegli «🏡 Villa» o «🏢 Palazzo».",
+        "html": "Scegli «🏡 Villa» o «🏢 Palazzo»."
+      },
+      {
+        "testo": "Scegli il «Tetto».",
+        "html": "Scegli il «Tetto»."
+      },
+      {
+        "testo": "Scegli i colori: dalla foto con «Aggiungi una foto da fuori», oppure toccando i pallini sotto Facciata, Persiane e Tetto.",
+        "html": "Scegli i colori: dalla foto con «Aggiungi una foto da fuori», oppure toccando i pallini sotto Facciata, Persiane e Tetto."
+      },
+      {
+        "testo": "Premi «Crea la casa →».",
+        "html": "Premi «Crea la casa →»."
+      }
+    ],
+    "consigli": []
+  },
+  "7": {
+    "titolo": "Casa 3D",
+    "scopo": "Controlli il riepilogo del piano e decidi: salvare e aprire la casa, aggiungere un altro piano, oppure rifare questo.",
+    "campi": [],
+    "passi": [
+      {
+        "testo": "Controlla il riepilogo: se manca qualcosa, torna indietro con «← Indietro».",
+        "html": "Controlla il riepilogo: se manca qualcosa, torna indietro con «← Indietro»."
+      },
+      {
+        "testo": "Se la casa ha altri piani, premi «➕ Aggiungi un altro piano» e ripeti i passi per quel piano.",
+        "html": "Se la casa ha altri piani, premi «➕ Aggiungi un altro piano» e ripeti i passi per quel piano."
+      },
+      {
+        "testo": "Quando hai finito, premi «🏠 Salva e apri la casa in 3D».",
+        "html": "Quando hai finito, premi «🏠 Salva e apri la casa in 3D»."
+      }
+    ],
+    "consigli": [
+      "Puoi sempre tornare qui: in 3D c'è «🏗️ Crea / modifica la casa».",
+      "In 3D sposti, ruoti e aggiungi quello che manca."
     ]
   }
 });
