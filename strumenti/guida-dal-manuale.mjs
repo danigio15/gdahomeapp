@@ -70,7 +70,8 @@ function elementi(righe, numerato) {
   for (const riga of righe) {
     const trovato = inizio.exec(riga);
     if (trovato && !/^\s{4,}/.test(riga)) fuori.push(trovato[1].trim());
-    else if (fuori.length && riga.trim()) fuori[fuori.length - 1] += ` ${riga.trim().replace(/^[-*]\s+/, "– ")}`;
+    else if (fuori.length && riga.trim())
+      fuori[fuori.length - 1] += ` ${riga.trim().replace(/^[-*]\s+/, "– ")}`;
   }
   return fuori;
 }
@@ -85,14 +86,25 @@ export function leGuide(manuale) {
     const righe = pezzo.split("\n");
     const titolo = righe[0].replace(/\s*\([^)]*\)\s*$/, "").trim();
     const scheda = /<!--\s*scheda:\s*([\w-]+)\s*-->/.exec(pezzo)?.[1];
-    if (!scheda) throw new Error(`«${titolo}»: manca <!-- scheda: … -->`);
+    /* Senza linguetta (la 27.0, che spiega la guida stessa) non c'e' niente
+     * da portare nel Config. */
+    if (!scheda) continue;
     /* I blocchi, divisi dalle intestazioni in grassetto. */
     const blocchi = { scopo: [], campi: [], passi: [], consigli: [] };
     let dove = null;
     for (const riga of righe.slice(1)) {
-      const testa = /^\*\*(A cosa serve\.?|Cosa trovi|Come si configura|Consigli)\*\*\.?\s*(?:[—–-]\s*)?(.*)$/.exec(riga.trim());
+      const testa =
+        /^\*\*(A cosa serve\.?|Cosa trovi|Come si configura|Consigli)\*\*\.?\s*(?:[—–-]\s*)?(.*)$/.exec(
+          riga.trim(),
+        );
       if (testa) {
-        dove = { "A cosa serve.": "scopo", "A cosa serve": "scopo", "Cosa trovi": "campi", "Come si configura": "passi", Consigli: "consigli" }[testa[1]];
+        dove = {
+          "A cosa serve.": "scopo",
+          "A cosa serve": "scopo",
+          "Cosa trovi": "campi",
+          "Come si configura": "passi",
+          Consigli: "consigli",
+        }[testa[1]];
         if (testa[2] && dove === "scopo") blocchi.scopo.push(testa[2]);
         continue;
       }
@@ -107,7 +119,10 @@ export function leGuide(manuale) {
     const chiudiGruppo = () => {
       elementi(gruppo, true).forEach((uno, i) => {
         const davanti = i === 0 && titoletto ? `${titoletto}: ` : "";
-        passi.push({ testo: semplice(davanti + uno), html: (davanti ? `<b>${inLinea(titoletto)}</b>: ` : "") + inLinea(uno) });
+        passi.push({
+          testo: semplice(davanti + uno),
+          html: (davanti ? `<b>${inLinea(titoletto)}</b>: ` : "") + inLinea(uno),
+        });
       });
       gruppo = [];
     };
@@ -152,7 +167,9 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   }
   if (process.argv.includes("--guarda")) {
     if (vecchio !== nuovo) {
-      process.stderr.write("La guida del Config e' indietro rispetto al manuale: node strumenti/guida-dal-manuale.mjs\n");
+      process.stderr.write(
+        "La guida del Config e' indietro rispetto al manuale: node strumenti/guida-dal-manuale.mjs\n",
+      );
       process.exit(1);
     }
     process.stdout.write("La guida del Config e' allineata al manuale.\n");

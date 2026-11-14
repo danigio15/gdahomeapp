@@ -51,6 +51,7 @@ numerati** con un riquadro attorno a un elemento. Sotto ogni immagine la
 24. [Se qualcosa non va](#24-se-qualcosa-non-va)
 25. [Domande frequenti](#25-domande-frequenti)
 26. [Privacy, contatti e chi c'è dietro](#26-privacy-contatti-e-chi-cè-dietro)
+27. [Configurare la plancia, scheda per scheda](#27-configurare-la-plancia-scheda-per-scheda)
 
 ---
 
@@ -425,6 +426,10 @@ sezione senza contenuto non compare nella barra.
 ---
 
 ## 7. Configurare la plancia
+
+> Qui trovi le basi. **Ogni scheda dell'editor, una per una**, è spiegata nel
+> [capitolo 27](#27-configurare-la-plancia-scheda-per-scheda); la stessa guida
+> si apre anche dentro la plancia, con **«📖 Come si configura questa scheda»**.
 
 **(Premium dall'app; dal browser è sempre disponibile all'amministratore.)**
 
@@ -1789,6 +1794,2000 @@ sono nell'[informativa sulla privacy](https://gdahome.org/privacy.html) e nei
 
 **Chi c'è dietro.** GdAHome la fa **CRV Immobiliare S.r.l.**, impresa di
 impianti elettrici e tecnologici di Aversa (CE).
+
+---
+
+## 27. Configurare la plancia, scheda per scheda
+
+Questo capitolo spiega **ogni scheda dell'editor della plancia**, una per una:
+a cosa serve, cosa trovi e come si configura. È lo stesso testo che trovi
+**dentro la plancia**: nell'editor, sotto la casella di ricerca, il tasto
+**«📖 Come si configura questa scheda»** apre la guida della scheda che stai
+guardando, e **«👉 Mostrami»** ti porta sul campo giusto (paragrafo 27.0).
+
+### Come si apre l'editor
+
+1. Apri la Configurazione: dall'app, menu → **«Configurazione plancia»**;
+   dalla plancia, la voce **CONFIG** in fondo alla barra.
+2. Premi **«Configura Entità»**: si apre l'**EDITOR DASHBOARD**.
+3. Scegli la **famiglia** (Plancia, Energia, Clima e acqua, Casa, Sicurezza,
+   Avvisi, Alexa, Macchine e rete) e poi la **scheda**. Oppure scrivi una
+   parola in **«Cerca in tutta la configurazione…»**.
+
+Quasi tutte le schede funzionano allo stesso modo:
+- **«Scegli entità ›»** apre l'elenco delle entità di Home Assistant, con la
+  ricerca; **«✏️ Modifica»** permette di scriverla a mano.
+- La tendina della **stanza** mette l'elemento nella stanza giusta.
+- **▲ ▼** cambiano l'ordine; **🗑** toglie.
+- In cima o in fondo c'è l'interruttore **«🟢 Sezione visibile in dashboard —
+  tocca per nascondere»**.
+- Alla fine si preme **«💾 Salva sezione»**: senza, le modifiche non restano.
+
+### 27.0 La guida interattiva dentro il Config
+
+<p align="center">
+  <img src="manuale/img/guida-1.jpg" width="250" alt="La guida di una scheda">
+  <img src="manuale/img/guida-2.jpg" width="250" alt="Mostrami: il campo acceso">
+  <img src="manuale/img/guida-3.jpg" width="250" alt="Da dove comincio">
+</p>
+
+1. Nell'editor, sotto la ricerca, premi **«📖 Come si configura questa
+   scheda»**. Si apre la guida della scheda aperta: sul telefono nella metà
+   bassa dello schermo, sul computer a destra. La scheda resta visibile.
+2. Premi **«Comincia ▶»**: il primo passo si evidenzia e il campo di cui
+   parla si **accende di rosso** nella scheda, con il numero del passo.
+3. Fai quello che dice il passo, poi **«Avanti ▶»**. Su ogni passo c'è anche
+   **«👉 Mostrami»**, per tornare a quel campo.
+4. Sotto i passi: **«🔎 Cosa trovi in questa scheda»** e **«💡 Consigli»**.
+5. Cambiando scheda, la guida segue: mostra sempre quella aperta.
+6. **«🧭 Da dove comincio»** apre il percorso consigliato per una casa nuova:
+   per ogni tappa **«Vai ›»** apre la scheda con la sua guida, e la spunta
+   **«Fatto»** ti ricorda a che punto sei (resta su quel dispositivo).
+7. **✕** chiude la guida.
+
+<p align="center"><img src="manuale/img/guida-pc.jpg" width="680" alt="La guida sul computer"></p>
+<p align="center"><sub>Sul computer la guida sta a destra: qui la scheda Energia, al passo 1, con la linguetta «FLUSSI ED ENTITÀ» accesa.</sub></p>
+
+### 27.1 Impostazioni (Plancia)
+<!-- scheda: visib -->
+<p align="center"><img src="manuale/img/cfg-00.jpg" width="250" alt="Scheda Impostazioni"></p>
+
+**A cosa serve.** È la scheda che si apre per prima. Qui dai il nome alla
+plancia, scegli la lingua, decidi quali sezioni si vedono e in che ordine
+stanno nella barra.
+
+**Cosa trovi**
+- **Generali**: il nome della dashboard e l'utente amministratore. Si salvano
+  con **«💾 Salva generali»**.
+- **«🌍 Lingua della plancia»**: con «Lingua di Home Assistant» la plancia
+  segue il profilo di chi guarda; scegliendo una lingua la fissi per questa
+  plancia.
+- **«🖥️ Modo chiosco»**: la plancia a tutto schermo, sopra la barra laterale di
+  Home Assistant. Vale solo per questa plancia e solo su questo apparecchio;
+  sul telefono è già acceso.
+- **«📌 Intestazione fissa»**: la parte alta (menu, nome della casa, meteo)
+  resta ferma mentre il resto scorre. Vale solo su questo apparecchio.
+- **«🗣️ Assist»**: aggiunge un tasto che apre l'assistente di Home Assistant,
+  a voce o scrivendo. Puoi far leggere la risposta ad alta voce («Leggi la
+  risposta ad alta voce») e scegliere l'«Assistente» (vuoto = automatico).
+- **«Le sezioni della plancia»**: tutte le sezioni divise per famiglia, ognuna
+  con il suo interruttore (visibile o nascosta) e il tasto **«Configura»** che
+  apre la sua scheda.
+- **«Ordine navbar»**: l'elenco delle voci della barra. Si spostano
+  trascinandole da ⠿ o con le frecce ▲ ▼; la matita ✏️ serve a rinominare la
+  voce.
+- **«Disposizioni salvate»** e **«Disegni salvati»**: le pagine e i disegni
+  che hai cambiato nelle anteprime. **«Ripristina»** li rimette come di serie.
+- **«Rilevamento e manutenzione»**: **«🪄 Avvia autorilevamento»** e
+  **«🗑️ Reset totale configurazione»**.
+
+**Come si configura**
+
+**Nome e amministratore**
+1. Scrivi il nome della plancia e scegli l'utente amministratore.
+2. Premi **«💾 Salva generali»**.
+
+**Mostrare o nascondere una sezione**
+1. Scorri fino a «Le sezioni della plancia».
+2. Tocca l'interruttore della sezione: verde = visibile.
+3. Per sistemarne il contenuto, premi **«Configura»** accanto.
+
+**Riordinare la barra**
+1. In «Ordine navbar» trascina la voce, oppure usa ▲ ▼.
+2. Per cambiarle nome tocca ✏️, scrivi il nuovo nome e premi **Salva**.
+
+**Partire con una casa nuova**
+1. Premi **«🪄 Avvia autorilevamento»**: la plancia esamina le entità di Home
+   Assistant e compila da sola luci, clima, stanze, telecamere e collegamenti.
+2. Controlla e correggi il risultato nelle altre schede.
+
+**Consigli**
+- **«Reset totale configurazione»** cancella tutta la configurazione salvata,
+  su **tutti** i dispositivi collegati. Prima fai un backup (vedi 27.9).
+- Modo chiosco e Intestazione fissa valgono solo sull'apparecchio che stai
+  usando: su un altro tablet vanno riaccesi.
+
+### 27.2 Home (Plancia)
+<!-- scheda: sez0 -->
+<p align="center"><img src="manuale/img/cfg-01.jpg" width="250" alt="Scheda Home"></p>
+
+**A cosa serve.** Decide com'è fatta la pagina Home: l'ordine dei blocchi,
+quali stanze si vedono, il meteo e l'antifurto in testa, la riga di
+«pastiglie» sotto il meteo e le immagini dei riquadri.
+
+**Cosa trovi**
+- **«🏠 Ordine dei blocchi della Home»**: un'anteprima con i blocchi
+  «Intestazione e menù», «Intestazione col meteo», «Persone», «Widget»,
+  «Azioni rapide», «Stanze», «Dispositivi». Si può guardare come
+  «Telefono», «Tablet» o «Computer».
+- **«Pastiglie di stato»**: la riga in cima alla Home (caldaia accesa,
+  antifurto inserito). Compare da sola quando ha qualcosa da dire.
+- **«🛋️ Stanze in plancia»**: le stanze da mostrare in Home, con temperatura e
+  numero di cose accese. Nessuna spuntata = nessun blocco stanze.
+- **Il riquadro «🏠 Home»**: le entità principali della Home.
+  - Il **meteo** (un'entità `weather`). L'interruttore «Usa entità proprie per
+    la stazione meteo», se acceso, ti lascia scegliere sensori tuoi; spento,
+    temperatura, umidità e vento si leggono dall'entità meteo.
+  - L'**antifurto** (la centrale), con «Modalità da mostrare» (Casa, Fuori,
+    Notte, Vacanza, Parziale: compaiono solo quelle che la centrale accetta).
+  - **«🚨 Quando è scattato»**: l'entità che dice che l'allarme sta suonando,
+    il valore che vuol dire «scattato» (vuoto = «on»), la «Sirena
+    (facoltativa)» e «Che cosa l'ha fatto scattare (facoltativo)».
+  - **«Tasti d'inserimento su misura»**: per chi non ha una centrale (antifurto
+    fatto con ESPHome, script o un elenco di modalità).
+  - Accanto a ogni casella c'è **«NEL WIDGET»**: decide se quel valore compare
+    anche nella tessera della Home.
+- **«🏠 Barra sotto il meteo»**: le pastiglie da mostrare (Posta, Rifiuti,
+  Sicurezza, Porte, Finestre, Luci, Temperatura, Pioggia…), l'ora dopo cui si
+  annuncia il ritiro rifiuti di domani, e i sensori: cassetta della posta,
+  temperatura, umidità, intensità della pioggia, pioggia caduta oggi.
+- **«✨ Le tue entità nella fascia»**: pastiglie tue (per esempio il livello
+  del serbatoio), anche visibili solo in certe condizioni.
+- **«🖼️ Immagini dei riquadri»**: tutte le card della plancia (luci, clima,
+  tapparelle, telecamere, stanze, elettrodomestici, azioni rapide, tessere
+  della Home…). Ognuna può avere una foto o un disegno.
+
+**Come si configura**
+
+**Riordinare i blocchi**
+1. Nell'anteprima trascina un blocco dove lo vuoi (sul telefono tieni premuto
+   un attimo), oppure usa ▲ ▼.
+2. Premi **«Applica»**. **«Annulla»** scarta, **«Ripristina»** torna
+   all'ordine di serie.
+
+**Scegliere le stanze in Home**
+1. In «🛋️ Stanze in plancia» spunta le stanze che vuoi vedere.
+
+**Meteo e antifurto**
+1. Nel riquadro «🏠 Home» tocca la casella del meteo e scegli l'entità con
+   **«Scegli entità»**.
+2. Fai lo stesso per la centrale d'allarme e togli le modalità che non usi.
+3. In «🚨 Quando è scattato» scegli dove si legge l'allarme e, se vuoi, la
+   sirena.
+4. Senza centrale: **«＋ Aggiungi un tasto»**, dai il nome e l'icona, scegli
+   cosa premere, dove si legge se è inserito e, se vuoi, un PIN (4–8 cifre);
+   poi **«Salva il tasto»**.
+
+**Barra sotto il meteo**
+1. Spunta le pastiglie che vuoi.
+2. Scegli i sensori (posta, temperatura, umidità, pioggia) con «Scegli
+   entità».
+3. Per aggiungerne una tua: **«＋ Aggiungi un'entità»**, scegli l'entità, il
+   nome, il segno e il colore e, se vuoi, quando deve comparire.
+
+**Mettere un'immagine in un riquadro**
+1. In «🖼️ Immagini dei riquadri» tocca 🖼️ accanto alla card.
+2. Scegli **«Carica una foto»** (dal telefono o dal computer) oppure
+   **«Scegli dai disegni»**.
+3. Sistema l'inquadratura e lo zoom. **«Togli immagine»** fa tornare il
+   disegno di sempre.
+
+Alla fine premi **«💾 Salva sezione»**.
+
+**Consigli**
+- I sensori della pioggia scelti qui sono gli stessi che usa l'**Irrigazione**
+  (27.20) e il **Meteo** (27.17): si mettono una volta sola.
+- La foto caricata resta in casa, nell'add-on: non passa da server esterni.
+- L'ordine *dentro* ogni blocco non si fa qui: le persone nella loro scheda,
+  le tessere in **Widget**, le azioni rapide in **Azioni**.
+
+### 27.3 Widget (Plancia)
+<!-- scheda: todo -->
+<p align="center"><img src="manuale/img/cfg-02.jpg" width="250" alt="Scheda Widget"></p>
+
+**A cosa serve.** Sceglie quali tessere si vedono nella Home e in che
+ordine, e prepara le tessere d'avviso che compaiono da sole.
+
+**Cosa trovi**
+- **«Anteprima della Home»**: le tessere come le vedi in Home, con i valori di
+  adesso. Si guarda come «Telefono», «Tablet» o «Computer». Si trascinano, e
+  l'occhio le nasconde.
+- **«Compaiono quando servono»**: le tessere che non sono in Home adesso ma
+  arrivano da sole (Assistenza, Aggiornamenti, Caldaia, Allerte, Dispositivi
+  non connessi, Stampanti…).
+- **«Tessere compatte»**: «Mai», «Auto» (si stringono solo sugli schermi
+  stretti) o «Sempre».
+- **«Avvisi personalizzati a finestra»**: quando un avviso personalizzato si
+  accende, la plancia lo apre da sola.
+- **L'elenco di tutte le tessere**, con ⠿ e ▲ ▼ per l'ordine. Alcune hanno una
+  scelta in più: Luci e Prese «Solo quando qualcosa è acceso»,
+  Elettrodomestici «Solo quando uno è in funzione», Clima e Temperatura
+  «Cosa mostra» (la media o una sola unità/stanza).
+- **«⭐ In evidenza · le tue tessere»**: una tessera per un'entità qualsiasi,
+  anche di una sezione che non esiste.
+- **«🔔 Widget di avviso»**: i sensori sorvegliati dalle tessere d'avviso
+  (batterie, allagamenti, fumo e gas) e gli avvisi personalizzati.
+
+**Come si configura**
+
+**Ordinare e nascondere le tessere**
+1. Nell'anteprima trascina la tessera (sul telefono tieni premuto un attimo).
+2. Tocca l'occhio per nasconderla.
+3. Premi **«Applica»**. **«Ripristina»** torna come di serie.
+
+**Aggiungere una tessera «In evidenza»**
+1. Premi **«＋ Aggiungi entità»**.
+2. Scegli l'entità, il nome e, se vuoi, l'icona e la stanza.
+3. Accendi **«Tessera a sé in Home»** se la vuoi da sola; altrimenti finisce
+   nel riassunto «In evidenza».
+4. Premi **«Salva entità»**.
+
+**Aggiungere un avviso**
+1. In «🔔 Widget di avviso» scegli il tipo: «🔋 Batterie (%)», «💧
+   Allagamenti», «💨 Rilevatori fumo e gas» o «⭐ Personalizzato».
+2. Scegli l'entità con «Scegli entità».
+3. Premi **«＋ Aggiungi avviso»**.
+
+Alla fine premi **«💾 Salva sezione»**.
+
+**Consigli**
+- Porte e finestre non si mettono più qui: le mostra la tessera Finestre, con i
+  sensori delle tapparelle (27.25).
+- Le tessere d'avviso restano nascoste finché non hanno qualcosa da dire: è
+  normale non vederle.
+
+### 27.4 Azioni (Plancia)
+<!-- scheda: sez8 -->
+<p align="center"><img src="manuale/img/cfg-03.jpg" width="250" alt="Scheda Azioni"></p>
+
+**A cosa serve.** Prepara i tasti rapidi della Home, per esempio «Luci» o
+«Cancello». Sono anche i comandi proposti in auto e sull'orologio.
+
+**Cosa trovi**
+- **«⚡ Azioni rapide (Home)»**: l'elenco delle azioni, con ▲ ▼ per l'ordine,
+  ✏️ per modificare e 🗑️ per togliere. Per alcune puoi scegliere una stanza.
+- **«GRUPPO»**: facoltativo. Le azioni con lo stesso gruppo stanno insieme in
+  Home, sotto un titolo che si chiude con un tocco.
+- **Il tipo di azione**: «💡 Popup luci — scegli TU le luci», «💡 Popup TUTTE
+  le luci», «🔌 Popup TUTTE le prese», «❄️ Popup Clima», «🛡️ Popup
+  Antifurto», «🧺 Popup Lavatrice», «🔀 Toggle entità», «🔊 Lettore
+  multimediale», «📜 Script», «🎬 Scena».
+
+**Come si configura**
+1. Scegli il tipo di azione dalla tendina.
+2. Scrivi il nome e, se vuoi, l'icona.
+3. Per «Toggle entità», «Script» e «Scena» scegli anche l'entità da
+   comandare. Se è un menu a tendina, scegli quale voce deve mettere.
+4. Se vuoi, scrivi un messaggio di conferma (per esempio «Sei sicuro?»).
+5. Premi **«＋ Aggiungi azione rapida»**.
+6. Per «Popup luci — scegli TU le luci», dopo aver premuto Aggiungi scegli le
+   luci da una lista con ricerca.
+7. Premi **«💾 Salva sezione»**.
+
+**Consigli**
+- I popup «pronti» (tutte le luci, clima, antifurto…) non chiedono un'entità:
+  basta il nome, anche facoltativo.
+- Il messaggio di conferma è utile per le azioni che non si possono annullare,
+  come aprire il cancello.
+
+### 27.5 Automazioni (Plancia)
+<!-- scheda: automazioni -->
+<p align="center"><img src="manuale/img/cfg-04.jpg" width="250" alt="Scheda Automazioni"></p>
+
+**A cosa serve.** Mostra tutte le automazioni di Home Assistant, a gruppi: le
+crei, le modifichi, le accendi e le spegni. Le esegue Home Assistant, anche
+con la plancia e l'app chiuse. È una funzione **Premium**.
+
+**Cosa trovi**
+- **L'interruttore della sezione**: mostra o nasconde le Automazioni nella
+  plancia.
+- **«PROSSIMO»** e **«ULTIME ESEGUITE»**: l'automazione che partirà fra poco
+  e quelle appena eseguite.
+- **«Suggerite per la tua casa ✨»**: proposte fatte dai tuoi dispositivi (per
+  esempio «avvisami quando la lavastoviglie ha finito»), con il perché. Per
+  vederle tutte, **«Vedi tutte»**.
+- **«Le automazioni di casa»**: l'elenco, raggruppato «Per categoria», «Per
+  tipo» o «Per stanza», con la ricerca 🔍 e il tasto **«＋ Nuova»**.
+
+**Come si configura**
+1. Per un suggerimento, premi **«Crea»** se ti va bene, **«No, grazie»** per
+   scartarlo.
+2. Per una nuova automazione premi **«＋ Nuova»** (vedi il capitolo 14).
+3. Per accendere, spegnere o modificare un'automazione, aprila dall'elenco.
+
+**Consigli**
+- Le automazioni vivono in Home Assistant: cambiarle qui le cambia anche lì.
+
+### 27.6 A muro (Plancia)
+<!-- scheda: muro -->
+<p align="center"><img src="manuale/img/cfg-05.jpg" width="250" alt="Scheda A muro"></p>
+
+**A cosa serve.** Configura il pannello per il tablet appeso al muro: le
+pagine (le linguette in alto) e cosa c'è in ognuna. È una funzione
+**Premium** (vedi anche 8.3).
+
+**Cosa trovi**
+- **«Usa questa plancia a muro»**: vale su ogni tablet che apre questa
+  plancia.
+- **«Le pagine di questo tablet»**: l'elenco delle pagine.
+- **«＋ Aggiungi una pagina»**: i tipi di pagina, fra cui Stanza, Scene,
+  Ingresso, Personalizzata, Tutte le luci, Clima, Tutte le tapparelle,
+  Ambienti, Telecamere, Energia, Musica, Meteo, Mixer audio, Telecamera con
+  comandi, Comandi di regia.
+- **«⚙️ Altre impostazioni»**: orientamento, tema, meteo, riposo, notte,
+  luminosità, PIN.
+
+**Come si configura**
+1. Accendi **«Usa questa plancia a muro»**.
+2. Premi **«＋ Aggiungi una pagina»** e scegli il tipo.
+3. Compila la pagina con quello che chiede (stanza, comandi, letture…).
+4. Ripeti per ogni pagina che vuoi.
+5. Apri **«⚙️ Altre impostazioni»** per orientamento, riposo, notte,
+   luminosità e PIN.
+6. Premi **«💾 Salva sezione»**.
+
+**Consigli**
+- Sul tablet, tenendo premuto l'orologio per due secondi si torna a questa
+  scheda.
+
+### 27.7 Le tue entità (Plancia)
+<!-- scheda: entita -->
+<p align="center"><img src="manuale/img/cfg-06.jpg" width="250" alt="Scheda Le tue entità"></p>
+
+**A cosa serve.** Aggiunge un'entità in fondo a una sezione che ha caselle
+fisse, come Energia o Sicurezza, dove non ci sarebbe posto per un sensore in
+più.
+
+**Cosa trovi**
+- **L'elenco** delle entità aggiunte, con il nome e la scheda dove compaiono
+  (per esempio «Cisterna» in Irrigazione). ✏️ per modificare, 🗑️ per
+  togliere.
+- **«＋ Aggiungi entità»**.
+
+**Come si configura**
+1. Premi **«＋ Aggiungi entità»**.
+2. Scegli l'entità con «Scegli entità».
+3. In **«In quale scheda»** scegli la sezione dove deve comparire.
+4. Se vuoi, scrivi un nome («Nome (facoltativo)»), scegli l'icona e la
+   stanza.
+5. Premi **«Salva entità»**, poi **«💾 Salva sezione»**.
+
+**Consigli**
+- L'entità compare in fondo alla pagina scelta. Se si può accendere, si
+  accende da lì.
+- Le schede fatte a elenco (Luci, Prese, Telecamere) non servono questa
+  scheda: lì l'entità si aggiunge direttamente.
+
+### 27.8 Le tue sezioni (Plancia)
+<!-- scheda: mie -->
+<p align="center"><img src="manuale/img/cfg-07.jpg" width="250" alt="Scheda Le tue sezioni"></p>
+
+**A cosa serve.** Crea una sezione nuova, con un titolo e le entità che vuoi
+tu, per le cose che la plancia non disegna ancora (per esempio un acquario).
+
+**Cosa trovi**
+- **L'elenco delle tue sezioni**, ognuna con titolo, icona e numero di
+  entità. ✏️ per modificare, 🗑️ per togliere.
+- **«Mostrala nella barra»**: la sezione compare nella barra come le altre.
+- **«Come si vedono le entità»**: «A righe» o «Piccole».
+- **«LE ENTITÀ»**: le entità della sezione. Per ognuna puoi scegliere gli
+  **«Attributi da mostrare»**.
+
+**Come si configura**
+1. Premi **«＋ Aggiungi sezione»**.
+2. Scrivi il titolo e scegli l'icona.
+3. Premi **«＋ Aggiungi entità»** e scegli l'entità. Ripeti per ognuna.
+4. Se vuoi, apri «Attributi da mostrare» e spunta quelli che ti servono.
+5. Accendi **«Mostrala nella barra»** e scegli come si vedono le entità.
+6. Premi **«💾 Salva sezione»**.
+
+**Consigli**
+- La sezione non toglie niente alle altre. Quando arriverà una sezione fatta
+  apposta, potrai cancellare questa.
+
+### 27.9 Backup (Plancia)
+<!-- scheda: backup -->
+<p align="center"><img src="manuale/img/cfg-08.jpg" width="250" alt="Scheda Backup"></p>
+
+**A cosa serve.** Salva in un file tutta la configurazione della plancia
+(sezioni, stanze, entità, persone, auto…) e la rimette al suo posto quando
+serve.
+
+**Cosa trovi**
+- **«⬇️ Scarica il backup»**: **«💾 Scarica il file»** (un file JSON) e
+  **«📋 Copia negli appunti»** (lo stesso contenuto come testo).
+- **«♻️ Ripristina da un backup»**: **«📁 Scegli il file»**, oppure incolla
+  il testo del backup.
+
+**Come si configura**
+
+**Fare un backup**
+1. Premi **«💾 Scarica il file»**.
+2. Conserva il file in un posto sicuro.
+
+**Ripristinare**
+1. Premi **«📁 Scegli il file»** e scegli il backup, oppure incolla il testo.
+2. Conferma. La plancia rimette la configurazione e si ricarica.
+
+**Consigli**
+- Il ripristino non cancella quello che nel backup non c'è: le voci assenti
+  restano come sono.
+- Fai un backup prima di un «Reset totale configurazione» o di grandi
+  modifiche.
+
+### 27.10 Runtime (Plancia)
+<!-- scheda: runtime -->
+
+È una pagina di diagnostica tecnica (versioni, indirizzi, tempi di avvio):
+serve solo all'assistenza, che potrebbe chiederti di leggerla.
+
+### 27.11 Energia (Energia)
+<!-- scheda: sez1 -->
+<p align="center"><img src="manuale/img/cfg-10.jpg" width="250" alt="Scheda Energia"></p>
+
+**A cosa serve.** Collega i sensori di energia di Home Assistant (casa, rete,
+fotovoltaico, batteria) alla pagina Energia e alla sua tessera in Home. Qui si
+mettono anche carichi, report e costi.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»**: l'anteprima della sezione com'è sulla plancia
+  («📱 Telefono» o «🖥️ Computer»). Si apre con **«▶ Apri l'anteprima»**: si
+  trascinano i riquadri e si nascondono con l'occhio. Telefono e computer
+  hanno ognuno la sua disposizione.
+- **Gli impianti**: le linguette in alto (per esempio «Impianto»,
+  «Dependance») e **«+ Aggiungi impianto»**. Ogni impianto ha il suo
+  misuratore, il suo fotovoltaico, la sua batteria e i suoi carichi. Per
+  ognuno: «Nome impianto» e, in Home, **«Una tessera sola»** (la somma) o
+  **«Una per impianto»**. L'impianto principale non si può eliminare.
+- **Quattro linguette**:
+  - **«FLUSSI ED ENTITÀ»**: i riquadri «🏠 Casa», «🔌 Rete · prelievo», «🔌 Rete
+    · immissione», «☀️ Fotovoltaico», «🔋 Batteria · carica», «🔋 Batteria ·
+    scarica». In ognuno: «Potenza istantanea» (W), «Energia giornaliera»,
+    «Energia mensile», «Energia annuale» e «Contatore energia totale» (kWh).
+    Accanto, l'interruttore «NEL WIDGET».
+  - **«CARICHI E DISPOSITIVI»**: i cerchi sotto la Casa (per esempio una
+    stanza o la cucina) e gli elettrodomestici dentro ciascuno.
+  - **«REPORT»**: le voci del Report Energia, ognuna con etichetta, icona e
+    contatore per lo storico.
+  - **«IMPOSTAZIONI»**: il costo dell'energia e le fasce orarie, la soglia di
+    potenza, le bollette e i fornitori di energia.
+- **«⚡ Come leggere la configurazione Energia»**: un riassunto che dice da
+  dove la plancia legge giorno, mese, anno e storico.
+
+**Come si configura**
+
+**I flussi**
+1. Apri la linguetta **«FLUSSI ED ENTITÀ»**.
+2. Apri il riquadro «🏠 Casa» e tocca ogni casella per scegliere il sensore
+   con «Scegli entità».
+3. Fai lo stesso per Rete, Fotovoltaico e Batteria.
+4. Il titolo di ogni riquadro dice quante caselle hai compilato (per esempio
+   «5/5 configurati»).
+5. Premi **«💾 Salva sezione»**.
+
+**Un secondo impianto**
+1. Premi **«+ Aggiungi impianto»** e dai il nome.
+2. Compila le sue caselle: parte da zero e non tocca il primo.
+3. Scegli se in Home vuoi una tessera sola o una per impianto.
+
+**I carichi**
+1. Apri **«CARICHI E DISPOSITIVI»** e premi **«Aggiungi carico»**.
+2. Dai il nome, l'icona e la stanza, e scegli il sensore di potenza.
+3. Con **«Aggiungi dispositivo»** o «Scegli da Elettrodomestici» metti gli
+   apparecchi dentro il carico.
+4. Premi **«Salva carichi»**.
+
+**Consigli**
+- Il **«Contatore energia totale»** è il sensore che cresce sempre: se c'è,
+  giorno, mese e anno vengono calcolati da lui e i sensori di periodo non
+  vengono letti. In quel caso puoi svuotarli con **«Svuota i campi di
+  periodo»**.
+- Lo storico e i mesi precedenti si leggono sempre dal contatore totale.
+- Una batteria che passa dall'inverter si mette qui, nei riquadri «Batteria ·
+  carica» e «Batteria · scarica». La scheda «Batteria di accumulo» (27.12)
+  serve solo per vedere i pacchi uno per uno.
+
+### 27.12 Batteria di accumulo (Energia)
+<!-- scheda: accumulo -->
+<p align="center"><img src="manuale/img/cfg-11.jpg" width="250" alt="Scheda Batteria di accumulo"></p>
+
+**A cosa serve.** Mostra i pacchi della batteria di accumulo e i loro BMS,
+uno per uno. Si vedono nella linguetta Batterie di Energia e nella tessera
+Accumulo in Home. È **facoltativa**.
+
+**Cosa trovi**
+- **L'elenco dei pacchi** (all'inizio «Nessun pacco di batterie»).
+- **«＋ Aggiungi pacco»**: apre la scheda di un pacco. Dentro: «Tipo di BMS»,
+  «Stato di carica (SoC)», «Stato di salute (SoH)», «Tensione», «Corrente»,
+  «Potenza», «Temperatura», «Temperatura MOS», «Cicli», «Capacità»,
+  «Energia residua» e le celle.
+
+**Come si configura**
+1. Premi **«＋ Aggiungi pacco»**.
+2. Scegli il tipo di BMS.
+3. Scegli l'entità dello stato di carica: è l'entità principale del pacco.
+4. Compila le altre caselle che hai (salute, tensione, temperature…).
+5. Premi **«Trova le celle»** per far cercare le tensioni delle celle.
+6. Se serve, indica il segno della corrente («Positiva in carica» o «Negativa
+   in carica»).
+7. Premi **«Salva pacco»**, poi **«💾 Salva sezione»**.
+
+**Consigli**
+- Una batteria che comunica attraverso l'inverter (per esempio una Huawei
+  LUNA2000) non ha un BMS da scegliere: la metti in **Energia**, linguetta
+  «Flussi ed entità» (27.11).
+
+### 27.13 Veicoli (Energia)
+<!-- scheda: sez2 -->
+<p align="center"><img src="manuale/img/cfg-12.jpg" width="250" alt="Scheda Veicoli"></p>
+
+**A cosa serve.** Configura le auto e le moto della sezione Auto: batteria o
+serbatoio, autonomia, ricarica, foto. Qui si collegano anche la colonnina e
+evcc.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»**: l'anteprima della sezione (vedi 27.11).
+- **L'elenco dei veicoli**, con il numero di entità collegate. ✏️ apre il
+  veicolo, 🗑️ lo toglie, l'interruttore lo mostra o lo nasconde nella sezione.
+- **«🔗 Aggiungi da un'integrazione»**: scegli il dispositivo (Hyundai, Tesla,
+  Renault, BMW…) e l'auto arriva già compilata.
+- **«🔌 Collega la colonnina»**: vale per tutte le auto. Porta potenza,
+  energia, tensione, temperatura e lo stato del cavo.
+- **«☀️ Collega evcc»**: modalità di ricarica, limite di carica, sessione e
+  quota di sole.
+- **«＋ Nuovo veicolo»**: una scheda vuota da compilare a mano.
+
+**Come si configura**
+
+**Da un'integrazione (più semplice)**
+1. Premi **«🔗 Aggiungi da un'integrazione»**.
+2. Scegli il dispositivo dell'auto.
+3. Controlla le caselle compilate e salva.
+
+**A mano**
+1. Premi **«＋ Nuovo veicolo»**.
+2. Indica se è un'auto o una moto.
+3. Scrivi nome, marca e modello.
+4. Scegli le entità, una casella alla volta.
+5. Aggiungi le due foto (anche una sola).
+6. Premi il tasto di salvataggio («Salva il nuovo veicolo»).
+
+**Consigli**
+- Il veicolo da guardare si sceglie dalle linguette della sezione Auto, non da
+  qui.
+- Colonnina ed evcc si collegano una volta sola e valgono per tutte le auto.
+
+### 27.14 UPS (Energia)
+<!-- scheda: ups -->
+<p align="center"><img src="manuale/img/cfg-13.jpg" width="250" alt="Scheda UPS"></p>
+
+**A cosa serve.** Collega i gruppi di continuità. Con la corrente presente la
+tessera mostra la carica della batteria; quando la corrente manca mostra i
+minuti che restano e si accende.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»**: l'anteprima della sezione (vedi 27.11).
+- **Per ogni UPS**: «Nome» e le caselle «Stato dell'UPS», «Presenza rete»,
+  «Carica della batteria (%)», «Carico (%)», «Autonomia residua», «Tensione
+  di rete (V)», «Potenza assorbita (W)», «Temperatura».
+- **«Il sensore dice il contrario»**: da spuntare se «Presenza rete» è acceso
+  quando la corrente **non** c'è.
+- **«＋ Aggiungi un UPS»**.
+
+**Come si configura**
+1. Scrivi il nome dell'UPS.
+2. Scegli almeno lo **«Stato dell'UPS»**.
+3. Compila le altre caselle che hai.
+4. Se hai un altro UPS, premi **«＋ Aggiungi un UPS»** e ripeti.
+5. Premi **«💾 Salva sezione»**.
+
+**Consigli**
+- Nessuna casella è obbligatoria: con il solo stato dell'UPS (NUT) la tessera
+  sa già dire se c'è corrente.
+- L'«Autonomia residua» è il numero grande della tessera quando la corrente
+  manca.
+
+### 27.15 Clima (Clima e acqua)
+<!-- scheda: sez9 -->
+<p align="center"><img src="manuale/img/cfg-14.jpg" width="250" alt="Scheda Clima"></p>
+
+**A cosa serve.** Collega condizionatori, termostati, pompe di calore,
+deumidificatori, ventilazione e caldaia alla pagina Clima e al popup Clima
+della Home.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»**: l'anteprima della sezione (vedi 27.11).
+- **«❄️ Unità clima»**: l'elenco delle unità, con la stanza. ✏️ per
+  modificare, 🗑️ per togliere.
+- **Il modulo per una nuova unità**: il tipo («❄️ Freddo», «🔥 Caldo», «♨️
+  Pompa di calore»), «Entità clima», la stanza e «Valvola TRV (posizione %)».
+- **«Tasto Clima rapido»**: cosa fa il tasto di questa unità nel popup Clima
+  della Home: «Modalità» (Raffrescamento, Riscaldamento, Deumidificazione,
+  Solo ventola), «Temperatura» e «Ventola».
+- **«💧 Deumidificatori»**: ognuno ha una card sua.
+- **«🔄 Ventilazione meccanica»**: la VMC con le quattro temperature, il
+  bypass, la stagione e i filtri.
+- **«🔥 Entità caldaia (switch — facoltativa)»**: l'entità che dice se la
+  caldaia ha il consenso ad accendersi.
+- **«🔥 Stato termico (Caldo)»**: caldaia, pompe e altro da mostrare acceso o
+  spento nel popup Caldo.
+- **«Mostra «Caldaia accesa» nella Home»** e **«Nelle card mostra grande
+  l'ambiente (target sotto)»**.
+
+**Come si configura**
+
+**Un'unità clima**
+1. Scegli il tipo: Freddo, Caldo o Pompa di calore.
+2. Scegli l'«Entità clima» e la stanza.
+3. Se hai una valvola termostatica, scegli la sua entità di posizione.
+4. In «Tasto Clima rapido» scegli modalità, temperatura e ventola (vuote = il
+   tasto non le tocca).
+5. Premi **«＋ Aggiungi unità clima»**.
+
+**Un deumidificatore**
+1. Premi **«＋ Aggiungi un deumidificatore»**.
+2. Scegli l'entità `humidifier` (obbligatoria), il nome e la stanza. Le altre
+   caselle si riempiono da sole quando salvi.
+
+**La ventilazione (VMC)**
+1. Premi **«＋ Aggiungi una VMC»**.
+2. Scegli le quattro temperature (aria esterna, immissione, ripresa,
+   espulsione) e, se li hai, ventole, bypass, filtri.
+
+**La caldaia**
+1. Scegli l'entità caldaia.
+2. In «Stato termico» premi **«＋ Aggiungi voce»** per ogni cosa da vedere
+   accesa o spenta.
+
+Alla fine premi **«💾 Salva sezione»**.
+
+**Consigli**
+- La valvola TRV non serve se l'unità clima comunica già la posizione della
+  valvola.
+- Senza voci in «Stato termico» il pannello nel popup Caldo non compare.
+
+### 27.16 Temperatura (Clima e acqua)
+<!-- scheda: sez7 -->
+<p align="center"><img src="manuale/img/cfg-15.jpg" width="250" alt="Scheda Temperatura"></p>
+
+**A cosa serve.** Associa a ogni stanza il suo sensore di temperatura e, se
+c'è, di umidità. Sono i numeri della pagina Temperature e delle stanze.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»**: l'anteprima della sezione (vedi 27.11).
+- **L'elenco delle associazioni**: stanza, sensore di temperatura e di
+  umidità. ✏️ per modificare, 🗑️ per togliere.
+- **«＋ Aggiungi temperatura»**: «Stanza», «Nome temperatura»
+  (facoltativo), «Entità temperatura», «Nome umidità», «Entità umidità»
+  (facoltativa).
+
+**Come si configura**
+1. Scegli la stanza.
+2. Scegli l'«Entità temperatura» con «Scegli entità».
+3. Se c'è, scegli l'«Entità umidità».
+4. Se vuoi, scrivi un nome.
+5. Premi **«Associa sensori»**, poi **«💾 Salva sezione»**.
+
+**Consigli**
+- La stessa stanza si può scegliere più volte, per esempio per due sensori
+  in punti diversi: dai a ognuno un nome.
+- L'umidità della stanza serve anche alle Finestre, per consigliare di
+  arieggiare (27.25).
+
+### 27.17 Meteo (Clima e acqua)
+<!-- scheda: meteo -->
+<p align="center"><img src="manuale/img/cfg-16.jpg" width="250" alt="Scheda Meteo"></p>
+
+**A cosa serve.** Prepara la pagina Meteo: il tempo di adesso, la tua stazione
+meteo con le ultime 24 ore, le previsioni e il radar della pioggia.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»**: l'anteprima della sezione (vedi 27.11).
+- **«PREVISIONI»**: l'«Entità meteo (weather)». È la stessa del meteo nella
+  testata della Home.
+- **«LA MIA STAZIONE»**: dodici caselle, tutte facoltative (temperatura
+  esterna, umidità, percepita, pressione, vento, raffica, direzione, pioggia di
+  oggi, intensità della pioggia, indice UV, radiazione solare, luminosità), e
+  **«🪄 Trova i sensori della stazione»**.
+- **«RADAR PIOGGIA»**: «Nessuno», «Servizio di mappe» (RainViewer) o «Camera
+  di Home Assistant».
+- **«LA PAGINA»**: l'ordine dei blocchi («Adesso», «La mia stazione»,
+  «Prossime 24 ore», «Prossimi giorni», «Radar pioggia»), con ▲ ▼.
+
+**Come si configura**
+1. Scegli l'entità meteo.
+2. Premi **«🪄 Trova i sensori della stazione»**, oppure scegli i sensori uno
+   per uno.
+3. Scegli la fonte del radar.
+4. Metti i blocchi della pagina nell'ordine che preferisci.
+5. Premi **«💾 Salva sezione»**.
+
+**Consigli**
+- Basta l'entità meteo: un blocco senza dati non compare.
+- Cambiare l'entità meteo qui la cambia anche nella Home. Temperatura,
+  umidità, percepita, vento e pioggia sono gli stessi campi della Home e
+  dell'Irrigazione: si scelgono una volta sola.
+- Con «Servizio di mappe» il servizio esterno sa quale zona guardi. Se non
+  vuoi, scegli «Nessuno».
+
+### 27.18 Gestione termica (Clima e acqua)
+<!-- scheda: sez3 -->
+<p align="center"><img src="manuale/img/cfg-17.jpg" width="250" alt="Scheda Gestione termica"></p>
+
+**A cosa serve.** Disegna il locale caldaia: solare termico, scaldabagno,
+caldaia e stufa a pellet, con temperature, pompe e comandi.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»**: l'anteprima della sezione (vedi 27.11).
+- **«🔥 Cosa c'è nel locale caldaia»**: le caselle da spuntare: «Solare
+  termico», «Scaldabagno», «Caldaia», «Stufa a pellet». Con più d'una, in
+  pagina compaiono le linguette per passare dall'una all'altra.
+- **«🌞 Solare termico»**: le caselle divise in gruppi:
+  - **«☀️ Pannello»**: la temperatura dei pannelli.
+  - **«🔁 Circuito»**: se la pompa gira, la differenza di temperatura, la
+    pressione.
+  - **«🛢️ Accumulo»**: le temperature alta e bassa, la potenza.
+  - **«🎛️ Comandi»**: gli interruttori e le valvole da comandare.
+
+  Ogni casella ha la stanza e l'interruttore «NEL WIDGET».
+- **«＋ Aggiungi un secondo impianto solare»**: per due tetti o due accumuli.
+
+**Come si configura**
+1. Spunta in «Cosa c'è nel locale caldaia» solo quello che hai davvero.
+2. Apri il riquadro di ognuno e tocca ogni casella per scegliere l'entità.
+3. Se preferisci scrivere il nome dell'entità a mano, usa **«Modifica
+   manuale»**.
+4. Accendi «NEL WIDGET» sui valori da mostrare nella tessera della Home.
+5. Premi **«💾 Salva sezione»**.
+
+**Consigli**
+- La pagina mostra solo quello che hai spuntato.
+- Il sensore che dice se la pompa gira fa scorrere la luce nei tubi del
+  disegno.
+
+### 27.19 Piscina (Clima e acqua)
+<!-- scheda: pool -->
+<p align="center"><img src="manuale/img/cfg-18.jpg" width="250" alt="Scheda Piscina"></p>
+
+**A cosa serve.** Collega i sensori e i comandi della piscina e gestisce la
+filtrazione automatica di ogni giorno.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»**: l'anteprima della sezione (vedi 27.11).
+- **I sensori e i comandi**: «Temperatura piscina», «pH», «Cloro», «Pompa
+  filtrazione», «Riscaldamento piscina», «Luce piscina».
+- **«Soglie qualità (avvisi) e filtrazione»**: i valori minimi e massimi di pH
+  e cloro, le ore di filtrazione, **«Ore automatiche (temperatura/2)»** e
+  **«Filtrazione giornaliera attiva (col tablet acceso)»**.
+- **«🏊 Nome della prima vasca»**.
+- **«🏊 Altre piscine»** con **«＋ Aggiungi piscina»**.
+
+**Come si configura**
+1. Scegli le entità di temperatura, pH, cloro, pompa, riscaldamento e luce.
+2. Scrivi le soglie di pH e cloro: fuori da queste arriva l'avviso.
+3. Per la filtrazione automatica spunta «Ore automatiche» e «Filtrazione
+   giornaliera attiva».
+4. Dai un nome alla vasca.
+5. Se hai un'altra piscina, premi **«＋ Aggiungi piscina»** e compila i suoi
+   sensori.
+6. Premi **«💾 Salva sezione»**.
+
+**Consigli**
+- Con le ore automatiche, le ore di filtrazione sono la temperatura divisa per
+  due, da un minimo di 2 a un massimo di 12.
+- La filtrazione programmata parte solo se il tablet con la plancia è acceso.
+
+### 27.20 Irrigazione (Clima e acqua)
+<!-- scheda: irr -->
+<p align="center"><img src="manuale/img/cfg-19.jpg" width="250" alt="Scheda Irrigazione"></p>
+
+**A cosa serve.** Configura le zone del giardino e il programma: le zone
+partono una dopo l'altra, ognuna per i suoi minuti, e il giro salta se piove.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»**: l'anteprima della sezione (vedi 27.11).
+- **Le zone**: nome, durata in minuti e stanza (per esempio «Prato fronte ·
+  15 min»). ✏️ per modificare, 🗑️ per togliere.
+- **«Valvola della zona»** e **«＋ Aggiungi zona»**.
+- **Meteo e programma**: «Sensore probabilità pioggia», «Sensore umidità
+  terreno», «Umidità ideale min (%)» e «max (%)», «Salta il programma se ≥
+  (%)», «Avvia da solo se < (%)», «Meteo», l'orario di avvio.
+- **«Altri orari di irrigazione»**: «Ora», «Durata», «Se sotto (%)», con
+  **«+ Aggiungi un orario»**.
+- **«Programma attivo (ogni giorno, col tablet acceso)»**.
+
+**Come si configura**
+1. Scrivi il nome della zona e i minuti.
+2. Scegli la valvola della zona (un interruttore o una valvola) e la stanza.
+3. Premi **«＋ Aggiungi zona»**. Ripeti per ogni zona; ✏️ la modifica dopo.
+4. Scegli il sensore di pioggia e, se c'è, quello di umidità del terreno.
+5. Scrivi le soglie e l'orario di avvio.
+6. Se vuoi più giri al giorno, premi **«+ Aggiungi un orario»**.
+7. Spunta **«Programma attivo»**.
+8. Premi **«💾 Salva sezione»**.
+
+**Consigli**
+- Con il terreno già bagnato il programma salta (e la card lo dice); sotto la
+  soglia bassa parte da solo, una volta al giorno.
+- I sensori della pioggia della Home (27.2) sono gli stessi che guarda
+  l'Irrigazione.
+- Il programma funziona solo se il tablet con la plancia è acceso.
+
+### 27.21 Piante (Clima e acqua)
+<!-- scheda: piante -->
+<p align="center"><img src="manuale/img/cfg-20.jpg" width="250" alt="Scheda Piante"></p>
+
+**A cosa serve.** Elenca le piante di casa. La pagina Piante dice quali sono
+da innaffiare, quali aspettano la pioggia e quando toccherà alle altre.
+
+**Cosa trovi**
+- **L'elenco delle piante** (all'inizio «Nessuna pianta configurata»).
+- **«＋ Aggiungi pianta»**: il nome, il disegno, «Umidità della terra»,
+  «Temperatura della terra», «Da innaffiare sotto il (%)», «Troppa acqua
+  sopra il (%)», e «All'aperto: se sta per piovere, aspetta».
+- La scritta **«⚪ Sezione vuota»**: la sezione compare solo quando c'è
+  almeno una pianta.
+
+**Come si configura**
+1. Premi **«＋ Aggiungi pianta»**.
+2. Scrivi il nome e scegli il disegno.
+3. Scegli il sensore di umidità della terra e, se c'è, quello di temperatura.
+4. Scrivi le due soglie (troppo secca, troppa acqua).
+5. Per le piante all'aperto spunta «All'aperto: se sta per piovere, aspetta».
+6. Premi **«Salva pianta»**, poi **«💾 Salva sezione»**.
+
+### 27.22 Acqua e gas (Clima e acqua)
+<!-- scheda: contatori -->
+<p align="center"><img src="manuale/img/cfg-21.jpg" width="250" alt="Scheda Acqua e gas"></p>
+
+**A cosa serve.** Collega i contatori di casa: acqua, gas e i sensori
+dell'impianto. La pagina mostra oggi, ieri e il mese, la pressione e l'acqua
+che non smette di scorrere.
+
+**Cosa trovi**
+- **L'elenco dei contatori**: entità, nome, stanza e valore di adesso. ✏️ per
+  modificare, 🗑️ per togliere.
+- **«＋ Aggiungi contatore»**: «Entità del sensore», il nome, il disegno e
+  **«Cosa misura»** (per esempio contatore acqua, contatore gas, pressione,
+  portata, sale dell'addolcitore). Secondo il tipo compaiono caselle in più:
+  «Prezzo al m³ (€)», «Ideale da (bar)» e «Ideale fino a (bar)», «Da
+  ricomprare sotto».
+
+**Come si configura**
+1. Premi **«＋ Aggiungi contatore»**.
+2. Scegli il sensore con «Scegli entità».
+3. Scegli cosa misura e scrivi un nome.
+4. Compila le caselle in più (prezzo, forcella della pressione…).
+5. Premi **«Salva contatore»**, poi **«💾 Salva sezione»**.
+
+**Consigli**
+- Un sensore di portata permette alla pagina di accorgersi dell'acqua che
+  scorre senza fermarsi.
+
+### 27.23 Stanze (Casa)
+<!-- scheda: stanze -->
+<p align="center"><img src="manuale/img/cfg-22.jpg" width="250" alt="Scheda Stanze"></p>
+
+**A cosa serve.** Gestisce le stanze e i piani della casa. Le stanze create qui
+compaiono nelle tendine di luci, clima, elettrodomestici e telecamere.
+
+**Cosa trovi**
+- **«Anteprima: l'ordine delle stanze»**: l'ordine usato nella pagina Stanze e
+  in Luci, Tapparelle e Clima.
+- **«✋ Sposta e nascondi»**: l'anteprima della sezione (vedi 27.11).
+- **«🏢 I piani della casa»**: i piani con le loro stanze. ▲ ▼ per l'ordine,
+  ✏️ per rinominare, 🗑️ per eliminare, **«＋ Aggiungi piano»**.
+- **«Vista della stanza»**: come si presenta una stanza aperta: **«Tessere»**
+  (ogni cosa col suo comando, in griglia) o **«Righe»** (l'elenco diviso per
+  tipo).
+- **Le stanze**, divise per piano, con ▲ ▼, ✏️ e 🗑️.
+- **«＋ Aggiungi stanza»**: icona, nome e piano.
+
+**Come si configura**
+
+**Aggiungere una stanza**
+1. Scegli l'icona e scrivi il nome della stanza.
+2. Scegli il piano dalla tendina.
+3. Premi **«＋ Aggiungi stanza»**.
+
+**Riordinare le stanze**
+1. Nell'anteprima trascina la stanza (sul telefono tieni premuto un attimo).
+2. Premi **«Applica»**.
+
+**I piani**
+1. Premi **«＋ Aggiungi piano»** e scrivi il nome.
+2. Metti i piani nell'ordine giusto con ▲ ▼.
+
+Alla fine premi **«💾 Salva sezione»**.
+
+**Consigli**
+- Rinominare un piano si porta dietro le sue stanze. Eliminarlo le lascia senza
+  piano (la plancia lo chiede prima).
+- L'ordine dei piani vale anche per le scene delle luci e per le tapparelle.
+- I sensori di temperatura delle stanze si mettono nella scheda Temperatura
+  (27.16).
+
+### 27.24 Luci (Casa)
+<!-- scheda: luci -->
+<p align="center"><img src="manuale/img/cfg-23.jpg" width="250" alt="Scheda Luci"></p>
+
+**A cosa serve.** Elenca le luci della casa, divise per stanza, per la pagina
+Luci e il popup delle luci.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»**: l'anteprima della sezione (vedi 27.11).
+- **Le luci, stanza per stanza**: nome, entità e le pastiglie che dicono cosa
+  sa fare la luce («RGB», «BIANCO», «DIMMER», «ON/OFF»). Si vedono solo le
+  stanze con almeno una luce.
+- **Per ogni luce**: la tendina della stanza, ✏️ che apre tutti i dati della
+  luce, 🗑️ per toglierla.
+- **«＋ Aggiungi luce»**: «Entità luce» e «STANZA».
+
+**Come si configura**
+1. Scegli la luce con **«Scegli entità»** sotto «Entità luce».
+2. Scegli la stanza.
+3. Premi **«＋ Aggiungi luce»**.
+4. Per spostare una luce in un'altra stanza, cambia la tendina sulla sua riga.
+5. Premi **«💾 Salva sezione»**.
+
+**Consigli**
+- Una luce può essere un'entità luce oppure un interruttore: una lampada
+  dietro un relè si aggiunge allo stesso modo.
+- Le pastiglie (RGB, dimmer…) decidono quali comandi compaiono nel popup.
+
+### 27.25 Finestre (Casa)
+<!-- scheda: tapp -->
+<p align="center"><img src="manuale/img/cfg-24.jpg" width="250" alt="Scheda Finestre"></p>
+
+**A cosa serve.** Collega tapparelle, tende e sensori delle finestre. Compaiono
+nella pagina 🪟 Finestre, divise per piano e stanza.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»**: l'anteprima della sezione (vedi 27.11).
+- **«Chiusa sotto il (%), di serie»**: una tapparella ferma a questa
+  percentuale o sotto conta come chiusa (utile per chi lascia uno spiraglio).
+- **«Suggerisci di arieggiare sopra il (%), di serie»**: sopra questa umidità
+  la finestra consiglia di aprire. Vuoto = 60, zero = mai.
+- **L'elenco delle finestre**, con stanza e piano. ⇄ inverte le percentuali,
+  ✏️ modifica, 🗑️ toglie.
+- **Il modulo per una finestra**: «Stanza», «Entità tapparella», «Relè di
+  discesa», «Tenda», «Tenda · relè di discesa», «Tenda da sole», «Tenda da
+  sole · relè di discesa», «Sensore apertura infisso», «Sensore apertura
+  inferriata», «Posizione preferita (%)», le soglie solo per questa finestra
+  e «Percentuali invertite (100% = chiusa)».
+
+**Come si configura**
+1. Scegli la stanza.
+2. Scegli l'entità della tapparella:
+   - una tapparella motorizzata con posizione: basta lei;
+   - un relè solo: scegli il relè;
+   - due relè (uno sale, uno scende): il primo in «Entità tapparella», il
+     secondo in «Relè di discesa».
+3. Fai lo stesso per tenda e tenda da sole, se ci sono.
+4. Se c'è, scegli il sensore di apertura dell'infisso o dell'inferriata.
+5. Premi **«＋ Aggiungi entità a Finestre»**.
+6. Premi **«💾 Salva sezione»**.
+
+**Consigli**
+- Una finestra che si apre a mano (persiane, scuri, maniglia): lascia vuoti i
+  comandi e metti solo il sensore di apertura. La card la mostra lo stesso.
+- Senza stanza la finestra non ha un'umidità da guardare e non può consigliare
+  di arieggiare.
+- Se la tapparella segna 100% quando è chiusa, spunta «Percentuali invertite»
+  (o premi ⇄ sulla sua riga).
+
+### 27.26 Elettrodom. (Casa)
+<!-- scheda: appliances -->
+<p align="center"><img src="manuale/img/cfg-25.jpg" width="250" alt="Scheda Elettrodom."></p>
+
+**A cosa serve.** Qui metti gli elettrodomestici di casa: lavatrice,
+lavastoviglie, forno, frigorifero… Lo stato («In funzione», «Standby»,
+«Spento») si capisce dal consumo in Watt. Per questo funziona anche con un
+elettrodomestico non wifi collegato a una presa smart.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»**: la sezione com'è sulla plancia. Scegli
+  **«📱 Telefono»** o **«🖥️ Computer»**, poi **«▶ Apri l'anteprima»**: trascini
+  i riquadri e nascondi quello che non vuoi con l'occhio.
+- **L'elenco degli elettrodomestici**: per ognuno il nome e quante entità ha
+  (per esempio «Lavatrice · 12 entità»). La matita ✏️ lo modifica, il
+  cestino 🗑️ lo toglie.
+- **«🔗 AGGIUNGI DA UN'INTEGRAZIONE»**: per hOn, Home Connect, Miele, LG
+  ThinQ, SmartThings o una presa Shelly. Scegli il dispositivo e
+  l'elettrodomestico arriva con tutte le sue entità già al posto giusto.
+- **La compilazione a mano**: «STANZA», la casella **«Scegli entità»**, il
+  tasto **«＋ AGGIUNGI QUESTA ENTITÀ»** e la soglia di potenza («Sopra questa
+  potenza = In funzione»).
+- **«＋ AGGIUNGI ELETTRODOMESTICO»**.
+- **«🟢 SEZIONE VISIBILE IN DASHBOARD — TOCCA PER NASCONDERE»**: accende o
+  spegne la sezione nella plancia.
+- **«💾 SALVA SEZIONE»**.
+
+**Come si configura**
+
+**Da un'integrazione (il modo più semplice)**
+1. Tocca **«🔗 AGGIUNGI DA UN'INTEGRAZIONE»**.
+2. Scegli il dispositivo dall'elenco.
+3. Controlla nome e stanza, poi premi **«💾 SALVA SEZIONE»**.
+
+**A mano, una entità alla volta**
+1. Tocca **«＋ AGGIUNGI ELETTRODOMESTICO»** e scrivi il nome.
+2. In «STANZA» scegli dove si trova (per esempio «Cucina»).
+3. In **«Scegli entità»** scegli il sensore della potenza (per esempio
+   `sensor.forno_potenza`) o l'interruttore, poi tocca **«＋ AGGIUNGI QUESTA
+   ENTITÀ»**. Ripeti per le altre entità.
+4. Imposta la soglia: sopra quel valore l'elettrodomestico è «In funzione».
+5. Premi **«💾 SALVA SEZIONE»**.
+
+**Consigli**
+- Per un elettrodomestico non wifi su presa smart imposta circa **5 W**.
+- Una soglia troppo bassa (sotto 1 W) fa risultare «In funzione» anche il
+  solo display acceso.
+
+---
+
+### 27.27 Musica (Casa)
+<!-- scheda: media -->
+<p align="center"><img src="manuale/img/cfg-26.jpg" width="250" alt="Scheda Musica"></p>
+
+**A cosa serve.** Qui scegli i lettori di casa (casse, TV, Chromecast…). Ogni
+lettore ha una scheda tutta sua nella pagina Musica, con la copertina del
+brano come sfondo.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»**: anteprima della sezione per **«📱 Telefono»** e
+  **«🖥️ Computer»**, da aprire con **«▶ Apri l'anteprima»**.
+- **L'elenco dei lettori** (per esempio «Salone», `media_player.salone`), con
+  la matita ✏️ per modificare e il cestino 🗑️ per togliere.
+- **«🔗 AGGIUNGI DA UN'INTEGRAZIONE»**: per SmartThings, Sonos, Chromecast,
+  AirPlay… Il lettore arriva già fatto: la sua entità, i comandi accanto
+  (l'interruttore di una TV, la tendina della sorgente) e le sue letture.
+- **«＋ AGGIUNGI LETTORE»**: per compilarlo a mano, una casella alla volta.
+- **«🟢 SEZIONE VISIBILE IN DASHBOARD — TOCCA PER NASCONDERE»** e
+  **«💾 SALVA SEZIONE»**.
+
+**Come si configura**
+1. Tocca **«🔗 AGGIUNGI DA UN'INTEGRAZIONE»** e scegli il dispositivo,
+   oppure tocca **«＋ AGGIUNGI LETTORE»** e scegli l'entità del lettore.
+2. Dai un nome al lettore (per esempio «Cucina»).
+3. Premi **«💾 SALVA SEZIONE»**.
+
+**Consigli**
+- I tasti della scheda sono solo quelli che il lettore sa fare davvero: se
+  non ha il brano successivo, quel tasto non c'è.
+- Puoi mettere un lettore anche fra le **Azioni rapide** della Home: il tasto
+  prende la copertina come sfondo e mette in pausa o fa ripartire.
+
+---
+
+### 27.28 Radio (Casa)
+<!-- scheda: media_radio -->
+<p align="center"><img src="manuale/img/cfg-27.jpg" width="250" alt="Scheda Radio"></p>
+
+**A cosa serve.** Qui scegli le radio preferite. Compaiono in cima alla
+pagina Musica e si ascoltano su un lettore di casa o sugli Echo.
+
+**Cosa trovi**
+- **«Le radio preferite»**: quelle già scelte. Se non ce n'è nessuna leggi
+  «Nessuna radio preferita».
+- **«Aggiungi una radio»**: le radio di Home Assistant (Radio Browser), con
+  una casella per cercare per nome e due elenchi pronti, **«Vicino a te»** e
+  **«Più ascoltate»**.
+- **«💾 SALVA SEZIONE»**.
+
+**Come si configura**
+1. In «Aggiungi una radio» apri **«Vicino a te»** o **«Più ascoltate»**,
+   oppure scrivi il nome della radio.
+2. Tocca la radio che vuoi: passa fra «Le radio preferite».
+3. Premi **«💾 SALVA SEZIONE»**.
+
+**Consigli**
+- Se leggi «Nessuna radio con questo nome», prova a scrivere il nome in un
+  altro modo.
+- Le stesse radio si possono far suonare sugli Echo (scheda Musica della
+  famiglia Alexa).
+
+---
+
+### 27.29 Sport (Casa)
+<!-- scheda: sport -->
+<p align="center"><img src="manuale/img/cfg-28.jpg" width="250" alt="Scheda Sport"></p>
+
+**A cosa serve.** Qui scegli cosa seguire: la tua squadra di calcio o di
+hockey, la Formula 1, la MotoGP. La pagina Sport mostra risultati, prossime
+partite e gare, classifiche. In Home la tessera dice la cosa che conta adesso:
+la partita in corso, quella di oggi, l'ultimo podio.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»** con **«📱 Telefono»**, **«🖥️ Computer»** e
+  **«▶ Apri l'anteprima»**.
+- **«COSA SEGUI»**: l'elenco di quello che segui, con il conto (per esempio
+  «3/8»: se ne possono seguire fino a otto). Le frecce ▲ ▼ cambiano l'ordine,
+  il cestino 🗑️ toglie.
+- **«Pilota del cuore»** (per Formula 1 e MotoGP): il pilota da mettere in
+  evidenza, oppure «Nessuno».
+- **«AGGIUNGI»**: quattro tasti, **«⚽ SQUADRA DI CALCIO»**, **«🏒 SQUADRA DI
+  HOCKEY»**, **«🏁 FORMULA 1»**, **«🏍️ MOTOGP»**.
+- **«🟢 SEZIONE VISIBILE IN DASHBOARD — TOCCA PER NASCONDERE»** e
+  **«💾 SALVA SEZIONE»**.
+
+**Come si configura**
+1. Sotto «AGGIUNGI» tocca il tasto che ti interessa, per esempio **«⚽
+   SQUADRA DI CALCIO»**.
+2. Scegli il campionato e poi la squadra.
+3. Per Formula 1 o MotoGP scegli, se vuoi, il «Pilota del cuore».
+4. Con ▲ ▼ metti in alto quello che ti interessa di più.
+5. Premi **«💾 SALVA SEZIONE»**.
+
+**Consigli**
+- Della squadra si vedono le partite di tutte le competizioni: campionato,
+  coppe ed Europa.
+- I risultati li chiede l'add-on GdAHome alle fonti pubbliche. Se leggi «Le
+  squadre adesso non arrivano», riprova fra poco.
+
+---
+
+### 27.30 Robot (Casa)
+<!-- scheda: robot -->
+<p align="center"><img src="manuale/img/cfg-29.jpg" width="250" alt="Scheda Robot"></p>
+
+**A cosa serve.** Qui metti i robot di casa, aspirapolvere e tagliaerba. Ogni
+robot ha la sua scheda nella sezione Robot: stato, batteria, comandi e mappa.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»** con **«📱 Telefono»**, **«🖥️ Computer»** e
+  **«▶ Apri l'anteprima»**.
+- **L'elenco dei robot** (per esempio «Robot piano terra»), con la matita ✏️
+  e il cestino 🗑️.
+- **«🔗 AGGIUNGI DA UN'INTEGRAZIONE»**: per Roborock, Dreame, Ecovacs,
+  Husqvarna… Il robot arriva già fatto: entità, mappe, batteria, programmi e
+  letture.
+- **«＋ AGGIUNGI ROBOT»**: per compilarlo a mano.
+- **«🟢 SEZIONE VISIBILE IN DASHBOARD — TOCCA PER NASCONDERE»** e
+  **«💾 SALVA SEZIONE»**.
+
+**Come si configura**
+1. Tocca **«🔗 AGGIUNGI DA UN'INTEGRAZIONE»** e scegli il dispositivo,
+   oppure tocca **«＋ AGGIUNGI ROBOT»**.
+2. A mano, scegli l'«Entità del robot»: è quella dell'aspirapolvere
+   (`vacuum.…`) o del tagliaerba (`lawn_mower.…`).
+3. Dai un nome al robot e premi **«💾 SALVA SEZIONE»**.
+
+**Consigli**
+- Se l'integrazione dice «non si riconosce nessun robot», il dispositivo
+  scelto non ha un'entità di aspirapolvere o tagliaerba: scegline un altro.
+
+---
+
+### 27.31 Stampanti (Casa)
+<!-- scheda: stampanti -->
+<p align="center"><img src="manuale/img/cfg-30.jpg" width="250" alt="Scheda Stampanti"></p>
+
+**A cosa serve.** Della stampante la plancia ti dice due cose: se è pronta e
+quanto inchiostro le resta. La pagina Stampanti compare da sola appena ne
+aggiungi una.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»** con **«📱 Telefono»**, **«🖥️ Computer»** e
+  **«▶ Apri l'anteprima»**.
+- **L'elenco delle stampanti**: all'inizio «Nessuna stampante».
+- **«＋ AGGIUNGI STAMPANTE»**: apre i campi «Entità dello stato», «Cartucce
+  (facoltativo)» e «Pagine stampate (facoltativo)».
+- **«⚪ SEZIONE VUOTA — AGGIUNGI UN'ENTITÀ QUI SOTTO PER MOSTRARLA»**: finché
+  non c'è una stampante la sezione non compare.
+- **«💾 SALVA SEZIONE»**.
+
+**Come si configura**
+1. Tocca **«＋ AGGIUNGI STAMPANTE»**.
+2. In «Entità dello stato» scegli l'entità che dice se la stampante è pronta,
+   in stampa o ferma (la crea l'integrazione della stampante).
+3. Le cartucce si cercano da sole partendo da quel nome. Se non le trova,
+   aggiungile tu in «Cartucce (facoltativo)».
+4. Premi **«💾 SALVA SEZIONE»**.
+
+---
+
+### 27.32 Animali (Casa)
+<!-- scheda: animali -->
+<p align="center"><img src="manuale/img/cfg-31.jpg" width="250" alt="Scheda Animali"></p>
+
+**A cosa serve.** Una scheda per ogni animale di casa, con la sua foto e
+quello che lo riguarda: la ciotola, la lettiera, l'acqua, la porta col
+microchip, il collare. Anche acquari e terrari, quanti ne hai.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»** con **«📱 Telefono»**, **«🖥️ Computer»** e
+  **«▶ Apri l'anteprima»**.
+- **L'elenco degli animali** (per esempio «Micio», «Fido»): per ognuno la
+  tendina della stanza, la matita ✏️ e il cestino 🗑️.
+- **«🔗 AGGIUNGI DA UN'INTEGRAZIONE»**: per PetKit, SurePetcare, Tractive,
+  Litter-Robot… La scheda arriva già fatta: livello del cibo, lettiera,
+  filtro dell'acqua, collare.
+- **«＋ AGGIUNGI ANIMALE»**, **«＋ 🐠 ACQUARIO»**, **«＋ 🦎 TERRARIO»**.
+- **«🟢 SEZIONE VISIBILE IN DASHBOARD — TOCCA PER NASCONDERE»** e
+  **«💾 SALVA SEZIONE»**.
+
+**Come si configura**
+
+**Un animale**
+1. Tocca **«🔗 AGGIUNGI DA UN'INTEGRAZIONE»** e scegli il dispositivo,
+   oppure tocca **«＋ AGGIUNGI ANIMALE»** e riempi le caselle una alla volta.
+2. Scrivi il nome e, se vuoi, aggiungi una foto. Senza foto la scheda mostra
+   il disegno del tipo di animale.
+3. Scegli la stanza dalla tendina.
+4. Premi **«💾 SALVA SEZIONE»**.
+
+**Un acquario o un terrario**
+1. Tocca **«＋ 🐠 ACQUARIO»** o **«＋ 🦎 TERRARIO»**.
+2. Aggiungi le sue entità (temperatura, pH…).
+3. Premi **«💾 SALVA SEZIONE»**.
+
+**Consigli**
+- Nella modifica puoi impostare quando avvisare, per esempio «Avvisa sotto il
+  cibo (%)» o «Avvisa sotto la sabbia (%)».
+
+---
+
+### 27.33 Persone (Casa)
+<!-- scheda: people -->
+<p align="center"><img src="manuale/img/cfg-32.jpg" width="250" alt="Scheda Persone"></p>
+
+**A cosa serve.** Le persone di casa: dove sono, da quanto tempo, e la
+batteria del telefono. Ogni persona ha la sua card in cima alla Home, con una
+foto vera o un avatar. Qui si configura anche l'**Assistente di casa**.
+
+**Cosa trovi**
+- **L'elenco delle persone** (per esempio «Persona 1», `person.persona_1`):
+  le frecce ▲ ▼ cambiano l'ordine in Home, la matita ✏️ modifica, il cestino
+  🗑️ cancella. L'interruttore della riga toglie la persona dalla Home senza
+  cancellarla.
+- **«＋ AGGIUNGI PERSONA»** e **«⤵️ IMPORTA DA HOME ASSISTANT»**.
+- **«Accanto alle persone»**: cosa mostrare vicino alle card delle persone,
+  per esempio «Assistente di casa» oppure «Niente».
+- **«Di cosa parla»**: gli argomenti dell'assistente, cioè «Sicurezza»,
+  «Risparmio», «Elettrodomestici», «Comfort», «Promemoria», «Manutenzione».
+- **«Quanto parla»**: «Solo l'importante», «Normale», «Proprio tutto».
+- **«La notte comincia alle»**: da 18:00 a 23:00.
+- **«DIMENTICA QUELLO CHE HA IMPARATO»**: azzera quello che l'assistente ha
+  imparato.
+- **«Cosa c'è in casa»** con **«GUARDA COSA HA CAPITO ›»**.
+- **«💾 SALVA SEZIONE»**.
+
+**Come si configura**
+
+**Aggiungere le persone**
+1. Il modo più veloce: tocca **«⤵️ IMPORTA DA HOME ASSISTANT»**. Arrivano le
+   persone che Home Assistant conosce già.
+2. Per una persona a mano tocca **«＋ AGGIUNGI PERSONA»**.
+3. In «Entità persona» scegli l'entità `person.…` (o un `device_tracker.…`).
+4. Scrivi il «Nome».
+5. Scegli una «Foto», oppure un «Avatar (senza foto)», oppure un'emoji. Se
+   lasci tutto vuoto, compaiono le iniziali del nome.
+6. Se vuoi, in «Batteria (facoltativa)» scegli il sensore della batteria del
+   telefono.
+7. Premi **«💾 SALVA SEZIONE»**.
+
+**Impostare l'Assistente di casa**
+1. In «Accanto alle persone» scegli **«Assistente di casa»**.
+2. In «Di cosa parla» accendi gli argomenti che ti interessano.
+3. In «Quanto parla» scegli quanto spesso deve intervenire.
+4. Scegli l'ora in «La notte comincia alle».
+5. Premi **«💾 SALVA SEZIONE»**.
+
+**Consigli**
+- L'assistente guarda la casa al posto tuo: luci accese con la casa vuota,
+  una finestra aperta col riscaldamento acceso, la pioggia in arrivo, il
+  bucato finito. Impara da quello che scarti.
+- Se l'assistente sbaglia a capire una luce, una presa o una porta, correggilo
+  da **«GUARDA COSA HA CAPITO ›»**.
+- Con una foto l'avatar non si vede: vince la foto.
+- Sul computer e sul tablet l'assistente sta a destra delle persone, sul
+  telefono sotto.
+
+---
+
+### 27.34 Batterie (Casa)
+<!-- scheda: batterie -->
+<p align="center"><img src="manuale/img/cfg-33.jpg" width="250" alt="Scheda Batterie"></p>
+
+**A cosa serve.** Qui scegli le batterie da tenere d'occhio. La pagina
+Batterie le mostra dalla più scarica alla più piena, e in cima dice quante
+sono da cambiare.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»** con **«📱 Telefono»**, **«🖥️ Computer»** e
+  **«▶ Apri l'anteprima»**.
+- **«Da cambiare sotto il (%)»**: vale per tutte. Sotto questa percentuale la
+  batteria entra nel conto di quelle da cambiare.
+- **L'elenco delle batterie**: per ognuna il nome, l'entità, la tendina della
+  stanza e la percentuale di adesso. Matita ✏️ per modificare, cestino 🗑️ per
+  togliere.
+- **«＋ AGGIUNGI BATTERIA»**.
+- **«🟢 SEZIONE VISIBILE IN DASHBOARD — TOCCA PER NASCONDERE»** e
+  **«💾 SALVA SEZIONE»**.
+
+**Come si configura**
+1. Scrivi la percentuale in «Da cambiare sotto il (%)».
+2. Tocca **«＋ AGGIUNGI BATTERIA»**.
+3. Scegli l'entità della batteria (deve essere in percentuale), scrivi il
+   nome che vuoi e scegli il disegno.
+4. Scegli la stanza dalla tendina.
+5. Ripeti per le altre batterie, poi premi **«💾 SALVA SEZIONE»**.
+
+---
+
+### 27.35 Salute (Casa)
+<!-- scheda: salute -->
+<p align="center"><img src="manuale/img/cfg-34.jpg" width="250" alt="Scheda Salute"></p>
+
+**A cosa serve.** La pagina Salute mostra i passi, il battito, la pressione,
+il peso, il sonno di chi abita la casa, e Strava. Le misure la plancia le
+trova da sola fra i sensori di Home Assistant. Qui scegli l'obiettivo, i nomi
+e, se serve, i sensori giusti.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»** con **«📱 Telefono»**, **«🖥️ Computer»** e
+  **«▶ Apri l'anteprima»**.
+- **👟 «OBIETTIVO DEI PASSI»**: il campo «Passi al giorno». L'anello della
+  pagina si chiude a questo numero.
+- **👤 «LE PERSONE»**: per ogni telefono trovato, il nome da usare (per
+  esempio «Come chiamare «Telefono Persona 1»»).
+- **🩺 «LE MISURE»**: una tendina per ogni misura: «Passi», «Battito a
+  riposo», «Battito», «Peso», «Massa grassa», «Pressione massima», «Pressione
+  minima», «Ossigeno», «Sonno», «Calorie a riposo», «Calorie», «Distanza a
+  piedi», «Piani saliti», «Minuti di esercizio», «Ore in piedi». Ogni tendina
+  offre:
+  - **«Automatico»**: la plancia usa il sensore che ha trovato da sola;
+  - un sensore preciso, scelto dall'elenco di tutti i sensori di casa;
+  - **«Nessuno: non mostrare»**: la misura non compare.
+
+  Sotto la tendina leggi cosa ha trovato da sola (per esempio «Trovati da
+  soli: Telefono Persona 1 Steps») oppure «Nessun sensore trovato da solo».
+- **🏃 «STRAVA»**: con l'integrazione Strava di HACS in Home Assistant, nella
+  pagina Salute compare anche la linguetta Strava.
+- **«🟢 SEZIONE VISIBILE IN DASHBOARD — TOCCA PER NASCONDERE»** e
+  **«💾 SALVA SEZIONE»**.
+
+**Come si configura**
+1. In «OBIETTIVO DEI PASSI» scrivi i «Passi al giorno» (per esempio 8000).
+2. In «LE PERSONE» scrivi come chiamare ogni telefono, per esempio il nome
+   della persona.
+3. In «LE MISURE» guarda le righe «Trovati da soli»:
+   - se il sensore trovato è giusto, lascia **«Automatico»**;
+   - se è sbagliato o manca, scegli tu il sensore dalla tendina;
+   - se una misura non ti interessa, scegli **«Nessuno: non mostrare»**.
+4. Premi **«💾 SALVA SEZIONE»**.
+
+**Consigli**
+- L'elenco dei sensori nelle tendine è lunghissimo perché contiene tutti i
+  sensori di casa: scegli solo quello della misura giusta (per esempio, per il
+  peso, il sensore «Weight» del telefono).
+- Per Strava non c'è niente da fare qui: basta l'integrazione in Home
+  Assistant.
+
+---
+
+### 27.36 Prese (Casa)
+<!-- scheda: prese -->
+<p align="center"><img src="manuale/img/cfg-35.jpg" width="250" alt="Scheda Prese"></p>
+
+**A cosa serve.** Le prese di casa: la TV del salotto, il Firestick, il modem.
+Si accendono e si spengono come le luci, ma stanno per conto loro: così
+«spegni tutte le luci» non spegne il modem.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»** con **«📱 Telefono»**, **«🖥️ Computer»** e
+  **«▶ Apri l'anteprima»**.
+- **«🟢 SEZIONE VISIBILE IN DASHBOARD — TOCCA PER NASCONDERE»**.
+- **L'elenco delle prese**: icona, nome, entità e stanza (per esempio «TV
+  salotto · 🏠 Soggiorno»), con la matita ✏️ e il cestino 🗑️.
+- **Il modulo «＋ Aggiungi presa»**:
+  - **«Nome»**;
+  - **«Entità Home Assistant»**: l'interruttore della presa;
+  - **«Consumo (facoltativo)»**: il wattmetro della presa, se ce l'ha. La card
+    scrive quanto consuma accanto allo stato;
+  - **«Icona»** e **«Stanza»** (c'è anche «— Altre zone —»);
+  - **«Si vede ma non si comanda»**: per le prese da non spegnere (frigo,
+    modem, congelatore). La riga resta, ma il tasto non risponde;
+  - **«IMMAGINE»**: **«Carica una foto»** (JPG, PNG, HEIC) oppure **«Scegli
+    dai disegni»**. La foto riempie il riquadro al posto del disegno.
+- **«＋ AGGIUNGI PRESA»** e **«💾 SALVA SEZIONE»**.
+
+**Come si configura**
+1. Tocca **«＋ AGGIUNGI PRESA»**.
+2. Scrivi il «Nome» e scegli l'«Entità Home Assistant» con **«Scegli
+   entità»**.
+3. Se la presa misura il consumo, scegli il sensore in «Consumo
+   (facoltativo)».
+4. Scegli «Icona» e «Stanza».
+5. Per il modem o il frigo accendi **«Si vede ma non si comanda»**.
+6. Se vuoi, metti una foto in «IMMAGINE».
+7. Premi **«💾 SALVA SEZIONE»**.
+
+**Consigli**
+- La foto resta in casa: si salva nell'add-on GdAHome e non passa da nessun
+  server esterno. Il telefono la riduce a 1200 px prima di mandarla.
+
+---
+
+### 27.37 Sicurezza (Sicurezza)
+<!-- scheda: sez4 -->
+<p align="center"><img src="manuale/img/cfg-36.jpg" width="250" alt="Scheda Sicurezza"></p>
+
+**A cosa serve.** Qui colleghi l'antifurto e le telecamere. La sezione
+Sicurezza, la tessera della Home e il pannello a muro mostrano lo stato
+dell'allarme e diventano rossi quando scatta.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»** con **«📱 Telefono»**, **«🖥️ Computer»** e
+  **«▶ Apri l'anteprima»**.
+- **«🛡️ Sicurezza»**: la centrale d'allarme (per esempio
+  `alarm_control_panel.casa`), con la sua stanza e il tasto «Modifica
+  manuale».
+- **«Modalità da mostrare»**: i tasti «CASA», «FUORI», «NOTTE», «VACANZA»,
+  «PARZIALE». Ci sono solo quelli che la centrale accetta davvero.
+- **«🚨 Quando è scattato»**:
+  - **«Dove si legge se è scattato»**: l'entità che dice che l'antifurto sta
+    suonando (un interruttore, un sensore o un aiutante);
+  - **«Il valore che vuol dire «scattato»»**: vuoto vuol dire «on»;
+  - **«Sirena (facoltativa)»**: serve per il tasto «Spegni sirena» nella
+    notifica e nella Sicurezza;
+  - **«Che cosa l'ha fatto scattare (facoltativo)»**: un sensore che dice la
+    zona;
+  - sotto, lo stato di adesso (per esempio «Adesso: a riposo»).
+- **«Tasti d'inserimento su misura»**: per chi non ha una centrale (antifurto
+  fatto con ESPHome, con gli script o con un elenco di modalità). Si
+  aggiungono con **«＋ AGGIUNGI UN TASTO»**.
+- **«🛡️ Zone e ingressi della centrale»**:
+  - **«Zone di quest'area»**: i sensori di movimento della centrale;
+  - **«Ingressi di quest'area»**: i contatti di porte e finestre.
+- **«＋ AGGIUNGI UNA SECONDA AREA D'ALLARME»**: per una centrale divisa in
+  aree (zona giorno e zona notte, casa e capannone).
+- **«📹 Telecamere»**: l'elenco delle telecamere (per esempio «Ingresso»,
+  `camera.ingresso`) e, per ognuna, «Entità telecamera», «INDIRIZZO RTSP
+  (FACOLTATIVO…)», «Video dal vivo nella tessera» e la stanza.
+- **«＋ AGGIUNGI TELECAMERA»**, **«🟢 SEZIONE VISIBILE IN DASHBOARD — TOCCA
+  PER NASCONDERE»** e **«💾 SALVA SEZIONE»**.
+
+**Come si configura**
+
+**La centrale d'allarme**
+1. Controlla che in «🛡️ Sicurezza» ci sia la tua centrale. Se non c'è, usa
+   «Modifica manuale» e scegli l'entità.
+2. In «Modalità da mostrare» spegni le modalità che non usi. Si nascondono
+   solo dalla sezione: la centrale non cambia, e lo sblocco resta sempre.
+3. Premi **«💾 SALVA SEZIONE»**.
+
+**L'allarme scattato**
+1. In «Dove si legge se è scattato» scegli l'entità che dice che l'antifurto
+   suona.
+2. Se quell'entità non dice «on» quando scatta, scrivi il valore giusto in
+   «Il valore che vuol dire «scattato»».
+3. Se vuoi il tasto «Spegni sirena», scegli la «Sirena (facoltativa)».
+4. Premi **«💾 SALVA SEZIONE»**.
+
+**Antifurto senza centrale**
+1. In «Tasti d'inserimento su misura» tocca **«＋ AGGIUNGI UN TASTO»**.
+2. Crea un tasto per ogni modo di inserire l'allarme. I tasti compaiono nella
+   sezione Sicurezza e nella tessera della Home.
+3. Premi **«💾 SALVA SEZIONE»**.
+
+**Zone e ingressi**
+1. In «Zone di quest'area» accendi i sensori che sono vere zone dell'allarme.
+2. In «Ingressi di quest'area» accendi le porte e le finestre da vedere.
+3. Premi **«💾 SALVA SEZIONE»**.
+
+**Le telecamere**
+1. Tocca **«＋ AGGIUNGI TELECAMERA»**.
+2. In «Entità telecamera» scegli la telecamera con **«Scegli entità»**.
+3. Se la telecamera non è in Home Assistant, scrivi l'indirizzo RTSP.
+4. Accendi **«Video dal vivo nella tessera»** solo sulle telecamere che vuoi
+   vedere muoversi.
+5. Scegli la stanza e premi **«💾 SALVA SEZIONE»**.
+
+**Consigli**
+- Se lasci vuoto «Che cosa l'ha fatto scattare», la casa guarda quale porta,
+  finestra o movimento si è acceso per ultimo.
+- Se non accendi nessuna zona, la pagina Sicurezza non mostra la parte
+  «Zone».
+- Gli ingressi hanno lo stesso nome e lo stesso stato che hanno nella scheda
+  Varchi.
+- «Video dal vivo nella tessera» tiene aperta una connessione mentre guardi la
+  sezione: senza, la tessera mostra un'istantanea ogni quattro secondi.
+
+---
+
+### 27.38 Varchi (Sicurezza)
+<!-- scheda: varchi -->
+<p align="center"><img src="manuale/img/cfg-37.jpg" width="250" alt="Scheda Varchi"></p>
+
+**A cosa serve.** I varchi di casa: porte, finestre, portone, basculante. La
+pagina Varchi li mostra in quest'ordine: verde chiuso, rosso aperto, e in
+cima quanti sono aperti adesso.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»** con **«📱 Telefono»**, **«🖥️ Computer»** e
+  **«▶ Apri l'anteprima»**.
+- **L'elenco dei varchi**: per ognuno il nome, lo stato di adesso («Chiusa»,
+  «Aperta»), l'entità del contatto, la tendina della stanza, la matita ✏️ e il
+  cestino 🗑️.
+- **«＋ AGGIUNGI VARCO»**.
+- **«🟢 SEZIONE VISIBILE IN DASHBOARD — TOCCA PER NASCONDERE»** e
+  **«💾 SALVA SEZIONE»**.
+
+**Come si configura**
+1. Tocca **«＋ AGGIUNGI VARCO»**.
+2. Scegli l'entità del contatto (per esempio
+   `binary_sensor.finestra_cucina`).
+3. Scrivi il nome che vuoi e scegli il disegno.
+4. Scegli la stanza dalla tendina.
+5. Premi **«💾 SALVA SEZIONE»**.
+
+**Consigli**
+- L'ordine dell'elenco è l'ordine della pagina Varchi.
+- Gli stessi contatti si possono mostrare fra gli «Ingressi» della scheda
+  Sicurezza.
+
+---
+
+### 27.39 Presenza (Sicurezza)
+<!-- scheda: presenza -->
+<p align="center"><img src="manuale/img/cfg-38.jpg" width="250" alt="Scheda Presenza"></p>
+
+**A cosa serve.** I rilevatori di presenza e di movimento. La pagina Presenza
+mostra in cima quante stanze hanno qualcuno dentro e, sotto, una card per
+ogni rilevatore con da quanto tempo è così.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»** con **«📱 Telefono»**, **«🖥️ Computer»** e
+  **«▶ Apri l'anteprima»**.
+- **L'elenco dei rilevatori**: nome, entità con lo stato di adesso (per
+  esempio «libero»), tendina della stanza, matita ✏️ e cestino 🗑️.
+- **«＋ AGGIUNGI RILEVATORE»**.
+- **«🟢 SEZIONE VISIBILE IN DASHBOARD — TOCCA PER NASCONDERE»** e
+  **«💾 SALVA SEZIONE»**.
+
+**Come si configura**
+1. Tocca **«＋ AGGIUNGI RILEVATORE»**.
+2. Scegli l'entità del rilevatore, scrivi il nome che vuoi e scegli il
+   disegno.
+3. Scegli la stanza: serve a contare quante stanze sono occupate.
+4. Premi **«💾 SALVA SEZIONE»**.
+
+---
+
+### 27.40 Apri porte/cancelli (Sicurezza)
+<!-- scheda: doors -->
+<p align="center"><img src="manuale/img/cfg-39.jpg" width="250" alt="Scheda Apri porte/cancelli"></p>
+
+**A cosa serve.** Le aperture della sezione Sicurezza: portone, porta di casa,
+cancello, garage. Ogni porta ha la sua card. Il tocco chiede conferma e, se
+imposti un PIN, il codice.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»** con **«📱 Telefono»**, **«🖥️ Computer»** e
+  **«▶ Apri l'anteprima»**.
+- **L'elenco delle aperture**: icona, nome, entità (per esempio
+  `lock.portone`), tendina della stanza, matita ✏️ e cestino 🗑️.
+- **«＋ AGGIUNGI APERTURA»**.
+- **«Chiedi conferma prima di aprire»**: l'interruttore della conferma.
+- **«🟢 SEZIONE VISIBILE IN DASHBOARD — TOCCA PER NASCONDERE»** e
+  **«💾 SALVA SEZIONE»**.
+
+**Come si configura**
+1. Tocca **«＋ AGGIUNGI APERTURA»**.
+2. Scegli l'entità della serratura o del cancello e scrivi il nome.
+3. Se vuoi proteggerla, imposta un PIN nella modifica ✏️.
+4. Scegli la stanza.
+5. Decidi se tenere acceso **«Chiedi conferma prima di aprire»**.
+6. Premi **«💾 SALVA SEZIONE»**.
+
+**Consigli**
+- Spegni la conferma se apri il portone dieci volte al giorno: si apre al
+  primo tocco.
+- Il PIN non è una conferma: una porta con il PIN continua a chiederlo anche
+  con la conferma spenta.
+
+---
+
+### 27.41 Citofono e posta (Sicurezza)
+<!-- scheda: citofono -->
+<p align="center"><img src="manuale/img/cfg-40.jpg" width="250" alt="Scheda Citofono e posta"></p>
+
+**A cosa serve.** Chi suona alla porta e cosa c'è nella cassetta delle
+lettere. Del citofono servono il tasto che apre e, se c'è, il campanello.
+Della cassetta basta un sensore.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»** con **«📱 Telefono»**, **«🖥️ Computer»** e
+  **«▶ Apri l'anteprima»**.
+- **«🔔 Citofono»**: all'inizio «Niente, per ora».
+  - **«🔗 AGGIUNGI DA UN'INTEGRAZIONE»**: per Ring, Doorbird, 2N, un relè su
+    un cancello… Le caselle si compilano da sole: il tasto che apre, il
+    campanello e la telecamera.
+  - **«＋ AGGIUNGI CITOFONO»**: per compilarlo a mano.
+- **«📬 Cassetta della posta»**: all'inizio «Niente, per ora».
+  - **«🔗 AGGIUNGI DA UN'INTEGRAZIONE»**: per il Vallhorn di IKEA, un
+    contatto Zigbee sullo sportello, un sensore di luce…
+  - **«＋ AGGIUNGI CASSETTA»**.
+- **«⚪ SEZIONE VUOTA — AGGIUNGI UN'ENTITÀ QUI SOTTO PER MOSTRARLA»** e
+  **«💾 SALVA SEZIONE»**.
+
+**Come si configura**
+
+**Il citofono**
+1. Tocca **«🔗 AGGIUNGI DA UN'INTEGRAZIONE»** sotto «🔔 Citofono» e scegli il
+   dispositivo, oppure tocca **«＋ AGGIUNGI CITOFONO»**.
+2. A mano, scegli il tasto che apre (un pulsante, uno script, una serratura,
+   un cancello motorizzato) e, se c'è, il campanello.
+3. Premi **«💾 SALVA SEZIONE»**.
+
+**La cassetta della posta**
+1. Tocca **«🔗 AGGIUNGI DA UN'INTEGRAZIONE»** sotto «📬 Cassetta della
+   posta», oppure **«＋ AGGIUNGI CASSETTA»**.
+2. Scegli il sensore che dice che è arrivato qualcosa e, se lo hai, quello
+   dello sportello.
+3. Premi **«💾 SALVA SEZIONE»**.
+
+**Consigli**
+- Con due sensori (arrivo e sportello) la plancia capisce da sola se la posta
+  è ancora dentro.
+- Con un sensore solo, l'apertura vale come arrivo: quando prendi la posta lo
+  dici tu, col tasto sulla card.
+
+---
+
+### 27.42 Allerte (Avvisi)
+<!-- scheda: allerte -->
+<p align="center"><img src="manuale/img/cfg-41.jpg" width="250" alt="Scheda Allerte"></p>
+
+**A cosa serve.** La pagina Allerte raccoglie terremoti, avvisi della
+protezione civile, fulmini, pollini, comfort termico, voli sopra casa,
+scioperi, treni e qualità dell'aria. Per ognuno scegli il sensore che la sua
+integrazione ha già portato in Home Assistant. La plancia non chiama nessun
+servizio: legge quello che c'è.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»** con **«📱 Telefono»**, **«🖥️ Computer»** e
+  **«▶ Apri l'anteprima»**.
+- **Un blocco per ogni fonte**, ognuno con le sue caselle **«Scegli
+  entità»**:
+  - **«TERREMOTI»**: «Sensore dei terremoti», «Magnitudo (facoltativa)»,
+    «Distanza in km (facoltativa)». Va bene l'integrazione INGV Terremoti;
+  - **«PROTEZIONE CIVILE»**: «Avviso della protezione civile» (Meteoalarm o
+    i bollettini della Protezione Civile, che dicono «gialla», «arancione»,
+    «rossa»);
+  - **«FULMINI»**: «Conteggio dei fulmini» e «Distanza dell'ultimo fulmine
+    (km)», per esempio da Blitzortung;
+  - **«POLLINI»**: «Pollini di oggi», più «Graminacee», «Erbacce», «Alberi»
+    (facoltativi);
+  - **«COMFORT TERMICO»**: «Percezione», più «Humidex», «Indice di calore»,
+    «Rischio gelo» (facoltativi), per esempio da Thermal Comfort;
+  - **«VOLI SOPRA CASA»**: «Voli in zona», per esempio da Flightradar24;
+  - **«SCIOPERI»**: «Sensore degli scioperi»;
+  - **«TRENI»**: «Treno seguito» e «Stazione preferita (facoltativa)».
+- **🍃 «QUALITÀ DELL'ARIA»**: i sensori dell'aria (polveri, CO₂, monossido,
+  composti volatili) li trova Home Assistant da solo. Qui si corregge:
+  - **«La misura in copertina»** con il tasto **«METTI»**: il numero grande
+    della tessera;
+  - **«Non contare questo sensore»** con **«TOGLI»**: esclude un sensore;
+  - **«Aggiungi un sensore che non viene trovato»**: scegli il sensore, poi
+    che misura è (PM2.5, PM10, Anidride carbonica…) e premi **«AGGIUNGI»**;
+  - **«I confini di ogni misura»**: per ogni sostanza i valori che separano
+    buona, discreta, scarsa e cattiva, e il tasto **«Rimetti le norme»**.
+- **«⚪ SEZIONE VUOTA — AGGIUNGI UN'ENTITÀ QUI SOTTO PER MOSTRARLA»** e
+  **«💾 SALVA SEZIONE»**.
+
+**Come si configura**
+
+**Le allerte**
+1. Scegli il blocco che ti interessa, per esempio «FULMINI».
+2. Nella prima casella tocca **«Scegli entità»** e scegli il sensore della
+   tua integrazione.
+3. Se vuoi, riempi anche le caselle facoltative.
+4. Ripeti per le altre fonti che hai.
+5. Premi **«💾 SALVA SEZIONE»**.
+
+**La qualità dell'aria**
+1. Se vuoi un numero preciso in copertina (per esempio l'indice della tua
+   centralina), sceglilo in «La misura in copertina» e premi **«METTI»**.
+2. Se un sensore non deve contare (per esempio quello esterno), sceglilo in
+   «Non contare questo sensore» e premi **«TOGLI»**.
+3. Se un sensore fatto in casa non viene trovato, sceglilo in «Aggiungi un
+   sensore che non viene trovato», indica che misura è e premi
+   **«AGGIUNGI»**.
+4. Premi **«💾 SALVA SEZIONE»**.
+
+**Consigli**
+- Nessuna casella è obbligatoria e ognuna basta da sola: la pagina mostra
+  solo le fonti che hai.
+- Lascia vuota «La misura in copertina»: in copertina va la misura messa
+  peggio, che di solito è la risposta giusta.
+- I confini di serie seguono le norme (indice europeo, EN 16798-1 per la CO₂,
+  OMS per il monossido). Cambiali solo se sai perché; per tornare indietro usa
+  **«Rimetti le norme»**.
+- Un treno soppresso diventa un allarme.
+
+---
+
+### 27.43 Agenda (Avvisi)
+<!-- scheda: agenda -->
+<p align="center"><img src="manuale/img/cfg-42.jpg" width="250" alt="Scheda Agenda"></p>
+
+**A cosa serve.** Gli impegni e le cose da fare, nella stessa pagina. Qui
+scegli quali calendari e quali liste guardare.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»** con **«📱 Telefono»**, **«🖥️ Computer»** e
+  **«▶ Apri l'anteprima»**.
+- **«📅 Calendario»**: i calendari di Home Assistant scelti (per esempio
+  «Famiglia», «Lavoro»), con la stanza, la matita ✏️ e il cestino 🗑️. Sotto,
+  **«＋ AGGIUNGI CALENDARIO»** e **«🪄 RILEVA DA HOME ASSISTANT»**.
+- **«✅ Cose da fare»**: le liste ToDo di Home Assistant (per esempio
+  «Spesa», «Cose di casa»), con **«＋ AGGIUNGI LISTA»** e **«🪄 RILEVA DA HOME
+  ASSISTANT»**.
+- **«🟢 SEZIONE VISIBILE IN DASHBOARD — TOCCA PER NASCONDERE»** e
+  **«💾 SALVA SEZIONE»**.
+
+**Come si configura**
+1. Sotto «📅 Calendario» tocca **«🪄 RILEVA DA HOME ASSISTANT»** per prendere
+   tutti i calendari, oppure **«＋ AGGIUNGI CALENDARIO»** per sceglierne uno.
+2. Togli con il cestino 🗑️ quelli che non vuoi.
+3. Fai lo stesso sotto «✅ Cose da fare» con le liste.
+4. Premi **«💾 SALVA SEZIONE»**.
+
+**Consigli**
+- La sezione «Agenda» compare nella barra appena scegli un calendario.
+- La tessera in Home mostra i prossimi due impegni. Se la tessera si vede o
+  no lo decidi nella scheda **Widget**.
+- Le cose da fare si spuntano dalla tessera e dalla sezione; quelle con una
+  scadenza compaiono nel giorno in cui scadono.
+
+---
+
+### 27.44 Rifiuti (Avvisi)
+<!-- scheda: rifiuti -->
+<p align="center"><img src="manuale/img/cfg-43.jpg" width="250" alt="Scheda Rifiuti"></p>
+
+**A cosa serve.** La raccolta differenziata. La pagina risponde alla domanda
+della sera, «cosa metto fuori stasera», e la tessera in Home si accende il
+giorno prima del ritiro.
+
+**Cosa trovi**
+- **«✋ Sposta e nascondi»** con **«📱 Telefono»**, **«🖥️ Computer»** e
+  **«▶ Apri l'anteprima»**.
+- **«♻️ Raccolta differenziata»**: un bidone per materiale, ognuno con il suo
+  sensore. Si aggiunge con **«＋ AGGIUNGI MATERIALE»**.
+- **«Calendario o sensore unico (facoltativo)»**: per chi ha tutti i ritiri
+  in un posto solo.
+- **«Da che ora si guarda a domani»**: da quest'ora la pagina parla del ritiro
+  di domani.
+- **«🗓️ Il calendario di casa»**: due settimane che si ripetono, scritte a
+  mano, con il campo «La prima settimana comincia il» e i giorni da «LUN» a
+  «DOM» di «SETTIMANA 1» e «SETTIMANA 2».
+- **«🟢 SEZIONE VISIBILE IN DASHBOARD — TOCCA PER NASCONDERE»** e
+  **«💾 SALVA SEZIONE»**.
+
+**Come si configura**
+
+**Con i sensori di Home Assistant**
+1. Tocca **«＋ AGGIUNGI MATERIALE»**.
+2. Scegli «Che materiale è» (carta, plastica…) e il «Sensore o calendario del
+   ritiro».
+3. Ripeti per ogni materiale e premi **«💾 SALVA SEZIONE»**.
+
+**Con un calendario unico**
+1. In «Calendario o sensore unico (facoltativo)» scegli il calendario con un
+   evento per ritiro, o il sensore con l'elenco dei ritiri.
+2. Premi **«💾 SALVA SEZIONE»**. Ogni voce diventa una riga, e il materiale
+   lo indovina dal nome.
+
+**A mano, senza sensori**
+1. In «🗓️ Il calendario di casa» scegli la data in «La prima settimana
+   comincia il».
+2. Tocca un giorno della «SETTIMANA 1» e scegli cosa esce. Fai lo stesso per
+   la «SETTIMANA 2».
+3. Premi **«💾 SALVA SEZIONE»**.
+
+**Consigli**
+- Imposta «Da che ora si guarda a domani» all'ora in cui il ritiro di oggi è
+  già passato.
+- Se un materiale ha già il suo sensore, il calendario di casa non lo ripete:
+  comanda il sensore.
+
+---
+
+### 27.45 Notifiche (Alexa)
+<!-- scheda: alexa -->
+<p align="center"><img src="manuale/img/cfg-44.jpg" width="250" alt="Scheda Notifiche"></p>
+
+**A cosa serve.** Le notifiche arrivano ai telefoni. Con questa scheda le
+dicono anche gli Echo di casa, per chi è in casa con le mani occupate. Vale
+per tutta la casa.
+
+**Cosa trovi**
+- **«Fai dire le notifiche agli Echo»**: l'interruttore e la scelta degli
+  Echo. Se in Home Assistant non c'è nessun Echo, leggi «Nessun Echo in Home
+  Assistant».
+- **«Quali notifiche»**: «Urgenti: antifurto, allarmi, campanello,
+  blackout», «Sicurezza: inserimenti, aperture, movimento», «Casa:
+  elettrodomestici, frigo, pioggia, animali», «Persone: chi arriva», «Le tue
+  notifiche personalizzate», «Dalle automazioni di Home Assistant».
+- **«Di notte zitti»**: con gli orari «Dalle» e «alle».
+- **«Come lo dice»**: «Annuncio» (prima il suono, poi la voce) oppure «Voce»
+  (solo la voce).
+- **«💾 SALVA SEZIONE»**.
+
+**Come si configura**
+1. Prima, in Home Assistant, aggiungi l'integrazione «Alexa Devices» (oppure
+   «Alexa Media Player» da HACS) e accedi con il tuo account Amazon. Gli Echo
+   compaiono qui da soli.
+2. Accendi **«Fai dire le notifiche agli Echo»** e tocca gli Echo che devono
+   parlare.
+3. In «Quali notifiche» accendi i gruppi che vuoi sentire.
+4. Se vuoi silenzio di notte, accendi «Di notte zitti» e scegli «Dalle» e
+   «alle».
+5. In «Come lo dice» scegli «Annuncio» o «Voce».
+6. Premi **«💾 SALVA SEZIONE»**.
+
+**Consigli**
+- Gli Echo dicono solo le notifiche accese nelle Notifiche dell'app: una
+  voce spenta su tutti i telefoni non la dicono.
+- Di notte le notifiche urgenti si dicono lo stesso.
+
+---
+
+### 27.46 Avvisi personalizzati (Alexa)
+<!-- scheda: alexa_avvisi -->
+<p align="center"><img src="manuale/img/cfg-45.jpg" width="250" alt="Scheda Avvisi personalizzati"></p>
+
+**A cosa serve.** Frasi tue che gli Echo dicono a un orario o quando cambia
+qualcosa in casa, per esempio «È ora di andare a scuola».
+
+**Cosa trovi**
+- **«Alexa non parla ancora»**: compare se gli Echo non sono ancora accesi
+  nella scheda «Notifiche».
+- **«Avvisi personalizzati»**: l'elenco delle tue frasi.
+- **«＋ Nuovo avviso»**: crea una frase nuova.
+- **«💾 SALVA SEZIONE»**.
+
+**Come si configura**
+1. Se vedi «Alexa non parla ancora», vai prima nella scheda **Notifiche**,
+   accendi gli Echo e sceglili.
+2. Tocca **«＋ Nuovo avviso»**.
+3. Scrivi la frase in «Cosa dice».
+4. Scegli quando: «A un orario» (con i giorni) oppure «Quando cambia
+   qualcosa».
+5. In «Su quali Echo» scegli gli Echo. Se non ne scegli nessuno, usa quelli
+   della scheda Notifiche.
+6. Premi **«💾 SALVA SEZIONE»**.
+
+**Consigli**
+- Gli avvisi a orario si dicono anche di notte.
+
+---
+
+### 27.47 Musica (Alexa)
+<!-- scheda: alexa_musica -->
+<p align="center"><img src="manuale/img/cfg-46.jpg" width="250" alt="Scheda Musica degli Echo"></p>
+
+**A cosa serve.** Fa suonare la musica e le radio sugli Echo di casa.
+
+**Cosa trovi**
+- Se in Home Assistant non c'è nessun Echo, la scheda mostra solo «Nessun
+  Echo in Home Assistant» e come rimediare.
+- Con gli Echo collegati: gli Echo su cui suonare, cosa suonare (un artista,
+  un brano, un album, una playlist o una radio) e le radio preferite scelte in
+  Musica › Radio.
+- **«💾 SALVA SEZIONE»**.
+
+**Come si configura**
+1. In Home Assistant aggiungi l'integrazione «Alexa Devices», oppure «Alexa
+   Media Player» da HACS, e accedi con il tuo account Amazon.
+2. Torna in questa scheda: gli Echo compaiono da soli.
+3. Tocca un Echo per sceglierlo e scegli cosa suonare.
+4. Premi **«💾 SALVA SEZIONE»**.
+
+**Consigli**
+- Il servizio musicale deve essere collegato agli Echo nell'app Alexa.
+- Le radio preferite si scelgono nella scheda **Radio** (famiglia Casa); sugli
+  Echo le cerca TuneIn.
+
+---
+
+### 27.48 MiniPC (Macchine e rete)
+<!-- scheda: sez6 -->
+<p align="center"><img src="manuale/img/cfg-47.jpg" width="250" alt="Scheda MiniPC"></p>
+
+**A cosa serve.** Tiene d'occhio il computer su cui gira Home Assistant, gli
+altri computer di casa e la rete: processore, memoria, disco, temperatura,
+internet, velocità della linea.
+
+**Cosa trovi**
+- **«🖥️ Monitoraggio server»**: i valori del computer principale. Dalla
+  tendina «— Scegli parametro —» scegli cosa mostrare («CPU (%)», «RAM (%)»,
+  «Disco (%)», «Temperatura CPU (°C)», «Internet», «Speedtest Download
+  (Mbit/s)»…) e premi **«＋ AGGIUNGI»**. Ogni riga ha la sua entità, la matita
+  «Modifica» e il cestino.
+- **«✋ Sposta e nascondi»** con **«📱 Telefono»**, **«🖥️ Computer»** e
+  **«▶ Apri l'anteprima»**.
+- **«🖧 Altri nodi del cluster»**: gli altri computer, uno per riga, con
+  **«🔗 AGGIUNGI DA UN'INTEGRAZIONE»** (Proxmox VE, Glances, System
+  Monitor…) e **«＋ AGGIUNGI NODO»**.
+- **Le macchine e la rete**: ogni riga è una macchina, con l'entità, il nome,
+  il disegno e la fascia in cui sta («Macchina o container» oppure «Pezzo di
+  rete»). C'è **«DA QUALI INTEGRAZIONI»** e **«＋ AGGIUNGI MACCHINA»**.
+- **«Si vede in Home»**: mostra o nasconde la tessera in Home.
+- **«🟢 SEZIONE VISIBILE IN DASHBOARD — TOCCA PER NASCONDERE»** e
+  **«💾 SALVA SEZIONE»**.
+
+**Come si configura**
+
+**Il computer principale**
+1. In «🖥️ Monitoraggio server» scegli un parametro dalla tendina e premi
+   **«＋ AGGIUNGI»**.
+2. Nella riga scegli l'entità giusta (per esempio `sensor.minipc_cpu`).
+3. Ripeti solo per i valori che vuoi vedere, poi premi **«💾 SALVA
+   SEZIONE»**.
+
+**Gli altri nodi**
+1. Tocca **«🔗 AGGIUNGI DA UN'INTEGRAZIONE»** e scegli il dispositivo del
+   nodo, oppure **«＋ AGGIUNGI NODO»**.
+2. Dai un nome al nodo e controlla le caselle.
+3. Premi **«💾 SALVA SEZIONE»**.
+
+**Le macchine e la rete**
+1. Tocca **«＋ AGGIUNGI MACCHINA»**.
+2. Scegli l'«Entità della macchina», il nome e il disegno.
+3. In «In quale fascia» scegli «Macchina o container» o «Pezzo di rete».
+4. Premi **«💾 SALVA SEZIONE»**.
+
+**Consigli**
+- Le caselle dei nodi sono tutte facoltative: una casella vuota è una barra
+  che non compare.
+- Finché non scegli l'entità, una macchina non si vede né nella pagina né nel
+  conto di quelle giù.
+- «Si vede in Home» è lo stesso interruttore di **Configurazione → Widget**,
+  dove scegli anche l'ordine delle tessere.
+
+---
+
+### 27.49 Dispositivi non connessi (Macchine e rete)
+<!-- scheda: scollegati -->
+<p align="center"><img src="manuale/img/cfg-48.jpg" width="250" alt="Scheda Dispositivi non connessi"></p>
+
+**A cosa serve.** Mostra tutti i dispositivi di Home Assistant che non
+rispondono, anche quelli che la plancia non mostra. Un apparecchio finisce
+qui quando tacciono tutte le sue entità.
+
+**Cosa trovi**
+- **L'elenco dei dispositivi che non rispondono.** Se va tutto bene leggi
+  «Adesso risponde tutto».
+- **Il cestino 🗑️**: toglie un dispositivo dall'avviso.
+- **Il campanello 🔔**: fra i dispositivi tolti, rimette quello che vuoi
+  nell'avviso.
+
+**Come si configura**
+1. Apri la scheda: non c'è niente da impostare, l'elenco si riempie da solo.
+2. Se un dispositivo è spento apposta (per esempio un apparecchio di
+   stagione), tocca il cestino 🗑️: non darà più l'avviso.
+3. Per riaverlo nell'avviso, trovalo fra quelli tolti e tocca il campanello.
+
+**Consigli**
+- Aiutanti, automazioni e script non compaiono: non hanno un apparecchio
+  dietro.
+- Quando un dispositivo smette di rispondere, in Home compare anche la sua
+  tessera.
 
 ---
 
