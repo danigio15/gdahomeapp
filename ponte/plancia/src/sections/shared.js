@@ -428,8 +428,22 @@ export function roomOptionsMarkup(selected = "", vuoto = "") {
  * immagini, la mappa del robot — e ne stava per nascere una quarta per gli
  * eventi dei calendari. Adesso e' una sola: dove si va a prendere il gettone
  * e' una domanda con una risposta, non tre uguali che un giorno divergono.
- */
+ *
+ * **Ospitata, nessun gettone: mai.** «Quando apro la plancia su HA mi arriva
+ * sempre la notifica di login fallito, anche se poi funziona tutto.» La
+ * plancia ospitata — dentro Home Assistant dall'add-on, o dentro l'app — non
+ * ha un gettone suo: parla col ponte, e per le porte HTTP di Home Assistant
+ * usa le firme del socket (`auth/sign_path`) o il gettone che `entity_picture`
+ * si porta dietro. Ma il salvataggio del collegamento (`cd_connection`) puo'
+ * avere dentro un gettone vecchio: arrivato con un backup della plancia
+ * autonoma, con la sincronizzazione di una volta, o rimasto da quando quella
+ * stessa pagina girava da sola. Letto qui, diventava `Authorization: Bearer
+ * <vecchio>` sulle istantanee delle telecamere e sui calendari — e un `Bearer`
+ * che non vale e' esattamente cio' che Home Assistant conta come «Login
+ * attempt or request with invalid authentication», a ogni apertura. I dati
+ * arrivavano lo stesso dal socket: per questo «funziona tutto». */
 export function gettoneDiAccesso() {
+  if (root.__DASHBOARDMODERN_HOSTED__ === true) return "";
   const valori = [
     root.DASHBOARDMODERN_AUTH_TOKEN,
     root.__DASHBOARDMODERN_REAL_TOKEN__,
