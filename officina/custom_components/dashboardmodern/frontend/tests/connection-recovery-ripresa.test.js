@@ -121,6 +121,9 @@ class PresaFinta {
 /* Come il guscio: `connect()` e' una dichiarazione globale, apre una presa,
  * accende il pallino a `auth_ok` e alla chiusura lo spegne e riprova fra
  * cinque secondi. */
+/* Il contatore dei messaggi del guscio: anche il `ping` di prova prende il
+ * suo numero da qui (vedi `il-ping-di-prova-non-ferma-i-comandi.test.js`). */
+globalThis.msgId = 1;
 function connect() {
   const presa = new PresaFinta();
   globalThis.ws = presa;

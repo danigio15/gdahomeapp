@@ -289,6 +289,20 @@ test("il ruolo col Supervisor e' quello di serie, e nessun permesso largo e' acc
   assert.ok(!/^apparmor:[ \t]*false/m.test(scritto), "AppArmor non si spegne");
 });
 
+/* I comandi della plancia — la luce che si accende dentro Home Assistant, il
+ * tasto dell'app — passano dal filo del ponte verso `supervisor/core/websocket`
+ * (`casa.js`, `cucitura.js`), e le letture e le scritture REST da
+ * `supervisor/core/api/`. Il Supervisor quelle due vie non le guarda col
+ * ruolo: stanno fra quelle senza controllo di ruolo
+ * (`supervisor/api/middleware/security.py`), e il suo proxy (`api/proxy.py`)
+ * chiede soltanto `homeassistant_api`, per leggere e per scrivere allo stesso
+ * modo. Il ruolo `default` non le tocca; senza `homeassistant_api` invece non
+ * passa niente, ne' gli stati ne' i comandi. */
+test("il filo con Home Assistant sta su homeassistant_api, non sul ruolo", () => {
+  const scritto = readFileSync(qui("../config.yaml"), "utf8");
+  assert.deepEqual(iValoriDi(scritto, "homeassistant_api"), ["true"]);
+});
+
 test("si mappa la sola cartella di Home Assistant, perche' le plance stanno in www/gdahome", () => {
   /* In scrittura per una ragione sola, detta nel manifesto: la pagina che apre
    * le plance fra le «Plance» deve uscire dalla `www` di Home Assistant, e Home

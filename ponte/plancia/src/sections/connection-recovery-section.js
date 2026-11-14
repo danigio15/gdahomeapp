@@ -344,14 +344,31 @@ function riparti(delay = FIRST_DELAY) {
  * il pallino verde mentiva: si spegne, la presa si lascia, e se ne apre una
  * nuova. Solo sulle prese vere del browser: il ponte del pannello di Home
  * Assistant (`legacy/bridge-socket.js`) vive nella stessa pagina e cade
- * insieme alla connessione del pannello, che lo dice da se'. */
+ * insieme alla connessione del pannello, che lo dice da se'.
+ *
+ * Il numero del `ping` e' il prossimo del runtime (`msgId++`), come per ogni
+ * altro messaggio delle sezioni, e mai uno inventato qui. Home Assistant
+ * vuole i numeri di una presa sempre in salita e a uno che non sale risponde
+ * `id_reuse` senza eseguirlo: nella 1.19.3 il `ping` partiva con
+ * 1 900 000 000, e dentro Home Assistant — dove la cucitura del ponte gira i
+ * numeri della pagina com'e' (`ponte/src/cucitura.js`) — dopo di lui nessun
+ * comando passava piu': le luci si vedevano accese e non si spegnevano. Senza
+ * il contatore del runtime la presa non si prova: meglio una prova in meno
+ * che una presa che non comanda piu' niente. */
 export function verificaLaPresa() {
   const socket = lexicalGlobal("ws") ?? root.ws;
   if (!socket || typeof socket !== "object" || !connectionUp()) return false;
   if (socket.readyState !== socketConstant("OPEN", 1) || socket.__dmProva) return false;
   if (!socket.__dmRecoveryOwned || eIlPonteDelPannello(socket)) return false;
+  let id = 0;
   try {
-    socket.send(JSON.stringify({ id: 1_900_000_000 + (state.preseMute % 1000), type: "ping" }));
+    id = root.eval?.("msgId++");
+  } catch (_error) {
+    return false;
+  }
+  if (!Number.isSafeInteger(id) || id <= 0) return false;
+  try {
+    socket.send(JSON.stringify({ id, type: "ping" }));
   } catch (_error) {
     return false;
   }

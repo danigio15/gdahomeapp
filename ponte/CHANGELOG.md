@@ -10,6 +10,14 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.19.4.1
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **I comandi dalla plancia dentro Home Assistant tornano a funzionare**:
+  dalla 1.19.3, dopo essere tornati sul pannello, luci e dispositivi si
+  vedevano ma non rispondevano ai comandi.
+
 ## 1.19.4
 
 _App GdAHome e add-on._
