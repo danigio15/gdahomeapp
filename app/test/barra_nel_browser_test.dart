@@ -248,12 +248,18 @@ void main() {
   });
 
   testWidgets(
-    'aperta fino in fondo la barra copre la plancia del tutto, e chiudendo smette',
+    'la barra copre la plancia del tutto solo quando la si fa scorrere, e chiudendo smette',
     (prova) async {
-      /* «Lo scroll del menu non scorre fluido»: a menu aperto la plancia,
-       * composta dal sistema, si toglie dalla scena. Solo a menu aperto del
-       * tutto, e solo sopra la plancia. */
-      prova.view.physicalSize = const Size(400, 800);
+      /* «Lo scroll del menu non scorre fluido»: col menu aperto e fatto
+       * scorrere la plancia, composta dal sistema, si toglie dalla scena.
+       *
+       * Prima bastava aperto fino in fondo, e si vedeva: «il menu laterale fa
+       * un glitch, e' come se caricasse due volte» — appena entrato, la
+       * striscia di plancia a destra cambiava e lo schermo si rifaceva. Chi
+       * apre il menu per toccare una mattonella non scorre, e a lui la
+       * plancia resta dov'e' (vedi `il_menu_si_apre_una_volta_test.dart`). */
+      prova.view.physicalSize = const Size(400, 560);
+      /* Basso abbastanza perche' l'elenco scorra davvero. */
       prova.view.devicePixelRatio = 1;
       addTearDown(prova.view.reset);
       final chiave = GlobalKey<BarraDelleSezioniState>();
@@ -264,6 +270,12 @@ void main() {
       chiave.currentState!.apri();
       await prova.pump(const Duration(milliseconds: 50));
       expect(daParte.coperta, isEmpty, reason: 'mentre entra si vede ancora');
+      await prova.pumpAndSettle();
+      expect(daParte.coperta, isEmpty, reason: 'aperto e fermo, pure');
+      await prova.drag(
+        find.text(Sezione.configurazione.titolo),
+        const Offset(0, -200),
+      );
       await prova.pumpAndSettle();
       expect(daParte.coperta, [true]);
       chiave.currentState!.chiudi();
