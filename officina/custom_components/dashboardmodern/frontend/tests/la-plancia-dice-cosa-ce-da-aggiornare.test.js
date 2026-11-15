@@ -225,8 +225,11 @@ test("se il servizio rifiuta, il tasto Installa torna com'era", () => {
   assert.match(sorgente, /\.then\(\(\) => guardaIlRiavvioDopoLInstallazione\(\)\)/);
   /* E il no si dice: il Marketplace che chiede di accettare l'avviso
    * rifiutava ogni aggiornamento, e il tasto tornava com'era senza una
-   * parola. */
-  assert.match(sorgente, /root\.edToast\?\.\(ilRifiutoDetto\(errore\)\)/);
+   * parola. Lo dice `diIlRifiuto`, con le parole di `ilRifiutoDetto`. */
+  assert.match(sorgente, /diIlRifiuto\(errore\)/);
+  /* E si chiede con l'utente di chi guarda, quando Home Assistant e' attorno:
+   * il Marketplace guarda chi ha accettato il suo avviso. */
+  assert.match(sorgente, /chiediLInstallazione\(quale, \(\) =>/);
   assert.match(sorgente, /aggiornamento\.disabled = false;/);
   assert.match(sorgente, /aggiornamento\.textContent = parola;/);
 });

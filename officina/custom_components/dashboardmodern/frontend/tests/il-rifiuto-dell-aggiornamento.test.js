@@ -12,3 +12,13 @@ test("il rifiuto del Marketplace si riconosce, gli altri no", () => {
   assert.equal(perchéNonSiInstalla(null), "");
   assert.equal(perchéNonSiInstalla(undefined), "");
 });
+
+test("il rifiuto del Marketplace si riconosce anche dalla sua chiave, in ogni lingua", () => {
+  /* Home Assistant manda `translation_key` accanto al messaggio: il testo
+   * cambia con la lingua di chi lo scrive, la chiave no. */
+  assert.equal(
+    perchéNonSiInstalla({ translation_key: "warning_not_accepted", message: "Öffne zuerst" }),
+    "marketplace",
+  );
+  assert.equal(perchéNonSiInstalla({ translation_key: "invalid_version", message: "x" }), "");
+});

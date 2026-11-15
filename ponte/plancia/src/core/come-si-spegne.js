@@ -131,6 +131,8 @@ export function comandoPerSpegnere(entity, stato = null) {
  * scrivono come li manda Home Assistant).
  */
 export function perchéNonSiInstalla(errore) {
+  /* Home Assistant dice anche la chiave del messaggio: vale in ogni lingua. */
+  if (errore?.translation_key === "warning_not_accepted") return "marketplace";
   const detto = String(errore?.message ?? errore ?? "");
   if (/marketplace/i.test(detto) && /(warning|accept)/i.test(detto)) return "marketplace";
   return "";

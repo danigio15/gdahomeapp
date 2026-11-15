@@ -37,6 +37,7 @@ import {
   postaRitirata,
 } from "../core/come-sta-la-casa.js";
 import { comandoPerSpegnere, perchéNonSiInstalla } from "../core/come-si-spegne.js";
+import { apriIlMarketplace, installaConChiGuarda } from "../core/installa-con-chi-guarda.js";
 import {
   VELO_DELLA_FASCIA,
   durataDellaDeriva,
@@ -1066,30 +1067,76 @@ function installaLAggiornamento(tasto) {
   const parola = tasto.textContent;
   tasto.disabled = true;
   tasto.textContent = t("In corso", "Installing");
-  Promise.resolve(root.dmCallHaService("update", "install", { entity_id: entita }))
+  chiediLInstallazione(entita, () => root.dmCallHaService("update", "install", { entity_id: entita }))
     .then(() => root.dmGuardaIlRiavvio?.())
     .catch((errore) => {
       tasto.disabled = false;
       tasto.textContent = parola;
-      try {
-        root.edToast?.(ilRifiutoDetto(errore));
-      } catch (_ignora) {}
+      diIlRifiuto(errore);
     });
   return true;
 }
 
+/* L'installazione, con l'utente di chi guarda quando Home Assistant e'
+ * attorno (`installa-con-chi-guarda.js`): il Marketplace guarda chi ha
+ * accettato il suo avviso, e il ponte parla col segno del Supervisor, che
+ * l'avviso non l'ha accettato mai. `ripiego` e' la strada di prima, per
+ * l'app e per la plancia aperta da sola. */
+export function chiediLInstallazione(entita, ripiego) {
+  return installaConChiGuarda(entita, { finestra: root, ripiego });
+}
+
 /* Il no di Home Assistant a un aggiornamento, in parole che si capiscono. Il
  * Marketplace che chiede di accettare l'avviso lo si dice con cosa fare; gli
- * altri come li manda Home Assistant. */
+ * altri come li manda Home Assistant.
+ *
+ * Il Marketplace l'avviso lo vuole accettato da chi installa, utente per
+ * utente. Se l'installazione l'ha chiesta l'utente che guarda
+ * (`strada: "utente"`) e' lui che non l'ha ancora accettato. Se l'ha chiesta
+ * il ponte, l'ha chiesta l'utente di GdAHome dentro Home Assistant: averlo
+ * accettato col proprio utente non basta, e dirgli «accettalo» era dirgli una
+ * cosa che aveva gia' fatto. */
 export function ilRifiutoDetto(errore) {
-  if (perchéNonSiInstalla(errore) === "marketplace")
+  if (perchéNonSiInstalla(errore) === "marketplace") {
+    if (errore?.strada === "utente")
+      return t(
+        "Il Marketplace di Home Assistant installa solo per chi ha accettato il suo avviso, e con l'utente con cui sei entrato non risulta accettato. Apri il Marketplace dal menu di Home Assistant con questo utente, leggi l'avviso e accettalo, poi riprova.",
+        "The Home Assistant Marketplace only installs for people who accepted its warning, and the user you are signed in with has not accepted it. Open the Marketplace from the Home Assistant menu with this user, read the warning and accept it, then try again.",
+      );
     return t(
-      "Prima apri il Marketplace dal menu di Home Assistant, leggi l'avviso e accettalo: dopo gli aggiornamenti si installano anche da qui.",
-      "First open the Marketplace from the Home Assistant menu, read the warning and accept it: after that, updates install from here too.",
+      "Da qui l'aggiornamento lo chiede GdAHome con il suo utente di Home Assistant, e il Marketplace vuole l'avviso accettato da chi installa: averlo accettato col tuo utente non basta. Installalo dalla plancia aperta dentro Home Assistant, oppure da Home Assistant: Impostazioni → Aggiornamenti.",
+      "From here the update is requested by GdAHome with its own Home Assistant user, and the Marketplace wants the warning accepted by whoever installs: accepting it with your user is not enough. Install it from the dashboard opened inside Home Assistant, or from Home Assistant: Settings → Updates.",
     );
+  }
   return `${t("Home Assistant ha rifiutato", "Home Assistant refused")}: ${clean(
     errore?.message || errore,
   )}`;
+}
+
+/* Il no, detto a chi ha toccato. Quello del Marketplace e' lungo e chiede di
+ * fare qualcosa: in un avviso che sparisce in due secondi non si legge, e
+ * allora sta in una finestra. Se Home Assistant e' attorno la finestra offre
+ * di aprire il Marketplace, dove l'avviso si legge e si accetta: lo accetta
+ * la persona, con le sue mani, non la plancia. */
+export function diIlRifiuto(errore) {
+  const detto = ilRifiutoDetto(errore);
+  try {
+    if (perchéNonSiInstalla(errore) === "marketplace") {
+      if (errore?.strada === "utente" && typeof root.confirm === "function") {
+        const apri = root.confirm(
+          `${detto}\n\n${t("Aprire il Marketplace adesso?", "Open the Marketplace now?")}`,
+        );
+        if (apri) apriIlMarketplace(root);
+        return detto;
+      }
+      if (typeof root.alert === "function") {
+        root.alert(detto);
+        return detto;
+      }
+    }
+    root.edToast?.(detto);
+  } catch (_ignora) {}
+  return detto;
 }
 
 function onClickElenco(event) {

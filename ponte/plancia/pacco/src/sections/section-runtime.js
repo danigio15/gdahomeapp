@@ -573,7 +573,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-QHWOPG5L.js";
+} from "../../chunk-CEZ7REMX.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -2871,6 +2871,7 @@ var SOURCE_INDEX = Object.freeze({
   "Aprine una": "Open one",
   "Aprire ${nomeDelRiquadro(r)}?": "Open ${nomeDelRiquadro(r)}?",
   "Aprire e chiudere": "Opening and closing",
+  "Aprire il Marketplace adesso?": "Open the Marketplace now?",
   "Aprire una finestra la fa scendere in fretta.": "Opening a window brings it down quickly.",
   "Apro il PDF…": "Opening the PDF…",
   "Arancione": "Orange",
@@ -3858,6 +3859,7 @@ var SOURCE_INDEX = Object.freeze({
   "Da questo dispositivo non si riconosce nessuna casella della colonnina.": "No charger field could be recognised from this device.",
   "Da questo dispositivo non si riconosce niente di un animale: serve una ciotola, una lettiera, una fontanella, una porta col microchip o un collare.": "Nothing about a pet can be recognised from this device: a bowl, a litter box, a fountain, a microchip door or a collar is needed.",
   "Da questo dispositivo non si riconosce niente di utile: servono almeno un tasto che apra, un campanello o un sensore della cassetta.": "Nothing useful can be recognised from this device: at least a button that opens, a doorbell or a mailbox sensor is needed.",
+  "Da qui l'aggiornamento lo chiede GdAHome con il suo utente di Home Assistant, e il Marketplace vuole l'avviso accettato da chi installa: averlo accettato col tuo utente non basta. Installalo dalla plancia aperta dentro Home Assistant, oppure da Home Assistant: Impostazioni → Aggiornamenti.": "From here the update is requested by GdAHome with its own Home Assistant user, and the Marketplace wants the warning accepted by whoever installs: accepting it with your user is not enough. Install it from the dashboard opened inside Home Assistant, or from Home Assistant: Settings → Updates.",
   "Da qui la pagina prende la temperatura e i comandi proposti": "The page takes its temperature and suggested controls from here",
   "Da qui si calcolano giorno e mese.": "Day and month are calculated from this one.",
   "da rabboccare": "to top up",
@@ -4782,6 +4784,7 @@ var SOURCE_INDEX = Object.freeze({
   "Il lettore dei DWG non si è scaricato: controlla la connessione e riprova.": "The DWG reader didn't download: check the connection and try again.",
   "Il lettore non ha risposto.": "The player did not answer.",
   "Il logo viene associato automaticamente al marchio. Il modello sostituisce la vecchia icona auto generica.": "The logo is automatically associated with the brand. The model replaces the old generic car icon.",
+  "Il Marketplace di Home Assistant installa solo per chi ha accettato il suo avviso, e con l'utente con cui sei entrato non risulta accettato. Apri il Marketplace dal menu di Home Assistant con questo utente, leggi l'avviso e accettalo, poi riprova.": "The Home Assistant Marketplace only installs for people who accepted its warning, and the user you are signed in with has not accepted it. Open the Marketplace from the Home Assistant menu with this user, read the warning and accept it, then try again.",
   "Il massimo è": "The most you can have is",
   "Il mese scorso ${quanto}": "Last month ${quanto}",
   "Il meteo a tutta pagina: com'è adesso in grande, con percepita, umidità, vento e pressione, poi le prossime ore e i prossimi giorni. Usa lo stesso meteo che il tablet mostra in alto e sul riposo.": "Full-page weather: what it's like now, big, with feels-like, humidity, wind and pressure, then the coming hours and days. It uses the same weather the tablet shows at the top and on the rest screen.",
@@ -6819,7 +6822,6 @@ var SOURCE_INDEX = Object.freeze({
   "Prezzo in fascia": "Price in the window",
   "Prezzo non impostato": "Price not set",
   "prezzo unico": "single rate",
-  "Prima apri il Marketplace dal menu di Home Assistant, leggi l'avviso e accettalo: dopo gli aggiornamenti si installano anche da qui.": "First open the Marketplace from the Home Assistant menu, read the warning and accept it: after that, updates install from here too.",
   "Prima configura i cerchi collegati a Casa. Ogni cerchio può usare un sensore di potenza diretto oppure sommare automaticamente tutti i carichi del gruppo collegato. Poi inserisci forno, frigo, lavastoviglie e gli altri dispositivi dentro il gruppo. I nodi vuoti o disabilitati non vengono forzati nel flow.": "First configure the circles connected to Home. Each circle can use a direct power sensor or automatically sum every child of a load group. Then create the appliances inside each group. Empty or disabled nodes are not forced into the flow.",
   "Prima scegli l'entità della persona": "Choose the person entity first",
   "Prima seleziona le luci nello step Luci (o nel wizard).": "First select your lights in the Lights step (or wizard).",
@@ -39982,9 +39984,76 @@ function comandoPerSpegnere(entity2, stato3 = null) {
   return null;
 }
 function perchéNonSiInstalla(errore) {
+  if (errore?.translation_key === "warning_not_accepted") return "marketplace";
   const detto3 = String(errore?.message ?? errore ?? "");
   if (/marketplace/i.test(detto3) && /(warning|accept)/i.test(detto3)) return "marketplace";
   return "";
+}
+
+// src/core/installa-con-chi-guarda.js
+function homeAssistantDiChiGuarda(finestra6) {
+  const cerca6 = (vista2) => {
+    try {
+      const hass = vista2?.document?.querySelector?.("home-assistant")?.hass;
+      if (typeof hass?.connection?.sendMessagePromise !== "function") return null;
+      return { hass, finestra: vista2 };
+    } catch (_errore) {
+      return null;
+    }
+  };
+  if (!finestra6) return null;
+  const qui = cerca6(finestra6);
+  if (qui) return qui;
+  try {
+    const padre = finestra6.parent;
+    if (!padre || padre === finestra6) return null;
+    return cerca6(padre);
+  } catch (_errore) {
+    return null;
+  }
+}
+function conLaStrada(errore, strada2) {
+  const fatto2 = errore instanceof Error ? errore : new Error(String(errore?.message ?? errore ?? "").trim() || "Home Assistant ha rifiutato");
+  if (!(errore instanceof Error) && errore && typeof errore === "object") {
+    for (const chiave2 of ["code", "translation_key", "translation_domain"])
+      if (errore[chiave2] !== void 0) fatto2[chiave2] = errore[chiave2];
+  }
+  fatto2.strada = strada2;
+  return fatto2;
+}
+async function installaConChiGuarda(entita4, { finestra: finestra6, ripiego } = {}) {
+  const casa3 = homeAssistantDiChiGuarda(finestra6);
+  if (casa3 && casa3.hass.user?.is_admin === true) {
+    try {
+      return await casa3.hass.connection.sendMessagePromise({
+        type: "call_service",
+        domain: "update",
+        service: "install",
+        service_data: { entity_id: entita4 }
+      });
+    } catch (errore) {
+      throw conLaStrada(errore, "utente");
+    }
+  }
+  if (typeof ripiego !== "function") throw conLaStrada("Home Assistant non connesso", "ponte");
+  try {
+    return await ripiego();
+  } catch (errore) {
+    throw conLaStrada(errore, "ponte");
+  }
+}
+function apriIlMarketplace(finestra6) {
+  const casa3 = homeAssistantDiChiGuarda(finestra6);
+  if (!casa3) return false;
+  try {
+    const vista2 = casa3.finestra;
+    vista2.history.pushState(null, "", "/marketplace");
+    const Evento = vista2.CustomEvent || CustomEvent;
+    vista2.dispatchEvent(new Evento("location-changed", { detail: { replace: false } }));
+    return true;
+  } catch (_errore) {
+    return false;
+  }
 }
 
 // src/core/la-fascia-deriva.js
@@ -40614,25 +40683,54 @@ function installaLAggiornamento(tasto5) {
   const parola2 = tasto5.textContent;
   tasto5.disabled = true;
   tasto5.textContent = t("In corso", "Installing");
-  Promise.resolve(root.dmCallHaService("update", "install", { entity_id: entita4 })).then(() => root.dmGuardaIlRiavvio?.()).catch((errore) => {
+  chiediLInstallazione(entita4, () => root.dmCallHaService("update", "install", { entity_id: entita4 })).then(() => root.dmGuardaIlRiavvio?.()).catch((errore) => {
     tasto5.disabled = false;
     tasto5.textContent = parola2;
-    try {
-      root.edToast?.(ilRifiutoDetto(errore));
-    } catch (_ignora) {
-    }
+    diIlRifiuto(errore);
   });
   return true;
 }
+function chiediLInstallazione(entita4, ripiego) {
+  return installaConChiGuarda(entita4, { finestra: root, ripiego });
+}
 function ilRifiutoDetto(errore) {
-  if (perchéNonSiInstalla(errore) === "marketplace")
+  if (perchéNonSiInstalla(errore) === "marketplace") {
+    if (errore?.strada === "utente")
+      return t(
+        "Il Marketplace di Home Assistant installa solo per chi ha accettato il suo avviso, e con l'utente con cui sei entrato non risulta accettato. Apri il Marketplace dal menu di Home Assistant con questo utente, leggi l'avviso e accettalo, poi riprova.",
+        "The Home Assistant Marketplace only installs for people who accepted its warning, and the user you are signed in with has not accepted it. Open the Marketplace from the Home Assistant menu with this user, read the warning and accept it, then try again."
+      );
     return t(
-      "Prima apri il Marketplace dal menu di Home Assistant, leggi l'avviso e accettalo: dopo gli aggiornamenti si installano anche da qui.",
-      "First open the Marketplace from the Home Assistant menu, read the warning and accept it: after that, updates install from here too."
+      "Da qui l'aggiornamento lo chiede GdAHome con il suo utente di Home Assistant, e il Marketplace vuole l'avviso accettato da chi installa: averlo accettato col tuo utente non basta. Installalo dalla plancia aperta dentro Home Assistant, oppure da Home Assistant: Impostazioni → Aggiornamenti.",
+      "From here the update is requested by GdAHome with its own Home Assistant user, and the Marketplace wants the warning accepted by whoever installs: accepting it with your user is not enough. Install it from the dashboard opened inside Home Assistant, or from Home Assistant: Settings → Updates."
     );
+  }
   return `${t("Home Assistant ha rifiutato", "Home Assistant refused")}: ${clean(
     errore?.message || errore
   )}`;
+}
+function diIlRifiuto(errore) {
+  const detto3 = ilRifiutoDetto(errore);
+  try {
+    if (perchéNonSiInstalla(errore) === "marketplace") {
+      if (errore?.strada === "utente" && typeof root.confirm === "function") {
+        const apri9 = root.confirm(
+          `${detto3}
+
+${t("Aprire il Marketplace adesso?", "Open the Marketplace now?")}`
+        );
+        if (apri9) apriIlMarketplace(root);
+        return detto3;
+      }
+      if (typeof root.alert === "function") {
+        root.alert(detto3);
+        return detto3;
+      }
+    }
+    root.edToast?.(detto3);
+  } catch (_ignora) {
+  }
+  return detto3;
 }
 function onClickElenco(event) {
   const nodo3 = doc?.getElementById?.(POPUP2);
@@ -83843,18 +83941,16 @@ function onClick12(event) {
     const parola2 = aggiornamento.textContent;
     aggiornamento.disabled = true;
     aggiornamento.textContent = t("In corso", "Installing");
-    const installa = typeof root.dmCallHaService === "function" ? Promise.resolve(root.dmCallHaService("update", "install", { entity_id: quale })) : callHa("update", "install", { entity_id: quale }).then((esito2) => {
-      if (esito2 === void 0) throw new Error("");
-      return esito2;
-    });
-    installa.then(() => guardaIlRiavvioDopoLInstallazione()).catch((errore) => {
+    chiediLInstallazione(
+      quale,
+      () => typeof root.dmCallHaService === "function" ? root.dmCallHaService("update", "install", { entity_id: quale }) : callHa("update", "install", { entity_id: quale }).then((esito2) => {
+        if (esito2 === void 0) throw new Error("");
+        return esito2;
+      })
+    ).then(() => guardaIlRiavvioDopoLInstallazione()).catch((errore) => {
       aggiornamento.disabled = false;
       aggiornamento.textContent = parola2;
-      if (clean(errore?.message || errore))
-        try {
-          root.edToast?.(ilRifiutoDetto(errore));
-        } catch (_ignora) {
-        }
+      if (clean(errore?.message || errore)) diIlRifiuto(errore);
     });
     return;
   }

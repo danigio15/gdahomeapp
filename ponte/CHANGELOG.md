@@ -10,6 +10,16 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.19.6.1
+
+_Solo Home Assistant: l'app sul telefono non cambia._
+
+- **Gli aggiornamenti del Marketplace si installano dalla plancia**: da
+  Home Assistant 2026.11 l'avviso del Marketplace va accettato da ogni
+  utente, e la plancia aperta in Home Assistant ora installa con l'utente
+  di chi la guarda. Se l'avviso non è ancora accettato, la plancia lo dice
+  in italiano e porta al Marketplace.
+
 ## 1.19.6
 
 _App GdAHome e add-on._

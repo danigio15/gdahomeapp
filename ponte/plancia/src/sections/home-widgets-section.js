@@ -387,7 +387,11 @@ import {
   t,
   senzaCadere,
 } from "./shared.js";
-import { disegnaComeStaLaCasa, ilRifiutoDetto } from "./come-sta-la-casa-section.js";
+import {
+  diIlRifiuto,
+  disegnaComeStaLaCasa,
+  chiediLInstallazione,
+} from "./come-sta-la-casa-section.js";
 import {
   disegnaAccantoAllePersone,
   registraLeFontiDellAssistente,
@@ -11390,23 +11394,24 @@ function onClick(event) {
     /* Il no di Home Assistant si dice, con le parole di `ilRifiutoDetto`:
      * il Marketplace che chiede di accettare l'avviso rifiuta ogni
      * aggiornamento delle integrazioni scaricate, e senza dirlo il tasto
-     * tornava com'era e basta. */
-    const installa =
+     * tornava com'era e basta.
+     *
+     * E lo si chiede con l'utente di chi guarda, quando Home Assistant e'
+     * attorno: il Marketplace guarda chi ha accettato il suo avviso, e la
+     * strada del ponte e' quella del Supervisor (`chiediLInstallazione`). */
+    chiediLInstallazione(quale, () =>
       typeof root.dmCallHaService === "function"
-        ? Promise.resolve(root.dmCallHaService("update", "install", { entity_id: quale }))
+        ? root.dmCallHaService("update", "install", { entity_id: quale })
         : callHa("update", "install", { entity_id: quale }).then((esito) => {
             if (esito === undefined) throw new Error("");
             return esito;
-          });
-    installa
+          }),
+    )
       .then(() => guardaIlRiavvioDopoLInstallazione())
       .catch((errore) => {
         aggiornamento.disabled = false;
         aggiornamento.textContent = parola;
-        if (clean(errore?.message || errore))
-          try {
-            root.edToast?.(ilRifiutoDetto(errore));
-          } catch (_ignora) {}
+        if (clean(errore?.message || errore)) diIlRifiuto(errore);
       });
     return;
   }

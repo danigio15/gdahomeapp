@@ -28,6 +28,7 @@
  */
 
 import { RispostaNegativa } from "./casa.js";
+import { comeDirloDelMarketplace } from "./il-no-del-marketplace.js";
 import { comeDirlo } from "./il-no-del-supervisore.js";
 
 const pulito = (valore) => String(valore ?? "").trim();
@@ -724,8 +725,15 @@ export class Aggiornamenti {
        * Le parole di Home Assistant restano in coda, che a chi cerca aiuto in
        * rete servono esatte. */
       if (errore instanceof RispostaNegativa) {
-        const meglio = comeDirlo(errore.message);
-        throw meglio ? new RispostaNegativa(errore.code, meglio) : errore;
+        /* E il no del Marketplace, che vuole l'avviso accettato da chi
+         * installa: da qui installa l'utente del ponte, e va detto
+         * (`il-no-del-marketplace.js`). Il codice resta quello di Home
+         * Assistant, e la chiave viaggia con lui. */
+        const meglio = comeDirloDelMarketplace(errore) ?? comeDirlo(errore.message);
+        if (!meglio) throw errore;
+        const detto = new RispostaNegativa(errore.code, meglio);
+        if (errore.chiave) detto.chiave = errore.chiave;
+        throw detto;
       }
       this.registro.info(`${cosa}: nessuna risposta, ed e' quello che ci si aspetta`);
     }
