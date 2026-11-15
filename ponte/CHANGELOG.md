@@ -10,6 +10,25 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.19.6
+
+_App GdAHome e add-on._
+
+- **Meno carico sulla casa**: la plancia non si ricollega più a raffica
+  quando Home Assistant è lento, e l'app chiude i collegamenti agli stati
+  che non usa più. Su un tablet a muro sempre acceso si accumulavano, e
+  facevano salire il processore e rallentare le risposte.
+- L'add-on fa meno lavoro a ogni cambio di stato.
+- **La plancia in Home Assistant su una casa lenta**: i comandi dati
+  mentre la plancia si sta collegando non si perdono più, le entità non
+  risultano «non trovate», e la pagina d'apertura non resta grigia: dice
+  che sta aspettando e riprova da sola.
+- **La Casa 3D dalla pianta arredata**: una planimetria a colori con i
+  mobili disegnati (anche presa da una schermata, con icone sopra) dà le
+  stanze separate dalle porte, le finestre, le misure controllate sulle
+  porte e gli arredi principali (letti, divano, tavolo, cucina, sanitari,
+  armadi, scrivania), che si possono spostare o togliere.
+
 ## 1.19.5
 
 _App GdAHome e add-on._

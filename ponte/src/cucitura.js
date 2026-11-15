@@ -48,6 +48,9 @@ import { NOME } from "./marchio.js";
  * messaggio e' lavoro per Home Assistant. */
 const MESSAGGI_AL_SECONDO = 50;
 const RAFFICA = 600;
+/* Quanti messaggi si tengono da parte mentre il filo con la casa si apre: un
+ * comando o due toccati in quell'attimo, e qualche lettura. */
+const IN_ATTESA_AL_MASSIMO = 50;
 
 function leggi(testo) {
   try {
@@ -92,6 +95,9 @@ export class Cucitura {
     this._amministraAllaStretta = false;
     this._gettoni = RAFFICA;
     this._ultimoGettone = Date.now();
+    /* I messaggi arrivati prima che il filo con la casa ci fosse: vedi
+     * `_dallaPagina`. */
+    this._inAttesa = [];
     presa.onMessaggio = (testo) => this._dallaPagina(testo);
     presa.onChiusa = () => this._laPaginaSeNEAndata();
     /* Un utente tolto o spento in Home Assistant non resta dentro: come i
@@ -161,6 +167,14 @@ export class Cucitura {
       `la plancia${this.quale?.titolo ? ` «${this.quale.titolo}»` : ""} si e' aperta da ${this.da}`,
     );
     this._manda({ type: "auth_ok", ha_version: NOME });
+    /* Quello che la pagina ha mandato mentre il filo si apriva. */
+    const tenuti = this._inAttesa.splice(0);
+    for (const uno of tenuti) {
+      if (!this.filo?.manda(uno)) {
+        this.chiudi(1011, "il filo con la casa e' caduto");
+        return;
+      }
+    }
   }
 
   _daQuanto() {
@@ -211,6 +225,24 @@ export class Cucitura {
     const { passa, rifiuti, risposte } = passaLaDogana(testo, { amministra, telecamereChiuse });
     for (const no of rifiuti) this._manda(no);
     for (const detta of risposte) this._manda(detta);
+    /* Il filo verso Home Assistant non c'e' ancora: la pagina ha la presa
+     * aperta, ma `auth_ok` non gliel'abbiamo detto. Succede quando la plancia
+     * si ricollega e chi guarda tocca una luce in quell'attimo — il runtime
+     * guarda solo che la presa sia aperta (`dmCallHaService`). Prima qui si
+     * chiudeva tutto («il filo con la casa e' caduto»): il comando si perdeva
+     * e la plancia ripartiva da capo, e su una casa lenta quell'attimo dura
+     * secondi. Adesso si tiene da parte, poco e in ordine, e parte appena il
+     * filo c'e' (`avvia`). */
+    if (!this.filo && !this._apertaIl) {
+      for (const uno of passa) {
+        if (this._inAttesa.length >= IN_ATTESA_AL_MASSIMO) {
+          this.chiudi(1008, "troppi messaggi prima della casa");
+          return;
+        }
+        this._inAttesa.push(uno);
+      }
+      return;
+    }
     for (const uno of passa) {
       if (!this.filo?.manda(uno)) {
         this.chiudi(1011, "il filo con la casa e' caduto");

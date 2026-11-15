@@ -8268,4 +8268,8 @@ export default Object.freeze({
   "What is in this tab": "Wat er in dit tabblad staat",
   "Where do I start": "Waar begin ik",
   "Windows and shutters.": "Ramen en rolluiken.",
+  "colour furnished plan: walls, windows and furniture read from the colours": "ingerichte plattegrond in kleur: muren, ramen en meubels uit de kleuren gelezen",
+  "Furniture from the plan": "Meubels uit de plattegrond",
+  "Recognised in the plan: remove the wrong ones. In Casa 3D, with «Furnish», you move and turn them like the others.": "Herkend in de plattegrond: verwijder de verkeerde. In Casa 3D verplaats en draai je ze met «Inrichten» zoals de andere.",
+  "Removed ${n} icons and labels over the plan and rebuilt what was underneath: check the walls": "${n} pictogrammen en labels boven de plattegrond verwijderd en wat eronder lag hersteld: controleer de muren",
 });

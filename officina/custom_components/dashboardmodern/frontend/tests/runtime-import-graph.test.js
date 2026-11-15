@@ -1682,8 +1682,11 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // testi, generati dal manuale da `strumenti/guida-dal-manuale.mjs`) e
   // `sections/guida-del-config-section.js` (il foglio, «Mostrami», il tasto
   // nella procedura della Casa 3D).
+  // 549 con `core/arredi-dalla-pianta.js`: gli arredi disegnati nella pianta
+  // arredata a colori (il letto, il tavolo, il divano, la vasca...) al loro
+  // posto nella Casa 3D.
   assert.ok(
-    relative.length <= 548,
+    relative.length <= 549,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

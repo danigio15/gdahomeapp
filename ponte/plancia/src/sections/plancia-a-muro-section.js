@@ -278,6 +278,9 @@ export function premiumRicordato() {
   return ricordo().premium;
 }
 
+/* Le domande al ponte gia' partite: vedi `premiumDellaCasa`. */
+const inViaggio = { premium: null, fonte: new Map() };
+
 export async function premiumDellaCasa({ forza = false } = {}) {
   /* Le prove e chi incolla la plancia fuori dal ponte lo dicono da se'. */
   if (typeof root.__GDAHOME_PREMIUM__ === "boolean") {
@@ -286,13 +289,32 @@ export async function premiumDellaCasa({ forza = false } = {}) {
   }
   if (!forza && state.premium !== null && Date.now() - state.premiumLetto < MEZZ_ORA)
     return state.premium;
+  /* Una domanda alla volta. All'apertura `rileggi` parte da cinque avvisi
+   * insieme (`legacy-ready`, `persistence-restored`, il muro, il ripristino,
+   * il salvataggio), e ognuno chiedeva la licenza per conto suo: dentro Home
+   * Assistant ogni domanda e' una presa nuova, e per il ponte un filo nuovo
+   * verso Home Assistant. Sei fili per la stessa risposta, su una casa lenta,
+   * erano secondi di pannello vuoto. Chi arriva mentre una domanda e' in
+   * viaggio aspetta quella. */
+  if (inViaggio.premium) return inViaggio.premium;
+  inViaggio.premium = chiediIlPremium().finally(() => {
+    inViaggio.premium = null;
+  });
+  return inViaggio.premium;
+}
+
+async function chiediIlPremium() {
   let premium = false;
   try {
     const stato = await bridgeRequest("ponte/licenza/stato", {});
     premium = stato?.gdahome?.attiva === true;
   } catch (_errore) {
-    /* Il ponte non risponde: si tiene quello che si sapeva. */
-    premium = state.premium === true;
+    /* Il ponte non risponde (una casa lenta, la presa che non arriva in
+     * tempo): si tiene quello che si sapeva, e non si scrive niente. Prima
+     * un «non lo so» diventava «Base» anche nel ricordo del tablet, e il
+     * pannello restava spento anche alle aperture dopo; adesso si richiede al
+     * prossimo giro. */
+    return state.premium === true;
   }
   state.premium = premium;
   state.premiumLetto = Date.now();
@@ -321,18 +343,29 @@ export async function fonteDelMuro(muro, { forza = false } = {}) {
     fonte = fonteDaiValori(root.__DM_MURO_FONTE__);
   else if (fonteEQui(di)) fonte = fonteDiQui();
   else {
-    try {
-      const letto = await bridgeRequest("dashboardmodern/config/get", { profile: di });
-      fonte = fonteDaiValori(letto?.snapshot?.values || {});
-    } catch (_errore) {
-      fonte = await fonteDalPonte();
+    /* Anche qui una domanda alla volta per plancia di origine: vedi
+     * `premiumDellaCasa`. */
+    let inCorso = inViaggio.fonte.get(di);
+    if (!inCorso) {
+      inCorso = fonteDaLontano(di).finally(() => inViaggio.fonte.delete(di));
+      inViaggio.fonte.set(di, inCorso);
     }
+    fonte = await inCorso;
   }
   state.fonte = fonte || fonteDiQui();
   state.fonteDi = di;
   state.fonteLetta = Date.now();
   ricorda({ fonte: state.fonte, fonteDi: di });
   return state.fonte;
+}
+
+async function fonteDaLontano(di) {
+  try {
+    const letto = await bridgeRequest("dashboardmodern/config/get", { profile: di });
+    return fonteDaiValori(letto?.snapshot?.values || {});
+  } catch (_errore) {
+    return fonteDalPonte();
+  }
 }
 
 /* Quando la plancia di origine e' riservata ad altri utenti («il 4 pollici

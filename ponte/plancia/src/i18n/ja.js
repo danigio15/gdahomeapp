@@ -8236,4 +8236,8 @@ export default Object.freeze({
   "What is in this tab": "このタブにあるもの",
   "Where do I start": "どこから始めるか",
   "Windows and shutters.": "窓とシャッター。",
+  "colour furnished plan: walls, windows and furniture read from the colours": "カラーの家具付き間取り図：壁・窓・家具を色から読み取りました",
+  "Furniture from the plan": "間取り図の家具",
+  "Recognised in the plan: remove the wrong ones. In Casa 3D, with «Furnish», you move and turn them like the others.": "間取り図から認識しました：間違っているものは削除してください。Casa 3D の「家具配置」で、ほかと同じように移動・回転できます。",
+  "Removed ${n} icons and labels over the plan and rebuilt what was underneath: check the walls": "間取り図の上のアイコンとラベルを ${n} 個削除し、下の部分を復元しました：壁を確認してください",
 });

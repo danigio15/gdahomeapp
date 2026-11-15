@@ -8314,4 +8314,8 @@ export default Object.freeze({
   "What is in this tab": "Ce que contient cet onglet",
   "Where do I start": "Par où commencer",
   "Windows and shutters.": "Fenêtres et volets.",
+  "colour furnished plan: walls, windows and furniture read from the colours": "plan meublé en couleur : murs, fenêtres et meubles lus à partir des couleurs",
+  "Furniture from the plan": "Meubles du plan",
+  "Recognised in the plan: remove the wrong ones. In Casa 3D, with «Furnish», you move and turn them like the others.": "Reconnus dans le plan : supprime ceux qui sont faux. Dans Casa 3D, avec « Aménager », tu les déplaces et les tournes comme les autres.",
+  "Removed ${n} icons and labels over the plan and rebuilt what was underneath: check the walls": "${n} icônes et étiquettes retirées du plan et ce qui était dessous reconstruit : vérifie les murs",
 });

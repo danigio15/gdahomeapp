@@ -8234,4 +8234,8 @@ export default Object.freeze({
   "What is in this tab": "Bu sekmede neler var",
   "Where do I start": "Nereden başlamalı",
   "Windows and shutters.": "Pencereler ve panjurlar.",
+  "colour furnished plan: walls, windows and furniture read from the colours": "renkli mobilyalı plan: duvarlar, pencereler ve mobilyalar renklerden okundu",
+  "Furniture from the plan": "Plandan mobilyalar",
+  "Recognised in the plan: remove the wrong ones. In Casa 3D, with «Furnish», you move and turn them like the others.": "Planda tanındı: yanlış olanları kaldır. Casa 3D'de «Döşe» ile diğerleri gibi taşır ve döndürürsün.",
+  "Removed ${n} icons and labels over the plan and rebuilt what was underneath: check the walls": "Planın üstündeki ${n} simge ve etiket kaldırıldı, altında kalan yeniden oluşturuldu: duvarları kontrol et",
 });

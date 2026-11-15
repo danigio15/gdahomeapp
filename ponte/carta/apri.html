@@ -288,6 +288,35 @@
          * al muro deve tornare da sola quando l'add-on riparte, non aspettare
          * che qualcuno la tocchi. */
         var ATTESE = [3000, 5000, 10000, 20000, 30000, 60000];
+
+        /* Le due domande al Supervisor (dov'e' l'add-on, la sessione) passano
+         * da `hass.callWS`, che non ha un tempo massimo: con un Supervisor
+         * che non risponde la pagina restava vuota, senza una parola e senza
+         * riprovare — un minuto di riquadro grigio. Dopo questo si dice che
+         * si aspetta, e si riprova come per ogni altro guasto. */
+        var ATTESA_DEL_SUPERVISOR = 15000;
+        /* E dopo questo, se la plancia non e' ancora arrivata, lo si dice. */
+        var ATTESA_DELLA_PLANCIA = 4000;
+
+        function entro(promessa, quanto) {
+          return new Promise(function (fatto, no) {
+            var orologio = setTimeout(function () {
+              var lento = new Error(due("il Supervisor non risponde", "the Supervisor isn’t answering"));
+              lento.tipo = "casa";
+              no(lento);
+            }, quanto);
+            promessa.then(
+              function (valore) {
+                clearTimeout(orologio);
+                fatto(valore);
+              },
+              function (errore) {
+                clearTimeout(orologio);
+                no(errore);
+              },
+            );
+          });
+        }
         var tentativi = 0;
         var prossimo = 0;
 
@@ -357,12 +386,26 @@
               /* Le due domande **insieme**: dov'e' l'add-on e una sessione per
                * entrarci non si servono a vicenda, e in fila si aspetterebbe la
                * somma dei due invece del piu' lento. */
-              return Promise.all([doveSta(hass), A.laSessione(hass, document)]).then(
-                function (fatto) {
-                  vai(fatto[0]);
-                  return null;
-                },
-              );
+              return entro(
+                Promise.all([doveSta(hass), A.laSessione(hass, document)]),
+                ATTESA_DEL_SUPERVISOR,
+              ).then(function (fatto) {
+                vai(fatto[0]);
+                /* La plancia arriva dall'add-on, attraverso il Supervisor: se
+                 * tarda, invece di un riquadro vuoto si legge che sta
+                 * arrivando. Quando arriva questa pagina se ne va, e con lei
+                 * l'orologio. */
+                setTimeout(function () {
+                  scrivi(
+                    due("Apro la plancia…", "Opening the dashboard…"),
+                    due(
+                      "GdAHome sta rispondendo lentamente: la plancia compare appena arriva.",
+                      "GdAHome is answering slowly: the dashboard shows up as soon as it arrives.",
+                    ),
+                  );
+                }, ATTESA_DELLA_PLANCIA);
+                return null;
+              });
             })
             .then(null, male);
         }
