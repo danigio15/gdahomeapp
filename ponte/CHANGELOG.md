@@ -19,6 +19,15 @@ _App GdAHome e add-on._
   che non usa più. Su un tablet a muro sempre acceso si accumulavano, e
   facevano salire il processore e rallentare le risposte.
 - L'add-on fa meno lavoro a ogni cambio di stato.
+- **La plancia in Home Assistant su una casa lenta**: i comandi dati
+  mentre la plancia si sta collegando non si perdono più, le entità non
+  risultano «non trovate», e la pagina d'apertura non resta grigia: dice
+  che sta aspettando e riprova da sola.
+- **La Casa 3D dalla pianta arredata**: una planimetria a colori con i
+  mobili disegnati (anche presa da una schermata, con icone sopra) dà le
+  stanze separate dalle porte, le finestre, le misure controllate sulle
+  porte e gli arredi principali (letti, divano, tavolo, cucina, sanitari,
+  armadi, scrivania), che si possono spostare o togliere.
 
 ## 1.19.5
 
