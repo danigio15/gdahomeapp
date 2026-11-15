@@ -41,8 +41,12 @@ import {
   memoriaPulita,
   opzioniDellAssistente,
   pioggiaFra,
+  rinviPossibili,
   suggerimentiDellaCasa,
+  tariffaDiAdesso,
 } from "../core/assistente-di-casa.js";
+import { CHIAVE_SOGLIA_UMIDITA, sogliaDellUmidita } from "../core/arieggiare.js";
+import { CHIAVE_FASCE } from "../core/fasce-della-tariffa.js";
 import { alarmCodeNeeded } from "../core/alarm-panel.js";
 import {
   CHIAVE_ASSIST,
@@ -103,6 +107,10 @@ const state = (root[KEY] ||= {
   raccolta: 0,
   aperto: false,
   rinvio: "",
+  /* Il suggerimento che aspetta il secondo tocco: chiudere a chiave,
+   * inserire l'antifurto, chiudere il garage si conferma. */
+  conferma: "",
+  confermaTimer: 0,
   battute: [],
   inVolo: false,
   filo: "",
@@ -201,14 +209,25 @@ function elettrodomestici() {
   });
 }
 
-function finiti(macchine, adesso) {
+/* Le macchine viste lavorare, finire, e accendersi: quella appena passata da
+ * spenta a pronta e' una macchina caricata, che sta per partire. */
+function macchineNelTempo(macchine, adesso) {
   const prima = readJson(CHIAVE_FINITI, {}) || {};
   const dopo = conIFiniti(prima, macchine, adesso);
   writeJsonIfChanged(CHIAVE_FINITI, dopo, { sync: false });
-  return macchine
-    .filter((m) => dopo[m.id]?.finitoIl > 0)
-    .map((m) => ({ ...m, finitoIl: dopo[m.id].finitoIl }));
+  return {
+    macchine: macchine.map((m) => ({ ...m, prontaDa: dopo[m.id]?.pronta ?? null })),
+    finiti: macchine
+      .filter((m) => dopo[m.id]?.finitoIl > 0)
+      .map((m) => ({ ...m, finitoIl: dopo[m.id].finitoIl })),
+  };
 }
+
+/* Uno stato che Home Assistant non sa dire: l'entita' c'e', ma non risponde.
+ * Su quelle l'assistente tace — «l'antifurto è spento» detto di una centrale
+ * che non risponde sarebbe un falso allarme al contrario. */
+const MUTA = /^(unavailable|unknown|)$/i;
+const risponde = (states, entity) => Boolean(states?.[entity]) && !MUTA.test(clean(states[entity].state));
 
 const coperture = (states, classi) =>
   Object.entries(states || {})
@@ -221,9 +240,27 @@ const coperture = (states, classi) =>
     .map(([entity, stato]) => ({
       entity,
       name: clean(stato?.attributes?.friendly_name) || entity,
+      classe: clean(stato?.attributes?.device_class),
       aperto: true,
       aperta: true,
     }));
+
+/* Le tapparelle alzate della tessera Finestre che si chiudono con un motore:
+ * non le tende da sole (quelle le dice la pioggia), non i garage, non quelle
+ * dietro un rele' o che adesso non rispondono. */
+const NON_TAPPARELLE = new Set(["garage", "gate", "door", "awning", "damper", "window"]);
+function tapparelleAlzate(states) {
+  return elenco(modello("tapparelle")?.alzate)
+    .filter(
+      (r) =>
+        r.isCover &&
+        !r.relay &&
+        !r.muta &&
+        clean(r.kind || "tapparella") === "tapparella" &&
+        !NON_TAPPARELLE.has(clean(states?.[r.entity]?.attributes?.device_class)),
+    )
+    .map((r) => ({ entity: clean(r.entity), name: clean(r.name) || clean(r.entity) }));
+}
 
 const FRIGO = /(frig|freez|congel)/i;
 
@@ -269,13 +306,28 @@ function antifurto(states) {
   try {
     entity = clean(root.resolveEntity?.("dm.security_centrale_allarme"));
   } catch (_errore) {}
-  if (!entity || !states?.[entity] || !sicurezza?.alarm) return null;
+  if (!entity || !risponde(states, entity) || !sicurezza?.alarm) return null;
   return {
     entity,
     inserito: Boolean(sicurezza.armed),
     scattato: Boolean(sicurezza.triggered),
     serveIlCodice: alarmCodeNeeded(states[entity], "alarm_arm_away"),
   };
+}
+
+/* Una misura di fuori: quella scelta per la testata del meteo, se c'e' e
+ * risponde, altrimenti l'attributo dell'entita' meteo. */
+function misuraDiFuori(states, casella, attributo, entitaMeteo) {
+  let scelta = "";
+  try {
+    scelta = clean(root.resolveEntity?.(casella));
+  } catch (_errore) {}
+  if (scelta && scelta !== casella && risponde(states, scelta)) {
+    const valore = Number.parseFloat(String(states[scelta].state).replace(",", "."));
+    if (Number.isFinite(valore)) return valore;
+  }
+  const valore = Number(states?.[entitaMeteo]?.attributes?.[attributo]);
+  return Number.isFinite(valore) ? valore : null;
 }
 
 function meteo(states, adesso) {
@@ -292,7 +344,27 @@ function meteo(states, adesso) {
     soleNelleProssimeOre:
       prossime.length > 0 &&
       prossime.every((voce) => ["sunny", "partlycloudy"].includes(clean(voce?.condition))),
+    fuori: {
+      temperatura: misuraDiFuori(states, "dm.home_meteo_temperatura", "temperature", entita),
+      umidita: misuraDiFuori(states, "dm.home_meteo_umidita", "humidity", entita),
+    },
   };
+}
+
+/* La soglia dell'umidita' scritta per le finestre: non scritta vale quella
+ * dell'assistente (`undefined`), spenta vale spenta (`null`). */
+function sogliaUmiditaScritta() {
+  const scritta = readJson(CHIAVE_SOGLIA_UMIDITA, null);
+  if (scritta === null || scritta === undefined || clean(scritta) === "") return undefined;
+  return sogliaDellUmidita(scritta);
+}
+
+function tariffa(adesso) {
+  try {
+    return tariffaDiAdesso(readJson(CHIAVE_FASCE, {}), adesso);
+  } catch (_errore) {
+    return null;
+  }
 }
 
 /** Il contesto per il nucleo: tutto quello che la casa sa adesso. */
@@ -308,8 +380,11 @@ export function contestoDellaCasa(states = allStates(), adesso = Date.now()) {
         entity: voce.entity,
         name: clean(voce.name) || voce.entity,
         stanza: stanzaDiHomeAssistant(voce.entity),
+        /* Da quanto e' aperta: dieci minuti col riscaldamento acceso sono
+         * arieggiare, un'ora e' scaldare la strada. */
+        daMs: daQuando(states, voce.entity, adesso),
       });
-  const macchine = elettrodomestici();
+  const { macchine, finiti } = macchineNelTempo(elettrodomestici(), adesso);
   const allagamenti = modello("allagamenti");
   const presenza = modello("presenza");
   const energia = state.energia || {};
@@ -332,13 +407,15 @@ export function contestoDellaCasa(states = allStates(), adesso = Date.now()) {
       on: Boolean(r.on),
       daMs: daQuando(states, clean(r.entity), adesso),
     })),
-    clima: elenco(modello("clima")?.rows).map((r) => ({
-      entity: clean(r.entity),
-      name: clean(r.name),
-      stanza: clean(r.stanza),
-      on: Boolean(r.on),
-      mode: clean(r.mode),
-    })),
+    clima: elenco(modello("clima")?.rows)
+      .filter((r) => r.disponibile !== false)
+      .map((r) => ({
+        entity: clean(r.entity),
+        name: clean(r.name),
+        stanza: clean(r.stanza),
+        on: Boolean(r.on),
+        mode: clean(r.mode),
+      })),
     media: elenco(modello("media")?.suonano).map((r) => ({
       entity: clean(r.entity),
       name: clean(r.nome || r.name),
@@ -352,9 +429,12 @@ export function contestoDellaCasa(states = allStates(), adesso = Date.now()) {
     })),
     garage: coperture(states, ["garage", "gate"]),
     tende: coperture(states, ["awning"]),
+    tapparelle: tapparelleAlzate(states),
     meteo: meteo(states, adesso),
     elettrodomestici: macchine,
-    finiti: finiti(macchine, adesso),
+    finiti,
+    tariffa: tariffa(adesso),
+    sogliaUmidita: sogliaUmiditaScritta(),
     energia: {
       solare: energia.solare ?? null,
       rete: energia.rete ?? null,
@@ -656,17 +736,27 @@ function testaMarkup(quanti) {
 function azioneMarkup(s, indice, classe = "dm-ass-tasto pieno") {
   const azione = s.azioni?.[0];
   if (!azione) return "";
-  return `<button type="button" class="${classe}" data-ass-fa="azione" data-ass-id="${esc(s.id)}" data-ass-azione="${indice}">${esc(azione.etichetta)}</button>`;
+  /* Una serratura, l'antifurto, il garage: il primo tocco chiede, il secondo
+   * fa. Il tasto lo dice con le sue parole («Sì, chiudi a chiave»). */
+  const chiede = Boolean(azione.conferma) && state.conferma === s.id;
+  return `<button type="button" class="${classe}${chiede ? " conferma" : ""}" data-ass-fa="azione" data-ass-id="${esc(s.id)}" data-ass-azione="${indice}">${esc(chiede ? azione.conferma : azione.etichetta)}</button>`;
 }
 
 function rinvioMarkup(s) {
   if (state.rinvio !== s.id)
     return `<button type="button" class="dm-ass-tasto" data-ass-fa="tardi" data-ass-id="${esc(s.id)}">${esc(t("Più tardi", "Later"))}</button>`;
-  return `<span class="dm-ass-rinvio" role="group" aria-label="${esc(t("Più tardi", "Later"))}">${[
-    ["ora", t("Fra 1 h", "In 1 h")],
-    ["stasera", t("Stasera", "Tonight")],
-    ["domani", t("Domani", "Tomorrow")],
-  ]
+  /* Le scelte che hanno senso adesso: «Stasera» alle otto di sera e' gia'
+   * adesso, e di notte si rimanda a domattina, non alle tre. */
+  const parole = {
+    ora: t("Fra 1 h", "In 1 h"),
+    stasera: t("Stasera", "Tonight"),
+    domani: t("Domani", "Tomorrow"),
+    domattina: t("Domattina", "Tomorrow morning"),
+  };
+  return `<span class="dm-ass-rinvio" role="group" aria-label="${esc(t("Più tardi", "Later"))}">${rinviPossibili(
+    Date.now(),
+  )
+    .map((fino) => [fino, parole[fino]])
     .map(
       ([fino, parola]) =>
         `<button type="button" class="dm-ass-tasto" data-ass-fa="rimanda" data-ass-fino="${fino}" data-ass-id="${esc(s.id)}">${esc(parola)}</button>`,
@@ -1178,7 +1268,28 @@ function rispondi(id, risposta, fino = 0) {
   const { memoria } = scelte();
   scrivi(conLaRisposta(memoria, s, risposta, Date.now(), fino));
   state.rinvio = "";
+  state.conferma = "";
   ricalcola();
+}
+
+/* Ridisegna la card e il foglio dopo un cambio che non tocca la casa. */
+function ridisegna() {
+  state.firma = "";
+  sistemaIlPostoAccanto();
+  if (state.aperto) disegnaIlFoglio();
+}
+
+/* La conferma aspetta otto secondi, poi il tasto torna com'era: un «Sì,
+ * chiudi» lasciato li' non deve partire al tocco di chi passa dopo. */
+function chiediConferma(id) {
+  state.conferma = id;
+  root.clearTimeout?.(state.confermaTimer);
+  state.confermaTimer =
+    root.setTimeout?.(() => {
+      state.conferma = "";
+      ridisegna();
+    }, 8000) || 0;
+  ridisegna();
 }
 
 function onClick(evento) {
@@ -1228,6 +1339,11 @@ function onClick(evento) {
     const s = state.suggerimenti.find((x) => x.id === id);
     const azione = s?.azioni?.[Number(tocco.dataset.assAzione) || 0];
     if (!azione) return;
+    if (azione.conferma && azione.servizio && state.conferma !== id) {
+      chiediConferma(id);
+      return;
+    }
+    state.conferma = "";
     if (azione.vai) {
       state.aperto = false;
       disegnaIlFoglio();
@@ -1282,6 +1398,7 @@ function installStyles() {
     .dm-ass-tasto{flex:0 1 auto;min-width:0;padding:5px 12px;border-radius:999px;border:1px solid color-mix(in srgb,#8b5cf6 40%,transparent);
       background:var(--card-bg,#fff);color:#6d28d9;font:inherit;font-size:12px;font-weight:850;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .dm-ass-tasto.pieno{background:linear-gradient(135deg,#7c3aed,#6d28d9);border-color:transparent;color:#fff;box-shadow:0 6px 14px -8px #7c3aed}
+    .dm-ass-tasto.pieno.conferma{background:linear-gradient(135deg,#dc2626,#b91c1c);box-shadow:0 6px 14px -8px #dc2626}
     html[data-theme="dark"] .dm-ass-tasto:not(.pieno){color:#c4b5fd;background:transparent}
     .dm-ass-rinvio{display:inline-flex;gap:4px;min-width:0}
     .dm-ass-x{flex:none;margin-left:auto;width:28px;height:28px;border-radius:50%;border:1px solid var(--card-border,#e2e8f0);background:transparent;

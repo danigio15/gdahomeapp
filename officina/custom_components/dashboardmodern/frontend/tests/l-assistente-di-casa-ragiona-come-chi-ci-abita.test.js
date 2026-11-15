@@ -126,7 +126,9 @@ test("casa vuota con le luci accese: le spegne, e dice da quando", () => {
   );
   assert.equal(primo.tipo, "vuota-luci");
   assert.equal(primo.urgenza, "oggi");
-  assert.equal(primo.titolo, "Non c'è nessuno in casa, ma 2 luci sono accese");
+  /* Le luci si contano e si nominano: la frase concorda con «luci», non con
+   * il nome che chi abita la casa ha dato alla lampada. */
+  assert.equal(primo.titolo, "Non c'è nessuno in casa, ma 2 luci sono accese: Cucina e Sala");
   assert.equal(primo.motivo, "Casa vuota da 2 h: le spengo?");
   assert.deepEqual(primo.azioni[0].servizio, {
     dominio: "light",
@@ -144,7 +146,8 @@ test("casa vuota con le luci accese: le spegne, e dice da quando", () => {
     {},
     "en",
   );
-  assert.equal(inglese.titolo, "Nobody is home, but Cucina is on");
+  assert.equal(inglese.titolo, "Nobody is home, but a light is on: Cucina");
+  assert.equal(inglese.motivo, "Empty for 2 h: turn it off?");
 });
 
 test("l'acquario, la notturna e le luci degli Animali restano: l'assistente non le propone", () => {
@@ -165,7 +168,7 @@ test("l'acquario, la notturna e le luci degli Animali restano: l'assistente non 
     "it",
   );
   assert.equal(primo.tipo, "vuota-luci");
-  assert.equal(primo.titolo, "Non c'è nessuno in casa, ma Cucina è accesa");
+  assert.equal(primo.titolo, "Non c'è nessuno in casa, ma una luce è accesa: Cucina");
   assert.deepEqual(primo.azioni[0].servizio.dati, { entity_id: "light.cucina" });
   assert.equal(altri.filter((s) => s.tipo === "vuota-luci").length, 0);
   /* Solo l'acquario acceso: niente da dire. */
@@ -260,7 +263,12 @@ test("di notte la porta non chiusa a chiave; con la casa vuota e' urgente", () =
   const [notte] = suggerimentiDellaCasa(casa(23, { serrature }), {}, {}, "it");
   assert.equal(notte.tipo, "serrature");
   assert.equal(notte.urgenza, "oggi");
-  assert.equal(notte.titolo, "È notte e Porta d'ingresso non è chiusa a chiave");
+  /* «Porta d'ingresso non è chiusa a chiave» andava bene per una porta, ma
+   * «Portone non è chiusa» no: la frase parla della serratura. */
+  assert.equal(notte.titolo, "Serratura aperta: Porta d'ingresso");
+  assert.equal(notte.motivo, "È notte: la chiudo a chiave?");
+  /* Chiudere a chiave da qui si conferma con un secondo tocco. */
+  assert.equal(notte.azioni[0].conferma, "Sì, chiudi a chiave");
   assert.deepEqual(notte.azioni[0].servizio, {
     dominio: "lock",
     servizio: "lock",
@@ -378,7 +386,7 @@ test("pioggia fra mezz'ora con la finestra aperta e la tenda fuori", () => {
   );
   const finestra = fuori.find((s) => s.entita.includes("binary_sensor.f_camera"));
   assert.equal(finestra.urgenza, "urgente");
-  assert.equal(finestra.titolo, "Pioggia fra 25 min e Finestra camera è aperta");
+  assert.equal(finestra.titolo, "Pioggia fra 25 min e una finestra è aperta: Finestra camera");
   const tenda = fuori.find((s) => s.entita.includes("cover.tenda"));
   assert.deepEqual(tenda.azioni[0].servizio, {
     dominio: "cover",
@@ -394,7 +402,9 @@ test("pioggia fra mezz'ora con la finestra aperta e la tenda fuori", () => {
 
 /* «Pioggia fra 2 h e Bagno Grande e altre 4 è aperta. Meglio chiuderla
  * prima.» — con cinque finestre. Una «è aperta», piu' d'una «sono aperte»; e
- * lo stesso per le tende, in tutte le lingue della plancia. */
+ * il soggetto e' «una finestra» o «5 finestre», non il loro nome: «Bagno
+ * Grande è aperta» non e' italiano. I nomi vengono dopo i due punti, fino a
+ * tre per esteso. Lo stesso per le tende da sole, in tutte le lingue. */
 test("la pioggia con piu' finestre aperte parla al plurale, in ogni lingua", async () => {
   const finestre = ["Bagno Grande", "Cucina", "Studio", "Camera", "Sala"].map((name, i) => ({
     entity: `binary_sensor.finestra_${i}`,
@@ -418,31 +428,47 @@ test("la pioggia con piu' finestre aperte parla al plurale, in ogni lingua", asy
   };
 
   const tante = dice("it");
-  assert.equal(tante.finestre.titolo, "Pioggia fra 2 h e Bagno Grande e altre 4 sono aperte");
+  assert.equal(
+    tante.finestre.titolo,
+    "Pioggia fra 2 h e 5 finestre sono aperte: Bagno Grande, Cucina e altre 3",
+  );
   assert.equal(tante.finestre.motivo, "Meglio chiuderle prima.");
-  assert.equal(tante.tende.titolo, "Pioggia fra 2 h e Tenda nord e Tenda sud sono fuori");
+  assert.equal(
+    tante.tende.titolo,
+    "Pioggia fra 2 h e 2 tende da sole sono aperte: Tenda nord e Tenda sud",
+  );
   assert.equal(tante.tende.motivo, "Le ritiro?");
+  const tre = dice("it", finestre.slice(0, 3));
+  assert.equal(
+    tre.finestre.titolo,
+    "Pioggia fra 2 h e 3 finestre sono aperte: Bagno Grande, Cucina e Studio",
+  );
   const una = dice("it", finestre.slice(0, 1), tende.slice(0, 1));
-  assert.equal(una.finestre.titolo, "Pioggia fra 2 h e Bagno Grande è aperta");
+  assert.equal(una.finestre.titolo, "Pioggia fra 2 h e una finestra è aperta: Bagno Grande");
   assert.equal(una.finestre.motivo, "Meglio chiuderla prima.");
-  assert.equal(una.tende.titolo, "Pioggia fra 2 h e Tenda nord è fuori");
+  assert.equal(una.tende.titolo, "Pioggia fra 2 h e una tenda da sole è aperta: Tenda nord");
   assert.equal(una.tende.motivo, "La ritiro?");
 
   const inglese = dice("en");
-  assert.equal(inglese.finestre.titolo, "Rain in 2 h and Bagno Grande and 4 more are open");
+  assert.equal(
+    inglese.finestre.titolo,
+    "Rain in 2 h and 5 windows are open: Bagno Grande, Cucina, and 3 more",
+  );
   assert.equal(inglese.finestre.motivo, "Better close them first.");
   assert.equal(inglese.tende.motivo, "Retract them?");
 
   /* Le tredici lingue dei cataloghi: la frase al plurale e' tradotta — non
-   * torna l'inglese — e porta i nomi giusti. */
+   * torna l'inglese — porta i nomi giusti, e il conto sta dove la lingua lo
+   * regge con ogni numero (in polacco e in russo «2 okna» e «5 okien» non sono
+   * la stessa parola: il conto va fra parentesi). */
   const plurali = {
-    de: ["sind offen", "Einfahren?"],
-    es: ["están abiertas", "¿Los recojo?"],
-    fr: ["sont ouvertes", "Je les replie ?"],
-    pt: ["estão abertas", "Recolho-os?"],
-    nl: ["staan open", "Inrollen?"],
-    pl: ["są otwarte", "Zwinąć je?"],
-    ru: ["открыты", "Сложить их?"],
+    de: ["5 Fenster sind offen: Bagno Grande, Cucina und 3 weitere", "Einfahren?"],
+    es: ["hay 5 ventanas abiertas: Bagno Grande, Cucina y 3 más", "¿Los recojo?"],
+    fr: ["5 fenêtres sont ouvertes : Bagno Grande, Cucina et 3 autres", "Je les replie ?"],
+    pt: ["há 5 janelas abertas: Bagno Grande, Cucina e mais 3", "Recolho-os?"],
+    nl: ["5 ramen staan open: Bagno Grande, Cucina en 3 andere", "Inrollen?"],
+    pl: ["otwarte są okna (5): Bagno Grande, Cucina i jeszcze 3", "Zwinąć je?"],
+    ru: ["открыты окна (5): Bagno Grande, Cucina и ещё 3", "Сложить их?"],
   };
   for (const lingua of [
     "ar",
@@ -465,9 +491,10 @@ test("la pioggia con piu' finestre aperte parla al plurale, in ogni lingua", asy
       detto.finestre.titolo.includes("Bagno Grande"),
       `${lingua}: ${detto.finestre.titolo}`,
     );
-    assert.doesNotMatch(detto.finestre.titolo, / are open$/, `${lingua}: tradotta`);
+    assert.doesNotMatch(detto.finestre.titolo, / are open|windows| more$/, `${lingua}: tradotta`);
     assert.notEqual(detto.finestre.motivo, "Better close them first.", `${lingua}: tradotta`);
     assert.notEqual(detto.tende.motivo, "Retract them?", `${lingua}: tradotta`);
+    assert.doesNotMatch(detto.tende.titolo, /awnings are out/, `${lingua}: tradotta`);
     const atteso = plurali[lingua];
     if (atteso) {
       assert.ok(detto.finestre.titolo.endsWith(atteso[0]), `${lingua}: ${detto.finestre.titolo}`);
@@ -626,7 +653,8 @@ test("la rete che tira troppo, i rifiuti, l'appuntamento", () => {
   );
   assert.equal(rete.tipo, "rete-alta");
   assert.equal(rete.urgenza, "urgente");
-  assert.equal(rete.motivo, "Sei vicino alla soglia: Forno si può rimandare?");
+  /* 3,1 kW su una soglia di 3: non «vicino», sopra. */
+  assert.equal(rete.motivo, "Hai superato la soglia del contatore. Si può rimandare Forno?");
 
   const rifiuti = { rifiuti: [{ name: "Plastica", quando: "domani" }] };
   assert.equal(suggerimentiDellaCasa(casa(15, rifiuti)).length, 0, "il pomeriggio e' presto");
@@ -693,7 +721,7 @@ test("comfort, aria, manutenzione", () => {
     "it",
   );
   const per = (tipo) => fuori.filter((s) => s.tipo === tipo).map((s) => s.titolo);
-  assert.deepEqual(per("comfort"), ["Camera è fredda: 15,5°"]);
+  assert.deepEqual(per("comfort"), ["Camera: fa freddo, 15,5°"]);
   assert.deepEqual(per("aria").sort(), ["Bagno: umidità al 78%", "Studio: aria pesante"]);
   assert.deepEqual(per("non-rispondono"), ["Sensore cantina non risponde"]);
   assert.deepEqual(per("aggiornamenti"), ["Ci sono 2 aggiornamenti da installare"]);
@@ -745,27 +773,40 @@ test("le categorie spente tacciono, e «poco» toglie le idee", () => {
   ]);
 });
 
-test("✕ nasconde per un'ora e pesa sul tipo; dopo un'ora la casa riguarda", () => {
+/* «✕ non ripropone lo stesso consiglio per quella stessa situazione.»
+ * Prima tornava dopo un'ora, uguale: adesso tace finche' la situazione resta
+ * quella (al massimo tre giorni), e torna quando la situazione cambia — un
+ * aggiornamento nuovo — o quando diventa piu' urgente. */
+test("✕ tace per quella situazione e pesa sul tipo; una situazione nuova si dice", () => {
   const adesso = alle(10);
   const situazione = casa(10, { aggiornamenti: [{ entity: "update.a" }] });
-  const fra = (ore) => ({ ...situazione, adesso: adesso + ore * ORA });
+  const fra = (ore, resto = {}) => ({ ...situazione, ...resto, adesso: adesso + ore * ORA });
   const [s] = suggerimentiDellaCasa(situazione);
   let memoria = conLaRisposta({}, s, "no", adesso);
   assert.equal(memoria.tipi.aggiornamenti.no, 1);
-  assert.equal(memoria.istanze[s.id].fino, adesso + ORA);
-  assert.equal(suggerimentiDellaCasa(fra(0.5), memoria).length, 0, "nascosto per un'ora");
-  /* Dopo un'ora torna, ma pesa meno. */
-  const [ancora] = suggerimentiDellaCasa(fra(1.5), memoria);
-  assert.ok(ancora.peso < 1);
-  /* Scartato tre volte di fila: il tipo pesa poco e tace per un'ora... */
-  memoria = conLaRisposta(memoria, s, "no", adesso + 2 * ORA);
-  memoria = conLaRisposta(memoria, s, "no", adesso + 4 * ORA);
+  assert.equal(memoria.istanze[s.id].no, true);
+  assert.equal(suggerimentiDellaCasa(fra(0.5), memoria).length, 0, "nascosto");
+  assert.equal(suggerimentiDellaCasa(fra(5), memoria).length, 0, "la stessa situazione tace");
+  /* Un aggiornamento in piu' e' un'altra situazione: si dice, e pesa meno. */
+  const [nuovo] = suggerimentiDellaCasa(
+    fra(5, { aggiornamenti: [{ entity: "update.a" }, { entity: "update.b" }] }),
+    memoria,
+    {},
+    "it",
+  );
+  assert.equal(nuovo.titolo, "Ci sono 2 aggiornamenti da installare");
+  assert.ok(nuovo.peso < 1);
+  /* Dopo tre giorni anche la stessa torna. */
+  assert.equal(suggerimentiDellaCasa(fra(73), memoria).length, 1);
+  /* Scartato tre volte (tre situazioni): il tipo pesa poco e tace per un'ora... */
+  const altro = (n) => ({ ...s, id: `aggiornamenti:update.${n}` });
+  memoria = conLaRisposta(memoria, altro(1), "no", adesso + 2 * ORA);
+  memoria = conLaRisposta(memoria, altro(2), "no", adesso + 4 * ORA);
   assert.ok(pesoDelTipo(memoria, "aggiornamenti", adesso + 4.5 * ORA) < 0.3);
-  assert.equal(suggerimentiDellaCasa(fra(4.5), memoria).length, 0);
-  /* ...ma non per sempre: un'ora dopo l'ultimo ✕ la casa riguarda, e se la
-   * cosa c'e' ancora la ridice. */
-  assert.ok(pesoDelTipo(memoria, "aggiornamenti", adesso + 5.5 * ORA) < 0.3);
-  assert.equal(suggerimentiDellaCasa(fra(5.5), memoria).length, 1, "dopo un'ora torna");
+  const diNuovo = (ore) => fra(ore, { aggiornamenti: [{ entity: "update.z" }] });
+  assert.equal(suggerimentiDellaCasa(diNuovo(4.5), memoria).length, 0);
+  /* ...ma non per sempre: un'ora dopo l'ultimo ✕ la casa riguarda. */
+  assert.equal(suggerimentiDellaCasa(diNuovo(5.5), memoria).length, 1, "dopo un'ora torna");
   /* E col tempo la casa dimentica: dopo due mesi pesa di nuovo quasi pieno. */
   assert.ok(pesoDelTipo(memoria, "aggiornamenti", adesso + 60 * GIORNO) > 0.85);
   /* Usarlo lo rialza. */
@@ -776,16 +817,65 @@ test("✕ nasconde per un'ora e pesa sul tipo; dopo un'ora la casa riguarda", ()
   );
 });
 
-test("un «Fatto» vale finche' la cosa c'e', ma dopo un'ora la casa riguarda", () => {
+/* Una cosa che finisce e poi ricomincia e' una situazione nuova: lo ✕ di
+ * prima non la copre. Ma un sensore che sparisce per un giro non e' una cosa
+ * finita. */
+test("✕: la memoria lascia andare la situazione finita, non il sensore che salta un giro", () => {
+  const adesso = alle(10);
+  const situazione = casa(10, { aggiornamenti: [{ entity: "update.a" }] });
+  const [s] = suggerimentiDellaCasa(situazione);
+  let memoria = conLaRisposta({}, s, "no", adesso);
+  /* Un giro senza: si segna, non si dimentica. */
+  memoria = memoriaDopo(memoria, [], adesso + MINUTO);
+  assert.ok(memoria.istanze[s.id]);
+  /* Torna: era un attimo. */
+  memoria = memoriaDopo(memoria, [s.id], adesso + 2 * MINUTO);
+  assert.equal(memoria.istanze[s.id].via, undefined);
+  /* Sparisce per davvero: dopo cinque minuti la memoria la lascia. */
+  memoria = memoriaDopo(memoria, [], adesso + 10 * MINUTO);
+  memoria = memoriaDopo(memoria, [], adesso + 16 * MINUTO);
+  assert.equal(memoria.istanze[s.id], undefined);
+  assert.equal(
+    suggerimentiDellaCasa({ ...situazione, adesso: adesso + 2 * ORA }, memoria).length,
+    1,
+    "la situazione ricomincia: si dice",
+  );
+});
+
+test("✕ su una batteria al 15%: sotto il 10% torna, perche' e' piu' urgente", () => {
+  const adesso = alle(10);
+  const batteria = (level) =>
+    casa(10, { batterie: [{ entity: "sensor.porta_batt", name: "Sensore porta", level }] });
+  const [s] = suggerimentiDellaCasa(batteria(15));
+  assert.equal(s.urgenza, "idea");
+  const memoria = conLaRisposta({}, s, "no", adesso);
+  assert.equal(suggerimentiDellaCasa({ ...batteria(14), adesso: adesso + ORA }, memoria).length, 0);
+  const [ancora] = suggerimentiDellaCasa(
+    { ...batteria(8), adesso: adesso + 2 * ORA },
+    memoria,
+    {},
+    "it",
+  );
+  assert.equal(ancora.urgenza, "oggi");
+  assert.equal(ancora.motivo, "Sensore porta è all'8%.");
+});
+
+test("un «Fatto» vale un'ora; se la cosa c'e' ancora, la casa lo nota con garbo", () => {
   const adesso = alle(10);
   const situazione = casa(10, { aggiornamenti: [{ entity: "update.a" }] });
   const [s] = suggerimentiDellaCasa(situazione);
   const memoria = conLaRisposta({}, s, "fatto", adesso);
   const fra = (ore) => ({ ...situazione, adesso: adesso + ore * ORA });
   assert.equal(suggerimentiDellaCasa(fra(0.5), memoria).length, 0);
-  assert.equal(suggerimentiDellaCasa(fra(1.5), memoria).length, 1, "ancora li': torna");
-  /* E la memoria lo dimentica, come un rinvio scaduto. */
-  assert.equal(memoriaDopo(memoria, [s.id], adesso + 1.5 * ORA).istanze[s.id], undefined);
+  /* Dopo un'ora, se e' ancora li', torna — e lo dice con garbo. */
+  const [ancora] = suggerimentiDellaCasa(fra(1.5), memoria, {}, "it");
+  assert.equal(ancora.ancora, true);
+  assert.equal(
+    ancora.motivo,
+    "L'avevi segnato come fatto, ma è ancora così. Con calma, quando hai un minuto.",
+  );
+  /* La memoria se lo tiene finche' la cosa c'e': e' quello che fa dire «ancora». */
+  assert.ok(memoriaDopo(memoria, [s.id], adesso + 1.5 * ORA).istanze[s.id]?.fatto);
   assert.ok(memoriaDopo(memoria, [s.id], adesso + 0.5 * ORA).istanze[s.id]?.fatto);
 });
 
@@ -842,8 +932,16 @@ test("«Fatto» lo toglie finche' la cosa non si ripresenta", () => {
   /* Finche' c'e', la memoria lo tiene. */
   memoria = memoriaDopo(memoria, [s.id], adesso + MINUTO);
   assert.equal(memoria.istanze[s.id].fatto, true);
-  /* La lavatrice riparte: il suggerimento sparisce, e la memoria lo lascia. */
+  /* Il bucato steso la casa non lo vede: dopo un'ora resta fatto, non torna. */
+  assert.equal(
+    suggerimentiDellaCasa({ ...situazione, adesso: adesso + 2 * ORA }, memoria).length,
+    0,
+    "«Fatto» sul bucato non ritorna dopo un'ora",
+  );
+  /* La lavatrice riparte: il suggerimento sparisce, e la memoria lo lascia
+   * (dopo cinque minuti: un giro senza non basta). */
   memoria = memoriaDopo(memoria, [], adesso + ORA);
+  memoria = memoriaDopo(memoria, [], adesso + ORA + 6 * MINUTO);
   assert.equal(memoria.istanze[s.id], undefined);
   /* Il prossimo bucato si dice di nuovo. */
   assert.equal(suggerimentiDellaCasa(situazione, memoria).length, 1);
