@@ -10,6 +10,16 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.19.6
+
+_App GdAHome e add-on._
+
+- **Meno carico sulla casa**: la plancia non si ricollega più a raffica
+  quando Home Assistant è lento, e l'app chiude i collegamenti agli stati
+  che non usa più. Su un tablet a muro sempre acceso si accumulavano, e
+  facevano salire il processore e rallentare le risposte.
+- L'add-on fa meno lavoro a ogni cambio di stato.
+
 ## 1.19.5
 
 _App GdAHome e add-on._
