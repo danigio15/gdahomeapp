@@ -48,12 +48,13 @@ import {
   posaDiRipiego,
   riprendiIlPiano,
 } from "../core/crea-casa.js";
-import { arrediDallaPianta } from "../core/arredi-dalla-pianta.js";
+import { arrediDallaPianta, stanzeDagliArredi } from "../core/arredi-dalla-pianta.js";
 import {
   CARTA_PULITA,
   PASSO,
   SPESSORE_DEL_RENDER,
   conMargine,
+  controprovaDellePorte,
   grigliaDallaFoto,
   inchiostro,
   leggiIlRender,
@@ -2347,13 +2348,20 @@ async function usaPlanimetria(src) {
     let muri = null;
     if (typeof src === "string") {
       try {
-        const base = pulita || dritta;
+        const base = pulita || dritta,
+          datiBase = base.getContext("2d").getImageData(0, 0, base.width, base.height);
         muri = scalaDaiMuri(
-          base.getContext("2d").getImageData(0, 0, base.width, base.height),
-          pulita
-            ? { muro: render?.muroM || SPESSORE_DEL_RENDER, minimo: render?.minimo || 8 }
-            : {},
+          datiBase,
+          pulita ? { muro: render?.muroM || SPESSORE_DEL_RENDER, minimo: render?.minimo || 8 } : {},
         );
+        /* Nella pianta arredata lo spessore dei muri di fuori e' stimato: le
+         * porte (70-90 cm) fanno da controprova e correggono la scala. */
+        if (muri && pulita && render?.arredata) {
+          const f = controprovaDellePorte(
+            riconosciDaFoto(grigliaDallaFoto(datiBase, muri.mpp, { render: true })),
+          );
+          if (f !== 1) muri = { ...muri, mpp: muri.mpp * f };
+        }
       } catch {
         muri = null;
       }
@@ -2871,12 +2879,48 @@ function riconosci() {
         S.arredi.push(
           ...arrediDallaPianta(d, S.casa, S.mpp).map((a) => ({ ...a, daPianta: true })),
         );
+        nomiDagliArredi();
       } catch (errore) {
         root.console?.warn?.("[DashboardModern] Casa 3D: arredi della pianta", errore);
       }
     return;
   }
   ricalcola();
+}
+
+/* I nomi delle stanze della pianta arredata, dagli arredi (il letto, i
+ * sanitari, la cucina) e dalla forma (il disimpegno, il ripostiglio): solo
+ * alle stanze ancora senza nome, coi nomi di sempre. Due bagni: «Bagno 2». */
+const NOME_DEL_TIPO = {
+  salone: 0,
+  cucina: 1,
+  camera: 2,
+  cameretta: 3,
+  bagno: 4,
+  ingresso: 5,
+  disimpegno: 6,
+  ripostiglio: 7,
+  studio: 8,
+};
+function nomiDagliArredi() {
+  const S = state.S;
+  const tipi = stanzeDagliArredi(
+    S.casa,
+    (S.arredi || []).filter((a) => a.daPianta),
+  );
+  const usati = new Map();
+  for (const s of S.casa?.stanze || []) {
+    const k = tipi[s.id];
+    if (!k || clean(S.nomi[s.id])) continue;
+    let nome =
+      k === "salone+cucina"
+        ? `${due(NOMI_DI_RIPIEGO[0])} / ${due(NOMI_DI_RIPIEGO[1])}`
+        : due(NOMI_DI_RIPIEGO[NOME_DEL_TIPO[k]]);
+    const n = (usati.get(nome) || 0) + 1;
+    usati.set(nome, n);
+    if (n > 1) nome = `${nome} ${n}`;
+    S.nomi[s.id] = nome;
+  }
 }
 
 /* Dopo un ritocco ai muri le stanze si riconoscono di nuovo: nomi, foto e

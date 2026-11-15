@@ -1471,8 +1471,8 @@ export function grigliaDallaFoto(
   /* Un render gia' pulito (leggiIlRender, in fondo): i muri e i vetri sono
    * scritti nei colori, e la strada e' quella dei muri pieni. */
   if (render && !disegno) {
-    const { ink, linee } = mappeDelRender(im);
-    return Object.assign(grigliaDaMuriPieni(ink, linee, w, h, mpp, { render: true }), {
+    const { ink, linee, porte: soglie } = mappeDelRender(im);
+    return Object.assign(grigliaDaMuriPieni(ink, linee, w, h, mpp, { render: true, soglie }), {
       strada: "render",
     });
   }
@@ -1506,7 +1506,14 @@ export function grigliaDallaFoto(
  *   4. scale: almeno quattro righe parallele, lunghe e a passo regolare
  *      (i gradini).
  */
-export function grigliaDaMuriPieni(ink, linee, w, h, mpp, { render = false } = {}) {
+export function grigliaDaMuriPieni(
+  ink,
+  linee,
+  w,
+  h,
+  mpp,
+  { render = false, soglie: chiuse = null } = {},
+) {
   const lato = PASSO / mpp,
     W = Math.max(1, Math.floor(w / lato)),
     H = Math.max(1, Math.floor(h / lato)),
@@ -1834,7 +1841,10 @@ export function grigliaDaMuriPieni(ink, linee, w, h, mpp, { render = false } = {
             continue;
           }
         }
-        if (fa && fb && k <= vetroMax && righe >= k * 0.5)
+        /* Nella pianta pulita il vetro e' disegnato apposta: una finestra
+         * d'angolo (da un capo il muro di traverso, non nella fila) e' vetro
+         * se la riga del vetro attraversa tutto il varco. */
+        if ((fa && fb ? righe >= k * 0.5 : render && righe >= k * 0.8) && k <= vetroMax)
           for (let q = b; q < e; q++) vetro[at(a, q)] = 1;
         /* da un lato solo, il muro che finisce dev'essere un tramezzo vero,
          * lungo almeno mezzo metro: non la gamba di una lettera */
@@ -1873,6 +1883,11 @@ export function grigliaDaMuriPieni(ink, linee, w, h, mpp, { render = false } = {
         soglie[c] = tutto ? 0 : 1;
       }
     }
+  }
+  /* le porte che la pianta pulita ha gia' chiuso (le ante scorrevoli) */
+  if (chiuse) {
+    const c = celleDi(chiuse, 0.3);
+    for (let i = 0; i < N; i++) if (c[i] && !muro[i] && !vetro[i]) soglie[i] = 1;
   }
   const barriera = muro.slice();
   for (let i = 0; i < N; i++) if (vetro[i] || soglie[i]) barriera[i] = 1;
@@ -3092,6 +3107,9 @@ export const SPESSORE_DEL_RENDER = 0.3;
 export const MURO_PULITO = [40, 40, 40];
 /** Il vetro delle finestre nella pianta pulita. */
 export const VETRO_PULITO = [255, 255, 0];
+/** Il colore di una porta chiusa nella pianta pulita (l'anta scorrevole, il
+ * varco che chiude): una soglia, non un muro. */
+export const PORTA_PULITA = [255, 0, 255];
 /** La carta della pianta pulita. */
 export const CARTA_PULITA = [250, 250, 250];
 
@@ -3432,14 +3450,21 @@ export function mappeDelRender(im) {
   const { width: w, height: h, data } = im,
     N = w * h;
   const ink = new Uint8Array(N),
-    linee = new Uint8Array(N);
+    linee = new Uint8Array(N),
+    porte = new Uint8Array(N);
+  let soglie = 0;
   for (let i = 0; i < N; i++) {
     const r = data[i * 4],
+      g = data[i * 4 + 1],
       b = data[i * 4 + 2];
     if (r < 145) ink[i] = 1;
     else if (b < 125) linee[i] = 1;
+    else if (g < 100) {
+      porte[i] = 1;
+      soglie++;
+    }
   }
-  return { ink, linee };
+  return { ink, linee, porte: soglie ? porte : null };
 }
 
 /* ── le icone sopra la pianta ─────────────────────────────────────────────
@@ -3712,9 +3737,10 @@ function rattoppa(data, buco, w, h) {
     N = w * h;
   const muro = (i) => {
     const v = luce(data, i);
-    return v >= 60 && v <= 200 && colore(data, i) <= 14;
+    return v <= 200 && colore(data, i) <= 18;
   };
-  const tmin = Math.max(3, Math.round(Math.max(w, h) * 0.004)),
+  /* anche i tramezzi sottili: due o tre pixel in una schermata piccola */
+  const tmin = Math.max(2, Math.round(Math.max(w, h) * 0.003)),
     tmax = Math.max(tmin + 2, Math.round(Math.max(w, h) * 0.03));
   /* lo spessore della fascia di muro in i, di traverso alla direzione (dx, dy) */
   const fascia = (x, y, dx, dy) => {
@@ -3975,16 +4001,82 @@ export function leggiLaPiantaArredata(im, fondo = null) {
         for (const i of p.celle) muro[i] = 1;
     }
   }
+  /* Le righe piu' sottili di un tramezzo (un terzo del muro di fuori) sono
+   * muro solo se corrono dritte e lunghe: i contorni dei sanitari, del
+   * piatto doccia, del lavabo sono anelli e curve, e due sanitari vicini
+   * (il wc col bidet) chiudevano il bagno in due stanzine. */
+  {
+    const rs = Math.max(2, Math.round(T * 0.17));
+    const largo = allarga(stringi(muro, w, h, rs), w, h, rs + 1);
+    const sottile = new Uint8Array(N);
+    for (let i = 0; i < N; i++) sottile[i] = muro[i] && !largo[i] ? 1 : 0;
+    /* la corsa dritta del sottile che passa per ogni pixel, in orizzontale
+     * e in verticale: un tramezzo corre per metri, un anello gira prima */
+    const lungo = new Uint8Array(N),
+      L2 = Math.round(T * 2);
+    const corse = (n, k, at) => {
+      for (let p = 0; p < n; p++) {
+        let b = 0;
+        while (b < k) {
+          if (!sottile[at(p, b)]) {
+            b++;
+            continue;
+          }
+          let e = b;
+          while (e < k && sottile[at(p, e)]) e++;
+          if (e - b >= L2) for (let q = b; q < e; q++) lungo[at(p, q)] = 1;
+          b = e;
+        }
+      }
+    };
+    corse(h, w, (p, b) => p * w + b);
+    corse(w, h, (p, b) => b * w + p);
+    /* tutto lo spessore della riga dritta: le corse di traverso */
+    const tiene = allarga(lungo, w, h, rs + 1);
+    /* i sanitari sono bianchi dentro: il bianco piccolo (fino a 0,6 m²,
+     * mezzo metro di lato al piu' due) chiuso dal contorno */
+    const bianco = new Uint8Array(N);
+    for (let i = 0; i < N; i++)
+      bianco[i] = !muro[i] && !fondo[i] && L[i] >= 236 && C[i] <= 12 ? 1 : 0;
+    const vicinoAlBianco = new Uint8Array(N),
+      mq = (T / SPESSORE_DELLA_PIANTA) ** 2;
+    for (const p of pezziDi(bianco, w, h).pezzi) {
+      const bw = p.x1 - p.x0 + 1,
+        bh = p.y1 - p.y0 + 1;
+      /* raccolto, non una striscia (la soglia bianca di una porta) */
+      if (
+        p.celle.length < mq * 0.004 ||
+        p.celle.length > mq * 0.6 ||
+        Math.max(bw, bh) > mq ** 0.5 * 1.1 ||
+        Math.min(bw, bh) < T * 0.4 ||
+        Math.max(bw, bh) > Math.min(bw, bh) * 4
+      )
+        continue;
+      for (const i of p.celle) vicinoAlBianco[i] = 1;
+    }
+    const sanitari = allarga(vicinoAlBianco, w, h, rs + 2);
+    for (let i = 0; i < N; i++) if (sottile[i] && !tiene[i] && sanitari[i]) muro[i] = 0;
+  }
   /* Un muro e' una fascia: lunga, dello stesso spessore. I contorni chiusi
    * di un mobile piccolo (il wc, il bidet, il lavabo, il piatto doccia: un
    * anello scuro su un fondo chiaro) restano pezzi corti, larghi di qua e
    * di la' e vuoti dentro: sono arredi sul pavimento, non muri. Messi
-   * vicini, nella griglia diventavano un blocco di muro pieno. */
-  for (const p of pezziDi(muro, w, h).pezzi) {
-    const bw = p.x1 - p.x0 + 1,
-      bh = p.y1 - p.y0 + 1;
-    if (Math.max(bw, bh) < T * 3.5 && Math.min(bw, bh) > T * 0.8 && p.celle.length < bw * bh * 0.6)
-      for (const i of p.celle) muro[i] = 0;
+   * vicini, nella griglia diventavano un blocco di muro pieno. Un pezzo
+   * spesso quanto il muro di fuori (lo spigolo fra due finestre, con il
+   * tramezzo che ci arriva) e' muro anche se corto. */
+  {
+    const spesso = stringi(muro, w, h, Math.max(1, Math.round(T * 0.3)));
+    for (const p of pezziDi(muro, w, h).pezzi) {
+      const bw = p.x1 - p.x0 + 1,
+        bh = p.y1 - p.y0 + 1;
+      if (
+        Math.max(bw, bh) < T * 3.5 &&
+        Math.min(bw, bh) > T * 0.8 &&
+        p.celle.length < bw * bh * 0.6 &&
+        !p.celle.some((i) => spesso[i])
+      )
+        for (const i of p.celle) muro[i] = 0;
+    }
   }
   /* Le righe dell'interfaccia attorno alla pianta (la cornice della
    * schermata, il bordo di un'etichetta) arrivano al bordo dell'immagine e
@@ -4016,6 +4108,100 @@ export function leggiLaPiantaArredata(im, fondo = null) {
   let n = 0;
   for (let i = 0; i < N; i++) n += muro[i];
   if (n < T * M * 1.5) return null;
+  /* Le ante delle porte scorrevoli: una barra scura (piu' scura del muro),
+   * dritta, sottile, lunga da mezzo metro a un metro e mezzo, che continua
+   * un muro nella sua fila (attaccata a un capo, e di la' il muro va avanti
+   * dritto: non e' il contorno di un mobile che tocca il muro di traverso).
+   * Chiusa e' il muro che manca fra due stanze: va nel muro, e il varco che
+   * resta dopo l'altro capo, fino al muro che segue nella sua fila, e' la
+   * porta. */
+  const porta = new Uint8Array(N);
+  {
+    const scuro = new Uint8Array(N);
+    for (let i = 0; i < N; i++)
+      scuro[i] = !fondo[i] && !muro[i] && L[i] < Math.min(Lw - 50, 115) && C[i] <= 30 ? 1 : 0;
+    const vicinoMuro = allarga(muro, w, h, Math.max(2, Math.round(T * 0.25)));
+    for (const p of pezziDi(scuro, w, h).pezzi) {
+      const bw = p.x1 - p.x0 + 1,
+        bh = p.y1 - p.y0 + 1,
+        lungo = Math.max(bw, bh),
+        corto = Math.min(bw, bh);
+      if (lungo < T * 1.5 || lungo > T * 5 || corto > T * 0.45 || corto < 2) continue;
+      if (p.celle.length < bw * bh * 0.55) continue;
+      const oriz = bw >= bh;
+      /* i due capi: quanto muro c'e' accanto */
+      const capo = (verso) => {
+        let n = 0;
+        for (let t = oriz ? p.y0 : p.x0; t <= (oriz ? p.y1 : p.x1); t++) {
+          const q = verso < 0 ? (oriz ? p.x0 : p.y0) - 1 : (oriz ? p.x1 : p.y1) + 1;
+          const i = oriz ? t * w + q : q * w + t;
+          if (i >= 0 && i < N && vicinoMuro[i]) n++;
+        }
+        return n >= corto * 0.5;
+      };
+      /* e il muro, di la' dal capo, va avanti nella fila dell'anta */
+      const fila = (verso) => {
+        const lat = Math.max(1, Math.round(corto / 2)),
+          c0 = oriz ? (p.y0 + p.y1) >> 1 : (p.x0 + p.x1) >> 1,
+          da = verso < 0 ? (oriz ? p.x0 : p.y0) - 1 : (oriz ? p.x1 : p.y1) + 1,
+          k = oriz ? w : h,
+          n = oriz ? h : w;
+        let meglio = 0;
+        for (let o = -lat; o <= lat; o++) {
+          const c = c0 + o;
+          if (c < 0 || c >= n) continue;
+          let t = 0;
+          while (
+            t < T * 0.7 &&
+            da + verso * t >= 0 &&
+            da + verso * t < k &&
+            !muro[oriz ? c * w + da + verso * t : (da + verso * t) * w + c]
+          )
+            t++;
+          /* il muro che va avanti, saltando i buchini (un filo chiaro fra
+           * due pezzi dello stesso muro) */
+          let run = 0,
+            buco = 0;
+          for (let q = da + verso * t; q >= 0 && q < k && run < T * 2; q += verso) {
+            if (muro[oriz ? c * w + q : q * w + c]) {
+              run++;
+              buco = 0;
+            } else if (++buco > T * 0.2) break;
+          }
+          meglio = Math.max(meglio, run);
+        }
+        return meglio >= T * 0.9;
+      };
+      const ca = capo(-1) && fila(-1),
+        cb = capo(1) && fila(1);
+      if (!ca && !cb) continue;
+      for (const i of p.celle) muro[i] = 1;
+      /* il varco dopo il capo libero, nella fila dell'anta */
+      for (const verso of [-1, 1]) {
+        if (verso < 0 ? ca : cb) continue;
+        const da = verso < 0 ? (oriz ? p.x0 : p.y0) - 1 : (oriz ? p.x1 : p.y1) + 1,
+          lim = Math.round(lungo * 1.3);
+        const a0 = oriz ? p.y0 : p.x0,
+          a1 = oriz ? p.y1 : p.x1;
+        let fine = -1;
+        for (let d = 0; d <= lim; d++) {
+          const q = da + verso * d;
+          if (q < 0 || q >= (oriz ? w : h)) break;
+          let m = 0;
+          for (let t = a0; t <= a1; t++) if (muro[oriz ? t * w + q : q * w + t]) m++;
+          if (m >= (a1 - a0 + 1) * 0.5) {
+            fine = d;
+            break;
+          }
+        }
+        if (fine < T * 0.5) continue;
+        for (let d = 0; d < fine; d++) {
+          const q = da + verso * d;
+          for (let t = a0; t <= a1; t++) porta[oriz ? t * w + q : q * w + t] = 1;
+        }
+      }
+    }
+  }
   /* 3. le finestre */
   const vetro = finestreChiare(muro, w, h, T, (i) => pavimento(i), L, C);
   const out = new Uint8ClampedArray(N * 4);
@@ -4023,6 +4209,7 @@ export function leggiLaPiantaArredata(im, fondo = null) {
   for (let i = 0; i < N; i++) {
     let c = CARTA_PULITA;
     if (muro[i]) c = MURO_PULITO;
+    else if (porta[i] && !vetro[i]) c = PORTA_PULITA;
     else if (vetro[i]) {
       c = VETRO_PULITO;
       vetri++;
@@ -4144,7 +4331,8 @@ function finestreChiare(muro, w, h, T, pavimento, L, C) {
                 }
               return (tutti ? si / tutti : 1) >= 0.55 && pv <= lontani * 0.1;
             };
-            if (lato(-1) || lato(1)) trovate.push({ p, e, f, at, n, sp: spessoreA, k });
+            const fuori = lato(-1) ? -1 : lato(1) ? 1 : 0;
+            if (fuori) trovate.push({ p, e, f, at, n, sp: spessoreA, k, fuori });
           }
         }
         b = f;
@@ -4199,21 +4387,40 @@ function finestreChiare(muro, w, h, T, pavimento, L, C) {
     while (b < n - 1 && b - p < lim && muro[at(b + 1, q)]) b++;
     return [a, b];
   };
-  /* I due capi dritti: il muro continua nella sua fila per mezzo muro,
-   * sottile. Una finestra d'angolo (un capo e' il muro di traverso) resta
-   * muro: la griglia non la saprebbe chiudere, e il fuori entrerebbe. */
-  const dritti = ({ p, e, f, sp, k }) => {
+  /* I due capi: il muro continua nella sua fila per mezzo muro. Puo'
+   * esserci il muro di traverso (una finestra d'angolo, un tramezzo che
+   * arriva fra due finestre): il riquadro del vetro prende lo spessore del
+   * muro di fuori ai due capi, e la griglia la chiude. */
+  const dritti = ({ p, e, f, at, k }) => {
     for (let t = 0; t <= Math.round(T * 0.5); t++)
-      if (e - 1 - t < 0 || f + t >= k || sp(p, e - 1 - t) > T * 1.6 || sp(p, f + t) > T * 1.6)
+      if (e - 1 - t < 0 || f + t >= k || !muro[at(p, e - 1 - t)] || !muro[at(p, f + t)])
         return false;
     return true;
   };
-  const buone = trovate.filter(({ p, e, f, at, n, sp, k }) => {
-    if (!dritti({ p, e, f, sp, k })) return false;
+  const buone = trovate.filter(({ p, e, f, at, n, k, fuori }) => {
+    if (!dritti({ p, e, f, at, k })) return false;
     const [a1, b1] = fasciaDi(p, e - 1, at, n),
       [a2, b2] = fasciaDi(p, f, at, n);
     const a = Math.max(a1, a2),
       b = Math.min(b1, b2);
+    /* Il portone: nel vano non c'e' niente (ne' il vetro ne' il telaio, solo
+     * il bianco, al piu' la soglia sul filo di dentro: l'anta e l'arco sono
+     * in casa). La finestra ha la riga del telaio anche a meta' del muro e
+     * fuori: per ogni punto del varco, la riga piu' scura nei due terzi dello
+     * spessore verso fuori; se di solito e' quasi bianca, e' una porta. */
+    {
+      const mezzo = (a + b) / 2,
+        terzo = (b - a) / 6,
+        minimi = [];
+      for (let q = e; q < f; q++) {
+        let m = 255;
+        for (let pp = a; pp <= b; pp++)
+          if ((pp - mezzo) * fuori >= -terzo) m = Math.min(m, L[at(pp, q)]);
+        minimi.push(m);
+      }
+      minimi.sort((x, y) => x - y);
+      if (minimi.length && minimi[minimi.length >> 1] >= 195) return false;
+    }
     let m = 0,
       pv = 0,
       ch = 0,
@@ -4232,12 +4439,24 @@ function finestreChiare(muro, w, h, T, pavimento, L, C) {
    * spessore del muro, e il resto del varco vuoto (una fascia piena larga
    * quanto il muro sembrerebbe un tramezzo). */
   const sottile = Math.max(2, Math.round(T * 0.1));
-  for (const { p, e, f, at, n } of buone) {
+  for (const { p, e, f, at, n, fuori } of buone) {
     const [a1, b1] = fasciaDi(p, e - 1, at, n),
       [a2, b2] = fasciaDi(p, f, at, n);
-    const a = Math.min(Math.max(a1, a2), p),
-      b = Math.max(Math.min(b1, b2), p),
-      c = Math.round((a + b) / 2 - sottile / 2);
+    let a = Math.min(Math.max(a1, a2), p),
+      b = Math.max(Math.min(b1, b2), p);
+    /* verso fuori il telaio, staccato dal muro da un filo chiaro, e' ancora
+     * finestra: fin dove nel varco c'e' muro, per mezzo muro al piu' */
+    for (let d = 1; d <= Math.round(T * 0.6); d++) {
+      const pp = fuori < 0 ? a - d : b + d;
+      if (pp < 0 || pp >= n) break;
+      let m = 0;
+      for (let q = e; q < f; q++) if (muro[at(pp, q)]) m++;
+      if (m >= (f - e) * 0.3) {
+        if (fuori < 0) a = pp;
+        else b = pp;
+      }
+    }
+    const c = Math.round((a + b) / 2 - sottile / 2);
     for (let q = e; q < f; q++)
       for (let pp = a; pp <= b; pp++) {
         const i = at(pp, q);
@@ -4247,6 +4466,29 @@ function finestreChiare(muro, w, h, T, pavimento, L, C) {
   }
   for (const i of togli) muro[i] = 0;
   return vetro;
+}
+
+/**
+ * La controprova della scala di una pianta arredata: lo spessore dei muri di
+ * fuori e' stimato (30 cm), le porte invece misurano quasi sempre 70-90 cm.
+ * Il vano di una porta di casa (fra i due capi del muro) e' di 75-100 cm:
+ * se le porte riconosciute (almeno tre) vengono in media sotto i 75 cm o
+ * sopra 1,05 m, la scala va corretta e la media torna a 80 (95) cm. Torna
+ * il fattore per i metri per pixel (fra 0,8 e 1,25), 1 se va bene cosi'.
+ */
+export function controprovaDellePorte(casa) {
+  const larghe = (casa?.aperture || [])
+    .filter((a) => a.tipo === "porta" && a.largo >= 0.45 && a.largo <= 1.4)
+    .map((a) => a.largo)
+    .sort((a, b) => a - b);
+  if (larghe.length < 3) return 1;
+  /* la media del mezzo (senza il quarto piu' stretto e il piu' largo): una
+   * porta in piu' o in meno non sposta la scala */
+  const via = Math.floor(larghe.length / 4),
+    mezzo = larghe.slice(via, larghe.length - via),
+    m = mezzo.reduce((a, b) => a + b, 0) / mezzo.length;
+  const f = m < 0.75 ? 0.8 / m : m > 1.05 ? 0.95 / m : 1;
+  return Math.min(1.25, Math.max(0.8, f));
 }
 
 /** L'immagine con un margine di `m` pixel tutto attorno, del colore `rgb`:

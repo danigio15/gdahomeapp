@@ -15,10 +15,11 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
-import { arrediDallaPianta } from "../src/core/arredi-dalla-pianta.js";
+import { arrediDallaPianta, stanzeDagliArredi } from "../src/core/arredi-dalla-pianta.js";
 import {
   CARTA_PULITA,
   conMargine,
+  controprovaDellePorte,
   grigliaDallaFoto,
   leggiIlRender,
   margineDellaPianta,
@@ -337,6 +338,21 @@ test("le icone della centrale sopra la pianta: tolte, il muro sotto ricostruito,
     `stanze: ${g.casa.stanze.map((s) => s.area.toFixed(1)).join(", ")}`,
   );
   assert.ok(g.arredi.some((a) => a.k === "matrimoniale"), "il letto c'e' ancora");
+});
+
+test("pianta arredata: i nomi delle stanze dagli arredi, e la scala che torna con le porte", () => {
+  const { casa, arredi, stanzaIn } = giro;
+  const tipi = stanzeDagliArredi(casa, arredi);
+  assert.equal(tipi[stanzaIn(8, 3)], "camera");
+  assert.equal(tipi[stanzaIn(8, 5)], "bagno");
+  assert.equal(tipi[stanzaIn(3, 4)], "salone+cucina");
+  /* qui le porte sono giuste: la scala resta quella dei muri */
+  assert.equal(controprovaDellePorte(casa), 1);
+  /* porte da 65 cm: la scala era piccola, si allarga verso gli 80 cm */
+  const strette = { aperture: [0.62, 0.65, 0.66, 0.68, 0.9].map((largo) => ({ tipo: "porta", largo })) };
+  const f = controprovaDellePorte(strette);
+  assert.ok(f > 1.1 && f < 1.3, `fattore ${f}`);
+  assert.equal(controprovaDellePorte({ aperture: [{ tipo: "porta", largo: 0.6 }] }), 1, "con una porta sola non si tocca");
 });
 
 test("niente da togliere su una pianta a righe nere, e una pianta a righe non e' arredata", () => {

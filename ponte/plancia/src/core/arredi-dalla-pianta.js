@@ -137,7 +137,9 @@ export function arrediDallaPianta(im, casa, mpp) {
     legno = new Uint8Array(N),
     nero = new Uint8Array(N),
     grigio = new Uint8Array(N),
-    altro = new Uint8Array(N);
+    altro = new Uint8Array(N),
+    /* il bianco col suo contorno grigio o scuro: i sanitari, la doccia */
+    chiaroScuro = new Uint8Array(N);
   for (let i = 0; i < N; i++) {
     const t = stanzaDi[i];
     if (!t) continue;
@@ -148,9 +150,13 @@ export function arrediDallaPianta(im, casa, mpp) {
       Math.abs(data[i * 4 + 2] - p[2]);
     const v = luce(data, i),
       c = colore(data, i);
-    if (v >= 232 && c <= 14) bianco[i] = 1;
-    else if (d <= 30) continue;
-    else if (v < 60) nero[i] = 1;
+    if (v >= 232 && c <= 14) {
+      bianco[i] = chiaroScuro[i] = 1;
+      continue;
+    }
+    if (d <= 30) continue;
+    if (c <= 24 && v < 215) chiaroScuro[i] = 1;
+    if (v < 60) nero[i] = 1;
     else if (c >= 40 && data[i * 4] > data[i * 4 + 2] + 30 && v < 190) legno[i] = 1;
     else if (c <= 14 && v < 200) grigio[i] = 1;
     else if (c >= 10) altro[i] = 1;
@@ -195,7 +201,7 @@ export function arrediDallaPianta(im, casa, mpp) {
   /* I pezzi bianchi di un mobile solo, divisi dalle sue righe (i cuscini
    * del divano, il cuscino del letto, le sedie attaccate al tavolo): quelli
    * che si toccano quasi diventano uno, col riquadro di tutti. */
-  const uniti = (lista, d) => {
+  const uniti = (lista, d, quotaGrande = 0, massimo = 3) => {
     const gruppi = lista.map((f) => ({ ...f }));
     let cambiato = true;
     while (cambiato) {
@@ -207,6 +213,15 @@ export function arrediDallaPianta(im, casa, mpp) {
           if (p.stanza !== q.stanza) continue;
           if (q.x0 > p.x1 + m(d) || p.x0 > q.x1 + m(d) || q.y0 > p.y1 + m(d) || p.y0 > q.y1 + m(d))
             continue;
+          /* due pezzi dello stesso mobile si toccano lungo quasi tutto il
+           * lato del piu' piccolo (il cuscino lungo il letto, la sedia
+           * contro il tavolo); il comodino o l'armadio accanto al letto lo
+           * toccano solo per un tratto */
+          const sx = Math.min(p.x1, q.x1) - Math.max(p.x0, q.x0) + 1,
+            sy = Math.min(p.y1, q.y1) - Math.max(p.y0, q.y0) + 1,
+            lp = sx > sy ? [p.x1 - p.x0 + 1, q.x1 - q.x0 + 1] : [p.y1 - p.y0 + 1, q.y1 - q.y0 + 1],
+            comune = Math.max(sx, sy);
+          if (comune < Math.min(...lp) * 0.6 || comune < Math.max(...lp) * quotaGrande) continue;
           const u = forma(
             {
               n: p.n + q.n,
@@ -219,7 +234,7 @@ export function arrediDallaPianta(im, casa, mpp) {
           );
           /* un mobile solo e' compatto e non piu' lungo di tre metri: il
            * letto accanto all'armadio restano due */
-          if (u.b > 3 || u.pieno < 0.5) continue;
+          if (u.b > massimo || u.pieno < 0.5) continue;
           gruppi[i] = u;
           gruppi.splice(j, 1);
           cambiato = true;
@@ -233,6 +248,10 @@ export function arrediDallaPianta(im, casa, mpp) {
     neri = forme(nero),
     grigi = forme(grigio),
     altri = forme(altro, true, true),
+    oggetti = forme(chiaroScuro, true),
+    /* il bianco senza chiudere: i mobili bianchi accostati restano divisi
+     * dai loro contorni (il letto, lo scaffale, l'armadio in fila) */
+    sciolti = forme(bianco),
     grandi = uniti(bianchi, 0.12);
   const tra = (v, a, b) => v >= a && v <= b;
   /* quanto muro c'e' appena fuori da un lato del riquadro (0..1) */
@@ -271,6 +290,12 @@ export function arrediDallaPianta(im, casa, mpp) {
     const dietro = a >= b ? lati[0] : lati[1];
     return versi[dietro].map((v) => -v);
   };
+  /* il lato qualunque piu' contro il muro (un mobile quasi quadrato) */
+  const spalleAlMuro = (f, soglia = 0.4, dm = 0.3) => {
+    const lati = ["su", "giu", "sx", "dx"].map((l) => [l, muroAccanto(f, l, dm)]);
+    lati.sort((p, q) => q[1] - p[1]);
+    return lati[0][1] >= soglia ? versi[lati[0][0]].map((v) => -v) : null;
+  };
   const vicino = (f, g, d) =>
     g.x1 >= f.x0 - m(d) && g.x0 <= f.x1 + m(d) && g.y1 >= f.y0 - m(d) && g.y0 <= f.y1 + m(d);
   const usati = new Set(),
@@ -297,13 +322,29 @@ export function arrediDallaPianta(im, casa, mpp) {
   /* le sedie: quadratini bianchi (o neri) da 30-60 cm */
   const sedia = (g) => tra(g.a, 0.25, 0.6) && tra(g.b, 0.3, 0.7) && g.pieno >= 0.5;
 
-  /* il letto: bianco grande e pieno (coi cuscini), la testa contro il muro */
-  for (const f of grandi) {
+  /* il letto: bianco grande e pieno (coi cuscini), la testa contro il muro.
+   * Prima coi pezzi sciolti (il letto senza il mobiletto o lo scaffale
+   * accostato), poi coi pezzi chiusi */
+  const letti = uniti(sciolti, 0.12, 0.5, 2.4);
+  const unLetto = (f) =>
+    trovati.some(
+      (a) =>
+        (a.k === "matrimoniale" || a.k === "singolo") &&
+        a.x / mpp > f.x0 &&
+        a.x / mpp < f.x1 &&
+        a.y / mpp > f.y0 &&
+        a.y / mpp < f.y1,
+    );
+  for (const f of [...letti, ...grandi]) {
+    if (usati.has(f) || unLetto(f)) continue;
     if (f.pieno < 0.8) continue;
-    const doppio = tra(f.a, 1.35, 2.1) && tra(f.b, 1.85, 2.45),
-      singolo = tra(f.a, 0.8, 1.25) && tra(f.b, 1.85, 2.3);
+    const doppio = tra(f.a, 1.35, 2.25) && tra(f.b, 1.85, 2.6) && f.a / f.b >= 0.6,
+      singolo = tra(f.a, 0.8, 1.25) && tra(f.b, 1.65, 2.3);
     if (!doppio && !singolo) continue;
-    const davanti = testaAlMuro(f, 0.4, 0.3);
+    /* la testa: il lato corto al muro; un letto matrimoniale e' quasi
+     * quadrato, e allora il lato col muro piu' vicino */
+    let davanti = testaAlMuro(f, 0.4, 0.3);
+    if (doppio && f.a / f.b > 0.85) davanti = spalleAlMuro(f, 0.4, 0.3);
     if (!davanti) continue;
     metti(doppio ? "matrimoniale" : "singolo", f, davanti);
     /* i comodini: il legno piccolo accanto alla testa */
@@ -333,8 +374,8 @@ export function arrediDallaPianta(im, casa, mpp) {
   const bagno = [];
   for (const f of bianchi) {
     if (usati.has(f)) continue;
-    /* la vasca: bianca, 1,4-1,9 per 0,6-0,9, lungo il muro */
-    if (f.pieno >= 0.65 && tra(f.a, 0.45, 0.9) && tra(f.b, 1.35, 1.9)) {
+    /* la vasca: bianca, 1,25-1,9 per 0,45-0,9, lungo il muro */
+    if (f.pieno >= 0.65 && tra(f.a, 0.45, 0.9) && tra(f.b, 1.25, 1.9)) {
       const d = controIlMuro(f, 0.4);
       if (d) {
         metti("vasca", f, d);
@@ -417,15 +458,69 @@ export function arrediDallaPianta(im, casa, mpp) {
       lungo(f),
     );
   }
+  /* il bianco chiuso dentro un mobile colorato (il lavabo nel suo mobile):
+   * attorno, a 6 cm, quasi tutto colorato */
+  const nonPavimento = (x, y) => {
+    const i = Math.round(y) * w + Math.round(x);
+    if (i < 0 || i >= N || !stanzaDi[i]) return false;
+    return legno[i] || nero[i] || altro[i] || grigio[i];
+  };
+  const racchiuso = (f) => {
+    const r = Math.max(2, Math.round(m(0.06)));
+    let si = 0,
+      tutti = 0;
+    for (let x = f.x0 - r; x <= f.x1 + r; x += 2)
+      for (const y of [f.y0 - r, f.y1 + r]) {
+        tutti++;
+        if (nonPavimento(x, y)) si++;
+      }
+    for (let y = f.y0 - r; y <= f.y1 + r; y += 2)
+      for (const x of [f.x0 - r, f.x1 + r]) {
+        tutti++;
+        if (nonPavimento(x, y)) si++;
+      }
+    return tutti > 0 && si >= tutti * 0.55;
+  };
   /* wc e bidet: piccoli, bianchi, con la schiena al muro, in un bagno (una
    * stanza dove c'e' gia' una vasca, una doccia, un lavabo, o un altro di
    * loro) */
-  const sanitari = bianchi.filter(
-    (f) => !usati.has(f) && f.pieno >= 0.55 && tra(f.a, 0.28, 0.5) && tra(f.b, 0.38, 0.75),
+  /* col loro contorno chiuso (il wc disegnato come un anello scuro, il
+   * bianco dentro diviso dalle righe del sedile) */
+  const sanitari = [...bianchi, ...oggetti].filter(
+    (f) => !usati.has(f) && f.pieno >= 0.55 && tra(f.a, 0.28, 0.55) && tra(f.b, 0.36, 0.75),
   );
+  /* il contorno scuro e il disegno del sedile: un mobiletto bianco ha solo
+   * la riga sottile attorno */
+  const scuroDentro = (f) => {
+    let n = 0,
+      t = 0;
+    for (let y = f.y0; y <= f.y1; y++)
+      for (let x = f.x0; x <= f.x1; x++) {
+        t++;
+        if (luce(data, y * w + x) < 140) n++;
+      }
+    return t ? n / t : 0;
+  };
+  for (let i = sanitari.length - 1; i >= 0; i--)
+    if (scuroDentro(sanitari[i]) < 0.1 || racchiuso(sanitari[i])) sanitari.splice(i, 1);
+  /* lo stesso sanitario visto due volte (il bianco e il contorno): uno */
+  for (let i = sanitari.length - 1; i >= 0; i--)
+    if (
+      sanitari.some(
+        (g, j) =>
+          j !== i &&
+          g !== sanitari[i] &&
+          g.n >= sanitari[i].n &&
+          sanitari[i].cx >= g.x0 &&
+          sanitari[i].cx <= g.x1 &&
+          sanitari[i].cy >= g.y0 &&
+          sanitari[i].cy <= g.y1,
+      )
+    )
+      sanitari.splice(i, 1);
   const perStanza = new Map();
   for (const f of sanitari) {
-    const d = testaAlMuro(f, 0.5);
+    const d = f.a / f.b > 0.7 ? spalleAlMuro(f, 0.5, 0.35) : testaAlMuro(f, 0.5, 0.35);
     if (!d) continue;
     if (!perStanza.has(f.stanza)) perStanza.set(f.stanza, []);
     perStanza.get(f.stanza).push([f, d]);
@@ -434,7 +529,67 @@ export function arrediDallaPianta(im, casa, mpp) {
     if (!bagno.includes(stanza) && sue.length < 2) continue;
     sue.sort((p, q) => p[0].cx + p[0].cy - (q[0].cx + q[0].cy));
     sue.slice(0, 4).forEach(([f, d], i) => metti(i % 2 ? "bidet" : "wc", f, d));
+    bagno.push(stanza);
   }
+  /* Nel bagno (dove ci sono i sanitari) il resto bianco contro il muro:
+   *  - il lavabo: bianco piccolo chiuso dentro un mobile colorato (il legno,
+   *    lo scuro), o un mobiletto bianco da 30-60 per 45-90 cm;
+   *  - la doccia: bianca, 35-120 per 60-130 cm, con le righe del piatto
+   *    dentro (le diagonali, il bordo). */
+  const inBagno = (f) => bagno.includes(f.stanza);
+  for (const f of bianchi) {
+    if (usati.has(f) || !inBagno(f) || !tra(f.a, 0.2, 0.6) || !tra(f.b, 0.25, 0.8)) continue;
+    let mobile = null;
+    if (racchiuso(f)) {
+      /* il mobile: i pezzi colorati attorno, tutti insieme */
+      const pezziAttorno = [...legni, ...neri, ...altri].filter(
+        (g) => !usati.has(g) && vicino(f, g, 0.08),
+      );
+      if (pezziAttorno.length)
+        mobile = forma(
+          {
+            n: pezziAttorno.reduce((a, g) => a + g.n, f.n),
+            x0: Math.min(f.x0, ...pezziAttorno.map((g) => g.x0)),
+            y0: Math.min(f.y0, ...pezziAttorno.map((g) => g.y0)),
+            x1: Math.max(f.x1, ...pezziAttorno.map((g) => g.x1)),
+            y1: Math.max(f.y1, ...pezziAttorno.map((g) => g.y1)),
+          },
+          { stanza: f.stanza },
+        );
+    } else if (f.pieno >= 0.85 && tra(f.a, 0.3, 0.6) && tra(f.b, 0.45, 0.9)) mobile = f;
+    if (!mobile || mobile.b > 1.8) continue;
+    const d = controIlMuro(mobile, 0.5) || testaAlMuro(mobile, 0.5, 0.25);
+    if (!d) continue;
+    usati.add(f);
+    for (const g of [...legni, ...neri, ...altri]) if (vicino(f, g, 0.08)) usati.add(g);
+    metti("lavabo", mobile, d, lungo(mobile));
+  }
+  if (!trovati.some((a) => a.k === "doccia"))
+    for (const f of bianchi) {
+      if (
+        usati.has(f) ||
+        !inBagno(f) ||
+        f.pieno < 0.75 ||
+        !tra(f.a, 0.35, 1.2) ||
+        !tra(f.b, 0.6, 1.3)
+      )
+        continue;
+      let righe = 0,
+        tutti = 0;
+      for (let y = f.y0 + 2; y < f.y1 - 1; y += 2)
+        for (let x = f.x0 + 2; x < f.x1 - 1; x += 2) {
+          tutti++;
+          if (luce(data, y * w + x) < 215) righe++;
+        }
+      if (!tutti || righe < tutti * 0.03 || righe > tutti * 0.4) continue;
+      const muri = ["su", "giu", "sx", "dx"].filter((l) => muroAccanto(f, l) >= 0.5);
+      if (!muri.length) continue;
+      metti(
+        "doccia",
+        f,
+        versi[muri[0]].map((v) => -v),
+      );
+    }
   /* il divano: bianco (o colorato), lungo e profondo quasi un metro, con lo
    * schienale: la riga lungo un lato lungo, a 15-30 cm dal bordo */
   for (const f of grandi) {
@@ -463,8 +618,19 @@ export function arrediDallaPianta(im, casa, mpp) {
     metti("divano", f, f.oriz ? [0, -dietro] : [-dietro, 0], lungo(f));
   }
   /* gli armadi: strisce bianche profonde 50-72 cm, lunghe, al muro */
-  for (const f of bianchi) {
-    if (usati.has(f) || f.pieno < 0.8 || !tra(f.a, 0.5, 0.72) || !tra(f.b, 0.9, 3.6)) continue;
+  const dentroUnoUsato = (f) =>
+    trovati.some((a) => {
+      const x = a.x / mpp,
+        y = a.y / mpp;
+      return Math.hypot(x - f.cx, y - f.cy) < Math.max(f.bw, f.bh) / 2;
+    });
+  for (const f of [...bianchi, ...sciolti]) {
+    if (usati.has(f) || f.pieno < 0.8 || !tra(f.a, 0.42, 0.72) || !tra(f.b, 0.8, 3.6)) continue;
+    if (
+      dentroUnoUsato(f) ||
+      [...usati].some((g) => g !== f && f.cx > g.x0 && f.cx < g.x1 && f.cy > g.y0 && f.cy < g.y1)
+    )
+      continue;
     const d = controIlMuro(f, 0.6);
     if (d) metti("armadio", f, d, lungo(f));
   }
@@ -485,9 +651,62 @@ export function arrediDallaPianta(im, casa, mpp) {
   /* il piano della cucina: una striscia colorata profonda 50-80 cm lungo il
    * muro (anche a L: si prende il pezzo piu' lungo) */
   for (const f of altri) {
-    if (usati.has(f) || !tra(f.a, 0.5, 0.85) || f.b < 1.2 || f.b > 5 || f.pieno < 0.75) continue;
+    if (usati.has(f) || !tra(f.a, 0.45, 0.85) || f.b < 1.2 || f.b > 5 || f.pieno < 0.75) continue;
     const d = controIlMuro(f, 0.6);
     if (d) metti("cucina", f, d, lungo(f));
   }
   return trovati;
+}
+
+/**
+ * Che stanza e' ognuna, dagli arredi che ci sono e dalla forma: torna
+ * `{ id: tipo }` con i tipi `salone`, `cucina`, `salone+cucina`, `camera`,
+ * `cameretta`, `bagno`, `studio`, `ingresso`, `disimpegno`, `ripostiglio`.
+ * Solo dove e' chiaro: una stanza vuota e grande resta senza.
+ */
+export function stanzeDagliArredi(casa, arredi) {
+  const out = {};
+  if (!casa?.stanze?.length) return out;
+  const { W, H, tipo, passo } = casa;
+  const di = new Map();
+  for (const a of arredi || []) {
+    if (!di.has(a.stanza)) di.set(a.stanza, new Set());
+    di.get(a.stanza).add(a.k);
+  }
+  /* le porte di ogni stanza, e quali vanno fuori */
+  const porte = new Map(),
+    portone = new Set();
+  const qui = (x, y) => {
+    const cx = Math.floor(x / passo),
+      cy = Math.floor(y / passo);
+    return cx < 0 || cy < 0 || cx >= W || cy >= H ? -2 : tipo[cy * W + cx];
+  };
+  for (const a of casa.aperture || []) {
+    if (a.tipo !== "porta") continue;
+    const d = 0.35,
+      lati = a.orizz
+        ? [qui(a.cx, a.cy - d), qui(a.cx, a.cy + d)]
+        : [qui(a.cx - d, a.cy), qui(a.cx + d, a.cy)];
+    for (const s of lati) if (s > 0) porte.set(s, (porte.get(s) || 0) + 1);
+    if (lati.some((s) => s === -2)) for (const s of lati) if (s > 0) portone.add(s);
+  }
+  for (const s of casa.stanze) {
+    const k = di.get(s.id) || new Set(),
+      ha = (...v) => v.some((x) => k.has(x));
+    const r = s.riquadro || { x0: 0, x1: 0, y0: 0, y1: 0 },
+      lati = [r.x1 - r.x0 + passo, r.y1 - r.y0 + passo].sort((a, b) => a - b);
+    if (ha("vasca", "doccia", "wc", "bidet")) out[s.id] = "bagno";
+    else if (ha("matrimoniale")) out[s.id] = "camera";
+    else if (ha("singolo", "culla")) out[s.id] = "cameretta";
+    else if (ha("cucina", "isola") && ha("divano", "pranzo6", "camino", "tondo4"))
+      out[s.id] = "salone+cucina";
+    else if (ha("cucina", "isola")) out[s.id] = "cucina";
+    else if (ha("divano", "camino")) out[s.id] = "salone";
+    else if (ha("scrivania")) out[s.id] = "studio";
+    else if (!k.size && portone.has(s.id) && s.area < 12) out[s.id] = "ingresso";
+    else if (!k.size && s.area < 6 && (porte.get(s.id) || 0) >= 2 && lati[0] <= 1.8)
+      out[s.id] = "disimpegno";
+    else if (!k.size && s.area < 4.5) out[s.id] = "ripostiglio";
+  }
+  return out;
 }

@@ -573,7 +573,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-J7NEGCTF.js";
+} from "../../chunk-QHWOPG5L.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -114859,6 +114859,7 @@ function premiumRicordato() {
   if (typeof root.__GDAHOME_PREMIUM__ === "boolean") return root.__GDAHOME_PREMIUM__;
   return ricordo().premium;
 }
+var inViaggio2 = { premium: null, fonte: /* @__PURE__ */ new Map() };
 async function premiumDellaCasa({ forza = false } = {}) {
   if (typeof root.__GDAHOME_PREMIUM__ === "boolean") {
     state114.premium = root.__GDAHOME_PREMIUM__;
@@ -114866,12 +114867,19 @@ async function premiumDellaCasa({ forza = false } = {}) {
   }
   if (!forza && state114.premium !== null && Date.now() - state114.premiumLetto < MEZZ_ORA2)
     return state114.premium;
+  if (inViaggio2.premium) return inViaggio2.premium;
+  inViaggio2.premium = chiediIlPremium().finally(() => {
+    inViaggio2.premium = null;
+  });
+  return inViaggio2.premium;
+}
+async function chiediIlPremium() {
   let premium3 = false;
   try {
     const stato3 = await bridgeRequest("ponte/licenza/stato", {});
     premium3 = stato3?.gdahome?.attiva === true;
   } catch (_errore) {
-    premium3 = state114.premium === true;
+    return state114.premium === true;
   }
   state114.premium = premium3;
   state114.premiumLetto = Date.now();
@@ -114888,18 +114896,26 @@ async function fonteDelMuro(muro, { forza = false } = {}) {
     fonte = fonteDaiValori(root.__DM_MURO_FONTE__);
   else if (fonteEQui(di)) fonte = fonteDiQui();
   else {
-    try {
-      const letto = await bridgeRequest("dashboardmodern/config/get", { profile: di });
-      fonte = fonteDaiValori(letto?.snapshot?.values || {});
-    } catch (_errore) {
-      fonte = await fonteDalPonte();
+    let inCorso2 = inViaggio2.fonte.get(di);
+    if (!inCorso2) {
+      inCorso2 = fonteDaLontano(di).finally(() => inViaggio2.fonte.delete(di));
+      inViaggio2.fonte.set(di, inCorso2);
     }
+    fonte = await inCorso2;
   }
   state114.fonte = fonte || fonteDiQui();
   state114.fonteDi = di;
   state114.fonteLetta = Date.now();
   ricorda({ fonte: state114.fonte, fonteDi: di });
   return state114.fonte;
+}
+async function fonteDaLontano(di) {
+  try {
+    const letto = await bridgeRequest("dashboardmodern/config/get", { profile: di });
+    return fonteDaiValori(letto?.snapshot?.values || {});
+  } catch (_errore) {
+    return fonteDalPonte();
+  }
 }
 async function fonteDalPonte() {
   try {
@@ -170784,8 +170800,8 @@ function grigliaDeiMuri(ink, w, h, mpp, { vetri = null, porte = null, disegno: d
 function grigliaDallaFoto(im, mpp, { vetri = null, porte = null, disegno: disegno8 = false, pianoDaFoto = true, render: render3 = false } = {}) {
   const { width: w, height: h } = im;
   if (render3 && !disegno8) {
-    const { ink, linee } = mappeDelRender(im);
-    return Object.assign(grigliaDaMuriPieni(ink, linee, w, h, mpp, { render: true }), {
+    const { ink, linee, porte: soglie } = mappeDelRender(im);
+    return Object.assign(grigliaDaMuriPieni(ink, linee, w, h, mpp, { render: true, soglie }), {
       strada: "render"
     });
   }
@@ -170802,7 +170818,7 @@ function grigliaDallaFoto(im, mpp, { vetri = null, porte = null, disegno: disegn
   const righe4 = aRighe();
   return np >= stanze4(righe4) * 0.75 ? aPieni : righe4;
 }
-function grigliaDaMuriPieni(ink, linee, w, h, mpp, { render: render3 = false } = {}) {
+function grigliaDaMuriPieni(ink, linee, w, h, mpp, { render: render3 = false, soglie: chiuse = null } = {}) {
   const lato = PASSO2 / mpp, W2 = Math.max(1, Math.floor(w / lato)), H7 = Math.max(1, Math.floor(h / lato)), N = W2 * H7;
   const celleDi = (px, quota) => {
     const celle = new Uint8Array(N);
@@ -171037,7 +171053,7 @@ function grigliaDaMuriPieni(ink, linee, w, h, mpp, { render: render3 = false } =
             continue;
           }
         }
-        if (fa && fb && k <= vetroMax && righe4 >= k * 0.5)
+        if ((fa && fb ? righe4 >= k * 0.5 : render3 && righe4 >= k * 0.8) && k <= vetroMax)
           for (let q = b2; q < e; q++) vetro[at(a, q)] = 1;
         else if (fa && fb ? k <= varco : k <= varcoUnLato && (fa ? corre(i - passo, -passo, mezzo) : corre(j, passo, mezzo)) >= mezzo)
           for (let q = b2; q < e; q++) soglie[at(a, q)] = 1;
@@ -171063,6 +171079,10 @@ function grigliaDaMuriPieni(ink, linee, w, h, mpp, { render: render3 = false } =
         soglie[c] = tutto ? 0 : 1;
       }
     }
+  }
+  if (chiuse) {
+    const c = celleDi(chiuse, 0.3);
+    for (let i = 0; i < N; i++) if (c[i] && !muro[i] && !vetro[i]) soglie[i] = 1;
   }
   const barriera = muro.slice();
   for (let i = 0; i < N; i++) if (vetro[i] || soglie[i]) barriera[i] = 1;
@@ -171971,6 +171991,7 @@ function scalaScritta(testo5) {
 var SPESSORE_DEL_RENDER = 0.3;
 var MURO_PULITO = [40, 40, 40];
 var VETRO_PULITO = [255, 255, 0];
+var PORTA_PULITA = [255, 0, 255];
 var CARTA_PULITA = [250, 250, 250];
 var luce2 = (d, i) => 0.3 * d[i * 4] + 0.59 * d[i * 4 + 1] + 0.11 * d[i * 4 + 2];
 var colore = (d, i) => Math.max(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]) - Math.min(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]);
@@ -172212,13 +172233,18 @@ function spessoreDeiMuri(classe3, w, h) {
 }
 function mappeDelRender(im) {
   const { width: w, height: h, data } = im, N = w * h;
-  const ink = new Uint8Array(N), linee = new Uint8Array(N);
+  const ink = new Uint8Array(N), linee = new Uint8Array(N), porte = new Uint8Array(N);
+  let soglie = 0;
   for (let i = 0; i < N; i++) {
-    const r = data[i * 4], b2 = data[i * 4 + 2];
+    const r = data[i * 4], g = data[i * 4 + 1], b2 = data[i * 4 + 2];
     if (r < 145) ink[i] = 1;
     else if (b2 < 125) linee[i] = 1;
+    else if (g < 100) {
+      porte[i] = 1;
+      soglie++;
+    }
   }
-  return { ink, linee };
+  return { ink, linee, porte: soglie ? porte : null };
 }
 function togliISovrapposti(im) {
   const { width: w, height: h, data } = im, N = w * h, M = Math.max(w, h);
@@ -172406,9 +172432,9 @@ function rattoppa(data, buco, w, h) {
   const out = new Uint8ClampedArray(data), N = w * h;
   const muro = (i) => {
     const v = luce2(data, i);
-    return v >= 60 && v <= 200 && colore(data, i) <= 14;
+    return v <= 200 && colore(data, i) <= 18;
   };
-  const tmin = Math.max(3, Math.round(Math.max(w, h) * 4e-3)), tmax = Math.max(tmin + 2, Math.round(Math.max(w, h) * 0.03));
+  const tmin = Math.max(2, Math.round(Math.max(w, h) * 3e-3)), tmax = Math.max(tmin + 2, Math.round(Math.max(w, h) * 0.03));
   const fascia2 = (x, y, dx, dy) => {
     let n = 1;
     for (const s of [-1, 1])
@@ -172596,10 +172622,50 @@ function leggiLaPiantaArredata(im, fondo = null) {
         for (const i of p.celle) muro[i] = 1;
     }
   }
-  for (const p of pezziDi3(muro, w, h).pezzi) {
-    const bw = p.x1 - p.x0 + 1, bh = p.y1 - p.y0 + 1;
-    if (Math.max(bw, bh) < T * 3.5 && Math.min(bw, bh) > T * 0.8 && p.celle.length < bw * bh * 0.6)
-      for (const i of p.celle) muro[i] = 0;
+  {
+    const rs = Math.max(2, Math.round(T * 0.17));
+    const largo = allarga(stringi(muro, w, h, rs), w, h, rs + 1);
+    const sottile = new Uint8Array(N);
+    for (let i = 0; i < N; i++) sottile[i] = muro[i] && !largo[i] ? 1 : 0;
+    const lungo = new Uint8Array(N), L2 = Math.round(T * 2);
+    const corse2 = (n2, k, at) => {
+      for (let p = 0; p < n2; p++) {
+        let b2 = 0;
+        while (b2 < k) {
+          if (!sottile[at(p, b2)]) {
+            b2++;
+            continue;
+          }
+          let e = b2;
+          while (e < k && sottile[at(p, e)]) e++;
+          if (e - b2 >= L2) for (let q = b2; q < e; q++) lungo[at(p, q)] = 1;
+          b2 = e;
+        }
+      }
+    };
+    corse2(h, w, (p, b2) => p * w + b2);
+    corse2(w, h, (p, b2) => b2 * w + p);
+    const tiene = allarga(lungo, w, h, rs + 1);
+    const bianco = new Uint8Array(N);
+    for (let i = 0; i < N; i++)
+      bianco[i] = !muro[i] && !fondo[i] && L[i] >= 236 && C[i] <= 12 ? 1 : 0;
+    const vicinoAlBianco = new Uint8Array(N), mq = (T / SPESSORE_DELLA_PIANTA) ** 2;
+    for (const p of pezziDi3(bianco, w, h).pezzi) {
+      const bw = p.x1 - p.x0 + 1, bh = p.y1 - p.y0 + 1;
+      if (p.celle.length < mq * 4e-3 || p.celle.length > mq * 0.6 || Math.max(bw, bh) > mq ** 0.5 * 1.1 || Math.min(bw, bh) < T * 0.4 || Math.max(bw, bh) > Math.min(bw, bh) * 4)
+        continue;
+      for (const i of p.celle) vicinoAlBianco[i] = 1;
+    }
+    const sanitari = allarga(vicinoAlBianco, w, h, rs + 2);
+    for (let i = 0; i < N; i++) if (sottile[i] && !tiene[i] && sanitari[i]) muro[i] = 0;
+  }
+  {
+    const spesso = stringi(muro, w, h, Math.max(1, Math.round(T * 0.3)));
+    for (const p of pezziDi3(muro, w, h).pezzi) {
+      const bw = p.x1 - p.x0 + 1, bh = p.y1 - p.y0 + 1;
+      if (Math.max(bw, bh) < T * 3.5 && Math.min(bw, bh) > T * 0.8 && p.celle.length < bw * bh * 0.6 && !p.celle.some((i) => spesso[i]))
+        for (const i of p.celle) muro[i] = 0;
+    }
   }
   {
     const spesso = stringi(muro, w, h, Math.max(1, Math.round(T * 0.3)));
@@ -172622,12 +172688,79 @@ function leggiLaPiantaArredata(im, fondo = null) {
   let n = 0;
   for (let i = 0; i < N; i++) n += muro[i];
   if (n < T * M * 1.5) return null;
+  const porta = new Uint8Array(N);
+  {
+    const scuro = new Uint8Array(N);
+    for (let i = 0; i < N; i++)
+      scuro[i] = !fondo[i] && !muro[i] && L[i] < Math.min(Lw - 50, 115) && C[i] <= 30 ? 1 : 0;
+    const vicinoMuro = allarga(muro, w, h, Math.max(2, Math.round(T * 0.25)));
+    for (const p of pezziDi3(scuro, w, h).pezzi) {
+      const bw = p.x1 - p.x0 + 1, bh = p.y1 - p.y0 + 1, lungo = Math.max(bw, bh), corto = Math.min(bw, bh);
+      if (lungo < T * 1.5 || lungo > T * 5 || corto > T * 0.45 || corto < 2) continue;
+      if (p.celle.length < bw * bh * 0.55) continue;
+      const oriz = bw >= bh;
+      const capo = (verso2) => {
+        let n2 = 0;
+        for (let t2 = oriz ? p.y0 : p.x0; t2 <= (oriz ? p.y1 : p.x1); t2++) {
+          const q = verso2 < 0 ? (oriz ? p.x0 : p.y0) - 1 : (oriz ? p.x1 : p.y1) + 1;
+          const i = oriz ? t2 * w + q : q * w + t2;
+          if (i >= 0 && i < N && vicinoMuro[i]) n2++;
+        }
+        return n2 >= corto * 0.5;
+      };
+      const fila2 = (verso2) => {
+        const lat = Math.max(1, Math.round(corto / 2)), c0 = oriz ? p.y0 + p.y1 >> 1 : p.x0 + p.x1 >> 1, da = verso2 < 0 ? (oriz ? p.x0 : p.y0) - 1 : (oriz ? p.x1 : p.y1) + 1, k = oriz ? w : h, n2 = oriz ? h : w;
+        let meglio = 0;
+        for (let o = -lat; o <= lat; o++) {
+          const c = c0 + o;
+          if (c < 0 || c >= n2) continue;
+          let t2 = 0;
+          while (t2 < T * 0.7 && da + verso2 * t2 >= 0 && da + verso2 * t2 < k && !muro[oriz ? c * w + da + verso2 * t2 : (da + verso2 * t2) * w + c])
+            t2++;
+          let run2 = 0, buco = 0;
+          for (let q = da + verso2 * t2; q >= 0 && q < k && run2 < T * 2; q += verso2) {
+            if (muro[oriz ? c * w + q : q * w + c]) {
+              run2++;
+              buco = 0;
+            } else if (++buco > T * 0.2) break;
+          }
+          meglio = Math.max(meglio, run2);
+        }
+        return meglio >= T * 0.9;
+      };
+      const ca = capo(-1) && fila2(-1), cb = capo(1) && fila2(1);
+      if (!ca && !cb) continue;
+      for (const i of p.celle) muro[i] = 1;
+      for (const verso2 of [-1, 1]) {
+        if (verso2 < 0 ? ca : cb) continue;
+        const da = verso2 < 0 ? (oriz ? p.x0 : p.y0) - 1 : (oriz ? p.x1 : p.y1) + 1, lim = Math.round(lungo * 1.3);
+        const a0 = oriz ? p.y0 : p.x0, a1 = oriz ? p.y1 : p.x1;
+        let fine = -1;
+        for (let d = 0; d <= lim; d++) {
+          const q = da + verso2 * d;
+          if (q < 0 || q >= (oriz ? w : h)) break;
+          let m = 0;
+          for (let t2 = a0; t2 <= a1; t2++) if (muro[oriz ? t2 * w + q : q * w + t2]) m++;
+          if (m >= (a1 - a0 + 1) * 0.5) {
+            fine = d;
+            break;
+          }
+        }
+        if (fine < T * 0.5) continue;
+        for (let d = 0; d < fine; d++) {
+          const q = da + verso2 * d;
+          for (let t2 = a0; t2 <= a1; t2++) porta[oriz ? t2 * w + q : q * w + t2] = 1;
+        }
+      }
+    }
+  }
   const vetro = finestreChiare(muro, w, h, T, (i) => pavimento(i), L, C);
   const out = new Uint8ClampedArray(N * 4);
   let vetri = 0;
   for (let i = 0; i < N; i++) {
     let c = CARTA_PULITA;
     if (muro[i]) c = MURO_PULITO;
+    else if (porta[i] && !vetro[i]) c = PORTA_PULITA;
     else if (vetro[i]) {
       c = VETRO_PULITO;
       vetri++;
@@ -172724,7 +172857,8 @@ function finestreChiare(muro, w, h, T, pavimento, L, C) {
                 }
               return (tutti ? si / tutti : 1) >= 0.55 && pv <= lontani * 0.1;
             };
-            if (lato(-1) || lato(1)) trovate.push({ p, e, f, at, n, sp: spessoreA, k });
+            const fuori = lato(-1) ? -1 : lato(1) ? 1 : 0;
+            if (fuori) trovate.push({ p, e, f, at, n, sp: spessoreA, k, fuori });
           }
         }
         b2 = f;
@@ -172763,16 +172897,27 @@ function finestreChiare(muro, w, h, T, pavimento, L, C) {
     while (b2 < n - 1 && b2 - p < lim && muro[at(b2 + 1, q)]) b2++;
     return [a, b2];
   };
-  const dritti = ({ p, e, f, sp, k }) => {
+  const dritti = ({ p, e, f, at, k }) => {
     for (let t2 = 0; t2 <= Math.round(T * 0.5); t2++)
-      if (e - 1 - t2 < 0 || f + t2 >= k || sp(p, e - 1 - t2) > T * 1.6 || sp(p, f + t2) > T * 1.6)
+      if (e - 1 - t2 < 0 || f + t2 >= k || !muro[at(p, e - 1 - t2)] || !muro[at(p, f + t2)])
         return false;
     return true;
   };
-  const buone = trovate.filter(({ p, e, f, at, n, sp, k }) => {
-    if (!dritti({ p, e, f, sp, k })) return false;
+  const buone = trovate.filter(({ p, e, f, at, n, k, fuori }) => {
+    if (!dritti({ p, e, f, at, k })) return false;
     const [a1, b1] = fasciaDi2(p, e - 1, at, n), [a2, b2] = fasciaDi2(p, f, at, n);
     const a = Math.max(a1, a2), b3 = Math.min(b1, b2);
+    {
+      const mezzo = (a + b3) / 2, terzo = (b3 - a) / 6, minimi = [];
+      for (let q = e; q < f; q++) {
+        let m2 = 255;
+        for (let pp = a; pp <= b3; pp++)
+          if ((pp - mezzo) * fuori >= -terzo) m2 = Math.min(m2, L[at(pp, q)]);
+        minimi.push(m2);
+      }
+      minimi.sort((x, y) => x - y);
+      if (minimi.length && minimi[minimi.length >> 1] >= 195) return false;
+    }
     let m = 0, pv = 0, ch = 0, tot = 0;
     for (let q = e; q < f; q++)
       for (let pp = a; pp <= b3; pp++) {
@@ -172785,9 +172930,20 @@ function finestreChiare(muro, w, h, T, pavimento, L, C) {
     return tot > 0 && m <= tot * 0.6 && pv <= tot * 0.15 && ch >= tot * 0.25;
   });
   const sottile = Math.max(2, Math.round(T * 0.1));
-  for (const { p, e, f, at, n } of buone) {
+  for (const { p, e, f, at, n, fuori } of buone) {
     const [a1, b1] = fasciaDi2(p, e - 1, at, n), [a2, b2] = fasciaDi2(p, f, at, n);
-    const a = Math.min(Math.max(a1, a2), p), b3 = Math.max(Math.min(b1, b2), p), c = Math.round((a + b3) / 2 - sottile / 2);
+    let a = Math.min(Math.max(a1, a2), p), b3 = Math.max(Math.min(b1, b2), p);
+    for (let d = 1; d <= Math.round(T * 0.6); d++) {
+      const pp = fuori < 0 ? a - d : b3 + d;
+      if (pp < 0 || pp >= n) break;
+      let m = 0;
+      for (let q = e; q < f; q++) if (muro[at(pp, q)]) m++;
+      if (m >= (f - e) * 0.3) {
+        if (fuori < 0) a = pp;
+        else b3 = pp;
+      }
+    }
+    const c = Math.round((a + b3) / 2 - sottile / 2);
     for (let q = e; q < f; q++)
       for (let pp = a; pp <= b3; pp++) {
         const i = at(pp, q);
@@ -172797,6 +172953,13 @@ function finestreChiare(muro, w, h, T, pavimento, L, C) {
   }
   for (const i of togli4) muro[i] = 0;
   return vetro;
+}
+function controprovaDellePorte(casa3) {
+  const larghe = (casa3?.aperture || []).filter((a) => a.tipo === "porta" && a.largo >= 0.45 && a.largo <= 1.4).map((a) => a.largo).sort((a, b2) => a - b2);
+  if (larghe.length < 3) return 1;
+  const via = Math.floor(larghe.length / 4), mezzo = larghe.slice(via, larghe.length - via), m = mezzo.reduce((a, b2) => a + b2, 0) / mezzo.length;
+  const f = m < 0.75 ? 0.8 / m : m > 1.05 ? 0.95 / m : 1;
+  return Math.min(1.25, Math.max(0.8, f));
 }
 function conMargine(im, m, rgb = [255, 255, 255]) {
   const W2 = im.width + 2 * m, H7 = im.height + 2 * m, out = new Uint8ClampedArray(W2 * H7 * 4);
@@ -173863,16 +174026,20 @@ function arrediDallaPianta(im, casa3, mpp) {
       }
     pavimento.set(t2, [(q >> 10 << 3) + 4, ((q >> 5 & 31) << 3) + 4, ((q & 31) << 3) + 4]);
   }
-  const bianco = new Uint8Array(N), legno = new Uint8Array(N), nero = new Uint8Array(N), grigio = new Uint8Array(N), altro = new Uint8Array(N);
+  const bianco = new Uint8Array(N), legno = new Uint8Array(N), nero = new Uint8Array(N), grigio = new Uint8Array(N), altro = new Uint8Array(N), chiaroScuro = new Uint8Array(N);
   for (let i = 0; i < N; i++) {
     const t2 = stanzaDi3[i];
     if (!t2) continue;
     const p = pavimento.get(t2);
     const d = Math.abs(data[i * 4] - p[0]) + Math.abs(data[i * 4 + 1] - p[1]) + Math.abs(data[i * 4 + 2] - p[2]);
     const v = luce3(data, i), c = colore3(data, i);
-    if (v >= 232 && c <= 14) bianco[i] = 1;
-    else if (d <= 30) continue;
-    else if (v < 60) nero[i] = 1;
+    if (v >= 232 && c <= 14) {
+      bianco[i] = chiaroScuro[i] = 1;
+      continue;
+    }
+    if (d <= 30) continue;
+    if (c <= 24 && v < 215) chiaroScuro[i] = 1;
+    if (v < 60) nero[i] = 1;
     else if (c >= 40 && data[i * 4] > data[i * 4 + 2] + 30 && v < 190) legno[i] = 1;
     else if (c <= 14 && v < 200) grigio[i] = 1;
     else if (c >= 10) altro[i] = 1;
@@ -173908,7 +174075,7 @@ function arrediDallaPianta(im, casa3, mpp) {
       return forma2(p, { celle: tieni ? p.celle : null, stanza: stanza2, bw, bh });
     });
   };
-  const uniti = (lista7, d) => {
+  const uniti = (lista7, d, quotaGrande = 0, massimo = 3) => {
     const gruppi2 = lista7.map((f) => ({ ...f }));
     let cambiato = true;
     while (cambiato) {
@@ -173919,6 +174086,8 @@ function arrediDallaPianta(im, casa3, mpp) {
           if (p.stanza !== q.stanza) continue;
           if (q.x0 > p.x1 + m(d) || p.x0 > q.x1 + m(d) || q.y0 > p.y1 + m(d) || p.y0 > q.y1 + m(d))
             continue;
+          const sx = Math.min(p.x1, q.x1) - Math.max(p.x0, q.x0) + 1, sy = Math.min(p.y1, q.y1) - Math.max(p.y0, q.y0) + 1, lp = sx > sy ? [p.x1 - p.x0 + 1, q.x1 - q.x0 + 1] : [p.y1 - p.y0 + 1, q.y1 - q.y0 + 1], comune = Math.max(sx, sy);
+          if (comune < Math.min(...lp) * 0.6 || comune < Math.max(...lp) * quotaGrande) continue;
           const u = forma2(
             {
               n: p.n + q.n,
@@ -173929,7 +174098,7 @@ function arrediDallaPianta(im, casa3, mpp) {
             },
             { stanza: p.stanza, parti: (p.parti || 1) + (q.parti || 1) }
           );
-          if (u.b > 3 || u.pieno < 0.5) continue;
+          if (u.b > massimo || u.pieno < 0.5) continue;
           gruppi2[i] = u;
           gruppi2.splice(j, 1);
           cambiato = true;
@@ -173938,7 +174107,7 @@ function arrediDallaPianta(im, casa3, mpp) {
     }
     return gruppi2;
   };
-  const bianchi = forme2(bianco, true), legni = forme2(legno), neri = forme2(nero), grigi = forme2(grigio), altri = forme2(altro, true, true), grandi = uniti(bianchi, 0.12);
+  const bianchi = forme2(bianco, true), legni = forme2(legno), neri = forme2(nero), grigi = forme2(grigio), altri = forme2(altro, true, true), oggetti = forme2(chiaroScuro, true), sciolti = forme2(bianco), grandi = uniti(bianchi, 0.12);
   const tra6 = (v, a, b2) => v >= a && v <= b2;
   const muroAccanto = (f, lato2, dm = 0.18) => {
     const d = Math.round(m(dm));
@@ -173972,6 +174141,11 @@ function arrediDallaPianta(im, casa3, mpp) {
     const dietro = a >= b2 ? lati[0] : lati[1];
     return versi[dietro].map((v) => -v);
   };
+  const spalleAlMuro = (f, soglia3 = 0.4, dm = 0.3) => {
+    const lati = ["su", "giu", "sx", "dx"].map((l) => [l, muroAccanto(f, l, dm)]);
+    lati.sort((p, q) => q[1] - p[1]);
+    return lati[0][1] >= soglia3 ? versi[lati[0][0]].map((v) => -v) : null;
+  };
   const vicino = (f, g, d) => g.x1 >= f.x0 - m(d) && g.x0 <= f.x1 + m(d) && g.y1 >= f.y0 - m(d) && g.y0 <= f.y1 + m(d);
   const usati = /* @__PURE__ */ new Set(), trovati = [];
   const metti6 = (k, f, davanti, extra = {}) => {
@@ -173992,11 +174166,17 @@ function arrediDallaPianta(im, casa3, mpp) {
   };
   const lungo = (f) => ({ l: Math.round(f.b * 100) / 100 });
   const sedia = (g) => tra6(g.a, 0.25, 0.6) && tra6(g.b, 0.3, 0.7) && g.pieno >= 0.5;
-  for (const f of grandi) {
+  const letti = uniti(sciolti, 0.12, 0.5, 2.4);
+  const unLetto = (f) => trovati.some(
+    (a) => (a.k === "matrimoniale" || a.k === "singolo") && a.x / mpp > f.x0 && a.x / mpp < f.x1 && a.y / mpp > f.y0 && a.y / mpp < f.y1
+  );
+  for (const f of [...letti, ...grandi]) {
+    if (usati.has(f) || unLetto(f)) continue;
     if (f.pieno < 0.8) continue;
-    const doppio = tra6(f.a, 1.35, 2.1) && tra6(f.b, 1.85, 2.45), singolo = tra6(f.a, 0.8, 1.25) && tra6(f.b, 1.85, 2.3);
+    const doppio = tra6(f.a, 1.35, 2.25) && tra6(f.b, 1.85, 2.6) && f.a / f.b >= 0.6, singolo = tra6(f.a, 0.8, 1.25) && tra6(f.b, 1.65, 2.3);
     if (!doppio && !singolo) continue;
-    const davanti = testaAlMuro(f, 0.4, 0.3);
+    let davanti = testaAlMuro(f, 0.4, 0.3);
+    if (doppio && f.a / f.b > 0.85) davanti = spalleAlMuro(f, 0.4, 0.3);
     if (!davanti) continue;
     metti6(doppio ? "matrimoniale" : "singolo", f, davanti);
     for (const g of legni)
@@ -174017,7 +174197,7 @@ function arrediDallaPianta(im, casa3, mpp) {
   const bagno = [];
   for (const f of bianchi) {
     if (usati.has(f)) continue;
-    if (f.pieno >= 0.65 && tra6(f.a, 0.45, 0.9) && tra6(f.b, 1.35, 1.9)) {
+    if (f.pieno >= 0.65 && tra6(f.a, 0.45, 0.9) && tra6(f.b, 1.25, 1.9)) {
       const d = controIlMuro(f, 0.4);
       if (d) {
         metti6("vasca", f, d);
@@ -174085,12 +174265,48 @@ function arrediDallaPianta(im, casa3, mpp) {
       lungo(f)
     );
   }
-  const sanitari = bianchi.filter(
-    (f) => !usati.has(f) && f.pieno >= 0.55 && tra6(f.a, 0.28, 0.5) && tra6(f.b, 0.38, 0.75)
+  const nonPavimento = (x, y) => {
+    const i = Math.round(y) * w + Math.round(x);
+    if (i < 0 || i >= N || !stanzaDi3[i]) return false;
+    return legno[i] || nero[i] || altro[i] || grigio[i];
+  };
+  const racchiuso = (f) => {
+    const r = Math.max(2, Math.round(m(0.06)));
+    let si = 0, tutti = 0;
+    for (let x = f.x0 - r; x <= f.x1 + r; x += 2)
+      for (const y of [f.y0 - r, f.y1 + r]) {
+        tutti++;
+        if (nonPavimento(x, y)) si++;
+      }
+    for (let y = f.y0 - r; y <= f.y1 + r; y += 2)
+      for (const x of [f.x0 - r, f.x1 + r]) {
+        tutti++;
+        if (nonPavimento(x, y)) si++;
+      }
+    return tutti > 0 && si >= tutti * 0.55;
+  };
+  const sanitari = [...bianchi, ...oggetti].filter(
+    (f) => !usati.has(f) && f.pieno >= 0.55 && tra6(f.a, 0.28, 0.55) && tra6(f.b, 0.36, 0.75)
   );
+  const scuroDentro = (f) => {
+    let n = 0, t2 = 0;
+    for (let y = f.y0; y <= f.y1; y++)
+      for (let x = f.x0; x <= f.x1; x++) {
+        t2++;
+        if (luce3(data, y * w + x) < 140) n++;
+      }
+    return t2 ? n / t2 : 0;
+  };
+  for (let i = sanitari.length - 1; i >= 0; i--)
+    if (scuroDentro(sanitari[i]) < 0.1 || racchiuso(sanitari[i])) sanitari.splice(i, 1);
+  for (let i = sanitari.length - 1; i >= 0; i--)
+    if (sanitari.some(
+      (g, j) => j !== i && g !== sanitari[i] && g.n >= sanitari[i].n && sanitari[i].cx >= g.x0 && sanitari[i].cx <= g.x1 && sanitari[i].cy >= g.y0 && sanitari[i].cy <= g.y1
+    ))
+      sanitari.splice(i, 1);
   const perStanza = /* @__PURE__ */ new Map();
   for (const f of sanitari) {
-    const d = testaAlMuro(f, 0.5);
+    const d = f.a / f.b > 0.7 ? spalleAlMuro(f, 0.5, 0.35) : testaAlMuro(f, 0.5, 0.35);
     if (!d) continue;
     if (!perStanza.has(f.stanza)) perStanza.set(f.stanza, []);
     perStanza.get(f.stanza).push([f, d]);
@@ -174099,7 +174315,54 @@ function arrediDallaPianta(im, casa3, mpp) {
     if (!bagno.includes(stanza2) && sue.length < 2) continue;
     sue.sort((p, q) => p[0].cx + p[0].cy - (q[0].cx + q[0].cy));
     sue.slice(0, 4).forEach(([f, d], i) => metti6(i % 2 ? "bidet" : "wc", f, d));
+    bagno.push(stanza2);
   }
+  const inBagno = (f) => bagno.includes(f.stanza);
+  for (const f of bianchi) {
+    if (usati.has(f) || !inBagno(f) || !tra6(f.a, 0.2, 0.6) || !tra6(f.b, 0.25, 0.8)) continue;
+    let mobile = null;
+    if (racchiuso(f)) {
+      const pezziAttorno = [...legni, ...neri, ...altri].filter(
+        (g) => !usati.has(g) && vicino(f, g, 0.08)
+      );
+      if (pezziAttorno.length)
+        mobile = forma2(
+          {
+            n: pezziAttorno.reduce((a, g) => a + g.n, f.n),
+            x0: Math.min(f.x0, ...pezziAttorno.map((g) => g.x0)),
+            y0: Math.min(f.y0, ...pezziAttorno.map((g) => g.y0)),
+            x1: Math.max(f.x1, ...pezziAttorno.map((g) => g.x1)),
+            y1: Math.max(f.y1, ...pezziAttorno.map((g) => g.y1))
+          },
+          { stanza: f.stanza }
+        );
+    } else if (f.pieno >= 0.85 && tra6(f.a, 0.3, 0.6) && tra6(f.b, 0.45, 0.9)) mobile = f;
+    if (!mobile || mobile.b > 1.8) continue;
+    const d = controIlMuro(mobile, 0.5) || testaAlMuro(mobile, 0.5, 0.25);
+    if (!d) continue;
+    usati.add(f);
+    for (const g of [...legni, ...neri, ...altri]) if (vicino(f, g, 0.08)) usati.add(g);
+    metti6("lavabo", mobile, d, lungo(mobile));
+  }
+  if (!trovati.some((a) => a.k === "doccia"))
+    for (const f of bianchi) {
+      if (usati.has(f) || !inBagno(f) || f.pieno < 0.75 || !tra6(f.a, 0.35, 1.2) || !tra6(f.b, 0.6, 1.3))
+        continue;
+      let righe4 = 0, tutti = 0;
+      for (let y = f.y0 + 2; y < f.y1 - 1; y += 2)
+        for (let x = f.x0 + 2; x < f.x1 - 1; x += 2) {
+          tutti++;
+          if (luce3(data, y * w + x) < 215) righe4++;
+        }
+      if (!tutti || righe4 < tutti * 0.03 || righe4 > tutti * 0.4) continue;
+      const muri = ["su", "giu", "sx", "dx"].filter((l) => muroAccanto(f, l) >= 0.5);
+      if (!muri.length) continue;
+      metti6(
+        "doccia",
+        f,
+        versi[muri[0]].map((v) => -v)
+      );
+    }
   for (const f of grandi) {
     if (usati.has(f) || f.pieno < 0.7 || !tra6(f.a, 0.5, 1.1) || !tra6(f.b, 1.4, 3)) continue;
     const righe4 = (verso2) => {
@@ -174122,8 +174385,14 @@ function arrediDallaPianta(im, casa3, mpp) {
     if (!dietro) continue;
     metti6("divano", f, f.oriz ? [0, -dietro] : [-dietro, 0], lungo(f));
   }
-  for (const f of bianchi) {
-    if (usati.has(f) || f.pieno < 0.8 || !tra6(f.a, 0.5, 0.72) || !tra6(f.b, 0.9, 3.6)) continue;
+  const dentroUnoUsato = (f) => trovati.some((a) => {
+    const x = a.x / mpp, y = a.y / mpp;
+    return Math.hypot(x - f.cx, y - f.cy) < Math.max(f.bw, f.bh) / 2;
+  });
+  for (const f of [...bianchi, ...sciolti]) {
+    if (usati.has(f) || f.pieno < 0.8 || !tra6(f.a, 0.42, 0.72) || !tra6(f.b, 0.8, 3.6)) continue;
+    if (dentroUnoUsato(f) || [...usati].some((g) => g !== f && f.cx > g.x0 && f.cx < g.x1 && f.cy > g.y0 && f.cy < g.y1))
+      continue;
     const d = controIlMuro(f, 0.6);
     if (d) metti6("armadio", f, d, lungo(f));
   }
@@ -174134,11 +174403,51 @@ function arrediDallaPianta(im, casa3, mpp) {
     if (d) metti6("camino", f, d, lungo(f));
   }
   for (const f of altri) {
-    if (usati.has(f) || !tra6(f.a, 0.5, 0.85) || f.b < 1.2 || f.b > 5 || f.pieno < 0.75) continue;
+    if (usati.has(f) || !tra6(f.a, 0.45, 0.85) || f.b < 1.2 || f.b > 5 || f.pieno < 0.75) continue;
     const d = controIlMuro(f, 0.6);
     if (d) metti6("cucina", f, d, lungo(f));
   }
   return trovati;
+}
+function stanzeDagliArredi(casa3, arredi) {
+  const out = {};
+  if (!casa3?.stanze?.length) return out;
+  const { W: W2, H: H7, tipo, passo } = casa3;
+  const di = /* @__PURE__ */ new Map();
+  for (const a of arredi || []) {
+    if (!di.has(a.stanza)) di.set(a.stanza, /* @__PURE__ */ new Set());
+    di.get(a.stanza).add(a.k);
+  }
+  const porte = /* @__PURE__ */ new Map(), portone = /* @__PURE__ */ new Set();
+  const qui = (x, y) => {
+    const cx = Math.floor(x / passo), cy = Math.floor(y / passo);
+    return cx < 0 || cy < 0 || cx >= W2 || cy >= H7 ? -2 : tipo[cy * W2 + cx];
+  };
+  for (const a of casa3.aperture || []) {
+    if (a.tipo !== "porta") continue;
+    const d = 0.35, lati = a.orizz ? [qui(a.cx, a.cy - d), qui(a.cx, a.cy + d)] : [qui(a.cx - d, a.cy), qui(a.cx + d, a.cy)];
+    for (const s of lati) if (s > 0) porte.set(s, (porte.get(s) || 0) + 1);
+    if (lati.some((s) => s === -2)) {
+      for (const s of lati) if (s > 0) portone.add(s);
+    }
+  }
+  for (const s of casa3.stanze) {
+    const k = di.get(s.id) || /* @__PURE__ */ new Set(), ha = (...v) => v.some((x) => k.has(x));
+    const r = s.riquadro || { x0: 0, x1: 0, y0: 0, y1: 0 }, lati = [r.x1 - r.x0 + passo, r.y1 - r.y0 + passo].sort((a, b2) => a - b2);
+    if (ha("vasca", "doccia", "wc", "bidet")) out[s.id] = "bagno";
+    else if (ha("matrimoniale")) out[s.id] = "camera";
+    else if (ha("singolo", "culla")) out[s.id] = "cameretta";
+    else if (ha("cucina", "isola") && ha("divano", "pranzo6", "camino", "tondo4"))
+      out[s.id] = "salone+cucina";
+    else if (ha("cucina", "isola")) out[s.id] = "cucina";
+    else if (ha("divano", "camino")) out[s.id] = "salone";
+    else if (ha("scrivania")) out[s.id] = "studio";
+    else if (!k.size && portone.has(s.id) && s.area < 12) out[s.id] = "ingresso";
+    else if (!k.size && s.area < 6 && (porte.get(s.id) || 0) >= 2 && lati[0] <= 1.8)
+      out[s.id] = "disimpegno";
+    else if (!k.size && s.area < 4.5) out[s.id] = "ripostiglio";
+  }
+  return out;
 }
 
 // src/core/la-focale-della-foto.js
@@ -176724,11 +177033,17 @@ async function usaPlanimetria(src) {
     let muri = null;
     if (typeof src === "string") {
       try {
-        const base = pulita3 || dritta;
+        const base = pulita3 || dritta, datiBase = base.getContext("2d").getImageData(0, 0, base.width, base.height);
         muri = scalaDaiMuri(
-          base.getContext("2d").getImageData(0, 0, base.width, base.height),
+          datiBase,
           pulita3 ? { muro: render3?.muroM || SPESSORE_DEL_RENDER, minimo: render3?.minimo || 8 } : {}
         );
+        if (muri && pulita3 && render3?.arredata) {
+          const f = controprovaDellePorte(
+            riconosciDaFoto(grigliaDallaFoto(datiBase, muri.mpp, { render: true }))
+          );
+          if (f !== 1) muri = { ...muri, mpp: muri.mpp * f };
+        }
       } catch {
         muri = null;
       }
@@ -177142,12 +177457,41 @@ function riconosci() {
         S.arredi.push(
           ...arrediDallaPianta(d, S.casa, S.mpp).map((a) => ({ ...a, daPianta: true }))
         );
+        nomiDagliArredi();
       } catch (errore) {
         root.console?.warn?.("[DashboardModern] Casa 3D: arredi della pianta", errore);
       }
     return;
   }
   ricalcola2();
+}
+var NOME_DEL_TIPO = {
+  salone: 0,
+  cucina: 1,
+  camera: 2,
+  cameretta: 3,
+  bagno: 4,
+  ingresso: 5,
+  disimpegno: 6,
+  ripostiglio: 7,
+  studio: 8
+};
+function nomiDagliArredi() {
+  const S = state194.S;
+  const tipi = stanzeDagliArredi(
+    S.casa,
+    (S.arredi || []).filter((a) => a.daPianta)
+  );
+  const usati = /* @__PURE__ */ new Map();
+  for (const s of S.casa?.stanze || []) {
+    const k = tipi[s.id];
+    if (!k || clean(S.nomi[s.id])) continue;
+    let nome = k === "salone+cucina" ? `${due4(NOMI_DI_RIPIEGO[0])} / ${due4(NOMI_DI_RIPIEGO[1])}` : due4(NOMI_DI_RIPIEGO[NOME_DEL_TIPO[k]]);
+    const n = (usati.get(nome) || 0) + 1;
+    usati.set(nome, n);
+    if (n > 1) nome = `${nome} ${n}`;
+    S.nomi[s.id] = nome;
+  }
 }
 function ricalcola2() {
   const S = state194.S;
