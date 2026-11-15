@@ -629,7 +629,12 @@ export function alzaLaCasaFinta() {
         return;
       }
       case "subscribe_events":
-        sottoscrizioni.set(socket, detto.id);
+        /* Gli stati si raccontano a chi ha chiesto gli stati: la plancia sullo
+         * stesso filo si mette in ascolto anche della chat e della
+         * configurazione, e prima l'ultima sottoscrizione prendeva il posto di
+         * quella degli stati — i cambi arrivavano col numero sbagliato. */
+        if ((detto.event_type ?? "state_changed") === "state_changed")
+          sottoscrizioni.set(socket, detto.id);
         ok();
         return;
       case "unsubscribe_events":
@@ -663,7 +668,9 @@ export function alzaLaCasaFinta() {
         /* Il comando cambia davvero lo stato, e il cambiamento torna
          * indietro: cosi' nell'app l'interruttore si muove per conto suo,
          * come farebbe in casa. */
-        const chi = detto.target?.entity_id;
+        /* Come Home Assistant: l'entita' nel `target` o, come la manda il
+         * runtime della plancia, nei dati del servizio. */
+        const chi = detto.target?.entity_id ?? detto.service_data?.entity_id;
         const nuovo =
           detto.service === "turn_on" ? "on" : detto.service === "turn_off" ? "off" : null;
         for (const id of [chi].flat().filter(Boolean)) {
