@@ -1685,8 +1685,11 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // 549 con `core/arredi-dalla-pianta.js`: gli arredi disegnati nella pianta
   // arredata a colori (il letto, il tavolo, il divano, la vasca...) al loro
   // posto nella Casa 3D.
+  // 550 con `core/installa-con-chi-guarda.js`: l'aggiornamento si installa
+  // con l'utente di chi guarda, che e' quello di cui il Marketplace di Home
+  // Assistant guarda l'avviso accettato.
   assert.ok(
-    relative.length <= 549,
+    relative.length <= 550,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

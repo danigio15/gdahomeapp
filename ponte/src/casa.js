@@ -398,7 +398,11 @@ Object.assign(Casa.prototype, {
     this._domande.delete(detto.id);
     clearTimeout(domanda.scadenza);
     if (detto.success === false) {
-      domanda.fallito(new RispostaNegativa(detto.error?.code, detto.error?.message));
+      const errore = new RispostaNegativa(detto.error?.code, detto.error?.message);
+      /* La chiave del messaggio, quando Home Assistant la dice: vale in ogni
+       * lingua, e il Marketplace la usa per «accetta prima l'avviso». */
+      if (detto.error?.translation_key) errore.chiave = String(detto.error.translation_key);
+      domanda.fallito(errore);
       return;
     }
     domanda.riuscito(detto.result);
