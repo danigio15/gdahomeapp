@@ -117,8 +117,15 @@ class ComandoRifiutato extends ErroreDelPonte {
     super.spiegazione, {
     this.codice,
     this.siPuoForzare = false,
+    this.chiave,
   });
   final String? codice;
+
+  /// La chiave del messaggio di Home Assistant (`translation_key`), quando il
+  /// no e' suo e il ponte la fa arrivare: vale in ogni lingua. Oggi la guarda
+  /// la pagina degli aggiornamenti, per `warning_not_accepted` — il
+  /// Marketplace che vuole il suo avviso accettato.
+  final String? chiave;
 
   /// Se questo no si puo' scavalcare insistendo, e la schermata deve offrirlo.
   ///

@@ -52,6 +52,7 @@ import { apriLaSchedaDellEntita } from "./la-scheda-di-home-assistant.js";
 import { CHIAVE_VERSI, apertaSecondoVerso, insiemeInvertiti } from "../core/verso-aperture.js";
 import { parolaDelQuando, rifiutiInPlancia } from "./rifiuti-section.js";
 import {
+  activeLocale,
   allStates,
   chiediAHomeAssistant,
   clean,
@@ -1072,7 +1073,8 @@ function installaLAggiornamento(tasto) {
     .catch((errore) => {
       tasto.disabled = false;
       tasto.textContent = parola;
-      diIlRifiuto(errore);
+      /* Riprovare e' premere di nuovo lo stesso tasto, tornato com'era. */
+      diIlRifiuto(errore, { riprova: () => tasto.click?.() });
     });
   return true;
 }
@@ -1115,10 +1117,16 @@ export function ilRifiutoDetto(errore) {
 
 /* Il no, detto a chi ha toccato. Quello del Marketplace e' lungo e chiede di
  * fare qualcosa: in un avviso che sparisce in due secondi non si legge, e
- * allora sta in una finestra. Se Home Assistant e' attorno la finestra offre
- * di aprire il Marketplace, dove l'avviso si legge e si accetta: lo accetta
- * la persona, con le sue mani, non la plancia. */
-export function diIlRifiuto(errore) {
+ * allora sta in una finestra.
+ *
+ * Due finestre, secondo la strada. Se l'installazione l'ha chiesta l'utente
+ * che guarda (`strada: "utente"`) la finestra offre di aprire il Marketplace,
+ * dove l'avviso si legge e si accetta col proprio utente. Se l'ha chiesta il
+ * ponte, l'avviso va accettato per l'utente di GdAHome: la finestra lo
+ * mostra e chiede «Ho letto: accetto anche per GdAHome?»
+ * (`accettaAnchePerGdAHome`). In tutti e due i casi lo accetta la persona,
+ * con le sue mani, non la plancia. `riprova` rifa' l'installazione dopo. */
+export function diIlRifiuto(errore, { riprova = null } = {}) {
   const detto = ilRifiutoDetto(errore);
   try {
     if (perchéNonSiInstalla(errore) === "marketplace") {
@@ -1129,6 +1137,10 @@ export function diIlRifiuto(errore) {
         if (apri) apriIlMarketplace(root);
         return detto;
       }
+      if (typeof root.confirm === "function") {
+        accettaAnchePerGdAHome(detto, riprova).catch(() => {});
+        return detto;
+      }
       if (typeof root.alert === "function") {
         root.alert(detto);
         return detto;
@@ -1137,6 +1149,105 @@ export function diIlRifiuto(errore) {
     root.edToast?.(detto);
   } catch (_ignora) {}
   return detto;
+}
+
+/* L'avviso del Marketplace come lo da' il ponte, in righe da leggere. */
+export function lAvvisoInParole(testo) {
+  if (!testo || typeof testo !== "object") return "";
+  const righe = (quali) =>
+    (Array.isArray(quali) ? quali : [])
+      .map(clean)
+      .filter(Boolean)
+      .map((una) => `• ${una}`);
+  const pezzi = [clean(testo.titolo), clean(testo.intro)];
+  const rischi = righe(testo.rischi);
+  if (rischi.length) pezzi.push([clean(testo.rischiTitolo), ...rischi].join("\n"));
+  const attenzione = righe(testo.attenzione);
+  if (attenzione.length) pezzi.push([clean(testo.attenzioneTitolo), ...attenzione].join("\n"));
+  return pezzi.filter(Boolean).join("\n\n");
+}
+
+/*
+ * L'avviso accettato anche per l'utente di GdAHome, quando l'installazione e'
+ * passata dal ponte.
+ *
+ * Il ponte da' l'avviso (`ponte/marketplace/avviso`) e lo accetta solo se una
+ * persona l'ha letto (`ponte/marketplace/accetta` con `ho_letto: true`): qui
+ * si mostra, e il si' lo da' chi guarda premendo OK. Solo chi amministra la
+ * casa arriva fin li': agli altri il ponte dice di no, e la finestra spiega a
+ * chi chiedere. Un ponte che non conosce il comando lascia la finestra di
+ * prima. Torna com'e' finita: «accettato», «no», «non-amministra», «senza».
+ */
+export async function accettaAnchePerGdAHome(
+  detto,
+  riprova,
+  {
+    chiedi = chiediAHomeAssistant,
+    conferma = (testo) => root.confirm?.(testo),
+    avvisa = (testo) => root.alert?.(testo),
+    lingua = activeLocale,
+  } = {},
+) {
+  let avviso;
+  try {
+    avviso = await chiedi(
+      { type: "ponte/marketplace/avviso", lingua: clean(lingua()) || "it" },
+      10_000,
+    );
+  } catch (errore) {
+    if (clean(errore?.code) === "unauthorized") {
+      avvisa(
+        `${detto}\n\n${t(
+          "Accettare l'avviso anche per GdAHome può solo chi amministra la casa: chiedilo a chi amministra, oppure installa da Home Assistant con il tuo utente.",
+          "Only someone who manages the home can accept the warning for GdAHome too: ask them, or install from Home Assistant with your own user.",
+        )}`,
+      );
+      return "non-amministra";
+    }
+    avvisa(detto);
+    return "senza";
+  }
+  if (!avviso?.disponibile) {
+    avvisa(detto);
+    return "senza";
+  }
+  if (avviso.accettato !== true) {
+    const testo = [
+      detto,
+      lAvvisoInParole(avviso.testo),
+      clean(avviso.pagina),
+      t(
+        "GdAHome installa con un suo utente di Home Assistant; accettando, permetti a GdAHome di installare e aggiornare dal Marketplace.",
+        "GdAHome installs with its own Home Assistant user; by accepting, you allow GdAHome to install and update from the Marketplace.",
+      ),
+      t("Ho letto: accetto anche per GdAHome?", "I have read it: accept for GdAHome too?"),
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+    if (!conferma(testo)) return "no";
+    let dopo;
+    try {
+      dopo = await chiedi({ type: "ponte/marketplace/accetta", ho_letto: true }, 15_000);
+    } catch (errore) {
+      avvisa(
+        `${t("L'avviso non è stato accettato", "The warning was not accepted")}: ${clean(
+          errore?.message || errore,
+        )}`,
+      );
+      return "senza";
+    }
+    if (dopo?.accettato !== true) {
+      avvisa(
+        t(
+          "Home Assistant non lo risulta ancora accettato. Riprova fra poco.",
+          "Home Assistant does not show it as accepted yet. Try again in a moment.",
+        ),
+      );
+      return "senza";
+    }
+  }
+  if (typeof riprova === "function") riprova();
+  return "accettato";
 }
 
 function onClickElenco(event) {

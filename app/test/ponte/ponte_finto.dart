@@ -314,7 +314,8 @@ class PonteFinto {
              * Chi aggiunge una famiglia di comandi la aggiunge qui. */
             tipo.startsWith('ponte/quadro/') ||
             tipo.startsWith('ponte/zigbee/') ||
-            tipo.startsWith('ponte/aggiornamenti/'))) {
+            tipo.startsWith('ponte/aggiornamenti/') ||
+            tipo.startsWith('ponte/marketplace/'))) {
       chieste.add(detto);
       _manda(presa, {'id': id, ..._segnalazione(detto)});
       return;
@@ -739,6 +740,20 @@ class PonteFinto {
   final List<String> installati = [];
   bool riavviata = false;
 
+  /// Il Marketplace di Home Assistant 2026.11: con `true` ogni installazione
+  /// torna col suo no (`warning_not_accepted`) finche' l'avviso non e'
+  /// accettato per l'utente del ponte — come fa il ponte vero.
+  bool ilMarketplace = false;
+  bool avvisoAccettato = false;
+
+  /// Quante volte gli e' stato chiesto di accettare l'avviso, e con che
+  /// messaggi: l'app deve chiederlo solo dal tasto, e con `ho_letto`.
+  final List<Map<String, dynamic>> accettazioni = [];
+
+  /// Se il telefono puo' leggere e accettare l'avviso: `false` e' il ponte
+  /// vero davanti a chi non amministra (`unauthorized`).
+  bool avvisoPerChiAmministra = true;
+
   /// Se da questa casa si risponde alle chat delle altre.
   ///
   /// Nel ponte vero e' la chiave della console scritta nelle opzioni
@@ -1162,6 +1177,31 @@ class PonteFinto {
             fili.remove(linea);
             return si({'dropped': true});
         }
+      case 'ponte/marketplace/avviso':
+      case 'ponte/marketplace/accetta':
+        if (!avvisoPerChiAmministra) {
+          return no('unauthorized', 'questo lo fa solo chi amministra la casa');
+        }
+        if (detto['type'] == 'ponte/marketplace/accetta') {
+          accettazioni.add(Map<String, dynamic>.from(detto));
+          if (detto['ho_letto'] != true) {
+            return no('serve_il_consenso', 'serve averlo letto');
+          }
+          avvisoAccettato = true;
+        }
+        return si({
+          'disponibile': true,
+          'accettato': avvisoAccettato,
+          'pagina': 'https://www.home-assistant.io/integrations/marketplace',
+          'testo': {
+            'titolo': 'Prima di installare dal Marketplace',
+            'intro': 'Gli elementi del Marketplace sono fatti dalla comunità.',
+            'rischiTitolo': 'Qualunque cosa installi può',
+            'rischi': ['Collegarsi a internet'],
+            'attenzioneTitolo': 'Quindi fai attenzione',
+            'attenzione': ['Se qualcosa va storto, disinstallalo subito.'],
+          },
+        });
       case 'ponte/aggiornamenti/elenco':
       case 'ponte/aggiornamenti/installa':
       case 'ponte/aggiornamenti/riavvia':
@@ -1234,6 +1274,19 @@ class PonteFinto {
             );
             if (voce == null) {
               return no('not_found', 'quell\'aggiornamento non c\'è più');
+            }
+            if (ilMarketplace && !avvisoAccettato) {
+              return {
+                'type': 'result',
+                'success': false,
+                'error': {
+                  'code': 'home_assistant_error',
+                  'message':
+                      'Il Marketplace di Home Assistant installa e aggiorna '
+                      'solo per chi ha letto e accettato il suo avviso.',
+                  'translation_key': 'warning_not_accepted',
+                },
+              };
             }
             installati.add(quale);
             /* Come il ponte vero: da qui in poi quella riga risulta in corso,

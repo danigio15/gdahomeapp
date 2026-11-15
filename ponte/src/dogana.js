@@ -44,7 +44,9 @@
  *        `/delete`) sono programmi che girano nel browser di chiunque apra
  *        Home Assistant, anche di chi lo amministra davvero; i pacchetti di
  *        HACS (`hacs/…`) sono codice che Home Assistant esegue al prossimo
- *        avvio; e un'integrazione nuova o riconfigurata
+ *        avvio, e cosi' quelli del Marketplace (`marketplace/…`), compreso
+ *        il suo avviso, che e' un consenso e si da' solo da
+ *        `ponte/marketplace/accetta`; e un'integrazione nuova o riconfigurata
  *        (`/api/config/config_entries/…/flow`) e' un pezzo di casa che si
  *        mette su senza che nessuno lo veda.
  *  2. **Chi amministra** passa con tutto il resto, com'era. Un telefono
@@ -142,6 +144,14 @@ const MAI = Object.freeze([
   /* HACS scarica e installa codice che Home Assistant esegue al prossimo
    * avvio, e il riavvio un telefono di chi amministra lo sa chiedere. */
   "hacs/",
+  /* E il Marketplace, che da Home Assistant 2026.11 e' HACS dentro Home
+   * Assistant: `marketplace/repository/install` e' lo stesso scaricare codice.
+   * Sopra tutto `marketplace/warning/accept`, che e' un **consenso** e vale
+   * per l'utente del ponte: si da' solo da `ponte/marketplace/accetta`, con la
+   * persona che preme il tasto apposta (`l-avviso-del-marketplace.js`), mai
+   * girando un messaggio della pagina o del telefono. Gli aggiornamenti
+   * passano lo stesso: sono `update.install`, un servizio. */
+  "marketplace/",
 ]);
 
 /* Di `auth/…` passa una cosa sola: la firma di un indirizzo, che serve alle

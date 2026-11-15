@@ -107,6 +107,12 @@ import {
 import { BASE as BASE_DELLA_PLANCIA } from "./plancia.js";
 import { ChatHaDettoNo } from "./chat.js";
 import { I_MARCHI, QuestoNoNo, ilMarchioDi } from "./aggiornamenti.js";
+import {
+  AVVISO_ACCETTA,
+  AVVISO_STATO,
+  AvvisoDelMarketplace,
+  AvvisoNo,
+} from "./l-avviso-del-marketplace.js";
 import { CentralinoHaDettoNo, SenzaCentralino } from "./segnalazioni.js";
 import { SegnalazioniDellaPlancia } from "./segnalazioni-della-plancia.js";
 import {
@@ -315,6 +321,9 @@ const AGGIORNAMENTI_LOGO = "ponte/aggiornamenti/logo";
 /* Le note lunghe di una versione: quelle che la finestra di Home Assistant
  * mostra, e che l'app mostra dentro di se'. */
 const AGGIORNAMENTI_NOTE = "ponte/aggiornamenti/note";
+/* L'avviso del Marketplace per l'utente di GdAHome
+ * (`l-avviso-del-marketplace.js`): leggerlo, e accettarlo quando una persona
+ * che amministra la casa l'ha letto e ha premuto il tasto. */
 
 const TIMER_ELENCO = "dashboardmodern/clima/timer/list";
 /* Le unita' che lo spegnimento programmato puo' spegnere: quelle che la
@@ -440,6 +449,10 @@ const SOLO_CHI_AMMINISTRA = new Set([
   "ponte/plance/togli",
   "ponte/aggiornamenti/installa",
   "ponte/aggiornamenti/riavvia",
+  /* L'avviso del Marketplace: Home Assistant lo fa leggere e accettare solo
+   * a chi amministra (`require_admin`), e qui vale lo stesso. */
+  AVVISO_STATO,
+  AVVISO_ACCETTA,
   "ponte/zigbee/apri",
   "ponte/zigbee/chiudi",
   "ponte/zigbee/rinomina",
@@ -658,6 +671,9 @@ export class Commissioni {
      * una porta che non c'e'. */
     zigbee = null,
     aggiornamenti = null,
+    /* L'avviso del Marketplace per l'utente di GdAHome. Senza, nasce dalla
+     * casa: e' solo due domande a Home Assistant. */
+    marketplace = null,
     /* L'anagrafe della casa — di chi e' ogni entita', e come si chiama quel
      * qualcuno. E' la stessa che legge il rapporto, e la tiene `registri.js`:
      * una sola, per non leggere due volte la stessa cosa pesante. */
@@ -729,6 +745,8 @@ export class Commissioni {
     /* Cosa c'e' da aggiornare, e i due tasti per farlo. In Home Assistant si
      * vede da una pagina che chi usa l'app non apre piu'. */
     this.aggiornamenti = aggiornamenti;
+    this.marketplace =
+      marketplace ?? (casa ? new AvvisoDelMarketplace({ casa, registro: this.registro }) : null);
     /* Dove sta questa casa sulla rete di casa: lo sa il Ritorno, che lo
      * chiede al Supervisor. Si mette dopo la costruzione — il Ritorno nasce
      * piu' tardi, che gli serve la porta vera — e dove non c'e' la domanda si
@@ -1165,6 +1183,8 @@ export class Commissioni {
       tipo === AGGIORNAMENTI_NOTE
     )
       return this._aggiornamenti(detto, chiChiede, amministra);
+    if (tipo === AVVISO_STATO || tipo === AVVISO_ACCETTA)
+      return this._lAvvisoDelMarketplace(detto, chiChiede, dalTelefono);
     if (typeof tipo === "string" && tipo.startsWith("dashboardmodern/tickets/"))
       return this._segnalazioniDellaPlancia(detto);
     if (eLaCopiaVecchia(detto)) {
@@ -1508,9 +1528,56 @@ export class Commissioni {
       if (errore instanceof QuestoNoNo) return no(id, errore.code, errore.message);
       /* E un no di Home Assistant e' suo: il permesso negato di un riavvio si
        * dice com'e', che rifarlo non serve a niente. */
-      if (errore?.code) return no(id, errore.code, errore.message || "Home Assistant ha detto no");
+      if (errore?.code) {
+        const detto = no(id, errore.code, errore.message || "Home Assistant ha detto no");
+        /* La chiave di Home Assistant viaggia fino al telefono: e' quella che
+         * dice all'app «e' il Marketplace» (`warning_not_accepted`) in
+         * qualunque lingua Home Assistant scriva. */
+        if (errore.chiave) detto.error.translation_key = errore.chiave;
+        return detto;
+      }
       this.registro.errore(`aggiornamenti: ${errore?.message || errore}`);
       return no(id, "ponte_aggiornamenti", "non ha funzionato");
+    }
+  }
+
+  /* L'avviso del Marketplace, per l'utente con cui GdAHome parla a Home
+   * Assistant.
+   *
+   * Due comandi, e nessuno dei due parte da solo: `ponte/marketplace/avviso`
+   * legge (accettato o no, e il testo da leggere), `ponte/marketplace/accetta`
+   * accetta — e solo se il messaggio dice `ho_letto: true`, che l'app e la
+   * plancia mettono quando una persona preme «Ho letto: accetto anche per
+   * GdAHome». Tutti e due stanno in `SOLO_CHI_AMMINISTRA`: chi non amministra
+   * qui non arriva. Nel registro resta chi ha accettato, e quando. */
+  async _lAvvisoDelMarketplace(detto, chiChiede = "", dalTelefono = false) {
+    const id = detto?.id ?? null;
+    const avviso = this.marketplace;
+    if (!avviso) return no(id, "unknown_command", `non conosco ${detto?.type}`);
+    const lingua = typeof detto?.lingua === "string" ? detto.lingua : "it";
+    try {
+      if (detto.type === AVVISO_STATO) return si(id, await avviso.stato({ lingua }));
+      const chi = String(chiChiede || "").trim();
+      let nome = "";
+      if (chi && this.utenti?.elenco) {
+        try {
+          nome = (await this.utenti.elenco()).find((uno) => uno.id === chi)?.nome ?? "";
+        } catch (_errore) {
+          nome = "";
+        }
+      }
+      const fatto = await avviso.accetta({
+        hoLetto: detto?.ho_letto === true,
+        chi,
+        nome,
+        da: dalTelefono === true ? "app" : "plancia",
+      });
+      return si(id, { ...fatto, ...(await avviso.stato({ lingua })) });
+    } catch (errore) {
+      if (errore instanceof AvvisoNo) return no(id, errore.code, errore.message);
+      if (errore?.code) return no(id, errore.code, errore.message || "Home Assistant ha detto no");
+      this.registro.errore(`avviso del Marketplace: ${errore?.message || errore}`);
+      return no(id, "ponte_marketplace", "non ha funzionato");
     }
   }
 

@@ -573,7 +573,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-CEZ7REMX.js";
+} from "../../chunk-4KWH6PHN.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -2459,6 +2459,7 @@ var SOURCE_INDEX = Object.freeze({
   "Acceso o spento": "Toggle on or off",
   "Acceso quando è acceso": "On when it's on",
   "Acceso, il radar mostra l'ultima ora di pioggia in movimento: si vede da che parte va il fronte, non solo dov'è adesso. Sono sei fotogrammi invece di uno, quindi sei giri di quadratini: spegnilo se la connessione è lenta o se preferisci una sola immagine.": "On, the radar plays the last hour of rain: you see which way the front is moving, not only where it is now. That is six frames instead of one, so six rounds of tiles: turn it off on a slow connection, or if you prefer a single image.",
+  "Accettare l'avviso anche per GdAHome può solo chi amministra la casa: chiedilo a chi amministra, oppure installa da Home Assistant con il tuo utente.": "Only someone who manages the home can accept the warning for GdAHome too: ask them, or install from Home Assistant with your own user.",
   "Accumulo": "Storage tank",
   "Accumulo alto": "Tank top",
   "Accumulo basso": "Tank bottom",
@@ -4528,6 +4529,7 @@ var SOURCE_INDEX = Object.freeze({
   "Gas oggi": "Gas today",
   "Gatti": "Cats",
   "Gatto": "Cat",
+  "GdAHome installa con un suo utente di Home Assistant; accettando, permetti a GdAHome di installare e aggiornare dal Marketplace.": "GdAHome installs with its own Home Assistant user; by accepting, you allow GdAHome to install and update from the Marketplace.",
   "Gelo improbabile": "Frost unlikely",
   "Gelo probabile": "Frost probable",
   "Gennaio": "January",
@@ -4626,6 +4628,7 @@ var SOURCE_INDEX = Object.freeze({
   "HLS: saltato, Home Assistant non dichiara un flusso per questa telecamera": "HLS: skipped, Home Assistant declares no stream for this camera",
   "Ho capito": "Got it",
   "Ho finito, continua": "Done, continue",
+  "Ho letto: accetto anche per GdAHome?": "I have read it: accept for GdAHome too?",
   "Home Assistant · Sistema core": "Home Assistant · Core system",
   "Home Assistant · Sistema Core": "Home Assistant · Core system",
   "Home Assistant → Impostazioni → Automazioni": "Home Assistant → Settings → Automations",
@@ -4642,6 +4645,7 @@ var SOURCE_INDEX = Object.freeze({
   "Home Assistant non ha risposto in tempo.": "Home Assistant did not answer in time.",
   "Home Assistant non ha sun.sun: vale l'orario di «Di notte schermo nero»": "Home Assistant has no sun.sun: the hours of “Black screen at night” apply",
   "Home Assistant non l'ha salvata: ${no}": "Home Assistant did not save it: ${no}",
+  "Home Assistant non lo risulta ancora accettato. Riprova fra poco.": "Home Assistant does not show it as accepted yet. Try again in a moment.",
   "Home Assistant non risponde": "Home Assistant is not answering",
   "Home Assistant non si e' riavviato: serve un utente amministratore.": "Home Assistant did not restart: an administrator is needed.",
   "Home Assistant non ti autorizza a comandare questa entità: serve un utente con il permesso, oppure l'entità è esposta in sola lettura.": "Home Assistant does not allow you to command this entity: it needs a user with permission, or the entity is exposed read-only.",
@@ -5154,6 +5158,7 @@ var SOURCE_INDEX = Object.freeze({
   "l'auto": "the car",
   "L'auto": "The car",
   "L'auto non ha risposto in tempo: le vetture in cloud dormono, spesso basta riprovare fra un minuto.": "The car did not answer in time: cloud vehicles sleep, trying again in a minute usually works.",
+  "L'avviso non è stato accettato": "The warning was not accepted",
   "L'azione del tasto in basso quando l'antifurto è spento": "The bottom button's action when the alarm is off",
   "L'editor delle entità": "The entity editor",
   "L'elenco dei fotogrammi del servizio non arriva: riprova fra un momento.": "The service's list of frames does not arrive: try again in a moment.",
@@ -40686,7 +40691,7 @@ function installaLAggiornamento(tasto5) {
   chiediLInstallazione(entita4, () => root.dmCallHaService("update", "install", { entity_id: entita4 })).then(() => root.dmGuardaIlRiavvio?.()).catch((errore) => {
     tasto5.disabled = false;
     tasto5.textContent = parola2;
-    diIlRifiuto(errore);
+    diIlRifiuto(errore, { riprova: () => tasto5.click?.() });
   });
   return true;
 }
@@ -40709,7 +40714,7 @@ function ilRifiutoDetto(errore) {
     errore?.message || errore
   )}`;
 }
-function diIlRifiuto(errore) {
+function diIlRifiuto(errore, { riprova: riprova2 = null } = {}) {
   const detto3 = ilRifiutoDetto(errore);
   try {
     if (perchéNonSiInstalla(errore) === "marketplace") {
@@ -40722,6 +40727,11 @@ ${t("Aprire il Marketplace adesso?", "Open the Marketplace now?")}`
         if (apri9) apriIlMarketplace(root);
         return detto3;
       }
+      if (typeof root.confirm === "function") {
+        accettaAnchePerGdAHome(detto3, riprova2).catch(() => {
+        });
+        return detto3;
+      }
       if (typeof root.alert === "function") {
         root.alert(detto3);
         return detto3;
@@ -40731,6 +40741,83 @@ ${t("Aprire il Marketplace adesso?", "Open the Marketplace now?")}`
   } catch (_ignora) {
   }
   return detto3;
+}
+function lAvvisoInParole(testo5) {
+  if (!testo5 || typeof testo5 !== "object") return "";
+  const righe4 = (quali) => (Array.isArray(quali) ? quali : []).map(clean).filter(Boolean).map((una) => `• ${una}`);
+  const pezzi2 = [clean(testo5.titolo), clean(testo5.intro)];
+  const rischi = righe4(testo5.rischi);
+  if (rischi.length) pezzi2.push([clean(testo5.rischiTitolo), ...rischi].join("\n"));
+  const attenzione = righe4(testo5.attenzione);
+  if (attenzione.length) pezzi2.push([clean(testo5.attenzioneTitolo), ...attenzione].join("\n"));
+  return pezzi2.filter(Boolean).join("\n\n");
+}
+async function accettaAnchePerGdAHome(detto3, riprova2, {
+  chiedi: chiedi9 = chiediAHomeAssistant,
+  conferma = (testo5) => root.confirm?.(testo5),
+  avvisa: avvisa4 = (testo5) => root.alert?.(testo5),
+  lingua: lingua9 = activeLocale
+} = {}) {
+  let avviso4;
+  try {
+    avviso4 = await chiedi9(
+      { type: "ponte/marketplace/avviso", lingua: clean(lingua9()) || "it" },
+      1e4
+    );
+  } catch (errore) {
+    if (clean(errore?.code) === "unauthorized") {
+      avvisa4(
+        `${detto3}
+
+${t(
+          "Accettare l'avviso anche per GdAHome può solo chi amministra la casa: chiedilo a chi amministra, oppure installa da Home Assistant con il tuo utente.",
+          "Only someone who manages the home can accept the warning for GdAHome too: ask them, or install from Home Assistant with your own user."
+        )}`
+      );
+      return "non-amministra";
+    }
+    avvisa4(detto3);
+    return "senza";
+  }
+  if (!avviso4?.disponibile) {
+    avvisa4(detto3);
+    return "senza";
+  }
+  if (avviso4.accettato !== true) {
+    const testo5 = [
+      detto3,
+      lAvvisoInParole(avviso4.testo),
+      clean(avviso4.pagina),
+      t(
+        "GdAHome installa con un suo utente di Home Assistant; accettando, permetti a GdAHome di installare e aggiornare dal Marketplace.",
+        "GdAHome installs with its own Home Assistant user; by accepting, you allow GdAHome to install and update from the Marketplace."
+      ),
+      t("Ho letto: accetto anche per GdAHome?", "I have read it: accept for GdAHome too?")
+    ].filter(Boolean).join("\n\n");
+    if (!conferma(testo5)) return "no";
+    let dopo;
+    try {
+      dopo = await chiedi9({ type: "ponte/marketplace/accetta", ho_letto: true }, 15e3);
+    } catch (errore) {
+      avvisa4(
+        `${t("L'avviso non è stato accettato", "The warning was not accepted")}: ${clean(
+          errore?.message || errore
+        )}`
+      );
+      return "senza";
+    }
+    if (dopo?.accettato !== true) {
+      avvisa4(
+        t(
+          "Home Assistant non lo risulta ancora accettato. Riprova fra poco.",
+          "Home Assistant does not show it as accepted yet. Try again in a moment."
+        )
+      );
+      return "senza";
+    }
+  }
+  if (typeof riprova2 === "function") riprova2();
+  return "accettato";
 }
 function onClickElenco(event) {
   const nodo3 = doc?.getElementById?.(POPUP2);
@@ -83950,7 +84037,8 @@ function onClick12(event) {
     ).then(() => guardaIlRiavvioDopoLInstallazione()).catch((errore) => {
       aggiornamento.disabled = false;
       aggiornamento.textContent = parola2;
-      if (clean(errore?.message || errore)) diIlRifiuto(errore);
+      if (clean(errore?.message || errore))
+        diIlRifiuto(errore, { riprova: () => aggiornamento.click?.() });
     });
     return;
   }

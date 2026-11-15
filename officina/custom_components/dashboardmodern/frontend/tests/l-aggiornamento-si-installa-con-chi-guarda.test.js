@@ -19,7 +19,11 @@ import {
   installaConChiGuarda,
 } from "../src/core/installa-con-chi-guarda.js";
 import { perchéNonSiInstalla } from "../src/core/come-si-spegne.js";
-import { ilRifiutoDetto } from "../src/sections/come-sta-la-casa-section.js";
+import {
+  accettaAnchePerGdAHome,
+  ilRifiutoDetto,
+  lAvvisoInParole,
+} from "../src/sections/come-sta-la-casa-section.js";
 
 const QUELLA_VERA =
   "Open the Marketplace and read the warning first, installing and updating work once it is accepted.";
@@ -189,4 +193,114 @@ test("chi non amministra resta sulla strada del ponte, con le sue regole", async
   });
   assert.equal(dalPonte, 1);
   assert.deepEqual(chieste, []);
+});
+
+/* ─── Dal ponte: l'avviso accettato anche per l'utente di GdAHome ───────── */
+
+const L_AVVISO = {
+  titolo: "Prima di installare dal Marketplace",
+  intro: "Gli elementi del Marketplace sono fatti da persone della comunità.",
+  rischiTitolo: "Qualunque cosa installi può",
+  rischi: ["Collegarsi a internet"],
+  attenzioneTitolo: "Quindi fai attenzione",
+  attenzione: ["Se qualcosa va storto, disinstallalo subito."],
+};
+
+/* Il ponte finto: `ponte/marketplace/avviso` e `ponte/marketplace/accetta`
+ * come quello vero, che accetta solo con `ho_letto: true`. */
+function ponteFinto({ amministra = true, conosce = true } = {}) {
+  const chieste = [];
+  let accettato = false;
+  const chiedi = async (comando) => {
+    chieste.push(comando);
+    if (!conosce) throw Object.assign(new Error("non conosco"), { code: "unknown_command" });
+    if (!amministra) throw Object.assign(new Error("no"), { code: "unauthorized" });
+    if (comando.type === "ponte/marketplace/accetta") {
+      if (comando.ho_letto !== true)
+        throw Object.assign(new Error("serve il consenso"), { code: "serve_il_consenso" });
+      accettato = true;
+    }
+    return { disponibile: true, accettato, testo: L_AVVISO, pagina: "https://esempio/x" };
+  };
+  return { chiedi, chieste, accettato: () => accettato };
+}
+
+test("l'avviso si legge in righe", () => {
+  const testo = lAvvisoInParole(L_AVVISO);
+  assert.match(testo, /^Prima di installare dal Marketplace/);
+  assert.match(testo, /Qualunque cosa installi può\n• Collegarsi a internet/);
+  assert.match(testo, /• Se qualcosa va storto/);
+  assert.equal(lAvvisoInParole(null), "");
+});
+
+test("dal ponte: la finestra mostra l'avviso, e si accetta solo premendo OK", async () => {
+  const ponte = ponteFinto();
+  const finestre = [];
+  let riprovato = 0;
+  const com = await accettaAnchePerGdAHome("il no", () => (riprovato += 1), {
+    chiedi: ponte.chiedi,
+    conferma: (testo) => {
+      finestre.push(testo);
+      return true;
+    },
+    avvisa: (testo) => finestre.push(`!${testo}`),
+    lingua: () => "it",
+  });
+  assert.equal(com, "accettato");
+  assert.equal(finestre.length, 1);
+  assert.match(finestre[0], /Prima di installare dal Marketplace/);
+  assert.match(finestre[0], /GdAHome installa con un suo utente di Home Assistant; accettando/);
+  assert.match(finestre[0], /Ho letto: accetto anche per GdAHome\?$/);
+  assert.deepEqual(
+    ponte.chieste.map((una) => una.type),
+    ["ponte/marketplace/avviso", "ponte/marketplace/accetta"],
+  );
+  assert.equal(ponte.chieste[1].ho_letto, true);
+  assert.equal(riprovato, 1);
+});
+
+test("dal ponte: chi dice di no non accetta niente, e non si riprova", async () => {
+  const ponte = ponteFinto();
+  let riprovato = 0;
+  const com = await accettaAnchePerGdAHome("il no", () => (riprovato += 1), {
+    chiedi: ponte.chiedi,
+    conferma: () => false,
+    avvisa: () => {},
+    lingua: () => "it",
+  });
+  assert.equal(com, "no");
+  assert.equal(ponte.accettato(), false);
+  assert.deepEqual(
+    ponte.chieste.map((una) => una.type),
+    ["ponte/marketplace/avviso"],
+  );
+  assert.equal(riprovato, 0);
+});
+
+test("dal ponte: chi non amministra legge a chi chiedere, senza tasto", async () => {
+  const ponte = ponteFinto({ amministra: false });
+  const avvisi = [];
+  let confermate = 0;
+  const com = await accettaAnchePerGdAHome("il no", null, {
+    chiedi: ponte.chiedi,
+    conferma: () => (confermate += 1),
+    avvisa: (testo) => avvisi.push(testo),
+    lingua: () => "it",
+  });
+  assert.equal(com, "non-amministra");
+  assert.equal(confermate, 0);
+  assert.match(avvisi[0], /può solo chi amministra la casa/);
+});
+
+test("un ponte che non conosce il comando lascia la finestra di prima", async () => {
+  const ponte = ponteFinto({ conosce: false });
+  const avvisi = [];
+  const com = await accettaAnchePerGdAHome("il no di prima", null, {
+    chiedi: ponte.chiedi,
+    conferma: () => true,
+    avvisa: (testo) => avvisi.push(testo),
+    lingua: () => "it",
+  });
+  assert.equal(com, "senza");
+  assert.deepEqual(avvisi, ["il no di prima"]);
 });

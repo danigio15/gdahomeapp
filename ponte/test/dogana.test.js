@@ -363,6 +363,31 @@ test("la pagina di chi non amministra passa dalla dogana come un telefono", asyn
   assert.deepEqual(nessuno.allaCasa, []);
 });
 
+test("dalla pagina l'avviso del Marketplace non si accetta girando il messaggio", async () => {
+  /* Il consenso vale per l'utente del ponte: una pagina — anche di chi
+   * amministra — non lo manda a Home Assistant per conto suo. Si da' solo con
+   * `ponte/marketplace/accetta`, e qui nessuna commissione: non arriva niente. */
+  const utenti = { amministratore: async (chi) => chi === "chi-amministra" };
+  const admin = unaCucitura({ chiGuarda: "chi-amministra", utenti });
+  await admin.cucitura.avvia();
+  admin.presa.onMessaggio(JSON.stringify({ id: 1, type: "marketplace/warning/accept" }));
+  admin.presa.onMessaggio(JSON.stringify({ id: 2, type: "marketplace/info" }));
+  admin.presa.onMessaggio(
+    JSON.stringify({ id: 3, type: "marketplace/repository/install", repository: "1" }),
+  );
+  admin.presa.onMessaggio(JSON.stringify({ id: 4, type: "get_states" }));
+  assert.deepEqual(
+    admin.allaCasa.map((detto) => detto.type),
+    ["get_states"],
+  );
+  const rifiutati = admin.allaPagina.filter((detto) => detto.type === "result");
+  assert.deepEqual(
+    rifiutati.map((detto) => detto.id),
+    [1, 2, 3],
+  );
+  for (const detto of rifiutati) assert.equal(detto.success, false);
+});
+
 /* ─── Quello che una revisione ha trovato ───────────────────────────────── */
 
 test("nelle vie REST le percentuali e le barre doppie non passano, e le maiuscole non ingannano", () => {

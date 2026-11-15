@@ -10,6 +10,15 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.19.7
+
+_App GdAHome e add-on._
+
+- **Gli aggiornamenti del Marketplace anche dall'app**: la prima volta
+  l'app mostra l'avviso del Marketplace di Home Assistant e chiede a un
+  amministratore di accettarlo anche per GdAHome; da lì «Installa»
+  funziona direttamente dall'app. Niente si accetta da solo.
+
 ## 1.19.6.1
 
 _Solo Home Assistant: l'app sul telefono non cambia._

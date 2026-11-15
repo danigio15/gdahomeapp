@@ -143,6 +143,74 @@ class Avviato {
   final bool stacca;
 }
 
+/// La chiave del no del Marketplace di Home Assistant: l'avviso non e'
+/// accettato da chi installa (`homeassistant/components/marketplace`).
+const chiaveDelMarketplace = 'warning_not_accepted';
+
+/// Se questo errore e' il Marketplace che vuole il suo avviso accettato.
+bool eIlNoDelMarketplace(Object errore) =>
+    errore is ComandoRifiutato && errore.chiave == chiaveDelMarketplace;
+
+/// L'avviso del Marketplace, come lo dice il ponte
+/// (`ponte/src/l-avviso-del-marketplace.js`).
+///
+/// Da Home Assistant 2026.11 il Marketplace installa e aggiorna solo per chi
+/// ha accettato il suo avviso, utente per utente. Dall'app installa il ponte,
+/// con un utente suo: l'avviso va accettato anche per lui, da una persona che
+/// amministra la casa e che l'ha letto. Mai da solo.
+class AvvisoDelMarketplace {
+  const AvvisoDelMarketplace({
+    this.disponibile = false,
+    this.accettato = false,
+    this.titolo = '',
+    this.intro = '',
+    this.rischiTitolo = '',
+    this.rischi = const [],
+    this.attenzioneTitolo = '',
+    this.attenzione = const [],
+    this.pagina = '',
+  });
+
+  /// Se in questa casa il Marketplace c'e'.
+  final bool disponibile;
+
+  /// Se l'utente di GdAHome l'ha gia' accettato.
+  final bool accettato;
+
+  final String titolo;
+  final String intro;
+  final String rischiTitolo;
+  final List<String> rischi;
+  final String attenzioneTitolo;
+  final List<String> attenzione;
+
+  /// La pagina ufficiale dell'integrazione.
+  final String pagina;
+
+  static AvvisoDelMarketplace leggi(Object? grezzo) {
+    if (grezzo is! Map) return const AvvisoDelMarketplace();
+    final testo = grezzo['testo'] is Map ? grezzo['testo'] as Map : const {};
+    List<String> righe(Object? quali) => quali is List
+        ? quali
+              .map((una) => '$una'.trim())
+              .where((una) => una.isNotEmpty)
+              .toList()
+        : const [];
+    String parola(String chiave) => testo[chiave]?.toString().trim() ?? '';
+    return AvvisoDelMarketplace(
+      disponibile: grezzo['disponibile'] == true,
+      accettato: grezzo['accettato'] == true,
+      titolo: parola('titolo'),
+      intro: parola('intro'),
+      rischiTitolo: parola('rischiTitolo'),
+      rischi: righe(testo['rischi']),
+      attenzioneTitolo: parola('attenzioneTitolo'),
+      attenzione: righe(testo['attenzione']),
+      pagina: grezzo['pagina']?.toString().trim() ?? '',
+    );
+  }
+}
+
 /// I tre sportelli degli aggiornamenti, passando dal ponte.
 class GliAggiornamenti {
   const GliAggiornamenti(this._filo);
@@ -247,6 +315,31 @@ class GliAggiornamenti {
     final byte = base64Decode(corpo);
     return byte.isEmpty ? null : byte;
   }
+
+  /// L'avviso del Marketplace per l'utente di GdAHome, nella lingua dell'app.
+  /// Una lettura: non accetta niente.
+  Future<AvvisoDelMarketplace> avvisoDelMarketplace(String lingua) async =>
+      AvvisoDelMarketplace.leggi(
+        await _filo.risultato({
+          'type': 'ponte/marketplace/avviso',
+          'lingua': lingua,
+        }),
+      );
+
+  /// Accetta l'avviso del Marketplace per l'utente di GdAHome.
+  ///
+  /// Si chiama **solo** dal tasto «Ho letto: accetto anche per GdAHome», che
+  /// una persona preme dopo averlo letto: `ho_letto` lo dice al ponte, che
+  /// senza non accetta niente.
+  Future<AvvisoDelMarketplace> accettaLAvvisoDelMarketplace(
+    String lingua,
+  ) async => AvvisoDelMarketplace.leggi(
+    await _filo.risultato({
+      'type': 'ponte/marketplace/accetta',
+      'ho_letto': true,
+      'lingua': lingua,
+    }),
+  );
 
   /// Riavvia Home Assistant. Il filo cade subito dopo, ed e' il segno che sta
   /// funzionando.

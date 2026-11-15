@@ -608,6 +608,83 @@ void main() {
         .length;
     expect(quante, 1);
   });
+
+  /* ─── Il Marketplace di Home Assistant 2026.11 ─────────────────────────── */
+
+  testWidgets('il no del Marketplace mostra l\'avviso, e si accetta solo '
+      'premendo', (tester) async {
+    await unaCasa(tester);
+    ponte.ilMarketplace = true;
+    ponte.aggiornamenti.add(
+      _voce(
+        'update.power_flow_card_plus_update',
+        'Power Flow Card Plus',
+        da: 'v0.6.2-beta.1',
+        a: 'v0.6.2-beta.2',
+      ),
+    );
+    await apri(tester);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Installa'));
+    await respira(tester);
+
+    /* Al posto della riga rossa: l'avviso di Home Assistant, e cosa vuol dire
+     * accettarlo per GdAHome. Niente e' stato accettato da solo. */
+    expect(find.byKey(const ValueKey('il-marketplace')), findsOneWidget);
+    expect(find.text('Prima di installare dal Marketplace'), findsOneWidget);
+    expect(find.text('•  Collegarsi a internet'), findsOneWidget);
+    expect(
+      find.text(
+        'GdAHome installa con un suo utente di Home Assistant; accettando, '
+        'permetti a GdAHome di installare e aggiornare dal Marketplace.',
+      ),
+      findsOneWidget,
+    );
+    expect(ponte.accettazioni, isEmpty);
+    expect(ponte.installati, isEmpty);
+
+    final tasto = find.byKey(const ValueKey('accetta-anche-per-gdahome'));
+    expect(tasto, findsOneWidget);
+    expect(find.text('Ho letto: accetto anche per GdAHome'), findsOneWidget);
+    await tester.ensureVisible(tasto);
+    await tester.tap(tasto);
+    /* Tre domande di fila: accetta, installa, rileggi l'elenco. */
+    await respira(tester);
+    await respira(tester);
+
+    /* Una domanda sola, con «ho letto», e poi l'installazione riparte. */
+    expect(ponte.accettazioni, hasLength(1));
+    expect(ponte.accettazioni.single['ho_letto'], isTrue);
+    expect(ponte.installati, ['update.power_flow_card_plus_update']);
+    expect(find.byKey(const ValueKey('il-marketplace')), findsNothing);
+  });
+
+  testWidgets('chi non amministra legge perché, e il tasto non c\'è', (
+    tester,
+  ) async {
+    await unaCasa(tester);
+    ponte.ilMarketplace = true;
+    ponte.avvisoPerChiAmministra = false;
+    ponte.aggiornamenti.add(
+      _voce('update.power_flow_card_plus_update', 'Power Flow Card Plus'),
+    );
+    await apri(tester);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Installa'));
+    await respira(tester);
+
+    expect(find.byKey(const ValueKey('il-marketplace')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('il-marketplace-non-amministra')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('accetta-anche-per-gdahome')),
+      findsNothing,
+    );
+    expect(ponte.accettazioni, isEmpty);
+    expect(ponte.installati, isEmpty);
+  });
 }
 
 /// Un PNG **vero**: due punti per due, azzurri.
