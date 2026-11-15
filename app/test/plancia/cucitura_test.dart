@@ -125,6 +125,113 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 100));
     expect(ponte.arrivati.length, prima);
   });
+
+  /* «Il processore sta alto e le entita' rispondono dopo tempo», da un tablet
+   * a muro sempre acceso. A ogni presa nuova della pagina — ricaricata, o
+   * cambiata dalla sezione che la ricollega (`connection-recovery-section.js`)
+   * — il runtime rifa' `subscribe_events`; la presa di prima se ne andava, e
+   * la sua sottoscrizione restava viva in Home Assistant finche' il filo non
+   * cadeva. Ogni `state_changed` arrivava una volta per presa vissuta, fino
+   * al telefono, per non andare da nessuna parte. */
+  for (final (come, lascia) in [
+    ('se ne va', (Cucitura c) async => c.laPaginaSeNEAndata()),
+    ('si abbandona', (Cucitura c) => c.abbandona()),
+  ]) {
+    test('la pagina che $come disdice le sue sottoscrizioni', () async {
+      await filo.apri();
+      final pagina = _PaginaFinta();
+      final cucitura = Cucitura(pagina, () => filoPronto(() => filo));
+      unawaited(cucitura.avvia());
+      await _finoA(() => pagina.arrivati.isNotEmpty);
+
+      await cucitura.dallaPagina(jsonEncode({'id': 2, 'type': 'get_states'}));
+      await cucitura.dallaPagina(
+        jsonEncode({
+          'id': 3,
+          'type': 'subscribe_events',
+          'event_type': 'state_changed',
+        }),
+      );
+      await _finoA(() => pagina.arrivati.any((uno) => uno['id'] == 3));
+      final sottoscritta = ponte.arrivati.lastWhere(
+        (uno) => uno['type'] == 'subscribe_events',
+      )['id'];
+
+      await lascia(cucitura);
+      await _finoA(
+        () => ponte.arrivati.any((uno) => uno['type'] == 'unsubscribe_events'),
+      );
+      final disdette = ponte.arrivati
+          .where((uno) => uno['type'] == 'unsubscribe_events')
+          .map((uno) => uno['subscription'])
+          .toList();
+      /* Solo la sottoscrizione: `get_states` aveva gia' finito. */
+      expect(disdette, [sottoscritta]);
+    });
+  }
+
+  test(
+    'una sottoscrizione rifiutata, o gia\' disdetta, non si ridisdice',
+    () async {
+      await filo.apri();
+      final pagina = _PaginaFinta();
+      final cucitura = Cucitura(pagina, () => filoPronto(() => filo));
+      unawaited(cucitura.avvia());
+      await _finoA(() => pagina.arrivati.isNotEmpty);
+
+      await cucitura.dallaPagina(
+        jsonEncode({
+          'id': 3,
+          'type': 'subscribe_events',
+          'event_type': 'state_changed',
+        }),
+      );
+      await _finoA(() => pagina.arrivati.any((uno) => uno['id'] == 3));
+      /* La pagina la disdice da se': passa com'e', col numero del filo. */
+      await cucitura.dallaPagina(
+        jsonEncode({'id': 4, 'type': 'unsubscribe_events', 'subscription': 3}),
+      );
+      await _finoA(() => pagina.arrivati.any((uno) => uno['id'] == 4));
+      /* Una sottoscrizione che la casa rifiuta e' una sottoscrizione mai
+     * nata. */
+      ponte.conosceGliAbbonamentiStretti = false;
+      await cucitura.dallaPagina(
+        jsonEncode({'id': 5, 'type': 'subscribe_entities'}),
+      );
+      await _finoA(() => pagina.arrivati.any((uno) => uno['id'] == 5));
+
+      final prima = ponte.arrivati
+          .where((uno) => uno['type'] == 'unsubscribe_events')
+          .length;
+      cucitura.laPaginaSeNEAndata();
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+      expect(
+        ponte.arrivati.where((uno) => uno['type'] == 'unsubscribe_events'),
+        hasLength(prima),
+      );
+    },
+  );
+
+  test('col filo caduto non si disdice niente', () async {
+    await filo.apri();
+    final pagina = _PaginaFinta();
+    final cucitura = Cucitura(pagina, () => filoPronto(() => filo));
+    unawaited(cucitura.avvia());
+    await _finoA(() => pagina.arrivati.isNotEmpty);
+    await cucitura.dallaPagina(
+      jsonEncode({
+        'id': 3,
+        'type': 'subscribe_events',
+        'event_type': 'state_changed',
+      }),
+    );
+    await _finoA(() => pagina.arrivati.any((uno) => uno['id'] == 3));
+    final prima = ponte.arrivati.length;
+    await filo.chiudi();
+    await cucitura.chiudi();
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+    expect(ponte.arrivati.length, prima);
+  });
 }
 
 Future<void> _finoA(

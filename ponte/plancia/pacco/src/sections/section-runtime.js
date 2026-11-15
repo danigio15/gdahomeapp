@@ -573,7 +573,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-IETZQSZU.js";
+} from "../../chunk-FWJDVP7V.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -104753,7 +104753,15 @@ var state89 = root[KEY93] ||= {
   /* Mentre e' vero, connect() puo' sostituire una presa aperta e muta. */
   sostituisciLaMuta: false,
   /* Le prese date per morte dalla prova del `ping`. */
-  preseMute: 0
+  preseMute: 0,
+  /* Le prese mute cambiate di fila senza che nessuna dicesse `auth_ok`:
+   * ognuna allunga l'attesa della prossima (`attesaDellaMuta`). */
+  muteDiFila: 0,
+  /* Quando si e' mandato l'ultimo `ping` di prova, e quanto gli si da' per
+   * rispondere: si allunga se le prese date per morte si ripetono. */
+  provataIl: 0,
+  attesaDelPing: 0,
+  uccisaDalPingIl: 0
 };
 var FIRST_DELAY = 2e3;
 var MAX_DELAY = 3e4;
@@ -104762,6 +104770,11 @@ var STALE_CONNECTING_MS = 8e3;
 var LEGACY_RECONNECT_DELAY_MS = 5e3;
 var STALE_OPEN_MS = 25e3;
 var FILO_GRACE_MS = 1500;
+var STALE_OPEN_MAX_MS = 5 * 60 * 1e3;
+var PROBE_QUIET_MS = 5e3;
+var PROBE_MIN_GAP_MS = 3e4;
+var PROBE_TIMEOUT_MAX_MS = 32e3;
+var PROBE_MEMORY_MS = 10 * 60 * 1e3;
 var FILO_FRESCO_MS = 1e4;
 var PROBE_TIMEOUT_MS = 8e3;
 var EVENTO_DEL_FILO = "gdahome:filo";
@@ -104780,11 +104793,16 @@ function adoptSocket(socket) {
   const legacyMessage = socket.onmessage;
   if (typeof legacyMessage === "function") {
     socket.onmessage = function ownedMessage(event) {
+      socket.__dmSentitaIl = Date.now();
       if (socket.__dmProva) {
         root.clearTimeout?.(socket.__dmProva);
         socket.__dmProva = 0;
       }
-      return legacyMessage.call(this, event);
+      try {
+        return legacyMessage.call(this, event);
+      } finally {
+        if (state89.muteDiFila && connectionUp()) state89.muteDiFila = 0;
+      }
     };
   }
   const legacyClose = socket.onclose;
@@ -104868,6 +104886,10 @@ function socketAge() {
   const nata = Number(lexicalGlobal("ws")?.__dmOpenedAt) || 0;
   return nata ? Date.now() - nata : 0;
 }
+function attesaDellaMuta(muteDiFila = 0) {
+  const volte = Math.max(0, Math.min(10, Math.floor(Number(muteDiFila) || 0)));
+  return Math.min(STALE_OPEN_MAX_MS, STALE_OPEN_MS * 2 ** volte);
+}
 function reconnectDecision({
   up,
   readyState,
@@ -104876,11 +104898,13 @@ function reconnectDecision({
   open = 1,
   sinceOpen = 0,
   filoPronto = false,
-  eager = false
+  eager = false,
+  muteDiFila = 0
 }) {
   if (up) return { retry: false, reason: "connessa" };
   if (readyState === open) {
-    if (sinceOpen >= STALE_OPEN_MS || filoPronto && sinceOpen >= FILO_GRACE_MS) {
+    const breve = filoPronto && muteDiFila === 0 && sinceOpen >= FILO_GRACE_MS;
+    if (breve || sinceOpen >= attesaDellaMuta(muteDiFila)) {
       return { retry: true, reason: "presa muta" };
     }
     return { retry: false, reason: "aspetta la casa" };
@@ -104907,7 +104931,8 @@ function attemptReconnect({ force = false, eager = false } = {}) {
     open: root.WebSocket?.OPEN ?? 1,
     sinceOpen: socketAge(),
     filoPronto: Date.now() - state89.filoProntoIl < FILO_FRESCO_MS,
-    eager
+    eager,
+    muteDiFila: state89.muteDiFila
   });
   if (!force && !decision.retry) return false;
   const connect = legacyConnect();
@@ -104916,6 +104941,7 @@ function attemptReconnect({ force = false, eager = false } = {}) {
   state89.attempts += 1;
   announceRetry();
   state89.sostituisciLaMuta = decision.reason === "presa muta";
+  if (state89.sostituisciLaMuta) state89.muteDiFila += 1;
   try {
     connect();
   } catch (_error) {
@@ -104937,6 +104963,9 @@ function verificaLaPresa() {
   if (!socket || typeof socket !== "object" || !connectionUp()) return false;
   if (socket.readyState !== socketConstant("OPEN", 1) || socket.__dmProva) return false;
   if (!socket.__dmRecoveryOwned || eIlPonteDelPannello(socket)) return false;
+  const ora8 = Date.now();
+  if (ora8 - (Number(socket.__dmSentitaIl) || 0) < PROBE_QUIET_MS) return false;
+  if (ora8 - state89.provataIl < PROBE_MIN_GAP_MS) return false;
   let id = 0;
   try {
     id = root.eval?.("msgId++");
@@ -104949,10 +104978,16 @@ function verificaLaPresa() {
   } catch (_error) {
     return false;
   }
+  state89.provataIl = ora8;
+  if (!state89.attesaDelPing || ora8 - state89.uccisaDalPingIl >= PROBE_MEMORY_MS) {
+    state89.attesaDelPing = PROBE_TIMEOUT_MS;
+  }
   socket.__dmProva = root.setTimeout?.(() => {
     socket.__dmProva = 0;
     if ((lexicalGlobal("ws") ?? root.ws) !== socket || socket.__dmSuperseded) return;
     state89.preseMute += 1;
+    state89.uccisaDalPingIl = Date.now();
+    state89.attesaDelPing = Math.min(PROBE_TIMEOUT_MAX_MS, state89.attesaDelPing * 2);
     doc?.getElementById?.("live-dot")?.classList?.remove("connected");
     socket.__dmSuperseded = true;
     try {
@@ -104961,7 +104996,7 @@ function verificaLaPresa() {
     }
     attemptReconnect({ force: true, eager: true });
     riparti(FIRST_DELAY);
-  }, PROBE_TIMEOUT_MS);
+  }, state89.attesaDelPing);
   return true;
 }
 function eIlPonteDelPannello(socket) {
@@ -104971,6 +105006,7 @@ function filoTornato() {
   state89.filoProntoIl = Date.now();
   if (connectionUp()) return verificaLaPresa();
   state89.attempts = 0;
+  state89.muteDiFila = 0;
   const fatto2 = attemptReconnect({ eager: true });
   riparti(FILO_GRACE_MS);
   return fatto2;

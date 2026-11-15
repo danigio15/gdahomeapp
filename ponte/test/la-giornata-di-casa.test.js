@@ -482,6 +482,40 @@ test("il diario: clima, riscaldamento, solare termico, auto, acqua, eventi e con
   assert.doesNotMatch(testo, /Persona 1/);
 });
 
+/* «Il processore sta alto.» Il diario guarda ogni `state_changed` della
+ * casa; per dire se la casa e' vuota passava tutta la casa — duemila entita'
+ * — a ogni cambio, anche di un sensore di temperatura. Le persone si cercano
+ * solo quando servono, e il risultato non cambia (la prova qui sopra:
+ * «Casa vuota», «Rientro», «Prima persona sveglia»). */
+test("il diario non passa tutta la casa a ogni state_changed", () => {
+  class Contata extends Map {
+    giri = 0;
+    [Symbol.iterator]() {
+      this.giri += 1;
+      return super[Symbol.iterator]();
+    }
+  }
+  const stati = new Contata();
+  for (let i = 0; i < 2000; i += 1) stati.set(`sensor.t_${i}`, st("20", {}));
+  stati.set("person.uno", st("home", {}));
+  const diario = new DiarioDellaCasa({ adesso: () => alle(7) });
+  for (let i = 0; i < 100; i += 1) {
+    const id = `sensor.t_${i}`;
+    const vecchio = stati.get(id);
+    const nuovo = st(String(21 + i), {});
+    stati.set(id, nuovo);
+    diario.cambia(id, nuovo, vecchio, stati);
+  }
+  assert.equal(stati.giri, 0, "un sensore che cambia non chiede chi c'e' in casa");
+
+  /* La persona che esce: li' si guarda, una volta. */
+  const vecchio = stati.get("person.uno");
+  const nuovo = st("not_home", {});
+  stati.set("person.uno", nuovo);
+  diario.cambia("person.uno", nuovo, vecchio, stati);
+  assert.equal(stati.giri, 1);
+});
+
 test("il diario: senza dispositivi, ogni sezione e' null", () => {
   const stati = new Map([["light.cucina", st("off")]]);
   const diario = new DiarioDellaCasa({ adesso: () => alle(12) });

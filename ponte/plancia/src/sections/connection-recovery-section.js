@@ -67,6 +67,14 @@ const state = (root[KEY] ||= {
   sostituisciLaMuta: false,
   /* Le prese date per morte dalla prova del `ping`. */
   preseMute: 0,
+  /* Le prese mute cambiate di fila senza che nessuna dicesse `auth_ok`:
+   * ognuna allunga l'attesa della prossima (`attesaDellaMuta`). */
+  muteDiFila: 0,
+  /* Quando si e' mandato l'ultimo `ping` di prova, e quanto gli si da' per
+   * rispondere: si allunga se le prese date per morte si ripetono. */
+  provataIl: 0,
+  attesaDelPing: 0,
+  uccisaDalPingIl: 0,
 });
 
 /** Prima riprova, e il tetto oltre il quale l'attesa non cresce piu'. */
@@ -87,6 +95,33 @@ export const STALE_OPEN_MS = 25000;
 /** Detto dall'app che il filo c'e', una presa muta ha ancora questo per dire
  * `auth_ok`: la cucitura lo manda appena trova il filo. */
 export const FILO_GRACE_MS = 1500;
+/* «Il processore sta alto e le entita' rispondono dopo tempo» (1.19.5, un
+ * tablet a muro sempre acceso e piu' telefoni). Ogni presa nuova, al suo
+ * `auth_ok`, rifa' tutto quello che fa un avvio: i quattro registri,
+ * `get_states` completo (un megabyte e mezzo in una casa vera) e la
+ * sottoscrizione agli stati. La 1.19.3 ha insegnato a questa sezione a
+ * cambiare una presa muta ogni venticinque secondi, e una presa collegata a
+ * ogni `ping` che non tornava in otto: in una casa che risponde piano —
+ * proprio quando e' carica — voleva dire una presa nuova, e un avvio intero,
+ * a ogni giro. Una plancia aperta tutto il giorno arrivava a due avvii al
+ * minuto (`tests/la-plancia-non-si-ricollega-a-raffica.test.js`). Adesso:
+ *
+ *  - una presa muta cambiata e subito sostituita da un'altra muta allunga
+ *    l'attesa della prossima, fino a cinque minuti, e torna da capo al primo
+ *    `auth_ok`;
+ *  - una presa che ha appena parlato e' viva: il `ping` non serve, e non si
+ *    prova piu' di una volta ogni trenta secondi;
+ *  - se le prese date per morte dal `ping` si ripetono, il `ping` ha piu'
+ *    tempo per tornare: quella casa e' lenta, non morta. */
+/** Il tetto dell'attesa di una presa muta, allungata di volta in volta. */
+export const STALE_OPEN_MAX_MS = 5 * 60 * 1000;
+/** Una presa che ha ricevuto qualcosa da cosi' poco e' viva: niente `ping`. */
+export const PROBE_QUIET_MS = 5000;
+/** Due `ping` di prova non stanno piu' vicini di cosi'. */
+export const PROBE_MIN_GAP_MS = 30000;
+/** Fin dove si allunga l'attesa del `pong`, e per quanto se lo ricorda. */
+export const PROBE_TIMEOUT_MAX_MS = 32000;
+export const PROBE_MEMORY_MS = 10 * 60 * 1000;
 /** Per quanto vale «il filo e' tornato» detto dall'app. */
 export const FILO_FRESCO_MS = 10000;
 /** Quanto si aspetta una risposta al `ping` di prova: piu' dei sei secondi
@@ -136,11 +171,17 @@ function adoptSocket(socket) {
   const legacyMessage = socket.onmessage;
   if (typeof legacyMessage === "function") {
     socket.onmessage = function ownedMessage(event) {
+      socket.__dmSentitaIl = Date.now();
       if (socket.__dmProva) {
         root.clearTimeout?.(socket.__dmProva);
         socket.__dmProva = 0;
       }
-      return legacyMessage.call(this, event);
+      try {
+        return legacyMessage.call(this, event);
+      } finally {
+        /* Dentro: le prese mute di prima non contano piu'. */
+        if (state.muteDiFila && connectionUp()) state.muteDiFila = 0;
+      }
     };
   }
   const legacyClose = socket.onclose;
@@ -248,6 +289,14 @@ function socketAge() {
  *
  * Separata dal resto perche' e' l'unico punto dove si decide qualcosa: il
  * contorno legge il documento e guarda l'orologio, questa no. */
+/* Quanto si aspetta una presa muta prima di cambiarla: venticinque secondi
+ * la prima volta, il doppio a ogni muta cambiata di fila, al piu' cinque
+ * minuti. */
+export function attesaDellaMuta(muteDiFila = 0) {
+  const volte = Math.max(0, Math.min(10, Math.floor(Number(muteDiFila) || 0)));
+  return Math.min(STALE_OPEN_MAX_MS, STALE_OPEN_MS * 2 ** volte);
+}
+
 export function reconnectDecision({
   up,
   readyState,
@@ -257,6 +306,7 @@ export function reconnectDecision({
   sinceOpen = 0,
   filoPronto = false,
   eager = false,
+  muteDiFila = 0,
 }) {
   if (up) return { retry: false, reason: "connessa" };
   /* Aperta e senza `auth_ok`. Di solito e' la cucitura dell'app che aspetta
@@ -266,7 +316,11 @@ export function reconnectDecision({
    * muta, e si cambia. Prima qui si diceva sempre «c'e' gia' una presa», e
    * una presa cosi' teneva il pallino rosso per sempre. */
   if (readyState === open) {
-    if (sinceOpen >= STALE_OPEN_MS || (filoPronto && sinceOpen >= FILO_GRACE_MS)) {
+    /* Col filo pronto si cambia dopo un attimo, ma una volta sola: se
+     * anche quella nuova tace, non e' il filo che manca, e si aspetta come
+     * le altre. */
+    const breve = filoPronto && muteDiFila === 0 && sinceOpen >= FILO_GRACE_MS;
+    if (breve || sinceOpen >= attesaDellaMuta(muteDiFila)) {
       return { retry: true, reason: "presa muta" };
     }
     return { retry: false, reason: "aspetta la casa" };
@@ -308,6 +362,7 @@ export function attemptReconnect({ force = false, eager = false } = {}) {
     sinceOpen: socketAge(),
     filoPronto: Date.now() - state.filoProntoIl < FILO_FRESCO_MS,
     eager,
+    muteDiFila: state.muteDiFila,
   });
   if (!force && !decision.retry) return false;
   const connect = legacyConnect();
@@ -316,6 +371,7 @@ export function attemptReconnect({ force = false, eager = false } = {}) {
   state.attempts += 1;
   announceRetry();
   state.sostituisciLaMuta = decision.reason === "presa muta";
+  if (state.sostituisciLaMuta) state.muteDiFila += 1;
   try {
     connect();
   } catch (_error) {
@@ -360,6 +416,10 @@ export function verificaLaPresa() {
   if (!socket || typeof socket !== "object" || !connectionUp()) return false;
   if (socket.readyState !== socketConstant("OPEN", 1) || socket.__dmProva) return false;
   if (!socket.__dmRecoveryOwned || eIlPonteDelPannello(socket)) return false;
+  const ora = Date.now();
+  /* Ha appena parlato: e' viva, e un `ping` non direbbe niente di piu'. */
+  if (ora - (Number(socket.__dmSentitaIl) || 0) < PROBE_QUIET_MS) return false;
+  if (ora - state.provataIl < PROBE_MIN_GAP_MS) return false;
   let id = 0;
   try {
     id = root.eval?.("msgId++");
@@ -372,10 +432,19 @@ export function verificaLaPresa() {
   } catch (_error) {
     return false;
   }
+  state.provataIl = ora;
+  /* Una presa data per morta da poco, e adesso un'altra: la casa risponde
+   * piano, e il `pong` ha il doppio del tempo. Dopo un po' senza, si torna
+   * all'attesa di sempre. */
+  if (!state.attesaDelPing || ora - state.uccisaDalPingIl >= PROBE_MEMORY_MS) {
+    state.attesaDelPing = PROBE_TIMEOUT_MS;
+  }
   socket.__dmProva = root.setTimeout?.(() => {
     socket.__dmProva = 0;
     if ((lexicalGlobal("ws") ?? root.ws) !== socket || socket.__dmSuperseded) return;
     state.preseMute += 1;
+    state.uccisaDalPingIl = Date.now();
+    state.attesaDelPing = Math.min(PROBE_TIMEOUT_MAX_MS, state.attesaDelPing * 2);
     /* Il pallino dice com'e', subito: la presa nuova lo riaccende col suo
      * `auth_ok`. */
     doc?.getElementById?.("live-dot")?.classList?.remove("connected");
@@ -385,7 +454,7 @@ export function verificaLaPresa() {
     } catch (_error) {}
     attemptReconnect({ force: true, eager: true });
     riparti(FIRST_DELAY);
-  }, PROBE_TIMEOUT_MS);
+  }, state.attesaDelPing);
   return true;
 }
 
@@ -407,6 +476,9 @@ export function filoTornato() {
   state.filoProntoIl = Date.now();
   if (connectionUp()) return verificaLaPresa();
   state.attempts = 0;
+  /* Un filo nuovo: la presa muta di adesso puo' essere sua, e si cambia
+   * subito come la prima volta. */
+  state.muteDiFila = 0;
   const fatto = attemptReconnect({ eager: true });
   riparti(FILO_GRACE_MS);
   return fatto;

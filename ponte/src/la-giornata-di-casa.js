@@ -791,11 +791,18 @@ export class DiarioDellaCasa {
     const prima = vecchio ? String(vecchio.state ?? "") : null;
     const classe = nuovo.attributes?.device_class;
     const h = new Date(ora).getHours();
-    const persone = [...stati].filter(([uno]) => dominioDi(uno) === "person");
-    const vuota = (cambiata) =>
-      persone.length
+    /* Le persone si cercano solo quando servono — un sensore di movimento al
+     * mattino, una persona che entra o esce — e una volta sola. Prima si
+     * passava tutta la casa a ogni `state_changed`: con duemila entita' e
+     * cinquanta cambi al secondo, centomila confronti al secondo per una
+     * risposta che quasi mai serviva. */
+    let persone = null;
+    const vuota = (cambiata) => {
+      persone ??= [...stati].filter(([uno]) => dominioDi(uno) === "person");
+      return persone.length
         ? persone.every(([uno, st]) => (uno === id ? cambiata : st.state) !== "home")
         : null;
+    };
 
     if (dominio === "binary_sensor" && dopo === "on" && prima === "off") {
       if (["door", "garage_door", "opening"].includes(classe)) g.conti.porte += 1;

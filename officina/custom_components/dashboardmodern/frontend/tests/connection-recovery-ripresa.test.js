@@ -141,7 +141,8 @@ connect(); // l'avvio del guscio, prima delle sezioni
 prese[0].entra();
 
 const recupero = await import("../src/sections/connection-recovery-section.js");
-const { EVENTO_DEL_FILO, FILO_GRACE_MS, PROBE_TIMEOUT_MS, STALE_OPEN_MS } = recupero;
+const { EVENTO_DEL_FILO, FILO_GRACE_MS, PROBE_MIN_GAP_MS, PROBE_TIMEOUT_MS, STALE_OPEN_MS } =
+  recupero;
 
 const ultima = () => prese.at(-1);
 const verde = () => classi.has("connected");
@@ -235,7 +236,10 @@ test("al rientro una presa che sembra collegata si prova, e se non risponde si r
   assert.equal(prese.length, quante);
   assert.equal(verde(), true);
 
-  // Morta: non risponde. Il pallino si spegne e la presa si rifa'.
+  // Morta: non risponde. Il pallino si spegne e la presa si rifa'. (Il
+  // secondo `ping` parte solo passato il tempo fra due prove: una presa
+  // appena provata, o che ha appena parlato, e' viva.)
+  passano(PROBE_MIN_GAP_MS);
   succede(EVENTO_DEL_FILO);
   assert.ok(viva.mandati.filter((uno) => uno.type === "ping").length >= 2);
   passano(PROBE_TIMEOUT_MS + 10);

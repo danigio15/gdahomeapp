@@ -117,6 +117,11 @@ class Cucitura {
   final Future<Filo?> Function() _trovaIlFilo;
 
   final _numeri = <int, int>{};
+
+  /* Le sottoscrizioni della pagina ancora vive dall'altra parte, coi numeri
+   * del filo: quando la pagina se ne va si disdicono (vedi [dimenticaTutto]).
+   */
+  final _sottoscritte = <int>{};
   final _finita = Completer<void>();
 
   Filo? _filo;
@@ -163,21 +168,30 @@ class Cucitura {
       if (mio != null) {
         messaggio['subscription'] = mio;
         filo.dimentica(mio);
+        _sottoscritte.remove(mio);
       }
     }
 
     try {
       late final int mio;
+      final sottoscrive = continua('$tipo');
       mio = filo.instrada(messaggio, (risposta) {
         _mandaByte(risposta.conNumero(suo));
         if (tipo == 'dashboardmodern/config/set') {
           _laPlanciaHaScritto.add('${messaggio['profile'] ?? 'primary'}');
         }
-        if (continua('$tipo')) return;
+        if (sottoscrive) {
+          /* Rifiutata: dall'altra parte non c'e' niente da disdire. */
+          if (risposta.tipo == 'result' && risposta.successo == false) {
+            _sottoscritte.remove(mio);
+          }
+          return;
+        }
         filo.dimentica(mio);
         _numeri.remove(suo);
       });
       _numeri[suo] = mio;
+      if (sottoscrive) _sottoscritte.add(mio);
     } on FiloCaduto {
       await chiudi();
     }
@@ -260,6 +274,18 @@ class Cucitura {
     if (!_finita.isCompleted) _finita.complete();
   }
 
+  /// Smette di instradare, e disdice le sottoscrizioni della pagina.
+  ///
+  /// «Il processore sta alto e le entita' rispondono dopo tempo», da un tablet
+  /// a muro sempre acceso. Il runtime della pagina, a ogni presa nuova —
+  /// ricaricata, o rifatta dalla sezione che la ricollega
+  /// (`connection-recovery-section.js`) — rifa' `subscribe_events`. Qui si
+  /// smetteva solo di consegnare: la sottoscrizione restava viva in Home
+  /// Assistant finche' il filo non cadeva, e ogni `state_changed` arrivava una
+  /// volta per ogni presa vissuta — Home Assistant che lo scrive, il ponte che
+  /// lo cifra, il telefono che lo decifra e lo legge — per non andare da
+  /// nessuna parte. Su un filo che resta su per giorni, decine di volte. Con
+  /// il filo caduto non serve: Home Assistant le ha gia' dimenticate.
   void dimenticaTutto() {
     unawaited(_guardaIlFilo?.cancel());
     _guardaIlFilo = null;
@@ -268,7 +294,17 @@ class Cucitura {
       for (final mio in _numeri.values) {
         filo.dimentica(mio);
       }
+      if (filo.dentro) {
+        for (final mio in _sottoscritte) {
+          unawaited(
+            filo
+                .chiedi({'type': 'unsubscribe_events', 'subscription': mio})
+                .then<void>((_) {}, onError: (Object _) {}),
+          );
+        }
+      }
     }
     _numeri.clear();
+    _sottoscritte.clear();
   }
 }
