@@ -837,7 +837,11 @@ test("chi amministra non mette programmi in Home Assistant, e non la spegne", as
       t.manda({ id: 7, type: "call_service", domain: "homeassistant", service: "restart" });
       t.manda({ id: 8, type: "lovelace/resources" });
       t.manda({ id: 9, type: "frontend/set_user_data", key: "x", value: 1 });
-      for (const id of [1, 2, 3, 4, 5]) {
+      /* Il Marketplace, che e' HACS dentro Home Assistant: e il suo avviso,
+       * che e' un consenso e si da' solo da `ponte/marketplace/accetta`. */
+      t.manda({ id: 10, type: "marketplace/warning/accept" });
+      t.manda({ id: 11, type: "marketplace/repository/install", repository: "123" });
+      for (const id of [1, 2, 3, 4, 5, 10, 11]) {
         assert.equal((await laRisposta(t, id)).error.code, "unauthorized", `${chi}: il ${id}`);
       }
       for (const id of [6, 7, 8, 9]) {

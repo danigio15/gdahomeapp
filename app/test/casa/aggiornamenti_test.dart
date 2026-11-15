@@ -144,4 +144,37 @@ void main() {
       );
     },
   );
+  test('il no del Marketplace arriva con la sua chiave, e l\'avviso si '
+      'accetta solo con «ho letto»', () async {
+    ponte.ilMarketplace = true;
+    ponte.aggiornamenti.add({
+      'entita': 'update.power_flow_card_plus_update',
+      'nome': 'Power Flow Card Plus',
+      'installabile': true,
+    });
+    final sportello = GliAggiornamenti(filo);
+    Object? preso;
+    try {
+      await sportello.installa('update.power_flow_card_plus_update');
+    } catch (errore) {
+      preso = errore;
+    }
+    expect(preso, isA<ComandoRifiutato>());
+    expect((preso! as ComandoRifiutato).chiave, chiaveDelMarketplace);
+    expect(eIlNoDelMarketplace(preso), isTrue);
+    expect(eIlNoDelMarketplace(const ComandoRifiutato('altro')), isFalse);
+
+    final avviso = await sportello.avvisoDelMarketplace('it');
+    expect(avviso.disponibile, isTrue);
+    expect(avviso.accettato, isFalse);
+    expect(avviso.titolo, 'Prima di installare dal Marketplace');
+    expect(avviso.rischi, ['Collegarsi a internet']);
+    expect(ponte.accettazioni, isEmpty);
+
+    final dopo = await sportello.accettaLAvvisoDelMarketplace('it');
+    expect(dopo.accettato, isTrue);
+    expect(ponte.accettazioni.single['ho_letto'], isTrue);
+    await sportello.installa('update.power_flow_card_plus_update');
+    expect(ponte.installati, ['update.power_flow_card_plus_update']);
+  });
 }

@@ -226,6 +226,12 @@ export const ALLOWED_MESSAGE_TYPES = Object.freeze([
   // chi amministra (ponte/src/aggiornamenti.js).
   "ponte/aggiornamenti/riavvio",
   "ponte/aggiornamenti/riavvia",
+  // L'avviso del Marketplace per l'utente di GdAHome: leggerlo, e accettarlo
+  // quando chi amministra l'ha letto e ha detto si' (ponte/src/
+  // l-avviso-del-marketplace.js). `marketplace/warning/accept` diretto no: la
+  // dogana del ponte non lo lascia passare.
+  "ponte/marketplace/avviso",
+  "ponte/marketplace/accetta",
   // I fornitori di energia, che li tiene il ponte di GdAHome
   // (`ponte/src/fornitori.js`): vederli, collegarli, rileggerli e
   // scollegarli — tutto solo per chi amministra la casa.

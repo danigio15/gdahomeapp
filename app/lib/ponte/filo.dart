@@ -843,6 +843,7 @@ class Filo {
       ComandoRifiutato(
         messaggio ?? 'Home Assistant ha rifiutato il comando',
         codice: codice,
+        chiave: male is Map ? male['translation_key']?.toString() : null,
       ),
     );
   }
@@ -931,6 +932,7 @@ class Filo {
             (male is Map ? male['message'] as String? : null) ??
                 'Home Assistant ha rifiutato il comando',
             codice: male is Map ? male['code'] as String? : null,
+            chiave: male is Map ? male['translation_key']?.toString() : null,
           ),
         );
         return;

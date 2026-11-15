@@ -11411,7 +11411,10 @@ function onClick(event) {
       .catch((errore) => {
         aggiornamento.disabled = false;
         aggiornamento.textContent = parola;
-        if (clean(errore?.message || errore)) diIlRifiuto(errore);
+        /* Riprovare, dopo l'avviso accettato, e' premere di nuovo lo
+         * stesso tasto, tornato com'era. */
+        if (clean(errore?.message || errore))
+          diIlRifiuto(errore, { riprova: () => aggiornamento.click?.() });
       });
     return;
   }

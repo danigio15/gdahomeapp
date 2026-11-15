@@ -38,6 +38,7 @@ import '../casa/fuori.dart';
 import '../casa/collegamento.dart';
 import '../casa/segnalazioni.dart' show spiegaLErrore;
 import '../parole.dart';
+import '../ponte/errori.dart';
 import '../ponte/filo.dart';
 import 'il_changelog.dart';
 import '../vestito/marchio.dart';
@@ -123,6 +124,20 @@ class _SchermataDegliAggiornamentiState
   /* Home Assistant e' stato mandato a riavviare da qui. Da li' in poi il filo
    * cade, e la schermata lo racconta invece di mostrare un errore. */
   bool _riavviata = false;
+
+  /* Il Marketplace di Home Assistant che ha detto no.
+   *
+   * Da Home Assistant 2026.11 il Marketplace installa solo per chi ha
+   * accettato il suo avviso, utente per utente, e dall'app installa GdAHome
+   * con un utente suo. Al posto della riga rossa qui si mostra l'avviso, e a
+   * chi amministra la casa il tasto per accettarlo anche per GdAHome: lo
+   * preme una persona che l'ha letto, e solo allora si riprova. */
+  UnAggiornamento? _fermoAlMarketplace;
+  AvvisoDelMarketplace? _avviso;
+  bool _avvisoSiLegge = false;
+  bool _nonAmministra = false;
+  bool _accettando = false;
+  String? _perCheNonSiAccetta;
 
   Filo? get _presa {
     final filo = widget.collegamento.filo;
@@ -337,6 +352,18 @@ class _SchermataDegliAggiornamentiState
        * resterebbe spenta su «in corso» per sempre, e l'unico modo di
        * riprovare sarebbe uscire e rientrare. */
       if (!mounted) return;
+      if (eIlNoDelMarketplace(errore)) {
+        setState(() {
+          _appenaPartiti.remove(quale.entita);
+          _perche = null;
+          _fermoAlMarketplace = quale;
+          _avviso = null;
+          _nonAmministra = false;
+          _perCheNonSiAccetta = null;
+        });
+        unawaited(_leggiLAvviso(spiegaLErrore(errore)));
+        return;
+      }
       setState(() {
         _appenaPartiti.remove(quale.entita);
         _perche = spiegaLErrore(errore);
@@ -345,6 +372,94 @@ class _SchermataDegliAggiornamentiState
     }
     await _carica(forza: true);
   }
+
+  /* L'avviso del Marketplace, chiesto al ponte. Una lettura: non accetta
+   * niente. Chi non amministra se lo sente dire dal ponte (`unauthorized`), e
+   * allora niente tasto; un ponte di prima non conosce il comando, e resta la
+   * frase rossa di sempre. */
+  Future<void> _leggiLAvviso(String ilNo) async {
+    final filo = _presa;
+    if (filo == null) {
+      setState(() {
+        _fermoAlMarketplace = null;
+        _perche = ilNo;
+      });
+      return;
+    }
+    setState(() {
+      _avvisoSiLegge = true;
+      _perCheNonSiAccetta = null;
+    });
+    try {
+      final avviso = await GliAggiornamenti(filo)
+          .avvisoDelMarketplace(laLingua.codice);
+      if (!mounted) return;
+      setState(() => _avviso = avviso);
+    } on ComandoRifiutato catch (errore) {
+      if (!mounted) return;
+      setState(() {
+        if (errore.codice == 'unauthorized') {
+          _nonAmministra = true;
+        } else {
+          _fermoAlMarketplace = null;
+          _perche = ilNo;
+        }
+      });
+    } catch (errore) {
+      if (!mounted) return;
+      setState(() => _perCheNonSiAccetta = spiegaLErrore(errore));
+    } finally {
+      if (mounted) setState(() => _avvisoSiLegge = false);
+    }
+  }
+
+  /* «Ho letto: accetto anche per GdAHome». E' l'unico posto dell'app da cui
+   * parte l'accettazione, e parte solo da questo tocco. Poi si riprova
+   * l'installazione che era stata fermata. */
+  Future<void> _accettaLAvviso() async {
+    final filo = _presa;
+    final quale = _fermoAlMarketplace;
+    if (filo == null || quale == null || _accettando) return;
+    setState(() {
+      _accettando = true;
+      _perCheNonSiAccetta = null;
+    });
+    try {
+      final dopo = await GliAggiornamenti(filo)
+          .accettaLAvvisoDelMarketplace(laLingua.codice);
+      if (!mounted) return;
+      if (!dopo.accettato) {
+        setState(
+          () => _perCheNonSiAccetta = inLingua(
+            it:
+                'Home Assistant non lo risulta ancora accettato. Riprova fra '
+                'poco.',
+            en:
+                'Home Assistant does not show it as accepted yet. Try again '
+                'in a moment.',
+          ),
+        );
+        return;
+      }
+      setState(() {
+        _fermoAlMarketplace = null;
+        _avviso = null;
+      });
+    } catch (errore) {
+      if (!mounted) return;
+      setState(() => _perCheNonSiAccetta = spiegaLErrore(errore));
+      return;
+    } finally {
+      if (mounted) setState(() => _accettando = false);
+    }
+    await _installa(quale);
+  }
+
+  void _chiudiIlMarketplace() => setState(() {
+    _fermoAlMarketplace = null;
+    _avviso = null;
+    _perCheNonSiAccetta = null;
+  });
 
   Future<void> _riavvia() async {
     if (!await _sicuro(_domandaDelRiavvio())) return;
@@ -467,6 +582,21 @@ class _SchermataDegliAggiornamentiState
             if (_perche != null) ...[
               const SizedBox(height: 12),
               _Avviso(_perche!),
+            ],
+            if (_fermoAlMarketplace != null) ...[
+              const SizedBox(height: 12),
+              _IlMarketplace(
+                nome: _fermoAlMarketplace!.nome,
+                avviso: _avviso,
+                siLegge: _avvisoSiLegge,
+                nonAmministra: _nonAmministra,
+                accettando: _accettando,
+                perche: _perCheNonSiAccetta,
+                quandoAccetta: _accettaLAvviso,
+                quandoRiprova: () => _installa(_fermoAlMarketplace!),
+                quandoChiude: _chiudiIlMarketplace,
+                quandoApre: _apriDiFuori,
+              ),
             ],
             if (_fila.isNotEmpty) ...[
               const SizedBox(height: 18),
@@ -1112,6 +1242,237 @@ class _Avviso extends StatelessWidget {
               testo,
               style: Theme.of(context).textTheme.bodySmall
                   ?.copyWith(color: colori.onErrorContainer),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Il Marketplace di Home Assistant che vuole il suo avviso accettato.
+///
+/// Al posto della riga rossa: l'avviso da leggere — quello di Home Assistant,
+/// come lo da' il ponte — cosa vuol dire accettarlo per GdAHome, e il tasto.
+/// Il tasto c'e' solo per chi amministra la casa, come in Home Assistant; chi
+/// non amministra legge perche' non si installa, e a chi chiedere.
+class _IlMarketplace extends StatelessWidget {
+  const _IlMarketplace({
+    required this.nome,
+    required this.avviso,
+    required this.siLegge,
+    required this.nonAmministra,
+    required this.accettando,
+    required this.perche,
+    required this.quandoAccetta,
+    required this.quandoRiprova,
+    required this.quandoChiude,
+    required this.quandoApre,
+  });
+
+  final String nome;
+  final AvvisoDelMarketplace? avviso;
+  final bool siLegge;
+  final bool nonAmministra;
+  final bool accettando;
+  final String? perche;
+  final VoidCallback quandoAccetta;
+  final VoidCallback quandoRiprova;
+  final VoidCallback quandoChiude;
+  final Future<void> Function(String dove) quandoApre;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+    final quale = avviso;
+    final giaAccettato = quale != null && quale.accettato;
+    final siAccetta = quale != null && quale.disponibile && !quale.accettato;
+
+    Widget elenco(String titolo, List<String> righe) => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 10),
+        Text(
+          titolo,
+          style: testi.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+        ),
+        for (final riga in righe)
+          Padding(
+            padding: const EdgeInsets.only(top: 3),
+            child: Text('•  $riga', style: testi.bodySmall),
+          ),
+      ],
+    );
+
+    return Scheda(
+      key: const ValueKey('il-marketplace'),
+      colore: colori.tertiaryContainer.withValues(alpha: 0.45),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.storefront_rounded, color: colori.tertiary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  inLingua(
+                    it: '$nome: il Marketplace vuole il suo avviso accettato',
+                    en: '$nome: the Marketplace wants its warning accepted',
+                  ),
+                  style: testi.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            inLingua(
+              it:
+                  'Il Marketplace di Home Assistant installa e aggiorna solo '
+                  'per chi ha letto e accettato il suo avviso, utente per '
+                  'utente.',
+              en:
+                  'The Home Assistant Marketplace only installs and updates '
+                  'for people who read and accepted its warning, user by user.',
+            ),
+            style: testi.bodySmall,
+          ),
+          if (siLegge) ...[
+            const SizedBox(height: 12),
+            const LinearProgressIndicator(),
+          ],
+          if (quale != null && quale.titolo.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Scheda(
+              key: const ValueKey('il-testo-dell-avviso'),
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    quale.titolo,
+                    style: testi.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  if (quale.intro.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(quale.intro, style: testi.bodySmall),
+                  ],
+                  if (quale.rischi.isNotEmpty)
+                    elenco(quale.rischiTitolo, quale.rischi),
+                  if (quale.attenzione.isNotEmpty)
+                    elenco(quale.attenzioneTitolo, quale.attenzione),
+                  if (quale.pagina.isNotEmpty)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: () => quandoApre(quale.pagina),
+                        icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                        label: Text(
+                          inLingua(
+                            it: 'La pagina ufficiale del Marketplace',
+                            en: 'The official Marketplace page',
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+          if (siAccetta) ...[
+            const SizedBox(height: 12),
+            Text(
+              inLingua(
+                it:
+                    'GdAHome installa con un suo utente di Home Assistant; '
+                    'accettando, permetti a GdAHome di installare e aggiornare '
+                    'dal Marketplace.',
+                en:
+                    'GdAHome installs with its own Home Assistant user; by '
+                    'accepting, you allow GdAHome to install and update from '
+                    'the Marketplace.',
+              ),
+              style: testi.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 10),
+            FilledButton.icon(
+              key: const ValueKey('accetta-anche-per-gdahome'),
+              onPressed: accettando ? null : quandoAccetta,
+              icon: accettando
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.check_rounded),
+              label: Text(
+                inLingua(
+                  it: 'Ho letto: accetto anche per GdAHome',
+                  en: 'I have read it: I accept for GdAHome too',
+                ),
+              ),
+            ),
+          ],
+          if (giaAccettato) ...[
+            const SizedBox(height: 12),
+            Text(
+              inLingua(
+                it: 'Per GdAHome adesso risulta accettato: puoi riprovare.',
+                en: 'For GdAHome it now shows as accepted: you can try again.',
+              ),
+              style: testi.bodySmall,
+            ),
+            const SizedBox(height: 8),
+            FilledButton(
+              onPressed: quandoRiprova,
+              child: Text(inLingua(it: 'Riprova', en: 'Try again')),
+            ),
+          ],
+          if (quale != null && !quale.disponibile) ...[
+            const SizedBox(height: 12),
+            Text(
+              inLingua(
+                it:
+                    'In questa casa il Marketplace non risulta caricato: '
+                    'installalo da Home Assistant con il tuo utente.',
+                en:
+                    'The Marketplace does not seem to be loaded in this home: '
+                    'install it from Home Assistant with your user.',
+              ),
+              style: testi.bodySmall,
+            ),
+          ],
+          if (nonAmministra) ...[
+            const SizedBox(height: 12),
+            Text(
+              key: const ValueKey('il-marketplace-non-amministra'),
+              inLingua(
+                it:
+                    'Dall\'app installa GdAHome, con un suo utente di Home '
+                    'Assistant, e accettare l\'avviso anche per lui può solo '
+                    'chi amministra la casa. Chiedilo a chi amministra, oppure '
+                    'installa da Home Assistant con il tuo utente.',
+                en:
+                    'From the app GdAHome installs, with its own Home Assistant '
+                    'user, and only someone who manages the home can accept the '
+                    'warning for it too. Ask them, or install from Home '
+                    'Assistant with your own user.',
+              ),
+              style: testi.bodySmall,
+            ),
+          ],
+          if (perche != null) ...[const SizedBox(height: 10), _Avviso(perche!)],
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: quandoChiude,
+              child: Text(inLingua(it: 'Chiudi', en: 'Close')),
             ),
           ),
         ],
