@@ -8181,4 +8181,8 @@ export default Object.freeze({
   "What is in this tab": "ما في هذا التبويب",
   "Where do I start": "من أين أبدأ",
   "Windows and shutters.": "النوافذ والستائر.",
+  "colour furnished plan: walls, windows and furniture read from the colours": "مخطط مؤثث بالألوان: الجدران والنوافذ والأثاث مقروءة من الألوان",
+  "Furniture from the plan": "أثاث من المخطط",
+  "Recognised in the plan: remove the wrong ones. In Casa 3D, with «Furnish», you move and turn them like the others.": "تم التعرف عليها في المخطط: احذف الخاطئ منها. في Casa 3D، باستخدام «تأثيث»، يمكنك نقلها وتدويرها مثل غيرها.",
+  "Removed ${n} icons and labels over the plan and rebuilt what was underneath: check the walls": "أزلت ${n} من الأيقونات والتسميات فوق المخطط وأعدت بناء ما تحتها: تحقّق من الجدران",
 });

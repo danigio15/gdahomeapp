@@ -8266,4 +8266,8 @@ export default Object.freeze({
   "What is in this tab": "O que há nesta aba",
   "Where do I start": "Por onde começo",
   "Windows and shutters.": "Janelas e persianas.",
+  "colour furnished plan: walls, windows and furniture read from the colours": "planta mobiliada a cores: paredes, janelas e móveis lidos a partir das cores",
+  "Furniture from the plan": "Móveis da planta",
+  "Recognised in the plan: remove the wrong ones. In Casa 3D, with «Furnish», you move and turn them like the others.": "Reconhecidos na planta: remove os errados. Na Casa 3D, com «Mobilar», moves e rodas como os outros.",
+  "Removed ${n} icons and labels over the plan and rebuilt what was underneath: check the walls": "Removidos ${n} ícones e etiquetas sobre a planta e reconstruído o que estava por baixo: verifica as paredes",
 });

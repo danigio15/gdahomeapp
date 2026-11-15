@@ -8251,4 +8251,8 @@ export default Object.freeze({
   "What is in this tab": "Что есть на этой вкладке",
   "Where do I start": "С чего начать",
   "Windows and shutters.": "Окна и жалюзи.",
+  "colour furnished plan: walls, windows and furniture read from the colours": "цветной план с мебелью: стены, окна и мебель распознаны по цветам",
+  "Furniture from the plan": "Мебель с плана",
+  "Recognised in the plan: remove the wrong ones. In Casa 3D, with «Furnish», you move and turn them like the others.": "Распознано на плане: удалите неверное. В Casa 3D в режиме «Обставить» их можно двигать и поворачивать, как остальные.",
+  "Removed ${n} icons and labels over the plan and rebuilt what was underneath: check the walls": "Удалено ${n} значков и подписей поверх плана, то, что было под ними, восстановлено: проверьте стены",
 });

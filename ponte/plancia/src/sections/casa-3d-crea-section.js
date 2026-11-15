@@ -48,19 +48,24 @@ import {
   posaDiRipiego,
   riprendiIlPiano,
 } from "../core/crea-casa.js";
+import { arrediDallaPianta } from "../core/arredi-dalla-pianta.js";
 import {
+  CARTA_PULITA,
   PASSO,
   SPESSORE_DEL_RENDER,
+  conMargine,
   grigliaDallaFoto,
   inchiostro,
   leggiIlRender,
   prospettiva,
   raddrizza,
   riconosciDaFoto,
+  margineDellaPianta,
   ritaglioDellaFoto,
   scalaDaiMuri,
   scalaScritta,
   stimaInclinazione,
+  togliISovrapposti,
 } from "../core/pianta-da-foto.js";
 import { focaleDallaFoto } from "../core/la-focale-della-foto.js";
 import {
@@ -930,6 +935,16 @@ function disegnaPianta() {
       `<div class="c3c-nome-st" style="left:${x}px;top:${y}px">${S.fuori.has(s.id) ? "🌳 " : ""}${esc(nomeDi(s.id))}<i>${esc(numero(s.area))} m²${nf ? ` · 📷 ${nf}` : ""}</i></div>`,
     );
   }
+  /* gli arredi letti nella pianta arredata, dove sono */
+  if (S.passo === P.stanze)
+    for (const a of (S.arredi || []).filter((a) => a.daPianta)) {
+      const [x, y] = aSchermo(a.x / PASSO - x0, a.y / PASSO - y0),
+        V = ARREDI_DELLE_FOTO[a.k];
+      sopra.insertAdjacentHTML(
+        "beforeend",
+        `<div class="c3c-arr-pianta" style="left:${x}px;top:${y}px" title="${esc(V ? due(V.nome) : a.k)}">${V?.icona || "📦"}</div>`,
+      );
+    }
   if (S.passo === P.dispositivi || S.passo === P.fine)
     for (const d of tuttiIDispositivi()) {
       const [x, y] = aSchermo(d.x / PASSO - x0, d.y / PASSO - y0);
@@ -1195,7 +1210,9 @@ function pPlanimetria() {
       ${S.lavoro ? `<div class="c3c-lavoro">⏳ ${esc(S.lavoro)}</div>` : ""}
       ${S.avviso ? `<div class="c3c-lavoro">⚠️ ${esc(S.avviso)}${S.dettaglio ? `<small class="c3c-dettaglio" translate="no">${esc(S.dettaglio)}</small>` : ""}</div>` : ""}
       ${dwgScelta()}
-      ${S.dritta && !S.dwg ? nota(`✓ ${esc(t("Raddrizzata di", "Straightened by"))} ${esc(numero(Math.abs(S.angolo)))}°${S.prospettiva ? ` · ${esc(t("prospettiva corretta", "perspective corrected"))}` : ""} · ${S.dritta.width}×${S.dritta.height} px`) : ""}`,
+      ${S.dritta && !S.dwg ? nota(`✓ ${esc(t("Raddrizzata di", "Straightened by"))} ${esc(numero(Math.abs(S.angolo)))}°${S.prospettiva ? ` · ${esc(t("prospettiva corretta", "perspective corrected"))}` : ""} · ${S.dritta.width}×${S.dritta.height} px`) : ""}
+      ${S.dritta && !S.dwg && S.arredata ? nota(`✓ ${esc(t("pianta arredata a colori: muri, finestre e arredi letti dai colori", "colour furnished plan: walls, windows and furniture read from the colours"))}`) : ""}
+      ${S.dritta && !S.dwg && S.sovrapposti ? notaDelleIcone(S.sovrapposti) : ""}`,
     ) +
     scheda(
       `✏️ <b>${esc(t("Non hai una planimetria?", "No floor plan?"))}</b>`,
@@ -1355,7 +1372,35 @@ function pStanze() {
         )
         .join("")}</div>
       ${nota(esc(t("🌳 = è fuori casa (cortile, balcone): le sue aperture diventano finestre.", "🌳 = it's outside (yard, balcony): its openings become windows.")))}`,
-    ) + avanti()
+    ) +
+    arrediDellaPianta() +
+    avanti()
+  );
+}
+
+/* Le icone tolte da sopra la pianta (togliISovrapposti): lo si dice, perche'
+ * quello che c'era sotto e' ricostruito e va guardato. */
+function notaDelleIcone(n) {
+  return nota(
+    `✓ ${esc(t(`Tolte ${n} icone e scritte sopra la pianta: sotto l'ho ricostruita, controlla i muri`, `Removed ${n} icons and labels over the plan and rebuilt what was underneath: check the walls`))}`,
+  );
+}
+
+/* Gli arredi riconosciuti nella pianta arredata: si tolgono qui, si
+ * spostano e si girano nella Casa 3D come tutti gli altri. */
+function arrediDellaPianta() {
+  const S = state.S,
+    suoi = (S.arredi || []).map((a, i) => [a, i]).filter(([a]) => a.daPianta);
+  if (!suoi.length) return "";
+  return scheda(
+    `🛋️ <b>${esc(t("Arredi dalla pianta", "Furniture from the plan"))}</b>`,
+    `<div class="c3c-dentro-pianta">${suoi
+      .map(([a, i]) => {
+        const V = ARREDI_DELLE_FOTO[a.k];
+        return `<span class="c3c-ch">${V?.icona || "📦"} ${esc(V ? due(V.nome) : a.k)} <button type="button" class="c3c-via" data-c3c-via-arredo="${i}" aria-label="${esc(t("Elimina", "Remove"))}">✕</button></span>`;
+      })
+      .join("")}</div>
+    ${nota(esc(t("Riconosciuti nella pianta: togli quelli sbagliati. Nella Casa 3D, con «Arreda», li sposti e li giri come gli altri.", "Recognised in the plan: remove the wrong ones. In Casa 3D, with «Furnish», you move and turn them like the others.")))}`,
   );
 }
 
@@ -2155,6 +2200,24 @@ async function usaPlanimetria(src) {
   await new Promise((ok) => setTimeout(ok, 30));
   try {
     let img = typeof src === "string" ? await immagine(src) : src;
+    /* Le icone sopra la pianta (i rilevatori della centrale d'allarme, i
+     * pulsanti, l'etichetta): via subito, alla risoluzione della foto, col
+     * buco riempito da quello che c'e' attorno (togliISovrapposti). */
+    let sovrapposti = 0;
+    if (typeof src === "string")
+      try {
+        const c = tela2d(img.naturalWidth || img.width, img.naturalHeight || img.height),
+          g = c.getContext("2d");
+        g.drawImage(img, 0, 0, c.width, c.height);
+        const via = togliISovrapposti(g.getImageData(0, 0, c.width, c.height));
+        if (via) {
+          g.putImageData(new ImageData(via.im.data, c.width, c.height), 0, 0);
+          sovrapposti = via.tolte.length;
+          img = c;
+        }
+      } catch (errore) {
+        root.console?.warn?.("[DashboardModern] Casa 3D: icone", errore);
+      }
     const originale = img;
     /* Il lato lungo a 2400 pixel: una foto enorme si rimpicciolisce, e una
      * pianta piccola (il PNG esportato dal CAD a 1200 pixel) si ingrandisce,
@@ -2205,6 +2268,19 @@ async function usaPlanimetria(src) {
           render = leggiIlRender(datiDi(ritagliata));
           if (render || rq.scuro) img = ritagliata;
         } else render = leggiIlRender(dati);
+        /* La pianta arredata arriva spesso fino al bordo della schermata: un
+         * margine bianco attorno, perche' i muri di fuori non tocchino il
+         * bordo e il fuori giri largo attorno alla casa. */
+        if (render?.arredata) {
+          const m = margineDellaPianta(render.im, render.spessore),
+            c = tela2d(img.width + 2 * m, img.height + 2 * m),
+            g = c.getContext("2d");
+          g.fillStyle = "#fff";
+          g.fillRect(0, 0, c.width, c.height);
+          g.drawImage(img, m, m);
+          img = c;
+          render.im = conMargine(render.im, m, CARTA_PULITA);
+        }
       } catch (errore) {
         root.console?.warn?.("[DashboardModern] Casa 3D: render", errore);
         render = null;
@@ -2274,7 +2350,9 @@ async function usaPlanimetria(src) {
         const base = pulita || dritta;
         muri = scalaDaiMuri(
           base.getContext("2d").getImageData(0, 0, base.width, base.height),
-          pulita ? { muro: SPESSORE_DEL_RENDER, minimo: 8 } : {},
+          pulita
+            ? { muro: render?.muroM || SPESSORE_DEL_RENDER, minimo: render?.minimo || 8 }
+            : {},
         );
       } catch {
         muri = null;
@@ -2289,6 +2367,8 @@ async function usaPlanimetria(src) {
       dritta,
       pulita,
       render: Boolean(pulita),
+      arredata: Boolean(pulita && render?.arredata),
+      sovrapposti,
       vetri: null,
       porte: null,
       disegno: false,
@@ -2781,6 +2861,20 @@ function riconosci() {
       pianoDaFoto: S.pianoDaFoto === true,
       render: base === S.pulita,
     });
+    ricalcola();
+    /* La pianta arredata: gli arredi disegnati, al loro posto (quelli
+     * trovati prima, con un'altra scala o altri muri, se ne vanno). */
+    S.arredi = (S.arredi || []).filter((a) => !a.daPianta);
+    if (S.arredata && base === S.pulita)
+      try {
+        const d = S.dritta.getContext("2d").getImageData(0, 0, S.dritta.width, S.dritta.height);
+        S.arredi.push(
+          ...arrediDallaPianta(d, S.casa, S.mpp).map((a) => ({ ...a, daPianta: true })),
+        );
+      } catch (errore) {
+        root.console?.warn?.("[DashboardModern] Casa 3D: arredi della pianta", errore);
+      }
+    return;
   }
   ricalcola();
 }
@@ -3276,6 +3370,10 @@ async function alClic(ev) {
   if (d.c3cStanza && !ev.target.closest("select,input,[data-c3c-fuori]"))
     S.sel = Number(d.c3cStanza);
   if (d.c3cStanza && ev.target.closest("select,input")) return;
+  if (d.c3cViaArredo !== undefined) {
+    const i = Number(d.c3cViaArredo);
+    if (S.arredi?.[i]?.daPianta) S.arredi.splice(i, 1);
+  }
   if (d.c3cFuori) {
     const id = Number(d.c3cFuori);
     if (S.fuori.has(id)) S.fuori.delete(id);
@@ -3923,6 +4021,8 @@ function installaLoStile() {
     ${Q} .c3c-fisso{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
     ${Q} .c3c-metri{display:flex;align-items:center;gap:8px;margin-top:10px}
     ${Q} .c3c-metri .c3c-in{width:110px;padding:9px;font-size:15px;font-weight:700}
+    ${Q} .c3c-arr-pianta{position:absolute;transform:translate(-50%,-50%);width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:13px;background:#fff;border:2px solid #8b5cf6;box-shadow:0 2px 6px rgba(0,0,0,.3);pointer-events:none}
+    ${Q} .c3c-via{border:0;background:none;padding:0 0 0 4px;cursor:pointer;font-size:12px;color:inherit}
     ${Q} .c3c-ch{padding:6px 10px;border-radius:100px;border:1px solid var(--c3c-bordo);background:var(--c3c-s2);font-size:12px;cursor:pointer;display:inline-block;margin:0 4px 6px 0}
     ${Q} .c3c-ch.si{background:#0ea5e9;border-color:#0ea5e9;color:#fff;font-weight:700}
     ${Q} .c3c-ch-list{display:flex;flex-wrap:wrap}

@@ -8217,4 +8217,8 @@ export default Object.freeze({
   "What is in this tab": "इस टैब में क्या है",
   "Where do I start": "कहाँ से शुरू करूँ",
   "Windows and shutters.": "खिड़कियाँ और शटर।",
+  "colour furnished plan: walls, windows and furniture read from the colours": "रंगीन सज्जित नक्शा: दीवारें, खिड़कियाँ और फ़र्नीचर रंगों से पढ़े गए",
+  "Furniture from the plan": "नक्शे से फ़र्नीचर",
+  "Recognised in the plan: remove the wrong ones. In Casa 3D, with «Furnish», you move and turn them like the others.": "नक्शे में पहचाने गए: गलत वाले हटा दें। Casa 3D में «सजाएँ» से आप इन्हें बाकी की तरह हिला और घुमा सकते हैं।",
+  "Removed ${n} icons and labels over the plan and rebuilt what was underneath: check the walls": "नक्शे के ऊपर से ${n} आइकन और लेबल हटाए और नीचे का हिस्सा फिर से बनाया: दीवारें जाँचें",
 });

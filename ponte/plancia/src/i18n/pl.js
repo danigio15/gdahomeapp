@@ -8256,4 +8256,8 @@ export default Object.freeze({
   "What is in this tab": "Co jest na tej karcie",
   "Where do I start": "Od czego zacząć",
   "Windows and shutters.": "Okna i rolety.",
+  "colour furnished plan: walls, windows and furniture read from the colours": "kolorowy umeblowany rzut: ściany, okna i meble odczytane z kolorów",
+  "Furniture from the plan": "Meble z rzutu",
+  "Recognised in the plan: remove the wrong ones. In Casa 3D, with «Furnish», you move and turn them like the others.": "Rozpoznane na rzucie: usuń błędne. W Casa 3D, w trybie «Urządź», przesuwasz je i obracasz jak pozostałe.",
+  "Removed ${n} icons and labels over the plan and rebuilt what was underneath: check the walls": "Usunięto ${n} ikon i etykiet nad rzutem i odtworzono to, co było pod spodem: sprawdź ściany",
 });

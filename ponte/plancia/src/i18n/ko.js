@@ -8208,4 +8208,8 @@ export default Object.freeze({
   "What is in this tab": "이 탭에 있는 것",
   "Where do I start": "어디서 시작할까요",
   "Windows and shutters.": "창문과 셔터.",
+  "colour furnished plan: walls, windows and furniture read from the colours": "컬러 가구 배치 평면도: 벽, 창문, 가구를 색으로 읽었습니다",
+  "Furniture from the plan": "평면도의 가구",
+  "Recognised in the plan: remove the wrong ones. In Casa 3D, with «Furnish», you move and turn them like the others.": "평면도에서 인식했습니다: 틀린 것은 지우세요. Casa 3D의 «꾸미기»에서 다른 것처럼 옮기고 돌릴 수 있습니다.",
+  "Removed ${n} icons and labels over the plan and rebuilt what was underneath: check the walls": "평면도 위의 아이콘과 라벨 ${n}개를 지우고 아래 부분을 다시 만들었습니다: 벽을 확인하세요",
 });

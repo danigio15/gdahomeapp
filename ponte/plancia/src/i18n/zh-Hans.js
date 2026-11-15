@@ -8098,4 +8098,8 @@ export default Object.freeze({
   "What is in this tab": "此标签页里有什么",
   "Where do I start": "从哪里开始",
   "Windows and shutters.": "窗户和卷帘。",
+  "colour furnished plan: walls, windows and furniture read from the colours": "彩色家具平面图：墙、窗和家具根据颜色识别",
+  "Furniture from the plan": "平面图中的家具",
+  "Recognised in the plan: remove the wrong ones. In Casa 3D, with «Furnish», you move and turn them like the others.": "已在平面图中识别：删除错误的。在 Casa 3D 中用「布置」可以像其他家具一样移动和旋转它们。",
+  "Removed ${n} icons and labels over the plan and rebuilt what was underneath: check the walls": "已移除平面图上方的 ${n} 个图标和标签，并重建了下面的内容：请检查墙体",
 });

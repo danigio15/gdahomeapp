@@ -8296,4 +8296,8 @@ export default Object.freeze({
   "What is in this tab": "Was dieser Reiter enthält",
   "Where do I start": "Wo fange ich an",
   "Windows and shutters.": "Fenster und Rollläden.",
+  "colour furnished plan: walls, windows and furniture read from the colours": "farbiger möblierter Grundriss: Wände, Fenster und Möbel aus den Farben gelesen",
+  "Furniture from the plan": "Möbel aus dem Grundriss",
+  "Recognised in the plan: remove the wrong ones. In Casa 3D, with «Furnish», you move and turn them like the others.": "Im Grundriss erkannt: Entferne die falschen. In Casa 3D verschiebst und drehst du sie mit «Einrichten» wie die anderen.",
+  "Removed ${n} icons and labels over the plan and rebuilt what was underneath: check the walls": "${n} Symbole und Beschriftungen über dem Grundriss entfernt und das Darunterliegende rekonstruiert: Prüfe die Wände",
 });
