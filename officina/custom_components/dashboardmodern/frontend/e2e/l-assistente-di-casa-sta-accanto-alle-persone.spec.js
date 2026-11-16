@@ -104,13 +104,23 @@ test("«Più tardi» rimanda a domani, ✕ scarta e se lo ricorda", async ({ pag
   await boot(page, testInfo);
   await card(page).locator('[data-ass-fa="tardi"]').click();
   const scelte = card(page).locator('[data-ass-fa="rimanda"]');
-  await expect(scelte).toHaveText(["Fra 1 h", "Stasera", "Domani"]);
-  await scelte.filter({ hasText: "Domani" }).click();
+  /* Le scelte dipendono dall'ora: dalle 18:30 «Stasera» e' gia' adesso, e di
+   * notte si rimanda solo a domattina (`rinviPossibili`). */
+  const ora = await page.evaluate(() => new Date().getHours() + new Date().getMinutes() / 60);
+  const attese =
+    ora >= 23 || ora < 7
+      ? ["Domattina"]
+      : ora >= 18.5
+        ? ["Fra 1 h", "Domani"]
+        : ["Fra 1 h", "Stasera", "Domani"];
+  await expect(scelte).toHaveText(attese);
+  await scelte.filter({ hasText: /^Dom/ }).click();
   await expect(card(page)).toContainText("In casa è tutto in ordine.");
   let salvato = await page.evaluate(() => JSON.parse(localStorage.getItem("cd_assistente")));
   const [id, voce] = Object.entries(salvato.memoria.istanze)[0];
   expect(id).toBe("vuota-luci:light.cucina,light.sala");
-  expect(voce.fino).toBeGreaterThan(Date.now() + 6 * 3600_000);
+  /* Domani (o domattina) alle otto: mai prima di un'ora da adesso. */
+  expect(voce.fino).toBeGreaterThan(Date.now() + 3600_000);
   /* Rimandare non e' scartare: il tipo non perde peso. */
   expect(salvato.memoria.tipi["vuota-luci"]).toBeUndefined();
 

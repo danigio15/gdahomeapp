@@ -1,13 +1,9 @@
 import {
   BUILD_INFO,
   DashboardStore,
-  IMPIANTO_SCELTO_KEY,
-  SCHEMA_VERSION,
   apri,
-  attributoSeCambia,
   canonicalReportDevices,
   capacitaDellaTelecamera,
-  classeSeCambia,
   createApplianceViewModel,
   createEnergyReportRows,
   createEntityPickerField,
@@ -17,9 +13,6 @@ import {
   eIlModoIntelligente,
   energyWriteInFlight,
   flushEnergyWrites,
-  getDeviceDisplayName,
-  getDeviceVisual,
-  getLocale,
   go2rtcRaggiungibile,
   iModiDiEvcc,
   iValoriDelSempre,
@@ -28,13 +21,9 @@ import {
   ilValoreDelSempreAcceso,
   laFilaDelSempreServe,
   loadPopupMetrics,
-  normalizeDevice,
   persistEnergyField,
   persistIlFotovoltaico,
   persistSignedSource,
-  pick,
-  plantAt,
-  plantModel,
   renderDeviceCard,
   renderEnergyEditor,
   renderPreseEditor,
@@ -45,7 +34,20 @@ import {
   stepReporter,
   stradaAppenaCaduta,
   strategieDellaTelecamera
-} from "../chunk-4KWH6PHN.js";
+} from "../chunk-TFSS2IRB.js";
+import {
+  IMPIANTO_SCELTO_KEY,
+  SCHEMA_VERSION,
+  attributoSeCambia,
+  classeSeCambia,
+  getDeviceDisplayName,
+  getDeviceVisual,
+  getLocale,
+  normalizeDevice,
+  pick,
+  plantAt,
+  plantModel
+} from "../chunk-XZD4LHEA.js";
 
 // src/legacy/dashboard-data.js
 function stableRoomId(room, index = 0) {

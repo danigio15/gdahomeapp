@@ -104,6 +104,7 @@ import {
   CartellaDelleFotoPiena,
   FOTO_MASSIMA,
 } from "./foto.js";
+import { ModelloRifiutato } from "./modelli-3d.js";
 import { BASE as BASE_DELLA_PLANCIA } from "./plancia.js";
 import { ChatHaDettoNo } from "./chat.js";
 import { I_MARCHI, QuestoNoNo, ilMarchioDi } from "./aggiornamenti.js";
@@ -298,6 +299,22 @@ const FOTO_CARICA = "dashboardmodern/www/upload";
  * a rifare tutte le stanze, meno di quelle che servono a riempire un disco. */
 const FOTO_PER_FINESTRA = 40;
 const FOTO_FINESTRA = 10 * 60 * 1000;
+/* Il modello 3D della Casa 3D (#440, `modelli-3d.js`): arriva a pezzi e
+ * riparte a pezzi. Quanti se ne finiscono per persona in dieci minuti: uno
+ * sbagliato e rifatto, due, tre — non trenta. */
+const MODELLO_INIZIA = "ponte/casa3d/modello/inizia";
+const MODELLO_PEZZO = "ponte/casa3d/modello/pezzo";
+const MODELLO_FINE = "ponte/casa3d/modello/fine";
+const MODELLO_LEGGI = "ponte/casa3d/modello/leggi";
+const MODELLO_TOGLI = "ponte/casa3d/modello/togli";
+const COMANDI_DEL_MODELLO = new Set([
+  MODELLO_INIZIA,
+  MODELLO_PEZZO,
+  MODELLO_FINE,
+  MODELLO_LEGGI,
+  MODELLO_TOGLI,
+]);
+const MODELLI_PER_FINESTRA = 6;
 /* Lo spegnimento programmato del clima (#364): nell'integrazione lo tiene
  * Home Assistant, qui lo tiene il ponte (`spegnimento.js`). */
 /* Cosa c'e' da aggiornare in casa, e i due tasti per farlo.
@@ -632,6 +649,7 @@ export class Commissioni {
     catalogo = null,
     foto = null,
     fotoDiCasa = null,
+    modelli3d = null,
     segnalazioni = null,
     chat = null,
     /* Se questo Home Assistant e' di chi installa. Solo un si' o un no: il
@@ -719,6 +737,8 @@ export class Commissioni {
     /* Quelle che stanno gia' in Home Assistant, in sola lettura: chi ha una
      * casa da qualche anno le ha li', e le sceglieva da li'. */
     this.fotoDiCasa = fotoDiCasa;
+    /* I modelli 3D della Casa 3D fatti con un altro programma (#440). */
+    this.modelli3d = modelli3d;
     /* Le segnalazioni dell'app, che passano dal centralino di gdahome. */
     this.segnalazioni = segnalazioni;
     /* E le stesse, scritte dalla finestra della plancia in Home Assistant:
@@ -1165,6 +1185,8 @@ export class Commissioni {
       return this._configurazione(detto, chiChiede, amministra, soloLaPrima);
     }
     if (tipo === CHI_SONO) return this._chiSono(detto, chiChiede, puoAmministrare);
+    if (COMANDI_DEL_MODELLO.has(tipo))
+      return this._ilModello3d(detto, chiChiede, amministra, puoAmministrare);
     if (tipo === DOVE_TORNARE) return this._doveTornare(detto);
     if (tipo === CATALOGO) return this._catalogo(detto);
     if (tipo === FOTO_ELENCO) return this._elencoDelleFoto(detto);
@@ -2873,6 +2895,69 @@ export class Commissioni {
         casa: Boolean(this.fotoDiCasa?.cE),
       },
     });
+  }
+
+  /* Il modello 3D della Casa 3D (#440): vedi `modelli-3d.js`.
+   *
+   * SOLO CHI E' ENTRATO, come ogni commissione (lo ha gia' chiesto
+   * `rispondi`). Leggerlo lo puo' chi vede almeno una plancia: e' un pezzo
+   * di casa, non roba da dare a un filo qualunque. Caricarlo e toglierlo lo
+   * puo' solo chi configura la plancia che lo usa — la stessa regola del
+   * salvataggio della configurazione, dove poi il suo nome va a finire. */
+  async _ilModello3d(detto, chiChiede = "", amministra = null, puoAmministrare = false) {
+    const id = detto.id ?? null;
+    const tipo = detto.type;
+    const m = this.modelli3d;
+    if (!m?.cE) return no(id, "unknown_command", `non conosco ${tipo}`);
+    const chi = String(chiChiede || "").trim();
+    if (!this._vedeQualchePlancia(chiChiede, amministra))
+      return no(id, NIENTE_PER_TE, "in questa casa non ci sono plance per la tua utenza");
+    try {
+      if (tipo === MODELLO_LEGGI) {
+        const letto = m.leggi(detto.modello, detto.da, detto.quanto);
+        if (!letto) return no(id, "not_found", "questo modello non c'e'");
+        const { byte, ...resto } = letto;
+        return si(id, { ...resto, corpo: byte.toString("base64") });
+      }
+      const profilo = detto?.profile ?? PROFILO_PRINCIPALE;
+      if (!(await this._puoConfigurare(profilo, chiChiede, puoAmministrare)))
+        return no(id, "unauthorized", "il modello lo cambia solo chi configura questa plancia");
+      if (tipo === MODELLO_TOGLI) return si(id, { tolto: m.togli(detto.modello) });
+      if (tipo === MODELLO_INIZIA) {
+        const adesso = Date.now();
+        this._modelliCaricati ??= new Map();
+        const fatti = (this._modelliCaricati.get(chi) || []).filter(
+          (quando) => adesso - quando < FOTO_FINESTRA,
+        );
+        this._modelliCaricati.set(chi, fatti);
+        if (fatti.length >= MODELLI_PER_FINESTRA)
+          return no(
+            id,
+            "rate_limited",
+            "Troppi modelli caricati di fila: riprova fra qualche minuto.",
+          );
+        return si(id, m.inizia({ chi, peso: detto.peso }));
+      }
+      if (tipo === MODELLO_PEZZO) {
+        if (typeof detto.data !== "string" || !detto.data || detto.data.length > 1024 * 1024)
+          return no(id, "invalid_format", "manca il pezzo");
+        const byte = Buffer.from(detto.data, "base64");
+        return si(id, m.pezzo({ chi, caricamento: detto.caricamento, indice: detto.indice, byte }));
+      }
+      const fatto = m.finisci({ chi, caricamento: detto.caricamento });
+      this._modelliCaricati?.get(chi)?.push(Date.now());
+      return si(id, fatto);
+    } catch (errore) {
+      if (!(errore instanceof ModelloRifiutato)) throw errore;
+      /* Il codice di sempre per chi legge i codici, e il motivo per la plancia. */
+      const rifiuto = no(
+        id,
+        errore.codice === "pieno" ? "storage_full" : "invalid_upload",
+        errore.message,
+      );
+      rifiuto.error.motivo = errore.codice;
+      return rifiuto;
+    }
   }
 
   _caricaUnaFoto(detto, chiChiede = "") {

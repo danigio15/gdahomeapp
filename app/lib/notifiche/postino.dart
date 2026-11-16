@@ -46,6 +46,7 @@ import '../casa/archivio_delle_case.dart';
 import '../casa/cassaforte.dart';
 import '../casa/collegamento.dart';
 import '../parole.dart';
+import 'al_navigatore.dart';
 import 'chiavi_per_l_iphone.dart';
 import 'consegna.dart';
 import 'firebase_qui.dart';
@@ -399,6 +400,10 @@ Future<NotificaDaMostrare?> apriEMostra(
     return null;
   }
   if (!await _eNuova(cassaforte, aperta.notifica.id)) return null;
+  /* Anche al navigatore, se e' acceso: in guida diventa un avviso sopra la
+   * mappa (`al_navigatore.dart`). Da qui passano sia l'app aperta sia il
+   * pezzo di Dart che Android sveglia con l'app in sottofondo. */
+  mandaAlNavigatore(aperta);
   try {
     await mostra(aperta);
   } catch (_) {
@@ -565,6 +570,14 @@ class Postino extends ChangeNotifier {
   /// Per le prove: un tocco come se arrivasse dal sistema.
   @visibleForTesting
   void toccaPerProva(ToccoDellaNotifica tocco) => _tocca(tocco);
+
+  /// Un tasto premuto su un avviso di casa nel navigatore (gia' confermato
+  /// col «Si'» la' dove lo chiede): va per la stessa strada del tasto
+  /// premuto sulla notifica — la home, dietro il velo del lucchetto
+  /// (`dietro_il_velo.dart`) — e non direttamente alla casa. Con la home non
+  /// ancora aperta (l'app accesa solo da Android Auto) aspetta, come un tocco
+  /// arrivato ad app chiusa, finche' l'app non si apre.
+  void dalNavigatore(ToccoDellaNotifica tocco) => _tocca(tocco);
 
   void _tocca(ToccoDellaNotifica tocco) {
     if (_tocchi.hasListener) {
@@ -786,6 +799,10 @@ class Postino extends ChangeNotifier {
       defaultTargetPlatform,
       inPrimoPiano: inPrimoPiano,
     )) {
+      /* La notifica la mostra il sistema, ma il navigatore la vuole lo
+       * stesso: con CarPlay acceso l'app e' «attiva» per la scena dell'auto
+       * anche col telefono in tasca, ed e' proprio li' che si guida. */
+      unawaited(_soloAlNavigatore(messaggio.data));
       return;
     }
     final aperta = await apriEMostra(messaggio.data, cassaforte);
@@ -794,6 +811,20 @@ class Postino extends ChangeNotifier {
       _tocca(
         ToccoDellaNotifica(casa: aperta.casa.id, notifica: aperta.notifica),
       );
+    }
+  }
+
+  /// Apre la busta solo per il navigatore, senza mostrarla e senza segnarla
+  /// vista: la notifica del sistema c'e' gia', e il tocco su quella deve
+  /// ancora aprirsi.
+  Future<void> _soloAlNavigatore(Map<String, dynamic> dati) async {
+    try {
+      final archivio = ArchivioDelleCase(cassaforte);
+      await archivio.apri();
+      final aperta = await apriQuellaArrivata(dati, archivio.tutte);
+      if (aperta != null) mandaAlNavigatore(aperta);
+    } catch (_) {
+      /* Il navigatore senza questa: sul telefono c'e' comunque. */
     }
   }
 

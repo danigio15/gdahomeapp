@@ -24,6 +24,8 @@ import 'package:gdanav_app/gdanav_app.dart';
 import '../../casa/collegamento.dart';
 import '../../casa/ponte_del_portachiavi.dart';
 import '../../licenza/licenza.dart' show GestoreLicenza, licenzeInQuestaApp;
+import '../../notifiche/al_navigatore.dart';
+import '../../notifiche/postino.dart';
 import '../../parole.dart';
 import '../../vestito/marchio.dart';
 import '../../vestito/pezzi.dart';
@@ -211,20 +213,54 @@ const _perLAuto = #auto;
 /// Accende gdanav, una volta sola per tutta l'app: dalla sezione del
 /// telefono o dall'auto, chi arriva prima.
 Future<GdanavApp> accendiIlNavigatore() => _acceso ??= () async {
-  return preparaGdanav(
-    portachiavi: _portachiavi,
-    gdahome: _vettura,
-    persone: _persone,
+  final argomenti = <Symbol, Object?>{
+    #portachiavi: _portachiavi,
+    #gdahome: _vettura,
+    #persone: _persone,
     /* gdanav Premium lo decide gdahome: la casa in uso e' Premium, e gdanav
      * con lei. Niente negozio di gdanav qui dentro: se manca, gdanav dice di
      * prenderlo in gdahome. */
-    premiumOspite: _premiumOspite,
-    guidaInAutoSenzaPremium: _guidaSenzaCasa,
+    #premiumOspite: _premiumOspite,
+    #guidaInAutoSenzaPremium: _guidaSenzaCasa,
     /* Lo schermo dell'auto di gdanav si accende solo nella versione col
      * navigatore in auto; nella gdahome di sempre Android Auto e' la casa. */
-    conLAuto: await _conLAuto,
-  );
+    #conLAuto: await _conLAuto,
+  };
+  return _preparaConLaCasa(argomenti);
 }();
+
+/// gdanav con gli avvisi di casa in guida, quando li sa fare.
+///
+/// Le notifiche della casa ([ascoltaLeNotifiche]) diventano gli avvisi sopra
+/// la mappa, e un tasto premuto su un avviso torna al postino
+/// ([avvisoToccatoNelNavigatore]). Come per il pianificatore
+/// ([_gdanavDentro]), gdanav arriva al commit fissato in pubspec.lock: uno di
+/// prima questi argomenti non li ha, e allora si accende senza.
+Future<GdanavApp> _preparaConLaCasa(Map<Symbol, Object?> argomenti) {
+  try {
+    return Function.apply(preparaGdanav, const [], {
+      ...argomenti,
+      #notificheDiCasa: ascoltaLeNotifiche(),
+      #tastoDiCasa: avvisoToccatoNelNavigatore,
+    }) as Future<GdanavApp>;
+  } on NoSuchMethodError {
+    return Function.apply(preparaGdanav, const [], argomenti)
+        as Future<GdanavApp>;
+  }
+}
+
+/// Un tasto premuto su un avviso di casa nel navigatore: diventa il tasto
+/// della notifica, e va per la sua strada (`al_navigatore.dart`).
+@visibleForTesting
+void avvisoToccatoNelNavigatore(
+  Map<String, Object?> notifica,
+  String tasto, {
+  Postino? postino,
+}) {
+  final tocco = toccoDalNavigatore(notifica, tasto);
+  if (tocco == null) return;
+  (postino ?? Postino.istanza)?.dalNavigatore(tocco);
+}
 
 /// Si mette in ascolto dell'auto: la chiama `main`, sul telefono.
 ///

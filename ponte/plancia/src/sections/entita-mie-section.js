@@ -13,8 +13,17 @@
  * non ne ha non guadagna un titolo vuoto.
  */
 import { comandoCheAbilita, comandoDelDispositivo } from "../core/comandi-accanto.js";
-import { CHIAVE_ENTITA_MIE, lettureDellaSezione, sezioniConEntita } from "../core/entita-mie.js";
+import {
+  CHIAVE_ENTITA_MIE,
+  TIPO_INTERRUTTORE,
+  entitaMie,
+  lettureDellaSezione,
+  sezioniConEntita,
+  toccoDellInterruttore,
+} from "../core/entita-mie.js";
+import { portaColPinPerLAzione } from "../core/security-door-model.js";
 import { apriIlMenu } from "./azioni-servizio-giusto-section.js";
+import { chiediIlPinDellaPorta, configuredSecurityDoors } from "./security-doors-section.js";
 import { parolaDiStato } from "./le-parole-di-home-assistant.js";
 import { oggettoWidget } from "../core/oggetti-widget.js";
 import {
@@ -42,7 +51,14 @@ export { CHIAVE_ENTITA_MIE };
 
 const voci = () => readJson(CHIAVE_ENTITA_MIE, []);
 
+const eInterruttore = (riga) => riga?.tipo === TIPO_INTERRUTTORE;
+
 function valoreMarkup(riga) {
+  if (eInterruttore(riga) && !riga.muto) {
+    /* Un tasto a impulso non ha uno stato da dire: dice cosa fa. */
+    if (riga.impulso) return `<b class="dm-mie-muta">${esc(t("Tasto", "Button"))}</b>`;
+    return `<b>${esc(riga.acceso ? t("Acceso", "On") : t("Spento", "Off"))}</b>`;
+  }
   if (riga.muto) return `<b class="dm-mie-muta">${esc(t("Non risponde", "Not reporting"))}</b>`;
   if (riga.numero !== null)
     return (
@@ -61,6 +77,9 @@ function valoreMarkup(riga) {
 function disegno(riga) {
   const scelta = clean(riga.icona);
   if (scelta) return esc(scelta);
+  /* Un interruttore fatto a mano un'entità tutta sua non ce l'ha: il posto
+   * delle sfumature e' la voce. */
+  if (eInterruttore(riga)) return oggettoWidget("azioni", "", `mie-int-${riga.id}`);
   /* Il posto e' l'entita': una riga per entita', e il disegno si porta dietro
    * le sue sfumature invece di prenderle dal foglio in cima al corpo. */
   return oggettoWidget(riga.comandabile ? "azioni" : "evidenza", "", `mie-${riga.entity}`);
@@ -80,6 +99,16 @@ function disegno(riga) {
 function codaMarkup(riga) {
   const vuoto = `<span class="dm-mie-vuoto" aria-hidden="true"></span>`;
   if (riga.muto) return vuoto;
+  /* L'interruttore fatto a mano (#406): la stessa levetta, ma il tocco chiama
+   * i servizi scritti nella voce, non quelli dell'entità che dice lo stato.
+   * Senza stato da leggere e' un tasto, e un tasto non ha una levetta. */
+  if (eInterruttore(riga)) {
+    if (riga.impulso)
+      return `<button type="button" class="dm-mie-premi" data-dm-mie-int="${esc(riga.id)}"
+               aria-label="${esc(t("Premi", "Press"))} — ${esc(riga.nome)}">▶</button>`;
+    return `<button type="button" class="dm-mie-lev" data-dm-mie-int="${esc(riga.id)}"
+               role="switch" aria-checked="${riga.acceso}" aria-label="${esc(riga.nome)}"><i></i></button>`;
+  }
   if (riga.tendina && siComanda(riga.entity))
     return `<button type="button" class="dm-mie-scegli" data-dm-mie-scegli="${esc(riga.entity)}"
              title="${esc(t("Scegli", "Choose"))}"
@@ -89,8 +118,14 @@ function codaMarkup(riga) {
              role="switch" aria-checked="${riga.acceso}" aria-label="${esc(riga.nome)}"><i></i></button>`;
 }
 
-function rigaMarkup(riga) {
-  return `<article class="dm-mie-riga" data-on="${riga.acceso}" data-muta="${riga.muto}">
+function rigaMarkup(grezza) {
+  const riga =
+    eInterruttore(grezza) && !grezza.nome
+      ? { ...grezza, nome: t("Interruttore", "Switch") }
+      : grezza;
+  return `<article class="dm-mie-riga" data-on="${riga.acceso}" data-muta="${riga.muto}"${
+    eInterruttore(riga) ? ` data-dm-mie-tipo="interruttore"` : ""
+  }>
     <span class="dm-mie-ic" aria-hidden="true">${disegno(riga)}</span>
     <span class="dm-mie-nome"><strong>${esc(riga.nome)}</strong></span>
     <span class="dm-mie-val">${valoreMarkup(riga)}</span>
@@ -182,7 +217,118 @@ async function chiamaHa(dominio, servizio, payload) {
   }
 }
 
+/* Perché un interruttore non parte: una frase per ogni no del modello. */
+export function parolaDelNo(perche) {
+  switch (perche) {
+    case "chiuso":
+      return t(
+        "Questo servizio la plancia non lo chiama: serrature che si aprono, antifurto che si disinserisce, riavvii e comandi di sistema restano fuori.",
+        "The dashboard does not call this service: unlocking locks, disarming the alarm, restarts and system commands stay out.",
+      );
+    case "serratura":
+      return t(
+        "Una serratura si apre da qui solo se fra le porte ha il suo PIN, e una alla volta.",
+        "A lock opens from here only if it has its PIN among the doors, and one at a time.",
+      );
+    case "bloccata":
+      return t(
+        "Questa entità si vede ma non si comanda.",
+        "This entity can be seen but not controlled.",
+      );
+    case "dati":
+      return t(
+        "I dati del servizio non sono un JSON valido.",
+        "The service data is not valid JSON.",
+      );
+    case "bersaglio":
+      return t(
+        "Scrivi le entità: aree, piani e dispositivi non si usano da qui.",
+        "Write the entities: areas, floors and devices are not used from here.",
+      );
+    default:
+      return t(
+        "Questo interruttore non sa ancora cosa fare: completalo nella configurazione.",
+        "This switch does not know what to do yet: finish it in the settings.",
+      );
+  }
+}
+
+function dilloNo(perche) {
+  const parola = parolaDelNo(perche);
+  try {
+    if (typeof root.edToast === "function") root.edToast(parola);
+    else root.console?.warn?.("[DashboardModern] interruttore", parola);
+  } catch (_errore) {}
+}
+
+/* Il tocco su un interruttore fatto a mano (#406).
+ *
+ * Il servizio lo decide il modello (`toccoDellInterruttore`), coi controlli di
+ * «Chiama un servizio» delle automazioni. Qui restano le tre cose che il
+ * modello non puo' sapere: se una delle entita' e' marcata «si vede ma non si
+ * comanda», il PIN di una porta e la conferma — le stesse delle azioni
+ * rapide, senza una strada nuova. */
+function toccaLInterruttore(tasto) {
+  const id = clean(tasto.dataset.dmMieInt);
+  const voce = entitaMie(voci()).find((una) => una.tipo === TIPO_INTERRUTTORE && una.id === id);
+  if (!voce) return;
+  const stati = allStates();
+  const tocco = toccoDellInterruttore(voce, stati, root.resolveEntity || ((valore) => valore));
+  if (!tocco.ok) return dilloNo(tocco.perche);
+  if (tocco.entita.some((entity) => !siComanda(entity))) return dilloNo("bloccata");
+  const nome = tocco.lettura.nome || t("Interruttore", "Switch");
+  const esegui = () => {
+    root.navigator?.vibrate?.(8);
+    if (tasto.getAttribute("role") === "switch")
+      tasto.setAttribute("aria-checked", tocco.lettura.verso === "spegni" ? "false" : "true");
+    chiamaHa(tocco.domain, tocco.service, tocco.data);
+  };
+  if (tocco.pin) {
+    let porta = null;
+    try {
+      porta = portaColPinPerLAzione(
+        configuredSecurityDoors(),
+        tocco.entita,
+        tocco.service,
+        stati?.[tocco.entita[0]]?.state,
+      );
+    } catch (_errore) {
+      porta = null;
+    }
+    /* Senza una porta col PIN, la serratura non si apre: meglio un tasto che
+     * non fa niente di una porta che si apre senza codice. */
+    if (!porta || !chiediIlPinDellaPorta(porta, esegui)) return dilloNo("serratura");
+    return;
+  }
+  if (tocco.conferma && typeof root.confermaAzione === "function") {
+    root.confermaAzione({
+      icon: clean(voce.icona) || "🔐",
+      title: nome,
+      /* La domanda dice il gesto vero, come nella pagina delle porte: «confermi
+       * l'accensione?» davanti a una serratura sarebbe una domanda su un'altra
+       * cosa. */
+      message:
+        tocco.domain === "lock"
+          ? t("Confermi il blocco?", "Confirm locking?")
+          : tocco.domain === "alarm_control_panel"
+            ? t("Confermi l'antifurto?", "Confirm the alarm?")
+            : tocco.lettura.verso === "spegni"
+              ? t("Confermi lo spegnimento?", "Confirm switching off?")
+              : t("Confermi l'accensione?", "Confirm switching on?"),
+      onConfirm: esegui,
+    });
+    return;
+  }
+  esegui();
+}
+
 function onClick(event) {
+  const interruttore = event.target?.closest?.("[data-dm-mie-int]");
+  if (interruttore) {
+    event.preventDefault();
+    toccaLInterruttore(interruttore);
+    return;
+  }
   /* I tre puntini prima della levetta: sono due tasti diversi nella stessa
    * casella, e chiedere prima la levetta li confonderebbe. */
   const scegli = event.target?.closest?.("[data-dm-mie-scegli]");
@@ -295,6 +441,13 @@ function installStyles() {
         font-size:17px;font-weight:900;line-height:1;cursor:pointer;padding:0}
       .dm-mie-scegli:active{transform:scale(.92)}
       .dm-mie-vuoto{display:block;width:46px;height:1px}
+      /* Il tasto a impulso di un interruttore fatto a mano: la colonna della
+         levetta, ma tondo — si preme, non resta acceso. */
+      .dm-mie-premi{
+        width:46px;height:27px;border-radius:999px;border:1px solid rgba(249,115,22,.55);
+        background:rgba(249,115,22,.12);color:#f97316;font-size:12px;line-height:1;
+        cursor:pointer;padding:0}
+      .dm-mie-premi:active{transform:scale(.92)}
     `,
   );
 }

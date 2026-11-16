@@ -122,7 +122,7 @@ test("il balcone a 6 gradi e al 79% non chiede di scaldare ne' di arieggiare", (
   };
   /* Senza la spunta l'assistente parla: e' la prova che misura la cosa giusta. */
   const prima = suggerimentiDellaCasa(casa([balcone]), {}, { sensibilita: "tutto" }, "it");
-  assert.deepEqual(titoli(prima, "comfort"), ["Lato nord è fredda: 5,9°"]);
+  assert.deepEqual(titoli(prima, "comfort"), ["Lato nord: fa freddo, 5,9°"]);
   assert.equal(titoli(prima, "aria").length, 2);
   /* Una stanza che si chiama Balcone, Giardino, Terrazzo e' fuori anche senza
    * la spunta: «non mi deve suggerire di attivare il riscaldamento». */
@@ -155,7 +155,7 @@ test("saltato il balcone, la stanza di casa fredda o umida si dice lo stesso", (
     { sensibilita: "tutto" },
     "it",
   );
-  assert.deepEqual(titoli(fuori, "comfort"), ["Camera è fredda: 15,5°"]);
+  assert.deepEqual(titoli(fuori, "comfort"), ["Camera: fa freddo, 15,5°"]);
   assert.deepEqual(titoli(fuori, "aria"), ["Bagno: umidità al 78%"]);
 });
 

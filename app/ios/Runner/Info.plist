@@ -61,6 +61,8 @@
 	<string>Serve al navigatore, per continuare a guidarti con lo schermo del telefono spento o mentre usi CarPlay.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Serve al navigatore solo se colleghi un dongle OBD, per leggere la batteria della tua auto.</string>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>Serve al navigatore, per mostrarti il brano della Musica che stai ascoltando e cambiarlo mentre guidi. GdAHome non legge né modifica la tua libreria.</string>
 	<!-- La Salute (#227): le misure dell'Apple Watch e dell'iPhone, portate
 	     alla casa. GdAHome legge e basta; la seconda riga Apple la vuole
 	     comunque per un'app con HealthKit, e dice la stessa cosa. -->

@@ -713,6 +713,74 @@ function pianoPulito(p, i) {
     dispositivi: elenco2(p?.dispositivi).map(dispositivoPulito).filter(Boolean).slice(0, DISPOSITIVI_AL_MASSIMO)
   };
 }
+var UNITA_DEL_MODELLO = Object.freeze({
+  m: 1,
+  cm: 0.01,
+  mm: 1e-3,
+  in: 0.0254,
+  ft: 0.3048
+});
+var FORMATI_DEL_MODELLO = Object.freeze(["glb", "gltf", "obj"]);
+var COORDINATA = 1e7;
+function dispositivoDelModelloPulito(d) {
+  const base = dispositivoPulito(d);
+  if (!base) return null;
+  const c = (v) => numero(v, -COORDINATA, COORDINATA, 0);
+  return {
+    k: base.k,
+    x: c(d?.x),
+    y: c(d?.y),
+    z: c(d?.z),
+    entity: base.entity,
+    nome: base.nome,
+    ...base.k === "telecamera" ? { fov: base.fov } : {},
+    da: "mano"
+  };
+}
+function modelloPulito(m) {
+  if (!m || typeof m !== "object") return null;
+  const id = /^[a-f0-9]{16}$/.test(clean2(m.id)) ? clean2(m.id) : "";
+  const formato = FORMATI_DEL_MODELLO.includes(m.formato) ? m.formato : "";
+  if (!id || !formato) return null;
+  const rot = Math.round(numero(m.rot, -180, 180, 0));
+  return {
+    id,
+    formato,
+    nome: testo2(m.nome, 80) || `modello.${formato}`,
+    peso: Math.round(numero(m.peso, 0, 1e9, 0)),
+    impronta: /^[a-f0-9]{16,64}$/.test(clean2(m.impronta)) ? clean2(m.impronta) : "",
+    unita: Object.keys(UNITA_DEL_MODELLO).includes(m.unita) ? m.unita : "m",
+    su: m.su === "z" ? "z" : "y",
+    rot,
+    scala: numero(m.scala, 1e-3, 1e3, 1),
+    triangoli: Math.round(numero(m.triangoli, 0, 1e9, 0)),
+    /* Spento, resta scritto: si torna alla casa generata senza perderlo. */
+    attivo: m.attivo !== false,
+    dispositivi: elenco2(m.dispositivi).map(dispositivoDelModelloPulito).filter(Boolean).slice(0, DISPOSITIVI_AL_MASSIMO)
+  };
+}
+var usaIlModello = (casa) => Boolean(casa?.modello?.id && casa.modello.attivo);
+function casaDelModello(casa, nome = "") {
+  const m = casa?.modello;
+  if (!m) return casa;
+  return {
+    ...casa,
+    piani: [
+      {
+        k: "modello",
+        nome: testo2(nome, 30) || testo2(m.nome.replace(/\.[a-z0-9]+$/i, ""), 30) || "3D",
+        livello: 0,
+        stanze: [],
+        aperture: [],
+        arredi: [],
+        dispositivi: m.dispositivi
+      }
+    ],
+    esterno: { ...casa.esterno, telecamere: [] },
+    /* i dispositivi stanno gia' nel piano qui sopra: due volte si conterebbero due volte */
+    modello: { ...m, dispositivi: [] }
+  };
+}
 function casa3dPulita(raw) {
   const c = raw && typeof raw === "object" ? raw : {};
   const e = c.esterno && typeof c.esterno === "object" ? c.esterno : {};
@@ -734,7 +802,8 @@ function casa3dPulita(raw) {
       giardino: e.giardino !== false,
       telecamere: elenco2(e.telecamere).map(dispositivoPulito).filter((d) => d && d.k === "telecamera").slice(0, 16)
     },
-    piani
+    piani,
+    modello: modelloPulito(c.modello)
   };
 }
 var CASA3D_VUOTA = Object.freeze(casa3dPulita({}));
@@ -946,6 +1015,10 @@ function contaCollegati(casa) {
     tutti++;
     if (d.entity) collegati++;
   }
+  for (const d of casa?.modello?.dispositivi || []) {
+    tutti++;
+    if (d.entity) collegati++;
+  }
   return { tutti, collegati, mancano: tutti - collegati };
 }
 
@@ -983,6 +1056,9 @@ export {
   espandiGriglia,
   ricampiona,
   dispositivoPulito,
+  UNITA_DEL_MODELLO,
+  usaIlModello,
+  casaDelModello,
   casa3dPulita,
   entitaCandidate,
   entitaProposta,

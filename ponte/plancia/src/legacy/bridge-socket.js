@@ -88,6 +88,14 @@ export const ALLOWED_MESSAGE_TYPES = Object.freeze([
   // plancia servita dall'integrazione non possiede nessun token e ogni
   // chiamata REST del browser risponde 401.
   "dashboardmodern/www/upload",
+  // Il modello 3D della Casa 3D fatto con un altro programma (#440): sale a
+  // pezzi e riscende a pezzi, perche' un messaggio non passa il megabyte. Li
+  // fa il ponte (`ponte/src/modelli-3d.js`), che decide anche chi puo'.
+  "ponte/casa3d/modello/inizia",
+  "ponte/casa3d/modello/pezzo",
+  "ponte/casa3d/modello/fine",
+  "ponte/casa3d/modello/leggi",
+  "ponte/casa3d/modello/togli",
   // Il menu delle integrazioni: la lavatrice di hOn, il forno di Home Connect,
   // con tutte le loro entita'. Il backend legge i registri e li rimette nella
   // forma di un menu; di qui passa la domanda, e la risposta.

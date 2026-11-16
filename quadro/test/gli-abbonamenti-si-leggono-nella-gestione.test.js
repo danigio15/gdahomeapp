@@ -1118,7 +1118,13 @@ test("in cima i numeri: paganti, prove, chi non rinnova, ricorrente, incassato, 
   assert.ok(letto.includes(`2 la prima termina ${il(ORA + 4 * GIORNO)}`), letto);
   /* Il ricorrente e' solo di chi rinnova: 4,99 + 49,99/12. */
   assert.match(letto, /Ricorrente i .* ≈ 9,16 € \/mese da 2 paganti che rinnovano/);
-  assert.ok(letto.includes(`9,98 € a ${mese} · 2 pagamenti`), letto);
+  /* Rossi e Romano hanno pagato in questo mese; Neri (revocata, ma il
+   * periodo l'ha pagato) quindici giorni fa, che dal 16 del mese in poi
+   * cade anch'esso nel mese: il conto lo fa il quadro, con la data vera. */
+  const conti = contaGliAbbonamenti(ELENCO, ORA);
+  assert.ok(conti.pagamenti === 2 || conti.pagamenti === 3, `pagamenti: ${conti.pagamenti}`);
+  const soldi = conti.incassato.EUR.toFixed(2).replace(".", ",");
+  assert.ok(letto.includes(`${soldi} € a ${mese} · ${conti.pagamenti} pagamenti`), letto);
   /* Le case: Premium da qualunque strada, e Base le altre. */
   assert.match(letto, /Case Premium i .* 8 \/14 6 case sono Base/);
   /* Ogni numero ha la sua «i», con la spiegazione lunga. */

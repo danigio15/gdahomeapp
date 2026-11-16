@@ -1688,8 +1688,13 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // 550 con `core/installa-con-chi-guarda.js`: l'aggiornamento si installa
   // con l'utente di chi guarda, che e' quello di cui il Marketplace di Home
   // Assistant guarda l'avviso accettato.
+  // 554 col modello 3D di chi abita (#440): `core/modello-3d.js` (che cos'e' un
+  // file, se si apre, come si raddrizza), `sections/casa-3d-modello-section.js`
+  // (la finestra che lo carica), `sections/casa-3d/scena-modello.js` (la scena
+  // col modello) e `sections/casa-3d/modello-dal-ponte.js` (a pezzi, su e giu').
+  // three e i suoi caricatori non contano: si leggono solo quando la casa si apre.
   assert.ok(
-    relative.length <= 550,
+    relative.length <= 554,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

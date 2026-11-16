@@ -30,7 +30,7 @@ import {
   genereDelComando,
   siPuoScegliere as puoScegliere,
 } from "../core/comandi-accanto.js";
-import { CHIAVE_ENTITA_MIE, entitaMie } from "../core/entita-mie.js";
+import { CHIAVE_ENTITA_MIE, TIPO_INTERRUTTORE, entitaMie } from "../core/entita-mie.js";
 import { roomGlyph } from "../core/personalization-catalog.js";
 import { normalizePeople } from "../core/person-model.js";
 import { CHIAVE_RISERVATE, telecamereVisibili } from "../core/telecamere-riservate.js";
@@ -233,6 +233,10 @@ export function assignedItems(
    * comanda quella scritta dalla tendina della sua riga — e' la piu' esplicita
    * delle due, e comunque una riga sola non diventa due. */
   for (const voce of entitaMie(readJson(CHIAVE_ENTITA_MIE, []))) {
+    /* Un interruttore fatto a mano (#406) non e' l'entita' da cui legge lo
+     * stato: il suo nome e i suoi servizi sono suoi, e in una stanza quella
+     * entita' uscirebbe col nome dell'interruttore e la levetta di un'altra. */
+    if (voce.tipo === TIPO_INTERRUTTORE) continue;
     const id = clean(voce.entity);
     if (!id) continue;
     dove(id, voce.room_id);

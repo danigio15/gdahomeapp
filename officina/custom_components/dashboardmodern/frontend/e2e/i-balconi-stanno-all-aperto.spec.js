@@ -154,7 +154,7 @@ test("la spunta «All'aperto» zittisce l'assistente sul balcone e lo toglie dal
   /* Prima: il balcone e' «una stanza fredda e umida», e la media lo conta. */
   await expect(assistente(page).locator(".dm-ass-conto")).toBeVisible({ timeout: 20_000 });
   const prima = await suggerimenti(page);
-  expect(prima).toMatch(/Balcone (sud|nord) è fredda/);
+  expect(prima).toMatch(/Balcone (sud|nord): fa freddo/);
   expect(prima).toMatch(/Balcone (sud|nord): umidità al/);
   /* (20,6 + 6,8 + 19,4 + 5,9) / 4 = 13,2 */
   await expect(tessera(page)).toContainText("13,2", { timeout: 20_000 });

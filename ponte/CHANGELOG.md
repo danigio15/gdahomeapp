@@ -10,6 +10,37 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.19.8
+
+_App GdAHome e add-on._
+
+- **Energia: i consumi non monitorati**: nel flusso dell'energia un nuovo
+  cerchio «Non monitorati» mostra in tempo reale quanto consuma la casa
+  oltre ai carichi configurati (per esempio 120 W di casa, 81 W misurati:
+  39 W non monitorati). Mai negativo, niente rumore sotto i 5 W, e vale
+  anche per i totali del giorno e del mese.
+- **Interruttore fatto a mano**: fra le entità personalizzate c'è il tipo
+  interruttore, con il servizio di Home Assistant da chiamare e lo stato
+  da leggere.
+- **Casa 3D dal modello**: si può caricare un modello 3D della casa e
+  vederla così com'è.
+- **Assistente di casa più intelligente**: frasi giuste, consigli in
+  ordine di importanza (prima sicurezza e danni, poi soldi e comfort),
+  guarda il contesto (casa vuota, notte, meteo fuori) e si ricorda cosa
+  hai già fatto o scartato; serrature, antifurto e garage chiedono
+  conferma.
+- **Navigatore mai contromano**: all'incrocio il percorso non fa più
+  prendere un tratto di senso unico al contrario, tiene la strada giusta.
+- **Avvisi di casa nel navigatore**: mentre guidi le notifiche di casa
+  (elettrodomestici, antifurto, campanello, allarmi) compaiono sopra la
+  mappa, sul telefono, su Android Auto e su CarPlay. Gli urgenti restano
+  finché non li chiudi, gli altri spariscono da soli; i comandi delicati
+  chiedono conferma.
+- **Musica nel navigatore**: titolo, copertina e comandi della canzone
+  in riproduzione direttamente nel navigatore (Android: qualsiasi
+  lettore, Spotify compreso; iPhone: Apple Music). Si spegne da «Casa e
+  musica in guida».
+
 ## 1.19.7
 
 _App GdAHome e add-on._

@@ -153,6 +153,9 @@ const SHARED_ACROSS_LANGUAGES = new Set([
   "Wallbox · evcc",
   /* Il suono «Ding» del campanello a muro: e' il suono, non una parola. */
   "Ding",
+  /* L'interruttore fatto a mano (#406): «Service» e' il servizio di Home
+   * Assistant, e in francese si scrive cosi'. */
+  "Service",
   "24 h",
   /* I minuti e le ore della Cottura (#71): «min» e «h» sono i simboli delle
    * unita', e mezza Europa li scrive cosi'. Dove non e' vero — tedesco, russo,

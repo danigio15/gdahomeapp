@@ -1001,7 +1001,10 @@ test.describe("la plancia a muro", () => {
     await page.waitForTimeout(1500);
     await page.evaluate(() => window.dmMuro.riposa());
     const consiglio = muro(page).locator('[data-mu-riposo="assistente"]');
-    await expect(consiglio).toContainText("Non c'è nessuno in casa", { timeout: 20000 });
+    /* La casa vuota ha anche la finestra della cucina aperta: a parita' di
+     * urgenza la sicurezza viene prima del risparmio, e il consiglio in cima e'
+     * la finestra, non le luci. */
+    await expect(consiglio).toContainText("Finestra aperta: Finestra cucina", { timeout: 20000 });
     await expect(consiglio).toHaveAttribute("data-urgenza", "oggi");
     /* Spento in Config › Persone, sul riposo non c'e' piu'. */
     await page.evaluate(() => {
