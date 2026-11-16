@@ -7,7 +7,7 @@ import {
   entitaCandidate,
   espandiGriglia,
   statoDelDispositivo
-} from "./chunk-LQ7Q24TI.js";
+} from "./chunk-EXLHWZMG.js";
 
 // src/sections/casa-3d/arredi-3d.js
 var CATALOGO_ARREDI = Object.freeze([
@@ -2983,6 +2983,8 @@ function installaLoStile() {
   `;
   document.head.appendChild(st);
 }
+
 export {
-  creaScena
+  creaScena,
+  installaLoStile
 };

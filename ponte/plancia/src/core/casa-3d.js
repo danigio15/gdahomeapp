@@ -437,6 +437,95 @@ function pianoPulito(p, i) {
   };
 }
 
+/* ── il modello 3D di chi abita (#440) ──────────────────────────────────
+ *
+ * «Possibilita' di caricare la pianta 3D fatta da un altro programma e
+ * usare quella grafica.» Il file (GLB, glTF, OBJ) sta nel ponte, non qui:
+ * nel config c'e' solo come ritrovarlo, come raddrizzarlo (le unita', l'asse
+ * che va in alto, il verso) e i dispositivi messi sopra, nelle coordinate del
+ * file — cosi' correggere la scala non li stacca dal modello. I controlli sul
+ * file stanno in `modello-3d.js`. */
+export const UNITA_DEL_MODELLO = Object.freeze({
+  m: 1,
+  cm: 0.01,
+  mm: 0.001,
+  in: 0.0254,
+  ft: 0.3048,
+});
+export const FORMATI_DEL_MODELLO = Object.freeze(["glb", "gltf", "obj"]);
+const COORDINATA = 1e7;
+
+/** Un dispositivo messo sul modello: x, y, z sono nel sistema del file. */
+export function dispositivoDelModelloPulito(d) {
+  const base = dispositivoPulito(d);
+  if (!base) return null;
+  const c = (v) => numero(v, -COORDINATA, COORDINATA, 0);
+  return {
+    k: base.k,
+    x: c(d?.x),
+    y: c(d?.y),
+    z: c(d?.z),
+    entity: base.entity,
+    nome: base.nome,
+    ...(base.k === "telecamera" ? { fov: base.fov } : {}),
+    da: "mano",
+  };
+}
+
+/** Il modello come si salva; `null` se non e' un modello del ponte. */
+export function modelloPulito(m) {
+  if (!m || typeof m !== "object") return null;
+  const id = /^[a-f0-9]{16}$/.test(clean(m.id)) ? clean(m.id) : "";
+  const formato = FORMATI_DEL_MODELLO.includes(m.formato) ? m.formato : "";
+  if (!id || !formato) return null;
+  const rot = Math.round(numero(m.rot, -180, 180, 0));
+  return {
+    id,
+    formato,
+    nome: testo(m.nome, 80) || `modello.${formato}`,
+    peso: Math.round(numero(m.peso, 0, 1e9, 0)),
+    impronta: /^[a-f0-9]{16,64}$/.test(clean(m.impronta)) ? clean(m.impronta) : "",
+    unita: Object.keys(UNITA_DEL_MODELLO).includes(m.unita) ? m.unita : "m",
+    su: m.su === "z" ? "z" : "y",
+    rot,
+    scala: numero(m.scala, 0.001, 1000, 1),
+    triangoli: Math.round(numero(m.triangoli, 0, 1e9, 0)),
+    /* Spento, resta scritto: si torna alla casa generata senza perderlo. */
+    attivo: m.attivo !== false,
+    dispositivi: elenco(m.dispositivi)
+      .map(dispositivoDelModelloPulito)
+      .filter(Boolean)
+      .slice(0, DISPOSITIVI_AL_MASSIMO),
+  };
+}
+
+/** Se la casa da mostrare e' il modello di chi abita. */
+export const usaIlModello = (casa) => Boolean(casa?.modello?.id && casa.modello.attivo);
+
+/** La casa come la leggono gli elenchi della pagina quando c'e' il modello:
+ * un piano solo, «modello», coi dispositivi messi sopra. */
+export function casaDelModello(casa, nome = "") {
+  const m = casa?.modello;
+  if (!m) return casa;
+  return {
+    ...casa,
+    piani: [
+      {
+        k: "modello",
+        nome: testo(nome, 30) || testo(m.nome.replace(/\.[a-z0-9]+$/i, ""), 30) || "3D",
+        livello: 0,
+        stanze: [],
+        aperture: [],
+        arredi: [],
+        dispositivi: m.dispositivi,
+      },
+    ],
+    esterno: { ...casa.esterno, telecamere: [] },
+    /* i dispositivi stanno gia' nel piano qui sopra: due volte si conterebbero due volte */
+    modello: { ...m, dispositivi: [] },
+  };
+}
+
 /** La casa come la si salva: tutto controllato, niente di troppo. */
 export function casa3dPulita(raw) {
   const c = raw && typeof raw === "object" ? raw : {};
@@ -463,6 +552,7 @@ export function casa3dPulita(raw) {
         .slice(0, 16),
     },
     piani,
+    modello: modelloPulito(c.modello),
   };
 }
 
@@ -730,6 +820,10 @@ export function contaCollegati(casa) {
       if (d.entity) collegati++;
     }
   for (const d of casa?.esterno?.telecamere || []) {
+    tutti++;
+    if (d.entity) collegati++;
+  }
+  for (const d of casa?.modello?.dispositivi || []) {
     tutti++;
     if (d.entity) collegati++;
   }

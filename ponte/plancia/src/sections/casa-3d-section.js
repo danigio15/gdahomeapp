@@ -23,9 +23,13 @@ import {
   DISPOSITIVI_3D,
   azioneDelTocco,
   casa3dPulita,
+  casaDelModello,
   contaCollegati,
   statoDelDispositivo,
+  usaIlModello,
 } from "../core/casa-3d.js";
+import { troppoPerQuestoDispositivo } from "../core/modello-3d.js";
+import { caricaIlMotore } from "./casa-3d-modello-section.js";
 import { apriIlMenu, premiumDellaCasa, premiumRicordato } from "./plancia-a-muro-section.js";
 import { CHIAVE_RISERVATE, telecamereVisibili } from "../core/telecamere-riservate.js";
 import { normalizePeople } from "../core/person-model.js";
@@ -71,12 +75,30 @@ const state = (root[KEY] ||= {
   videoAperto: false,
   nascosta: false,
   guasto: "",
+  /* Il modello di chi abita che qui non si apre (#440): il suo nome, e
+   * finche' resta quello si mostra la casa generata. */
+  modelloGuasto: "",
+  attesaDelModello: "",
 });
 
 /** La casa del config, pulita. */
 export function casa3dDiQui() {
   return casa3dPulita(readJson(CHIAVE_CASA3D, null));
 }
+
+/* Se qui si mostra il modello di chi abita (#440) invece della casa
+ * generata: c'e', e' acceso, non e' gia' caduto su questo dispositivo, e non
+ * e' troppo per un tablet piccolo — che allora, se c'e', apre la casa
+ * generata. Senza casa generata si prova lo stesso: e' l'unica che c'e'. */
+function conIlModello(casa) {
+  if (!usaIlModello(casa)) return false;
+  if (state.modelloGuasto === casa.modello.id) return false;
+  return !(casa.piani.length && troppoPerQuestoDispositivo(casa.modello));
+}
+
+/* La casa che leggono gli elenchi: col modello, un piano solo coi suoi dispositivi. */
+const casaDaElencare = (casa) =>
+  conIlModello(casa) ? casaDelModello(casa) : casa;
 
 /* Le telecamere che adesso si possono guardare: le riservate, con qualcuno in
  * casa (o non si sa), no — la stessa regola della plancia principale. */
@@ -142,10 +164,12 @@ const gradi = (v) =>
 
 /* ── i pezzi della pagina ─────────────────────────────────────────────── */
 
-function testataMarkup(casa, admin) {
+function testataMarkup(casa, admin, modello = false) {
   const nome = clean(root.__HASS__?.config?.location_name) || t("Casa", "Home");
-  const p = casa.piani.find((x) => x.k === state.vista);
-  const sotto = p
+  const p = modello ? null : casa.piani.find((x) => x.k === state.vista);
+  const sotto = modello
+    ? t("La casa in 3D · il tuo modello", "Home in 3D · your model")
+    : p
     ? `${p.nome} · ${t("tocca «Esterno» per tornare fuori", "tap «Outside» to step back out")}`
     : casa.tipo === "palazzo"
       ? t("La casa in 3D · il palazzo", "Home in 3D · the building")
@@ -159,16 +183,19 @@ function testataMarkup(casa, admin) {
         <h1>${esc(p ? p.nome : nome)}</h1>
         <p>${esc(sotto)}</p>
       </div>
-      <div class="c3-pillole">${pillola("esterno", `${casa.tipo === "palazzo" ? "🏢" : "🏡"} ${t("Esterno", "Outside")}`)}${pianiDallAlto(
-        casa,
-      )
+      <div class="c3-pillole">${
+        modello
+          ? pillola("modello", `🧊 ${casa.piani[0]?.nome || ""}`)
+          : pillola("esterno", `${casa.tipo === "palazzo" ? "🏢" : "🏡"} ${t("Esterno", "Outside")}`)
+      }${modello ? "" : pianiDallAlto(casa)
         .map((x) => pillola(x.k, x.nome))
         .join("")}</div>
       <span class="c3-spazio"></span>
       ${
         admin && casa.piani.length
           ? `<button type="button" class="c3-tasto" data-c3s="arreda" aria-pressed="${state.arreda}">🎨 ${esc(t("Arreda", "Furnish"))}</button>
-             <button type="button" class="c3-tasto" data-c3s="crea">🏗️ ${esc(t("Crea / modifica la casa", "Create / edit the house"))}</button>`
+             ${modello ? "" : `<button type="button" class="c3-tasto" data-c3s="crea">🏗️ ${esc(t("Crea / modifica la casa", "Create / edit the house"))}</button>`}
+             <button type="button" class="c3-tasto" data-c3s="modello">🧊 ${esc(t("Il tuo modello 3D", "Your 3D model"))}</button>`
           : ""
       }
       <span class="c3-ora">${esc(adesso)}</span>
@@ -197,7 +224,8 @@ function casaDaCreareMarkup(admin) {
               "Whoever manages the home still has to create it. It will appear here as soon as it's ready.",
             ),
       )}</p>
-      ${admin ? `<button type="button" class="c3-tasto c3-tasto-grande" data-c3s="crea">🏗️ ${esc(t("Crea la tua casa", "Create your home"))}</button>` : ""}
+      ${admin ? `<button type="button" class="c3-tasto c3-tasto-grande" data-c3s="crea">🏗️ ${esc(t("Crea la tua casa", "Create your home"))}</button>
+        <button type="button" class="c3-tasto" data-c3s="modello">🧊 ${esc(t("Usa un modello 3D tuo (GLB/glTF/OBJ)", "Use your own 3D model (GLB/glTF/OBJ)"))}</button>` : ""}
     </div>`;
 }
 
@@ -207,7 +235,8 @@ function sinistraMarkup(casa, states, admin) {
       const luci = luciDelPiano(p, states);
       const temp = temperaturaDelPiano(p, states);
       const locali = p.stanze.filter((s) => !s.fuori).length;
-      const dettagli = [`${locali} ${t("locali", "rooms")}`];
+      /* il modello di chi abita non ha stanze contate: si dice quello che c'e' */
+      const dettagli = locali || p.k !== "modello" ? [`${locali} ${t("locali", "rooms")}`] : [];
       if (luci.tutte) dettagli.push(`💡 ${luci.accese}`);
       if (temp !== null) dettagli.push(`🌡 ${gradi(temp)}`);
       return `<button type="button" class="c3-piano" data-c3s="vista" data-c3s-k="${esc(p.k)}" aria-pressed="${state.vista === p.k}">
@@ -442,7 +471,85 @@ const TRE = (() => {
   }
 })();
 
+/* La scena col modello di chi abita (#440): il file dal ponte (o dalla cache
+ * del browser), letto, e messo al posto della casa generata. Se non si apre —
+ * un file che qui non si legge, un tablet senza memoria, il filo che cade —
+ * si torna alla casa generata e lo si dice; senza casa generata, lo si dice e
+ * basta. */
+async function avviaIlModello(admin) {
+  state.caricando = true;
+  state.guasto = "";
+  const casa = casa3dDiQui();
+  const m = casa.modello;
+  try {
+    const [{ THREE, caricatori, scena }, { scaricaIlModello }] = await Promise.all([
+      caricaIlMotore(),
+      import("./casa-3d/modello-dal-ponte.js"),
+    ]);
+    const byte = await scaricaIlModello(m, {
+      quandoAvanza: (fatti, tutti) => {
+        const pct = Math.round((fatti / Math.max(1, tutti)) * 100);
+        state.attesaDelModello = t(`Scarico il modello… ${pct}%`, `Downloading the model… ${pct}%`);
+        const el = doc.getElementById(ID)?.querySelector(".c3-attesa p");
+        if (el) el.textContent = state.attesaDelModello;
+      },
+    });
+    const forma = await scena.caricaLaForma(THREE, caricatori, byte, m.formato);
+    const nodo = doc.getElementById(ID);
+    const posto = nodo?.querySelector(".c3-posto");
+    const ora = casa3dDiQui();
+    if (!posto || !conIlModello(ora) || ora.modello.id !== m.id) {
+      scena.liberaLaForma(forma.radice);
+      return;
+    }
+    const states = allStates() || {};
+    state.scena = scena.creaScenaDelModello(THREE, {
+      contenitore: posto,
+      casa: ora,
+      forma,
+      stati: () => allStates() || {},
+      italiano: italiano(),
+      admin,
+      aree: admin ? areeDelleEntita(states) : {},
+      pannello: nodo.querySelector(".c3-arreda-posto"),
+      quandoTocchi: alToccoDellaScena,
+      quandoSalvi: salvaLaCasa,
+      quandoCade: () => cadeIlModello(m.id),
+    });
+    state.firma = firmaDi(ora);
+    state.vista = "modello";
+    if (state.arreda) state.scena.arreda(true);
+  } catch (errore) {
+    root.console?.warn?.("[DashboardModern] casa 3d, il modello", errore);
+    cadeIlModello(m?.id);
+  } finally {
+    state.caricando = false;
+    state.attesaDelModello = "";
+    ridisegna();
+  }
+}
+
+function cadeIlModello(id) {
+  state.modelloGuasto = id || "";
+  spegniLaScena();
+  const casa = casa3dDiQui();
+  if (casa.piani.length)
+    avviso(
+      t(
+        "Il tuo modello non si apre qui: ecco la casa generata.",
+        "Your model can't open here: here's the generated house.",
+      ),
+      "male",
+    );
+  else state.guasto = "modello";
+  ridisegna();
+}
+
+/* La firma della scena: la casa, e se si sta mostrando il modello. */
+const firmaDi = (casa) => `${conIlModello(casa) ? "M" : "C"}${JSON.stringify(casa)}`;
+
 async function avviaLaScena(admin) {
+  if (conIlModello(casa3dDiQui())) return avviaIlModello(admin);
   state.caricando = true;
   state.guasto = "";
   try {
@@ -470,7 +577,7 @@ async function avviaLaScena(admin) {
         ridisegna();
       },
     });
-    state.firma = JSON.stringify(casa);
+    state.firma = firmaDi(casa);
     if (state.vista !== "esterno" && !state.scena.apri(state.vista)) state.vista = "esterno";
     if (state.arreda) state.scena.arreda(true);
   } catch (errore) {
@@ -494,7 +601,7 @@ function spegniLaScena() {
  * prima di scrivere: la casa scritta e' gia' quella in scena, non si rifa'. */
 function salvaLaCasa(nuova) {
   const pulita = casa3dPulita(nuova);
-  state.firma = JSON.stringify(pulita);
+  state.firma = firmaDi(pulita);
   try {
     writeJsonIfChanged(CHIAVE_CASA3D, pulita);
   } catch (_errore) {
@@ -538,7 +645,7 @@ function comanda(azione) {
 }
 
 function guarda(entity) {
-  const casa = casa3dDiQui();
+  const casa = casaDaElencare(casa3dDiQui());
   if (!telecamereGuardabili(casa, allStates() || {}).has(entity)) {
     avviso(
       t("Telecamera riservata: non si vede adesso", "Private camera: not viewable now"),
@@ -600,27 +707,31 @@ function disegna() {
     state.arreda = false;
     state.scena?.arreda(false);
   }
-  if (!casa.piani.some((p) => p.k === state.vista)) state.vista = "esterno";
+  /* Col modello di chi abita (#440) gli elenchi leggono un piano solo, il suo. */
+  const modello = conIlModello(casa);
+  const elencata = casaDaElencare(casa);
+  if (modello) state.vista = "modello";
+  else if (!casa.piani.some((p) => p.k === state.vista)) state.vista = "esterno";
   const nodo = tela();
   doc.documentElement.classList.add("dm-casa3d-acceso");
   nodo.dataset.tema = doc.documentElement.getAttribute("data-theme") || "light";
   nodo.dataset.arreda = String(state.arreda);
-  scriviSeCambia(nodo.querySelector(".c3-testa-posto"), testataMarkup(casa, admin));
+  scriviSeCambia(nodo.querySelector(".c3-testa-posto"), testataMarkup(elencata, admin, modello));
   /* Una plancia Casa 3D appena nata non ha ancora la casa: niente scena,
    * niente schede, e al posto della casa l'invito a crearla. */
-  const vuota = !casa.piani.length;
+  const vuota = !elencata.piani.length;
   scriviSeCambia(
     nodo.querySelector(".c3-sinistra"),
-    vuota ? "" : sinistraMarkup(casa, states, admin),
+    vuota ? "" : sinistraMarkup(elencata, states, admin),
   );
-  const guardabili = telecamereGuardabili(casa, states);
+  const guardabili = telecamereGuardabili(elencata, states);
   scriviSeCambia(
     nodo.querySelector(".c3-elenco"),
-    vuota ? "" : elencoMarkup(casa, states, guardabili),
+    vuota ? "" : elencoMarkup(elencata, states, guardabili),
   );
   /* La scena: si costruisce una volta, si rifa' solo se la casa e' cambiata
    * da un'altra parte (la procedura «Crea», un altro dispositivo). */
-  const firma = JSON.stringify(casa);
+  const firma = firmaDi(casa);
   if (state.scena && state.firma !== firma) spegniLaScena();
   if (state.scena) state.scena.aggiornaStati(states);
   else if (!vuota && !state.caricando && !state.guasto) avviaLaScena(admin);
@@ -628,9 +739,15 @@ function disegna() {
     nodo.querySelector(".c3-attesa"),
     state.scena
       ? ""
-      : vuota
+      : vuota && usaIlModello(casa)
+        ? `<div class="c3-da-creare"><p>${esc(t("La casa in 3D non si apre su questo dispositivo.", "The 3D house cannot open on this device."))}</p>${
+            admin
+              ? `<button type="button" class="c3-tasto" data-c3s="modello">🧊 ${esc(t("Il tuo modello 3D", "Your 3D model"))}</button>`
+              : ""
+          }</div>`
+        : vuota
         ? casaDaCreareMarkup(admin)
-        : `<p>${esc(state.guasto ? t("La casa in 3D non si apre su questo dispositivo.", "The 3D house cannot open on this device.") : t("Arriva la casa…", "Loading the house…"))}</p>`,
+        : `<p>${esc(state.guasto ? t("La casa in 3D non si apre su questo dispositivo.", "The 3D house cannot open on this device.") : state.attesaDelModello || t("Arriva la casa…", "Loading the house…"))}</p>`,
   );
   /* Il video vivo non si ridisegna finche' resta aperto; una telecamera che
    * smette di potersi guardare si chiude subito. */
@@ -644,7 +761,8 @@ function disegna() {
     chiudiIlVideo();
     state.finestra = null;
   }
-  if (scriviSeCambia(sopra, finestraMarkup(casa, states))) accendiIlVideo(sopra, casa, states);
+  if (scriviSeCambia(sopra, finestraMarkup(elencata, states)))
+    accendiIlVideo(sopra, elencata, states);
   avviaIlBattito();
 }
 
@@ -763,6 +881,11 @@ function alClic(evento) {
         ),
         "male",
       );
+    return;
+  }
+  if (cosa === "modello") {
+    const apri = root.__DM_CASA3D_MODELLO__;
+    if (typeof apri === "function") apri();
     return;
   }
   if (cosa === "guarda") return guarda(clean(el.dataset.c3sE));

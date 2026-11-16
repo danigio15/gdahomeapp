@@ -205,6 +205,7 @@ import { installOcchioEditor } from "./colpo-d-occhio-editor-section.js";
 import { installCasa3D } from "./casa-3d-section.js";
 import { installCasa3DEditor } from "./casa-3d-editor-section.js";
 import { installCasa3DCrea } from "./casa-3d-crea-section.js";
+import { installCasa3DModello } from "./casa-3d-modello-section.js";
 import { installMacchineEditor } from "./macchine-editor-section.js";
 import { installNodiSection } from "./nodi-section.js";
 import { installNodiEditor } from "./nodi-editor-section.js";
@@ -1316,6 +1317,7 @@ export function installSectionRuntime() {
     senzaCadere(installCasa3D);
     senzaCadere(installCasa3DEditor);
     senzaCadere(installCasa3DCrea);
+    senzaCadere(installCasa3DModello);
     senzaCadere(installMacchineEditor);
     senzaCadere(installNodiSection);
     senzaCadere(installNodiEditor);

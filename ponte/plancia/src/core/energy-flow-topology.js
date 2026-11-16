@@ -725,6 +725,114 @@ function clickTarget(load, override, period, name, children = 0, wallbox = null)
   return entity ? { kind: "history", entity, title: name } : null;
 }
 
+/* ── I carichi non monitorati ──────────────────────────────────────────────
+ *
+ * «Negli assorbimenti ci potrebbero essere dei carichi non monitorati (normale
+ * direi). Sarebbe carino avere un flusso automatico degli assorbimenti non
+ * configurati. Es. qui mancano circa 40 watt.» Casa diceva 120 W, sotto
+ * c'erano Bagno a 80 W e Spogliatoio a 1 W, e «Altro» a 0 W. Non era un conto
+ * sbagliato: «Altro» e' il cerchio degli elettrodomestici senza stanza
+ * (`CERCHIO_ALTRO`), fermi, e la loro somma fa davvero zero. I 39 W che
+ * mancano non li aveva in mano nessun cerchio.
+ *
+ * Il resto si ricava — Casa meno quello che i cerchi misurano — e ha un
+ * cerchio suo, «Non monitorati». Non si mescola con nessun altro: «Altro»
+ * (quello delle stanze o uno scritto a mano dall'utente) resta suo, col suo
+ * nome e il suo numero, e il suo numero si sottrae come quello di ogni altro
+ * cerchio. Le regole:
+ *
+ *  · serve il consumo di Casa dello stesso periodo, nella stessa unita' dei
+ *    cerchi (watt nell'istantanea, kilowattora nel Giorno e nel Mese): uno
+ *    stato di HA si converte con la sua unita', cosi' una Casa in kW e i
+ *    carichi in W si sottraggono senza sbagliare di mille;
+ *  · sotto una soglia — 5 W, o 0,05 kWh, o il 3% di Casa se e' di piu' — il
+ *    resto e' rumore di misura e vale zero;
+ *  · mai negativo: se i cerchi sommano piu' di Casa (i sensori non campionano
+ *    nello stesso istante) il resto e' zero, senza avvisi — dello sbilancio
+ *    vero si occupa gia' `laQuadraturaNonTorna`;
+ *  · finche' un cerchio aspetta il suo numero (nel Giorno e nel Mese), o ha
+ *    un sensore che non risponde, il resto non si calcola: sarebbe Casa meno
+ *    un pezzo, cioe' un numero inventato;
+ *  · il cerchio nasce se c'e' posto sul palco (al massimo `FLOW_MAX_LOADS`) e
+ *    quando c'e' davvero qualcosa da dire: una casa misurata tutta non si
+ *    vede un cerchio in piu' a 0 W. Una volta nato pero' resta, anche a 0 W
+ *    (`tieni`, che la sezione ricorda): un cerchio che appare e sparisce col
+ *    rumore farebbe ballare tutto il disegno. */
+export const CERCHIO_NON_MONITORATI = "carichi-non-monitorati";
+const RESIDUO_MINIMO_W = 5;
+const RESIDUO_MINIMO_KWH = 0.05;
+const RESIDUO_IN_PROPORZIONE = 0.03;
+
+/** Il consumo di Casa nell'unita' dei cerchi del periodo: un numero passa
+ * com'e', uno stato di HA si converte con la sua unita'. */
+export function valoreDellaCasa(casa, period = "instant") {
+  if (casa === null || casa === undefined) return null;
+  if (typeof casa !== "object") return finiteOrNull(casa);
+  if (casa.state === undefined) return null;
+  const grezzo = String(casa.state);
+  if (grezzo === "unknown" || grezzo === "unavailable") return null;
+  if (period === "instant") return finiteOrNull(wattsFromState(casa));
+  return stateKwh({ casa }, "casa");
+}
+
+/**
+ * Quanto di Casa non misura nessun cerchio, con le soglie del rumore: `null`
+ * se Casa non si sa, altrimenti un numero ≥ 0.
+ */
+export function residuoNonMisurato(casa, misurati = [], period = "instant") {
+  const totale = finiteOrNull(casa);
+  if (totale === null || totale < 0) return null;
+  let somma = 0;
+  for (const valore of misurati) {
+    const numero = finiteOrNull(valore);
+    if (numero !== null && numero > 0) somma += numero;
+  }
+  const resto = totale - somma;
+  const minimo = period === "instant" ? RESIDUO_MINIMO_W : RESIDUO_MINIMO_KWH;
+  const soglia = Math.max(minimo, totale * RESIDUO_IN_PROPORZIONE);
+  if (!(resto >= soglia)) return 0;
+  return round(resto, period === "instant" ? 1 : 3);
+}
+
+function conIlResiduo({ visible, readings, casa, period, nome, tieni }) {
+  if (casa === null || !visible.length || visible.length >= FLOW_MAX_LOADS) return null;
+  if (period !== "instant" && readings.some((lettura) => lettura.attesa)) return null;
+  /* Un cerchio col sensore che non risponde (all'avvio, o «unavailable»):
+   * il suo consumo finirebbe tutto fra i non monitorati. Si aspetta. */
+  if (readings.some((lettura) => lettura.sensore && lettura.value === null)) return null;
+  const resto = residuoNonMisurato(
+    casa,
+    readings.map((lettura) => lettura.value),
+    period,
+  );
+  if (resto === null || (resto === 0 && !tieni)) return null;
+  return {
+    nuovo: {
+      voce: {
+        load: {
+          id: CERCHIO_NON_MONITORATI,
+          name: nome,
+          icon: "mdi:help-circle-outline",
+          color: "#94a3b8",
+          metadata: { residuo_non_misurato: true },
+        },
+        slotKey: "",
+        override: null,
+        order: visible.length,
+      },
+      lettura: {
+        entity: "",
+        value: resto,
+        source: "residuo",
+        children: 0,
+        sensore: true,
+        attesa: false,
+        nonMisurato: resto,
+      },
+    },
+  };
+}
+
 /* The whole stage for one period: which bubbles exist, what they read, where
  * they sit and how their connector should animate. The DOM renderer only
  * applies this. */
@@ -744,6 +852,16 @@ export function flowStageModel(options = {}) {
     /* L'ultimo numero gia' letto per ogni cerchio, nello stesso giorno o
      * mese: un giro senza lettura non lo cancella. */
     ricordati = null,
+    /* Quanto consuma Casa nello stesso periodo — watt nell'istantanea,
+     * kilowattora nel Giorno e nel Mese — o lo stato di Home Assistant che lo
+     * dice, con la sua unita'. Senza, niente residuo: vedi `conIlResiduo`. */
+    casa = null,
+    /* Il nome del cerchio dei carichi non monitorati: la sezione lo passa
+     * gia' tradotto. */
+    nomeDelResiduo = "Non monitorati",
+    /* Il cerchio dei non monitorati c'era gia' in questa vista: resta anche
+     * a 0 W, invece di sparire e far ballare il disegno. */
+    tieniIlResiduo = false,
   } = options;
   const attende = (voce) => {
     const chiave = clean(voce?.id) || clean(voce?.name);
@@ -764,8 +882,6 @@ export function flowStageModel(options = {}) {
     visible.push({ load, slotKey, override, order: index });
   });
 
-  const desktop = flowStageLayout(visible.length, "desktop");
-  const mobile = flowStageLayout(visible.length, "mobile");
   const threshold = period === "instant" ? INSTANT_THRESHOLD : ENERGY_THRESHOLD;
   const readings = visible.map(({ load, slotKey }, index) => {
     const figli = subloadsOf(load, loads, appliances);
@@ -779,13 +895,35 @@ export function flowStageModel(options = {}) {
     const attesa = period !== "instant" && sensore && [load, ...figli].some(attende);
     return { ...reading, sensore, attesa };
   });
+  const residuo = conIlResiduo({
+    visible,
+    readings,
+    casa: valoreDellaCasa(casa, period),
+    period,
+    nome: nomeDelResiduo,
+    tieni: Boolean(tieniIlResiduo),
+  });
+  if (residuo?.nuovo) {
+    visible.push(residuo.nuovo.voce);
+    readings.push(residuo.nuovo.lettura);
+  }
+  const desktop = flowStageLayout(visible.length, "desktop");
+  const mobile = flowStageLayout(visible.length, "mobile");
   const peak = readings.reduce((top, item) => Math.max(top, Math.abs(item.value ?? 0)), 0);
 
   const nodes = visible.map(({ load, slotKey, override, order }, index) => {
     const name = clean(override?.name) || clean(load.name) || "Carico";
-    const { entity, value, source, children, sensore, attesa } = readings[index];
+    const { entity, value, source, children, sensore, attesa, nonMisurato } = readings[index];
     const active = value !== null && Math.abs(value) > threshold;
     return {
+      ...(nonMisurato !== undefined
+        ? {
+            /* Il cerchio dei carichi non monitorati: il resto di Casa che
+             * nessun altro cerchio misura. */
+            nonMisurato,
+            residuo: true,
+          }
+        : {}),
       id: clean(load.id) || `${slotKey || "flow-load"}-${index}`,
       slotKey,
       order,

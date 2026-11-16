@@ -16,8 +16,13 @@
  * pagine spente non compaiono, e una sezione nuova entra il giorno in cui
  * nasce senza che nessuno se ne ricordi.
  */
-import { MASSIMO_PER_SEZIONE } from "../core/entita-mie.js";
-import { CHIAVE_ENTITA_MIE, ridisegnaEntitaMie } from "./entita-mie-section.js";
+import {
+  MASSIMO_PER_SEZIONE,
+  TIPO_INTERRUTTORE,
+  normalizzaVoce,
+  servizioDellInterruttore,
+} from "../core/entita-mie.js";
+import { CHIAVE_ENTITA_MIE, parolaDelNo, ridisegnaEntitaMie } from "./entita-mie-section.js";
 import {
   clean,
   doc,
@@ -100,16 +105,141 @@ function nomeDellaSezione(tab, sezioni) {
 
 /* ── il disegno della scheda ──────────────────────────────────────────── */
 
+const eInterruttore = (voce) => clean(voce?.tipo) === TIPO_INTERRUTTORE;
+
+/* La tendina del genere: un'entità che c'è già, o un interruttore fatto a
+ * mano (#406). Cambiarla ridisegna la riga coi campi dell'altro genere, e
+ * quelli scritti prima restano nella voce: chi torna indietro li ritrova. */
+function tipoMarkup(voce) {
+  const interruttore = eInterruttore(voce);
+  return `<label class="ed-slot dm-mia-ent-campo"><span class="ed-slot-lbl">${esc(
+    t("Che cos'è", "What it is"),
+  )}</span><span class="ed-form-row"><select class="ed-input" data-mia-ent-campo="tipo"
+    data-mia-ent-tipo><option value=""${interruttore ? "" : " selected"}>${esc(
+      t("Un'entità di Home Assistant", "A Home Assistant entity"),
+    )}</option><option value="${TIPO_INTERRUTTORE}"${interruttore ? " selected" : ""}>${esc(
+      t("Un interruttore fatto da te", "A switch you make"),
+    )}</option></select></span></label>`;
+}
+
+/* Una casella con la lente accanto, per scegliere l'entità dall'elenco. */
+function campoEntita(id, campo, valore, etichetta, segnaposto) {
+  return `<label class="ed-slot dm-mia-ent-campo"><span class="ed-slot-lbl">${esc(
+    etichetta,
+  )}</span><span class="ed-form-row"><input id="${id}" class="ed-input mono"
+    data-mia-ent-campo="${campo}" value="${esc(clean(valore))}" placeholder="${esc(segnaposto)}"
+    autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker"
+    data-mia-ent-pick="${id}" aria-label="${esc(t("Scegli entità", "Choose entity"))}">🔍</button></span></label>`;
+}
+
+/* Una metà dell'interruttore: il servizio, l'entità che comanda, i dati.
+ *
+ * Il servizio NON ha la classe `mono` e il suo esempio non comincia con un
+ * dominio di quelli che la guardia delle lenti riconosce
+ * (`entity-picker-guard-section.js`): «script.turn_on» ha la forma di
+ * un'entità, e la casella diventava una tendina di entità in cui un servizio
+ * non si poteva scrivere. Il carattere a spaziatura fissa lo dà la sua
+ * classe. */
+function metaMarkup(voce, id, verso, titolo, spiega) {
+  const dati = voce?.[`${verso}_dati`];
+  const scritti = dati && typeof dati === "object" ? JSON.stringify(dati) : clean(dati);
+  return `<fieldset class="dm-mia-int-meta" data-mia-int-verso="${verso}">
+    <legend>${esc(titolo)}</legend>
+    <div class="ed-intro dm-mia-int-spiega">${esc(spiega)}</div>
+    <label class="ed-slot dm-mia-ent-campo"><span class="ed-slot-lbl">${esc(
+      t("Servizio", "Service"),
+    )}</span><span class="ed-form-row"><input class="ed-input dm-mia-int-servizio"
+      data-mia-ent-campo="${verso}_servizio" value="${esc(clean(voce?.[`${verso}_servizio`]))}"
+      placeholder="homeassistant.turn_on"
+      autocomplete="off" spellcheck="false"></span></label>
+    ${campoEntita(
+      `${id}-${verso}`,
+      `${verso}_entity`,
+      Array.isArray(voce?.[`${verso}_entity`])
+        ? voce[`${verso}_entity`].join(", ")
+        : voce?.[`${verso}_entity`],
+      t("Entità da comandare", "Entity to control"),
+      verso === "spegni" ? "script.spegni_pompa" : "script.accendi_pompa",
+    )}
+    <label class="ed-slot dm-mia-ent-campo"><span class="ed-slot-lbl">${esc(
+      t("Dati del servizio (JSON, facoltativo)", "Service data (JSON, optional)"),
+    )}</span><span class="ed-form-row"><textarea class="ed-input mono dm-mia-int-dati" rows="2"
+      data-mia-ent-campo="${verso}_dati" placeholder='{"brightness_pct": 60}'
+      spellcheck="false">${esc(scritti)}</textarea></span></label>
+  </fieldset>`;
+}
+
+function campiInterruttoreMarkup(voce, id) {
+  return `${metaMarkup(
+    voce,
+    id,
+    "accendi",
+    t("All'accensione", "When switched on"),
+    t(
+      "Il servizio di Home Assistant da chiamare, e l'entità su cui. Basta anche solo l'entità: uno script o una scena partono, un'automazione si esegue, un pulsante si preme.",
+      "The Home Assistant service to call, and on which entity. The entity alone is enough too: a script or a scene starts, an automation runs, a button is pressed.",
+    ),
+  )}
+    ${metaMarkup(
+      voce,
+      id,
+      "spegni",
+      t("Allo spegnimento (facoltativo)", "When switched off (optional)"),
+      t(
+        "Se lo lasci vuoto, ogni tocco fa l'accensione.",
+        "If you leave it empty, every tap does the switch-on.",
+      ),
+    )}
+    <fieldset class="dm-mia-int-meta">
+      <legend>${esc(t("Lo stato", "The state"))}</legend>
+      <div class="ed-intro dm-mia-int-spiega">${esc(
+        t(
+          "L'entità che dice se è acceso, e quale valore vuol dire «acceso». Senza entità è un tasto a impulso.",
+          "The entity that says whether it is on, and which value means «on». Without an entity it is a push button.",
+        ),
+      )}</div>
+      ${campoEntita(
+        id,
+        "entity",
+        voce?.entity,
+        t("Entità che dice lo stato", "Entity that tells the state"),
+        "input_boolean.pompa",
+      )}
+      <label class="ed-slot dm-mia-ent-campo"><span class="ed-slot-lbl">${esc(
+        t("Acceso quando vale", "On when it reads"),
+      )}</span><span class="ed-form-row"><input class="ed-input mono"
+        data-mia-ent-campo="acceso_se" value="${esc(clean(voce?.acceso_se))}" placeholder="on"
+        autocomplete="off" spellcheck="false"></span></label>
+    </fieldset>`;
+}
+
+function campiEntitaMarkup(voce, id) {
+  return `${campoEntita(id, "entity", voce?.entity, t("Entità", "Entity"), "sensor.qualcosa")}
+      <label class="ed-slot dm-mia-ent-campo"><span class="ed-slot-lbl">${esc(
+        t("Stanza", "Room"),
+      )}</span><span class="ed-form-row"><select id="${id}-room" class="ed-input"
+        data-mia-ent-campo="room_id">${roomOptionsMarkup(
+          clean(voce?.room_id),
+          t("Nessuna stanza", "No room"),
+        )}</select></span></label>`;
+}
+
 function rigaMarkup(voce, indice, sezioni, troppe) {
   const aperta = state.aperta === indice;
   const id = `dm-mia-ent-${indice}`;
-  const nome = clean(voce?.nome) || clean(voce?.entity) || t("Entità nuova", "New entity");
+  const interruttore = eInterruttore(voce);
+  const nome =
+    clean(voce?.nome) ||
+    clean(voce?.entity) ||
+    (interruttore ? t("Interruttore nuovo", "New switch") : t("Entità nuova", "New entity"));
   return `<article class="ed-row dm-todo-ed-row dm-mia-ent-riga" data-mia-ent="${indice}" data-open="${aperta}">
     <div class="dm-todo-ed-head">
       <span class="dm-todo-ed-icon" aria-hidden="true">${esc(clean(voce?.icona) || "⭐")}</span>
       <span class="ed-row-main">
         <strong class="ed-row-new">${esc(nome)}</strong>
-        <small class="ed-row-old">${esc(nomeDellaSezione(voce?.sezione, sezioni))}${
+        <small class="ed-row-old">${
+          interruttore ? `${esc(t("Interruttore", "Switch"))} · ` : ""
+        }${esc(nomeDellaSezione(voce?.sezione, sezioni))}${
           troppe ? ` · ${esc(t("oltre il limite", "over the limit"))}` : ""
         }</small>
       </span>
@@ -119,6 +249,7 @@ function rigaMarkup(voce, indice, sezioni, troppe) {
         aria-label="${esc(t("Elimina", "Remove"))}">🗑️</button>
     </div>
     <div class="dm-todo-ed-body"${aperta ? "" : " hidden"}>
+      ${tipoMarkup(voce)}
       <label class="ed-slot dm-mia-ent-campo"><span class="ed-slot-lbl">${esc(
         t("In quale scheda", "On which page"),
       )}</span><span class="ed-form-row"><select id="${id}-sez" class="ed-input"
@@ -130,23 +261,9 @@ function rigaMarkup(voce, indice, sezioni, troppe) {
         <input class="ed-input" data-mia-ent-campo="nome" value="${esc(clean(voce?.nome))}"
           placeholder="${esc(t("Nome (facoltativo)", "Name (optional)"))}">
       </div>
-      <label class="ed-slot dm-mia-ent-campo"><span class="ed-slot-lbl">${esc(
-        t("Entità", "Entity"),
-      )}</span><span class="ed-form-row"><input id="${id}" class="ed-input mono"
-        data-mia-ent-campo="entity" value="${esc(clean(voce?.entity))}" placeholder="sensor.qualcosa"
-        autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker"
-        data-mia-ent-pick="${id}" aria-label="${esc(
-          t("Scegli entità", "Choose entity"),
-        )}">🔍</button></span></label>
-      <label class="ed-slot dm-mia-ent-campo"><span class="ed-slot-lbl">${esc(
-        t("Stanza", "Room"),
-      )}</span><span class="ed-form-row"><select id="${id}-room" class="ed-input"
-        data-mia-ent-campo="room_id">${roomOptionsMarkup(
-          clean(voce?.room_id),
-          t("Nessuna stanza", "No room"),
-        )}</select></span></label>
+      ${interruttore ? campiInterruttoreMarkup(voce, id) : campiEntitaMarkup(voce, id)}
       <button type="button" class="ed-save-btn" data-mia-ent-save>💾 ${esc(
-        t("Salva entità", "Save entity"),
+        interruttore ? t("Salva interruttore", "Save switch") : t("Salva entità", "Save entity"),
       )}</button>
     </div>
   </article>`;
@@ -159,7 +276,11 @@ function oltreIlTetto(lista) {
   const troppe = new Set();
   lista.forEach((voce, indice) => {
     const sezione = clean(voce?.sezione);
-    if (!sezione || !clean(voce?.entity)) return;
+    if (!sezione) return;
+    if (eInterruttore(voce)) {
+      const pronta = normalizzaVoce(voce, indice).accendi;
+      if (!pronta.servizio && !pronta.entity) return;
+    } else if (!clean(voce?.entity)) return;
     const quante = (conto.get(sezione) || 0) + 1;
     conto.set(sezione, quante);
     if (quante > MASSIMO_PER_SEZIONE) troppe.add(indice);
@@ -199,6 +320,9 @@ function corpoMarkup() {
   <button type="button" class="ed-btn-add" data-mia-ent-add>＋ ${esc(
     t("Aggiungi entità", "Add entity"),
   )}</button>
+  <button type="button" class="ed-btn-add" data-mia-ent-add="${TIPO_INTERRUTTORE}">＋ ${esc(
+    t("Aggiungi interruttore", "Add switch"),
+  )}</button>
   </div>`;
 }
 
@@ -229,7 +353,25 @@ function leggiLaRiga(riga) {
   for (const campo of riga.querySelectorAll("[data-mia-ent-campo]"))
     letto[clean(campo.dataset.miaEntCampo)] = clean(campo.value);
   if (!clean(letto.id)) letto.id = `mia-${Date.now().toString(36)}`;
+  /* Una voce che è un'entità resta scritta com'era: senza un `tipo` vuoto in
+   * più, che non dice niente. */
+  if (!clean(letto.tipo)) delete letto.tipo;
   return letto;
+}
+
+/* Il primo no che le due metà di un interruttore direbbero al tocco, detto
+ * subito al salvataggio: un tasto che non parte va saputo qui, non in pagina.
+ * Lo spegnimento vuoto non è un no: vuol dire «ogni tocco accende». */
+export function nonSiSalvaPerche(voce) {
+  if (!eInterruttore(voce)) return "";
+  const pronta = normalizzaVoce(voce);
+  const accendi = servizioDellInterruttore(pronta.accendi, "accendi");
+  if (!accendi.ok) return accendi.perche;
+  if (pronta.spegni.servizio || pronta.spegni.entity || clean(pronta.spegni.dati)) {
+    const spegni = servizioDellInterruttore(pronta.spegni, "spegni");
+    if (!spegni.ok) return spegni.perche;
+  }
+  return "";
 }
 
 /* Tutte le righe della scheda come sono adesso nel documento.
@@ -239,28 +381,53 @@ function leggiLaRiga(riga) {
  * stacca gli altri bottoni dal documento. Chi scrive per primo, quindi, scrive
  * per tutti — vedi `righeDelDocumento`. */
 function righeDalDocumento(body) {
-  return righeDelDocumento(body, "data-mia-ent", voci(), (riga) => leggiLaRiga(riga));
+  /* Un interruttore che non partirebbe resta com'era scritto: chi scrive per
+   * tutti non deve far passare dalla porta di servizio quello che il suo tasto
+   * ha rifiutato (#406). */
+  const siTiene = (bozza) => !nonSiSalvaPerche(bozza);
+  return righeDelDocumento(body, "data-mia-ent", voci(), (riga) => leggiLaRiga(riga), siTiene);
 }
 
 function onClick(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva() !== ENTITA_MIE_EDITOR_TAB || !body.contains(event.target)) return;
 
-  if (event.target.closest("[data-mia-ent-add]")) {
+  const aggiungi = event.target.closest("[data-mia-ent-add]");
+  if (aggiungi) {
     event.preventDefault();
+    const interruttore = clean(aggiungi.dataset.miaEntAdd) === TIPO_INTERRUTTORE;
     const lista = voci().slice();
     /* La scheda che si sta guardando è quella più probabile: chi apre la
      * configurazione dalla Sicurezza sta aggiungendo un sensore alla
      * Sicurezza. Resta una tendina, e si cambia. */
     const dove = clean(doc?.querySelector?.(".page.active")?.id).replace(/^page-/, "");
-    lista.push({
-      id: `mia-${Date.now().toString(36)}`,
-      entity: "",
-      nome: "",
-      icona: "⭐",
-      sezione: dove && dove !== "config" ? dove : "",
-      room_id: "",
-    });
+    const sezione = dove && dove !== "config" ? dove : "";
+    lista.push(
+      interruttore
+        ? {
+            id: `mia-${Date.now().toString(36)}`,
+            tipo: TIPO_INTERRUTTORE,
+            entity: "",
+            nome: "",
+            icona: "🔘",
+            sezione,
+            acceso_se: "on",
+            accendi_servizio: "",
+            accendi_entity: "",
+            accendi_dati: "",
+            spegni_servizio: "",
+            spegni_entity: "",
+            spegni_dati: "",
+          }
+        : {
+            id: `mia-${Date.now().toString(36)}`,
+            entity: "",
+            nome: "",
+            icona: "⭐",
+            sezione,
+            room_id: "",
+          },
+    );
     state.aperta = lista.length - 1;
     salva(lista);
     ridisegna();
@@ -298,12 +465,43 @@ function onClick(event) {
 
   if (event.target.closest("[data-mia-ent-save]")) {
     event.preventDefault();
+    const letta = leggiLaRiga(riga);
+    const no = nonSiSalvaPerche(letta);
+    if (no) {
+      root.edToast?.(`⚠️ ${parolaDelNo(no)}`);
+      return;
+    }
     const lista = righeDalDocumento(body);
-    lista[indice] = leggiLaRiga(riga);
+    lista[indice] = letta;
     salva(lista);
     ridisegna();
-    root.edToast?.(t("💾 Entità salvata", "💾 Entity saved"));
+    root.edToast?.(
+      eInterruttore(letta)
+        ? t("💾 Interruttore salvato", "💾 Switch saved")
+        : t("💾 Entità salvata", "💾 Entity saved"),
+    );
   }
+}
+
+/* Il genere cambiato dalla tendina: si tiene quello che è scritto nella riga
+ * e la si ridisegna coi campi dell'altro genere. */
+function onChange(event) {
+  const body = doc?.getElementById("ed-body");
+  if (!body || schedaAttiva() !== ENTITA_MIE_EDITOR_TAB || !body.contains(event.target)) return;
+  if (!event.target.closest("[data-mia-ent-tipo]")) return;
+  const riga = event.target.closest("[data-mia-ent]");
+  if (!riga) return;
+  const indice = Number(riga.dataset.miaEnt);
+  const lista = righeDalDocumento(body);
+  const letta = leggiLaRiga(riga);
+  if (eInterruttore(letta)) {
+    letta.room_id = "";
+    if (!clean(letta.acceso_se)) letta.acceso_se = "on";
+  }
+  lista[indice] = letta;
+  state.aperta = indice;
+  salva(lista);
+  ridisegna();
 }
 
 export function ensureEntitaMieTab() {
@@ -333,6 +531,13 @@ function installStyles() {
       #ed-body .dm-mia-ent-icona{text-align:center;font-size:18px}
       #ed-body .dm-mia-ent-campo{margin:0 0 10px}
       #ed-body .dm-mia-ent-pieno{margin:10px 2px 0;opacity:.75}
+      #ed-body .dm-mia-int-meta{
+        margin:0 0 12px;padding:10px 12px 2px;border:1px solid var(--card-border,#e2e8f0);
+        border-radius:14px}
+      #ed-body .dm-mia-int-meta legend{padding:0 6px;font-weight:800;font-size:13px}
+      #ed-body .dm-mia-int-spiega{margin:0 0 10px;font-size:12px}
+      #ed-body .dm-mia-int-servizio{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+      #ed-body .dm-mia-int-dati{min-height:44px;resize:vertical;width:100%;font-size:12px}
       /* Nome e scheda incolonnati, come nelle altre liste della
          configurazione: affiancati, il nome di una pagina lunga finiva
          sempre coi puntini. */
@@ -352,6 +557,7 @@ export function installEntitaMieEditor() {
   state.installed = true;
   installStyles();
   doc.addEventListener("click", onClick);
+  doc.addEventListener("change", onChange);
   /* La linguetta si mette appena il pannello nasce, non al primo ridisegno:
    * chi apre la configurazione e chiede subito questa scheda la troverebbe
    * altrimenti assente. */

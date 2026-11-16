@@ -2207,7 +2207,7 @@ function tettoAFalde(THREE, x0, x1, z0, z1, h) {
 }
 
 /* ── il foglio della scena ──────────────────────────────────────────── */
-function installaLoStile() {
+export function installaLoStile() {
   if (document.getElementById("dm-casa3d-scena-stile")) return;
   const st = document.createElement("style");
   st.id = "dm-casa3d-scena-stile";

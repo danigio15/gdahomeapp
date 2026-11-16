@@ -692,7 +692,14 @@ function stageModel(period) {
     ...letturePerLaScena([...loads, ...appliances], period),
     locale: locale(),
     wallbox: vehiclePopupTarget(),
+    /* Il consumo di Casa dello stesso periodo: il resto che nessun cerchio
+     * misura ha un cerchio suo, «Non monitorati» (`conIlResiduo` nel nucleo). */
+    casa: consumoDiCasa(period),
+    nomeDelResiduo: t("Non monitorati", "Unmonitored"),
+    tieniIlResiduo: Boolean(state.nonMonitorati?.[period]),
   });
+  if (model.nodes.some((nodo) => nodo.residuo))
+    state.nonMonitorati = { ...state.nonMonitorati, [period]: true };
   ricordaINumeri(period, model);
   return conLePosizioniDelFlusso(period, model);
 }
@@ -721,6 +728,53 @@ function ridisegnaIlDisegno() {
     const period = view.period === "instant" ? "" : view.period;
     mirrorLegacyMainFlows(scopeFor(period), period);
   }
+}
+
+/* Il consumo di Casa che il flusso confronta con i suoi cerchi.
+ *
+ * Nell'istantanea parla il sensore della casa, in watt con la sua unita' (lo
+ * stesso che scrive la bolla di Casa); senza, si ricava dalle sorgenti col
+ * segno — sole + prelievo − immissione + scarica − carica — purche' nessuna
+ * sorgente configurata sia muta, o il conto inventerebbe un resto. Nel Giorno
+ * e nel Mese vale il pacchetto dell'Energia, lo stesso numero che la bolla di
+ * Casa ha davanti (la bolla la scrive `energy-section.js`, e qui non si
+ * tocca); se il pacchetto quel periodo non l'ha letto, il contatore del
+ * periodo, con la sua unita'. */
+const CASA_DEL_PERIODO = Object.freeze({
+  day: "dm.energy_consumo_casa_oggi",
+  month: "dm.energy_consumo_casa_mese",
+});
+
+/** Il consumo di Casa del Giorno o del Mese dal pacchetto dell'Energia, in
+ * kWh, o `null` se quel periodo non e' stato letto. */
+export function casaDalPacchetto(bundle, period) {
+  if (!bundle || (period !== "day" && period !== "month")) return null;
+  if (bundle.letti && bundle.letti[period] === false) return null;
+  const valore = bundle[period]?.house;
+  return typeof valore === "number" && Number.isFinite(valore) ? valore : null;
+}
+
+function consumoDiCasa(period) {
+  if (period === "instant") {
+    const viva = potenzaViva(SORGENTI_ISTANTANEE.home);
+    if (viva !== null) return viva;
+    const fonti = [
+      SORGENTI_ISTANTANEE.solar,
+      SORGENTI_ISTANTANEE.grid,
+      SORGENTI_ISTANTANEE.battery,
+    ].map((ref) => ({ configurata: resolvedEntity(ref) !== clean(ref), valore: potenzaViva(ref) }));
+    if (fonti[1].valore === null) return null;
+    if (fonti.some((fonte) => fonte.configurata && fonte.valore === null)) return null;
+    return Math.max(
+      0,
+      fonti.reduce((somma, fonte) => somma + (fonte.valore ?? 0), 0),
+    );
+  }
+  const ref = CASA_DEL_PERIODO[period];
+  if (!ref) return null;
+  const dalPacchetto = casaDalPacchetto(root.__DASHBOARDMODERN_RUNTIME_0150__?.bundle, period);
+  if (dalPacchetto !== null) return dalPacchetto;
+  return allStates()[resolvedEntity(ref)] || null;
 }
 
 function letturePerLaScena(voci, period) {
@@ -990,12 +1044,23 @@ function ensureBubble(stage, node, period, scale) {
    * disposizione il cerchio resta com'era, senza un attributo in piu'. */
   if (node.nuovo) scriviDatoSeCambia(element, "dmFlowNuovo", "true");
   else if (element.dataset && "dmFlowNuovo" in element.dataset) delete element.dataset.dmFlowNuovo;
+  /* Il resto di Casa che nessun cerchio misura: lo si dice, perche' e' un
+   * numero ricavato e non letto da un sensore. */
+  const residuo = node.nonMisurato !== undefined;
+  if (residuo) scriviDatoSeCambia(element, "dmFlowNonMisurato", String(node.nonMisurato));
+  else if (element.dataset && "dmFlowNonMisurato" in element.dataset)
+    delete element.dataset.dmFlowNonMisurato;
   const suggerimento =
     node.sensore === false
       ? t("Nessun sensore collegato.", "No sensor linked.")
       : node.waiting
         ? t("Sto leggendo i consumi da Home Assistant…", "Reading consumption from Home Assistant…")
-        : "";
+        : residuo
+          ? t(
+              "Consumo di Casa non misurato dai carichi configurati (Casa meno la somma dei carichi).",
+              "Home consumption not measured by the configured loads (Home minus the sum of the loads).",
+            )
+          : "";
   if ((element.title || "") !== suggerimento) element.title = suggerimento;
   bindNodeClick(element, node, period);
   return element;

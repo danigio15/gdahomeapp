@@ -501,6 +501,9 @@ export function chiediAHomeAssistant(payload, timeout = 8000) {
         const errore = new Error(clean(message?.error?.message) || "home assistant");
         const codice = clean(message?.error?.code);
         if (codice) errore.code = codice;
+        /* E il motivo, quando il ponte lo dice (il modello 3D, #440). */
+        const motivo = clean(message?.error?.motivo);
+        if (motivo) errore.motivo = motivo;
         reject(errore);
       } else resolve(message?.result);
     };

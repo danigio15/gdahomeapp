@@ -1228,6 +1228,13 @@ function pPlanimetria() {
       `${nota(esc(t("Niente planimetria e niente misure: fotografa ogni stanza intera e la pianta viene da sé, con gli arredi e i dispositivi visti nelle foto.", "No floor plan and no measurements: photograph each room whole and the plan comes by itself, with the furniture and devices seen in the photos.")))}
       <button type="button" class="c3c-carica" data-c3c="dallefoto"><b>📷</b>${esc(t("Dalle foto delle stanze", "From room photos"))}<span class="c3c-piccolo">${esc(t("le misure dalle cose di misura nota (forno, WC, condizionatore...); ogni stanza si corregge a mano", "sizes from things of known size (oven, toilet, air conditioner...); each room can be adjusted by hand"))}</span></button>`,
     ) +
+    /* #440: chi la casa in 3D ce l'ha gia', fatta con un altro programma,
+     * la porta qui com'e' (`casa-3d-modello-section.js`). */
+    scheda(
+      `🧊 <b>${esc(t("Usa un modello 3D tuo (GLB/glTF/OBJ)", "Use your own 3D model (GLB/glTF/OBJ)"))}</b>`,
+      `${nota(esc(t("Hai già la casa in 3D fatta con un altro programma? Caricala qui e la Casa 3D userà quella, con sopra luci, sensori e tapparelle.", "Already have your home in 3D, made with another program? Upload it here and the 3D Home will use it, with lights, sensors and shutters on top.")))}
+      <button type="button" class="c3c-carica c3c-carica-piccola" data-c3c="modello3d"><b>🧊</b>${esc(t("Scegli il file", "Choose the file"))}</button>`,
+    ) +
     scheda(
       `💡 <b>${esc(t("Consigli", "Tips"))}</b>`,
       `<div class="c3c-piccolo c3c-righe">${esc(t("Foto dall'alto, foglio intero, buona luce.", "Shoot from above, whole sheet, good light."))}<br>${esc(
@@ -3344,6 +3351,12 @@ async function alClic(ev) {
     case "dallefoto":
       entraNelleFoto();
       break;
+    case "modello3d":
+      /* la procedura si chiude (chiede, se c'e' qualcosa da perdere) e si apre
+       * la finestra del modello */
+      chiudi();
+      if (!state.S && typeof root.__DM_CASA3D_MODELLO__ === "function") root.__DM_CASA3D_MODELLO__();
+      return;
     case "sfnuova":
       S.stanzeFoto.push(stanzaDalleFoto(""));
       S.sel = S.stanzeFoto[S.stanzeFoto.length - 1].id;
