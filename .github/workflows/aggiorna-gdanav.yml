@@ -11,6 +11,9 @@
 # - appena gdanav ne ha uno nuovo su main (glielo dice il suo workflow,
 #   `gdanav-aggiornato`, se ha il segreto GDAHOME_TOKEN);
 # - ogni notte comunque, per quello che l'avviso non ha portato;
+# - quando main cambia il lucchetto (una release che porta gdanav da se'):
+#   se main e' gia' all'ultimo, la richiesta aperta prima si chiude subito,
+#   invece di restare li' fino alla notte;
 # - a mano, da «Run workflow».
 #
 # Gira dal ramo principale, come tutti i workflow a orario e ad avviso.
@@ -21,6 +24,9 @@ on:
     types: [gdanav-aggiornato]
   schedule:
     - cron: "17 3 * * *"
+  push:
+    branches: [main]
+    paths: [app/pubspec.lock]
   workflow_dispatch:
 
 permissions:
