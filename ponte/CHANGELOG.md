@@ -10,6 +10,20 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.19.12
+
+_App GdAHome e add-on._
+
+- **La radio di casa si comanda dal navigatore**: le radio e le playlist
+  di casa restano in auto, ma la radio si comanda dal lettore sulla
+  mappa, dal telefono e dal Menu «Musica di casa», non dai tasti del
+  volante. Sul solo telefono suona con l'app aperta.
+- **L'attesa d'avvio anche con «riduci animazioni»**: se il telefono o il
+  PC chiedono meno animazioni, l'attesa resta calma ma viva (luce che
+  respira, finestre che si accendono) invece di restare ferma. Aprendo
+  la plancia in Home Assistant, al posto del bianco c'è già il fondo
+  dell'attesa.
+
 ## 1.19.11
 
 _App GdAHome e add-on._
