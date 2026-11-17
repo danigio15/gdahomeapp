@@ -4,9 +4,4 @@
      quello che si guarda guidando lo deve impaginare la macchina. -->
 <automotiveApp>
     <uses name="template" />
-    <!-- La musica di casa (le radio della plancia) che suona nel telefono in
-         auto: con questa riga Android Auto la tratta come musica, cioe' la
-         mostra nella sua scheda della musica e le manda i tasti del volante.
-         Il servizio e' `ServizioLettoreDiCasa` di GdANav. -->
-    <uses name="media" />
 </automotiveApp>
