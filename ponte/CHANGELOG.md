@@ -10,6 +10,24 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.19.11
+
+_App GdAHome e add-on._
+
+- **Le radio e le playlist di casa in auto**: le radio preferite della
+  casa e le playlist della pagina Musica si ascoltano in macchina, dal
+  telefono («Dalla casa») e da Android Auto (Menu › «Musica di casa»).
+  Le radio suonano direttamente nel telefono, coi tasti del volante; le
+  playlist di Spotify partono nell'app Spotify. Quelle che si possono
+  suonare solo in casa lo dicono e si possono avviare in casa.
+- **La musica parte anche se l'app è chiusa**: con niente che suona, nel
+  navigatore c'è «▶ Spotify» (o l'app scelta in «App della musica»), e
+  un tocco la fa partire.
+- **Un'attesa nuova, col logo che si accende**: all'apertura dell'app e
+  della plancia in Home Assistant le iniziali del logo si srotolano, si
+  incastrano nel logo e la casa si accende; poi un cerchio d'oro svela
+  la plancia. Senza allungare l'avvio, e ferma con «riduci animazioni».
+
 ## 1.19.10
 
 _App GdAHome e add-on._
