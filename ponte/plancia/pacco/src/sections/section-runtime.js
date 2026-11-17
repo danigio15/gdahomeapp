@@ -46,6 +46,7 @@ import {
   EVENTO_VEICOLO_IN_SCHEDA,
   FASCE_DEL_PROGRAMMA,
   FASI_STUFA,
+  FINESTRA_ELETTRODOMESTICO,
   GRUPPI_DEL_SOLARE,
   GRUPPO_PELLET,
   ID_FOGLIO_OGGETTI,
@@ -239,6 +240,7 @@ import {
   kioskAttivo,
   lEnergiaInParole,
   laFilaDelSempreServe,
+  laFinestraEDi,
   laMisuraDallUnita,
   laMossaDelloScudo,
   laPotenzaInParole,
@@ -293,6 +295,7 @@ import {
   orologioNelFuso,
   overridesPerScelto,
   overridesPerSolare,
+  padroneDellaFinestra,
   pageCardMarkup,
   parlaDelCavo,
   parolaDelVerdetto,
@@ -408,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-4Q4A3OZA.js";
+} from "../../chunk-W5ACRDDF.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -96410,7 +96413,7 @@ function soloQuelleViste(elenco18 = [], apparecchio = {}, prendi3) {
 
 // src/sections/appliance-detail-popup-section.js
 var KEY78 = "__DASHBOARDMODERN_APPLIANCE_DETAIL_POPUP__";
-var state74 = root[KEY78] ||= { installed: false, aperto: null };
+var state74 = root[KEY78] ||= { installed: false, aperto: null, gettone: null };
 var STATI_MUTI4 = /^(unknown|unavailable|none|)$/i;
 var DOMINI_INTERRUTTORE = /^(switch|light|input_boolean|fan)\./;
 var DOMINI_AZIONE = /^(script|scene|button)\./;
@@ -96695,6 +96698,7 @@ function riveste(indice) {
   const appliance = root.getAppliances?.()?.[indice];
   if (!lista7 || !appliance) return false;
   state74.aperto = indice;
+  state74.gettone = padroneDellaFinestra(doc?.getElementById?.("details-modal"), lexicalGlobal("currentPopupType"))?.gettone ?? null;
   lista7.replaceChildren();
   lista7.dataset.dmApdeOwner = "moduli";
   const model2 = applianceModelForIndex(indice);
@@ -97274,7 +97278,11 @@ function vesteIntegrazione(lista7, appliance, giaMostrate, titoletto4) {
 function alCatalogo() {
   if (state74.aperto == null) return;
   const modal = doc?.getElementById?.("details-modal");
-  if (!modal?.classList?.contains("show")) return;
+  if (!laFinestraEDi(modal, FINESTRA_ELETTRODOMESTICO, {
+    gettone: state74.gettone,
+    ripiego: lexicalGlobal("currentPopupType")
+  }))
+    return;
   try {
     riveste(state74.aperto);
   } catch (_errore) {

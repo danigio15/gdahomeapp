@@ -13,6 +13,7 @@ import {
 } from "../core/light-model.js";
 import { configuredLightGroups } from "./lights-alerts-section.js";
 import { roomOrderRank } from "../core/room-overview.js";
+import { FINESTRA_LUCI, laFinestraEDi } from "../core/chi-ha-la-finestra.js";
 import {
   allStates,
   clean,
@@ -20,6 +21,7 @@ import {
   esc,
   entitaSoloLettura,
   installStyle,
+  lexicalGlobal,
   readJson,
   root,
   scriviSeCambia,
@@ -389,22 +391,28 @@ function syncCard(card, view) {
   if (range && doc.activeElement !== range) range.value = String(level);
 }
 
-function popupShowing() {
-  return Boolean(doc?.getElementById("details-modal")?.classList?.contains("show"));
+/* La lista e' di tutte le finestre del guscio: la telecamera, gli avvisi, gli
+ * elettrodomestici ci scrivono dentro come le luci. Che la finestra sia aperta
+ * non dice di chi e' — con la telecamera davanti, ogni luce che cambiava in
+ * casa la riempiva di luci sotto il titolo «📹 …» — quindi si chiede al guscio
+ * a chi l'ha data (`core/chi-ha-la-finestra.js`). */
+function popupOurs() {
+  return laFinestraEDi(doc?.getElementById("details-modal"), FINESTRA_LUCI, {
+    ripiego: lexicalGlobal("currentPopupType"),
+  });
 }
 
 function sync() {
   const list = listNode();
   if (!list) return false;
-  const views = lightViews();
-  const painted = Boolean(list.querySelector("[data-dm-light]"));
-  /* The list is shared with the other popups of the runtime. Repainting it
-   * without our own cards in it is only ever right while this popup is the one
-   * on screen; the sheet opened from the editor keeps updating either way. */
-  if (!painted && !popupShowing()) {
+  /* Solo la finestra delle luci si ridisegna; il foglio di una luce aperto
+   * dall'editor si aggiorna comunque, perche' e' una finestra sua. */
+  if (!popupOurs()) {
     syncControl();
     return false;
   }
+  const views = lightViews();
+  const painted = Boolean(list.querySelector("[data-dm-light]"));
   if (!painted || lightsSignature(views) !== state.signature) return paint();
   const byId = new Map(views.map((view) => [view.id, view]));
   for (const card of list.querySelectorAll("[data-dm-light]")) {
@@ -1032,7 +1040,7 @@ export function installLightsSceneSection() {
       });
     }
     root.addEventListener?.("dashboardmodern:state-changed", () => {
-      if (controlNode() || (popupShowing() && listNode()?.querySelector("[data-dm-light]"))) sync();
+      if (controlNode() || (popupOurs() && listNode()?.querySelector("[data-dm-light]"))) sync();
     });
   }
   state.installed = true;
