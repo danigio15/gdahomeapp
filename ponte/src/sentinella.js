@@ -712,6 +712,12 @@ export class Sentinella {
     this.daNonContare = new Set();
     /** Il nome di ogni dispositivo, per dire quale non risponde. */
     this.nomiDeiDispositivi = {};
+    /** Marca e modello di ogni dispositivo (`registri.js`): dicono se un
+     * termometro e' quello di una stanza o di una televisione (#452). */
+    this.modelliDeiDispositivi = {};
+    /** Le entita' che i registri dicono di diagnostica o di configurazione:
+     * la temperatura del chip di una presa non e' quella della stanza. */
+    this.diagnostiche = new Set();
     /** Le notifiche personalizzate, come le tiene `notifiche.js`. */
     this.personalizzate = [];
     /* Quello che una regola deve ricordarsi fra un giro e l'altro: da quando
@@ -2465,6 +2471,8 @@ export class Sentinella {
       aree: this.aree,
       dispositivoDi: this.dispositivoDi || {},
       nomiDeiDispositivi: this.nomiDeiDispositivi || {},
+      modelliDeiDispositivi: this.modelliDeiDispositivi || {},
+      diagnostiche: this.diagnostiche,
       daNonContare: this.daNonContare,
       tornatiDaSoli: this._tornatiDaSoli,
       valori,

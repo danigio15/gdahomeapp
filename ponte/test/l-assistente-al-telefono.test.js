@@ -607,6 +607,200 @@ test("comfort: freddo senza un clima vicino dice «Guarda»; con la casa vuota t
   assert.equal(vuota.dell("suggerimenti:comfort:").length, 0);
 });
 
+/* #452: «🥵 TV Camera Temperatura: 62 °C — Qualcuno è in casa, e fa caldo».
+ * La temperatura interna di una televisione, di un PC, di una lavatrice non
+ * e' quella di una stanza. */
+function unaCasaCoiDispositivi(stati, { ora, aree = {}, valori = {}, dispositivi = {} }) {
+  const casa = unaCasa([stato("person.uno", "home", {}, 5 * ORA, ora), ...stati], {
+    ora,
+    aree,
+    valori,
+  });
+  casa.sentinella.dispositivoDi = Object.fromEntries(
+    Object.entries(dispositivi).flatMap(([suo, d]) => d.entita.map((id) => [id, suo])),
+  );
+  casa.sentinella.nomiDeiDispositivi = Object.fromEntries(
+    Object.entries(dispositivi).map(([suo, d]) => [suo, d.nome]),
+  );
+  casa.sentinella.modelliDeiDispositivi = Object.fromEntries(
+    Object.entries(dispositivi).map(([suo, d]) => [suo, d.modello || ""]),
+  );
+  return casa;
+}
+
+const mezzOra = (casa) => {
+  casa.battito();
+  casa.passa(31 * MINUTO);
+  casa.passa(MINUTO);
+  return casa.dell("suggerimenti:comfort:");
+};
+
+test("comfort (#452): la televisione, il PC e la lavatrice non sono stanze", () => {
+  const ora = alle(15);
+  const casa = unaCasaCoiDispositivi(
+    [
+      /* Quelli della segnalazione, coi loro nomi. */
+      gradi("sensor.tv_camera_temperatura", 62, ora),
+      stato("media_player.tv_camera", "on", {}, ORA, ora),
+      gradi("sensor.pcstation_temperatura", 60, ora),
+      gradi("sensor.lavatrice_temperatura", 40, ora),
+      stato("sensor.lavatrice_potenza", "1800", { device_class: "power" }, ORA, ora),
+      /* E quelli che dal nome non si capiscono, con un grado plausibile: li
+       * tradisce il dispositivo. Una televisione col suo `media_player`… */
+      gradi("sensor.ospiti_temperatura", 31, ora),
+      stato("media_player.ospiti", "playing", {}, ORA, ora),
+      /* …una presa con la sua potenza… */
+      gradi("sensor.presa_studio_temperatura", 33, ora),
+      stato("sensor.presa_studio_potenza", "12", { device_class: "power" }, ORA, ora),
+      /* …un computer dal modello. */
+      gradi("sensor.scrivania_temperatura", 34, ora),
+    ],
+    {
+      ora,
+      aree: {
+        "sensor.tv_camera_temperatura": "Camera",
+        "sensor.pcstation_temperatura": "Studio",
+        "sensor.lavatrice_temperatura": "Lavanderia",
+        "sensor.ospiti_temperatura": "Ospiti",
+        "sensor.presa_studio_temperatura": "Studio",
+        "sensor.scrivania_temperatura": "Studio",
+      },
+      dispositivi: {
+        tv: {
+          nome: "TV Camera",
+          entita: ["sensor.tv_camera_temperatura", "media_player.tv_camera"],
+        },
+        pc: { nome: "PCStation", entita: ["sensor.pcstation_temperatura"] },
+        lava: {
+          nome: "Lavatrice",
+          entita: ["sensor.lavatrice_temperatura", "sensor.lavatrice_potenza"],
+        },
+        ospiti: {
+          nome: "Schermo ospiti",
+          entita: ["sensor.ospiti_temperatura", "media_player.ospiti"],
+        },
+        presa: {
+          nome: "Presa studio",
+          entita: ["sensor.presa_studio_temperatura", "sensor.presa_studio_potenza"],
+        },
+        scrivania: {
+          nome: "Scrivania",
+          modello: "Mini PC N100",
+          entita: ["sensor.scrivania_temperatura"],
+        },
+      },
+    },
+  );
+  assert.deepEqual(
+    mezzOra(casa).map((e) => e.parole.it.titolo),
+    [],
+    "nessun avviso per le temperature delle macchine",
+  );
+});
+
+test("comfort (#452): il termometro del salone a 29 gradi da mezz'ora si dice, col nome della stanza", () => {
+  const ora = alle(15);
+  const casa = unaCasaCoiDispositivi(
+    [
+      gradi("sensor.termometro_lumaca_temperatura", 29, ora),
+      stato("sensor.termometro_lumaca_umidita", "55", { device_class: "humidity" }, ORA, ora),
+      stato("sensor.termometro_lumaca_batteria", "80", { device_class: "battery" }, ORA, ora),
+      /* Gli aggiornamenti e il tasto li hanno anche i termometri Zigbee. */
+      stato("update.termometro_lumaca", "off", {}, ORA, ora),
+      stato("button.termometro_lumaca_identifica", "unknown", {}, ORA, ora),
+      /* Una valvola termostatica col suo interruttore del blocco bambini: e'
+       * un clima, la sua temperatura e' quella della stanza. */
+      gradi("sensor.valvola_pervinca_temperatura", 15, ora),
+      stato("climate.valvola_pervinca", "unavailable", {}, ORA, ora),
+      stato("switch.valvola_pervinca_blocco", "off", {}, ORA, ora),
+      stato("sensor.valvola_pervinca_potenza", "0", { device_class: "power" }, ORA, ora),
+    ],
+    {
+      ora,
+      aree: {
+        "sensor.termometro_lumaca_temperatura": "Salone",
+        "sensor.valvola_pervinca_temperatura": "Bagno",
+      },
+      dispositivi: {
+        termo: {
+          nome: "Termometro Lumaca",
+          modello: "Aqara Temperature and Humidity Sensor",
+          entita: [
+            "sensor.termometro_lumaca_temperatura",
+            "sensor.termometro_lumaca_umidita",
+            "sensor.termometro_lumaca_batteria",
+            "update.termometro_lumaca",
+            "button.termometro_lumaca_identifica",
+          ],
+        },
+        valvola: {
+          nome: "Valvola Pervinca",
+          entita: [
+            "sensor.valvola_pervinca_temperatura",
+            "climate.valvola_pervinca",
+            "switch.valvola_pervinca_blocco",
+            "sensor.valvola_pervinca_potenza",
+          ],
+        },
+      },
+    },
+  );
+  const titoli = mezzOra(casa).map((e) => e.parole.it.titolo);
+  assert.deepEqual(titoli.sort(), ["🥵 Salone: 29 °C", "🥶 Bagno: 15 °C"].sort());
+});
+
+test("comfort (#452): il termometro che la plancia ha dato a una stanza vale sempre, col nome della stanza", () => {
+  const ora = alle(15);
+  const casa = unaCasaCoiDispositivi(
+    [
+      /* Una sonda (parola che di solito vuol dire l'acqua) in una presa con
+       * la potenza: chi abita l'ha scelta come temperatura dello Studio. */
+      gradi("sensor.sonda_scrivania", 30, ora),
+      stato("sensor.sonda_scrivania_potenza", "5", { device_class: "power" }, ORA, ora),
+    ],
+    {
+      ora,
+      valori: {
+        cd_stanze: JSON.stringify([
+          { id: "studio", name: "Studio Gelsomino", temp: "sensor.sonda_scrivania" },
+        ]),
+      },
+      dispositivi: {
+        presa: {
+          nome: "Presa con sonda",
+          entita: ["sensor.sonda_scrivania", "sensor.sonda_scrivania_potenza"],
+        },
+      },
+    },
+  );
+  assert.deepEqual(
+    mezzOra(casa).map((e) => e.parole.it.titolo),
+    ["🥵 Studio Gelsomino: 30 °C"],
+  );
+});
+
+test("comfort (#452): una lettura che una stanza non ha non si dice, nemmeno dalla plancia", () => {
+  const ora = alle(15);
+  const casa = unaCasaCoiDispositivi(
+    [
+      gradi("sensor.termometro_camera_temperatura", 50, ora),
+      gradi("sensor.termometro_cantina_temperatura", -12, ora),
+      gradi("sensor.termometro_studio_temperatura", 85, ora),
+    ],
+    {
+      ora,
+      aree: {
+        "sensor.termometro_camera_temperatura": "Camera",
+        "sensor.termometro_cantina_temperatura": "Cantina",
+      },
+      valori: {
+        cd_stanze: [{ id: "studio", name: "Studio", temp: "sensor.termometro_studio_temperatura" }],
+      },
+    },
+  );
+  assert.deepEqual(mezzOra(casa), []);
+});
+
 /* ─── 10. L'aria ─────────────────────────────────────────────────────────── */
 
 test("aria: la CO₂ alta da un quarto d'ora e una ventola spenta li': «Accendi la ventilazione»", () => {

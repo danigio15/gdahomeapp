@@ -179,9 +179,34 @@ const CASELLE_DI_FUORI = Object.freeze([
   "dm.ev_temperatura_esterna",
 ]);
 /* I termometri che non dicono com'e' una stanza: il frigo, l'acqua, il
- * boiler, la piscina, i computer, le batterie, l'auto. */
+ * boiler, la piscina, i computer, le batterie, l'auto — e la televisione, il
+ * PC, la lavatrice (#452, «🥵 TV Camera Temperatura: 62 °C»). Le parole valgono
+ * nell'identificativo e nel nome del sensore, e nel nome e nel modello del suo
+ * dispositivo. Le sigle corte (tv, pc, soc, core…) solo a inizio di parola:
+ * «TVOC» e' l'aria di una stanza, non un televisore. */
 const NON_E_UNA_STANZA =
-  /frig|fridge|refriger|freez|congel|acqua|water|boiler|scaldabagn|piscin|pool|cpu|processor|chip|batter|inverter|forno|oven|acquari|terrari|mandata|ritorno|collettor|sonda|motore|engine|vehicle|veicol|router|server|\bnas\b|\bups\b|stampant|printer/i;
+  /frig|fridge|refriger|freez|congel|acqua|water|boiler|scaldabagn|caldai|puffer|accumul|piscin|pool|cpu|gpu|processor|chip|batter|inverter|forno|oven|acquari|aquari|terrari|mandata|ritorno|collettor|sonda|motore|engine|vehicle|veicol|router|server|\bnas\b|\bups\b|stampant|printer|televis|smart[\s_]*tv|bravia|webos|tizen|proiettor|projector|soundbar|amplific|amplifier|decoder|console|playstation|xbox|computer|desktop|laptop|notebook|raspberry|esp32|esp8266|modem|nvme|lavatric|lavasciug|asciugatric|lavastovigl|dishwasher|washer|dryer|washing|device[\s_]*temp|(^|[^a-z])(core|soc|ssd|hdd|disk|disco|nvr|rpi)([^a-z]|$)|(^|[^a-z])tv([^a-z]|$)|(^|[^a-z])pc/i;
+/* Una temperatura che una stanza abitata non ha: sotto i -5 o sopra i 45
+ * gradi e' un sensore rotto, o quello di una macchina. */
+const STANZA_PLAUSIBILE = [-5, 45]; // °C
+/* Accanto a un termometro, nello stesso dispositivo, le cose che dicono che
+ * misura una macchina e non una stanza: un televisore (`media_player`,
+ * `remote`), un robot, uno scaldabagno, un telefono o un'auto
+ * (`device_tracker`), una telecamera; e le letture della corrente, che ha
+ * una presa, un elettrodomestico o un inverter, non un termometro. */
+const DOMINI_DI_UNA_MACCHINA =
+  /^(media_player|remote|vacuum|lawn_mower|water_heater|device_tracker|camera|image)\./;
+const CLASSI_DI_UNA_MACCHINA = new Set([
+  "power",
+  "energy",
+  "current",
+  "voltage",
+  "apparent_power",
+  "reactive_power",
+  "power_factor",
+  "data_rate",
+  "data_size",
+]);
 /* Il comando che fa partire un elettrodomestico: lo stesso criterio della
  * plancia (`assistente-di-casa-section.js`, `comandoDiAvvio`). */
 const PARTENZA = /(start|avvi|inizia|run|play)/i;
@@ -958,17 +983,21 @@ function stanzeDellaPlancia(valori) {
  * la stazione meteo della testata, la temperatura esterna dell'auto. `risolvi`
  * traduce le caselle `dm.` nell'entita' scelta.
  */
+/* Un riferimento della plancia come entita': le caselle `dm.` passano da
+ * `risolvi`, le entita' scritte restano come sono. */
+const traduttore = (risolvi) => (rif) => {
+  const pulito = String(rif || "").trim();
+  if (!pulito.startsWith("dm.")) return pulito;
+  try {
+    return String(risolvi(pulito) || "").trim();
+  } catch (_errore) {
+    return "";
+  }
+};
+
 export function entitaAllAperto(valori = {}, risolvi = () => "") {
   const fuori = new Set();
-  const traduci = (rif) => {
-    const pulito = String(rif || "").trim();
-    if (!pulito.startsWith("dm.")) return pulito;
-    try {
-      return String(risolvi(pulito) || "").trim();
-    } catch (_errore) {
-      return "";
-    }
-  };
+  const traduci = traduttore(risolvi);
   for (const stanza of stanzeDellaPlancia(valori)) {
     if (!stanzaAllAperto(stanza) && !ALL_APERTO.test(String(stanza.name || ""))) continue;
     for (const rif of [
@@ -1010,35 +1039,120 @@ function eDiCasa(vista, id, stato, fuori) {
 }
 
 /**
+ * I termometri che la plancia ha dato alle stanze di casa: entita' → nome
+ * della stanza. Sono la temperatura di quella stanza per scelta di chi abita,
+ * e valgono sempre. Le stanze all'aperto no: quelle le tiene `entitaAllAperto`.
+ */
+export function termometriDelleStanze(valori = {}, risolvi = () => "") {
+  const traduci = traduttore(risolvi);
+  const stanze = new Map();
+  for (const stanza of stanzeDellaPlancia(valori)) {
+    const nome = String(stanza.name || "").trim();
+    if (stanzaAllAperto(stanza) || ALL_APERTO.test(nome)) continue;
+    const altre = Array.isArray(stanza.metadata?.temperature_entries)
+      ? stanza.metadata.temperature_entries.map(
+          (voce) => voce?.temp || voce?.temperature_entity || voce?.entity,
+        )
+      : [];
+    for (const rif of [stanza.temp, stanza.temperature_entity, ...altre]) {
+      const id = traduci(rif);
+      if (ENTITA.test(id) && !stanze.has(id)) stanze.set(id, nome.slice(0, 60));
+    }
+  }
+  return stanze;
+}
+
+/* Le entita' di ogni dispositivo, dai registri (`vista.dispositivoDi`). */
+function entitaPerDispositivo(vista) {
+  const per = new Map();
+  for (const [id, suo] of Object.entries(vista.dispositivoDi || {})) {
+    if (!suo) continue;
+    if (!per.has(suo)) per.set(suo, []);
+    per.get(suo).push(id);
+  }
+  return per;
+}
+
+/**
+ * Se un sensore di temperatura che la plancia non ha dato a una stanza sembra
+ * il termometro di una stanza (#452): non la temperatura interna di una
+ * televisione, di un PC o di una lavatrice.
+ *
+ * No se il nome lo dice (`NON_E_UNA_STANZA`, nel sensore o nel suo
+ * dispositivo), se Home Assistant lo dice di diagnostica (la temperatura del
+ * chip di una presa), o se il suo dispositivo ha qualcosa che un termometro
+ * non ha (`DOMINI_DI_UNA_MACCHINA`, `CLASSI_DI_UNA_MACCHINA`). Un dispositivo
+ * con un clima e' un termostato, una valvola, un condizionatore: la sua
+ * temperatura e' quella della stanza. Gli aggiornamenti (`update`) e i tasti
+ * (`button`) non dicono niente: li hanno anche i termometri Zigbee. Senza
+ * registri restano il nome e la plausibilita'.
+ */
+function eUnTermometroDiStanza(vista, id, stato, perDispositivo) {
+  const suo = vista.dispositivoDi?.[id] || "";
+  const dispositivo = suo
+    ? `${vista.nomiDeiDispositivi?.[suo] || ""} ${vista.modelliDeiDispositivi?.[suo] || ""}`
+    : "";
+  if (NON_E_UNA_STANZA.test(`${id} ${nomeDi(stato, id)} ${dispositivo}`)) return false;
+  if (vista.diagnostiche?.has?.(id)) return false;
+  if (!suo) return true;
+  const fratelli = (perDispositivo.get(suo) || []).filter((altro) => altro !== id);
+  if (fratelli.some((altro) => dominioDi(altro) === "climate")) return true;
+  return !fratelli.some(
+    (altro) =>
+      DOMINI_DI_UNA_MACCHINA.test(altro) ||
+      (dominioDi(altro) === "sensor" &&
+        CLASSI_DI_UNA_MACCHINA.has(vista.stati.get(altro)?.attributes?.device_class)),
+  );
+}
+
+/**
  * Con qualcuno in casa, un termometro di una stanza sopra i 27 o sotto i 16
  * gradi da mezz'ora. Se nella stessa area c'e' un clima spento, «Accendi il
  * clima»; se ce n'e' uno acceso, ci sta gia' pensando lui, e non si dice.
+ *
+ * Il termometro di una stanza e' quello che la plancia le ha dato
+ * (`termometriDelleStanze`); gli altri sensori di temperatura di casa solo se
+ * sembrano un termometro ambiente (`eUnTermometroDiStanza`) — non i 62 gradi
+ * della televisione (#452). E mai una lettura che una stanza non ha
+ * (`STANZA_PLAUSIBILE`). Il titolo dice la stanza: quella della plancia,
+ * l'area di Home Assistant, e solo senza nessuna delle due il nome del
+ * sensore.
  */
 export function comfort(vista) {
   const { ora, vuota, memoria } = vista;
   const fuori = [];
   const viste = new Set();
   const allAperto = entitaAllAperto(vista.valori, vista.risolvi);
+  const dellaPlancia = termometriDelleStanze(vista.valori, vista.risolvi);
+  const perDispositivo = entitaPerDispositivo(vista);
   for (const [id, stato] of gliStati(vista, "sensor")) {
     if (stato.attributes?.device_class !== "temperature") continue;
+    const stanza = allAperto.has(id) ? "" : dellaPlancia.get(id) || "";
+    const t = gradi(stato);
+    const misuraUnaStanza = dellaPlancia.has(id)
+      ? !allAperto.has(id)
+      : eDiCasa(vista, id, stato, allAperto) &&
+        eUnTermometroDiStanza(vista, id, stato, perDispositivo);
     if (
-      !eDiCasa(vista, id, stato, allAperto) ||
-      NON_E_UNA_STANZA.test(`${id} ${nomeDi(stato, id)}`)
+      !misuraUnaStanza ||
+      (t !== null && (t < STANZA_PLAUSIBILE[0] || t > STANZA_PLAUSIBILE[1]))
     ) {
-      /* Un sensore che e' fuori non si ricorda nemmeno: se un giorno torna
-       * dentro, la mezz'ora riparte da li'. */
+      /* Un sensore che non e' una stanza non si ricorda nemmeno: se un
+       * giorno lo diventa, la mezz'ora riparte da li'. */
       memoria.delete(`comfort:${id}`);
       continue;
     }
-    const t = gradi(stato);
     const fuoriMisura = vuota === false && t !== null && (t >= TROPPO_CALDO || t <= TROPPO_FREDDO);
     if (regge(memoria, `comfort:${id}`, fuoriMisura, ora) < COMFORT_DA || !fuoriMisura) continue;
     const area = areaDi(vista, id);
-    const dove = area || nomePulito(nomeDi(stato, id));
+    const dove = stanza || area || nomePulito(nomeDi(stato, id));
     if (viste.has(dove.toLowerCase())) continue;
     viste.add(dove.toLowerCase());
-    const climi = area
-      ? [...gliStati(vista, "climate")].filter(([uno]) => stessaArea(areaDi(vista, uno), area))
+    /* Il clima della stessa stanza: nella sua area, o — senza area — in
+     * quella che si chiama come la stanza della plancia. */
+    const vicina = area || stanza;
+    const climi = vicina
+      ? [...gliStati(vista, "climate")].filter(([uno]) => stessaArea(areaDi(vista, uno), vicina))
       : [];
     if (climi.some(([, s]) => !["off", "unavailable", "unknown"].includes(s.state))) continue;
     const spento = climi.find(([, s]) => s.state === "off")?.[0] || "";

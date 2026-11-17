@@ -23,6 +23,13 @@ _App GdAHome e add-on._
   respira, finestre che si accendono) invece di restare ferma. Aprendo
   la plancia in Home Assistant, al posto del bianco c'è già il fondo
   dell'attesa.
+- **Niente più «fa caldo» per la TV o il PC**: l'avviso del caldo e del
+  freddo guarda i termometri delle stanze, non le temperature interne
+  di televisori, computer ed elettrodomestici, e porta il nome della
+  stanza.
+- **La finestra della telecamera resta la telecamera**: quando cambiava
+  una luce, dentro la telecamera aperta poteva comparire l'elenco delle
+  luci. Ora ogni finestra mostra solo il suo contenuto.
 
 ## 1.19.11
 
