@@ -10,8 +10,13 @@
  *    pronta se ne va con il cerchio, poi sparisce;
  *  - nell'app: non si accende niente — sopra c'e' l'attesa dell'app — e se ne
  *    va sfumando, che e' quello che l'app ascolta (`premesse.dart`);
- *  - con «riduci animazioni»: fermo, con i tre punti, e la riga cambia lo
- *    stesso. */
+ *  - con «riduci animazioni»: calmo ma vivo. Non fermo: su Windows con
+ *    «Effetti di animazione» spenti Chrome ed Edge chiedono di ridurre le
+ *    animazioni, e il velo fermo sembrava una plancia bloccata (la prova del
+ *    titolare dentro Home Assistant). Niente che si sposti, cresca o giri;
+ *    luci che si accendono sul posto, tre punti che pulsano, e se ne va
+ *    sfumando. E senza l'ellisse azzurra: il foglio grande della plancia
+ *    vestiva ancora quei punti da rotella di una volta. */
 import { expect, test } from "@playwright/test";
 
 const pronta = (page) =>
@@ -85,18 +90,94 @@ test("nell'app il velo resta fermo e se ne va sfumando, come prima", async ({ pa
   expect(await page.evaluate(() => window.__velo)).toEqual({ cerchio: false, sfumato: true });
 });
 
-test("con «riduci animazioni» il velo e' fermo, coi tre punti", async ({ browser }) => {
+test("con «riduci animazioni» il velo e' calmo ma vivo, e se ne va sfumando", async ({
+  browser,
+}) => {
   test.setTimeout(90_000);
   const contesto = await browser.newContext({ reducedMotion: "reduce" });
   const page = await contesto.newPage();
-  await page.route("**/dashboard-runtime-it.js", () => new Promise(() => {}));
-  await page.goto("http://127.0.0.1:4173/legacy/dashboard.html?dmi=velo-fermo", {
+  /* Il foglio grande si lascia arrivare (e' quello che vestiva i punti da
+   * rotella); la plancia invece si tiene ferma finche' non si e' guardato. */
+  let lascia;
+  const trattenuta = new Promise((ok) => (lascia = ok));
+  await page.route("**/dashboard-runtime-it.js", async (rotta) => {
+    await trattenuta;
+    await rotta.continue();
+  });
+  await page.goto("http://127.0.0.1:4173/legacy/dashboard.html?dmi=velo-calmo", {
     waitUntil: "commit",
   });
   const velo = page.locator("#cd-boot-overlay");
-  await expect(velo).toHaveClass(/gv-fermo/, { timeout: 15_000 });
-  await expect(velo.locator(".s")).toBeVisible();
+  await expect(velo).toHaveClass(/gv-calmo/, { timeout: 15_000 });
+  await page.waitForFunction(
+    () =>
+      [...document.styleSheets].some(
+        (f) => /dashboard-runtime-it\.css/.test(f.href || "") && f.media.mediaText !== "print",
+      ),
+    null,
+    { timeout: 30_000 },
+  );
+  /* Il marchio intero e fermo dal primo istante; niente iniziali, anello,
+   * granelli, onda d'urto. */
   await expect(velo.locator("img")).toHaveCSS("opacity", "1");
-  expect(await velo.locator(".gv-ini").evaluate((n) => getComputedStyle(n).display)).toBe("none");
+  for (const via of [".gv-ini", ".gv-anello", ".gv-g", ".gv-onda", ".s"]) {
+    expect(
+      await velo
+        .locator(via)
+        .first()
+        .evaluate((n) => getComputedStyle(n).display),
+      via,
+    ).toBe("none");
+  }
+  /* Vivo: ci sono animazioni in corsa, e nessuna sposta, ingrandisce o gira
+   * niente — solo luce. L'unica che trasla e' la luce che passa sul marchio,
+   * dentro il marchio. */
+  const animazioni = await page.evaluate(() =>
+    document
+      .getElementById("cd-boot-overlay")
+      .getAnimations({ subtree: true })
+      .map((a) => {
+        const chi = a.effect.target;
+        const muove = a.effect
+          .getKeyframes()
+          .some((k) => (k.transform && k.transform !== "none") || k.scale || k.rotate);
+        return {
+          nome: a.animationName,
+          viva: a.playState === "running" && a.effect.getComputedTiming().iterations === Infinity,
+          muove,
+          dentroIlMarchio: Boolean(chi.closest(".gv-luc")),
+        };
+      }),
+  );
+  expect(animazioni.filter((a) => a.viva).length, "luci che restano accese").toBeGreaterThan(10);
+  expect(animazioni.filter((a) => a.muove && !a.dentroIlMarchio)).toEqual([]);
+  expect(animazioni.map((a) => a.nome)).toEqual(
+    expect.arrayContaining(["gvPulsa", "gvRespiraCalmo", "gvRaggiCalmi", "gvLampoCalmo", "gvFinR"]),
+  );
+  /* I tre punti: tre, rotondi e piccoli — non l'ellisse azzurra. */
+  const punti = await velo.locator(".gv-punti > i").evaluateAll((tutti) =>
+    tutti.map((p) => {
+      const s = getComputedStyle(p);
+      const r = p.getBoundingClientRect();
+      return {
+        tondo: s.borderRadius === "50%",
+        bordo: s.borderTopWidth,
+        quadrato: Math.abs(r.width - r.height) < 0.5,
+      };
+    }),
+  );
+  expect(punti).toEqual(Array(3).fill({ tondo: true, bordo: "0px", quadrato: true }));
+  await expect(velo.locator(".gv-punti")).toBeVisible();
+  /* Se ne va sfumando, senza il cerchio. */
+  await guardaIlVelo(page);
+  lascia();
+  await pronta(page);
+  const cerchio = await page.evaluate(() => {
+    const o = document.getElementById("cd-boot-overlay");
+    globalThis.cdHideBoot();
+    return Boolean(o && /radial-gradient/.test(o.style.maskImage || o.style.webkitMaskImage || ""));
+  });
+  expect(cerchio).toBe(false);
+  await expect(velo).toHaveCount(0, { timeout: 15_000 });
   await contesto.close();
 });

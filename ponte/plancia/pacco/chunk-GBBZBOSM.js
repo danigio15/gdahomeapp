@@ -5746,6 +5746,25 @@ function stradeDiAdesso(cam) {
     go2rtcRaggiungibile: go2rtcRaggiungibile()
   });
 }
+function nuovaApertura(content) {
+  try {
+    return typeof root.dmCamNuovaApertura === "function" ? root.dmCamNuovaApertura(content) : 0;
+  } catch (_errore) {
+    return 0;
+  }
+}
+function ancoraAperta(content, apertura) {
+  if (!apertura || typeof root.dmCamAncoraAperta !== "function") return true;
+  try {
+    return Boolean(root.dmCamAncoraAperta(content, apertura));
+  } catch (_errore) {
+    return true;
+  }
+}
+function corpoDellApertura(content, apertura) {
+  if (!apertura || typeof root.dmCamCorpo !== "function") return content;
+  return root.dmCamCorpo(content, apertura);
+}
 function corsaDelGuscio(strada, cam, content) {
   const nome = clean(strada?.nome);
   if (nome === "WebRTC") return root.dmCamWebRTC?.(cam, strada, content, strada.attesa);
@@ -5773,16 +5792,20 @@ function installTelecameraSubito() {
   const precedente = root.dmCamOpen;
   if (typeof precedente !== "function" || precedente.__dmTelecameraSubito) return false;
   installStyle(STYLE_ID, css());
-  async function avvolta(cam, title, content) {
+  async function avvolta(cam, title, content, giaAperta) {
     const entity = clean(cam?.entity);
+    const apertura = giaAperta || nuovaApertura(content);
+    const ancora = () => ancoraAperta(content, apertura);
+    const corpo2 = corpoDellApertura(content, apertura);
     mostraSubito(cam, content);
     state3.caduta = null;
-    if (!entity) return precedente.call(this, cam, title, content);
+    if (!entity) return precedente.call(this, cam, title, content, apertura);
     if (!capacitaChieste(entity)) {
       try {
         await chiediLeCapacita(entity, Date.now(), { forza: true });
       } catch (_errore) {
       }
+      if (!ancora()) return void 0;
     }
     const ricordo = ricordoDellaTelecamera(memoria(), entity, Date.now());
     const strade = stradeDiAdesso(cam);
@@ -5791,10 +5814,12 @@ function installTelecameraSubito() {
       const inizio = Date.now();
       try {
         root.dmCamCleanup?.();
-        await corsaDelGuscio(corta, cam, content);
+        await corsaDelGuscio(corta, cam, corpo2);
+        if (!ancora()) return void 0;
         imparaLaStrada(entity, corta.nome, Date.now() - inizio);
         return void 0;
       } catch (_errore) {
+        if (!ancora()) return void 0;
         const intera = strade.find((strada) => strada.nome === corta.nome && !strada.salta);
         if (Number(corta.attesa) >= Number(intera?.attesa || 0))
           state3.caduta = { entity, nome: clean(corta.nome), quando: Date.now() };
@@ -5803,7 +5828,9 @@ function installTelecameraSubito() {
         mostraSubito(cam, content);
       }
     }
-    const esito = await precedente.call(this, cam, title, content);
+    if (!ancora()) return void 0;
+    const esito = await precedente.call(this, cam, title, content, apertura);
+    if (!ancora()) return esito;
     const vincitrice = clean(stradaMostrata());
     const suo = strade.find((strada) => clean(strada?.nome) === vincitrice);
     if (vincitrice) imparaLaStrada(entity, vincitrice, Number(suo?.attesa) || 0);
@@ -6891,6 +6918,29 @@ if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installLightsAlertsSection, { once: true });
 else senzaCadere(installLightsAlertsSection);
 
+// src/core/chi-ha-la-finestra.js
+var FINESTRA_LUCI = "gestione_luci";
+var FINESTRA_ELETTRODOMESTICO = "appliance_view";
+function aperta(finestra3) {
+  try {
+    return Boolean(finestra3?.classList?.contains?.("show"));
+  } catch (_errore) {
+    return false;
+  }
+}
+function padroneDellaFinestra(finestra3, ripiego = null) {
+  if (!aperta(finestra3)) return null;
+  const scritto4 = finestra3.dataset?.dmFinestra;
+  const tipo = String((scritto4 === void 0 ? ripiego : scritto4) || "").trim();
+  if (!tipo) return null;
+  return Object.freeze({ tipo, gettone: String(finestra3.dataset?.dmGettone ?? "") });
+}
+function laFinestraEDi(finestra3, tipo, { gettone = null, ripiego = null } = {}) {
+  const padrone = padroneDellaFinestra(finestra3, ripiego);
+  if (!padrone || padrone.tipo !== tipo) return false;
+  return gettone == null || padrone.gettone === String(gettone);
+}
+
 // src/sections/lights-scene-section.js
 var KEY5 = "__DASHBOARDMODERN_LIGHTS_SCENE_SECTION__";
 var MARKER = "__dmLightsSceneOwner";
@@ -7140,18 +7190,20 @@ function syncCard(card, view) {
   const range = card.querySelector("[data-dm-light-brightness]");
   if (range && doc.activeElement !== range) range.value = String(level);
 }
-function popupShowing() {
-  return Boolean(doc?.getElementById("details-modal")?.classList?.contains("show"));
+function popupOurs() {
+  return laFinestraEDi(doc?.getElementById("details-modal"), FINESTRA_LUCI, {
+    ripiego: lexicalGlobal("currentPopupType")
+  });
 }
 function sync() {
   const list = listNode();
   if (!list) return false;
-  const views = lightViews();
-  const painted = Boolean(list.querySelector("[data-dm-light]"));
-  if (!painted && !popupShowing()) {
+  if (!popupOurs()) {
     syncControl();
     return false;
   }
+  const views = lightViews();
+  const painted = Boolean(list.querySelector("[data-dm-light]"));
   if (!painted || lightsSignature(views) !== state5.signature) return paint();
   const byId = new Map(views.map((view) => [view.id, view]));
   for (const card of list.querySelectorAll("[data-dm-light]")) {
@@ -7693,7 +7745,7 @@ function installLightsSceneSection() {
       });
     }
     root.addEventListener?.("dashboardmodern:state-changed", () => {
-      if (controlNode() || popupShowing() && listNode()?.querySelector("[data-dm-light]")) sync();
+      if (controlNode() || popupOurs() && listNode()?.querySelector("[data-dm-light]")) sync();
     });
   }
   state5.installed = true;
@@ -9543,18 +9595,18 @@ var comeBlob = (tela, tipo) => new Promise((fatto) => {
   }
 });
 async function riduciLaFoto(file, lato = LATO_MASSIMO) {
-  const aperta = await apriLaFoto(file);
+  const aperta2 = await apriLaFoto(file);
   try {
-    if (!aperta.w || !aperta.h) throw new Error("decode");
-    const scala = Math.min(1, lato / Math.max(aperta.w, aperta.h));
-    const w = Math.max(1, Math.round(aperta.w * scala));
-    const h = Math.max(1, Math.round(aperta.h * scala));
+    if (!aperta2.w || !aperta2.h) throw new Error("decode");
+    const scala = Math.min(1, lato / Math.max(aperta2.w, aperta2.h));
+    const w = Math.max(1, Math.round(aperta2.w * scala));
+    const h = Math.max(1, Math.round(aperta2.h * scala));
     const tela = doc.createElement("canvas");
     tela.width = w;
     tela.height = h;
     const ctx = tela.getContext("2d");
     ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(aperta.sorgente, 0, 0, w, h);
+    ctx.drawImage(aperta2.sorgente, 0, 0, w, h);
     let blob = await comeBlob(tela, "image/webp");
     let suffisso = ".webp";
     if (!blob || blob.type !== "image/webp") {
@@ -9565,7 +9617,7 @@ async function riduciLaFoto(file, lato = LATO_MASSIMO) {
     const radice = clean(file?.name).replace(/\.[^.]*$/, "").slice(0, 60) || "riquadro";
     return { blob, nome: `${radice}${suffisso}`, larghezza: w, altezza: h };
   } finally {
-    aperta.chiudi();
+    aperta2.chiudi();
   }
 }
 async function caricaNelBlocco(blocco, file) {
@@ -9999,7 +10051,7 @@ function pannelloDelleCard() {
     voci: vociDi(superficie)
   })).filter((g) => g.voci.length);
   if (!gruppi.length) return "";
-  const aperta = state8.cardAperta || "";
+  const aperta2 = state8.cardAperta || "";
   const lingua2 = activeLocale();
   return `<div class="ed-sec-title">🖼️ ${esc(t("Immagini dei riquadri", "Tile images"))}</div>
     <div class="ed-intro">${esc(t("Ogni card della plancia può avere una foto o un disegno che la riempie: le luci, il clima, le tapparelle, le telecamere, le stanze, le azioni rapide. I comandi restano sopra, in chiaro; a muro la stessa immagine si vede nelle pagine che si riempiono da sole.", "Every dashboard card can have a photo or a drawing that fills it: lights, climate, blinds, cameras, rooms, quick actions. The controls stay on top, readable; on the wall the same image shows on the pages that fill themselves."))}</div>
@@ -10024,8 +10076,8 @@ function pannelloDelleCard() {
       return `<div class="ed-row dm-rq-riga" data-dm-rq-card="${esc(chiave2)}"${stato ? ` data-dm-rq-stato="${stato}"` : ""}>
         <span class="dm-rq-pollicino" aria-hidden="true">${pollicino({ ...vista, icon: voce?.icon || "🖼️" })}</span>
         <span class="ed-row-main"><strong class="ed-row-new">${esc(nome)}</strong><small class="ed-row-old">${esc(detto)}</small></span>
-        ${interruttore}<button type="button" class="dm-rq-apri" data-dm-rq-apri-card="${esc(chiave2)}" aria-expanded="${aperta === chiave2}" aria-label="${esc(`${t("Immagine", "Image")} · ${nome}`)}">🖼️<span class="dm-rq-apri-testo"> ${esc(t("Immagine", "Image"))}</span></button>
-      </div>${aperta === chiave2 ? bloccoImmagineMarkup({ chiave: chiave2, immagine, nome, accento: ACCENTO_DEI_DISPOSITIVI, anteprima: { stato: "", acceso: false, destra: "", comandi: "", classi: "dm-rq-lettura" } }) : ""}`;
+        ${interruttore}<button type="button" class="dm-rq-apri" data-dm-rq-apri-card="${esc(chiave2)}" aria-expanded="${aperta2 === chiave2}" aria-label="${esc(`${t("Immagine", "Image")} · ${nome}`)}">🖼️<span class="dm-rq-apri-testo"> ${esc(t("Immagine", "Image"))}</span></button>
+      </div>${aperta2 === chiave2 ? bloccoImmagineMarkup({ chiave: chiave2, immagine, nome, accento: ACCENTO_DEI_DISPOSITIVI, anteprima: { stato: "", acceso: false, destra: "", comandi: "", classi: "dm-rq-lettura" } }) : ""}`;
     }).join("")}</div>`
   ).join("")}`;
 }
@@ -15415,10 +15467,10 @@ function updateVehicle(list = [], uid, patch = {}) {
     ) : car
   );
 }
-function accogliAutoDalDispositivo(list = [], { name = "", mappa = {}, tipo = "", aperta = "", metadata = {} } = {}) {
+function accogliAutoDalDispositivo(list = [], { name = "", mappa = {}, tipo = "", aperta: aperta2 = "", metadata = {} } = {}) {
   const auto = vehicleList(list);
   const nome = clean20(name);
-  const chiaveAperta = clean20(aperta);
+  const chiaveAperta = clean20(aperta2);
   const caselle = Object.fromEntries(
     Object.entries(isObject(mappa) ? mappa : {}).map(([chiave2, valore]) => [clean20(chiave2), clean20(valore)]).filter(([chiave2, valore]) => chiave2.startsWith("dm.ev_") && valore)
   );
@@ -31587,8 +31639,8 @@ function gradiAlle(crono, istante2) {
   return cronoInFascia(crono, istante2) ? crono.inCasa : crono.fuori;
 }
 function cronoVoluto(crono, { adesso, stati = {} }) {
-  const aperta = crono.finestraSpegne && crono.finestre.some((id) => acceso2(stati[id] || null));
-  if (aperta) return "spento";
+  const aperta2 = crono.finestraSpegne && crono.finestre.some((id) => acceso2(stati[id] || null));
+  if (aperta2) return "spento";
   return gradiAlle(crono, adesso);
 }
 function cronoProssimo(crono, adesso) {
@@ -32118,8 +32170,8 @@ function comeStaIlVarco(entity, stato, invertiti) {
   const acceso3 = grezzo === "on" || grezzo === "open" || grezzo === "true";
   const chiuso = grezzo === "off" || grezzo === "closed" || grezzo === "false";
   if (!acceso3 && !chiuso) return "";
-  const aperta = apertaSecondoVerso(acceso3, invertiti?.has?.(clean24(entity)) === true);
-  return aperta ? "aperto" : "chiuso";
+  const aperta2 = apertaSecondoVerso(acceso3, invertiti?.has?.(clean24(entity)) === true);
+  return aperta2 ? "aperto" : "chiuso";
 }
 function contaIVarchi(entities = [], states2 = {}, invertiti) {
   let aperti = 0;
@@ -35409,8 +35461,8 @@ async function invia() {
       diagnostics: await diagnostica()
     });
     state35.bozza = { title: "", body: "", sezione: "", funzione: "" };
-    const aperta = risposta?.ticket || {};
-    state35.appena = risposta?.delivered && aperta.issue_url ? { numero: clean(aperta.remote_id), url: clean(aperta.issue_url) } : null;
+    const aperta2 = risposta?.ticket || {};
+    state35.appena = risposta?.delivered && aperta2.issue_url ? { numero: clean(aperta2.remote_id), url: clean(aperta2.issue_url) } : null;
     if (risposta?.delivered) {
       state35.avviso = t("Inviata. Grazie.", "Sent. Thank you.");
     } else if (state35.delivery && !state35.account.connected) {
@@ -35614,7 +35666,7 @@ function installSegnalazioniSection() {
 senzaCadere(installSegnalazioniSection);
 
 // legacy/build-info.js
-var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.19.11", "dashboardVersion": "1.19.11", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-11-17T15:05:47+00:00", "commit": "4e89dd22236a351d575e5ae465687770926fd22d", "assetHash": "2060203a0f388941" });
+var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.19.12", "dashboardVersion": "1.19.12", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-11-17T17:16:51+00:00", "commit": "0f0665782f226d6994ad2d9e600fe1a9f23922dc", "assetHash": "a9e9d6071356cb1c" });
 
 export {
   faseInParole,
@@ -35784,6 +35836,9 @@ export {
   openIconPicker,
   configuredLightGroups,
   installLightsAlertsSection,
+  FINESTRA_ELETTRODOMESTICO,
+  padroneDellaFinestra,
+  laFinestraEDi,
   installLightsSceneSection,
   pageCardMarkup,
   installLightsPageSection,

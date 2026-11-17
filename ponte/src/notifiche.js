@@ -749,9 +749,10 @@ export class Notifiche {
     if (!this.registri) return;
     this._registriIl = this.adesso();
     try {
-      const { di, nomi } = await this.registri.leMappe();
+      const { di, nomi, modelli } = await this.registri.leMappe();
       this.sentinella.dispositivoDi = di || {};
       this.sentinella.nomiDeiDispositivi = nomi || {};
+      this.sentinella.modelliDeiDispositivi = modelli || {};
     } catch (_errore) {
       /* Senza registri la telecamera si cerca per nome. */
     }
@@ -810,6 +811,7 @@ export class Notifiche {
        * disattivate, di diagnostica o di configurazione. */
       const areaDi = new Map();
       const daNonContare = new Set();
+      const diagnostiche = new Set();
       for (const voce of Array.isArray(entita) ? entita : []) {
         const id = voce?.entity_id;
         if (typeof id !== "string") continue;
@@ -817,6 +819,7 @@ export class Notifiche {
         const area = String(nomeDellArea.get(voce?.area_id || suo?.area_id) || "").trim();
         if (area) areaDi.set(id, area.slice(0, 60));
         if (voce?.hidden_by || voce?.disabled_by || voce?.entity_category) daNonContare.add(id);
+        if (voce?.entity_category) diagnostiche.add(id);
         if (!/^(light|switch|binary_sensor|cover)\./.test(id)) continue;
         const pezzi = [area, suo?.manufacturer, suo?.model, suo?.name_by_user || suo?.name]
           .map((p) => String(p || "").trim())
@@ -826,6 +829,7 @@ export class Notifiche {
       this.sentinella.capire.descrivi(descrizioni);
       this.sentinella.aree = areaDi;
       this.sentinella.daNonContare = daNonContare;
+      this.sentinella.diagnostiche = diagnostiche;
     } catch (_errore) {
       /* Senza anagrafe l'assistente guarda i nomi, come prima. */
     }

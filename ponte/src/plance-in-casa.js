@@ -83,6 +83,12 @@ export const NOME_DELL_APERTURA = "apri.html";
  * indirizzo. */
 export const SEGNO_DELL_APERTURA = '<meta name="gdahome" content="apri" />';
 
+/* Il fondo del velo della plancia (`ponte/plancia/legacy/dashboard.html`,
+ * `#cd-boot-overlay`), chiaro e scuro: lo stesso di `apri.html` e
+ * dell'attesa dell'app. Sotto la tessera della Plancia, perche' fra Home
+ * Assistant che apre la Plancia e il velo che si accende non passi un bianco. */
+export const FONDO_DEL_VELO = "light-dark(#e8edf3, #0b1220)";
+
 /* Dove, dentro `apri.html`, va cucito l'accompagnatore. */
 const POSTO_DELL_ACCOMPAGNATORE = "/*@accompagna@*/";
 
@@ -1112,7 +1118,18 @@ export class PlanceInCasa {
    * `manca` dice se la pagina d'apertura Home Assistant non la serve ancora
    * (`riavvio`): allora si scrive la vista che lo spiega. Vuoto vuol dire «per
    * quanto ne sappiamo si apre»: su un dubbio nostro non si toglie la plancia
-   * a chi ce l'ha davanti. */
+   * a chi ce l'ha davanti.
+   *
+   * **Il fondo, prima che arrivi qualunque pagina nostra.** Aprendo la
+   * Plancia, Home Assistant disegna la vista e la tessera subito, e la pagina
+   * d'apertura arriva dopo: in quel tempo si vedeva il bianco della tessera
+   * (la prova del titolare, un secondo e mezzo di bianco con sopra la barra di
+   * Home Assistant, e poi il velo). Adesso la tessera e' trasparente
+   * (`hide_background`, da Home Assistant 2025.12; prima si ignora e resta
+   * com'era) e sotto c'e' il fondo del velo, chiaro o scuro come il tema di
+   * Home Assistant: `light-dark()` segue la `color-scheme` che il frontend
+   * scrive in testa alla sua pagina. Dove `light-dark()` non c'e' (un browser
+   * di prima del 2024) il valore non vale, e resta il fondo del tema. */
   vista(quale, io = null, manca = "") {
     if (manca === "riavvio") return this.vistaCheSpiega(quale);
     return {
@@ -1120,10 +1137,12 @@ export class PlanceInCasa {
         {
           title: quale.titolo,
           panel: true,
+          background: FONDO_DEL_VELO,
           cards: [
             {
               type: "iframe",
               url: this.indirizzoPer(quale, io),
+              hide_background: true,
             },
           ],
         },

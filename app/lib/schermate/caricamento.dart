@@ -52,11 +52,20 @@
 ///  - **Il primo fotogramma e' quello del sistema.** Al tempo zero il fondo e'
 ///    pieno, del colore della schermata d'avvio di Android e di iOS, e il
 ///    marchio non c'e' ancora: si accende tutto da li', senza lampi.
-///  - **«Riduci animazioni».** Con le animazioni spente dal sistema
-///    ([MediaQuery.disableAnimationsOf]) si disegna fermo e pieno: niente
-///    lampi, niente iniziali che si scrivono, niente granelli, tre punti al
-///    posto dell'anello, e l'uscita e' immediata. La riga sotto cambia lo
-///    stesso.
+///  - **«Riduci animazioni»: calma, non ferma.** Con le animazioni spente
+///    dal sistema ([MediaQuery.disableAnimationsOf]) — su Windows basta
+///    «Effetti di animazione» spento, e Chrome ed Edge lo chiedono anche alla
+///    plancia — va via solo quello che si sposta, cresce o gira: le iniziali
+///    che si srotolano e si rimpiccioliscono, il rimbalzo del marchio, l'onda
+///    d'urto, l'anello, i granelli in orbita, i raggi che ruotano, le lettere
+///    che salgono. Resta quello che si accende e si spegne sul posto: le
+///    dissolvenze, l'alone che respira, i raggi che si schiariscono, il lampo
+///    caldo (piu' lento a salire), le finestrelle, il Wi-Fi, la luce che passa
+///    sul marchio, e tre punti che pulsano al posto dell'anello. Il marchio,
+///    il nome e la riga ci sono interi dal primo fotogramma; la riga cambia
+///    sfumando sul posto, e l'uscita sfuma invece di aprirsi in un cerchio.
+///    Fermo del tutto, prima, sembrava un'app bloccata. E' la stessa scelta
+///    del velo della plancia (`ponte/plancia/legacy/caricamento/velo.js`).
 ///  - **Leggera.** Niente sfocature e niente shader scritti a mano: archi,
 ///    cerchi, gradienti, e le iniziali sono tracciati misurati una volta
 ///    sola, di cui a ogni fotogramma si prende un pezzo. Il fondo, il marchio e la sua riflessione stanno
@@ -67,7 +76,6 @@
 /// plancia non c'e', la licenza — restano le loro: questa e' solo l'attesa.
 library;
 
-import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
@@ -307,8 +315,7 @@ class _CaricamentoDellaPlanciaState extends State<CaricamentoDellaPlancia>
     with SingleTickerProviderStateMixin {
   late final Ticker _ticker = createTicker((_) => _segna());
   final ValueNotifier<double> _tempo = ValueNotifier(_Orologio.ultimo);
-  Timer? _fermo;
-  bool _statico = false;
+  bool _calmo = false;
 
   String get _perche => switch (widget.fase) {
     FaseDelCaricamento.app => inLingua(
@@ -351,33 +358,18 @@ class _CaricamentoDellaPlanciaState extends State<CaricamentoDellaPlancia>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final statico = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
-    /* I pezzi del marchio per le iniziali: si chiedono una volta sola. */
-    if (!statico) _Pezzi.chiedi(context);
-    if (statico == _statico && (_ticker.isActive || _fermo != null)) return;
-    _statico = statico;
-    _ticker.stop();
-    _fermo?.cancel();
-    _fermo = null;
-    if (statico) {
-      /* Fermo, ma la riga sotto cambia lo stesso: due volte al secondo si
-       * chiede un fotogramma e si legge il tempo. */
-      void chiedi() =>
-          SchedulerBinding.instance.scheduleFrameCallback((_) => _segna());
-      chiedi();
-      _fermo = Timer.periodic(const Duration(milliseconds: 500), (_) {
-        chiedi();
-        SchedulerBinding.instance.scheduleFrame();
-      });
-    } else {
-      _ticker.start();
-    }
+    final calmo = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    /* I pezzi del marchio per le iniziali: si chiedono una volta sola, e
+     * calmi non servono. */
+    if (!calmo) _Pezzi.chiedi(context);
+    _calmo = calmo;
+    /* Calma o no, il tempo scorre: anche calma l'attesa si accende e respira. */
+    if (!_ticker.isActive) _ticker.start();
   }
 
   @override
   void dispose() {
     _ticker.dispose();
-    _fermo?.cancel();
     _tempo.dispose();
     _Orologio.esce();
     super.dispose();
@@ -386,7 +378,7 @@ class _CaricamentoDellaPlanciaState extends State<CaricamentoDellaPlancia>
   @override
   Widget build(BuildContext context) {
     final scuro = Theme.of(context).brightness == Brightness.dark;
-    final statico = _statico;
+    final calmo = _calmo;
     final nome = widget.nome?.trim() ?? '';
     final via = _UscitaInCorso.di(context);
     return Semantics(
@@ -416,7 +408,7 @@ class _CaricamentoDellaPlanciaState extends State<CaricamentoDellaPlancia>
                       painter: _Fondo(
                         tempo: _tempo,
                         scuro: scuro,
-                        statico: statico,
+                        calmo: calmo,
                         centro: centro,
                         logo: m.logo,
                         raggio: math.max(pagina.shortestSide * 0.62, 260),
@@ -431,7 +423,7 @@ class _CaricamentoDellaPlanciaState extends State<CaricamentoDellaPlancia>
                         via: via,
                         misure: m,
                         scuro: scuro,
-                        statico: statico,
+                        calmo: calmo,
                         nome: nome,
                         carattere: widget.carattere ?? 'Inter',
                       ),
@@ -440,7 +432,9 @@ class _CaricamentoDellaPlanciaState extends State<CaricamentoDellaPlancia>
                 ],
               ),
             );
-            if (via == null) return velo;
+            /* Calma, l'uscita non apre il cerchio: sfuma
+             * ([UscitaDelCaricamento]). */
+            if (via == null || calmo) return velo;
             /* L'uscita: un cerchio che si apre dal centro del marchio, col
              * bordo d'oro. */
             return AnimatedBuilder(
@@ -491,7 +485,7 @@ class _Colonna extends StatelessWidget {
     required this.via,
     required this.misure,
     required this.scuro,
-    required this.statico,
+    required this.calmo,
     required this.nome,
     required this.carattere,
   });
@@ -500,7 +494,7 @@ class _Colonna extends StatelessWidget {
   final Animation<double>? via;
   final _Misure misure;
   final bool scuro;
-  final bool statico;
+  final bool calmo;
   final String nome;
   final String carattere;
 
@@ -527,33 +521,38 @@ class _Colonna extends StatelessWidget {
     /* Il marchio, nel suo strato: finita l'entrata non si ridipinge piu'. */
     final marchio = RepaintBoundary(child: Marchio(lato: m.logo));
 
-    final luci = statico
-        ? const SizedBox.shrink()
-        : RepaintBoundary(
-            child: CustomPaint(
-              painter: _Luci(tempo: tempo, scuro: scuro, scala: m.scala),
-            ),
-          );
+    /* Le luci sopra il marchio ci sono anche calme: si accendono e si
+     * spengono sul posto. */
+    final luci = RepaintBoundary(
+      child: CustomPaint(
+        painter: _Luci(
+          tempo: tempo,
+          scuro: scuro,
+          scala: m.scala,
+          calmo: calmo,
+        ),
+      ),
+    );
 
     final riflesso = RepaintBoundary(child: Marchio(lato: m.logo));
 
     return ValueListenableBuilder<double>(
       valueListenable: tempo,
       builder: (context, t, _) {
-        final pieno = statico ? 10.0 : t;
         final esce = via?.value ?? 0;
-        final scala =
-            _scalaDelMarchio(pieno) *
-            (1 + 0.35 * Curves.easeIn.transform(esce));
-        final riflessoQuanto = statico
+        /* Calmo, il marchio non cresce, non rimbalza e non si allarga
+         * uscendo: sta li', intero, dal primo fotogramma. */
+        final scala = calmo
             ? 1.0
-            : _morbido(_tra(t, _accensione - 0.1, 0.6));
+            : _scalaDelMarchio(t) * (1 + 0.35 * Curves.easeIn.transform(esce));
+        final riflessoQuanto = _morbido(_tra(t, _accensione - 0.1, 0.6));
         final nomeDa = math.max(_Orologio.nomeDa, _accensione + 0.15);
-        final filoQuanto = statico
-            ? 1.0
-            : _morbido(_tra(t, nomeDa + 0.25, 0.7));
-        final sotto = _morbido(_tra(pieno, _accensione + 0.3, 0.5));
-        final appare = statico ? 1.0 : _marchioAppare(t);
+        /* Il filo cresce dal centro; calmo, compare sfumando. */
+        final filoArriva = _morbido(_tra(t, nomeDa + 0.25, 0.7));
+        final filoQuanto = calmo ? 1.0 : filoArriva;
+        final filoSi = calmo ? filoArriva : 1.0;
+        final sotto = calmo ? 1.0 : _morbido(_tra(t, _accensione + 0.3, 0.5));
+        final appare = calmo ? 1.0 : _marchioAppare(t);
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -565,7 +564,7 @@ class _Colonna extends StatelessWidget {
                 children: [
                   /* Dietro: l'anello di luce e i granelli che passano dietro
                    * al marchio. */
-                  if (!statico)
+                  if (!calmo)
                     RepaintBoundary(
                       child: CustomPaint(
                         painter: _Orbita(
@@ -588,7 +587,7 @@ class _Colonna extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (!statico)
+                  if (!calmo)
                     RepaintBoundary(
                       child: CustomPaint(
                         painter: _Orbita(
@@ -600,7 +599,7 @@ class _Colonna extends StatelessWidget {
                       ),
                     ),
                   /* Davanti a tutto: le iniziali, finche' non si fondono. */
-                  if (!statico && t < _accensione)
+                  if (!calmo && t < _accensione)
                     RepaintBoundary(
                       child: CustomPaint(
                         painter: _Iniziali(
@@ -660,7 +659,7 @@ class _Colonna extends StatelessWidget {
                   ? null
                   : _NomeLetteraPerLettera(
                       nome: nome.toUpperCase(),
-                      t: statico ? 100 : t,
+                      t: calmo ? 100 : t,
                       da: nomeDa,
                       stile: stile(
                         16 * m.scala,
@@ -672,33 +671,39 @@ class _Colonna extends StatelessWidget {
                     ),
             ),
             SizedBox(height: 6 * m.scala),
-            /* Il filo d'oro sotto il nome: cresce dal centro. */
+            /* Il filo d'oro sotto il nome: cresce dal centro (calmo,
+             * sfuma). */
             SizedBox(
               height: m.filo,
               width: 56 * m.scala,
-              child: nome.isEmpty
+              child: nome.isEmpty || filoSi <= 0
                   ? null
-                  : Center(
-                      child: Container(
-                        width: 56 * m.scala * filoQuanto,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(m.filo),
-                          gradient: LinearGradient(
-                            colors: [
-                              _oro.withValues(alpha: 0),
-                              _oro,
-                              _oro.withValues(alpha: 0),
-                            ],
+                  : Opacity(
+                      opacity: filoSi,
+                      child: Center(
+                        child: Container(
+                          width: 56 * m.scala * filoQuanto,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(m.filo),
+                            gradient: LinearGradient(
+                              colors: [
+                                _oro.withValues(alpha: 0),
+                                _oro,
+                                _oro.withValues(alpha: 0),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
             ),
             SizedBox(height: m.sottoNome),
-            /* Fermi, tre punti al posto dell'anello che gira. */
+            /* Calmi, tre punti che pulsano al posto dell'anello che gira. */
             SizedBox(
               height: m.punti,
-              child: statico ? _TrePunti(scuro: scuro, misura: m.punti) : null,
+              child: calmo
+                  ? _TrePunti(scuro: scuro, misura: m.punti, t: t)
+                  : null,
             ),
             SizedBox(height: m.sottoPunti),
             Opacity(
@@ -707,7 +712,7 @@ class _Colonna extends StatelessWidget {
                 height: m.riga,
                 child: _Riga(
                   t: t,
-                  statico: statico,
+                  calmo: calmo,
                   stile: stile(13 * m.scala, FontWeight.w600, colRiga, 0.1),
                 ),
               ),
@@ -776,20 +781,21 @@ class _NomeLetteraPerLettera extends StatelessWidget {
 }
 
 /// La riga sotto: cambia sfumando, la vecchia che sale e se ne va e la
-/// nuova che arriva da sotto.
+/// nuova che arriva da sotto. Calma, sfuma sul posto.
 class _Riga extends StatelessWidget {
-  const _Riga({required this.t, required this.statico, required this.stile});
+  const _Riga({required this.t, required this.calmo, required this.stile});
 
   final double t;
-  final bool statico;
+  final bool calmo;
   final TextStyle stile;
 
   @override
   Widget build(BuildContext context) {
     final quale = _qualeRiga(t);
-    final passa = statico || quale == 0
+    final passa = quale == 0
         ? 1.0
         : _morbido(_tra(t, _quandoCambiaLaRiga[quale], 0.45));
+    final sale = calmo ? 0.0 : 6.0;
     Widget riga(int i, double quanto, double su) => Opacity(
       opacity: quanto,
       child: Transform.translate(
@@ -807,8 +813,8 @@ class _Riga extends StatelessWidget {
       alignment: Alignment.center,
       clipBehavior: Clip.none,
       children: [
-        if (passa < 1) riga(quale - 1, 1 - passa, -6 * passa),
-        riga(quale, passa, 6 * (1 - passa)),
+        if (passa < 1) riga(quale - 1, 1 - passa, -sale * passa),
+        riga(quale, passa, sale * (1 - passa)),
       ],
     );
   }
@@ -816,32 +822,32 @@ class _Riga extends StatelessWidget {
 
 /// Il fondo vivo: il colore pieno della schermata d'avvio, e sopra un alone
 /// che respira dietro il marchio, raggi lenti che girano, il lampo
-/// dell'accensione e il pavimento lucido sotto il marchio.
+/// dell'accensione e il pavimento lucido sotto il marchio. Calmo, l'alone
+/// respira solo di luce, i raggi stanno fermi e si schiariscono col respiro,
+/// e il lampo non si allarga e non manda l'onda d'urto.
 class _Fondo extends CustomPainter {
   _Fondo({
     required this.tempo,
     required this.scuro,
-    required this.statico,
+    required this.calmo,
     required this.centro,
     required this.logo,
     required this.raggio,
-  }) : super(repaint: statico ? null : tempo);
+  }) : super(repaint: tempo);
 
   final ValueNotifier<double> tempo;
   final bool scuro;
-  final bool statico;
+  final bool calmo;
   final Offset centro;
   final double logo;
   final double raggio;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final t = statico ? 10.0 : tempo.value;
+    final t = tempo.value;
     final arriva = _morbido(_tra(t, 0.0, 0.7));
     if (arriva <= 0) return;
-    final respiro = statico
-        ? 0.5
-        : 0.5 - 0.5 * math.cos(2 * math.pi * t / _respiro);
+    final respiro = 0.5 - 0.5 * math.cos(2 * math.pi * t / _respiro);
     final tutto = Offset.zero & size;
 
     /* La profondita': in alto e in basso un velo appena piu' scuro (di sera)
@@ -868,7 +874,7 @@ class _Fondo extends CustomPainter {
     );
 
     /* L'alone dietro il marchio: blu elettrico di sera, bianco di giorno. */
-    final r = raggio * (0.92 + 0.1 * respiro);
+    final r = raggio * (calmo ? 1.02 : 0.92 + 0.1 * respiro);
     final forza = arriva * (0.75 + 0.25 * respiro);
     canvas.drawCircle(
       centro,
@@ -892,10 +898,12 @@ class _Fondo extends CustomPainter {
 
     /* I raggi: sette lame di luce larghe e tenui che girano piano attorno
      * al marchio, accese dal lampo. */
-    final raggi = statico ? 0.6 : _morbido(_tra(t, _accensione, 0.9));
+    final raggi =
+        _morbido(_tra(t, _accensione, 0.9)) *
+        (calmo ? 0.55 + 0.35 * respiro : 1);
     if (raggi > 0) {
       final lunghi = raggio * 1.25;
-      final giro = statico ? 0.0 : t * 0.07;
+      final giro = calmo ? 0.0 : t * 0.07;
       final pennello = Paint()
         ..blendMode = scuro ? BlendMode.plus : BlendMode.srcOver
         ..shader = RadialGradient(
@@ -932,7 +940,7 @@ class _Fondo extends CustomPainter {
 
     /* Il pavimento lucido: una pozza di luce schiacciata sotto il marchio. */
     final sotto = centro + Offset(0, logo * 0.53);
-    final pozza = statico ? 1.0 : _morbido(_tra(t, _accensione - 0.1, 0.7));
+    final pozza = _morbido(_tra(t, _accensione - 0.1, 0.7));
     if (pozza > 0) {
       canvas.save();
       canvas.translate(sotto.dx, sotto.dy);
@@ -960,13 +968,16 @@ class _Fondo extends CustomPainter {
       canvas.restore();
     }
 
-    if (statico) return;
-
     /* Il lampo dell'accensione: una luce calda che si allarga dal marchio,
-     * e l'onda d'urto d'oro che corre verso i bordi. */
-    final lampo = _lampo(t, _accensione, 0.08, 0.7);
+     * e l'onda d'urto d'oro che corre verso i bordi. Calmo, la luce sale piano
+     * e resta della sua misura, e l'onda non parte. */
+    final lampo = calmo
+        ? _lampo(t, _accensione, 0.25, 1.0)
+        : _lampo(t, _accensione, 0.08, 0.7);
     if (lampo > 0) {
-      final rl = logo * (1.0 + 0.9 * _morbido(_tra(t, _accensione, 0.6)));
+      final rl = calmo
+          ? logo * 1.9
+          : logo * (1.0 + 0.9 * _morbido(_tra(t, _accensione, 0.6)));
       canvas.drawCircle(
         centro,
         rl,
@@ -982,6 +993,7 @@ class _Fondo extends CustomPainter {
           ).createShader(Rect.fromCircle(center: centro, radius: rl)),
       );
     }
+    if (calmo) return;
     final onda = _tra(t, _accensione, 1.0);
     if (onda > 0 && onda < 1) {
       final ro = logo * (0.62 + 2.6 * Curves.easeOutCubic.transform(onda));
@@ -1008,7 +1020,7 @@ class _Fondo extends CustomPainter {
   @override
   bool shouldRepaint(_Fondo prima) =>
       prima.scuro != scuro ||
-      prima.statico != statico ||
+      prima.calmo != calmo ||
       prima.centro != centro ||
       prima.logo != logo ||
       prima.raggio != raggio ||
@@ -1023,12 +1035,20 @@ class _Fondo extends CustomPainter {
 /// puntino a (267, 129); le finestrelle centrate a (189, 172), (206, 172),
 /// (189, 190), (206, 190), di dodici pixel e mezzo.
 class _Luci extends CustomPainter {
-  _Luci({required this.tempo, required this.scuro, required this.scala})
-    : super(repaint: tempo);
+  _Luci({
+    required this.tempo,
+    required this.scuro,
+    required this.scala,
+    required this.calmo,
+  }) : super(repaint: tempo);
 
   final ValueNotifier<double> tempo;
   final bool scuro;
   final double scala;
+
+  /// Calme, il bagliore sale piano e il terzo arco del Wi-Fi pulsa sul posto
+  /// invece di allargarsi.
+  final bool calmo;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1046,7 +1066,9 @@ class _Luci extends CustomPainter {
 
   /// Il marchio che si accende: per un attimo brucia, poi si calma.
   void _bagliore(Canvas canvas, Size size, RRect forma, double t) {
-    final f = _lampo(t, _accensione, 0.06, 0.55);
+    final f = calmo
+        ? _lampo(t, _accensione, 0.2, 0.8)
+        : _lampo(t, _accensione, 0.06, 0.55);
     if (f <= 0) return;
     canvas.save();
     canvas.clipRRect(forma);
@@ -1169,7 +1191,7 @@ class _Luci extends CustomPainter {
     final via = _tra(fase, 0.42, 0.55);
     if (via > 0 && via < 1) {
       arco(
-        l * (66 + 34 * via) / 384,
+        l * (66 + (calmo ? 0 : 34 * via)) / 384,
         (1 - via) * math.sin(math.pi * math.min(1, via * 3)) * arriva,
         sottile: 0.85,
       );
@@ -1218,7 +1240,10 @@ class _Luci extends CustomPainter {
 
   @override
   bool shouldRepaint(_Luci prima) =>
-      prima.tempo != tempo || prima.scuro != scuro || prima.scala != scala;
+      prima.tempo != tempo ||
+      prima.scuro != scuro ||
+      prima.scala != scala ||
+      prima.calmo != calmo;
 }
 
 /// Un pezzo del marchio per le iniziali: dove sta nel disegno, e il nastro
@@ -1694,21 +1719,36 @@ class _Orbita extends CustomPainter {
       prima.davanti != davanti;
 }
 
-/// Con le animazioni spente: tre punti fermi, blu, argento e oro.
+/// Calmi, al posto dell'anello che gira: tre punti, blu, argento e oro, che
+/// pulsano uno dopo l'altro sul posto — solo di luce, senza crescere. Gli
+/// stessi tempi del velo della plancia (`gvPulsa`: 1,2 secondi, due decimi
+/// fra un punto e l'altro).
 class _TrePunti extends StatelessWidget {
-  const _TrePunti({required this.scuro, required this.misura});
+  const _TrePunti({required this.scuro, required this.misura, required this.t});
 
   final bool scuro;
   final double misura;
+  final double t;
+
+  /// Quanto e' acceso il punto [i] al tempo [t]: fra 0,3 e 1.
+  static double accesoDi(int i, double t) {
+    final x = t - 0.2 * i;
+    if (x <= 0) return 0.3;
+    return 0.3 + 0.7 * (0.5 - 0.5 * math.cos(2 * math.pi * x / 1.2));
+  }
 
   @override
   Widget build(BuildContext context) {
     final d = misura * 0.7;
-    Widget punto(Color c) => Container(
-      width: d,
-      height: d,
-      margin: EdgeInsets.symmetric(horizontal: d * 0.45),
-      decoration: BoxDecoration(color: c, shape: BoxShape.circle),
+    var quale = 0;
+    Widget punto(Color c) => Opacity(
+      opacity: accesoDi(quale++, t),
+      child: Container(
+        width: d,
+        height: d,
+        margin: EdgeInsets.symmetric(horizontal: d * 0.45),
+        decoration: BoxDecoration(color: c, shape: BoxShape.circle),
+      ),
     );
     return FittedBox(
       fit: BoxFit.scaleDown,
@@ -1805,7 +1845,8 @@ class _UscitaInCorso extends InheritedWidget {
 /// schermata che funziona gia'.
 ///
 /// Se torna [su] (una pagina che si ricarica) c'e' subito, senza entrare.
-/// Con «riduci animazioni» se ne va di colpo.
+/// Con «riduci animazioni» niente cerchio: sfuma in [quantoSfuma], come il
+/// velo della plancia.
 class UscitaDelCaricamento extends StatefulWidget {
   const UscitaDelCaricamento({
     super.key,
@@ -1819,6 +1860,9 @@ class UscitaDelCaricamento extends StatefulWidget {
   /// Quanto dura l'uscita.
   static const quantoDura = Duration(milliseconds: 560);
 
+  /// Quanto dura l'uscita calma, che sfuma soltanto.
+  static const quantoSfuma = Duration(milliseconds: 260);
+
   @override
   State<UscitaDelCaricamento> createState() => _UscitaDelCaricamentoState();
 }
@@ -1826,10 +1870,14 @@ class UscitaDelCaricamento extends StatefulWidget {
 class _UscitaDelCaricamentoState extends State<UscitaDelCaricamento>
     with SingleTickerProviderStateMixin {
   /* 0 l'attesa c'e', 1 e' andata. */
+  /* `preserve`: con le animazioni spente dal sistema Flutter accorcerebbe
+   * da se' ogni animazione a un ventesimo, e lo sfumare calmo diventerebbe
+   * uno scatto. La scelta di cosa fare calmi la fa questa pagina. */
   late final AnimationController _via = AnimationController(
     vsync: this,
     duration: UscitaDelCaricamento.quantoDura,
     value: widget.su ? 0 : 1,
+    animationBehavior: AnimationBehavior.preserve,
   )..addStatusListener((_) => setState(() {}));
 
   /* Alla fine l'ultimo pezzo sfuma: il bordo d'oro non resta tagliato. */
@@ -1837,17 +1885,27 @@ class _UscitaDelCaricamentoState extends State<UscitaDelCaricamento>
     CurvedAnimation(parent: _via, curve: const Interval(0.7, 1)),
   );
 
+  /* Calma, sfuma tutta, dall'inizio alla fine. */
+  late final Animation<double> _sfuma = ReverseAnimation(
+    CurvedAnimation(parent: _via, curve: Curves.easeOut),
+  );
+  bool _calma = false;
+
   @override
   void didUpdateWidget(UscitaDelCaricamento prima) {
     super.didUpdateWidget(prima);
     if (prima.su == widget.su) return;
     if (widget.su) {
       _via.value = 0;
-    } else if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
-      _via.value = 1;
-    } else {
-      _via.forward();
+      return;
     }
+    _calma = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    _via.animateTo(
+      1,
+      duration: _calma
+          ? UscitaDelCaricamento.quantoSfuma
+          : UscitaDelCaricamento.quantoDura,
+    );
   }
 
   @override
@@ -1862,7 +1920,7 @@ class _UscitaDelCaricamentoState extends State<UscitaDelCaricamento>
     return IgnorePointer(
       ignoring: !widget.su,
       child: FadeTransition(
-        opacity: _quanto,
+        opacity: _calma ? _sfuma : _quanto,
         child: _UscitaInCorso(via: _via, child: widget.child),
       ),
     );

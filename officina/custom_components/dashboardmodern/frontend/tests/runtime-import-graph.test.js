@@ -1697,8 +1697,11 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // `core/pianta-da-pdf.js` (muri, quote, porte, balconi, la scala anche quando
   // non e' scritta) e `core/scritte-disegnate.js` (le scritte di un PDF senza
   // testo: i nomi delle stanze, i metri quadri, «scala 1:50»).
+  // 557 con `core/chi-ha-la-finestra.js`: di chi e' la finestra dei dettagli,
+  // perche' le luci non ridisegnino la telecamera aperta (ne' altri il corpo
+  // di qualcun altro).
   assert.ok(
-    relative.length <= 556,
+    relative.length <= 557,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

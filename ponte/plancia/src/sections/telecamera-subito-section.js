@@ -269,6 +269,31 @@ function stradeDiAdesso(cam) {
 
 /* Le corse del guscio, con le firme che hanno la'. Le istantanee non tornano
  * una promessa: e' l'ultima rete, e non fallisce. */
+/* Le aperture le numera il guscio (`dmCamNuovaApertura`): un numero solo per
+ * tutto il motore, che chiudere la finestra o darla a un altro fa scadere. Un
+ * guscio che non le sa numerare lascia tutto com'era. */
+function nuovaApertura(content) {
+  try {
+    return typeof root.dmCamNuovaApertura === "function" ? root.dmCamNuovaApertura(content) : 0;
+  } catch (_errore) {
+    return 0;
+  }
+}
+
+function ancoraAperta(content, apertura) {
+  if (!apertura || typeof root.dmCamAncoraAperta !== "function") return true;
+  try {
+    return Boolean(root.dmCamAncoraAperta(content, apertura));
+  } catch (_errore) {
+    return true;
+  }
+}
+
+function corpoDellApertura(content, apertura) {
+  if (!apertura || typeof root.dmCamCorpo !== "function") return content;
+  return root.dmCamCorpo(content, apertura);
+}
+
 function corsaDelGuscio(strada, cam, content) {
   const nome = clean(strada?.nome);
   if (nome === "WebRTC") return root.dmCamWebRTC?.(cam, strada, content, strada.attesa);
@@ -308,8 +333,18 @@ export function installTelecameraSubito() {
   if (typeof precedente !== "function" || precedente.__dmTelecameraSubito) return false;
   installStyle(STYLE_ID, css());
 
-  async function avvolta(cam, title, content) {
+  async function avvolta(cam, title, content, giaAperta) {
     const entity = clean(cam?.entity);
+    /* L'apertura di questa telecamera, presa dal guscio prima di ogni attesa.
+     *
+     * Qui si aspetta parecchio — le capacita', una strada col suo tempo — e
+     * intanto la finestra puo' essere chiusa, passata alle luci o a un'altra
+     * telecamera. Quello che arriva dopo non scrive piu' nel corpo (le strade
+     * scrivono in `corpo`, che si ferma da solo) e non ripulisce niente:
+     * ripulire vorrebbe dire spegnere il video di chi e' venuto dopo. */
+    const apertura = giaAperta || nuovaApertura(content);
+    const ancora = () => ancoraAperta(content, apertura);
+    const corpo = corpoDellApertura(content, apertura);
     /* Prima di qualunque negoziato: la telecamera si vede. Anche quando la
      * cascata sotto ci mettera' venti secondi, e anche quando finira' male —
      * un'istantanea ferma e' piu' di un rettangolo nero. */
@@ -317,7 +352,7 @@ export function installTelecameraSubito() {
     /* Ogni apertura ricomincia da capo: una strada caduta la volta prima non
      * si salta adesso. */
     state.caduta = null;
-    if (!entity) return precedente.call(this, cam, title, content);
+    if (!entity) return precedente.call(this, cam, title, content, apertura);
 
     /* Se Home Assistant non ha ancora detto che flussi sa fare questa
      * telecamera, glielo si chiede adesso e si aspetta: e' una domanda
@@ -327,6 +362,7 @@ export function installTelecameraSubito() {
       try {
         await chiediLeCapacita(entity, Date.now(), { forza: true });
       } catch (_errore) {}
+      if (!ancora()) return undefined;
     }
     const ricordo = ricordoDellaTelecamera(memoria(), entity, Date.now());
     const strade = stradeDiAdesso(cam);
@@ -345,10 +381,12 @@ export function installTelecameraSubito() {
       const inizio = Date.now();
       try {
         root.dmCamCleanup?.();
-        await corsaDelGuscio(corta, cam, content);
+        await corsaDelGuscio(corta, cam, corpo);
+        if (!ancora()) return undefined;
         imparaLaStrada(entity, corta.nome, Date.now() - inizio);
         return undefined;
       } catch (_errore) {
+        if (!ancora()) return undefined;
         /* Col tempo intero, la fila non la rifa' (vedi `stradaAppenaCaduta`). */
         const intera = strade.find((strada) => strada.nome === corta.nome && !strada.salta);
         if (Number(corta.attesa) >= Number(intera?.attesa || 0))
@@ -365,7 +403,9 @@ export function installTelecameraSubito() {
       }
     }
 
-    const esito = await precedente.call(this, cam, title, content);
+    if (!ancora()) return undefined;
+    const esito = await precedente.call(this, cam, title, content, apertura);
+    if (!ancora()) return esito;
     /* Cosa ha vinto lo dice il popup: ogni strada del guscio disegna il suo
      * lettore, e ognuno ha il suo identificativo.
      *

@@ -208,6 +208,9 @@ for (const lingua of ["it", "en"]) {
         cdApplStatus: () => ({ label: "OFF", cls: "off", w: null }),
         cdApplianceVisual: () => "<svg></svg>",
         cdApplianceDisplayName: (a) => a.name,
+        /* Chi apre la finestra se la prende dal guscio: qui conta cosa ci
+         * scrive dentro, non di chi e'. */
+        dmFinestraDi: () => 1,
       });
       vm.runInContext(
         `${conAiutanti("apriApplianceDetail")};this.apri=apriApplianceDetail`,

@@ -30,6 +30,7 @@ import {
   lettureDelDispositivo as lettureScelte,
 } from "../core/letture-accanto.js";
 import { soloQuelleViste } from "../core/le-voci-nascoste.js";
+import { FINESTRA_ELETTRODOMESTICO, padroneDellaFinestra, laFinestraEDi } from "../core/chi-ha-la-finestra.js";
 import {
   applianceModelForIndex,
   buildCardMarkup,
@@ -44,13 +45,14 @@ import {
   doc,
   esc,
   installStyle,
+  lexicalGlobal,
   root,
   t,
   senzaCadere,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_APPLIANCE_DETAIL_POPUP__";
-const state = (root[KEY] ||= { installed: false, aperto: null });
+const state = (root[KEY] ||= { installed: false, aperto: null, gettone: null });
 
 const STATI_MUTI = /^(unknown|unavailable|none|)$/i;
 const DOMINI_INTERRUTTORE = /^(switch|light|input_boolean|fan)\./;
@@ -456,6 +458,11 @@ function riveste(indice) {
   const appliance = root.getAppliances?.()?.[indice];
   if (!lista || !appliance) return false;
   state.aperto = indice;
+  /* L'apertura di cui e' questa veste: il catalogo che arriva dopo riveste
+   * soltanto quella, non la finestra che nel frattempo e' di qualcun altro. */
+  state.gettone =
+    padroneDellaFinestra(doc?.getElementById?.("details-modal"), lexicalGlobal("currentPopupType"))
+      ?.gettone ?? null;
 
   lista.replaceChildren();
   lista.dataset.dmApdeOwner = "moduli";
@@ -1207,11 +1214,22 @@ function vesteIntegrazione(lista, appliance, giaMostrate, titoletto) {
   return true;
 }
 
-/* Il catalogo arriva dopo la finestra: se e' ancora aperta, si riveste. */
+/* Il catalogo arriva dopo la finestra: se e' ancora la stessa, si riveste.
+ *
+ * «Ancora aperta» non bastava: la finestra e' la stessa per la telecamera, le
+ * luci e gli avvisi, e un catalogo arrivato tardi rivestiva da elettrodomestico
+ * la telecamera aperta dopo. Si riveste solo l'apertura di cui si era presa la
+ * veste, col suo gettone. */
 function alCatalogo() {
   if (state.aperto == null) return;
   const modal = doc?.getElementById?.("details-modal");
-  if (!modal?.classList?.contains("show")) return;
+  if (
+    !laFinestraEDi(modal, FINESTRA_ELETTRODOMESTICO, {
+      gettone: state.gettone,
+      ripiego: lexicalGlobal("currentPopupType"),
+    })
+  )
+    return;
   try {
     riveste(state.aperto);
   } catch (_errore) {}

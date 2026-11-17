@@ -303,7 +303,7 @@ function renderAppliances(){
 function apriApplianceDetail(i){
   if(navigator.vibrate) navigator.vibrate(10);
   const a=getAppliances()[i]; if(!a) return;
-  currentPopupType='appliance_view';
+  dmFinestraDi('appliance_view', true);
   const ents=(a.entities||[]).map(e=>typeof e==='string'?e:e.entity).filter(Boolean);
   const s=cdApplStatus(a);
   document.getElementById('details-title').innerHTML='<span style="display:inline-flex;vertical-align:middle;color:#0ea5e9;">'+cdApplianceVisual(a,22)+'</span> '+cdEsc(String(cdApplianceDisplayName(a)).toUpperCase());
@@ -569,7 +569,7 @@ function apriAvvisoCustom(idx) {
     if (navigator.vibrate) navigator.vibrate(10);
     const a = cdCfgList('cd_avvisi_custom')[idx];
     if (!a) return;
-    currentPopupType = 'avviso_custom';
+    dmFinestraDi('avviso_custom', true);
     window._avvPopupIdx = idx;
     document.getElementById('details-modal').classList.add('show');
     _avvRenderPopup(a, idx, true);
@@ -4387,11 +4387,35 @@ function cdOpenAppMenu() {
 }
 
 // ================= GESTIONE MODALS E PULIZIA RISORSE ================= //
+/* La finestra dei dettagli ha un padrone.
+   `#details-modal` e' una sola e la usano in tanti: la telecamera, la gestione
+   luci, gli avvisi, gli elettrodomestici, i gruppi della Home. Chi la apre se
+   la prende qui: il tipo resta scritto sulla finestra (`data-dm-finestra`)
+   insieme a un gettone che cambia a ogni apertura (`data-dm-gettone`), e chi
+   ne ridisegna il corpo dopo — un cambio di stato, una risposta arrivata tardi
+   — prima guarda che il padrone sia ancora lui (`core/chi-ha-la-finestra.js`).
+   Senza, il ridisegno delle luci guardava solo che la finestra fosse aperta, e
+   riempiva di luci la telecamera lasciandole sopra il suo titolo.
+   Chi lascia la telecamera per un altro contenuto la chiude davvero: il flusso
+   restava acceso dietro un corpo che non era piu' il suo. `nuova` e' un'apertura
+   vera (un tocco); senza, e' il ridisegno dello stesso contenuto. */
+let _dmFinestraGiro = 0;
+function dmFinestraDi(tipo, nuova) {
+    const modal = document.getElementById('details-modal');
+    const aperta = !!(modal && modal.classList.contains('show'));
+    if (currentPopupType === 'camera_view' && (tipo !== 'camera_view' || nuova)) { try { dmCamChiudi(); } catch (e) {} }
+    if (nuova || tipo !== currentPopupType || !aperta) _dmFinestraGiro++;
+    currentPopupType = tipo;
+    if (modal) { modal.dataset.dmFinestra = tipo || ''; modal.dataset.dmGettone = String(_dmFinestraGiro); }
+    return _dmFinestraGiro;
+}
 function forceClose(id) { 
   document.getElementById(id).classList.remove('show'); 
   if(id === 'details-modal') {
-      try { dmCamCleanup(); } catch(e) {}
+      try { dmCamChiudi(); } catch(e) {}
       currentPopupType = null; 
+      _dmFinestraGiro++;
+      { const m = document.getElementById('details-modal'); if (m) { m.dataset.dmFinestra = ''; m.dataset.dmGettone = String(_dmFinestraGiro); } }
       currentActiveCam = null;
       
       // Distruggi l'iframe video per fermare il flusso e liberare RAM e Banda
@@ -4501,7 +4525,7 @@ function apriGestioneLuci(isClick = false, luciFilter = null, customTitle = null
   window._luciPopupFilter = luciFilter || null;
   window._luciPopupTitle = customTitle || null;
   if(isClick && navigator.vibrate) navigator.vibrate(10);
-  currentPopupType = 'gestione_luci';
+  dmFinestraDi('gestione_luci', isClick);
   const list = document.getElementById('details-list');
   const scrollTop = list.scrollTop;
   document.getElementById('details-title').innerHTML = window._luciPopupTitle ? ('💡 ' + cdEsc(window._luciPopupTitle.toUpperCase())) : '💡 GESTIONE LUCI';
@@ -5654,7 +5678,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function apriCamera(camId, title) {
     if (navigator.vibrate) navigator.vibrate(10);
-    currentPopupType = 'camera_view';
+    dmFinestraDi('camera_view', true);
     const list = document.getElementById('details-list');
     document.getElementById('details-title').innerHTML = '📹 ' + cdEsc(title);
     document.getElementById('details-modal').classList.add('show');
@@ -5670,6 +5694,35 @@ function apriCamera(camId, title) {
    Riusa le primitive di Modern: ws, msgId, pendingWsCallbacks, STATES,
    LONG_LIVED_TOKEN, HA_HTTP_URL, toggleFullScreenCam. */
 let _dmCurrentCam = null, _dmPc = null, _dmWs = null, _dmHls = null;
+/* Di chi e' il motore delle telecamere adesso.
+   Ogni apertura ha un numero, scritto anche sul riquadro in cui disegna
+   (`data-dm-cam-apertura`). Le strade aspettano — una firma, un flusso, dieci
+   secondi di WebRTC — e intanto la finestra puo' essere stata chiusa, o data
+   alle luci, o a un'altra telecamera: quello che arriva dopo si butta invece di
+   scriverci dentro. Il numero lo cambia solo chi apre o chiude davvero, non la
+   pulizia fra una strada e l'altra. */
+let _dmCamApertura = 0;
+const DM_CAM_SUPERATA = 'telecamera non piu\' aperta qui';
+function dmCamNuovaApertura(content) {
+    _dmCamApertura++;
+    if (content && content.dataset) content.dataset.dmCamApertura = String(_dmCamApertura);
+    return _dmCamApertura;
+}
+function dmCamAncoraAperta(content, apertura) {
+    return apertura === _dmCamApertura && !!content && content.isConnected !== false && (!content.dataset || content.dataset.dmCamApertura === String(apertura));
+}
+/* Il corpo come lo vede una strada: scrive finche' l'apertura e' la sua, e poi
+   si ferma con un errore invece di scrivere nella finestra di qualcun altro. */
+function dmCamCorpo(content, apertura) {
+    return {
+        get innerHTML() { return content.innerHTML; },
+        set innerHTML(html) { if (!dmCamAncoraAperta(content, apertura)) throw new Error(DM_CAM_SUPERATA); content.innerHTML = html; },
+    };
+}
+function dmCamChiudi() {
+    _dmCamApertura++;
+    dmCamCleanup();
+}
 let _dmPollInt = null, _dmPollBlob = null, _dmPollFail = 0;
 /* Le istantanee: quanto si aspetta fra un fotogramma e il successivo, e da
    quanto tempo senza nemmeno un'immagine si dice che non risponde. Venti
@@ -5689,8 +5742,13 @@ function dmStreamName(cam) { return cam.stream || (cam.entity ? cam.entity.split
    restano le parole, che il modulo non sa in che lingua vanno dette. */
 const _DM_CAM_MOTIVI = { 'senza-nome-di-flusso': 'WebRTC: saltato — compila \u00abNome stream go2rtc\u00bb nella scheda Telecamere (il nome della telecamera non c\u2019entra)', 'browser-senza-webrtc': 'WebRTC: saltato, il browser non lo supporta', 'browser-senza-hls': 'HLS: saltato, hls.js non caricato', 'telecamera-che-dorme': 'MJPEG: saltato, la telecamera trasmette solo su richiesta', 'go2rtc-fuori-portata': 'WebRTC: il nome stream go2rtc funziona solo aprendo la plancia fuori da Home Assistant \u2014 qui dentro la telecamera passa dalla sua entit\u00e0', 'appena-caduta': 'WebRTC: provato per primo col suo tempo intero, il video non \u00e8 arrivato', 'senza-flusso-dichiarato': 'HLS: saltato, Home Assistant non dichiara un flusso per questa telecamera' };
 
-async function dmCamOpen(cam, title, content) {
+async function dmCamOpen(cam, title, content, apertura) {
     dmCamCleanup();
+    /* Chi avvolge questa funzione apre prima di lei e le passa la sua apertura. */
+    if (!apertura) apertura = dmCamNuovaApertura(content);
+    if (!dmCamAncoraAperta(content, apertura)) return;
+    const mia = () => dmCamAncoraAperta(content, apertura);
+    const corpo = dmCamCorpo(content, apertura);
     _dmCurrentCam = cam;
     if (!cam || !cam.entity) { content.innerHTML = '<div class="cam-popup-error">⚠️ Telecamera senza entita\'<br><span style="font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;">Nella scheda Telecamere manca l\'entita\' di Home Assistant</span></div>'; return; }
     const camState = STATES[cam.entity] && STATES[cam.entity].state;
@@ -5710,16 +5768,20 @@ async function dmCamOpen(cam, title, content) {
         { nome: 'Istantanee' },
     ];
     const CORSE = {
-        WebRTC: (strada) => dmCamWebRTC(cam, strada, content, strada.attesa),
-        HLS: (strada) => dmCamHLS(cam, content, strada.attesa),
-        MJPEG: (strada) => dmCamMJPEG(cam, content, strada.attesa),
-        Istantanee: () => Promise.resolve(dmCamPolling(cam, content)),
+        WebRTC: (strada) => dmCamWebRTC(cam, strada, corpo, strada.attesa),
+        HLS: (strada) => dmCamHLS(cam, corpo, strada.attesa),
+        MJPEG: (strada) => dmCamMJPEG(cam, corpo, strada.attesa),
+        Istantanee: () => Promise.resolve(dmCamPolling(cam, corpo)),
     };
     const tentativi = [];
     for (const strada of strade) {
+        if (!mia()) return;
         if (strada.salta) { tentativi.push({ nome: strada.nome, salta: strada.salta }); console.log('[Cam] – ' + strada.nome + ': ' + strada.salta); continue; }
         try { await CORSE[strada.nome](strada); console.log('[Cam] ✓ ' + strada.nome); return; }
         catch (err) {
+            /* Chiusa, o passata a un altro, mentre questa strada aspettava: le
+               pulizie qui sotto toccherebbero il video di chi e' venuto dopo. */
+            if (!mia()) return;
             const motivo = (err && err.message) || String(err);
             tentativi.push({ nome: strada.nome, errore: motivo });
             console.warn('[Cam] ' + strada.nome + ' fallito:', motivo);
@@ -5728,6 +5790,7 @@ async function dmCamOpen(cam, title, content) {
     }
     /* Il messaggio dice cosa non ha funzionato, una riga per strada: «nessuna
        strategia ha funzionato» non si sa da che parte prenderlo. */
+    if (!mia()) return;
     const righe = (api ? api.diagnosi(tentativi) : tentativi).map(function (voce) {
         return voce.salta ? (_DM_CAM_MOTIVI[voce.salta] || (voce.nome + ': ' + voce.salta)) : (voce.nome + ': ' + voce.errore);
     });
@@ -5880,6 +5943,7 @@ async function dmStartWebRTC(streamName, videoEl) {
     let signedPath;
     try { signedPath = await dmGetSignedPath('/api/webrtc/ws?url=' + encodeURIComponent(streamName), 60); }
     catch (e) { dmCleanupWebRTC(); throw new Error('Impossibile firmare URL WebRTC: ' + (e.message || e)); }
+    if (pc.signalingState === 'closed') throw new Error(DM_CAM_SUPERATA);
     const camWs = new WebSocket(`${wsProto}//${location.host}${signedPath}`);
     _dmWs = camWs;
     pc.onicecandidate = (e) => { if (camWs.readyState === WebSocket.OPEN) camWs.send(JSON.stringify({ type: 'webrtc/candidate', value: e.candidate ? e.candidate.candidate : '' })); };
@@ -6028,9 +6092,11 @@ window.dmAttivaAudio = async function () {
     if (_dmPollInt) { clearInterval(_dmPollInt); _dmPollInt = null; }
     if (_dmPollBlob && _dmPollBlob.startsWith('blob:')) { URL.revokeObjectURL(_dmPollBlob); _dmPollBlob = null; }
     const content = document.getElementById('details-list'); if (!content) return;
+    const apertura = _dmCamApertura;
+    if (!dmCamAncoraAperta(content, apertura)) return;
     content.innerHTML = '<div class="cam-popup-body"><div class="cam-zoom-container" style="position:relative;padding-top:56.25%;"><div class="cam-video-loader-overlay"><div class="cam-popup-spinner"></div><div>Avvio audio HLS…</div></div></div></div>';
-    try { await dmCamHLS(cam, content); const v = document.getElementById('cam-hls'); if (v) { v.muted = false; v.volume = 1.0; await v.play().catch(() => {}); } }
-    catch (e) { content.innerHTML = `<div class="cam-popup-error">⚠️ Audio non disponibile<br><span style="font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;">${cdEsc(e.message || e)}</span></div>`; setTimeout(() => { const c = document.getElementById('details-list'); if (c) dmCamPolling(cam, c); }, 3500); }
+    try { await dmCamHLS(cam, dmCamCorpo(content, apertura)); const v = document.getElementById('cam-hls'); if (v) { v.muted = false; v.volume = 1.0; await v.play().catch(() => {}); } }
+    catch (e) { if (!dmCamAncoraAperta(content, apertura)) return; content.innerHTML = `<div class="cam-popup-error">⚠️ Audio non disponibile<br><span style="font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0;">${cdEsc(e.message || e)}</span></div>`; setTimeout(() => { const c = document.getElementById('details-list'); if (c) dmCamPolling(cam, c); }, 3500); }
 };
 
 var _dmNativeSubId = null;
@@ -6218,7 +6284,7 @@ async function apriStorico(e, entityId, name, hours = 24) {
 
 function apriDettagli(e, tipo) {
   if(e) e.stopPropagation(); if(e && navigator.vibrate) navigator.vibrate(10);
-  currentPopupType = tipo;
+  dmFinestraDi(tipo, !!e);
   const list = document.getElementById('details-list'); const scrollTop = list.scrollTop;
   let html = ''; let items = [];
   const map = {'luci':'💡 LUCI ATTIVE', 'clima':'❄️ CLIMA ATTIVI', 'risc':'🔥 RISCALDAMENTO', 'win':'🚪 APERTURE', 'batt':'🔋 BATTERIE'};
