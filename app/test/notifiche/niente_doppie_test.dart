@@ -20,15 +20,15 @@ class _CassaforteMuta implements Cassaforte {
 
 /// «Le notifiche sempre a doppio»: sull'iPhone la notifica la mostra il
 /// sistema, e l'app ne mostrava una seconda copia quando era sveglia in
-/// sottofondo. Sull'iPhone l'app la mostra solo in primo piano; su Android,
-/// dove il sistema non mostra niente, sempre.
+/// sottofondo. Sull'iPhone l'app la mostra solo quando il sistema la tace e
+/// gliela passa; su Android, dove il sistema non mostra niente, sempre.
 ///
 /// E il contrario, «le notifiche non partono se l'app non e' collegata»: una
 /// notifica non deve sparire in nessun punto della strada.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('sull iPhone la copia locale solo in primo piano', () {
+  test('sull iPhone la copia locale solo se il sistema la tace', () {
     expect(mostraLaCopiaLocale(TargetPlatform.iOS, inPrimoPiano: true), isTrue);
     expect(
       mostraLaCopiaLocale(TargetPlatform.iOS, inPrimoPiano: false),
@@ -47,13 +47,16 @@ void main() {
     );
   });
 
-  test('per l iPhone anche l app inattiva e in primo piano', () {
-    /* Il centro notifiche tirato giu', il selettore delle app: il sistema
-     * tace la notifica, e allora la deve mostrare l'app. */
+  test('per l iPhone anche l app inattiva ha qualcuno davanti', () {
+    /* Il centro notifiche tirato giu', il selettore delle app: davanti al
+     * telefono c'e' qualcuno. */
     expect(inPrimoPianoPerLIphone(AppLifecycleState.resumed), isTrue);
     expect(inPrimoPianoPerLIphone(AppLifecycleState.inactive), isTrue);
     expect(inPrimoPianoPerLIphone(null), isTrue);
-    /* In sottofondo la mostra il sistema: niente doppie. */
+    /* Con la finestra del telefono dietro, no. Ma questo non dice piu' chi
+     * mostra la notifica: quella che iOS passa all'app (`onMessage`) l'app la
+     * mostra sempre, anche qui — e' il telefono bloccato con CarPlay davanti
+     * (`iphone_con_carplay_test.dart`). */
     expect(inPrimoPianoPerLIphone(AppLifecycleState.paused), isFalse);
     expect(inPrimoPianoPerLIphone(AppLifecycleState.hidden), isFalse);
     expect(inPrimoPianoPerLIphone(AppLifecycleState.detached), isFalse);

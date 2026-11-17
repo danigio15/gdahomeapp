@@ -469,30 +469,45 @@ Future<void> quandoArrivaDaChiusa(RemoteMessage messaggio) async {
 /// «Le notifiche sempre a doppio»: sull'iPhone la notifica la mostra il
 /// sistema — col testo vero, da quando l'estensione apre la busta — e l'app ne
 /// mostrava una seconda copia ogni volta che era sveglia in sottofondo (il
-/// navigatore, la posizione). Sull'iPhone l'app la mostra solo in primo piano,
-/// dove il sistema la tace (`setForegroundNotificationPresentationOptions`).
-/// Su Android il sistema non mostra niente: la mostra sempre l'app.
+/// navigatore, la posizione). Sull'iPhone l'app la mostra solo quando il
+/// sistema la tace ([inPrimoPiano]): cioe' quando gliela passa con
+/// `onMessage` invece di mostrarla (`setForegroundNotificationPresentationOptions`).
+/// Per la strada di sottofondo ([quandoArrivaDaChiusa]) e' sempre `false`:
+/// li' la mostra il sistema. Su Android il sistema non mostra niente: la
+/// mostra sempre l'app.
 @visibleForTesting
 bool mostraLaCopiaLocale(
   TargetPlatform piattaforma, {
   required bool inPrimoPiano,
 }) => piattaforma != TargetPlatform.iOS || inPrimoPiano;
 
-/// Se, per il sistema dell'iPhone, l'app e' in primo piano: e' li' che il
-/// sistema la notifica la tace e la passa all'app
-/// (`setForegroundNotificationPresentationOptions`).
-///
-/// Per l'iPhone «in primo piano» vuol dire anche **inattiva**: il centro
+/// Se sull'iPhone c'e' qualcuno davanti all'app: lo schermo acceso con
+/// l'app davanti (`resumed`), o coperta per un attimo (`inactive`: il centro
 /// notifiche tirato giu', il centro di controllo, il selettore delle app, una
-/// chiamata che arriva, l'attimo in cui si blocca lo schermo. Contare solo
-/// `resumed` voleva dire una notifica che il sistema taceva e l'app non
-/// mostrava: sparita. In sottofondo (`paused`, `hidden`) la notifica la
-/// mostra il sistema, e l'app non la vede nemmeno arrivare.
+/// chiamata che arriva).
+///
+/// **Non** dice se la notifica la mostra il sistema o l'app. Prima lo si
+/// usava per quello, e con CarPlay era sbagliato: con GdAHome sullo schermo
+/// dell'auto e il telefono bloccato l'app per iOS e' in primo piano (per la
+/// scena dell'auto), Flutter dice `paused`, il sistema la notifica la tace e
+/// la passa all'app — che, credendosi in sottofondo, non la mostrava. Una
+/// notifica sparita dal telefono. Adesso quello che arriva con `onMessage`
+/// l'app lo mostra sempre ([Postino.arrivataAdAppAperta]); questo serve solo
+/// a sapere se aprire subito il campanello ([campanelloSubito]).
 @visibleForTesting
 bool inPrimoPianoPerLIphone(AppLifecycleState? stato) =>
     stato == null ||
     stato == AppLifecycleState.resumed ||
     stato == AppLifecycleState.inactive;
+
+/// Se il campanello arrivato ad app aperta si apre subito, senza aspettare
+/// un tocco. Su Android `onMessage` arriva solo con l'app davanti: sempre.
+/// Sull'iPhone arriva anche col telefono bloccato e GdAHome sullo schermo
+/// dell'auto: li' davanti al telefono non c'e' nessuno, e la telecamera non
+/// si apre da sola — resta la notifica, e la si tocca.
+@visibleForTesting
+bool campanelloSubito(TargetPlatform piattaforma, AppLifecycleState? stato) =>
+    piattaforma != TargetPlatform.iOS || inPrimoPianoPerLIphone(stato);
 
 /// Fino a quando un gettone detto a una casa non si ridice: sei ore se la
 /// casa ha risposto, dieci minuti se no. Piu' spesso sarebbero richieste
@@ -791,41 +806,41 @@ class Postino extends ChangeNotifier {
     if (casa != null) _detto.remove(casa.id);
   }
 
-  Future<void> _arrivataAdAppAperta(RemoteMessage messaggio) async {
-    final inPrimoPiano = inPrimoPianoPerLIphone(
-      WidgetsBinding.instance.lifecycleState,
-    );
-    if (!mostraLaCopiaLocale(
+  Future<void> _arrivataAdAppAperta(RemoteMessage messaggio) =>
+      arrivataAdAppAperta(messaggio.data);
+
+  /// Una spinta che Firebase passa all'app con `onMessage`: la busta si apre
+  /// qui, la notifica si mostra sul telefono (la copia locale: schermata di
+  /// blocco, suono, centro notifiche) e va anche al navigatore
+  /// ([apriEMostra]).
+  ///
+  /// Si mostra **sempre**, in qualunque stato sia la finestra del telefono.
+  /// Sull'iPhone `onMessage` per una spinta con il testo arriva da un posto
+  /// solo: `willPresent`, cioe' quando iOS considera l'app in primo piano e,
+  /// invece di mostrare la notifica, la passa all'app — e il plugin gli
+  /// risponde di non mostrare niente
+  /// (`setForegroundNotificationPresentationOptions`, tutto spento). Quindi
+  /// se arriva qui il sistema l'ha taciuta, e una copia del sistema da
+  /// raddoppiare non c'e'. Succede anche col telefono bloccato in tasca,
+  /// quando «in primo piano» c'e' solo la scena di CarPlay: prima, con la
+  /// finestra del telefono `paused`, la si passava solo al navigatore, e sul
+  /// telefono non restava niente. La strada dove il sistema la mostra da se'
+  /// e' un'altra ([quandoArrivaDaChiusa]), e li' la guardia contro le doppie
+  /// resta. La stessa notifica consegnata due volte si mostra una volta sola
+  /// (`NotificheViste`, dentro [apriEMostra]).
+  @visibleForTesting
+  Future<void> arrivataAdAppAperta(Map<String, dynamic> dati) async {
+    final aperta = await apriEMostra(dati, cassaforte);
+    if (aperta == null || !aperta.notifica.chiamata || aperta.scaduta) return;
+    /* Il campanello ad app aperta non aspetta un tocco: si apre subito. Ma
+     * solo se davanti al telefono c'e' qualcuno. */
+    if (!campanelloSubito(
       defaultTargetPlatform,
-      inPrimoPiano: inPrimoPiano,
+      WidgetsBinding.instance.lifecycleState,
     )) {
-      /* La notifica la mostra il sistema, ma il navigatore la vuole lo
-       * stesso: con CarPlay acceso l'app e' «attiva» per la scena dell'auto
-       * anche col telefono in tasca, ed e' proprio li' che si guida. */
-      unawaited(_soloAlNavigatore(messaggio.data));
       return;
     }
-    final aperta = await apriEMostra(messaggio.data, cassaforte);
-    /* Il campanello ad app aperta non aspetta un tocco: si apre subito. */
-    if (aperta != null && aperta.notifica.chiamata && !aperta.scaduta) {
-      _tocca(
-        ToccoDellaNotifica(casa: aperta.casa.id, notifica: aperta.notifica),
-      );
-    }
-  }
-
-  /// Apre la busta solo per il navigatore, senza mostrarla e senza segnarla
-  /// vista: la notifica del sistema c'e' gia', e il tocco su quella deve
-  /// ancora aprirsi.
-  Future<void> _soloAlNavigatore(Map<String, dynamic> dati) async {
-    try {
-      final archivio = ArchivioDelleCase(cassaforte);
-      await archivio.apri();
-      final aperta = await apriQuellaArrivata(dati, archivio.tutte);
-      if (aperta != null) mandaAlNavigatore(aperta);
-    } catch (_) {
-      /* Il navigatore senza questa: sul telefono c'e' comunque. */
-    }
+    _tocca(ToccoDellaNotifica(casa: aperta.casa.id, notifica: aperta.notifica));
   }
 
   /* Le buste appena aperte da un tocco: la stessa toccata arriva da Firebase
