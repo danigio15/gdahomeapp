@@ -50,6 +50,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.embedding.engine.dart.DartExecutor
 import io.flutter.plugin.common.MethodChannel
+import it.gdanav.gdanav_app.auto.ArbitroAvvisi
 import it.gdanav.gdanav_app.auto.GdanavInAuto
 import it.gdanav.gdanav_app.auto.PonteAuto
 import it.gdanav.gdanav_app.auto.SessioneGdanav
@@ -250,6 +251,28 @@ class ArrivoACasa(private val auto: () -> CarContext) {
             ).show()
             return
         }
+        /* Sull'auto c'e' un avviso alla volta: «Quasi a casa» passa dall'arbitro
+         * di gdanav, che sa cosa c'e' in vista (un allarme, la strada proposta,
+         * una notifica di casa) e non lo fa cancellare ne' lo cancella. Il tasto
+         * toccato chiude l'avviso da se'. Solo se l'arbitro non ha ancora una
+         * sessione si mostra come prima. */
+        val passato = ArbitroAvvisi.mostra(
+            ArbitroAvvisi.Avviso(
+                chiave = "quasi-a-casa",
+                precedenza = ArbitroAvvisi.QUASI_A_CASA,
+                titolo = carContext.getString(R.string.auto_quasi_a_casa),
+                testo = comando.nome,
+                icona = ilSegno(carContext, comando.genere, comando.dominio),
+                durataMs = DURATA_MS,
+                tasti = listOf(
+                    ArbitroAvvisi.Tasto(carContext.getString(R.string.auto_arrivo_fai)) {
+                        premiEDillo(carContext, comando.id, comando.nome, true)
+                    },
+                    ArbitroAvvisi.Tasto(carContext.getString(R.string.auto_arrivo_non_ora)) {},
+                ),
+            ),
+        )
+        if (passato) return
         val gestore = carContext.getCarService(AppManager::class.java)
         val avviso = Alert.Builder(
             ID_AVVISO,
