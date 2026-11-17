@@ -773,4 +773,25 @@ void main() {
     filo.ferma();
     expect(fonte.chiedi, isNull);
   });
+
+  test('la musica di casa passa, gli altri ponte/… no', () {
+    for (final tipo in [
+      'ponte/musica/della-casa',
+      'ponte/musica/flusso',
+      'ponte/musica/in-casa',
+      'ponte/viaggi/elenco',
+      'ponte/auto/ricariche-di-casa',
+    ]) {
+      expect(comandoDiGdanav(tipo), isTrue, reason: tipo);
+    }
+    for (final tipo in [
+      'ponte/musica/altro',
+      'ponte/http',
+      'ponte/notifiche/stato',
+      'call_service',
+      'media_player/browse_media',
+    ]) {
+      expect(comandoDiGdanav(tipo), isFalse, reason: tipo);
+    }
+  });
 }

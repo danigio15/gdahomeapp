@@ -77,6 +77,7 @@ class _PlanciaFinta extends FabbricaDellaPlancia {
     void Function(String pagina)? quandoCambiaPagina,
     void Function()? quandoChiedeIlMenu,
     VoidCallback? quandoSiVede,
+    VoidCallback? quandoHaIlVelo,
     void Function(String foto)? quandoFotografaLaCasa,
     void Function(String persona)? quandoApreLaPersona,
   }) {

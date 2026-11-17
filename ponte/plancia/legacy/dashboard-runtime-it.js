@@ -5503,7 +5503,12 @@ function _cdTogliIlVelo() {
     // sente. Chiesto in revisione. La Diagnostica legge questo.
     try { window.__DASHBOARDMODERN_VELO_VIA__ = performance.now(); } catch(_) {}
     const o = document.getElementById('cd-boot-overlay');
-    if (o) { o.style.opacity = '0'; setTimeout(() => { if (o.parentNode) o.remove(); }, 260); }
+    if (!o) return;
+    // Il velo di GdAHome se ne va aprendosi in un cerchio dal logo, come
+    // l'attesa dell'app (caricamento/velo.js). Dentro l'app, o senza quel
+    // file, sfuma come sempre: e' lo sfumare che l'app ascolta.
+    try { if (window.__gdahomeVelo && window.__gdahomeVelo.via()) return; } catch(_) {}
+    o.style.opacity = '0'; setTimeout(() => { if (o.parentNode) o.remove(); }, 260);
 }
 function cdHideBoot() {
     window.__DASHBOARDMODERN_READY__ = true;

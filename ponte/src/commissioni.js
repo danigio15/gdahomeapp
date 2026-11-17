@@ -705,6 +705,8 @@ export class Commissioni {
      * le prove di ieri — nessun limite, e `ponte/licenza/stato` dice che le
      * licenze sono spente. */
     licenze = null,
+    /* La musica della casa da ascoltare in auto (`musica-della-casa.js`). */
+    musica = null,
     scarica = scaricaDavvero,
     insieme = INSIEME,
   } = {}) {
@@ -774,6 +776,7 @@ export class Commissioni {
      * sa fare. */
     this.ritorno = ritorno;
     this.licenze = licenze;
+    this.musica = musica;
     this.scarica = scarica;
     this.insieme = insieme;
     this._inCorso = 0;
@@ -1020,6 +1023,17 @@ export class Commissioni {
      * telefono di un altro lo vede solo chi amministra. Niente di nuovo esce
      * di casa: le buste prendono la strada delle altre notifiche, e la foto
      * (Premium) quella delle elaborate. */
+    /* La musica della casa in auto (`musica-della-casa.js`): le radio
+     * preferite e le playlist della pagina Musica, con come si suonano fuori
+     * casa (`ponte/musica/della-casa`), i brani firmati di un file di Home
+     * Assistant (`ponte/musica/flusso`) e «falla partire in casa»
+     * (`ponte/musica/in-casa`). SOLO CHI E' ENTRATO (la regola di sopra), e
+     * sulla plancia che vede: quella chiesta, se e' fra le sue, se no la
+     * principale, se no la prima delle sue. In casa parte solo una voce di
+     * quell'elenco: il telefono non sceglie il servizio. Nel ponte non si vede
+     * nulla. */
+    if (typeof tipo === "string" && tipo.startsWith("ponte/musica/"))
+      return this._laMusica(detto, chiChiede, amministra, soloLaPrima);
     /* La ricarica di notte (`ricarica-di-notte.js`): cosa sta facendo la
      * casa con l'auto, in sola lettura. Le impostazioni non passano di qui —
      * stanno nella configurazione della plancia, con le sue regole. */
@@ -2022,6 +2036,32 @@ export class Commissioni {
       this.registro.errore(`codice del pannello a muro: ${errore?.message || errore}`);
       return no(id, "ponte_config", "non ha funzionato");
     }
+  }
+
+  async _laMusica(detto, chiChiede = "", amministra = null, soloLaPrima = false) {
+    const id = detto?.id ?? null;
+    const musica = this.musica;
+    const cassetta = this.configurazione;
+    if (!musica?.riconosce?.(detto?.type) || !cassetta)
+      return no(id, "unknown_command", `non conosco ${detto?.type}`);
+    let profilo = PROFILO_PRINCIPALE;
+    if (this.plance) {
+      const sue = this._lePlanceSue(chiChiede, amministra, soloLaPrima);
+      const voluto = String(detto?.profile ?? "");
+      const quale =
+        sue.find((una) => voluto && una.profilo === voluto) ??
+        sue.find((una) => una.profilo === PROFILO_PRINCIPALE) ??
+        sue[0];
+      if (!quale) return no(id, "not_found", "nessuna plancia da cui prendere la musica");
+      profilo = quale.profilo;
+    }
+    try {
+      await this._laPrendeDallIntegrazione(profilo);
+    } catch (_errore) {
+      /* Si va avanti con quello che c'e'. */
+    }
+    const valori = cassetta.leggi(profilo)?.snapshot?.values || {};
+    return musica.rispondi(detto, { valori, profilo });
   }
 
   _lePlanceSue(chiChiede = "", amministra = null, soloLaPrima = false) {

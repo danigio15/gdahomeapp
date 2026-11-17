@@ -82,6 +82,7 @@ class FabbricaDellaPlancia {
     void Function(String pagina)? quandoCambiaPagina,
     void Function()? quandoChiedeIlMenu,
     VoidCallback? quandoSiVede,
+    VoidCallback? quandoHaIlVelo,
     void Function(String foto)? quandoFotografaLaCasa,
     void Function(String persona)? quandoApreLaPersona,
   }) => RiquadroDellaPlancia(
@@ -94,6 +95,7 @@ class FabbricaDellaPlancia {
     quandoCambiaPagina: quandoCambiaPagina,
     quandoChiedeIlMenu: quandoChiedeIlMenu,
     quandoSiVede: quandoSiVede,
+    quandoHaIlVelo: quandoHaIlVelo,
     quandoFotografaLaCasa: quandoFotografaLaCasa,
     quandoApreLaPersona: quandoApreLaPersona,
   );
@@ -108,6 +110,15 @@ class FabbricaDellaPlancia {
 /// anche a freddo da fuori casa, la pagina — che e' un file solo — e' arrivata
 /// da un pezzo, e sotto il nostro velo c'e' gia' il suo.
 const quantoDuraAlPiuIlVelo = Duration(seconds: 20);
+
+/// Quanto resta al piu' l'attesa dopo il `load`, sopra una pagina che ha
+/// detto di avere il suo velo (`Premesse.laPrimaSchermata`).
+///
+/// Di solito non serve: il velo della pagina se ne va da se' — quando la
+/// plancia e' pronta, o alla sua scadenza di otto secondi, o diventa l'errore
+/// del cane da guardia ai dieci — e la pagina lo dice. Questa e' la rete per
+/// una pagina che il suo velo lo nasconde in un modo che lo script non vede.
+const quantoAspettaIlVeloDellaPagina = Duration(seconds: 10);
 
 class PlanciaVera extends StatefulWidget {
   const PlanciaVera({
@@ -177,6 +188,10 @@ class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
   /// togliere anche se non e' ancora finita. [_caricata] resta il «finita»,
   /// che e' quello che serve per parlarle (la Config, il parcheggio, l'auto).
   bool _siVede = false;
+
+  /// La pagina ha detto che davanti ha il suo velo: l'attesa dell'app resta
+  /// finche' quello non se ne va ([_siVede]), anche dopo il `load`.
+  bool _haIlVelo = false;
   Timer? _scadenzaDelVelo;
   String? _perche;
   StreamSubscription<void>? _ascoltoLeImpostazioni;
@@ -273,6 +288,7 @@ class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
   void _rimettiIlVelo() {
     _caricata = false;
     _siVede = false;
+    _haIlVelo = false;
     _perche = null;
     _scadenzaDelVelo?.cancel();
     _scadenzaDelVelo = Timer(quantoDuraAlPiuIlVelo, _ilVeloHaAspettato);
@@ -282,8 +298,21 @@ class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
    * si toglie lo stesso. */
   void _ilVeloHaAspettato() {
     _scadenzaDelVelo = null;
-    if (!mounted || _caricata || _siVede) return;
+    if (!mounted || _siVede) return;
     setState(() => _siVede = true);
+  }
+
+  /// Se l'attesa dell'app copre ancora la pagina.
+  ///
+  /// Finche' la pagina non dice che si vede. Il `load` la toglie solo a una
+  /// pagina che non ha detto niente; a una che ha il suo velo no — la pagina
+  /// finita sotto un velo e' ancora una pagina che non si vede.
+  bool get _veloSu => !_siVede && !(_caricata && !_haIlVelo);
+
+  /// La pagina ha il suo velo d'avvio, e dira' quando se ne va.
+  void _laPaginaHaIlVelo() {
+    if (!mounted || _siVede || _caricata) return;
+    _haIlVelo = true;
   }
 
   /// La pagina e' in piedi: il velo se ne va, e il resto aspetta che sia
@@ -718,6 +747,7 @@ class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
       return CaricamentoDellaPlancia(
         fase: FaseDelCaricamento.cerco,
         inFondo: inFondo,
+        nome: collegamento.casa?.nome,
       );
     }
     final pannello = collegamento.pannello;
@@ -782,6 +812,7 @@ class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
         return CaricamentoDellaPlancia(
           fase: FaseDelCaricamento.accendo,
           inFondo: inFondo,
+          nome: collegamento.casa?.nome,
         );
       }
       /* Chiesto e non arrivato. Sul telefono non succede; nel browser si', e
@@ -877,6 +908,14 @@ class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
                 }
                 _scadenzaDelVelo?.cancel();
                 _scadenzaDelVelo = null;
+                /* Una pagina col suo velo ha una scadenza nuova, breve:
+                   dopo il `load` il suo velo ha i suoi otto secondi. */
+                if (_haIlVelo && !_siVede) {
+                  _scadenzaDelVelo = Timer(
+                    quantoAspettaIlVeloDellaPagina,
+                    _ilVeloHaAspettato,
+                  );
+                }
                 if (!_caricata) setState(() => _caricata = true);
                 /* Una pagina appena aperta non sa niente di quello che le e'
                    stato detto prima di nascere: se e' nata sotto un'altra
@@ -902,6 +941,9 @@ class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
                  nostro se ne va senza aspettare il `load`, che aspetta anche
                  i moduli delle sezioni e ogni immagine. */
               quandoSiVede: _laPaginaSiVede,
+              /* E se davanti ha il suo velo, l'attesa resta finche' non se
+                 ne va: si vede un'attesa sola, la nostra. */
+              quandoHaIlVelo: _laPaginaHaIlVelo,
               /* Il nome della casa lo mette qui l'app: la plancia sa di essere
                  una plancia, non sa di quale delle case dell'app e'. */
               quandoFotografaLaCasa: (foto) => unawaited(
@@ -959,15 +1001,19 @@ class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
                 label: Text(inLingua(it: 'Riprova', en: 'Try again')),
               ),
             ),
-          )
-        else if (!_caricata && !_siVede)
-          /* Il velo della pagina, disegnato dall'app finche' la pagina non
-           * mette il suo: sono lo stesso disegno, nello stesso punto, e il
-           * passaggio non si vede. */
-          CaricamentoDellaPlancia(
+          ),
+        /* L'attesa, la stessa delle fasi prima e nello stesso punto: copre
+         * la pagina e il suo velo finche' la pagina non e' pronta, poi sfuma
+         * — e da subito lascia passare i tocchi alla plancia, che sotto c'e'
+         * gia'. */
+        UscitaDelCaricamento(
+          su: _perche == null && _veloSu,
+          child: CaricamentoDellaPlancia(
             fase: FaseDelCaricamento.apro,
             inFondo: inFondo,
+            nome: collegamento.casa?.nome,
           ),
+        ),
         /* Una riga sottile che dice «sto ricollegando»: la plancia resta a
          * schermo coi suoi dati, e si vede che stanno per cambiare. */
         if (collegamento.comeVa == ComeVa.inCammino)
@@ -998,6 +1044,7 @@ class RiquadroDellaPlancia extends StatefulWidget {
     this.quandoCambiaPagina,
     this.quandoChiedeIlMenu,
     this.quandoSiVede,
+    this.quandoHaIlVelo,
     this.quandoFotografaLaCasa,
     this.quandoApreLaPersona,
     this.ibrido = false,
@@ -1025,6 +1072,10 @@ class RiquadroDellaPlancia extends StatefulWidget {
   /// La pagina ha la sua prima schermata, e lo dice dalla stessa strada:
   /// arriva prima di [quandoCaricata], che aspetta tutto.
   final VoidCallback? quandoSiVede;
+
+  /// La pagina ha davanti il suo velo d'avvio: [quandoSiVede] arrivera'
+  /// quando se ne va (`Premesse.laPrimaSchermata`).
+  final VoidCallback? quandoHaIlVelo;
 
   /// La plancia ha fotografato la casa per Android Auto: due numeri, chi c'e'
   /// in casa, i tasti. Arriva da un canale suo — vedi `riquadro/sul_telefono`
@@ -1168,6 +1219,7 @@ class RiquadroDellaPlanciaState extends State<RiquadroDellaPlancia> {
       quandoCambiaPagina: widget.quandoCambiaPagina,
       quandoChiedeIlMenu: widget.quandoChiedeIlMenu,
       quandoSiVede: () => widget.quandoSiVede?.call(),
+      quandoHaIlVelo: () => widget.quandoHaIlVelo?.call(),
       quandoFotografaLaCasa: widget.quandoFotografaLaCasa,
       quandoApreLaPersona: widget.quandoApreLaPersona,
       quandoSiPerdeLaPagina: _riapriLaPagina,

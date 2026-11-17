@@ -56,6 +56,21 @@
         );
         -webkit-text-size-adjust: 100%;
       }
+      /* Finche' non c'e' niente da dire, il fondo e' gia' quello del velo della
+       * plancia che sta per arrivare (chiaro o scuro come il sistema): la
+       * plancia si accende su un fondo che c'e' gia', senza un cambio di
+       * colore in mezzo. Quando si scrive qualcosa, torna il tema di Home
+       * Assistant, che e' quello in cui si legge. */
+      html:not(.parla),
+      html:not(.parla) body {
+        background: #e8edf3;
+      }
+      @media (prefers-color-scheme: dark) {
+        html:not(.parla),
+        html:not(.parla) body {
+          background: #0b1220;
+        }
+      }
       main {
         box-sizing: border-box;
         min-height: 100%;
@@ -144,6 +159,7 @@
           bottone.hidden = !tasto;
           bottone.textContent = tasto || "";
           document.getElementById("messaggio").hidden = false;
+          document.documentElement.classList.add("parla");
         }
 
         /* I colori e il carattere di Home Assistant, presi dalla sua pagina:

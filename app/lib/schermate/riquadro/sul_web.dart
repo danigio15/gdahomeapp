@@ -27,7 +27,8 @@ import 'pagine.dart';
 /// ragione c'e' `quandoFotografaLaCasa` e qui non si usa: quella fotografia
 /// la legge Android Auto, e in un browser Android Auto non c'e'. E cosi'
 /// `quandoSiVede`: la pagina che dice di essere in piedi serve a togliere il
-/// velo prima del `load`, e qui il velo si toglie subito. E
+/// velo prima del `load`, e qui il velo si toglie subito; e cosi'
+/// `quandoHaIlVelo`, che la tiene su fino al velo della pagina. E
 /// `quandoApreLaPersona`: nel browser il navigatore non c'e'.
 WebViewController costruisciIlControllore({
   required void Function() quandoCaricata,
@@ -40,6 +41,7 @@ WebViewController costruisciIlControllore({
   void Function(String pagina)? quandoCambiaPagina,
   void Function()? quandoChiedeIlMenu,
   void Function()? quandoSiVede,
+  void Function()? quandoHaIlVelo,
   void Function(String foto)? quandoFotografaLaCasa,
   void Function(String persona)? quandoApreLaPersona,
   void Function()? quandoSiPerdeLaPagina,

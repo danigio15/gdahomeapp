@@ -37,7 +37,8 @@ test("il velo si dipinge anche con la rete lenta", async ({ page }) => {
   await page.goto("/legacy/dashboard.html?dmi=prova-velo-lento", { waitUntil: "commit" });
   const velo = page.locator("#cd-boot-overlay");
   await expect(velo).toBeVisible({ timeout: 10000 });
-  expect(await velo.innerText()).toMatch(/DashboardModern/i);
+  /* Il marchio sul disco e' il nostro dalla 1.5.9: la parola del velo e' GdAHome. */
+  expect(await velo.innerText()).toMatch(/GdAHome/i);
   const stile = await velo.evaluate((n) => {
     const s = getComputedStyle(n);
     return { sfondo: s.backgroundColor, posizione: s.position, colonna: s.flexDirection };

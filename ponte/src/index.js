@@ -63,6 +63,7 @@ import { TelefoniAlTramite } from "./telefoni-al-tramite.js";
 import { Automazioni } from "./automazioni.js";
 import { Integrazioni } from "./integrazioni.js";
 import { Aiutanti } from "./aiutanti.js";
+import { MusicaDellaCasa } from "./musica-della-casa.js";
 
 /* Ogni quanto si guarda se qualche telefono e' sparito da troppo tempo. */
 const POTATURA = 6 * 60 * 60 * 1000;
@@ -297,6 +298,8 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     aggiornamenti,
     /* Le licenze: `ponte/licenza/*` sul filo. */
     licenze,
+    /* La musica della casa da ascoltare in auto: `ponte/musica/*`. */
+    musica: new MusicaDellaCasa({ casa, registro }),
   });
   const ponte = new Ponte({ casa, dispositivi, registro, commissioni, utenti });
   /* L'elenco degli utenti si rinfresca da se', ogni minuto: un amministratore

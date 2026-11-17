@@ -5449,7 +5449,12 @@ function _cdTogliIlVelo() {
     // sente. Chiesto in revisione. La Diagnostica legge questo.
     try { window.__DASHBOARDMODERN_VELO_VIA__ = performance.now(); } catch(_) {}
     const o = document.getElementById('cd-boot-overlay');
-    if (o) { o.style.opacity = '0'; setTimeout(() => { if (o.parentNode) o.remove(); }, 260); }
+    if (!o) return;
+    // The GdAHome veil leaves by opening in a circle from the logo, like the
+    // app's wait (caricamento/velo.js). Inside the app, or without that file,
+    // it fades as always: the fade is what the app listens for.
+    try { if (window.__gdahomeVelo && window.__gdahomeVelo.via()) return; } catch(_) {}
+    o.style.opacity = '0'; setTimeout(() => { if (o.parentNode) o.remove(); }, 260);
 }
 function cdHideBoot() {
     window.__DASHBOARDMODERN_READY__ = true;

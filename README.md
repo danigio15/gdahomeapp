@@ -1,305 +1,352 @@
 <p align="center">
-  <img src="docs/immagini/banner.png" alt="GdAHome" width="640">
+  <img src="docs/immagini/readme/logo.png" alt="GdAHome" width="112">
 </p>
 
-<h3 align="center">La tua casa in una plancia. Anche fuori casa, senza aprire porte.</h3>
+<h1 align="center">GdAHome</h1>
 
 <p align="center">
-  Home Assistant sul telefono, in una pagina fatta per essere guardata:<br>
-  le luci, il clima, le tapparelle, le telecamere, i consumi, le persone.
+  <b>La tua casa Home Assistant in una plancia sola: sul telefono, sul tablet, al polso e in auto.</b><br>
+  Luci, clima, tapparelle, antifurto, telecamere, energia e persone, stanza per stanza.<br>
+  Anche da fuori casa, senza aprire porte sul router.
 </p>
 
 <p align="center">
-  <a href="https://gdahome.org"><b>Il sito</b></a>
-  &nbsp;·&nbsp;
-  <a href="https://webapp.gdahome.org"><b>Aprila dal browser</b></a>
-  &nbsp;·&nbsp;
-  <a href="#metterla-in-casa"><b>Come si installa</b></a>
+  <img src="https://img.shields.io/badge/Home%20Assistant-add--on-18BCF2?logo=homeassistant&logoColor=white" alt="Add-on di Home Assistant">
+  <img src="https://img.shields.io/badge/Android-Play%20Store-3DDC84?logo=android&logoColor=white" alt="Android">
+  <img src="https://img.shields.io/badge/iOS-iPhone%20%C2%B7%20iPad-0A84FF?logo=apple&logoColor=white" alt="iPhone e iPad">
+  <img src="https://img.shields.io/badge/lingue-italiano%20%C2%B7%20English-64748B" alt="Lingue: italiano e inglese">
+</p>
+
+<p align="center">
+  <a href="#installazione-in-home-assistant"><b>Installa</b></a>
   &nbsp;·&nbsp;
   <a href="docs/MANUALE.md"><b>Manuale d'uso</b></a>
   &nbsp;·&nbsp;
-  <a href="#quanto-costa"><b>Prezzi</b></a>
+  <a href="https://gdahome.org"><b>Il sito</b></a>
   &nbsp;·&nbsp;
-  <a href="#per-chi-installa"><b>Per chi installa</b></a>
+  <a href="#domande-frequenti"><b>Domande</b></a>
   &nbsp;·&nbsp;
-  <a href="https://gdahome.org/privacy.html"><b>Privacy</b></a>
+  <a href="#in-english"><b>English</b></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/danigio15/gdahomeapp/releases"><img src="https://img.shields.io/github/v/release/danigio15/gdahomeapp?label=versione&color=0ea5e9" alt="Ultima versione"></a>
-  <img src="https://img.shields.io/badge/Home%20Assistant-OS%20%7C%20Supervised-18BCF2" alt="Home Assistant OS o Supervised">
-  <img src="https://img.shields.io/badge/Android%20%C2%B7%20iPhone%20%C2%B7%20browser-16a34a" alt="Android, iPhone, browser">
-  <img src="https://img.shields.io/badge/Base-gratis-16a34a" alt="Base gratis">
-  <img src="https://img.shields.io/badge/Premium-14%20giorni%20gratis-f59e0b" alt="Premium, i primi 14 giorni gratis">
+  <img src="docs/immagini/readme/eroe.webp" alt="La plancia di GdAHome sul computer e sul telefono: in alto meteo e ora, poi le persone di casa, l'assistente di casa e i riquadri di ogni sezione" width="100%">
 </p>
-
-<p align="center">
-  <img src="docs/immagini/3-le-luci.png" alt="Le luci, stanza per stanza" width="31%">
-  <img src="docs/immagini/1-la-plancia.png" alt="La plancia di casa" width="31%">
-  <img src="docs/immagini/4-il-clima.png" alt="Il clima" width="31%">
-</p>
+<p align="center"><sub>La plancia vera, con una casa d'esempio («Casa Rossi»): sul computer e sul telefono è la stessa.</sub></p>
 
 ---
 
-## Com'è fatta
-
-GdAHome sono **due pezzi che lavorano insieme**:
-
-|     |                                     |                                                                                                                                                                                                     |
-| :-: | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 🏠  | **L'add-on**, dentro Home Assistant | Si installa come ogni altro add-on. Porta dentro la plancia, abbina i telefoni e tiene il segreto di Home Assistant: quello non esce mai da lì.                                                     |
-| 📱  | **L'app**, sul telefono             | Per Android e iPhone, e anche dal browser senza installare niente. Si abbina **inquadrando un QR code**: nessun indirizzo da scrivere, nessuna password di Home Assistant, nessun token da copiare. |
-
-Nell'app c'è **la plancia**: una pagina sola con quello che in Home Assistant
-sta in dieci pagine diverse. In alto la temperatura, l'antifurto e chi è in
-casa; sotto le sezioni — **luci, clima, tapparelle, telecamere, consumi,
-persone** e tutte le altre, trenta in tutto — e ogni sezione divisa per stanza.
-Si tocca una luce e si accende, si trascina il cursore e cambia il colore.
-
-<table>
-<tr>
-<td width="62%" align="center" valign="top">
-<img src="docs/immagini/addon-la-scheda.png" alt="La scheda dell'add-on in Home Assistant: abbina un telefono, i telefoni abbinati, le plance, la licenza" width="100%">
-<br><sub><b>L'add-on</b>, in Home Assistant: abbina e stacca i telefoni, tiene le plance e la licenza della casa.</sub>
-</td>
-<td width="38%" align="center" valign="top">
-<img src="docs/immagini/2-le-plance.png" alt="L'app: le plance di casa" width="100%">
-<br><sub><b>L'app</b>, sul telefono: le plance di casa, a un tocco.</sub>
-</td>
-</tr>
-</table>
-
-La plancia si vede anche **senza l'app**: in Home Assistant l'add-on aggiunge
-una voce nella barra laterale, e da lì la si apre da qualunque browser di
-casa.
-
-## Metterla in casa
-
-**Cosa serve:** un Home Assistant con il **Supervisor**, cioè **Home Assistant
-OS** (su Raspberry, mini PC o macchina virtuale) oppure **Home Assistant
-Supervised**. Su Home Assistant in Docker gli add-on non esistono:
-[vedi le domande](#domande).
-
-**1. Aggiungi l'archivio.** In Home Assistant: **Impostazioni → Add-on →
-Negozio degli add-on**, i tre puntini in alto a destra → **Archivi**. Incolla
-questo indirizzo e premi **Aggiungi**:
-
-```
-https://github.com/danigio15/gdahomeapp
-```
-
-**2. Installa GdAHome.** Nell'elenco compare la sezione **GdAHome**: apri
-l'add-on, premi **Installa** e poi **Avvia**. La prima volta ci mette qualche
-minuto — su un Raspberry anche dieci — perché Home Assistant lo prepara sul
-posto. Gli aggiornamenti poi arrivano come per ogni altro add-on.
-
-**3. Genera il QR code.** Apri **GdAHome** dalla barra laterale e premi
-**Genera QR code**. Il codice vale una volta sola e per pochi minuti.
-
-<p align="center">
-  <img src="docs/immagini/addon-genera-qr.png" alt="Abbina un telefono: premi Genera QR code e inquadralo con l'app" width="640">
-</p>
-
-**4. Inquadralo con l'app.** Scarica GdAHome dal **[Play Store](https://play.google.com/store/apps/details?id=com.gdahome.gdahome)** (Android) o
-dall'**[App Store](https://apps.apple.com/app/id6816421418)** (iPhone e iPad), oppure apri
-**[webapp.gdahome.org](https://webapp.gdahome.org)** dal browser, e inquadra il
-codice. Senza fotocamera lo si digita: sedici caratteri, in quattro gruppi.
-
-Fatto: la casa è abbinata. Ogni telefono ha il suo abbinamento, e dalla scheda
-dell'add-on lo si toglie con un tasto — per esempio il giorno che un telefono
-si perde.
-
-## Cosa fa l'app
+## Cosa fa
 
 <table>
 <tr>
 <td width="50%" valign="top">
 
-**📋 Le plance.** La plancia principale, e con Premium fino a **30 plance per
-casa**: una per la famiglia, una per il piano di sopra, una per l'ufficio.
-Ognuna con le sue sezioni e le sue stanze, a un tocco l'una dall'altra.
-
-**🏘️ Più case.** Con Premium fino a **10 case** nella stessa app — casa, casa
-al mare, l'ufficio — e si passa dall'una all'altra senza riabbinare.
-
-**🔌 I dispositivi** _(Premium)_. Tutte le entità di Home Assistant divise per
-tipo, con i loro comandi; e dall'app anche le integrazioni, gli aiutanti e le
-automazioni, col pianificatore a orari e fasce.
-
-**📡 Zigbee dall'app** _(Premium)_. Si abbina un dispositivo Zigbee dal
-telefono, e l'app chiede **«Dove lo metto?»**: finisce direttamente nella
-sezione e nella stanza giusta della plancia.
-
-**⚙️ La configurazione dal telefono** _(Premium)_. La plancia si cambia
-dall'app: sezioni, stanze, cosa si vede e dove.
-
-**🖼️ La plancia a muro** _(Premium)_. Un tablet fisso o un NSPanel con una
-schermata sola e comandi grandi, fino a 8 pagine: stanze, luci, clima e
-antifurto li prende da un'altra plancia della casa.
-
-**⌚ Al polso** _(Premium)_. Su Apple Watch e Wear OS: i comandi rapidi, i
-dispositivi, le azioni della plancia, com'è la casa, e la prossima manovra
-del navigatore.
-
-**🔄 Gli aggiornamenti di casa.** Nel menu compaiono quelli di Home Assistant,
-degli add-on, di GdAHome e dei firmware: si installano da lì, e da lì si
-riavvia la casa.
-
-**💬 Segnalazioni e assistenza.** Qualcosa non va? Si scrive dall'app, con
-foto e video, e arriva a chi sviluppa GdAHome. Per una domanda c'è la **chat
-di assistenza**, privata.
-
-**🔒 Il lucchetto.** L'app si apre con l'impronta o col volto.
+🏠 **Una plancia per tutta la casa**<br>
+Quello che in Home Assistant sta in dieci pagine, qui sta in una: una trentina di sezioni, divise per stanza.
 
 </td>
-<td width="50%" valign="top" align="center">
+<td width="50%" valign="top">
 
-<img src="docs/immagini/menu-con-i-lucchetti.png" alt="Il menu dell'app: la plancia, i dispositivi, GdANav, la configurazione, gli aggiornamenti, le notifiche, le automazioni, gli aiutanti, Zigbee" width="48%">
-<img src="docs/immagini/plance-col-lucchetto.png" alt="Le plance di questa casa: la principale, e le altre con Premium" width="48%">
-<br>
-<sub>Il menu, e le plance della casa. Il lucchetto segna quello che si apre con Premium.</sub>
+📱 **Un'app per telefono e tablet**<br>
+Android, iPhone e iPad, e anche dal browser. Si collega **inquadrando un QR code**: nessuna password da scrivere.
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+🚗 **Un navigatore con la casa dentro**<br>
+GdANav, con **Android Auto** e **CarPlay**: il cancello, la musica e gli avvisi di casa sullo schermo dell'auto.
+
+</td>
+<td width="50%" valign="top">
+
+⚡ **Energia a colpo d'occhio**<br>
+Sole, rete, batteria, auto e carichi in un unico flusso, con quello che non è misurato.
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+🧊 **Casa 3D**<br>
+La tua casa in tre dimensioni, dalla planimetria: tocchi una luce nel modello e si accende.
+
+</td>
+<td width="50%" valign="top">
+
+🔔 **Notifiche e assistente di casa**<br>
+La casa ti scrive quando serve e ti propone cosa fare: «C'è sole: avvio la lavatrice?».
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+🌍 **Da fuori casa**<br>
+Senza VPN, senza porte aperte sul router, cifrato da un capo all'altro.
+
+</td>
+<td width="50%" valign="top">
+
+🖼️ **Il tablet a muro**<br>
+Un tablet in corridoio o un NSPanel diventano un pannello con comandi grandi.
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+⌚ **Al polso**<br>
+Apple Watch e Wear OS: i comandi rapidi, com'è la casa, la prossima svolta del navigatore.
+
+</td>
+<td width="50%" valign="top">
+
+🔒 **I dati restano in casa**<br>
+Nessun account, nessuna pubblicità: il segreto di Home Assistant non lascia mai l'add-on.
 
 </td>
 </tr>
 </table>
 
-### In auto: GdANav, il navigatore
+GdAHome sono **due pezzi che lavorano insieme**: l'**add-on**, che si installa
+in Home Assistant come ogni altro add-on, e l'**app**. L'add-on porta la
+plancia, abbina i telefoni e tiene il segreto di Home Assistant: quello non
+esce mai di casa e sul telefono non ci finisce.
 
-Nell'app c'è anche **GdANav**, un navigatore fatto per l'auto elettrica che
-serve anche a chi guida a benzina o a gasolio. Il percorso, i distributori e i
-loro prezzi, il traffico, gli autovelox e il meteo lungo la strada. Per
-l'elettrica, con Premium: la batteria **letta dall'auto** e il percorso **con
-le soste alle colonnine**, col loro stato in tempo reale. Con **Android Auto**
-e **CarPlay** la casa è a un tasto: il cancello, il portone, «sto arrivando».
+## La plancia
 
-GdANav esiste anche come app a sé, per chi non ha Home Assistant.
+In alto il meteo, l'ora, l'antifurto e chi è in casa; sotto le sezioni —
+**luci, clima, tapparelle, telecamere, energia, persone** e tutte le altre — e
+ogni sezione divisa per stanza. Si tocca una luce e si accende, si trascina il
+cursore e cambia la luminosità. La plancia si apre anche **dentro Home
+Assistant**, dalla barra laterale, da qualunque browser di casa.
 
 <p align="center">
-  <img src="docs/immagini/gdanav-viaggio.png" alt="GdANav: un viaggio in auto elettrica, con l'orario di arrivo" width="30%">
-  &nbsp;
-  <img src="docs/immagini/gdanav-premium.png" alt="GdANav Premium" width="30%">
+  <img src="docs/immagini/readme/plancia-stanza.webp" alt="Una stanza della plancia: il soggiorno, con temperatura, umidità e clima in testa, e sotto le luci, la tapparella, la TV e i due termostati" width="100%">
 </p>
+<p align="center"><sub>Una stanza: tutto quello che c'è nel soggiorno, con i suoi comandi.</sub></p>
+
+<table>
+<tr>
+<td width="33%" align="center" valign="top"><img src="docs/immagini/readme/plancia-telefono-luci.webp" alt="La sezione Luci sul telefono" width="100%"><br><sub>Le luci, stanza per stanza</sub></td>
+<td width="33%" align="center" valign="top"><img src="docs/immagini/readme/plancia-telefono-stanza.webp" alt="Una stanza sul telefono" width="100%"><br><sub>Una stanza, sul telefono</sub></td>
+<td width="33%" align="center" valign="top"><img src="docs/immagini/readme/plancia-telefono-energia.webp" alt="L'energia sul telefono" width="100%"><br><sub>L'energia, dal vivo</sub></td>
+</tr>
+</table>
+
+<p align="center">
+  <img src="docs/immagini/readme/plancia-antifurto.webp" alt="La sezione Sicurezza: l'antifurto armato in modalità Fuori, con i tasti Casa, Fuori, Notte, Vacanza, Parziale e Sblocca" width="100%">
+</p>
+<p align="center"><sub>L'antifurto: i modi (Casa, Fuori, Notte, Vacanza…) a un tocco, con le telecamere e i sensori di fumo e gas sotto.</sub></p>
+
+<details>
+<summary><b>Tutte le sezioni della plancia</b></summary>
+
+<br>
+
+| Sezione | Cosa contiene |
+| --- | --- |
+| 🏠 Home | Il riepilogo della casa, le persone, l'assistente e i riquadri |
+| ⚡ Energia | Fotovoltaico, rete, accumulo, consumi, tariffe, report |
+| 🚗 Auto | Auto elettrica, colonnina, ricarica di notte |
+| 🧭 GdANav | I viaggi pianificati, che ritrovi nel navigatore |
+| 🛡️ Sicurezza | Antifurto, telecamere, sensori di fumo e gas |
+| ❄️ Clima · 🌡️ Temperatura · 🌞 Gestione termica | Termostati, condizionatori, VMC, solare termico, caldaia |
+| 🪟 Finestre | Tapparelle e finestre |
+| 💡 Luci · 🔌 Prese · 🛋️ Stanze | |
+| 🧺 Elettrodomestici | Lavatrice, lavastoviglie e gli altri, con cicli e costi |
+| 🎵 Musica | Lettori, radio, Alexa |
+| ❤️ Salute | Le misure dell'orologio |
+| 🌦️ Meteo · ⛈️ Allerte · 📅 Agenda · 🗑️ Rifiuti | |
+| 🚪 Varchi · 🏃 Presenza · 🔓 Apri porte · 📮 Citofono | Porte e finestre aperte, movimento, cancelli con PIN, campanello |
+| 🏊 Piscina · 💧 Irrigazione · 🪴 Piante · 🐾 Animali · 🤖 Robot | |
+| 🔋 Batterie · 🔌 UPS · 🖨️ Stampanti · 💧 Acqua e gas · 🖥️ Server e rete | |
+| ⚽ Sport | Squadra del cuore, Formula 1, MotoGP |
+| ⭐ Le tue sezioni | Quelle che crei tu |
+
+Le sezioni si accendono e si spengono dalla configurazione, anche dal
+telefono; una sezione senza niente dentro non compare.
+
+</details>
+
+### Il tablet a muro
+
+Un tablet fisso in corridoio o un **Sonoff NSPanel** diventano un pannello con
+**comandi grandi** e poche pagine scelte da te: una stanza, le scene, l'ingresso
+con il cancello e la telecamera, l'energia, la musica, il meteo. Quando nessuno
+lo tocca resta l'orologio; di notte lo schermo si spegne.
+
+<p align="center">
+  <img src="docs/immagini/readme/plancia-a-muro.webp" alt="La plancia a muro su un tablet: il soggiorno con clima, termostato, tapparella e una scena, e in alto meteo e ora" width="80%">
+</p>
+
+## L'app sul telefono e sugli orologi
+
+L'app è per **Android**, **iPhone** e **iPad**, e c'è anche
+[nel browser](https://webapp.gdahome.org). Dentro c'è la plancia, e intorno
+quello che serve per tenere la casa: le notifiche, la pagina «La tua
+giornata», i dispositivi, le automazioni, Zigbee, gli aggiornamenti di Home
+Assistant e le segnalazioni. Si apre con l'impronta o col volto.
+
+<table>
+<tr>
+<td width="25%" align="center" valign="top"><img src="docs/immagini/readme/avvio-app.gif" alt="L'avvio dell'app: il marchio GdAHome si disegna e compare la casa" width="100%"><br><sub>L'avvio</sub></td>
+<td width="25%" align="center" valign="top"><img src="docs/immagini/readme/app-menu.webp" alt="Il menu dell'app: GdANav in alto, poi Plancia, Configurazione, Aggiornamenti, Notifiche, Salute" width="100%"><br><sub>Il menu</sub></td>
+<td width="25%" align="center" valign="top"><img src="docs/immagini/readme/app-giornata.webp" alt="La tua giornata: quanta energia dal sole, cosa ha consumato di più, il grafico ora per ora" width="100%"><br><sub>«La tua giornata»</sub></td>
+<td width="25%" align="center" valign="top"><img src="docs/immagini/readme/app-salute.webp" alt="La pagina Salute: le misure dell'orologio mandate alla casa" width="100%"><br><sub>La Salute dall'orologio</sub></td>
+</tr>
+</table>
+
+**⌚ Al polso.** Su **Apple Watch** e **Wear OS** ci sono i comandi rapidi, i
+dispositivi, le azioni della plancia, «Come sta la casa» e il navigatore:
+«Portami a casa» e, durante la guida, la freccia con la distanza.
+L'orologio non ha impostazioni sue: usa gli stessi tasti scelti per l'auto.
+
+**❤️ La Salute.** Le misure dell'orologio — da Apple Salute o da Health
+Connect (Galaxy Watch, Pixel Watch, Fitbit, Amazfit…) — arrivano alla casa e
+si vedono nella sezione Salute della plancia, per tutta la famiglia.
+
+## Il navigatore: GdANav, con Android Auto e CarPlay
+
+Nell'app c'è **GdANav**, un navigatore pensato per l'auto elettrica che va
+bene anche a benzina o a gasolio:
+
+- percorso con **guida vocale** e lo svincolo ingrandito agli incroci;
+- **distributori** con i prezzi del giorno;
+- **traffico, autovelox e meteo** lungo la strada, e le segnalazioni di chi
+  guida;
+- con l'auto elettrica, **la batteria letta dall'auto** e **le soste alle
+  colonnine**, col loro stato in tempo reale;
+- i **viaggi pianificati** dal telefono o dal computer, con l'avviso prima di
+  partire.
+
+Mentre guidi **la casa ti avvisa** — la lavatrice che ha finito, l'auto
+carica — e ti chiede conferma prima di fare cose importanti, come
+disinserire l'antifurto.
+
+<p align="center">
+  <img src="docs/immagini/readme/navigatore-telefono.webp" alt="GdANav sul telefono: la guida con un avviso di casa «Lavatrice finita»" width="30%">
+  &nbsp;
+  <img src="docs/immagini/readme/navigatore-antifurto.webp" alt="GdANav sul telefono: la casa chiede «Disinserire l'antifurto?» con i tasti Sì e No" width="30%">
+  &nbsp;
+  <img src="docs/immagini/readme/navigatore-notte.webp" alt="GdANav sul telefono, di notte: l'avviso «Auto carica all'80%»" width="30%">
+</p>
+
+GdANav esiste anche come **app a sé**, per chi non ha Home Assistant.
+
+Sullo schermo dell'auto, con **Android Auto** e **CarPlay**, la casa è a un
+tasto: il cancello e il portone, «Quasi a casa» quando arrivi, gli avvisi di
+casa con il loro tasto, e la musica di casa.
+
+<p align="center">
+  <img src="docs/immagini/readme/auto-avviso-di-casa.webp" alt="Android Auto: la guida in 3D con la prossima svolta, un avviso di casa «Antifurto inserito» con il tasto Disinserisci, e il lettore musicale" width="100%">
+</p>
+<p align="center">
+  <img src="docs/immagini/readme/auto-musica-di-casa.webp" alt="Android Auto: Musica di casa, con Radio di casa, Playlist di casa e Ferma la musica di casa" width="80%">
+</p>
+<p align="center"><sub>Android Auto: un avviso di casa durante la guida, e la musica di casa.</sub></p>
+
+## Casa 3D
+
+La tua casa **in tre dimensioni**, creata dalla planimetria con una procedura
+guidata e poi arredata. Dentro ci sono i dispositivi veri: le luci accese si
+illuminano, le finestre aperte si vedono, il movimento si accende dove
+succede, e un tocco comanda la casa. Di sera la casa si fa buia e restano
+accese le luci che sono accese davvero.
+
+<p align="center">
+  <img src="docs/immagini/readme/casa3d-piano-terra.webp" alt="Casa 3D, il piano terra: soggiorno, cucina e camera viste dall'alto, con le etichette di luci, clima, finestra aperta e lavastoviglie, e l'elenco dei dispositivi a destra" width="100%">
+</p>
+
+<table>
+<tr>
+<td width="50%" align="center" valign="top"><img src="docs/immagini/readme/casa3d-esterno.webp" alt="Casa 3D, l'esterno della villa d'esempio di giorno" width="100%"><br><sub>Fuori, di giorno</sub></td>
+<td width="50%" align="center" valign="top"><img src="docs/immagini/readme/casa3d-notte.webp" alt="Casa 3D, l'esterno della villa d'esempio di notte, con le luci accese" width="100%"><br><sub>La stessa casa, di sera</sub></td>
+</tr>
+</table>
+
+## Energia
+
+Il **flusso dal vivo**: quanto produce il sole, quanto prende o cede la rete,
+la batteria che si carica o si scarica, la casa e i carichi più grandi — e il
+cerchio **«Non monitorati»**, quello che la casa consuma e che nessun sensore
+misura. Poi i report del giorno e del mese, le tariffe, l'auto elettrica e
+la ricarica di notte.
+
+<p align="center">
+  <img src="docs/immagini/readme/energia-flusso.webp" alt="La sezione Energia: il flusso fra solare, rete, batteria e casa, e sotto i carichi boiler, climatizzatore, wallbox e il cerchio Non monitorati" width="100%">
+</p>
+
+## Notifiche e assistente di casa
+
+**La casa ti avvisa anche ad app chiusa**: l'antifurto che scatta, il fumo,
+l'acqua per terra, il campanello, la lavatrice che ha finito, il movimento
+quando non c'è nessuno, con la foto del momento. Le regole stanno nell'add-on,
+e le notifiche partono **già cifrate** con la chiave del tuo telefono.
+
+L'**assistente di casa** guarda quello che succede e propone cosa fare, con un
+tasto: avviare la lavatrice quando c'è sole, inserire l'antifurto se siete
+usciti tutti, aprire una finestra quando l'aria è pesante. La sera arriva il
+**riepilogo della giornata**.
+
+<table>
+<tr>
+<td width="25%" align="center" valign="top"><img src="docs/immagini/readme/notifica-movimento.webp" alt="Una notifica: movimento all'ingresso con la casa vuota, con la foto del momento e i tasti Inserisci antifurto e Guarda dal vivo" width="100%"><br><sub>Movimento, con la foto</sub></td>
+<td width="25%" align="center" valign="top"><img src="docs/immagini/readme/notifica-lavatrice.webp" alt="Una notifica: lavatrice finita, con durata, consumo, costo e quanta energia è venuta dal sole" width="100%"><br><sub>Lavatrice finita</sub></td>
+<td width="25%" align="center" valign="top"><img src="docs/immagini/readme/assistente-sole-lavatrice.webp" alt="L'assistente: c'è sole, è il momento della lavatrice. Avvia o Più tardi" width="100%"><br><sub>«C'è sole»</sub></td>
+<td width="25%" align="center" valign="top"><img src="docs/immagini/readme/assistente-antifurto.webp" alt="L'assistente: siete usciti e l'antifurto è spento. Inserisci fuori casa o Va bene così" width="100%"><br><sub>«Siete usciti»</sub></td>
+</tr>
+</table>
 
 ## Da fuori casa
 
 Sulla rete di casa il telefono parla direttamente con l'add-on. **Con
-Premium** la casa si raggiunge anche da fuori — dall'ufficio, in vacanza, col
-telefono sui dati — e senza fare niente:
+Premium** la casa si raggiunge anche da fuori — dall'ufficio, in vacanza, coi
+dati del telefono — e senza fare niente:
 
-- **nessuna porta da aprire sul router**, nessun indirizzo pubblico da avere,
-  nessuna VPN da installare: è la casa a tenere aperto il collegamento verso
-  l'esterno, e il telefono la raggiunge da lì;
+- **nessuna porta da aprire sul router**, nessun indirizzo pubblico, nessuna
+  VPN: è la casa a tenere aperto il collegamento verso l'esterno;
 - **cifrato da un capo all'altro**, fra il telefono e l'add-on: chi sta in
   mezzo fa passare i messaggi ma non li può leggere;
-- **si sceglie da solo**: in casa l'app usa la strada diretta, appena esci
-  dal portone passa a quella da fuori, senza che tu te ne accorga.
+- **si sceglie da solo**: in casa l'app usa la strada diretta, appena esci dal
+  portone passa a quella da fuori.
 
-<table>
-<tr>
-<td width="35%" align="center" valign="top">
-<img src="docs/immagini/fuori-casa-serve-premium.png" alt="Fuori casa serve GdAHome Premium" width="100%">
-</td>
-<td valign="top">
+Ogni telefono abbinato ha **un accesso suo**, che si toglie con un tasto dalla
+pagina dell'add-on — per esempio il giorno che un telefono si perde.
 
-Senza Premium, fuori dal Wi-Fi di casa l'app lo dice chiaramente, e la casa
-torna raggiungibile appena si rientra.
+## Base e Premium
 
-Ogni telefono abbinato ha **un accesso suo**, che vale solo per quella casa
-e si toglie con un tasto dalla scheda dell'add-on. Il segreto di Home
-Assistant non esce mai dall'add-on.
+**GdAHome Base è gratis, per sempre**: l'add-on, la plancia in Home Assistant
+e l'app sul telefono e sul tablet, sulla rete di casa.
 
-</td>
-</tr>
-</table>
+**GdAHome Premium** aggiunge:
 
-## Quanto costa
+| Con Premium | In pratica |
+| --- | --- |
+| 🌍 **Da fuori casa** | la casa ovunque, cifrata, senza aprire porte |
+| 📋 **Più plance e più case** | una plancia per la famiglia, una per l'ufficio; casa e casa al mare nella stessa app |
+| ⚙️ **La configurazione dal telefono** | sezioni, stanze, dispositivi, automazioni, aiutanti, Zigbee con «Dove lo metto?» |
+| 🔔 **Le notifiche elaborate** | con grafici e foto, il riepilogo della sera, i mini video del movimento |
+| 🧊 **Casa 3D** | la casa in tre dimensioni, dalla tua planimetria |
+| 🖼️ **La plancia a muro** | un tablet o un NSPanel come pannello con comandi grandi |
+| ❤️ **La Salute dall'orologio** | per tutta la famiglia |
+| ⌚ **Al polso** e 🚗 **in auto** | Apple Watch, Wear OS, Android Auto, CarPlay |
+| 🧭 **GdANav Premium compreso** | batteria letta dall'auto e soste alle colonnine |
+| 🌐 **L'app dal browser** | la stessa app, senza installare niente |
 
-|                                                                     | **Base**<br>gratis, per sempre |   **Premium**<br>4,99 € al mese · 49,99 € all'anno   |
-| ------------------------------------------------------------------- | :----------------------------: | :--------------------------------------------------: |
-| L'add-on e la plancia in Home Assistant                             |               ✅               |                          ✅                          |
-| Plance (anche in Home Assistant)                                    |       una, la principale       |                fino a **30** per casa                |
-| Telefoni abbinati alla casa                                         |            fino a 2            |                   **senza limite**                   |
-| Case nell'app                                                       |              una               |                    fino a **10**                     |
-| Dove funziona                                                       |       sulla rete di casa       | **anche da fuori casa**, cifrato, senza aprire porte |
-| L'app dal browser                                                   |               —                |                          ✅                          |
-| Configurare la plancia dal telefono                                 |               —                |                          ✅                          |
-| Dispositivi, integrazioni, aiutanti e automazioni dall'app          |               —                |                          ✅                          |
-| Aggiungere dispositivi Zigbee dall'app                              |               —                |               ✅ con «Dove lo metto?»                |
-| Notifiche elaborate, riepilogo della sera, mini video del movimento |               —                |                          ✅                          |
-| La plancia a muro (tablet, NSPanel)                                 |               —                |                          ✅                          |
-| La Casa 3D, dalla tua planimetria                                   |               —                |                          ✅                          |
-| La Salute dall'orologio, per tutta la famiglia                      |               —                |                          ✅                          |
-| Al polso (Apple Watch, Wear OS)                                     |               —                |                          ✅                          |
-| In auto (Android Auto, CarPlay)                                     |               —                |                          ✅                          |
-| GdANav, il navigatore                                               |       la versione gratis       |             **GdANav Premium compreso**              |
-| Segnalazioni e chat di assistenza                                   |               ✅               |                          ✅                          |
-| Account da fare                                                     |            nessuno             |                       nessuno                        |
+Premium **è della casa, non del telefono**: si attiva una volta, e tutti i
+telefoni abbinati a quella casa sono Premium insieme a lei. Si prende
+dall'app, con Google Play o l'App Store (**4,99 € al mese** o **49,99 €
+all'anno**), e **i primi 14 giorni sono gratis**. Se finisce non si perde
+niente: la configurazione resta salvata e torna appena Premium torna.
 
-> **I primi 14 giorni di Premium sono gratis**, la prima volta: si prova
-> tutto, e se non serve si disdice dal Play Store o dall'App Store prima che
-> finiscano.
+<details>
+<summary><b>GdANav da solo, senza Home Assistant</b></summary>
 
-<p align="center">
-  <img src="docs/immagini/premium-prova-14-giorni.png" alt="La pagina Premium: il piano annuale e quello mensile, con 14 giorni gratis" width="34%">
-  &nbsp;&nbsp;
-  <img src="docs/immagini/premium-attivo.png" alt="Premium attivo per la casa" width="34%">
-</p>
-<p align="center"><sub>La pagina Premium nell'app, e la stessa pagina con Premium attivo per tutta la casa.</sub></p>
-
-### Premium è della casa, non del telefono
-
-Si attiva **una volta per la casa**, e tutti i telefoni abbinati a quella casa
-sono Premium insieme a lei — anche l'app dal browser. Chi abita con te non
-paga un'altra volta. Con Base i telefoni abbinati sono al massimo due; con
-Premium quanti ne vuoi.
-
-### Come si ha
-
-<table>
-<tr>
-<td valign="top">
-
-**🛒 Dall'app.** Pagina **Premium**, piano mensile o annuale. Si paga con
-Google Play o con l'App Store, e si disdice da lì come ogni altro
-abbonamento. Dal browser non si compra: si compra dal telefono, e vale anche
-lì.
-
-**🎁 Con un codice regalo**, fatto così: `GDA-XXXX-XXXX-XXXX`. Si scrive
-nell'app, **Premium → Ho un codice regalo** (anche dal browser), oppure nella
-scheda dell'add-on in Home Assistant. Vale una volta sola.
-
-**🧰 Dal tuo installatore.** Se l'impianto te l'ha fatto un installatore, può
-darti lui Premium: o lo assegna direttamente alla tua casa — e non c'è niente
-da fare, l'app lo sa già — o ti manda un codice regalo.
-
-</td>
-<td width="34%" align="center" valign="top">
-<img src="docs/immagini/premium-codice-regalo.png" alt="Premium con un codice regalo" width="100%">
-<br><sub>Un codice regalo, scritto nell'app.</sub>
-</td>
-</tr>
-</table>
-
-<table>
-<tr>
-<td width="50%" align="center" valign="top"><img src="docs/immagini/addon-licenza-base.png" alt="La licenza nella scheda dell'add-on: Base" width="100%"><br><sub>Base: una plancia, e solo da casa.</sub></td>
-<td width="50%" align="center" valign="top"><img src="docs/immagini/addon-licenza-premium.png" alt="La licenza nella scheda dell'add-on: Premium" width="100%"><br><sub>Premium: la seconda plancia, e GdANav compreso.</sub></td>
-</tr>
-</table>
-
-La stessa casa in Home Assistant, prima e dopo: la licenza si vede anche nella
-scheda dell'add-on, e il codice regalo si può scrivere lì.
-
-### Quando finisce
-
-Non si perde niente. La casa torna Base: la plancia principale resta, e le
-plance in più restano salvate dove sono — si rivedono appena Premium torna,
-anche fra le Plance di Home Assistant. Dei telefoni, con Base, ne restano
-abbinati al massimo due: i due usati più di recente. Gli altri si staccano, e
-l'app su quei telefoni lo dice e porta alla pagina Premium; con Premium si
-riabbinano.
-
-### GdANav da solo
+<br>
 
 |                            |             **GdANav**<br>gratis              |        **GdANav Premium**<br>2,99 € al mese · 29,99 € all'anno        |
 | -------------------------- | :-------------------------------------------: | :-------------------------------------------------------------------: |
@@ -309,140 +356,150 @@ riabbinano.
 | Home Assistant             |                       —                       |                                  ✅                                   |
 | Android Auto e CarPlay     |                       —                       |                                  ✅                                   |
 
-Anche GdANav Premium ha **i primi 14 giorni gratis**. E con **GdAHome Premium
-è già compreso**: la casa Premium sblocca tutto anche nel navigatore, senza un
-secondo abbonamento.
+Anche GdANav Premium ha i primi 14 giorni gratis. Con **GdAHome Premium è già
+compreso**, senza un secondo abbonamento.
 
-## Per chi installa
+</details>
 
-Se metti in piedi impianti Home Assistant per i tuoi clienti, GdAHome ha una
-parte per te: **il cruscotto per installatori**. Una pagina sola con tutti gli
-impianti che segui, e da lì le licenze Premium da dare ai clienti.
+## Installazione in Home Assistant
+
+**Cosa serve:** Home Assistant con il **Supervisor**, cioè **Home Assistant
+OS** (su Raspberry, mini PC o macchina virtuale) oppure **Home Assistant
+Supervised**. GdAHome è un **add-on**, non un'integrazione: **da HACS non si
+installa**.
+
+**1. Aggiungi l'archivio.** In Home Assistant apri **Impostazioni → Add-on →
+Negozio degli add-on**, tocca i **tre puntini** in alto a destra →
+**Archivi**, incolla questo indirizzo e premi **Aggiungi**:
+
+```
+https://github.com/danigio15/gdahomeapp
+```
+
+**2. Installa e avvia.** Nell'elenco compare la sezione **GdAHome**: apri
+l'add-on, premi **Installa** e poi **Avvia**, e accendi **Mostra nella barra
+laterale**. La prima volta ci vuole qualche minuto. Gli aggiornamenti poi
+arrivano come per ogni altro add-on.
+
+**3. Collega l'app.** Apri la voce di **GdAHome** nella barra laterale, premi **Collega
+l'app**, scegli la persona che userà il telefono e premi **Genera il QR
+code**. Il codice vale cinque minuti e una volta sola.
 
 <p align="center">
-  <img src="docs/immagini/cruscotto-installatore-licenze.png" alt="Il cruscotto per installatori: il pacchetto di licenze, le licenze assegnate, i codici da consegnare" width="820">
+  <img src="docs/immagini/readme/addon-collega-app.webp" alt="La pagina dell'add-on in Home Assistant: Collega l'app GdAHome, con la persona scelta, il QR code da inquadrare e il tempo che resta" width="80%">
 </p>
-<p align="center"><sub>Il cruscotto: il pacchetto di licenze diviso per durata, le licenze assegnate alle case, i codici regalo da consegnare.</sub></p>
 
-**🩺 Come sta ogni casa.** Tutti gli impianti in una pagina, e in cima quelli
-che chiedono qualcosa adesso. Per ogni casa **dieci controlli al giorno**: la
-plancia, i telefoni, il collegamento da fuori, gli aggiornamenti, gli add-on,
-la rete, la macchina (processore, memoria, disco, temperatura), il backup, le
-batterie dei dispositivi. E **un avviso quando una casa smette di farsi
-sentire**, e uno quando riprende: te ne accorgi prima che il cliente ti
-telefoni.
+**4. Inquadralo con l'app.** Scarica GdAHome dal
+**[Play Store](https://play.google.com/store/apps/details?id=com.gdahome.gdahome)**
+o dall'**[App Store](https://apps.apple.com/app/id6816421418)** e inquadra il
+codice. Senza fotocamera lo si scrive a mano: sedici caratteri, in quattro
+gruppi. Fatto: **nessuna password di Home Assistant**, nessun indirizzo,
+nessun token da copiare.
 
-**🛠️ Da lontano, solo dove il cliente lo permette.** Installare gli
-aggiornamenti, riavviare Home Assistant, sistemare la plancia — le sezioni, le
-stanze, dove sta una presa nuova — senza andare sul posto. Sono **interruttori
-nella scheda dell'add-on del cliente, spenti di serie**: li accende e li
-spegne chi abita la casa.
+Il resto — le sezioni, le stanze, le notifiche, l'auto — è spiegato passo
+passo, con le schermate, nel **[manuale d'uso](docs/MANUALE.md)**.
 
-**🎟️ Le licenze Premium per i clienti.** GdAHome ti dà un **pacchetto di
-licenze**, diviso per durata — per esempio 10 da un mese, 5 da un anno, 2 per
-sempre. Per ognuna scegli:
+<details>
+<summary><b>Avevo l'integrazione DashboardModern: cosa faccio?</b></summary>
 
-- **assegnarla a una delle tue case**: da quel momento la casa è Premium, e
-  il cliente non deve fare niente;
-- **oppure generare un codice regalo** da mandare al cliente: la durata parte
-  quando lo riscatta.
+<br>
 
-Una licenza tolta, o un codice annullato prima di essere usato, **torna nel
-tuo pacchetto**. Nel pacchetto possono esserci anche licenze **GdANav
-Premium**, per chi vuole solo il navigatore.
+Non serve più: la plancia è già dentro l'add-on, e **alla prima apertura
+GdAHome prende la configurazione che avevi**. Disinstalla l'integrazione da
+HACS e togli la sua voce da **Impostazioni → Dashboard**: se la lasci, quella
+voce mostra «Errore di configurazione».
 
-**🙈 Cosa non vedi.** Non apri la plancia del cliente e non entri in casa sua:
-ricevi numeri, non nomi. Stanze, persone e telecamere restano sue — le
-immagini delle telecamere non escono mai di casa, nemmeno mentre sistemi la
-plancia.
+</details>
 
-### Come si comincia
+## Domande frequenti
 
-1. **Chiedi l'accesso** dalla pagina dei contatti del sito:
-   **[gdahome.org/#contatti](https://gdahome.org/#contatti)**. Ricevi il codice
-   del tuo cruscotto e il tuo pacchetto di licenze.
-2. Sul **tuo** Home Assistant, nella configurazione dell'add-on GdAHome,
-   accendi la parte **per chi installa** e scrivi il codice: compare il
-   cruscotto, nella barra laterale e nell'app.
-3. Per ogni cliente, **dal cruscotto generi un codice di abbinamento**: il
-   cliente lo incolla nella configurazione del suo add-on, e da quel momento
-   la sua casa compare nella tua pagina — e in nessun'altra. Se vuole, la sua
-   plancia porta il tuo nome e il tuo logo: il giorno che qualcosa non va, sa
-   chi chiamare.
+<details>
+<summary><b>Si installa su Home Assistant in Docker?</b></summary>
 
-## I tuoi dati
+<br>
 
-**I dati della casa restano in casa.** Nessun account, nessuna pubblicità,
-nessun tracciamento. Da fuori casa i messaggi viaggiano cifrati fra il
-telefono e l'add-on. Per sapere se una casa è Premium, l'add-on manda solo un
-identificativo anonimo della casa: niente nomi, dispositivi, stati o
-posizione. Il pagamento lo gestiscono Google e Apple: a GdAHome non arrivano
-né il tuo nome né i dati della carta.
+No, e non dipende da GdAHome: su **Home Assistant Container** e su **Home
+Assistant Core** il negozio degli add-on non esiste, e nessun add-on si
+installa.
 
-Tutto per intero, anche per il navigatore, la fotocamera e le segnalazioni:
-**[l'informativa sulla privacy](https://gdahome.org/privacy.html)**
-([`docs/PRIVACY.md`](docs/PRIVACY.md)).
+| Home Assistant | GdAHome |
+| --- | :-: |
+| **OS** — il sistema completo, su Raspberry, mini PC o macchina virtuale | ✅ |
+| **Supervised** — Debian con l'installatore ufficiale | ✅ |
+| **Container** — l'immagine Docker da sola | ❌ nessun add-on, di nessuno |
+| **Core** — in un ambiente Python | ❌ idem |
 
-## Domande
-
-**Si installa su Home Assistant in Docker?**
-No, e non dipende da GdAHome: su **Home Assistant Container** (l'immagine
-Docker da sola) e su **Home Assistant Core** il negozio degli add-on non
-esiste, e nessun add-on si installa. Serve il Supervisor.
-
-| Home Assistant                                                          |           GdAHome            |
-| ----------------------------------------------------------------------- | :--------------------------: |
-| **OS** — il sistema completo, su Raspberry, mini PC o macchina virtuale |              ✅              |
-| **Supervised** — Debian con l'installatore ufficiale                    |              ✅              |
-| **Container** — l'immagine Docker da sola                               | ❌ nessun add-on, di nessuno |
-| **Core** — in un ambiente Python                                        |           ❌ idem            |
-
-Chi ha Container può passare a **Supervised** sulla stessa macchina: Docker ce
+Chi ha Container può passare a Supervised sulla stessa macchina: Docker ce
 l'ha già.
 
-**L'add-on serve solo per usare l'app?**
+</details>
+
+<details>
+<summary><b>Serve l'app per usare la plancia?</b></summary>
+
+<br>
+
 No. La plancia compare anche in Home Assistant, nella barra laterale, e si
 guarda e si configura da qualunque browser di casa. Con l'app diventa una casa
 in tasca.
 
-**Devo installare anche l'integrazione DashboardModern?**
-No: la plancia è già dentro l'add-on. Chi l'integrazione ce l'ha già e ci ha
-configurato la plancia non ricomincia da zero: alla prima apertura GdAHome
-prende quella configurazione e la usa.
+</details>
 
-**Siamo in quattro in casa: paghiamo quattro volte?**
-No. Premium è della casa: tutti i telefoni abbinati, e l'app dal browser, sono
-Premium insieme. E con Premium i telefoni non hanno limite: con Base sono due.
+<details>
+<summary><b>Siamo in quattro in casa: paghiamo quattro volte?</b></summary>
 
-**Il mio installatore mi ha dato un codice. Dove lo metto?**
-Nell'app, **Premium → Ho un codice regalo**, oppure nella scheda dell'add-on in
-Home Assistant. Se invece la licenza l'ha assegnata lui alla casa, non c'è
-niente da fare.
+<br>
 
-**Ho perso il telefono.**
-Apri GdAHome in Home Assistant e, fra i **telefoni abbinati**, premi **Togli
-associazione** accanto a quello perso: da quel momento non entra più.
+No. Premium è della casa: tutti i telefoni abbinati, e l'app dal browser,
+sono Premium insieme.
 
-**Dove finiscono le cose che segnalo?**
-Nelle [segnalazioni di questa repository](https://github.com/danigio15/gdahomeapp/issues):
-si scrivono dall'app — **Segnalazioni** nel menu, con foto e video — senza
-bisogno di un account GitHub. Per chiedere aiuto c'è **Assistenza**, una
-conversazione privata che non finisce su nessuna pagina pubblica.
+</details>
 
-## Chi c'è dietro
+<details>
+<summary><b>Ho perso il telefono.</b></summary>
+
+<br>
+
+Apri GdAHome in Home Assistant e, fra i **telefoni abbinati**, togli quello
+perso: da quel momento non entra più.
+
+</details>
+
+<details>
+<summary><b>Che fine fanno i dati della casa?</b></summary>
+
+<br>
+
+**Restano in casa.** Nessun account, nessuna pubblicità, nessun
+tracciamento. Da fuori casa i messaggi viaggiano cifrati fra il telefono e
+l'add-on, e il segreto di Home Assistant non esce mai dall'add-on. Il
+pagamento lo gestiscono Google e Apple. Tutto per intero:
+**[l'informativa sulla privacy](https://gdahome.org/privacy.html)**
+([`docs/PRIVACY.md`](docs/PRIVACY.md)).
+
+</details>
+
+## Lingue
+
+L'app, la plancia e l'add-on parlano **italiano** e **inglese**, e scelgono da
+soli la lingua del telefono o di Home Assistant. Il manuale d'uso è in
+italiano.
+
+## Assistenza e segnalazioni
+
+- **Dall'app:** **Segnalazioni** nel menu, con foto e video, senza bisogno di
+  un account GitHub; per una domanda c'è **Assistenza**, una conversazione
+  privata.
+- **Da GitHub:** apri una
+  **[segnalazione](https://github.com/danigio15/gdahomeapp/issues)**. Non
+  mettere nelle segnalazioni indirizzi, token o foto di casa tua.
+- **Le novità** di ogni versione dell'add-on sono in
+  [`ponte/CHANGELOG.md`](ponte/CHANGELOG.md).
 
 GdAHome la fa **CRV Immobiliare S.r.l.**, impresa di impianti elettrici e
-tecnologici di Aversa (CE), abilitata agli impianti ai sensi del D.M. 37/2008
-(lettere A–G). Sede legale in Viale della Libertà 24, 81031 Aversa (CE);
-P. IVA e C.F. 03719610614; REA CE-266848; PEC crvimmobiliare@pec.it.
-
-Premium, per GdAHome e per GdANav, lo vende CRV Immobiliare S.r.l. attraverso
-l'App Store e Google Play: le ricevute arrivano da Apple o da Google, come per
-ogni abbonamento.
-
-- Il sito della società: **[www.crvgroup.it](https://www.crvgroup.it/)**
-- Per scrivere: **domotica@crvgroup.it**, oppure il modulo su
-  [gdahome.org/#contatti](https://gdahome.org/#contatti)
+tecnologici: **[www.crvgroup.it](https://www.crvgroup.it/)** · per scrivere,
+**domotica@crvgroup.it** oppure il modulo su
+[gdahome.org/#contatti](https://gdahome.org/#contatti).
 
 ## Licenza
 
@@ -450,5 +507,42 @@ Il codice di GdAHome è pubblico, ma non è open source: vale la **Licenza d'uso
 di GdAHome** ([`LICENSE`](LICENSE)), in italiano con la traduzione inglese. In
 breve: si legge e si controlla cosa fa, si installa e si usa a casa propria o
 nella propria attività; non si ripubblica, non si rivende e non si aggira
-Premium. Chi installa per i clienti lo fa con l'autorizzazione di CRV
-Immobiliare S.r.l.
+Premium. Le condizioni d'uso dell'app sono in [`docs/TERMINI.md`](docs/TERMINI.md).
+
+---
+
+## In English
+
+<details>
+<summary><b>GdAHome in short</b></summary>
+
+<br>
+
+**GdAHome turns your Home Assistant into a single dashboard** — on your phone,
+tablet, watch and car. Lights, climate, blinds, alarm, cameras, energy and
+people, room by room.
+
+- **Two pieces:** a Home Assistant **add-on** (it serves the dashboard, pairs
+  phones and keeps the Home Assistant secret at home) and an **app** for
+  Android, iPhone and iPad, also in the browser. Pairing is a **QR code**: no
+  passwords, no addresses, no tokens.
+- **Energy flow** with solar, grid, battery, car and the "not monitored" share;
+  **3D home** built from your floor plan; **wall tablet** mode; **notifications**
+  and a **home assistant** that suggests what to do.
+- **GdANav**, a navigator built for EVs, with **Android Auto** and **CarPlay**:
+  gate, music and home alerts on the car screen.
+- **Away from home** with Premium: no open router ports, no VPN, end-to-end
+  encrypted.
+- **Base is free forever**; **Premium** (14 days free) belongs to the whole
+  house, not to a single phone.
+
+**Install:** Home Assistant OS or Supervised → *Settings → Add-ons → Add-on
+store → ⋮ → Repositories* → add `https://github.com/danigio15/gdahomeapp` →
+install **GdAHome** → open it from the sidebar → **Connect the app** → scan the
+QR code with the app.
+
+The app and the dashboard speak Italian and English. Issues:
+[github.com/danigio15/gdahomeapp/issues](https://github.com/danigio15/gdahomeapp/issues).
+License: [`LICENSE`](LICENSE) (source-available, not open source).
+
+</details>
