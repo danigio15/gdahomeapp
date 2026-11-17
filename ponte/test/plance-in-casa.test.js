@@ -39,6 +39,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   CARTELLA,
   DAVANTI,
+  FONDO_DEL_VELO,
   PlanceInCasa,
   IL_RIAVVIO,
   SEGNO_DELL_APERTURA,
@@ -319,6 +320,19 @@ test("dove non c'e' nessuna Home Assistant non scrive niente", async () => {
   }
 });
 
+test("il fondo sotto la tessera e' quello del velo e di apri.html, chiaro e scuro", () => {
+  const qui = dirname(fileURLToPath(import.meta.url));
+  const [chiaro, scuro] = /^light-dark\((#[0-9a-f]{6}), (#[0-9a-f]{6})\)$/
+    .exec(FONDO_DEL_VELO)
+    .slice(1);
+  const velo = readFileSync(join(qui, "..", "plancia", "legacy", "dashboard.html"), "utf8");
+  assert.ok(velo.includes(`html{background:${chiaro}}`), "il velo, chiaro");
+  assert.ok(velo.includes(`html[data-theme="dark"]{background:${scuro}}`), "il velo, scuro");
+  const apri = readFileSync(join(qui, "..", "carta", "apri.html"), "utf8");
+  assert.ok(apri.includes(`background: ${chiaro};`), "apri.html, chiara");
+  assert.ok(apri.includes(`background: ${scuro};`), "apri.html, scura");
+});
+
 test("nella Plancia ci sono solo tessere di Home Assistant: la «pagina web» che apre apri.html", async () => {
   const b = banco();
   try {
@@ -339,9 +353,14 @@ test("nella Plancia ci sono solo tessere di Home Assistant: la «pagina web» ch
     assert.equal(mare.views.length, 1);
     assert.equal(mare.views[0].title, "Casa al mare");
     assert.equal(mare.views[0].panel, true);
+    /* Sotto la tessera, trasparente, il fondo del velo: fra Home Assistant
+     * che apre la Plancia e il velo che si accende non passa il bianco della
+     * tessera (la prova del titolare, un secondo e mezzo di bianco). */
+    assert.equal(mare.views[0].background, "light-dark(#e8edf3, #0b1220)");
     assert.equal(mare.views[0].cards.length, 1);
     const tessera = mare.views[0].cards[0];
-    assert.deepEqual(Object.keys(tessera).sort(), ["type", "url"]);
+    assert.deepEqual(Object.keys(tessera).sort(), ["hide_background", "type", "url"]);
+    assert.equal(tessera.hide_background, true);
     assert.equal(tessera.type, "iframe");
     assert.match(tessera.url, /^\/local\/gdahome\/apri\.html\?v=0\.21\.0-[0-9a-f]{10}&/);
     assert.deepEqual(iDetti(tessera.url), {

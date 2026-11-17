@@ -26,8 +26,18 @@
  *    questo velo finche' se ne va (`premesse.dart`, `laPrimaSchermata`): due
  *    spettacoli uno sotto l'altro sarebbero lavoro per niente. Il velo resta
  *    quello fermo, e se ne va come prima, sfumando: e' quello che l'app ascolta.
- *  - **«Riduci animazioni».** Fermo e pieno: il marchio, il nome, tre punti, e
- *    la riga sotto che cambia lo stesso.
+ *  - **«Riduci animazioni».** Calmo, non fermo. Su Windows basta avere spento
+ *    «Effetti di animazione» perche' Chrome ed Edge lo chiedano, e prima qui
+ *    il velo restava una fotografia: nessuno capiva se stesse caricando.
+ *    Adesso va via solo quello che si sposta, cresce o gira — le iniziali che
+ *    si srotolano e si rimpiccioliscono, il rimbalzo del marchio, l'onda
+ *    d'urto, l'anello, i granelli in orbita, i raggi che ruotano, le lettere
+ *    che salgono — e resta tutto quello che si accende e si spegne sul posto:
+ *    le dissolvenze, l'alone che respira, i raggi che si schiariscono, il
+ *    lampo caldo, le finestrelle, il Wi-Fi, la luce che passa sul marchio, i
+ *    tre punti che pulsano. Il marchio, il nome e la riga stanno fermi e
+ *    pieni dal primo istante, come nel velo di riserva. L'uscita sfuma. E'
+ *    la stessa scelta dell'app (`caricamento.dart`, `calmo`).
  *  - **Il marchio di chi installa.** Le iniziali, le finestrelle e il Wi-Fi
  *    sono disegnati sul nostro logo: con il logo di un altro nel velo non si
  *    accendono, e resta il resto.
@@ -57,9 +67,9 @@
     }
   }
 
-  var fermo = false;
+  var calmo = false;
   try {
-    fermo = W.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    calmo = W.matchMedia("(prefers-reduced-motion: reduce)").matches;
   } catch (_e) {}
   /* Il nostro logo, quello che porta le iniziali: lo stesso di
    * `ponte/marchio/gdahome-velo.webp` e dell'app. */
@@ -273,14 +283,38 @@
     "§.gv-vivo>small{z-index:2;height:calc(18*" + u + ");animation:gvSu .5s 1.5s " + EOC + " both}",
     "§ small>span{position:absolute;left:0;right:0;top:0}",
     "§ small i{position:static;display:inline-block}",
-    /* Fermo: «riduci animazioni». */
-    "§.gv-fermo *:not(.gv-r){animation:none!important}",
-    "§.gv-fermo .gv-r{animation-duration:1ms!important}",
-    "§.gv-fermo .gv-ini,§.gv-fermo .gv-m,§.gv-fermo .gv-anello,§.gv-fermo .gv-g,§.gv-fermo .gv-lampo,§.gv-fermo .gv-onda{display:none!important}",
-    "§.gv-fermo .gv-raggi{opacity:.6}",
-    "§.gv-fermo .gv-alone>i{transform:scale(.951);opacity:.875}",
-    "§.gv-fermo>.s{display:block}",
-    "§.gv-fermo{transition:none}",
+    /* I tre punti che pulsano, al posto dell'anello quando si e' calmi: gli
+     * stessi tre colori e lo stesso posto dei punti del velo di riserva. */
+    "§ .gv-punti{display:none;z-index:2;left:calc(50% - 16.8*" +
+      u +
+      ");top:calc(50% + 91.9*" +
+      u +
+      ");width:calc(33.6*" +
+      u +
+      ");height:calc(7*" +
+      u +
+      ")}",
+    "§ .gv-punti>i{top:0;width:calc(7*" +
+      u +
+      ");height:calc(7*" +
+      u +
+      ");border-radius:50%;animation:gvPulsa 1.2s " +
+      EIOS +
+      " infinite both}",
+    "§ .gv-punti>i:nth-child(1){left:0;background:#3b82f6}",
+    "§ .gv-punti>i:nth-child(2){left:calc(13.3*" + u + ");background:var(--p);animation-delay:.2s}",
+    "§ .gv-punti>i:nth-child(3){right:0;background:#f6b85c;animation-delay:.4s}",
+    /* Calmo: «riduci animazioni». Via quello che si sposta, cresce o gira;
+     * resta quello che si accende e si spegne sul posto. */
+    "§.gv-calmo .gv-ini,§.gv-calmo .gv-anello,§.gv-calmo .gv-g,§.gv-calmo .gv-onda,§.gv-calmo>.s{display:none!important}",
+    "§.gv-calmo .gv-punti{display:block}",
+    "§.gv-calmo>img,§.gv-calmo>b,§.gv-calmo>small,§.gv-calmo b>span>span,§.gv-calmo .gv-m,§.gv-calmo .gv-rifl>i>i{animation:none}",
+    "§.gv-calmo .gv-alone>i{animation-name:gvRespiraCalmo}",
+    "§.gv-calmo .gv-raggi>i{animation:gvRaggiCalmi 2.4s " + EIOS + " infinite alternate}",
+    "§.gv-calmo .gv-lampo{animation:gvLampoCalmo 1.25s 1.2s both}",
+    "§.gv-calmo .gv-bag{animation:gvBaglioreCalmo 1s 1.2s both}",
+    "§.gv-calmo .gv-onde svg:nth-child(4){animation-name:gvArco3Calmo}",
+    "§.gv-calmo .gv-filo{animation-name:gvSu}",
     /* I tempi. */
     "@keyframes gvSu{from{opacity:0}}",
     "@keyframes gvRespira{from{transform:scale(.902);opacity:.75}}",
@@ -351,6 +385,27 @@
     "@keyframes gvLucido{0%{transform:translate(-120%,-120%);animation-timing-function:" +
       EIOS +
       "}17.71%,to{transform:translate(120%,120%)}}",
+    /* I tempi calmi: solo luce, niente movimento. Il lampo e il bagliore
+     * salgono piano invece che di scatto. */
+    "@keyframes gvRespiraCalmo{from{opacity:.75}}",
+    "@keyframes gvRaggiCalmi{from{opacity:.55}to{opacity:.9}}",
+    "@keyframes gvLampoCalmo{0%{opacity:0;animation-timing-function:" +
+      EO +
+      "}20%{opacity:1;animation-timing-function:" +
+      EOC +
+      "}to{opacity:0}}",
+    "@keyframes gvBaglioreCalmo{0%{opacity:0;animation-timing-function:" +
+      EO +
+      "}20%{opacity:1;animation-timing-function:" +
+      EOC +
+      "}to{opacity:0}}",
+    "@keyframes gvArco3Calmo{0%,42%{opacity:0;animation-timing-function:" +
+      EOS +
+      "}51.17%{opacity:.833;animation-timing-function:" +
+      EIS +
+      "}60.33%,to{opacity:0}}",
+    "@keyframes gvPulsa{0%,to{opacity:.3}50%{opacity:1}}",
+    "@keyframes gvVa{to{opacity:0}}",
   ]
     .join("\n")
     .replace(/§/g, "#cd-boot-overlay");
@@ -531,9 +586,13 @@
     fuori.className = "gv-r";
     dentro.className = "gv-r";
     dentro.textContent = righe[r];
+    /* Calmi, la riga cambia sfumando sul posto: senza salire. */
     if (r + 1 < righe.length && r + 1 < QUANDO.length)
-      fuori.style.animation = "gvEsce .45s " + QUANDO[r + 1] + "s " + EOC + " both";
-    if (r > 0) dentro.style.animation = "gvEntra .45s " + QUANDO[r] + "s " + EOC + " both";
+      fuori.style.animation =
+        (calmo ? "gvVa" : "gvEsce") + " .45s " + QUANDO[r + 1] + "s " + EOC + " both";
+    if (r > 0)
+      dentro.style.animation =
+        (calmo ? "gvSu" : "gvEntra") + " .45s " + QUANDO[r] + "s " + EOC + " both";
     fuori.appendChild(dentro);
     riga.appendChild(fuori);
   }
@@ -543,7 +602,8 @@
   img.parentNode.insertBefore(luci, img.nextSibling);
   o.insertBefore(riflesso, nome);
   o.insertBefore(filo, riga);
-  o.className += " gv-vivo" + (nostro ? " gv-nostro" : "") + (fermo ? " gv-fermo" : "");
+  o.insertBefore(pezzo("gv-punti", [pezzo(), pezzo(), pezzo()]), riga);
+  o.className += " gv-vivo" + (nostro ? " gv-nostro" : "") + (calmo ? " gv-calmo" : "");
 
   /* Un nome lungo non esce dallo schermo: si stringe, come nel Dart. */
   try {
@@ -565,7 +625,7 @@
   /* Il logo in alta risoluzione: quello dentro la pagina e' piccolo, per
    * arrivare col primo byte; su uno schermo fitto si vede. Quando c'e', si
    * cambia senza che si veda. */
-  if (nostro && !fermo) {
+  if (nostro) {
     var alto = new Image();
     alto.src = accanto("marchio.webp");
     var cambia = function () {
@@ -638,14 +698,16 @@
     }
     pz.immagine = new Image();
     pz.pronta = false;
-    (function (questo) {
-      var fatto = function () {
-        questo.pronta = true;
-      };
-      questo.immagine.src = accanto(questo.file);
-      if (questo.immagine.decode) questo.immagine.decode().then(fatto, function () {});
-      else questo.immagine.onload = fatto;
-    })(pz);
+    /* Calmi, le iniziali non si srotolano: non serve aprirle. */
+    if (!calmo)
+      (function (questo) {
+        var fatto = function () {
+          questo.pronta = true;
+        };
+        questo.immagine.src = accanto(questo.file);
+        if (questo.immagine.decode) questo.immagine.decode().then(fatto, function () {});
+        else questo.immagine.onload = fatto;
+      })(pz);
     pz.tela = D.createElement("canvas");
   }
 
@@ -834,7 +896,7 @@
     disegna(t);
     if (t < ACCENSIONE + 0.05) W.requestAnimationFrame(giro);
   }
-  if (!fermo) {
+  if (!calmo) {
     misura();
     W.addEventListener("resize", misura);
     W.requestAnimationFrame(giro);
@@ -922,7 +984,9 @@
    * quando l'uscita la fa lei, come prima. */
   function via() {
     if (esce && esce.via) return true;
-    if (fermo || !o.isConnected || o.getAttribute("data-state") === "error") return false;
+    /* Calmi, niente cerchio che si allarga: il velo lo sfuma la plancia, in
+     * un quarto di secondo. */
+    if (calmo || !o.isConnected || o.getAttribute("data-state") === "error") return false;
     if (!W.requestAnimationFrame) return false;
     uscita(0);
     esce.via = true;

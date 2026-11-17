@@ -3,8 +3,9 @@
 /// All'avvio si vedevano tre attese diverse: una rotella sola, «Casa · da
 /// fuori · Apro la plancia…», e il velo della plancia dentro la pagina. Qui
 /// si tiene fermo che l'attesa e' quella di gdahome, che si muove con un
-/// tempo solo anche quando cambia posto, che con «riduci animazioni» sta
-/// ferma, che parte dal colore della schermata d'avvio del sistema — e che
+/// tempo solo anche quando cambia posto, che con «riduci animazioni» e'
+/// calma ma viva (niente che si sposti, cresca o giri; luci che si accendono
+/// sul posto), che parte dal colore della schermata d'avvio del sistema — e che
 /// **non trattiene niente**: se ne va appena la cosa che aspetta e' pronta.
 library;
 
@@ -243,8 +244,13 @@ void main() {
     expect(find.text('Mi collego a casa…'), findsOneWidget);
   });
 
-  testWidgets('con «riduci animazioni» sta ferma: nessun fotogramma chiesto '
-      'di continuo, ma la riga cambia lo stesso', (tester) async {
+  testWidgets('con «riduci animazioni» è calma ma viva: niente che si '
+      'sposti, cresca o giri, ma i tre punti pulsano e la riga cambia', (
+    tester,
+  ) async {
+    /* La prova del titolare: su Windows con «Effetti di animazione» spenti
+     * Chrome chiede di ridurre le animazioni, e l'attesa ferma sembrava una
+     * plancia bloccata. */
     await tester.pumpWidget(
       _dentro(const CaricamentoDellaPlancia(nome: 'Casa Rossi'), fermo: true),
     );
@@ -255,11 +261,44 @@ void main() {
       findsNothing,
       reason: 'niente iniziali che si scrivono',
     );
-    expect(SchedulerBinding.instance.transientCallbackCount, 0);
-    await tester.pump(const Duration(seconds: 3));
-    await tester.pump();
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is CustomPaint && '${w.painter.runtimeType}' == '_Orbita',
+      ),
+      findsNothing,
+      reason: 'niente anello che gira, niente granelli in orbita',
+    );
+    double scalaDelMarchio() => tester
+        .widget<Transform>(
+          find.ancestor(of: _ilMarchio, matching: find.byType(Transform)).first,
+        )
+        .transform
+        .getMaxScaleOnAxis();
+    List<double> punti() => tester
+        .widgetList<Opacity>(
+          find.descendant(
+            of: find.byWidgetPredicate(
+              (w) => '${w.runtimeType}' == '_TrePunti',
+            ),
+            matching: find.byType(Opacity),
+          ),
+        )
+        .map((o) => o.opacity)
+        .toList();
+    expect(punti(), hasLength(3), reason: 'tre punti al posto dell\'anello');
+    final prima = punti();
+    expect(
+      SchedulerBinding.instance.transientCallbackCount,
+      greaterThan(0),
+      reason: 'il tempo scorre: non è una fotografia',
+    );
+    for (final dopo in const [300, 900, 1300]) {
+      await tester.pump(Duration(milliseconds: dopo));
+      expect(scalaDelMarchio(), 1, reason: 'il marchio non cresce né rimbalza');
+    }
+    expect(punti(), isNot(equals(prima)), reason: 'i punti pulsano');
+    await tester.pump(const Duration(seconds: 1));
     expect(find.text('Mi collego a casa…'), findsOneWidget);
-    expect(SchedulerBinding.instance.transientCallbackCount, 0);
   });
 
   group('l\'uscita', () {
@@ -322,10 +361,32 @@ void main() {
       expect(foro().clipBehavior, Clip.antiAlias, reason: 'il foro si apre');
     });
 
-    testWidgets('con «riduci animazioni» se ne va di colpo', (tester) async {
+    testWidgets('con «riduci animazioni» sfuma, senza aprire il cerchio', (
+      tester,
+    ) async {
       await tester.pumpWidget(banco(su: true, fermo: true));
       await tester.pump();
       await tester.pumpWidget(banco(su: false, fermo: true));
+      expect(laPlanciaSiTocca(tester), isTrue);
+      await tester.pump();
+      await tester.pump(UscitaDelCaricamento.quantoSfuma ~/ 2);
+      expect(find.byType(CaricamentoDellaPlancia), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(CaricamentoDellaPlancia),
+          matching: find.byType(ClipPath),
+        ),
+        findsNothing,
+        reason: 'nessun foro: sfuma',
+      );
+      final sfuma = tester.widget<FadeTransition>(
+        find.descendant(
+          of: find.byType(UscitaDelCaricamento),
+          matching: find.byType(FadeTransition),
+        ),
+      );
+      expect(sfuma.opacity.value, inExclusiveRange(0, 1));
+      await tester.pump(UscitaDelCaricamento.quantoSfuma);
       await tester.pump();
       expect(find.byType(CaricamentoDellaPlancia), findsNothing);
     });

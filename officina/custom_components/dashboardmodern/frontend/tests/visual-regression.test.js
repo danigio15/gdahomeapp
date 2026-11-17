@@ -86,9 +86,13 @@ const expectedTabs = [
  *
  * Questa impronta non e' una regola: e' una firma. Serve a far vedere che i
  * fogli si sono mossi, e chi la aggiorna deve sapere perche'. */
+// Rifatte quando dai due fogli e' uscita la vecchia rotella del velo
+// (`#cd-boot-overlay .s` e `cdBootSpin`): arrivando dopo, vestiva i tre punti
+// del velo calmo da anello schiacciato — l'«ellisse azzurra» nella prova del
+// titolare dentro Home Assistant.
 const vendoredCssSnapshots = {
-  "dashboard-runtime-it.css": "30834c7e5733e2d6200f848fa00c925d39ef254ed1a67ee568d35691d242df0c",
-  "dashboard-runtime-en.css": "00dbd938460f7c44c59254cb15084669779a6f8ee462912b66e983ce0f4d450f",
+  "dashboard-runtime-it.css": "c7161fe6901a5b848beae08b511c2928b48b424806b0464cc60236734dcb9719",
+  "dashboard-runtime-en.css": "54041cbfae8014aba2c60f7b4a8367be3d842fdb8fcc5871a5cfdc4bc4ab0565",
 };
 
 for (const file of ["dashboard.html", "dashboard-en.html"]) {
