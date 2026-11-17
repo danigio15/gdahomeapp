@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-GBBZBOSM.js";
+} from "../../chunk-3TVP6OSZ.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -168988,7 +168988,7 @@ async function caricaIlMotore() {
   const [THREE, caricatori, scena2] = await Promise.all([
     import(MOTORE.tre),
     import(MOTORE.caricatori),
-    import("../../scena-modello-CR4YVD7W.js")
+    import("../../scena-modello-VV7MPKD2.js")
   ]);
   return { THREE, caricatori, scena: scena2 };
 }
@@ -169905,7 +169905,7 @@ async function avviaLaScena(admin) {
   state193.caricando = true;
   state193.guasto = "";
   try {
-    const [THREE, { creaScena }] = await Promise.all([import(TRE), import("../../scena-YFO42AAS.js")]);
+    const [THREE, { creaScena }] = await Promise.all([import(TRE), import("../../scena-ELFNVKDG.js")]);
     const nodo4 = doc.getElementById(ID5);
     const posto = nodo4?.querySelector(".c3-posto");
     if (!posto) return;

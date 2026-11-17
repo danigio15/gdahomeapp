@@ -7,7 +7,7 @@ import {
 } from "./chunk-F3VEVFFR.js";
 import {
   installaLoStile
-} from "./chunk-LT3OFOIJ.js";
+} from "./chunk-AZEG3CXG.js";
 import {
   DISPOSITIVI_3D,
   azioneDelTocco,
