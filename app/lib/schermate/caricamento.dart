@@ -12,24 +12,28 @@
 ///
 /// ## Com'e' fatta
 ///
-/// Il primo secondo e mezzo e' uno spettacolo breve, poi l'attesa respira:
+/// I primi due secondi sono uno spettacolo breve, poi l'attesa respira:
 ///
-///  1. **Il marchio si disegna** (0–0,75 s): una lama di luce dorata gira
-///     attorno al centro come la lancetta di un orologio, e dove passa il
-///     marchio compare.
-///  2. **Si accende** (0,75 s): un lampo caldo, un'onda d'urto d'oro che si
+///  1. **Le iniziali si scrivono** (0–0,9 s): G, d e A, grandi, al centro,
+///     come nastri di luce — la G d'argento che va nel blu, la d d'argento,
+///     la A d'oro — tracciate da sole, una dopo l'altra, con una testa
+///     luminosa che corre lungo il tratto ([_Iniziali]).
+///  2. **Si fondono nel marchio** (0,9–1,2 s): accelerano verso il centro,
+///     si rimpiccioliscono fino alla misura delle lettere del marchio, e si
+///     posano ognuna dove sta nel disegno; sotto di loro il marchio compare.
+///  3. **Si accende** (1,2 s): un lampo caldo, un'onda d'urto d'oro che si
 ///     allarga, e il marchio fa un piccolo rimbalzo elastico. Dal lampo
 ///     escono i granelli di luce che poi gli girano attorno, davanti e
 ///     dietro, come attorno a un pianeta.
-///  3. **La casetta si sveglia** (0,95 s): le quattro finestrelle si
+///  4. **La casetta si sveglia** (1,4 s): le quattro finestrelle si
 ///     accendono una alla volta, e le onde del Wi-Fi partono in fila — il
 ///     puntino, il primo arco, il secondo, e un terzo che va oltre e sfuma:
 ///     il segnale verso casa. Si ripete piano finche' si aspetta.
-///  4. **Il nome della casa** entra lettera per lettera, con un filo d'oro
+///  5. **Il nome della casa** entra lettera per lettera, con un filo d'oro
 ///     sotto; attorno al marchio gira un anello di luce, blu in coda e oro in
 ///     testa, al posto della rotella; una riflessione del marchio sul
 ///     «pavimento» lucido; e sul fondo raggi lenti e un alone che respira.
-///  5. **Se ne va aprendosi** ([UscitaDelCaricamento]): un cerchio si apre
+///  6. **Se ne va aprendosi** ([UscitaDelCaricamento]): un cerchio si apre
 ///     dal centro del marchio, bordato d'oro, e rivela la plancia sotto.
 ///
 /// ## Le regole
@@ -46,10 +50,12 @@
 ///    marchio non c'e' ancora: si accende tutto da li', senza lampi.
 ///  - **«Riduci animazioni».** Con le animazioni spente dal sistema
 ///    ([MediaQuery.disableAnimationsOf]) si disegna fermo e pieno: niente
-///    lampi, niente granelli, tre punti al posto dell'anello, e l'uscita e'
-///    immediata. La riga sotto cambia lo stesso.
+///    lampi, niente iniziali che si scrivono, niente granelli, tre punti al
+///    posto dell'anello, e l'uscita e' immediata. La riga sotto cambia lo
+///    stesso.
 ///  - **Leggera.** Niente sfocature e niente shader scritti a mano: archi,
-///    cerchi e gradienti. Il fondo, il marchio e la sua riflessione stanno
+///    cerchi, gradienti, e le iniziali sono tracciati misurati una volta
+///    sola, di cui a ogni fotogramma si prende un pezzo. Il fondo, il marchio e la sua riflessione stanno
 ///    ognuno nel suo [RepaintBoundary]: finita l'entrata, il marchio non si
 ///    ridipinge piu', e a ogni fotogramma si ridisegnano solo i tratti di luce.
 ///
@@ -59,6 +65,7 @@ library;
 
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' show PathMetric;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -99,12 +106,15 @@ const _bluElettrico = Color(0xFF2563EB);
 const _oro = Color(0xFFF6B85C);
 const _oroChiaro = Color(0xFFFFDDA6);
 
-/* I tempi dello spettacolo, in secondi dall'inizio. */
-const _disegnoDa = 0.08;
-const _disegnoDura = 0.67;
-const _accensione = 0.75;
-const _finestreDa = 0.95;
-const _ondeDa = 1.3;
+/* I tempi dello spettacolo, in secondi dall'inizio. Le iniziali stanno
+ * tutte prima dell'accensione: al piu' 1,2 secondi prima del marchio. */
+const _inizialiDa = 0.08;
+const _passoIniziali = 0.14;
+const _scriveDura = 0.5;
+const _fondonoDa = 0.88;
+const _accensione = 1.2;
+const _finestreDa = 1.4;
+const _ondeDa = 1.75;
 const _respiro = 4.8;
 
 /// Le righe sotto, una dopo l'altra se l'attesa dura: quando cambiano, in
@@ -207,13 +217,16 @@ double _lampo(double t, double da, double sale, double scende) {
   return 1 - Curves.easeOutCubic.transform(_tra(t, da + sale, scende));
 }
 
-/// Quanto e' disegnato il marchio, da 0 a 1.
-double _disegnato(double t) =>
-    Curves.easeInOutCubic.transform(_tra(t, _disegnoDa, _disegnoDura));
+/// Quanto si vede il marchio: compare sotto le iniziali che arrivano.
+double _marchioAppare(double t) =>
+    _morbido(_tra(t, _fondonoDa + 0.16, _accensione - _fondonoDa - 0.16));
 
-/// La scala del marchio: piccolo mentre si disegna, poi il rimbalzo.
+/// La scala del marchio: cresce mentre le iniziali gli cadono dentro, poi il
+/// rimbalzo dell'accensione.
 double _scalaDelMarchio(double t) {
-  if (t < _accensione) return 0.9 + 0.02 * _disegnato(t);
+  if (t < _accensione) {
+    return 0.72 + 0.2 * _morbido(_tra(t, _fondonoDa, _accensione - _fondonoDa));
+  }
   final x = _tra(t, _accensione, 0.9);
   return 0.92 + 0.08 * const ElasticOutCurve(0.42).transform(x);
 }
@@ -227,9 +240,15 @@ class _Misure {
     /* Un telefono sdraiato e' basso: si stringe, che stia tutto. */
     if (schermo.height < 520) s = math.min(s, schermo.height / 520);
     scala = s;
+    larga = schermo.width;
   }
 
   late final double scala;
+  late final double larga;
+
+  /// L'altezza delle iniziali grandi: quasi quella del marchio, ma la parola
+  /// intera — 2,8 volte l'altezza — non passa i tre quarti dello schermo.
+  double get iniziali => math.min(logo * 0.92, larga * 0.74 / _GdA.larga);
   double get logo => 112 * scala;
   double get pavimento => logo * 0.06;
   double get riflesso => logo * 0.34;
@@ -507,37 +526,7 @@ class _Colonna extends StatelessWidget {
     );
 
     /* Il marchio, nel suo strato: finita l'entrata non si ridipinge piu'. */
-    final marchio = RepaintBoundary(
-      child: statico
-          ? Marchio(lato: m.logo)
-          : ValueListenableBuilder<double>(
-              valueListenable: tempo,
-              child: Marchio(lato: m.logo),
-              builder: (context, t, marchio) {
-                final quanto = _disegnato(t);
-                /* Finito il disegno la maschera se ne va, e lo strato resta
-                 * fermo: l'immagine e' gia' in memoria, e torna subito. */
-                if (quanto >= 1) return marchio!;
-                /* Si vede fin dove e' passata la lama di luce: un ventaglio
-                 * che si apre dalle dodici, in senso orario. */
-                return ShaderMask(
-                  blendMode: BlendMode.dstIn,
-                  shaderCallback: (r) => SweepGradient(
-                    center: Alignment.center,
-                    transform: const GradientRotation(-math.pi / 2),
-                    colors: const [
-                      Colors.white,
-                      Colors.white,
-                      Color(0x00FFFFFF),
-                      Color(0x00FFFFFF),
-                    ],
-                    stops: [0, math.max(0, quanto - 0.03), quanto, 1],
-                  ).createShader(r),
-                  child: marchio,
-                );
-              },
-            ),
-    );
+    final marchio = RepaintBoundary(child: Marchio(lato: m.logo));
 
     final luci = statico
         ? const SizedBox.shrink()
@@ -564,7 +553,8 @@ class _Colonna extends StatelessWidget {
         final filoQuanto = statico
             ? 1.0
             : _morbido(_tra(t, nomeDa + 0.25, 0.7));
-        final sotto = _morbido(_tra(pieno, 1.1, 0.5));
+        final sotto = _morbido(_tra(pieno, _accensione + 0.3, 0.5));
+        final appare = statico ? 1.0 : _marchioAppare(t);
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -592,7 +582,11 @@ class _Colonna extends StatelessWidget {
                     child: Stack(
                       clipBehavior: Clip.none,
                       fit: StackFit.expand,
-                      children: [marchio, luci],
+                      children: [
+                        /* Sotto le iniziali che arrivano compare il marchio. */
+                        Opacity(opacity: appare, child: marchio),
+                        luci,
+                      ],
                     ),
                   ),
                   if (!statico)
@@ -603,6 +597,17 @@ class _Colonna extends StatelessWidget {
                           scuro: scuro,
                           scala: m.scala,
                           davanti: true,
+                        ),
+                      ),
+                    ),
+                  /* Davanti a tutto: le iniziali, finche' non si fondono. */
+                  if (!statico && t < _accensione)
+                    RepaintBoundary(
+                      child: CustomPaint(
+                        painter: _Iniziali(
+                          tempo: tempo,
+                          scuro: scuro,
+                          alte: m.iniziali,
                         ),
                       ),
                     ),
@@ -1011,8 +1016,7 @@ class _Fondo extends CustomPainter {
       prima.tempo != tempo;
 }
 
-/// Quello che si accende sopra il marchio: la lama che lo disegna, il
-/// bagliore dell'accensione, le finestrelle, le onde della casetta e il
+/// Quello che si accende sopra il marchio: il bagliore dell'accensione, le finestrelle, le onde della casetta e il
 /// riflesso che lo attraversa.
 ///
 /// Le misure sono quelle del disegno (`assets/marchio/gda.png`, 384 pixel):
@@ -1035,57 +1039,10 @@ class _Luci extends CustomPainter {
       Offset.zero & size,
       Radius.circular(l * 0.22),
     );
-    _lama(canvas, size, forma, t);
     _bagliore(canvas, size, forma, t);
     _finestre(canvas, l, t);
     _onde(canvas, l, t);
     _riflesso(canvas, size, forma, t);
-  }
-
-  /// La lama di luce che gira e disegna il marchio.
-  void _lama(Canvas canvas, Size size, RRect forma, double t) {
-    final quanto = _disegnato(t);
-    if (t < _disegnoDa || quanto >= 1) return;
-    final svanisce = 1 - _tra(quanto, 0.85, 0.15);
-    final testa = quanto * 2 * math.pi;
-    const coda = 0.9;
-    canvas.save();
-    canvas.clipRRect(forma);
-    canvas.drawRect(
-      Offset.zero & size,
-      Paint()
-        ..blendMode = BlendMode.plus
-        ..shader = SweepGradient(
-          transform: GradientRotation(-math.pi / 2 + testa - coda),
-          endAngle: coda + 0.08,
-          colors: [
-            const Color(0x00FFC46B),
-            _oro.withValues(alpha: 0.35 * svanisce),
-            _oroChiaro.withValues(alpha: 0.95 * svanisce),
-            const Color(0x00FFFFFF),
-          ],
-          stops: const [0, 0.75, 0.92, 1],
-        ).createShader(Offset.zero & size),
-    );
-    canvas.restore();
-    /* La punta: una scintilla sul bordo, dove la lama sta disegnando. */
-    final c = size.center(Offset.zero);
-    final a = -math.pi / 2 + testa;
-    final punta = c + Offset(math.cos(a), math.sin(a)) * size.width * 0.5;
-    final rp = size.width * 0.09;
-    canvas.drawCircle(
-      punta,
-      rp,
-      Paint()
-        ..blendMode = scuro ? BlendMode.plus : BlendMode.srcOver
-        ..shader = RadialGradient(
-          colors: [
-            Colors.white.withValues(alpha: 0.95 * svanisce),
-            _oro.withValues(alpha: 0.45 * svanisce),
-            _oro.withValues(alpha: 0),
-          ],
-        ).createShader(Rect.fromCircle(center: punta, radius: rp)),
-    );
   }
 
   /// Il marchio che si accende: per un attimo brucia, poi si calma.
@@ -1263,6 +1220,244 @@ class _Luci extends CustomPainter {
   @override
   bool shouldRepaint(_Luci prima) =>
       prima.tempo != tempo || prima.scuro != scuro || prima.scala != scala;
+}
+
+/// Una delle iniziali, come tracciato da scrivere: in un quadrato alto uno,
+/// largo [larga], nell'ordine in cui la penna la scrive.
+class _Lettera {
+  _Lettera(this.larga, Path tracciato)
+    : tratti = tracciato.computeMetrics().toList() {
+    lunga = tratti.fold(0, (somma, tratto) => somma + tratto.length);
+  }
+
+  final double larga;
+  final List<PathMetric> tratti;
+  late final double lunga;
+
+  /// Il pezzo scritto fino a [quanto] (da 0 a 1), e dove sta la penna.
+  (Path, Offset?) finoA(double quanto) {
+    final scritto = Path();
+    var resta = quanto.clamp(0.0, 1.0) * lunga;
+    Offset? penna;
+    for (final tratto in tratti) {
+      if (resta <= 0) break;
+      final qui = math.min(resta, tratto.length);
+      scritto.addPath(tratto.extractPath(0, qui), Offset.zero);
+      if (qui < tratto.length) {
+        penna = tratto.getTangentForOffset(qui)?.position;
+      }
+      resta -= qui;
+    }
+    return (scritto, penna);
+  }
+}
+
+/// Le tre iniziali del marchio, G, d, A: tracciati a una linea sola, come le
+/// scriverebbe una penna di luce. Misurati una volta sola, all'inizio.
+abstract final class _GdA {
+  /* Lo spazio fra una lettera e l'altra, e quanto e' larga la parola. */
+  static const spazio = 0.16;
+  static double get larga =>
+      lettere.fold(0.0, (somma, l) => somma + l.larga) +
+      spazio * (lettere.length - 1);
+
+  static final List<_Lettera> lettere = [
+    /* La G: un cerchio quasi chiuso da in alto a destra, in senso
+     * antiorario, poi giu' e dentro col trattino. */
+    _Lettera(
+      0.9,
+      Path()
+        ..addArc(
+          Rect.fromCircle(center: const Offset(0.45, 0.5), radius: 0.45),
+          -0.62,
+          -(2 * math.pi - 1.08),
+        )
+        ..lineTo(0.88, 0.53)
+        ..lineTo(0.52, 0.53),
+    ),
+    /* La d: la pancia, in senso antiorario dalla destra, poi l'asta dall'alto
+     * in giu'. */
+    _Lettera(
+      0.72,
+      Path()
+        ..addArc(
+          Rect.fromCircle(center: const Offset(0.33, 0.66), radius: 0.32),
+          0,
+          -2 * math.pi + 0.001,
+        )
+        ..moveTo(0.66, 0)
+        ..lineTo(0.66, 1),
+    ),
+    /* La A: su e giu', poi la traversa. */
+    _Lettera(
+      0.86,
+      Path()
+        ..moveTo(0, 1)
+        ..lineTo(0.43, 0)
+        ..lineTo(0.86, 1)
+        ..moveTo(0.18, 0.64)
+        ..lineTo(0.68, 0.64),
+    ),
+  ];
+
+  /// Dove ognuna si posa dentro il marchio — il centro, rispetto al centro
+  /// del marchio, in lati del marchio — e quanto e' alta li'.
+  static const arrivi = [
+    Offset(-0.22, 0.06),
+    Offset(-0.03, 0.0),
+    Offset(0.2, 0.06),
+  ];
+  static const altaArrivata = 0.42;
+}
+
+/// Le iniziali che si scrivono e poi si fondono nel marchio.
+///
+/// Ognuna si scrive col suo colore — la G d'argento che va nel blu, la d
+/// d'argento, la A d'oro come nel marchio — con un alone largo e tenue sotto
+/// il tratto, e una testa luminosa dove sta la penna. Scritte tutte e tre,
+/// accelerano verso il centro rimpicciolendo, ognuna verso il punto dove sta
+/// nel disegno, e svaniscono dentro il marchio che compare: il lampo
+/// dell'accensione e' il momento in cui ci entrano.
+class _Iniziali extends CustomPainter {
+  _Iniziali({required this.tempo, required this.scuro, required this.alte})
+    : super(repaint: tempo);
+
+  final ValueNotifier<double> tempo;
+  final bool scuro;
+
+  /// Quanto sono alte le iniziali grandi.
+  final double alte;
+
+  List<Color> _colori(int quale) => switch ((quale, scuro)) {
+    (0, true) => const [Color(0xFFDCE8FF), Color(0xFF4F8BFF)],
+    (1, true) => const [Color(0xFFFFFFFF), Color(0xFFB8C4D6)],
+    (_, true) => const [Color(0xFFFFE2B0), Color(0xFFEFA445)],
+    (0, false) => const [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
+    (1, false) => const [Color(0xFF334155), Color(0xFF7C8BA1)],
+    (_, false) => const [Color(0xFFE8A13E), Color(0xFFC77812)],
+  };
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final t = tempo.value;
+    if (t >= _accensione) return;
+    final l = size.shortestSide;
+    final c = size.center(Offset.zero);
+    /* Quanto sono gia' andate verso il marchio: accelerano entrando. */
+    final dentro = Curves.easeInCubic.transform(
+      _tra(t, _fondonoDa, _accensione - _fondonoDa),
+    );
+    final larga = _GdA.larga * alte;
+    var x = c.dx - larga / 2;
+    for (var i = 0; i < _GdA.lettere.length; i += 1) {
+      final lettera = _GdA.lettere[i];
+      final scrive = Curves.easeInOutSine.transform(
+        _tra(t, _inizialiDa + i * _passoIniziali, _scriveDura),
+      );
+      final grande = Offset(x + lettera.larga * alte / 2, c.dy);
+      x += (lettera.larga + _GdA.spazio) * alte;
+      if (scrive <= 0) continue;
+      /* Dalla parola grande al suo posto nel marchio. */
+      final arrivo = c + _GdA.arrivi[i] * l;
+      final dove = Offset.lerp(grande, arrivo, dentro)!;
+      final u = alte + (l * _GdA.altaArrivata - alte) * dentro;
+      final svanisce = 1 - _tra(dentro, 0.35, 0.6);
+      /* Scritte tutte e tre, un luccichio le percorre da sinistra. */
+      final luccica = _gobba(t, _fondonoDa - 0.1 + i * 0.05, 0.22);
+      if (svanisce <= 0) continue;
+      final (scritto, penna) = lettera.finoA(scrive);
+      final colori = _colori(i);
+
+      canvas.save();
+      canvas.translate(dove.dx - lettera.larga * u / 2, dove.dy - u / 2);
+      canvas.scale(u);
+      final rettangolo = Rect.fromLTWH(0, 0, lettera.larga, 1);
+      /* L'alone sotto il tratto, in tre passate sempre piu' strette: sfuma
+       * come una luce, non come un tubo. Piu' forte mentre entrano nel
+       * marchio. */
+      final alone = (scuro ? 1.0 : 0.55) * (1 + dentro + luccica) * svanisce;
+      for (final (largo, alfa) in const [
+        (0.30, 0.05),
+        (0.2, 0.08),
+        (0.13, 0.14),
+      ]) {
+        canvas.drawPath(
+          scritto,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeCap = StrokeCap.round
+            ..strokeJoin = StrokeJoin.round
+            ..strokeWidth = largo
+            ..blendMode = scuro ? BlendMode.plus : BlendMode.srcOver
+            ..color = colori.last.withValues(alpha: alfa * alone),
+        );
+      }
+      canvas.drawPath(
+        scritto,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round
+          ..strokeWidth = 0.085
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              colori.first.withValues(alpha: svanisce),
+              colori.last.withValues(alpha: svanisce),
+            ],
+          ).createShader(rettangolo),
+      );
+      /* Un filo di luce dentro il nastro: lo fa sembrare di metallo. */
+      if (scuro) {
+        canvas.drawPath(
+          scritto,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeCap = StrokeCap.round
+            ..strokeJoin = StrokeJoin.round
+            ..strokeWidth = 0.022
+            ..blendMode = BlendMode.plus
+            ..color = Colors.white.withValues(
+              alpha: (0.45 + 0.5 * luccica) * svanisce,
+            ),
+        );
+      } else if (luccica > 0) {
+        canvas.drawPath(
+          scritto,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeCap = StrokeCap.round
+            ..strokeJoin = StrokeJoin.round
+            ..strokeWidth = 0.03
+            ..color = Colors.white.withValues(alpha: 0.7 * luccica * svanisce),
+        );
+      }
+      /* La testa: dove sta scrivendo la penna. */
+      if (penna != null) {
+        const rp = 0.16;
+        canvas.drawCircle(
+          penna,
+          rp,
+          Paint()
+            ..blendMode = scuro ? BlendMode.plus : BlendMode.srcOver
+            ..shader = RadialGradient(
+              colors: [
+                Colors.white.withValues(alpha: scuro ? 0.95 : 0.9),
+                _oro.withValues(alpha: 0.5),
+                _oro.withValues(alpha: 0),
+              ],
+              stops: const [0, 0.35, 1],
+            ).createShader(Rect.fromCircle(center: penna, radius: rp)),
+        );
+      }
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(_Iniziali prima) =>
+      prima.tempo != tempo || prima.scuro != scuro || prima.alte != alte;
 }
 
 /// Un granello di luce in orbita: sempre lo stesso, da un seme.

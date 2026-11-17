@@ -34,12 +34,18 @@ Widget _dentro(
 /// Il marchio vero: il primo. Il secondo e' la sua riflessione.
 Finder get _ilMarchio => find.byType(Marchio).first;
 
-/// Se il marchio si sta ancora disegnando: sopra ha la maschera della lama
-/// di luce. Disegnato tutto, la maschera non c'e' piu'.
-bool _siStaDisegnando(WidgetTester tester) => find
-    .ancestor(of: _ilMarchio, matching: find.byType(ShaderMask))
-    .evaluate()
-    .isNotEmpty;
+/// Quanto si vede il marchio: compare sotto le iniziali che gli arrivano
+/// addosso.
+double _marchio(WidgetTester tester) => tester
+    .widget<Opacity>(
+      find.ancestor(of: _ilMarchio, matching: find.byType(Opacity)).first,
+    )
+    .opacity;
+
+/// Le iniziali G, d, A che si scrivono, se ci sono.
+Finder get _leIniziali => find.byWidgetPredicate(
+  (w) => w is CustomPaint && '${w.painter.runtimeType}' == '_Iniziali',
+);
 
 void main() {
   setUp(ripartiLAttesa);
@@ -58,7 +64,9 @@ void main() {
       ),
     );
     await tester.pump();
-    await tester.pump(const Duration(seconds: 2));
+    /* Il nome entra dopo il lampo, lettera per lettera; la riga cambia ai
+     * due secondi e mezzo. */
+    await tester.pump(const Duration(milliseconds: 2300));
     expect(find.text('DASHBOARDMODERN'), findsNothing);
     expect(find.byType(Marchio), findsWidgets);
     expect(find.text('Caricamento…'), findsOneWidget);
@@ -67,17 +75,20 @@ void main() {
     expect(find.textContaining('plancia…'), findsNothing);
   });
 
-  testWidgets('il primo fotogramma è il fondo pieno della schermata d\'avvio: '
-      'il marchio si disegna da lì, e in tre quarti di secondo c\'è', (
-    tester,
-  ) async {
+  testWidgets('il primo fotogramma è il fondo pieno della schermata d\'avvio; '
+      'poi si scrivono le iniziali, e in un secondo e un quarto c\'è il '
+      'marchio', (tester) async {
     await tester.pumpWidget(_dentro(const CaricamentoDellaPlancia()));
-    expect(_siStaDisegnando(tester), isTrue, reason: 'al tempo zero non c\'è');
+    expect(_marchio(tester), 0, reason: 'al tempo zero non c\'è niente');
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(_siStaDisegnando(tester), isTrue);
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(_siStaDisegnando(tester), isFalse);
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(_leIniziali, findsOneWidget, reason: 'G, d, A si scrivono');
+    expect(_marchio(tester), 0, reason: 'prima le iniziali, poi il marchio');
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(_marchio(tester), inExclusiveRange(0, 1), reason: 'ci entrano');
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(_marchio(tester), 1);
+    expect(_leIniziali, findsNothing, reason: 'si sono fuse nel marchio');
   });
 
   testWidgets('il fondo è quello della schermata d\'avvio, chiaro e scuro', (
@@ -227,7 +238,8 @@ void main() {
         ),
       ),
     );
-    expect(_siStaDisegnando(tester), isFalse, reason: 'non si ridisegna');
+    expect(_marchio(tester), 1, reason: 'il marchio non rientra');
+    expect(_leIniziali, findsNothing, reason: 'le iniziali non si riscrivono');
     expect(find.text('Mi collego a casa…'), findsOneWidget);
   });
 
@@ -237,7 +249,12 @@ void main() {
       _dentro(const CaricamentoDellaPlancia(nome: 'Casa Rossi'), fermo: true),
     );
     await tester.pump();
-    expect(_siStaDisegnando(tester), isFalse, reason: 'c\'è già, intero');
+    expect(_marchio(tester), 1, reason: 'c\'è già, intero');
+    expect(
+      _leIniziali,
+      findsNothing,
+      reason: 'niente iniziali che si scrivono',
+    );
     expect(SchedulerBinding.instance.transientCallbackCount, 0);
     await tester.pump(const Duration(seconds: 3));
     await tester.pump();
@@ -272,7 +289,8 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
       expect(laPlanciaSiTocca(tester), isFalse, reason: 'l\'attesa copre');
-      expect(_siStaDisegnando(tester), isTrue, reason: 'sta ancora entrando');
+      expect(_leIniziali, findsOneWidget, reason: 'le iniziali si scrivono');
+      expect(_marchio(tester), 0, reason: 'il marchio non c\'è ancora');
 
       await tester.pumpWidget(banco(su: false));
       expect(

@@ -328,11 +328,14 @@ void main() {
          * i fotogrammi chiave nei momenti dello spettacolo. */
         const chiave = {
           0: '0-inizio',
-          11: '1-si-disegna',
-          24: '2-lampo',
-          35: '3-finestre',
-          60: '4-pieno',
-          96: '5-mi-collego',
+          9: '1-la-g-si-scrive',
+          19: '2-la-d-e-la-a',
+          27: '3-iniziali-scritte',
+          33: '4-si-fondono',
+          39: '5-lampo',
+          48: '6-finestre',
+          75: '7-pieno',
+          96: '8-mi-collego',
         };
         const passo = Duration(microseconds: 33333);
         var n = 0;
@@ -366,7 +369,7 @@ void main() {
             await _scatta(
               tester,
               cornice,
-              '$_cartella/caricamento-$dove-6-uscita.png',
+              '$_cartella/caricamento-$dove-9-uscita.png',
               schermo.value.densita,
             );
           }
@@ -375,7 +378,7 @@ void main() {
         await _scatta(
           tester,
           cornice,
-          '$_cartella/caricamento-$dove-7-plancia.png',
+          '$_cartella/caricamento-$dove-10-plancia.png',
           schermo.value.densita,
         );
         expect(find.byType(CaricamentoDellaPlancia), findsNothing);
@@ -392,7 +395,7 @@ void main() {
         await _scatta(
           tester,
           cornice,
-          '$_cartella/caricamento-$dove-8-quasi-pronto.png',
+          '$_cartella/caricamento-$dove-11-quasi-pronto.png',
           schermo.value.densita,
         );
         await tester.pumpWidget(const SizedBox());
