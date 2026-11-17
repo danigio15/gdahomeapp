@@ -31961,8 +31961,8 @@ return A.f(a.vR(),$async$anm)
 case 4:p=c
 o=t.N
 o=A.x(o,o)
-o.m(0,"app","1.19.9")
-o.m(0,"costruzione","1190900")
+o.m(0,"app","1.19.10")
+o.m(0,"costruzione","1191000")
 if(p.length!==0)o.m(0,"proprietario",p)
 q=o
 s=1
@@ -35097,7 +35097,7 @@ else h.m(0,"chi",b)
 h.m(0,"apertura",B.e5.glY().bj(m))
 h.m(0,"mia",B.e5.glY().bj(l))
 h.m(0,"mucchio",!0)
-h.m(0,"app",1190900)
+h.m(0,"app",1191e3)
 h.m(0,"lega",1)
 p=B.al.j3(h,null)
 g.aqu(new A.bfF(o,e,g,n,m,c,d,p))
@@ -121593,7 +121593,7 @@ q=q.ai(p==null?m.k3:p)}p=t.p
 q=A.b6(A.aj(A.a([k,B.Qt,s,B.aS,A.r(r,o,o,o,o,q,B.aq,o,o)],p),B.o,o,B.dx,B.i,0,B.k),1)
 r=A.hK(o,o,B.kA,o,o,o,o)
 k=A.iA(B.zq,o,A.r(l===B.W?A.c("Update from the App Store","Aggiorna dall'App Store"):A.c("Update from Google Play","Aggiorna dal Play Store"),o,o,o,o,o,o,o,o),new A.aGb(this),r)
-s=A.c("This is 1.19.9 (1190900)","Questa \xe8 la 1.19.9 (1190900)")
+s=A.c("This is 1.19.10 (1191000)","Questa \xe8 la 1.19.10 (1191000)")
 r=n.Q
 if(r==null)l=o
 else{l=m.rx
@@ -127787,7 +127787,7 @@ i=t.N
 i=A.x(i,i)
 h=g
 if(h!=null)h.b_K()
-i.m(0,"app","1.19.9")
+i.m(0,"app","1.19.10")
 if(k.length!==0)i.m(0,"proprietario",k)
 q=new A.ahy(i,j.a)
 s=1
@@ -129190,9 +129190,9 @@ else{l=a5.rx
 l=n.ai(l==null?a5.k3:l)}l=A.r(o,a4,a4,a4,a4,l,a4,a4,a4)
 o=a6.w
 k=A.r(A.c("This app","Questa app"),a4,a4,a4,a4,o,a4,a4,a4)
-j=p.$2(A.c("Version","Versione"),"1.19.9 (1190900)")
+j=p.$2(A.c("Version","Versione"),"1.19.10 (1191000)")
 i=A.c("Package","Pacchetto")
-i=p.$2(i,"100-4e64f0b")
+i=p.$2(i,"101-a6ad0c7")
 h=A.c("Relay","Centralino")
 g=t.p
 h=A.aj(A.a([k,B.bu,j,i,p.$2(h,$.aob()==null?A.c("none","nessuno"):"GdAHome")],g),B.t,a4,B.f,B.i,0,B.k)
@@ -129322,7 +129322,7 @@ A.IH.prototype={
 A(a){var s,r=null,q=A.u(a).ax,p=A.u(a).ok.Q
 if(p==null)p=r
 else{s=q.rx
-p=p.y9((s==null?q.k3:s).cP(0.7),11)}return new A.ak(new A.Y(0,this.c,0,0),A.r("GdAHome 1.19.9 (1190900)",r,r,r,r,p,B.aq,r,r),r)}}
+p=p.y9((s==null?q.k3:s).cP(0.7),11)}return new A.ak(new A.Y(0,this.c,0,0),A.r("GdAHome 1.19.10 (1191000)",r,r,r,r,p,B.aq,r,r),r)}}
 A.J7.prototype={
 ad(){var s=$.am()
 return new A.QP(new A.bC(null,t.Pq),new A.bC(null,t.dS),B.cS,new A.bC(null,t.b7),new A.cp(!1,s),new A.cp(!1,s))}}
@@ -129477,7 +129477,7 @@ else s=!0
 return s},
 atA(){var s,r,q=null,p=this.a.c,o=t.N
 o=A.x(o,o)
-o.m(0,"app","100-4e64f0b")
+o.m(0,"app","101-a6ad0c7")
 o.m(0,"sistema","web")
 s=p.k1
 s=s==null?q:s.b
