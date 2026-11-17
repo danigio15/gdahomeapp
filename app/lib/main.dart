@@ -1040,12 +1040,13 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     if (!_pronto) {
-      /* La prima attesa e' gia' quella della plancia: lo stesso velo che
-       * verra' dopo, nello stesso punto, invece di una rotella sola su un
-       * fondo di un altro colore (schermate/caricamento.dart). */
+      /* La prima attesa e' gia' quella della plancia: la stessa che
+       * continua dopo, nello stesso punto e con lo stesso tempo, sul fondo
+       * della schermata d'avvio del sistema (schermate/caricamento.dart). */
       return Scaffold(
         body: CaricamentoDellaPlancia(
           inFondo: MediaQuery.viewPaddingOf(context).bottom,
+          nome: _collegamento.casa?.nome,
         ),
       );
     }

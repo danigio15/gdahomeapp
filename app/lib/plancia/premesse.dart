@@ -44,6 +44,12 @@ const String ilMenuDalRiquadro = 'menu';
 /// mezzo: non e' il nome di nessuna linguetta, e non potra' esserlo.
 const String laPlanciaSiVede = 'gdahome:si-vede';
 
+/// Come la pagina dice all'app che davanti ha il suo velo d'avvio, e che
+/// [laPlanciaSiVede] arrivera' quando quel velo se ne va: vedi
+/// [Premesse.laPrimaSchermata]. Una pagina che non lo dice si scopre al suo
+/// `load`, come sempre.
+const String laPlanciaHaIlSuoVelo = 'gdahome:ha-il-velo';
+
 /// Un valore scritto come JavaScript, **dentro uno `<script>`**.
 ///
 /// `jsonEncode` da solo non basta: fa una stringa giusta per JavaScript, ma
@@ -825,39 +831,81 @@ class Premesse {
 
   /// La pagina dice all'app quando la sua prima schermata c'e'.
   ///
-  /// Sopra il riquadro l'app tiene un velo suo — «Apro la plancia…» — e lo
-  /// toglieva solo quando il WebView diceva «pagina finita». Quel «finita» e'
-  /// il `load` della pagina, che aspetta **tutto**: i trecento moduli delle
-  /// sezioni che la pagina si fa portare avanti ma usa dopo, i caratteri, e
-  /// ogni immagine — le foto di casa e le istantanee delle telecamere, che da
-  /// fuori passano dal centralino una per una. Erano secondi di rotella sopra
-  /// una plancia che intanto era gia' in piedi.
+  /// Sopra il riquadro l'app tiene la sua attesa (`schermate/caricamento.dart`)
+  /// e la toglieva solo quando il WebView diceva «pagina finita». Quel
+  /// «finita» e' il `load` della pagina, che aspetta **tutto**: i trecento
+  /// moduli delle sezioni che la pagina si fa portare avanti ma usa dopo, i
+  /// caratteri, e ogni immagine — le foto di casa e le istantanee delle
+  /// telecamere, che da fuori passano dal centralino una per una.
   ///
-  /// Quindi la pagina lo dice a `DOMContentLoaded`: il documento e' intero e
-  /// i suoi script sono girati, e davanti c'e' il velo della plancia —
-  /// `cd-boot-overlay`, il primo pezzo del corpo, col logo, la rotella e la
-  /// parola di chi ha montato l'impianto ([leVesti]) — che e' fatto apposta
-  /// per coprire la pagina finche' la plancia non e' pronta. Non prima: quel
-  /// velo prende il suo colore da uno script che viene dopo di lui, e
-  /// scoprirlo appena dipinto vorrebbe dire, a chi ha la plancia scura, un
-  /// lampo chiaro. Lo dice sul canale del telefono ([laPlanciaSiVede]), una
-  /// volta sola; il `load` resta il ripiego dell'app, e sotto a tutti e due
-  /// c'e' una scadenza (`schermate/plancia_vera.dart`).
+  /// Davanti alla pagina pero' c'e' il velo della plancia, `cd-boot-overlay`
+  /// — il primo pezzo del corpo, col logo, una rotella e una parola — fatto
+  /// apposta per coprirla finche' la plancia non e' pronta: i moduli
+  /// installati, il vestito arrivato, la casa che ha risposto. Se l'attesa
+  /// dell'app se ne andasse prima, si vedrebbero due attese di seguito, e la
+  /// seconda e' quella vecchia. Quindi:
+  ///
+  ///  - a `DOMContentLoaded`, se il velo della pagina c'e', la pagina lo dice
+  ///    ([laPlanciaHaIlSuoVelo]) e lo guarda: quando sfuma (la plancia lo
+  ///    porta a opacita' zero, poi lo toglie), quando sparisce, o quando
+  ///    diventa l'errore del cane da guardia, dice [laPlanciaSiVede]. L'app
+  ///    sfuma la sua nello stesso momento, e sotto c'e' la plancia pronta.
+  ///    Non un attimo dopo: l'attesa dura quanto il velo della pagina, che
+  ///    ha le sue scadenze (otto secondi per i moduli, dieci per l'errore).
+  ///  - se il velo non c'e', o se n'e' gia' andato, dice [laPlanciaSiVede]
+  ///    subito, come prima.
+  ///
+  /// Il velo si guarda con un `MutationObserver` e, sotto, un controllo ogni
+  /// 150 millisecondi: una plancia che lo nasconde con una classe invece che
+  /// con lo stile non deve tenere su l'attesa. Lo dice sul canale del
+  /// telefono, una volta sola; il `load` resta il ripiego dell'app per le
+  /// pagine che non dicono niente, e sotto a tutto c'e' una scadenza
+  /// (`schermate/plancia_vera.dart`).
   ///
   /// Sta **in testa**, nello script delle premesse, perche' ascolti da
   /// subito. Nel browser non dice niente: `gdahomeDice` li' non c'e', e il
   /// velo dell'app nemmeno.
   static const String laPrimaSchermata =
       '(function(){'
-      'var detto=false;'
-      'var dico=function(){'
-      'if(detto)return;detto=true;'
+      'var detto=false,guardato=false;'
+      'var di=function(m){'
       'try{if(window.gdahomeDice&&window.gdahomeDice.postMessage)'
-      'window.gdahomeDice.postMessage("$laPlanciaSiVede");}catch(male){}'
+      'window.gdahomeDice.postMessage(m);}catch(male){}'
+      '};'
+      'var dico=function(){'
+      'if(detto)return;detto=true;di("$laPlanciaSiVede");'
+      '};'
+      'var via=function(v){'
+      'if(v.isConnected===false)return true;'
+      'if(v.dataset&&v.dataset.state==="error")return true;'
+      'if(v.style&&v.style.opacity==="0")return true;'
+      'try{var c=getComputedStyle(v);'
+      'if(c.display==="none"||c.visibility==="hidden"||c.opacity==="0")'
+      'return true;}catch(male){}'
+      'return false;'
+      '};'
+      'var guarda=function(){'
+      'if(guardato)return;guardato=true;'
+      'var v=null;'
+      'try{v=document.getElementById("cd-boot-overlay");}catch(male){}'
+      'if(!v||via(v)){dico();return;}'
+      'di("$laPlanciaHaIlSuoVelo");'
+      'var o=null,ogni=0;'
+      'var prova=function(){'
+      'if(detto||!via(v))return;'
+      'try{if(o)o.disconnect();}catch(male){}'
+      'clearInterval(ogni);dico();'
+      '};'
+      'try{o=new MutationObserver(prova);'
+      'o.observe(v,{attributes:true,'
+      'attributeFilter:["style","class","data-state","hidden"]});'
+      'if(v.parentNode)o.observe(v.parentNode,{childList:true});'
+      '}catch(male){}'
+      'ogni=setInterval(prova,150);'
       '};'
       'if(document.readyState==="loading")'
-      'document.addEventListener("DOMContentLoaded",dico);'
-      'else dico();'
+      'document.addEventListener("DOMContentLoaded",guarda);'
+      'else guarda();'
       '})();';
 
   /// La pagina dice all'app il colore del suo fondo, e lo ridice quando

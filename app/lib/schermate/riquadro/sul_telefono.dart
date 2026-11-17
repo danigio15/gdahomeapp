@@ -22,7 +22,8 @@ import '../../casa/fuori.dart';
 import '../../casa/la_finestra.dart' show permessoDelMicrofono;
 import '../../casa/lo_schermo.dart';
 import '../../plancia/il_fondo.dart';
-import '../../plancia/premesse.dart' show ilMenuDalTelefono, laPlanciaSiVede;
+import '../../plancia/premesse.dart'
+    show ilMenuDalTelefono, laPlanciaHaIlSuoVelo, laPlanciaSiVede;
 import '../../parole.dart';
 import '../da_parte.dart' show planciaCopertaDelTutto;
 import 'biglietto.dart';
@@ -46,7 +47,9 @@ import 'pagine.dart';
 ///
 /// [quandoCaricata] e' la pagina finita — il `load`, che aspetta tutto — e
 /// [quandoSiVede] la sua prima schermata, che la pagina dice da se' molto
-/// prima (`Premesse.laPrimaSchermata`).
+/// prima (`Premesse.laPrimaSchermata`). [quandoHaIlVelo] dice che davanti
+/// alla pagina c'e' il suo velo d'avvio, e che [quandoSiVede] arrivera'
+/// quando se ne va.
 WebViewController costruisciIlControllore({
   required void Function() quandoCaricata,
   required void Function(String perche) quandoFallisce,
@@ -58,6 +61,7 @@ WebViewController costruisciIlControllore({
   void Function(String pagina)? quandoCambiaPagina,
   void Function()? quandoChiedeIlMenu,
   void Function()? quandoSiVede,
+  void Function()? quandoHaIlVelo,
   void Function(String foto)? quandoFotografaLaCasa,
   void Function(String persona)? quandoApreLaPersona,
   void Function()? quandoSiPerdeLaPagina,
@@ -195,6 +199,10 @@ WebViewController costruisciIlControllore({
           }
           if (detto == laPlanciaSiVede) {
             quandoSiVede?.call();
+            return;
+          }
+          if (detto == laPlanciaHaIlSuoVelo) {
+            quandoHaIlVelo?.call();
             return;
           }
           /* Il fondo della plancia: lo prende il WebView, che sotto la

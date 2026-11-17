@@ -72,6 +72,67 @@ process.stdout.write(JSON.stringify({ quante, detti }));
   );
 }
 
+/// Fa girare lo script in un documento finto che ha davanti il velo della
+/// plancia, e torna cosa ha detto la pagina dopo ogni passo: a
+/// `DOMContentLoaded`, poi dopo che [comeSeNeVa] — un pezzo di programma su
+/// `velo` — ha fatto andare via il velo e il controllo periodico e' passato.
+Future<List<List<String>>> _giraColVelo({
+  required String comeSeNeVa,
+  bool conObserver = true,
+}) async {
+  final copione =
+      '''
+const copione = ${jsonEncode(Premesse.laPrimaSchermata)};
+const detti = [];
+const ascolti = {};
+const osservatori = [];
+const ogni = [];
+const velo = {
+  isConnected: true,
+  dataset: {},
+  style: {},
+  parentNode: {},
+};
+const finestra = { gdahomeDice: { postMessage: (m) => detti.push(String(m)) } };
+const documento = {
+  readyState: "loading",
+  addEventListener: (nome, f) => { (ascolti[nome] ||= []).push(f); },
+  getElementById: (id) => id === "cd-boot-overlay" ? velo : null,
+};
+function Osservatore(f) { this.f = f; this.spento = false; osservatori.push(this); }
+Osservatore.prototype.observe = function () {};
+Osservatore.prototype.disconnect = function () { this.spento = true; };
+const passi = [];
+new Function(
+  "window", "document", "MutationObserver", "getComputedStyle",
+  "setInterval", "clearInterval", copione,
+)(
+  finestra, documento, ${conObserver ? 'Osservatore' : 'undefined'},
+  (v) => ({ display: v.style.display || "flex", visibility: "visible", opacity: v.style.opacity || "1" }),
+  (f) => { ogni.push(f); return ogni.length; },
+  (n) => { ogni[n - 1] = null; },
+);
+(ascolti.DOMContentLoaded || []).forEach((f) => f());
+passi.push([...detti]);
+/* Il controllo periodico, prima che il velo se ne vada: non dice niente. */
+ogni.forEach((f) => f && f());
+passi.push([...detti]);
+$comeSeNeVa;
+osservatori.forEach((o) => !o.spento && o.f());
+ogni.forEach((f) => f && f());
+passi.push([...detti]);
+ogni.forEach((f) => f && f());
+passi.push([...detti]);
+process.stdout.write(JSON.stringify(passi));
+''';
+  final fatto = await Process.run('node', ['-e', copione]);
+  expect(fatto.exitCode, 0, reason: '${fatto.stderr}');
+  return [
+    for (final passo in jsonDecode(fatto.stdout as String) as List)
+      [for (final d in passo as List) d as String],
+  ];
+}
+
 void main() {
   test('la parola non è il nome di una pagina, e nemmeno quella del menu', () {
     /* Passa sullo stesso canale dei nomi delle pagine: se fosse il nome di
@@ -79,8 +140,12 @@ void main() {
      * la pagina e' in piedi sposterebbe il menu. */
     expect(laPlanciaSiVede, contains(':'));
     expect(laPlanciaSiVede, isNot(ilMenuDalTelefono));
+    expect(laPlanciaHaIlSuoVelo, contains(':'));
+    expect(laPlanciaHaIlSuoVelo, isNot(ilMenuDalTelefono));
+    expect(laPlanciaHaIlSuoVelo, isNot(laPlanciaSiVede));
     for (final quale in const ['home', 'clima', 'energy', 'config']) {
       expect(laPlanciaSiVede, isNot(quale));
+      expect(laPlanciaHaIlSuoVelo, isNot(quale));
     }
   });
 
@@ -108,12 +173,15 @@ void main() {
     expect('<script'.allMatches(testa), hasLength(1));
     expect(
       Premesse.laPrimaSchermata,
-      contains('window.gdahomeDice.postMessage("$laPlanciaSiVede")'),
+      contains('window.gdahomeDice.postMessage(m)'),
     );
+    expect(Premesse.laPrimaSchermata, contains('di("$laPlanciaSiVede")'));
+    expect(Premesse.laPrimaSchermata, contains('di("$laPlanciaHaIlSuoVelo")'));
     final telefono = File('lib/schermate/riquadro/sul_telefono.dart')
         .readAsStringSync();
     expect(telefono, contains("'gdahomeDice'"));
     expect(telefono, contains('detto == laPlanciaSiVede'));
+    expect(telefono, contains('detto == laPlanciaHaIlSuoVelo'));
   });
 
   test('davanti c\'è il velo della plancia: il primo pezzo del corpo, prima di '
@@ -162,6 +230,53 @@ void main() {
         quanteVolteSiDicePronto: 0,
       );
       expect(fatto.quante, [1]);
+    });
+
+    group('col velo della plancia davanti', () {
+      /* L'attesa dell'app resta finche' il velo della pagina non se ne va:
+       * se no si vedrebbero due attese di seguito, e la seconda e' quella
+       * vecchia. */
+      for (final come in {
+        'sfuma (la plancia lo porta a opacità zero)':
+            'velo.style.opacity = "0"',
+        'sparisce': 'velo.isConnected = false',
+        'diventa l\'errore del cane da guardia': 'velo.dataset.state = "error"',
+        'si nasconde con una classe': 'velo.style.display = "none"',
+      }.entries) {
+        test('dice che ce l\'ha, e «si vede» quando ${come.key}', () async {
+          final passi = await _giraColVelo(comeSeNeVa: come.value);
+          expect(passi[0], [laPlanciaHaIlSuoVelo]);
+          expect(passi[1], [laPlanciaHaIlSuoVelo], reason: 'velo ancora su');
+          expect(passi[2], [laPlanciaHaIlSuoVelo, laPlanciaSiVede]);
+          expect(passi[3], hasLength(2), reason: 'una volta sola');
+        });
+      }
+
+      test('senza MutationObserver basta il controllo periodico', () async {
+        final passi = await _giraColVelo(
+          comeSeNeVa: 'velo.style.opacity = "0"',
+          conObserver: false,
+        );
+        expect(passi[2], [laPlanciaHaIlSuoVelo, laPlanciaSiVede]);
+      });
+
+      test('un velo già andato via: «si vede» subito', () async {
+        final passi = await _giraColVelo(comeSeNeVa: '');
+        expect(passi[0], [laPlanciaHaIlSuoVelo]);
+        final via = await Process.run('node', [
+          '-e',
+          '''
+const detti = [];
+const v = { isConnected: true, dataset: {}, style: { opacity: "0" } };
+new Function("window", "document", ${jsonEncode(Premesse.laPrimaSchermata)})(
+  { gdahomeDice: { postMessage: (m) => detti.push(m) } },
+  { readyState: "complete", getElementById: () => v, addEventListener() {} },
+);
+process.stdout.write(JSON.stringify(detti));
+''',
+        ]);
+        expect(jsonDecode(via.stdout as String), [laPlanciaSiVede]);
+      });
     });
 
     test('nel browser il canale non c\'è, e non succede niente', () async {

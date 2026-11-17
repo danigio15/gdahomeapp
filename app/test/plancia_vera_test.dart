@@ -13,6 +13,7 @@ library;
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/casa/archivio_delle_case.dart';
 import 'package:gdahome/casa/cassaforte.dart';
@@ -49,6 +50,7 @@ class _PlanciaFinta extends FabbricaDellaPlancia {
   /// Quello che la pagina direbbe: «sono finita», «mi vedo».
   VoidCallback? caricata;
   VoidCallback? siVede;
+  VoidCallback? haIlVelo;
 
   /// Quante volte si e' detto alla pagina che il filo con la casa c'e'.
   int filoDetto = 0;
@@ -74,11 +76,13 @@ class _PlanciaFinta extends FabbricaDellaPlancia {
     void Function(String pagina)? quandoCambiaPagina,
     void Function()? quandoChiedeIlMenu,
     VoidCallback? quandoSiVede,
+    VoidCallback? quandoHaIlVelo,
     void Function(String foto)? quandoFotografaLaCasa,
     void Function(String persona)? quandoApreLaPersona,
   }) {
     caricata = quandoCaricata;
     siVede = quandoSiVede;
+    haIlVelo = quandoHaIlVelo;
     return _RiquadroFinto(
       key: chiave,
       pagina: pagina,
@@ -315,9 +319,13 @@ void main() {
    * piedi. Adesso la pagina dice quando si vede; il `load` resta il ripiego,
    * e sotto a tutti e due c'e' una scadenza. */
 
-  /* Il velo e' l'attesa della plancia, nella sua fase «apro»: non si scrive
-   * piu' «Apro la plancia…», si mostra lo stesso velo della pagina. */
-  Finder ilVelo() => laFase(FaseDelCaricamento.apro);
+  /* Il velo e' l'attesa della plancia, nella sua fase «apro», quando copre:
+   * andandosene sfuma per un terzo di secondo, ma da subito non copre piu'
+   * niente — i tocchi passano alla plancia. */
+  Finder ilVelo() => find.ancestor(
+    of: laFase(FaseDelCaricamento.apro),
+    matching: find.byWidgetPredicate((w) => w is UscitaDelCaricamento && w.su),
+  );
 
   testWidgets('il velo se ne va appena la pagina si vede, senza aspettare '
       'che sia finita', (tester) async {
@@ -381,6 +389,81 @@ void main() {
       await chiudiLaCasa(tester);
     },
   );
+
+  testWidgets('una pagina che arriva subito non aspetta niente: l\'attesa '
+      'lascia la plancia al primo fotogramma, e sfuma sopra una plancia che '
+      'già risponde', (tester) async {
+    await apriLaCasa(tester);
+    final plancia = _PlanciaFinta();
+    await tester.pumpWidget(_laSchermata(collegamento, plancia, impostazioni));
+    await tester.pump();
+    await tester.pump();
+    expect(ilVelo(), findsNothing, reason: 'la pagina è finita: niente attesa');
+    /* La plancia c'è già, e i tocchi la raggiungono: l'attesa che sfuma
+     * sopra non li prende. */
+    expect(find.textContaining('LA PLANCIA'), findsOneWidget);
+    expect(
+      tester
+          .hitTestOnBinding(tester.getCenter(find.textContaining('LA PLANCIA')))
+          .path
+          .any((voce) => voce.target is RenderParagraph),
+      isTrue,
+    );
+    /* E dopo la sfumatura l'attesa non c'è proprio più. */
+    await tester.pump();
+    await tester.pump(UscitaDelCaricamento.quantoDura * 2);
+    await tester.pump();
+    expect(find.byType(CaricamentoDellaPlancia), findsNothing);
+    await chiudiLaCasa(tester);
+  });
+
+  testWidgets(
+    'una pagina col suo velo: il load non toglie l\'attesa, la toglie '
+    'la pagina quando il suo velo se ne va',
+    (tester) async {
+      await apriLaCasa(tester);
+      final plancia = _PlanciaFinta(daSola: false);
+      await tester.pumpWidget(
+        _laSchermata(collegamento, plancia, impostazioni),
+      );
+      await tester.pump();
+      await tester.pump();
+      plancia.haIlVelo!();
+      plancia.caricata!();
+      await tester.pump();
+      expect(
+        ilVelo(),
+        findsOneWidget,
+        reason: 'sotto c\'è il velo della pagina: non si deve vedere',
+      );
+      await tester.pump(const Duration(seconds: 3));
+      expect(ilVelo(), findsOneWidget);
+
+      plancia.siVede!();
+      await tester.pump();
+      expect(ilVelo(), findsNothing);
+      await chiudiLaCasa(tester);
+    },
+  );
+
+  testWidgets('una pagina col suo velo che non dice più niente: dopo il load '
+      'l\'attesa ha una scadenza sua', (tester) async {
+    await apriLaCasa(tester);
+    final plancia = _PlanciaFinta(daSola: false);
+    await tester.pumpWidget(_laSchermata(collegamento, plancia, impostazioni));
+    await tester.pump();
+    await tester.pump();
+    plancia.haIlVelo!();
+    plancia.caricata!();
+    await tester.pump();
+    await tester.pump(
+      quantoAspettaIlVeloDellaPagina - const Duration(seconds: 1),
+    );
+    expect(ilVelo(), findsOneWidget);
+    await tester.pump(const Duration(seconds: 2));
+    expect(ilVelo(), findsNothing);
+    await chiudiLaCasa(tester);
+  });
 
   testWidgets('ricaricando il velo torna, e aspetta di nuovo la pagina', (
     tester,

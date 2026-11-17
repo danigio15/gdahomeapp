@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Gli stessi di `lib/vestito/tema.dart`: il blu notte del marchio e i
-         due fondi delle schermate, chiaro e scuro. -->
+    <!-- Il blu notte del marchio, e i due fondi della schermata d'avvio:
+         gli stessi del primo fotogramma dell'attesa dell'app
+         (`lib/schermate/caricamento.dart`, `fondoDelCaricamento`), cosi' il
+         passaggio dal sistema a Flutter non si vede. Chi li cambia cambia
+         anche quelli, e `FondoAvvio` su iOS. -->
     <color name="fondo_dell_icona">#000000</color>
-    <color name="fondo_chiaro">#F4F6FA</color>
-    <color name="fondo_scuro">#0A1220</color>
+    <color name="fondo_chiaro">#E8EDF3</color>
+    <color name="fondo_scuro">#0B1220</color>
 </resources>
