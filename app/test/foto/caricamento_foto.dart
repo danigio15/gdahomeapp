@@ -254,6 +254,11 @@ Future<void> _leImmagini(WidgetTester tester) async {
       final immagine = elemento.widget as Image;
       await precacheImage(immagine.image, elemento);
     }
+    /* E i pezzi del marchio delle iniziali. */
+    final dove = find.byType(Scaffold).evaluate().first;
+    for (final pezzo in pezziDelleIniziali) {
+      await precacheImage(AssetImage(pezzo), dove);
+    }
     await Future<void>.delayed(const Duration(milliseconds: 200));
   });
   await tester.pump();

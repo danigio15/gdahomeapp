@@ -14,13 +14,17 @@
 ///
 /// I primi due secondi sono uno spettacolo breve, poi l'attesa respira:
 ///
-///  1. **Le iniziali si scrivono** (0–0,9 s): G, d e A, grandi, al centro,
-///     come nastri di luce — la G d'argento che va nel blu, la d d'argento,
-///     la A d'oro — tracciate da sole, una dopo l'altra, con una testa
-///     luminosa che corre lungo il tratto ([_Iniziali]).
-///  2. **Si fondono nel marchio** (0,9–1,2 s): accelerano verso il centro,
-///     si rimpiccioliscono fino alla misura delle lettere del marchio, e si
-///     posano ognuna dove sta nel disegno; sotto di loro il marchio compare.
+///  1. **Le iniziali si srotolano** (0–0,9 s): G, d e A, grandi, al centro,
+///     e sono **quelle del marchio** — gli stessi nastri d'argento, di blu e
+///     d'oro, presi dal disegno ([_Pezzo]). Ognuna compare come un nastro che
+///     si srotola: una maschera larga corre lungo il nastro, con un punto di
+///     luce in testa ([_Iniziali]). Prima la G, poi la d con la casetta, poi
+///     la A che sale fino alla punta, fa partire il segnale del Wi-Fi e
+///     scende.
+///  2. **Si incastrano nel marchio** (0,9–1,2 s): si rimpiccioliscono verso
+///     il centro, e sotto di loro compare il quadrato del marchio; all'ultimo
+///     fotogramma coincidono pixel per pixel col marchio — sono lo stesso
+///     disegno, nello stesso punto e alla stessa scala.
 ///  3. **Si accende** (1,2 s): un lampo caldo, un'onda d'urto d'oro che si
 ///     allarga, e il marchio fa un piccolo rimbalzo elastico. Dal lampo
 ///     escono i granelli di luce che poi gli girano attorno, davanti e
@@ -65,7 +69,7 @@ library;
 
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui' show PathMetric;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -108,9 +112,6 @@ const _oroChiaro = Color(0xFFFFDDA6);
 
 /* I tempi dello spettacolo, in secondi dall'inizio. Le iniziali stanno
  * tutte prima dell'accensione: al piu' 1,2 secondi prima del marchio. */
-const _inizialiDa = 0.08;
-const _passoIniziali = 0.14;
-const _scriveDura = 0.5;
 const _fondonoDa = 0.88;
 const _accensione = 1.2;
 const _finestreDa = 1.4;
@@ -245,10 +246,6 @@ class _Misure {
 
   late final double scala;
   late final double larga;
-
-  /// L'altezza delle iniziali grandi: quasi quella del marchio, ma la parola
-  /// intera — 2,8 volte l'altezza — non passa i tre quarti dello schermo.
-  double get iniziali => math.min(logo * 0.92, larga * 0.74 / _GdA.larga);
   double get logo => 112 * scala;
   double get pavimento => logo * 0.06;
   double get riflesso => logo * 0.34;
@@ -355,6 +352,8 @@ class _CaricamentoDellaPlanciaState extends State<CaricamentoDellaPlancia>
   void didChangeDependencies() {
     super.didChangeDependencies();
     final statico = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    /* I pezzi del marchio per le iniziali: si chiedono una volta sola. */
+    if (!statico) _Pezzi.chiedi(context);
     if (statico == _statico && (_ticker.isActive || _fermo != null)) return;
     _statico = statico;
     _ticker.stop();
@@ -607,7 +606,7 @@ class _Colonna extends StatelessWidget {
                         painter: _Iniziali(
                           tempo: tempo,
                           scuro: scuro,
-                          alte: m.iniziali,
+                          larga: m.larga,
                         ),
                       ),
                     ),
@@ -1222,120 +1221,164 @@ class _Luci extends CustomPainter {
       prima.tempo != tempo || prima.scuro != scuro || prima.scala != scala;
 }
 
-/// Una delle iniziali, come tracciato da scrivere: in un quadrato alto uno,
-/// largo [larga], nell'ordine in cui la penna la scrive.
-class _Lettera {
-  _Lettera(this.larga, Path tracciato)
-    : tratti = tracciato.computeMetrics().toList() {
-    lunga = tratti.fold(0, (somma, tratto) => somma + tratto.length);
+/// Un pezzo del marchio per le iniziali: dove sta nel disegno, e il nastro
+/// da srotolare.
+///
+/// I pezzi sono ritagliati dall'icona a 1024 pixel (la stessa immagine di
+/// `assets/marchio/gda.png`, piu' grande): i nastri tenuti per luminosita', i
+/// pezzi staccati vicino al bordo e il riflesso sul pavimento tolti, il nero
+/// del fondo tolto dai bordi mezzi trasparenti. Lungo i tagli i pezzi si
+/// sovrappongono di qualche pixel, pieni, cosi' la cucitura non si vede. Il
+/// taglio fra i tre segue il disegno: la G a sinistra del palo; la d col palo, il tetto, le finestrelle
+/// e il mezzo dell'onda; la A oltre la sua gamba sinistra, col Wi-Fi.
+///
+/// Le coordinate sono quelle dell'icona a 1024: per questo, rimpiccioliti
+/// fino alla misura del marchio, i pezzi gli cadono esattamente sopra.
+class _Pezzo {
+  _Pezzo(this.asset, this.dove, this.da, List<List<Offset>> nastri)
+    : tratti = _misura(nastri) {
+    lungo = tratti.fold(0, (somma, tratto) => somma + tratto.length);
   }
 
-  final double larga;
-  final List<PathMetric> tratti;
-  late final double lunga;
+  final String asset;
 
-  /// Il pezzo scritto fino a [quanto] (da 0 a 1), e dove sta la penna.
+  /// Dove sta il ritaglio nell'icona a 1024.
+  final Rect dove;
+
+  /// Quando comincia a srotolarsi.
+  final double da;
+
+  final List<ui.PathMetric> tratti;
+  late final double lungo;
+
+  static List<ui.PathMetric> _misura(List<List<Offset>> nastri) {
+    final tracciato = Path();
+    for (final nastro in nastri) {
+      tracciato.moveTo(nastro.first.dx, nastro.first.dy);
+      for (final punto in nastro.skip(1)) {
+        tracciato.lineTo(punto.dx, punto.dy);
+      }
+    }
+    return tracciato.computeMetrics().toList();
+  }
+
+  /// Il pezzo di nastro srotolato fino a [quanto] (da 0 a 1), e dove sta la
+  /// testa.
   (Path, Offset?) finoA(double quanto) {
-    final scritto = Path();
-    var resta = quanto.clamp(0.0, 1.0) * lunga;
-    Offset? penna;
+    final srotolato = Path();
+    var resta = quanto.clamp(0.0, 1.0) * lungo;
+    Offset? testa;
     for (final tratto in tratti) {
       if (resta <= 0) break;
       final qui = math.min(resta, tratto.length);
-      scritto.addPath(tratto.extractPath(0, qui), Offset.zero);
+      srotolato.addPath(tratto.extractPath(0, qui), Offset.zero);
       if (qui < tratto.length) {
-        penna = tratto.getTangentForOffset(qui)?.position;
+        testa = tratto.getTangentForOffset(qui)?.position;
       }
       resta -= qui;
     }
-    return (scritto, penna);
+    return (srotolato, testa);
   }
 }
 
-/// Le tre iniziali del marchio, G, d, A: tracciati a una linea sola, come le
-/// scriverebbe una penna di luce. Misurati una volta sola, all'inizio.
-abstract final class _GdA {
-  /* Lo spazio fra una lettera e l'altra, e quanto e' larga la parola. */
-  static const spazio = 0.16;
-  static double get larga =>
-      lettere.fold(0.0, (somma, l) => somma + l.larga) +
-      spazio * (lettere.length - 1);
+/// Quanto dura lo srotolarsi di un pezzo.
+const _srotolaDura = 0.42;
 
-  static final List<_Lettera> lettere = [
-    /* La G: un cerchio quasi chiuso da in alto a destra, in senso
-     * antiorario, poi giu' e dentro col trattino. */
-    _Lettera(
-      0.9,
-      Path()
-        ..addArc(
-          Rect.fromCircle(center: const Offset(0.45, 0.5), radius: 0.45),
-          -0.62,
-          -(2 * math.pi - 1.08),
-        )
-        ..lineTo(0.88, 0.53)
-        ..lineTo(0.52, 0.53),
-    ),
-    /* La d: la pancia, in senso antiorario dalla destra, poi l'asta dall'alto
-     * in giu'. */
-    _Lettera(
-      0.72,
-      Path()
-        ..addArc(
-          Rect.fromCircle(center: const Offset(0.33, 0.66), radius: 0.32),
-          0,
-          -2 * math.pi + 0.001,
-        )
-        ..moveTo(0.66, 0)
-        ..lineTo(0.66, 1),
-    ),
-    /* La A: su e giu', poi la traversa. */
-    _Lettera(
-      0.86,
-      Path()
-        ..moveTo(0, 1)
-        ..lineTo(0.43, 0)
-        ..lineTo(0.86, 1)
-        ..moveTo(0.18, 0.64)
-        ..lineTo(0.68, 0.64),
-    ),
-  ];
+/// Quanto e' larga la maschera che corre lungo il nastro, nell'icona a 1024:
+/// piu' del nastro, che lo prenda tutto con la sua luce attorno.
+const _larghezzaDelNastro = 150.0;
 
-  /// Dove ognuna si posa dentro il marchio — il centro, rispetto al centro
-  /// del marchio, in lati del marchio — e quanto e' alta li'.
-  static const arrivi = [
-    Offset(-0.22, 0.06),
-    Offset(-0.03, 0.0),
-    Offset(0.2, 0.06),
-  ];
-  static const altaArrivata = 0.42;
+/// Dove sta il disegno nell'icona a 1024: largo cosi', attorno a questo
+/// centro.
+const _disegnoLargo = 846.0;
+
+/// Le iniziali, nell'ordine in cui si srotolano.
+@visibleForTesting
+const pezziDelleIniziali = [
+  'assets/caricamento/iniziale_g.webp',
+  'assets/caricamento/iniziale_d.webp',
+  'assets/caricamento/iniziale_a.webp',
+];
+
+final List<_Pezzo> _pezzi = [
+  /* La G: dal colmo del tetto giu' lungo la falda, attorno, fino in fondo;
+   * poi il braccio di sopra, poi la sbarra. */
+  _Pezzo(pezziDelleIniziali[0], const Rect.fromLTWH(92, 170, 297, 593), 0.08, [
+    [
+      Offset(380, 205),
+      Offset(260, 285),
+      Offset(155, 395),
+      Offset(115, 500),
+      Offset(150, 620),
+      Offset(240, 690),
+      Offset(370, 720),
+    ],
+    [Offset(140, 425), Offset(370, 420)],
+    [Offset(380, 557), Offset(245, 557)],
+  ]),
+  /* La d: il palo dall'alto, il tetto fino alla A, il nastro di dentro, le
+   * finestrelle, e il mezzo dell'onda. */
+  _Pezzo(pezziDelleIniziali[1], const Rect.fromLTWH(371, 165, 332, 597), 0.26, [
+    [Offset(415, 315), Offset(415, 752)],
+    [Offset(380, 195), Offset(500, 205), Offset(620, 300), Offset(690, 375)],
+    [Offset(410, 270), Offset(530, 340), Offset(615, 420), Offset(625, 470)],
+    [Offset(485, 455), Offset(570, 525)],
+    [Offset(410, 560), Offset(470, 600), Offset(530, 660), Offset(600, 705)],
+  ]),
+  /* La A: su per la gamba sinistra fino alla punta, il puntino e le onde
+   * del Wi-Fi, giu' per la gamba destra, e la coda dell'onda. */
+  _Pezzo(pezziDelleIniziali[2], const Rect.fromLTWH(448, 215, 498, 547), 0.44, [
+    [Offset(530, 660), Offset(625, 510), Offset(715, 375)],
+    [Offset(712, 345), Offset(712, 330)],
+    [Offset(705, 285), Offset(770, 305), Offset(792, 365)],
+    [Offset(705, 235), Offset(800, 260), Offset(835, 365)],
+    [Offset(730, 380), Offset(840, 550), Offset(940, 725)],
+    [Offset(560, 680), Offset(670, 620), Offset(780, 590), Offset(880, 660)],
+  ]),
+];
+
+/// Le immagini dei pezzi, chieste una volta e tenute: sono piccole, e
+/// servono ogni volta che l'attesa riparte.
+abstract final class _Pezzi {
+  static final List<ui.Image?> immagini = List.filled(_pezzi.length, null);
+  static final List<ImageStream> _flussi = [];
+
+  static void chiedi(BuildContext context) {
+    if (_flussi.isNotEmpty) return;
+    final come = createLocalImageConfiguration(context);
+    for (var i = 0; i < _pezzi.length; i += 1) {
+      final flusso = AssetImage(_pezzi[i].asset).resolve(come);
+      flusso.addListener(
+        ImageStreamListener(
+          (info, _) => immagini[i] = info.image,
+          /* Senza il pezzo, l'iniziale non c'e': il marchio arriva lo
+           * stesso. */
+          onError: (_, _) {},
+        ),
+      );
+      _flussi.add(flusso);
+    }
+  }
 }
 
-/// Le iniziali che si scrivono e poi si fondono nel marchio.
+/// Le iniziali che si srotolano e poi si incastrano nel marchio.
 ///
-/// Ognuna si scrive col suo colore — la G d'argento che va nel blu, la d
-/// d'argento, la A d'oro come nel marchio — con un alone largo e tenue sotto
-/// il tratto, e una testa luminosa dove sta la penna. Scritte tutte e tre,
-/// accelerano verso il centro rimpicciolendo, ognuna verso il punto dove sta
-/// nel disegno, e svaniscono dentro il marchio che compare: il lampo
-/// dell'accensione e' il momento in cui ci entrano.
+/// Ogni pezzo del marchio compare dentro una maschera larga che corre lungo
+/// il suo nastro, con un punto di luce in testa: il nastro sembra srotolarsi.
+/// Finito il tracciato, quello che la maschera non ha preso compare piano.
+/// Poi tutti e tre si rimpiccioliscono verso il centro fino alla misura del
+/// marchio, che intanto compare sotto: all'accensione coincidono, e le
+/// iniziali lasciano il posto al marchio vero.
 class _Iniziali extends CustomPainter {
-  _Iniziali({required this.tempo, required this.scuro, required this.alte})
+  _Iniziali({required this.tempo, required this.scuro, required this.larga})
     : super(repaint: tempo);
 
   final ValueNotifier<double> tempo;
   final bool scuro;
 
-  /// Quanto sono alte le iniziali grandi.
-  final double alte;
-
-  List<Color> _colori(int quale) => switch ((quale, scuro)) {
-    (0, true) => const [Color(0xFFDCE8FF), Color(0xFF4F8BFF)],
-    (1, true) => const [Color(0xFFFFFFFF), Color(0xFFB8C4D6)],
-    (_, true) => const [Color(0xFFFFE2B0), Color(0xFFEFA445)],
-    (0, false) => const [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
-    (1, false) => const [Color(0xFF334155), Color(0xFF7C8BA1)],
-    (_, false) => const [Color(0xFFE8A13E), Color(0xFFC77812)],
-  };
+  /// Quanto e' larga la pagina: il disegno grande non ne passa i quattro
+  /// quinti.
+  final double larga;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1343,121 +1386,158 @@ class _Iniziali extends CustomPainter {
     if (t >= _accensione) return;
     final l = size.shortestSide;
     final c = size.center(Offset.zero);
-    /* Quanto sono gia' andate verso il marchio: accelerano entrando. */
-    final dentro = Curves.easeInCubic.transform(
+    /* Grande al centro, poi alla misura del marchio quando si accende (che
+     * in quel momento e' a 0,92: vedi [_scalaDelMarchio]). */
+    final grande = math.min(larga * 0.82, l * 2.4) / _disegnoLargo;
+    final giusta = 0.92 * l / 1024;
+    final dentro = Curves.easeInOutCubic.transform(
       _tra(t, _fondonoDa, _accensione - _fondonoDa),
     );
-    final larga = _GdA.larga * alte;
-    var x = c.dx - larga / 2;
-    for (var i = 0; i < _GdA.lettere.length; i += 1) {
-      final lettera = _GdA.lettere[i];
-      final scrive = Curves.easeInOutSine.transform(
-        _tra(t, _inizialiDa + i * _passoIniziali, _scriveDura),
+    final f = grande + (giusta - grande) * dentro;
+    final pennello = Paint()..filterQuality = FilterQuality.medium;
+    canvas.save();
+    canvas.translate(c.dx, c.dy);
+    canvas.scale(f);
+    canvas.translate(-512, -512);
+    if (!scuro) _piastra(canvas, t);
+    for (var i = 0; i < _pezzi.length; i += 1) {
+      final pezzo = _pezzi[i];
+      final immagine = _Pezzi.immagini[i];
+      if (immagine == null) continue;
+      final srotola = Curves.easeInOutSine.transform(
+        _tra(t, pezzo.da, _srotolaDura),
       );
-      final grande = Offset(x + lettera.larga * alte / 2, c.dy);
-      x += (lettera.larga + _GdA.spazio) * alte;
-      if (scrive <= 0) continue;
-      /* Dalla parola grande al suo posto nel marchio. */
-      final arrivo = c + _GdA.arrivi[i] * l;
-      final dove = Offset.lerp(grande, arrivo, dentro)!;
-      final u = alte + (l * _GdA.altaArrivata - alte) * dentro;
-      final svanisce = 1 - _tra(dentro, 0.35, 0.6);
-      /* Scritte tutte e tre, un luccichio le percorre da sinistra. */
-      final luccica = _gobba(t, _fondonoDa - 0.1 + i * 0.05, 0.22);
-      if (svanisce <= 0) continue;
-      final (scritto, penna) = lettera.finoA(scrive);
-      final colori = _colori(i);
-
-      canvas.save();
-      canvas.translate(dove.dx - lettera.larga * u / 2, dove.dy - u / 2);
-      canvas.scale(u);
-      final rettangolo = Rect.fromLTWH(0, 0, lettera.larga, 1);
-      /* L'alone sotto il tratto, in tre passate sempre piu' strette: sfuma
-       * come una luce, non come un tubo. Piu' forte mentre entrano nel
-       * marchio. */
-      final alone = (scuro ? 1.0 : 0.55) * (1 + dentro + luccica) * svanisce;
-      for (final (largo, alfa) in const [
-        (0.30, 0.05),
-        (0.2, 0.08),
-        (0.13, 0.14),
-      ]) {
-        canvas.drawPath(
-          scritto,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeCap = StrokeCap.round
-            ..strokeJoin = StrokeJoin.round
-            ..strokeWidth = largo
-            ..blendMode = scuro ? BlendMode.plus : BlendMode.srcOver
-            ..color = colori.last.withValues(alpha: alfa * alone),
-        );
+      if (srotola <= 0) continue;
+      /* Il resto, quello che la maschera non ha preso: compare piano. */
+      final resto = _morbido(_tra(t, pezzo.da + _srotolaDura - 0.05, 0.15));
+      final sorgente = Rect.fromLTWH(
+        0,
+        0,
+        immagine.width.toDouble(),
+        immagine.height.toDouble(),
+      );
+      if (resto >= 1) {
+        canvas.drawImageRect(immagine, sorgente, pezzo.dove, pennello);
+        continue;
       }
+      final (srotolato, testa) = pezzo.finoA(srotola);
+      /* La maschera, bianca, solo dentro il ritaglio, e un poco piu' in la'
+       * del suo orlo (che e' vuoto): fuori l'immagine non la copre, e
+       * resterebbe un filo bianco lungo il bordo. */
+      canvas.save();
+      canvas.clipRect(pezzo.dove.deflate(5));
+      canvas.saveLayer(pezzo.dove, Paint());
       canvas.drawPath(
-        scritto,
+        srotolato,
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeCap = StrokeCap.round
           ..strokeJoin = StrokeJoin.round
-          ..strokeWidth = 0.085
-          ..shader = LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              colori.first.withValues(alpha: svanisce),
-              colori.last.withValues(alpha: svanisce),
-            ],
-          ).createShader(rettangolo),
+          ..strokeWidth = _larghezzaDelNastro
+          ..color = Colors.white,
       );
-      /* Un filo di luce dentro il nastro: lo fa sembrare di metallo. */
-      if (scuro) {
-        canvas.drawPath(
-          scritto,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeCap = StrokeCap.round
-            ..strokeJoin = StrokeJoin.round
-            ..strokeWidth = 0.022
-            ..blendMode = BlendMode.plus
-            ..color = Colors.white.withValues(
-              alpha: (0.45 + 0.5 * luccica) * svanisce,
-            ),
-        );
-      } else if (luccica > 0) {
-        canvas.drawPath(
-          scritto,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeCap = StrokeCap.round
-            ..strokeJoin = StrokeJoin.round
-            ..strokeWidth = 0.03
-            ..color = Colors.white.withValues(alpha: 0.7 * luccica * svanisce),
+      if (resto > 0) {
+        canvas.drawRect(
+          pezzo.dove,
+          Paint()..color = Colors.white.withValues(alpha: resto),
         );
       }
-      /* La testa: dove sta scrivendo la penna. */
-      if (penna != null) {
-        const rp = 0.16;
+      canvas.drawImageRect(
+        immagine,
+        sorgente,
+        pezzo.dove,
+        Paint()
+          ..filterQuality = FilterQuality.medium
+          ..blendMode = BlendMode.srcIn,
+      );
+      canvas.restore();
+      canvas.restore();
+      /* Il punto di luce dove il nastro si sta srotolando. */
+      if (testa != null) {
+        const r = 70.0;
         canvas.drawCircle(
-          penna,
-          rp,
+          testa,
+          r,
           Paint()
             ..blendMode = scuro ? BlendMode.plus : BlendMode.srcOver
             ..shader = RadialGradient(
               colors: [
-                Colors.white.withValues(alpha: scuro ? 0.95 : 0.9),
-                _oro.withValues(alpha: 0.5),
-                _oro.withValues(alpha: 0),
+                Colors.white.withValues(alpha: 0.95),
+                (i == 2 ? _oro : _blu).withValues(alpha: 0.45),
+                (i == 2 ? _oro : _blu).withValues(alpha: 0),
               ],
-              stops: const [0, 0.35, 1],
-            ).createShader(Rect.fromCircle(center: penna, radius: rp)),
+              stops: const [0, 0.3, 1],
+            ).createShader(Rect.fromCircle(center: testa, radius: r)),
         );
       }
-      canvas.restore();
     }
+    canvas.restore();
+  }
+
+  /// Di giorno, sotto le iniziali, il quadrato blu notte del marchio.
+  ///
+  /// I pezzi sono ritagliati da un disegno su fondo nero: i loro bordi, le
+  /// ombre fra un nastro e l'altro, la luce attorno alle finestrelle e al
+  /// Wi-Fi sono fatti per quel fondo, e sul bianco sembrerebbero sporco. Cosi'
+  /// stanno sul loro: un quadrato coi colori del marchio — il blu notte
+  /// dentro, l'orlo blu a sinistra e arancio a destra — nelle stesse
+  /// coordinate, che si rimpicciolisce con le iniziali e alla fine lascia il
+  /// posto al marchio vero.
+  void _piastra(Canvas canvas, double t) {
+    final c =
+        _morbido(_tra(t, 0.0, 0.3)) * (1 - _tra(t, _accensione - 0.04, 0.04));
+    if (c <= 0) return;
+    final s = 0.94 + 0.06 * _morbido(_tra(t, 0.0, 0.4));
+    canvas.save();
+    canvas.translate(512, 512);
+    canvas.scale(s);
+    canvas.translate(-512, -512);
+    const quadrato = Rect.fromLTWH(0, 0, 1024, 1024);
+    final forma = RRect.fromRectAndRadius(quadrato, const Radius.circular(225));
+    canvas.drawRRect(
+      forma,
+      Paint()
+        ..shader = LinearGradient(
+          colors: [
+            Color.fromRGBO(0, 6, 38, c),
+            Color.fromRGBO(6, 10, 26, c),
+            Color.fromRGBO(20, 10, 12, c),
+          ],
+        ).createShader(quadrato),
+    );
+    canvas.save();
+    canvas.clipRRect(forma);
+    final orlo = LinearGradient(
+      colors: [
+        Color.fromRGBO(1, 110, 240, c),
+        Color.fromRGBO(60, 90, 170, c),
+        Color.fromRGBO(225, 125, 40, c),
+      ],
+    ).createShader(quadrato);
+    /* L'orlo luminoso, e la sua luce che entra, sfumando: passate sempre
+     * piu' strette e piu' forti. */
+    for (final (largo, alfa) in const [
+      (80.0, 0.06),
+      (52.0, 0.08),
+      (34.0, 0.14),
+      (22.0, 1.0),
+    ]) {
+      canvas.drawRRect(
+        forma,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = largo
+          ..shader = orlo
+          ..color = Colors.white.withValues(alpha: alfa),
+      );
+    }
+    canvas.restore();
+    canvas.restore();
   }
 
   @override
   bool shouldRepaint(_Iniziali prima) =>
-      prima.tempo != tempo || prima.scuro != scuro || prima.alte != alte;
+      prima.tempo != tempo || prima.scuro != scuro || prima.larga != larga;
 }
 
 /// Un granello di luce in orbita: sempre lo stesso, da un seme.

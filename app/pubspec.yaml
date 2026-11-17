@@ -155,6 +155,9 @@ flutter:
     # Il marchio: la stessa immagine che fa da icona dell'app. Ce n'e' una
     # sola, e sta in un posto solo.
     - assets/marchio/gda.png
+    # Le iniziali G, d, A dell'attesa all'avvio: tre pezzi del marchio,
+    # ritagliati dall'icona a 1024 (`schermate/caricamento.dart`).
+    - assets/caricamento/
     # Gli oggetti delle sezioni: gli stessi disegni della plancia, uno per
     # sezione. Non sono simboli a contorno ne' emoji di sistema — sono i
     # disegni di DashboardModern, presi da li' e non rifatti a somiglianza,
