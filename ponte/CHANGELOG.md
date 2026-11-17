@@ -10,6 +10,24 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.19.10
+
+_App GdAHome e add-on._
+
+- **Musica in auto che si comanda**: su Android Auto il brano in
+  riproduzione è un piccolo lettore sulla mappa, con copertina, titolo,
+  artista e i tasti precedente, pausa e successivo da toccare. Si riduce
+  a una pillola e ha una forma compatta quando la mappa è affiancata
+  alla musica; la barra in alto torna quella di sempre.
+- **Costo del viaggio giusto**: l'energia caricata a casa vale per i
+  viaggi finché è in batteria, col suo prezzo vero e la parte dal sole;
+  se non si sa, si usa la tariffa di casa e, solo in ultimo, il prezzo
+  delle opzioni, detto come stima. Sui viaggi corti il consumo è scritto
+  «circa».
+- **Ricariche di casa più complete**: una ricarica a cavallo della
+  mezzanotte, o con la wallbox che si ferma e riparte col sole, conta
+  tutta; una ricarica fatta fuori casa non è più «di casa».
+
 ## 1.19.9
 
 _App GdAHome e add-on._

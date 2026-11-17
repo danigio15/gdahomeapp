@@ -947,9 +947,13 @@ export class Commissioni {
      * GdAHome) passa per la stessa porta e con le stesse regole: **solo da
      * un telefono abbinato con un utente** di Home Assistant — senza,
      * `unauthorized` — in sola lettura, e nel ponte non si vede nulla. Dice,
-     * per ogni auto della plancia, l'ultima ricarica finita a casa: quando,
-     * da che percentuale a quale, i kWh, quanti col sole e gli euro di rete.
-     * Niente entita', niente altro.
+     * per ogni auto della plancia, l'ultima ricarica a casa (anche a pezzi,
+     * anche in corso): quando, da che percentuale a quale, i kWh, quanti col
+     * sole e gli euro di rete. E due cose per quando quella non basta: il
+     * prezzo della rete di casa (`prezzo.euroAlKwh`, la media sulla
+     * settimana della tariffa della plancia; `null` se non c'e') e i nomi
+     * delle auto di cui la casa segue la ricarica (`auto`). Niente entita',
+     * niente altro.
      *
      * `ponte/energia/giornata` (la pagina «La tua giornata» dell'app) passa
      * per la stessa porta: solo da un telefono abbinato **con un utente** di

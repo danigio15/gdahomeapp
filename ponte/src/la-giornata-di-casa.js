@@ -339,6 +339,76 @@ export function senzaNomiDiPersone(dato, nomi = []) {
 
 /* ─── Il diario ──────────────────────────────────────────────────────────── */
 
+/* Quanto possono distare due pezzi della stessa ricarica quando la batteria
+ * non si legge: una pausa, il cambio di giornata. */
+const STESSA_RICARICA_ENTRO = 10 * MINUTO;
+/* Di quanti punti la batteria puo' scendere da ferma (il freddo, la notte)
+ * fra due pezzi dello stesso pieno. */
+const PUNTI_SENZA_VIAGGIO = 3;
+
+/**
+ * Una ricarica come la ricorda la casa per GdANav. `prima`: quella ricordata
+ * finora per la stessa auto.
+ *
+ * I pezzi dello stesso pieno si sommano. Col fotovoltaico la ricarica va a
+ * pezzi — una nuvola, e la wallbox si ferma dieci minuti — e «l'ultima
+ * ricarica» era l'ultimo pezzo: mezzo kWh al tramonto, tutto dalla rete, a
+ * dire il prezzo di un pieno fatto col sole. Finche' fra un pezzo e l'altro
+ * la batteria non e' scesa (l'auto non ha viaggiato), e' lo stesso pieno;
+ * senza la batteria, se sono attaccati nel tempo (la mezzanotte).
+ */
+export function voceDellaRicarica(nome, r, capacita, prima = null) {
+  const kwh =
+    r.wh > 0 ? r.wh / 1000 : Math.max(0, ((r.socA ?? 0) - (r.socDa ?? 0)) / 100) * capacita;
+  const tonda = (v) => (v !== null && v !== undefined ? Math.round(v) : null);
+  const voce = {
+    nome,
+    finitaIl: r.a,
+    socDa: tonda(r.socDa),
+    socA: tonda(r.socA),
+    kwh,
+    kwhSole: r.wh > 0 ? Math.min(r.sole, r.wh) / 1000 : null,
+    euroRete: r.conPrezzo ? r.eur : null,
+  };
+  const attaccate =
+    prima && prima.finitaIl <= r.da && r.da - prima.finitaIl <= STESSA_RICARICA_ENTRO;
+  const senzaViaggi =
+    prima &&
+    prima.finitaIl <= r.da &&
+    prima.socA !== null &&
+    prima.socA !== undefined &&
+    voce.socDa !== null &&
+    voce.socDa >= prima.socA - PUNTI_SENZA_VIAGGIO;
+  if (attaccate || senzaViaggi) {
+    const somma = (x, y) => (x === null || x === undefined || y === null ? null : x + y);
+    voce.socDa = prima.socDa ?? voce.socDa;
+    voce.kwhSole = somma(prima.kwhSole, voce.kwhSole);
+    /* Gli euro: se un pezzo non aveva il prezzo, il totale non si sa. */
+    voce.euroRete = somma(prima.euroRete, voce.euroRete);
+    voce.kwh += prima.kwh || 0;
+  }
+  if (!(voce.kwh > 0.2)) return null;
+  voce.kwh = arrotonda(voce.kwh);
+  if (voce.kwhSole !== null) voce.kwhSole = arrotonda(Math.min(voce.kwhSole, voce.kwh));
+  if (voce.euroRete !== null) voce.euroRete = arrotonda(voce.euroRete, 2);
+  return voce;
+}
+
+/* L'auto e' fuori casa: la sua posizione e' un `device_tracker` (o una
+ * persona) che dice chiaro un posto che non e' casa. Senza, o se tace, non si
+ * sa: e vale come prima. */
+function autoFuoriCasa(posizione, c) {
+  if (!posizione || !/^(device_tracker|person)\./.test(posizione)) return false;
+  const dove = String(c(posizione)?.state ?? "")
+    .trim()
+    .toLowerCase();
+  return Boolean(dove) && !["home", "unknown", "unavailable", "none"].includes(dove);
+}
+
+/* Una ricarica fatta fuori casa: l'auto non era a casa per piu' di meta' del
+ * tempo. */
+const fattaAltrove = (r) => (r?.fuori || 0) > (r?.n || 0) / 2;
+
 export class DiarioDellaCasa {
   constructor({ cartella = "", adesso = () => Date.now(), registro = null } = {}) {
     this._suDisco = Boolean(cartella);
@@ -378,6 +448,13 @@ export class DiarioDellaCasa {
         riscaldamento: Math.round((prima.riscaldamento?.acceso || 0) / MINUTO),
         litri: prima.acqua?.litri || 0,
       };
+    /* Una ricarica a cavallo della mezzanotte (di notte e' il caso di tutti i
+     * giorni): la giornata nuova ricomincia da capo, e il pezzo di ieri non
+     * finiva mai — non si ricordava. Lo si ricorda adesso; il pezzo dopo
+     * mezzanotte gli si somma quando finisce (`_ricordaLaRicarica`). */
+    for (const [chiave, a] of Object.entries(prima?.auto || {}))
+      if (a?.carica && !fattaAltrove(a.carica))
+        this._ricordaLaRicarica({ chiave, nome: a.nome }, a.carica, a.capacita);
     const nuova = giornataNuova(giorno);
     this.archivio.dati.oggi = nuova;
     return nuova;
@@ -459,6 +536,9 @@ export class DiarioDellaCasa {
         entita,
         potenza: leggi("dm.ev_potenza_ricarica", "dm.ev_charge_power", "dm.ev_potenza_wallbox"),
         odometro: leggi("dm.ev_odometro"),
+        /* Dov'e' l'auto, se la plancia ha il suo `device_tracker`: una
+         * ricarica fatta fuori non e' «di casa». */
+        posizione: leggi("dm.ev_posizione"),
         /* Quello che l'auto dice di se' (GdAAuto): quanti kWh tiene, e quanto
          * consuma davvero. */
         capacitaDetta: leggi(CASELLA_DELLA_CAPACITA),
@@ -699,6 +779,13 @@ export class DiarioDellaCasa {
         conPrezzo: false,
       });
       r.a = ora;
+      /* Fuori casa (una colonnina): il sole e la rete di casa non c'entrano,
+       * e quella non e' «l'ultima ricarica a casa». Si sa solo se la plancia
+       * ha la posizione dell'auto e dice chiaro che non e' a casa; e si
+       * contano i campioni, perche' una posizione che balla un minuto non
+       * butti via una ricarica fatta in garage. */
+      r.n = (r.n || 0) + 1;
+      if (autoFuoriCasa(una.posizione, c)) r.fuori = (r.fuori || 0) + 1;
       if (soc !== null) r.socA = soc;
       let wh = 0;
       let w = null;
@@ -722,7 +809,7 @@ export class DiarioDellaCasa {
         }
       }
     } else if (a.carica && ora - a.carica.a >= RICARICA_FINITA_DOPO) {
-      this._ricordaLaRicarica(una, a.carica, capacita);
+      if (!fattaAltrove(a.carica)) this._ricordaLaRicarica(una, a.carica, capacita);
       a.ricariche.push(a.carica);
       a.ricariche = a.ricariche.slice(-RICARICHE_AL_PIU);
       a.carica = null;
@@ -1068,19 +1155,10 @@ export class DiarioDellaCasa {
    * caricata». Quanta energia, quanta col sole e quanto e' costata la rete:
    * da li' GdANav sa quanto vale un kWh della batteria con cui si parte. */
   _ricordaLaRicarica(una, r, capacita) {
-    const kwh =
-      r.wh > 0 ? r.wh / 1000 : Math.max(0, ((r.socA ?? 0) - (r.socDa ?? 0)) / 100) * capacita;
-    if (!(kwh > 0.2)) return;
     const tutte = (this.archivio.dati.ricaricheDiCasa ??= {});
-    tutte[una.chiave] = {
-      nome: una.nome,
-      finitaIl: r.a,
-      socDa: r.socDa !== null && r.socDa !== undefined ? Math.round(r.socDa) : null,
-      socA: r.socA !== null && r.socA !== undefined ? Math.round(r.socA) : null,
-      kwh: arrotonda(kwh),
-      kwhSole: r.wh > 0 ? arrotonda(Math.min(r.sole, r.wh) / 1000) : null,
-      euroRete: r.conPrezzo ? arrotonda(r.eur, 2) : null,
-    };
+    const voce = voceDellaRicarica(una.nome, r, capacita, tutte[una.chiave]);
+    if (!voce) return;
+    tutte[una.chiave] = voce;
     this.scrivi();
   }
 
@@ -1088,12 +1166,32 @@ export class DiarioDellaCasa {
    * L'ultima ricarica a casa di ogni auto della plancia, per GdANav:
    * `[{nome, finitaIl (ISO), socDa, socA, kwh, kwhSole, euroRete}]`. Solo
    * numeri e il nome che l'auto ha nella plancia.
+   *
+   * Anche quella in corso, o finita da meno di cinque minuti: chi stacca il
+   * cavo e parte chiede subito, e gli si rispondeva con la ricarica di prima.
    */
   ricaricheDiCasa() {
-    return Object.values(this.archivio.dati.ricaricheDiCasa || {}).map((r) => ({
+    const tutte = { ...(this.archivio.dati.ricaricheDiCasa || {}) };
+    for (const [chiave, a] of Object.entries(this.archivio.dati.oggi?.auto || {})) {
+      if (!a?.carica || fattaAltrove(a.carica)) continue;
+      const voce = voceDellaRicarica(a.nome, a.carica, a.capacita, tutte[chiave]);
+      if (voce) tutte[chiave] = voce;
+    }
+    return Object.values(tutte).map((r) => ({
       ...r,
       finitaIl: new Date(r.finitaIl).toISOString(),
     }));
+  }
+
+  /**
+   * I nomi delle auto di cui la casa segue la ricarica: quelle della plancia
+   * con una batteria che si legge. GdANav, se l'auto in uso non c'e', dice a
+   * chi guida cosa manca invece di usare in silenzio un prezzo stimato.
+   * `null` finche' la casa non si e' guardata intorno (appena accesa): non
+   * si dice «nessuna» di quello che non si e' ancora cercato.
+   */
+  autoSeguite() {
+    return this._trovate ? this._trovate.auto.map((una) => una.nome) : null;
   }
 
   scrivi() {
