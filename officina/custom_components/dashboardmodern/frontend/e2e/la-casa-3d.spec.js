@@ -418,11 +418,24 @@ test("tre luci nella stessa stanza: i tasti non si coprono", async ({ page }, te
   }));
   const casa = {
     ...CASA,
-    piani: [{ ...terra, dispositivi: [...terra.dispositivi.filter((d) => d.k !== "luce" || d.stanza !== 2), ...luci] }, CASA.piani[1]],
+    piani: [
+      {
+        ...terra,
+        dispositivi: [
+          ...terra.dispositivi.filter((d) => d.k !== "luce" || d.stanza !== 2),
+          ...luci,
+        ],
+      },
+      CASA.piani[1],
+    ],
   };
   await boot(page, testInfo, { casa });
   await page.evaluate(() => {
-    const s = (entity_id, state, friendly_name) => ({ entity_id, state, attributes: { friendly_name } });
+    const s = (entity_id, state, friendly_name) => ({
+      entity_id,
+      state,
+      attributes: { friendly_name },
+    });
     const nuovi = {
       "light.cucina_isola": s("light.cucina_isola", "on", "Isola"),
       "light.cucina_cappa": s("light.cucina_cappa", "off", "Cappa"),
@@ -442,14 +455,17 @@ test("tre luci nella stessa stanza: i tasti non si coprono", async ({ page }, te
           return { x0: r.left, y0: r.top, x1: r.right, y1: r.bottom };
         }),
     );
-  await expect.poll(async () => (await visibili()).length, { timeout: 30_000 }).toBeGreaterThanOrEqual(9);
+  await expect
+    .poll(async () => (await visibili()).length, { timeout: 30_000 })
+    .toBeGreaterThanOrEqual(9);
   await page.waitForTimeout(500);
   const tasti = await visibili();
   const coperti = [];
   for (let i = 0; i < tasti.length; i++)
     for (let j = i + 1; j < tasti.length; j++) {
       const [a, b] = [tasti[i], tasti[j]];
-      if (a.x0 < b.x1 - 1 && b.x0 < a.x1 - 1 && a.y0 < b.y1 - 1 && b.y0 < a.y1 - 1) coperti.push([i, j]);
+      if (a.x0 < b.x1 - 1 && b.x0 < a.x1 - 1 && a.y0 < b.y1 - 1 && b.y0 < a.y1 - 1)
+        coperti.push([i, j]);
     }
   await scatta(page, testInfo, "casa3d-tre-luci");
   expect(coperti).toEqual([]);
@@ -466,8 +482,10 @@ test("arredando, un dispositivo sul muro si sposta trascinando il suo tasto", as
   await vai(page, "terra");
   await casa.locator('[data-c3s="arreda"]').click();
   await expect(casa.locator(".c3-arreda-posto")).toBeVisible();
-  const prima = await page.evaluate(
-    () => JSON.parse(localStorage.getItem("cd_casa3d")).piani[0].dispositivi.find((d) => d.k === "termometro"),
+  const prima = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("cd_casa3d")).piani[0].dispositivi.find(
+      (d) => d.k === "termometro",
+    ),
   );
   const tasto = casa.locator(".c3-chip").filter({ hasText: "21,4°" });
   await expect(tasto).toBeVisible();
@@ -484,7 +502,9 @@ test("arredando, un dispositivo sul muro si sposta trascinando il suo tasto", as
     .poll(
       () =>
         page.evaluate(() => {
-          const d = JSON.parse(localStorage.getItem("cd_casa3d")).piani[0].dispositivi.find((v) => v.k === "termometro");
+          const d = JSON.parse(localStorage.getItem("cd_casa3d")).piani[0].dispositivi.find(
+            (v) => v.k === "termometro",
+          );
           return [d.x, d.y];
         }),
       { timeout: 10_000 },
