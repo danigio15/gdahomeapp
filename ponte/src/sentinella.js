@@ -42,6 +42,7 @@ import {
   giornoDi,
   letturaDellEnergia,
   prezzoAllOra,
+  prezzoMedio,
 } from "./l-energia-di-casa.js";
 import { risolutoreDalla } from "./ricarica-di-notte.js";
 import { batterieDiCasa } from "./la-giornata-di-casa.js";
@@ -804,6 +805,20 @@ export class Sentinella {
   /* Il prezzo della corrente in quell'istante, dalle fasce della plancia. */
   prezzo(istante, valori = this._valori()) {
     return prezzoAllOra(
+      {
+        fasce: valori.cd_fasce_kwh,
+        costo: valori.cd_costo_kwh,
+        entita: this._entitaDelPrezzo(valori),
+        stato: (id) => this.stati.get(id),
+      },
+      istante,
+    );
+  }
+
+  /* Il prezzo di casa in media sulla settimana (`prezzoMedio`): per GdANav,
+   * che non sa a che ora l'auto e' stata caricata. `null` senza un prezzo. */
+  prezzoMedio(istante, valori = this._valori()) {
+    return prezzoMedio(
       {
         fasce: valori.cd_fasce_kwh,
         costo: valori.cd_costo_kwh,

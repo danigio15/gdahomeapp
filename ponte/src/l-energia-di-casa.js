@@ -145,6 +145,34 @@ export function prezzoAllOra({ fasce, costo, entita = "", stato = () => null }, 
   return { prezzo: null, fascia: "", indice: -1 };
 }
 
+/**
+ * Il prezzo di casa «in media»: la media del prezzo sulle ore di una
+ * settimana da `istante`. Per GdANav, quando deve dare un prezzo a un kWh
+ * di batteria e non sa a che ora e' stato caricato: con la tariffa unica e'
+ * lei, con le fasce e' la loro media pesata sulle ore. `null` se la casa un
+ * prezzo non ce l'ha.
+ */
+export function prezzoMedio(conf, istante) {
+  let fasce = conf?.fasce;
+  if (typeof fasce === "string") {
+    try {
+      fasce = JSON.parse(fasce);
+    } catch (_errore) {
+      fasce = null;
+    }
+  }
+  let somma = 0;
+  let ore = 0;
+  for (let h = 0; h < 7 * 24; h += 1) {
+    const { prezzo } = prezzoAllOra({ ...conf, fasce }, istante + h * 3600 * 1000);
+    if (prezzo > 0) {
+      somma += prezzo;
+      ore += 1;
+    }
+  }
+  return ore ? Math.round((somma / ore) * 10000) / 10000 : null;
+}
+
 /* Il prezzo di un'entita' in euro al kWh: chi lo da' in €/MWh (il PUN, i
  * prezzi della borsa) o in centesimi si riporta al kWh, come lo scrive la
  * plancia. */

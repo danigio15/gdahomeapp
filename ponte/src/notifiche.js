@@ -2264,10 +2264,29 @@ export class Notifiche {
         });
       /* L'ultima ricarica a casa (kWh, quanti col sole, gli euro di rete,
        * fino a che percentuale): per il costo del viaggio in GdANav. Solo a
-       * chi ha un utente, come la giornata; niente entita'. */
+       * chi ha un utente, come la giornata; niente entita'.
+       *
+       * «Verifica i costi perche' non mi trovo: 1 € di energia per 3,5 kWh.»
+       * Senza una ricarica che valesse GdANav usava il prezzo scritto nelle
+       * sue opzioni (0,30 €/kWh di serie), mentre la casa il prezzo della sua
+       * rete lo sa. Glielo si dice (`prezzo`: la media sulla settimana, o
+       * `null` se nella plancia non c'e'), con le auto di cui la casa segue
+       * la ricarica (`auto`: i nomi della plancia, `null` se la casa non ha
+       * ancora guardato): cosi' quando manca qualcosa GdANav dice cosa,
+       * invece di stimare in silenzio. */
       if (detto.type === LE_RICARICHE_DI_CASA) {
         if (!utente) return no("unauthorized", "le ricariche di casa si vedono da un utente");
-        return si({ ricariche: this.diario?.ricaricheDiCasa?.() ?? [] });
+        let medio = null;
+        try {
+          medio = this.sentinella?.prezzoMedio?.(this.adesso(), this._valori()) ?? null;
+        } catch (_errore) {
+          medio = null;
+        }
+        return si({
+          ricariche: this.diario?.ricaricheDiCasa?.() ?? [],
+          prezzo: medio !== null ? { euroAlKwh: medio } : null,
+          auto: this.diario?.autoSeguite?.() ?? null,
+        });
       }
       if (detto.type === LA_GIORNATA) {
         if (!utente) return no("unauthorized", "la giornata della casa si vede da un utente");

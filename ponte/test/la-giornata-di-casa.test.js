@@ -33,7 +33,7 @@ import {
   prezzoDiCessione,
   senzaNomiDiPersone,
 } from "../src/la-giornata-di-casa.js";
-import { TaccuinoDellEnergia } from "../src/l-energia-di-casa.js";
+import { TaccuinoDellEnergia, prezzoMedio } from "../src/l-energia-di-casa.js";
 import { cieloDiDomani, LA_GIORNATA, LE_RICARICHE_DI_CASA, Notifiche } from "../src/notifiche.js";
 import { apriLaSpinta } from "../src/spinta.js";
 
@@ -1120,12 +1120,153 @@ test("l'ultima ricarica a casa resta, per il costo dei viaggi di GdANav", async 
   assert.equal(diario.ricaricheDiCasa().length, 1);
 });
 
+test("una ricarica col sole a pezzi e' un pieno solo, finche' l'auto non viaggia", () => {
+  /* Col fotovoltaico la wallbox va e viene con le nuvole: «l'ultima
+   * ricarica» era l'ultimo pezzo, e diceva il prezzo di quello. */
+  const stati = unaCasa();
+  const { diario, passa, energia } = unDiario(stati, { adesso: alle(11) });
+  const batteria = (soc) =>
+    stati.set("sensor.auto_batteria", st(soc, { unit_of_measurement: "%" }));
+  const wallbox = (w) => stati.set("sensor.wallbox_w", st(w, { unit_of_measurement: "W" }));
+  batteria(60);
+  passa(1);
+  /* Il primo pezzo: un'ora a 7 kW, tutta dal sole. */
+  energia.sole = 8000;
+  energia.casa = 7300;
+  energia.rete = 0;
+  wallbox(7000);
+  passa(60);
+  batteria(70);
+  /* Una nuvola: venti minuti ferma. */
+  wallbox(0);
+  energia.casa = 300;
+  passa(20);
+  assert.equal(diario.ricaricheDiCasa().length, 1);
+  /* Il secondo pezzo: mezz'ora a 7 kW, tutta dalla rete. */
+  energia.sole = 0;
+  energia.casa = 7300;
+  energia.rete = 7300;
+  wallbox(7000);
+  passa(30);
+  batteria(75);
+  /* Ancora in corso: chi stacca e parte la trova gia' intera. */
+  const [inCorso] = diario.ricaricheDiCasa();
+  assert.ok(inCorso.kwh > 10 && inCorso.kwh < 11, `in corso ${inCorso.kwh}`);
+  wallbox(0);
+  energia.casa = 300;
+  energia.rete = 300;
+  passa(10);
+  const [r] = diario.ricaricheDiCasa();
+  assert.ok(r.kwh > 10 && r.kwh < 11, `kWh ${r.kwh}`);
+  assert.ok(r.kwhSole > 6.5 && r.kwhSole < 7.5, `col sole ${r.kwhSole}`);
+  assert.ok(r.euroRete > 0.6 && r.euroRete < 0.8, `euro di rete ${r.euroRete}`);
+  assert.equal(r.socDa, 60);
+  assert.equal(r.socA, 75);
+  /* Dopo un viaggio (la batteria scende), la ricarica dopo e' un'altra. */
+  batteria(50);
+  passa(30);
+  energia.casa = 7300;
+  energia.rete = 7300;
+  wallbox(7000);
+  passa(30);
+  batteria(55);
+  wallbox(0);
+  passa(10);
+  const [dopo] = diario.ricaricheDiCasa();
+  assert.ok(dopo.kwh > 3 && dopo.kwh < 4, `kWh ${dopo.kwh}`);
+  assert.equal(dopo.kwhSole, 0);
+  assert.equal(dopo.socDa, 50);
+});
+
+test("una ricarica a cavallo della mezzanotte resta intera", () => {
+  const stati = unaCasa();
+  const { diario, passa, energia } = unDiario(stati, { adesso: alle(23) });
+  stati.set("sensor.auto_batteria", st(40, { unit_of_measurement: "%" }));
+  passa(1);
+  energia.casa = 7300;
+  energia.rete = 7300;
+  stati.set("sensor.wallbox_w", st(7000, { unit_of_measurement: "W" }));
+  /* Dalle 23 alle 2: tre ore a 7 kW, 21 kWh, tutti dalla rete a 0,20. */
+  passa(180);
+  stati.set("sensor.auto_batteria", st(70, { unit_of_measurement: "%" }));
+  stati.set("sensor.wallbox_w", st(0, { unit_of_measurement: "W" }));
+  energia.casa = 300;
+  energia.rete = 300;
+  passa(10);
+  const [r] = diario.ricaricheDiCasa();
+  assert.ok(r.kwh > 20.5 && r.kwh < 21.5, `kWh ${r.kwh}`);
+  assert.ok(r.euroRete > 4.1 && r.euroRete < 4.3, `euro di rete ${r.euroRete}`);
+  assert.equal(r.socA, 70);
+  assert.match(r.finitaIl, /^2026-10-19T/);
+});
+
+test("una ricarica fuori casa non e' «di casa»", () => {
+  const stati = unaCasa();
+  const valori = JSON.parse(JSON.stringify(VALORI));
+  const orologio = { ora: alle(11) };
+  const diario = new DiarioDellaCasa({ adesso: () => orologio.ora });
+  /* La plancia ha la posizione dell'auto. */
+  valori.cd_ev_cars[0].ov["dm.ev_posizione"] = "device_tracker.auto";
+  stati.set("device_tracker.auto", st("not_home"));
+  const energia = { sole: 0, casa: 500, rete: 500 };
+  const passa = (minuti) => {
+    for (let i = 0; i < minuti * 2; i += 1) {
+      orologio.ora += 30 * 1000;
+      diario.campiona({ stati, valori, energia, prezzo: () => ({ prezzo: 0.2 }) });
+    }
+  };
+  stati.set("sensor.auto_batteria", st(30, { unit_of_measurement: "%" }));
+  passa(1);
+  assert.deepEqual(diario.autoSeguite(), ["Auto elettrica"]);
+  /* Una colonnina: 50 kW che la casa non da'. */
+  stati.set("sensor.wallbox_w", st(50000, { unit_of_measurement: "W" }));
+  passa(20);
+  stati.set("sensor.auto_batteria", st(60, { unit_of_measurement: "%" }));
+  stati.set("sensor.wallbox_w", st(0, { unit_of_measurement: "W" }));
+  passa(10);
+  assert.deepEqual(diario.ricaricheDiCasa(), []);
+  /* Tornata a casa, la ricarica dopo si ricorda. */
+  stati.set("device_tracker.auto", st("home"));
+  stati.set("sensor.wallbox_w", st(7000, { unit_of_measurement: "W" }));
+  passa(30);
+  stati.set("sensor.wallbox_w", st(0, { unit_of_measurement: "W" }));
+  passa(10);
+  assert.equal(diario.ricaricheDiCasa().length, 1);
+});
+
+test("il prezzo di casa in media: la tariffa unica, o le fasce pesate sulle ore", () => {
+  assert.equal(prezzoMedio({ costo: 0.22 }, alle(12)), 0.22);
+  assert.equal(prezzoMedio({}, alle(12)), null);
+  assert.equal(prezzoMedio({ costo: "non lo so" }, alle(12)), null);
+  /* Undici ore a 0,175, quattro a 0,15, nove a 0,135: 0,1558 in media. */
+  const fasce = {
+    quante: 3,
+    voci: [
+      { dalle: "08:00", prezzo: 0.175 },
+      { dalle: "19:00", prezzo: 0.15 },
+      { dalle: "23:00", prezzo: 0.135 },
+    ],
+  };
+  const medio = prezzoMedio({ fasce: JSON.stringify(fasce), costo: 0.3 }, alle(12));
+  assert.ok(Math.abs(medio - 0.1558) < 0.002, `in media ${medio}`);
+});
+
 test("le ricariche di casa: solo a un utente, e senza entita'", async () => {
   const banco = unBanco();
   try {
     const detto = await banco.chiedi({ type: LE_RICARICHE_DI_CASA });
     assert.equal(detto.success, true);
-    assert.deepEqual(detto.result, { ricariche: [] });
+    /* Una casa senza prezzo lo dice: GdANav spiega cosa manca. Le auto non
+     * le ha ancora cercate, e non dice «nessuna». */
+    assert.deepEqual(detto.result, { ricariche: [], prezzo: null, auto: null });
+    /* Con la tariffa nella plancia: il prezzo della rete di casa, e le auto
+     * di cui la casa segue la ricarica. Solo numeri e nomi della plancia. */
+    banco.notifiche._valori = () => ({ cd_costo_kwh: 0.22 });
+    banco.notifiche.diario.autoSeguite = () => ["Auto elettrica"];
+    const con = (await banco.chiedi({ type: LE_RICARICHE_DI_CASA })).result;
+    assert.deepEqual(con.prezzo, { euroAlKwh: 0.22 });
+    assert.deepEqual(con.auto, ["Auto elettrica"]);
+    assert.doesNotMatch(JSON.stringify(con), /sensor\.|device_tracker\./);
     const senza = await banco.notifiche.rispondi(
       { id: 2, type: LE_RICARICHE_DI_CASA },
       { dispositivo: { id: "b".repeat(32) } },
