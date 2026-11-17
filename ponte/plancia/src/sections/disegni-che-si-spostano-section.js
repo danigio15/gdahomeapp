@@ -29,6 +29,17 @@
  *     segue il suo pezzo) e `cede` (una misura: si scosta quando le si lascia
  *     sopra un pezzo, invece di farlo scostare);
  *   - `ridisegna()` rimette il disegno con `posizioniInUso(id, variante)`.
+ *
+ * Un disegno che ha piu' di una disposizione (il flusso dell'energia, una per
+ * impianto) lo dice con tre cose in piu':
+ *   - `disegno()`: la casella di adesso (`energia-impianto-2`), se non e' `id`;
+ *   - `salvate(tutta, variante)`: le posizioni salvate di quella casella, se
+ *     per leggerle serve una regola (la vecchia disposizione comune);
+ *   - `primaDiSalvare(tutta)`: la casella intera rimessa in ordine prima di
+ *     scriverci sopra (la vecchia disposizione divisa fra gli impianti);
+ * e con `fissa(variante, posizioni)` puo' fermare al Salva anche i pezzi che
+ * non si sono mossi, cosi' un pezzo che arriva o se ne va dopo non fa
+ * scorrere gli altri. `nomeDi(disegno)` da' il nome di una sua casella.
  */
 
 import {
@@ -86,6 +97,42 @@ export function posizioniInUso(disegno, variante) {
   return salvate()[casella] || {};
 }
 
+/** La casella di adesso di un disegno iscritto: la sua, o quella che dice. */
+function disegnoDi(voce) {
+  try {
+    return voce?.disegno?.() || voce?.id;
+  } catch (_errore) {
+    return voce?.id;
+  }
+}
+
+/** Le posizioni salvate di un disegno iscritto, con la regola sua se ne ha. */
+function salvateDi(voce, variante) {
+  const tutta = salvate();
+  if (typeof voce?.salvate === "function") {
+    try {
+      return posizioniPulite(voce.salvate(tutta, variante));
+    } catch (_errore) {}
+  }
+  return tutta[casellaDel(disegnoDi(voce), variante)] || {};
+}
+
+/** Come `posizioniInUso`, per un disegno iscritto: la bozza della sua
+ * casella di adesso, se no le salvate con la sua regola. */
+export function posizioniDellaVoce(voce, variante) {
+  const casella = casellaDel(disegnoDi(voce), variante);
+  if (state.bozza.has(casella)) return state.bozza.get(casella);
+  return salvateDi(voce, variante);
+}
+
+/* Le posizioni salvate di una casella della bozza, come le vede chi la usa. */
+function salvateDellaCasella(casella) {
+  for (const voce of state.registro.values())
+    for (const variante of VARIANTI)
+      if (casellaDel(disegnoDi(voce), variante) === casella) return salvateDi(voce, variante);
+  return salvate()[casella] || {};
+}
+
 /* I nomi dei disegni anche prima che la loro pagina si apra (il Config li
  * elenca da subito): gli stessi che il disegno si da' iscrivendosi. */
 const NOMI = Object.freeze({
@@ -102,6 +149,10 @@ export function nomeDelDisegno(id) {
   try {
     const nome = state.registro.get(id)?.nome?.();
     if (nome) return nome;
+    for (const voce of state.registro.values()) {
+      const suo = voce.nomeDi?.(id);
+      if (suo) return suo;
+    }
   } catch (_errore) {}
   if (NOMI[id]) return NOMI[id]();
   const ups = /^ups(?:-(\d+))?$/.exec(id || "");
@@ -129,9 +180,8 @@ export function registraIlDisegno(voce) {
 
 function conta() {
   let n = 0;
-  const tutta = salvate();
   for (const [casella, posizioni] of state.bozza)
-    if (!stessePosizioni(posizioni, tutta[casella] || {})) n += 1;
+    if (!stessePosizioni(posizioni, salvateDellaCasella(casella))) n += 1;
   return n;
 }
 
@@ -145,7 +195,26 @@ function ridisegnaTutti() {
 
 function salva() {
   if (!state.bozza.size) return;
+  /* I pezzi che non si sono mossi si fermano dove si vedono, nel disegno che
+   * si sta cambiando: chi arriva dopo non li fa scorrere. Una scelta vuota
+   * (Ripristina) resta vuota. */
+  for (const voce of state.pagina ? vociDellaPagina(state.pagina) : []) {
+    if (typeof voce.fissa !== "function") continue;
+    const variante = voce.variante?.();
+    const casella = casellaDel(disegnoDi(voce), variante);
+    const bozza = state.bozza.get(casella);
+    if (!bozza || !Object.keys(bozza).length) continue;
+    try {
+      state.bozza.set(casella, posizioniPulite(voce.fissa(variante, bozza)));
+    } catch (_errore) {}
+  }
   let tutta = salvate();
+  for (const voce of state.registro.values()) {
+    if (typeof voce.primaDiSalvare !== "function") continue;
+    try {
+      tutta = disegniPuliti(voce.primaDiSalvare(tutta));
+    } catch (_errore) {}
+  }
   for (const [casella, posizioni] of state.bozza) {
     const [disegno, variante] = casella.split(":");
     tutta = conLePosizioni(tutta, disegno, variante, posizioni);
@@ -177,7 +246,7 @@ function vociDellaPagina(pagina) {
 function ripristina(pagina) {
   for (const voce of vociDellaPagina(pagina)) {
     const variante = voce.variante?.();
-    if (VARIANTI.includes(variante)) state.bozza.set(casellaDel(voce.id, variante), {});
+    if (VARIANTI.includes(variante)) state.bozza.set(casellaDel(disegnoDi(voce), variante), {});
   }
   rifaiGliStrati();
   ridisegnaTutti();
@@ -186,8 +255,8 @@ function ripristina(pagina) {
 /** Un pezzo messo in un posto, nella bozza. Un pezzo rimesso dove sta di
  * serie non si scrive. */
 function metti(voce, variante, nodo, punto) {
-  const casella = casellaDel(voce.id, variante);
-  const posizioni = { ...posizioniInUso(voce.id, variante) };
+  const casella = casellaDel(disegnoDi(voce), variante);
+  const posizioni = { ...posizioniDellaVoce(voce, variante) };
   delete posizioni[nodo.id];
   /* Dove starebbe senza una scelta sua: per una misura che segue il suo
    * pezzo, dove l'ha portata il pezzo. */
@@ -202,7 +271,13 @@ function metti(voce, variante, nodo, punto) {
 /* ── misurare ───────────────────────────────────────────────────────────── */
 
 function dove(voce, nodo, variante) {
-  return posizioniInUso(voce.id, variante)[nodo.id] || nodo.adesso?.() || nodo.centro;
+  /* Un pezzo che il disegno tiene dentro di suo (un cerchio scelto con
+   * un'altra misura): la maniglia sta dove si vede il pezzo. */
+  if (nodo.dentro) {
+    const qui = nodo.adesso?.();
+    if (qui) return qui;
+  }
+  return posizioniDellaVoce(voce, variante)[nodo.id] || nodo.adesso?.() || nodo.centro;
 }
 
 /** Quanto un pezzo (col suo disegno e le sue etichette) si allarga intorno
@@ -365,7 +440,7 @@ function prendi(event, maniglia) {
   const foto = fotografia(voce);
   const nodo = foto?.nodi.find((n) => n.id === maniglia.getAttribute("data-dm-disegno-nodo"));
   if (!nodo) return false;
-  const casella = casellaDel(voce.id, foto.variante);
+  const casella = casellaDel(disegnoDi(voce), foto.variante);
   state.presa = {
     voce,
     nodo,
@@ -683,6 +758,8 @@ export function installDisegniCheSiSpostano() {
 /* Per le prove. */
 root.dmDisegni = {
   posizioniInUso,
+  /* La casella di adesso di un disegno iscritto (il flusso: una per impianto). */
+  casella: (id, variante) => casellaDel(disegnoDi(state.registro.get(id) || { id }), variante),
   conta,
   voci: () => [...state.registro.keys()],
   /* I pezzi che hanno diritto a una maniglia adesso. */

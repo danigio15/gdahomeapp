@@ -56,6 +56,7 @@ import {
   conMargine,
   controprovaDellePorte,
   grigliaDallaFoto,
+  grigliaDeiMuri,
   inchiostro,
   leggiIlRender,
   prospettiva,
@@ -82,6 +83,15 @@ import {
   stanzeRitrovate,
   tipoDellaStanza,
 } from "../core/stanze-dalle-foto.js";
+import {
+  piantaDalPdf,
+  porteDelDisegno,
+  senzaIMuriDeiVani,
+  stanzeDalPdf,
+  tavolaDalPdf,
+  tracciatiDellaPagina,
+  unisciLeStanze,
+} from "../core/pianta-da-pdf.js";
 import {
   BIANCO_ATTORNO,
   pianteNelFoglio,
@@ -203,6 +213,15 @@ function statoNuovo(salvata, livello = 0) {
     casa: null,
     ritaglio: { x0: 0, y0: 0 },
     fuori: new Set(),
+    /* i balconi: fuori casa, ma col loro pavimento (dal PDF, o segnati) */
+    balconi: new Set(),
+    /* da dove viene la scala: «scritta», «quote», «porte», «muri», «aree»,
+     * «catasto», «dwg», «stima», «mano» (la misura corretta a mano) — si
+     * dice accanto alla misura */
+    scalaDa: "",
+    /* il PDF letto dal disegno (pianta-da-pdf.js): la tavola coi parapetti,
+     * i vani e le scritte, e se la scala e' sicura */
+    pdf: null,
     nomi: {},
     aree: {},
     sel: null,
@@ -933,7 +952,7 @@ function disegnaPianta() {
       nf = (S.foto[s.id] || []).length;
     sopra.insertAdjacentHTML(
       "beforeend",
-      `<div class="c3c-nome-st" style="left:${x}px;top:${y}px">${S.fuori.has(s.id) ? "🌳 " : ""}${esc(nomeDi(s.id))}<i>${esc(numero(s.area))} m²${nf ? ` · 📷 ${nf}` : ""}</i></div>`,
+      `<div class="c3c-nome-st" style="left:${x}px;top:${y}px">${S.fuori.has(s.id) ? "🌳 " : S.balconi?.has(s.id) ? "🪴 " : ""}${esc(nomeDi(s.id))}<i>${esc(numero(s.area))} m²${nf ? ` · 📷 ${nf}` : ""}</i></div>`,
     );
   }
   /* gli arredi letti nella pianta arredata, dove sono */
@@ -1248,20 +1267,47 @@ function pPlanimetria() {
   );
 }
 
+/* Da dove viene la scala, in parole: si dice accanto alla misura. */
+function provenienzaDellaScala(S) {
+  const scala = `1:${S.daScala || ""}`;
+  switch (S.scalaDa) {
+    case "scritta":
+      return t(`ricavata dalla scala ${scala} scritta sul foglio`, `from the ${scala} scale written on the sheet`);
+    case "porte":
+      return S.daScala
+        ? t(`ricavata dalla scala ${scala}, riconosciuta dalle porte del disegno`, `from the ${scala} scale, recognised from the doors in the drawing`)
+        : t("stimata dalle porte disegnate (una porta è 80 cm)", "estimated from the doors in the drawing (a door is 80 cm)");
+    case "muri":
+      return S.daScala
+        ? t(`ricavata dalla scala ${scala}, riconosciuta dallo spessore dei muri`, `from the ${scala} scale, recognised from the wall thickness`)
+        : t("stimata dallo spessore dei muri", "estimated from the wall thickness");
+    case "quote":
+      return t(`ricavata dalle quote scritte nel disegno (${scala})`, `from the dimensions written in the drawing (${scala})`);
+    case "aree":
+      return t("ricavata dalle aree scritte nelle stanze", "from the areas written in the rooms");
+    case "catasto":
+      return t("ricavata dalla scala del catasto (1:200)", "from the land registry scale (1:200)");
+    case "dwg":
+      return t("presa dal disegno", "taken from the drawing");
+    case "mano":
+      return t("dalla misura che hai scritto", "from the length you entered");
+    case "stima":
+      return t("stimata dalla misura del foglio: controllala", "estimated from the sheet size: check it");
+    default:
+      return "";
+  }
+}
+
 function notaDellaScala(S) {
-  const auto = S.mppMuri && S.mpp === S.mppMuri,
-    cm = S.scalaAvviso,
+  const cm = S.scalaAvviso,
     metri = S.metri ? numero(S.centimetri ? S.metri / 100 : S.metri, 2) : "";
   if (cm)
     return nota(
       `⚠️ ${esc(t(`Con questa misura i muri esterni sarebbero spessi ${cm} cm: controlla la misura, in metri (10,92 e non 1092).`, `With this length the outer walls would be ${cm} cm thick: check the length, in metres (10.92, not 1092).`))}`,
     );
   if (S.centimetri) return nota(esc(t(`Letta come ${metri} metri.`, `Read as ${metri} metres.`)));
-  if (auto)
-    return nota(
-      `✓ ${esc(t("Scala trovata dallo spessore dei muri: puoi andare avanti, o segnare una misura per essere più preciso.", "Scale found from the wall thickness: you can go on, or mark a length to be more precise."))}`,
-    );
-  return "";
+  const da = provenienzaDellaScala(S);
+  return da ? nota(`${S.scalaDa === "stima" ? "⚠️" : "✓"} ${esc(t("Scala", "Scale"))}: ${esc(da)}`) : "";
 }
 
 function pScala() {
@@ -1269,13 +1315,37 @@ function pScala() {
   return (
     scheda(
       `📏 <b>${esc(t("La scala", "The scale"))}</b>`,
-      `${nota(esc(t("Tocca i due estremi di una misura che conosci: una quota scritta, un muro, una porta (di solito 80 cm).", "Tap both ends of a length you know: a written dimension, a wall, a door (usually 80 cm).")))}
-      ${nota(S.punti.length === 2 ? `✓ ${esc(t("Due punti scelti", "Two points chosen"))}` : esc(t(`Punti: ${S.punti.length} di 2`, `Points: ${S.punti.length} of 2`)))}
+      `${nota(esc(t("La misura l'ho già ricavata: non serve scrivere niente. Se la conosci meglio, correggila qui, o tocca i due estremi di una misura che conosci (una quota scritta, una porta di 80 cm).", "I've already worked out the length: you don't need to enter anything. If you know it better, correct it here, or tap both ends of a length you know (a written dimension, an 80 cm door).")))}
       <label class="c3c-metri"><input class="c3c-in" data-c3c-metri inputmode="decimal" value="${S.metri ? esc(numero(S.metri, 2)) : ""}" placeholder="${esc(t("es. 4,20", "e.g. 4.20"))}"> <span>${esc(t("metri", "metres"))}</span></label>
       ${S.mpp ? nota(esc(t(`1 metro = ${Math.round(1 / S.mpp)} pixel della foto`, `1 metre = ${Math.round(1 / S.mpp)} photo pixels`))) : ""}
-      <div data-c3c="notaScala">${notaDellaScala(S)}</div>`,
+      <div data-c3c="notaScala">${notaDellaScala(S)}</div>
+      ${S.lavoro ? `<div class="c3c-lavoro">⏳ ${esc(S.lavoro)}</div>` : ""}`,
     ) + avanti(t("Riconosci i muri →", "Find the walls →"), Boolean(S.mpp))
   );
+}
+
+/* Quello che il PDF ha detto, al passo dei muri: la scala e da dove viene,
+ * i balconi e i vani trovati, e se le aree scritte tornano. Se la scala
+ * non e' sicura lo si dice: si corregge tornando alla «Scala». */
+function notaDelDisegno(S) {
+  if (!S.pdf) return "";
+  const righe = [];
+  const da = provenienzaDellaScala(S);
+  if (da) righe.push(`${S.pdf.sicuro || S.scalaDa === "aree" || S.scalaDa === "mano" ? "✓" : "⚠️"} ${esc(t("Scala", "Scale"))}: ${esc(da)}`);
+  if (S.pdf.confronti >= 2)
+    righe.push(
+      `✓ ${esc(t(`Le aree scritte in ${S.pdf.confronti} stanze tornano con quelle riconosciute.`, `The areas written in ${S.pdf.confronti} rooms match the recognised ones.`))}`,
+    );
+  const balconi = [...S.balconi].filter((id) => stanzaDi(id)).length;
+  if (balconi)
+    righe.push(
+      `✓ ${esc(t(`Balconi: ${balconi} (pavimento e parapetto, senza soffitto).`, `Balconies: ${balconi} (floor and railing, no ceiling).`))}`,
+    );
+  if (!S.pdf.sicuro && S.scalaDa !== "aree" && S.scalaDa !== "mano")
+    righe.push(
+      `⚠️ ${esc(t("La scala non era scritta come testo: controlla le misure delle stanze. Se non tornano, torna indietro alla «Scala» e correggila.", "The scale wasn't written as text: check the room sizes. If they're wrong, go back to «Scale» and correct it."))}`,
+    );
+  return righe.length ? `<div class="c3c-piccolo c3c-righe">${righe.join("<br>")}</div>` : "";
 }
 
 function pMuri() {
@@ -1321,7 +1391,8 @@ function pMuri() {
       `${nota(esc(t(`Trovati ${c.stanze.length} ambienti, ${porte} porte e ${fin} finestre. Correggi dove serve, poi vai avanti.`, `Found ${c.stanze.length} rooms, ${porte} doors and ${fin} windows. Fix what's needed, then go on.`)))}
       <div class="c3c-strumenti">${strumenti.map(([k, i, n]) => `<button type="button" class="${S.strumento === k ? "si" : ""}" data-c3c-strumento="${k}"><b>${i}</b>${esc(n)}</button>`).join("")}</div>
       <div class="c3c-leg"><span><i style="background:#0f172a"></i>${esc(t("muro", "wall"))}</span><span><i style="background:#22c55e"></i>${esc(t("porta", "door"))}</span><span><i style="background:#0ea5e9"></i>${esc(t("finestra", "window"))}</span><span><i style="background:#bae6fd"></i>${esc(t("stanza", "room"))}</span></div>
-      ${nota(esc(aiuto))}`,
+      ${nota(esc(aiuto))}
+      ${notaDelDisegno(S)}`,
     ) + avanti()
   );
 }
@@ -1375,11 +1446,13 @@ function pStanze() {
             <span class="c3c-pall" style="background:${COLORI_STANZE[k % COLORI_STANZE.length]}"></span>
             <div class="c3c-stanza-campi">${sceltaDellaStanza(s)}</div>
             <span class="c3c-m">${esc(numero(s.area))} m²</span>
+            <button type="button" class="c3c-ch${S.balconi?.has(s.id) ? " si" : ""}" data-c3c-balcone="${s.id}" title="${esc(t("È un balcone", "It's a balcony"))}">🪴</button>
             <button type="button" class="c3c-ch${S.fuori.has(s.id) ? " si" : ""}" data-c3c-fuori="${s.id}" title="${esc(t("È fuori casa", "It's outside"))}">🌳</button>
           </div>`,
         )
         .join("")}</div>
-      ${nota(esc(t("🌳 = è fuori casa (cortile, balcone): le sue aperture diventano finestre.", "🌳 = it's outside (yard, balcony): its openings become windows.")))}`,
+      ${nota(esc(t("🌳 = è fuori casa (cortile, balcone): le sue aperture diventano finestre.", "🌳 = it's outside (yard, balcony): its openings become windows.")))}
+      ${nota(esc(t("🪴 = è un balcone: resta col suo pavimento e il parapetto, senza soffitto.", "🪴 = it's a balcony: it keeps its floor and railing, with no ceiling.")))}`,
     ) +
     arrediDellaPianta() +
     avanti()
@@ -2021,6 +2094,9 @@ function creaLaPiantaDalleFoto() {
     aree,
     foto,
     fuori: new Set(),
+    balconi: new Set(),
+    pdf: null,
+    scalaDa: "",
     manuali: [],
     arredi: [],
     finiture: {},
@@ -2390,11 +2466,17 @@ async function usaPlanimetria(src) {
       punti: [],
       metri: null,
       mpp: muri?.mpp || null,
+      scalaDa: muri?.mpp ? "muri" : "",
+      ricavata: muri?.mpp ? { mpp: muri.mpp, da: "muri" } : null,
+      misuraProposta: false,
+      daScala: 0,
       griglia: null,
       casa: null,
       nomi: {},
       aree: {},
       fuori: new Set(),
+      balconi: new Set(),
+      pdf: null,
       foto: {},
       manuali: [],
       etichette: [],
@@ -2423,10 +2505,19 @@ async function caricaPdfjs() {
   }
 }
 
-/* Il PDF della planimetria (il catasto lo da' cosi'): la prima pagina,
- * disegnata nitida. Se sul foglio c'e' scritta la scala («Scala 1:200») la
- * casa e' gia' in metri, e si va dritti ai muri: sul catasto non ci sono
- * quote da toccare. Senza scala si passa dai due punti, come per una foto. */
+/* Il PDF della planimetria: la prima pagina.
+ *
+ * Prima si legge il disegno per quello che e' (pianta-da-pdf.js): il PDF
+ * dell'architetto e' fatto di tratti, e dai tratti si sa cosa sono i muri, le
+ * quote, il cartiglio, le porte, i balconi, e la scala anche quando «scala
+ * 1:50» non e' testo ma disegno. Cosi' la casa esce in metri, senza chiedere
+ * niente.
+ *
+ * Se il disegno non dice i suoi muri (una scansione, come la visura del
+ * catasto, o un disegno a righe senza campiture) la pagina si disegna nitida
+ * e passa per la strada della foto: se sul foglio c'e' scritta la scala
+ * («Scala 1:200») la casa e' gia' in metri; se no la scala si stima dalle
+ * porte o dallo spessore dei muri, e si puo' correggere al passo «Scala». */
 async function usaPdf(file) {
   const S = state.S;
   Object.assign(S, {
@@ -2439,8 +2530,59 @@ async function usaPdf(file) {
   try {
     const [lib, dati] = await Promise.all([caricaPdfjs(), file.arrayBuffer()]);
     const documento = await lib.getDocument({ data: new Uint8Array(dati) }).promise;
-    const pagina = await documento.getPage(1);
-    const uno = pagina.getViewport({ scale: 1 });
+    /* una pagina: il suo testo (quando c'e', in punti della pagina) e il
+     * suo disegno, tratto per tratto */
+    const leggi = async (numero) => {
+      const pagina = await documento.getPage(numero);
+      const uno = pagina.getViewport({ scale: 1 });
+      let scritte = [];
+      try {
+        const testo = await pagina.getTextContent();
+        scritte = testo.items
+          .filter((i) => clean(i.str))
+          .map((i) => {
+            const m = lib.Util.transform(uno.transform, i.transform);
+            return {
+              t: i.str,
+              x: m[4],
+              y: m[5],
+              h: Math.hypot(m[2], m[3]) || 8,
+              w: Number(i.width) || 0,
+            };
+          });
+      } catch (_errore) {}
+      let piano = null;
+      try {
+        const operazioni = await pagina.getOperatorList();
+        piano = piantaDalPdf(tracciatiDellaPagina(operazioni, lib.OPS, uno.transform), {
+          scritte,
+        });
+      } catch (errore) {
+        root.console?.warn?.("[DashboardModern] Casa 3D: PDF a tratti", errore);
+      }
+      return { pagina, uno, scritte, piano };
+    };
+    S.lavoro = t("Leggo i muri dal disegno…", "Reading the walls from the drawing…");
+    disegnaIlPannello();
+    await new Promise((ok) => setTimeout(ok, 30));
+    /* 1. il disegno. Di solito e' la prima pagina; se li' non c'e' (una
+     * copertina, una relazione) si guarda nelle pagine dopo, fino alla sesta */
+    let letta = await leggi(1);
+    if (!letta.piano?.muri)
+      for (let n = 2; n <= Math.min(documento.numPages || 1, 6); n++) {
+        const altra = await leggi(n);
+        if (altra.piano?.muri) {
+          letta = altra;
+          break;
+        }
+      }
+    const { pagina, uno, scritte, piano } = letta;
+    const parole = scritte.map((q) => q.t).join(" ");
+    if (piano?.muri) {
+      documento.destroy?.();
+      return usaIlDisegnoDelPdf(piano);
+    }
+    /* 2. la pagina disegnata, come una foto */
     const zoom = 2400 / Math.max(uno.width, uno.height);
     const vista = pagina.getViewport({ scale: zoom });
     const tela = tela2d(Math.round(vista.width), Math.round(vista.height));
@@ -2448,19 +2590,21 @@ async function usaPdf(file) {
     g.fillStyle = "#fff";
     g.fillRect(0, 0, tela.width, tela.height);
     await pagina.render({ canvasContext: g, viewport: vista }).promise;
-    let scala = 0,
+    let scala = scalaScritta(parole),
+      scalaDa = scala ? "scritta" : "",
       delCatasto = false;
-    try {
-      const testo = await pagina.getTextContent();
-      const parole = testo.items.map((i) => i.str).join(" ");
-      scala = scalaScritta(parole);
-      /* La visura del catasto e' una scansione: la «Scala 1:200» sta
-       * nell'immagine e non si legge, ma si sa (vedi piante-nel-foglio.js). */
-      if (!scala) {
-        scala = scalaDelCatasto(parole);
-        delCatasto = scala > 0;
-      }
-    } catch (_errore) {}
+    /* La visura del catasto e' una scansione: la «Scala 1:200» sta
+     * nell'immagine e non si legge, ma si sa (vedi piante-nel-foglio.js). */
+    if (!scala) {
+      scala = scalaDelCatasto(parole);
+      delCatasto = scala > 0;
+      if (delCatasto) scalaDa = "catasto";
+    }
+    /* quella che i tratti del disegno dicono (le quote scritte, le porte,
+     * lo spessore dei tramezzi): quando manca la scala scritta, o quando il
+     * disegno la smentisce (un foglio stampato «adattato alla pagina») */
+    if (piano?.scala && (!scala || delCatasto || piano.scalaDa !== "scritta"))
+      [scala, scalaDa, delCatasto] = [piano.scala, piano.scalaDa, false];
     documento.destroy?.();
     S.lavoro = "";
     if (scala) {
@@ -2485,6 +2629,8 @@ async function usaPdf(file) {
               tela: pezzo,
               mpp,
               delCatasto,
+              scalaDa,
+              scala: Math.round(scala),
               nome: t(`Pianta ${i + 1}`, `Plan ${i + 1}`),
               larghezzaMetri: p.larghezza,
               profonditaMetri: p.profondita,
@@ -2501,17 +2647,21 @@ async function usaPdf(file) {
         return;
       }
       await usaPlanimetria(piante.length === 1 ? ritaglioDellaPianta(tela, piante[0], mpp) : tela);
-      pronta(mpp);
+      S.daScala = Math.round(scala);
+      pronta(mpp, [], scalaDa);
       if (delCatasto) {
         S.avviso = avvisoDelCatasto();
         disegna();
       }
       return;
     }
+    /* nessun indizio: la scala si stima (dai muri, o dalla misura del
+     * foglio) e si va al passo «Scala», dove si puo' correggere */
     await usaPlanimetria(tela);
+    stimaLaScala();
     S.avviso = t(
-      "Sul PDF non ho trovato la scala: tocca i due capi di una misura che conosci.",
-      "No scale found on the PDF: tap both ends of a length you know.",
+      "Sul PDF non ho trovato la scala: l'ho stimata. Controlla la misura al passo «Scala».",
+      "No scale on the PDF: I estimated it. Check the length at the «Scale» step.",
     );
     disegna();
   } catch (errore) {
@@ -2524,6 +2674,35 @@ async function usaPdf(file) {
     );
     disegna();
   }
+}
+
+/* Il PDF letto dai tratti: i muri disegnati puliti (con le finestre e le
+ * porte a parte), la scala gia' nota, i nomi scritti nelle stanze. Si va
+ * dritti ai muri; quello che il disegno dice dopo il riconoscimento (i
+ * balconi, i vani, le aree scritte) lo fa `ricalcola`. */
+async function usaIlDisegnoDelPdf(piano) {
+  const S = state.S;
+  const tav = tavolaDalPdf(piano);
+  const tela = tela2d(tav.im.width, tav.im.height);
+  tela
+    .getContext("2d")
+    .putImageData(new ImageData(tav.im.data, tav.im.width, tav.im.height), 0, 0);
+  await usaPlanimetria(tela);
+  Object.assign(S, {
+    vetri: tav.vetri,
+    porte: null,
+    disegno: true,
+    daScala: piano.scala,
+    pdf: {
+      tav,
+      scala: piano.scala,
+      sicuro: piano.sicuro,
+      ricalibrato: false,
+      vani: new Set(),
+      confronti: 0,
+    },
+  });
+  pronta(tav.mpp, tav.etichette, piano.scalaDa);
 }
 
 /* Una pianta del foglio, ritagliata con un metro di margine e un po' di
@@ -2561,7 +2740,8 @@ async function usaPiantaDelFoglio(p) {
   if (!p) return;
   S.dwg = null;
   await usaPlanimetria(p.tela);
-  pronta(p.mpp);
+  S.daScala = p.scala || 0;
+  pronta(p.mpp, [], p.scalaDa || "scritta");
   if (p.delCatasto) {
     S.avviso = avvisoDelCatasto();
     disegna();
@@ -2780,13 +2960,23 @@ async function usaPianoDwg(p) {
   S.dwg = null;
   await usaPlanimetria(tela);
   Object.assign(S, { vetri, porte, disegno: true });
-  return pronta(mpp, etichette);
+  return pronta(mpp, etichette, "dwg");
 }
 
 /* Dopo un disegno la scala e' gia' nota: si va dritti ai muri. */
-function pronta(mpp, etichette = []) {
+function pronta(mpp, etichette = [], da = state.S.scalaDa || "disegno") {
   const S = state.S;
-  Object.assign(S, { mpp, etichette, avviso: "", dettaglio: "" });
+  Object.assign(S, {
+    mpp,
+    etichette,
+    avviso: "",
+    dettaglio: "",
+    scalaDa: da,
+    ricavata: { mpp, da },
+    punti: [],
+    metri: null,
+    misuraProposta: false,
+  });
   S.passo = P.scala;
   vaiAvanti();
 }
@@ -2823,7 +3013,7 @@ async function disegnaAMano() {
   S.dwg = null;
   await usaPlanimetria(tela);
   Object.assign(S, { strumento: "dritto", disegno: true });
-  return pronta(1 / ppm);
+  return pronta(1 / ppm, [], "mano");
 }
 
 /* I piani di un DWG che ne ha piu' d'uno: si sceglie quale. */
@@ -2859,6 +3049,8 @@ function riconosci() {
     const im = base.getContext("2d").getImageData(0, 0, base.width, base.height);
     /* le tele a parte del disegno (infissi, porte), come mappe di pixel */
     const mappa = (tela) => {
+      /* il PDF le da' gia' come mappe di pixel */
+      if (tela instanceof Uint8Array) return tela.length === im.width * im.height ? tela : null;
       if (tela?.width !== im.width || tela.height !== im.height) return null;
       const d = tela.getContext("2d").getImageData(0, 0, im.width, im.height).data,
         m = new Uint8Array(im.width * im.height);
@@ -2876,7 +3068,20 @@ function riconosci() {
       pianoDaFoto: S.pianoDaFoto === true,
       render: base === S.pulita,
     });
+    /* il PDF: muri puliti e porte tutte disegnate. Le stanzine (il
+     * ripostiglio, il bagnetto) si cercano anche a 30 cm dai muri. */
+    if (S.pdf) S.griglia.pieni = true;
     ricalcola();
+    /* Le aree scritte nelle stanze non tornano, e tutte allo stesso modo:
+     * la scala era sbagliata di quel tanto. Si corregge una volta. */
+    if (S.pdf && !S.pdf.ricalibrato && S.pdf.fattore && S.pdf.fattore !== 1) {
+      S.pdf.ricalibrato = true;
+      S.mpp *= S.pdf.fattore;
+      S.ricavata = { mpp: S.mpp, da: "aree" };
+      S.scalaDa = "aree";
+      S.griglia = null;
+      return riconosci();
+    }
     /* La pianta arredata: gli arredi disegnati, al loro posto (quelli
      * trovati prima, con un'altra scala o altri muri, se ne vanno). */
     S.arredi = (S.arredi || []).filter((a) => !a.daPianta);
@@ -2943,12 +3148,34 @@ function ricalcola() {
             nome: S.nomi[s.id],
             area: S.aree[s.id],
             fuori: S.fuori.has(s.id),
+            balcone: S.balconi?.has(s.id),
             foto: S.foto[s.id],
           },
         ]),
       )
     : {};
-  S.casa = riconosciDaFoto(S.griglia);
+  S.casa = riconosciDaFoto(S.griglia, { squadra: !S.pdf });
+  /* Il PDF dice di piu': i balconi (chiusi dal parapetto), i vani (il
+   * riquadro con le diagonali: ascensore, cavedio), i passaggi senza porta
+   * (due pezzi della stessa stanza) e le aree scritte. */
+  let dalPdf = null;
+  if (S.pdf?.tav && S.mpp) {
+    try {
+      const lato = PASSO / S.mpp;
+      S.casa = porteDelDisegno(S.casa, S.pdf.tav, S.mpp);
+      const prima = stanzeDalPdf(S.casa, S.pdf.tav, lato);
+      S.casa = unisciLeStanze(S.casa, prima.balconi, S.griglia.barriera);
+      const nomiScritti = S.etichette?.length
+        ? nomiDalleScritte(S.casa, S.etichette, lato)
+        : {};
+      dalPdf = stanzeDalPdf(S.casa, S.pdf.tav, lato, nomiScritti);
+      S.pdf.fattore = dalPdf.fattore;
+      S.pdf.confronti = dalPdf.fattore === 1 ? dalPdf.confronti : 0;
+      S.pdf.vani = dalPdf.vani;
+    } catch (errore) {
+      root.console?.warn?.("[DashboardModern] Casa 3D: stanze del PDF", errore);
+    }
+  }
   const nomi = {},
     aree = {},
     fuori = new Set(),
@@ -2976,9 +3203,28 @@ function ricalcola() {
       if (!giaViste.has(Number(id)) && eNomeDiFuori(nome)) fuori.add(Number(id));
     }
   }
+  /* i balconi e i vani del PDF: solo per le stanze nuove (quello che
+   * l'utente ha gia' deciso resta) */
+  const balconi = new Set();
+  for (const s of S.casa.stanze) {
+    const v = vecchi[s.cuori.join(",")];
+    if (v) {
+      if (v.balcone) balconi.add(s.id);
+      continue;
+    }
+    if (!dalPdf) continue;
+    if (dalPdf.vani.has(s.id)) fuori.add(s.id);
+    else if (dalPdf.balconi.has(s.id)) {
+      /* un balcone resta col suo pavimento: non e' «fuori» come un cortile
+       * (la scritta «BALCONE» l'avrebbe messo fuori) */
+      balconi.add(s.id);
+      fuori.delete(s.id);
+      if (!nomi[s.id]) nomi[s.id] = t("Balcone", "Balcony");
+    }
+  }
   const finiture = {};
   for (const [da, a] of Object.entries(daA)) if (S.finiture?.[da]) finiture[a] = S.finiture[da];
-  Object.assign(S, { nomi, aree, fuori, foto, finiture });
+  Object.assign(S, { nomi, aree, fuori, balconi, foto, finiture });
   S.manuali = S.manuali.filter((d) => daA[d.stanza]).map((d) => ({ ...d, stanza: daA[d.stanza] }));
   S.arredi = (S.arredi || [])
     .filter((a) => daA[a.stanza])
@@ -2988,7 +3234,9 @@ function ricalcola() {
 
 function aggiornaScala() {
   const S = state.S;
-  const auto = S.mppMuri || null;
+  /* la scala ricavata da sola (dal PDF, dal disegno, dai muri, stimata):
+   * la misura scritta qui la corregge, e se si cancella si torna a lei */
+  const auto = S.mppMuri || S.ricavata?.mpp || null;
   S.scalaAvviso = null;
   S.centimetri = false;
   const px =
@@ -3006,12 +3254,97 @@ function aggiornaScala() {
     }
     S.centimetri = f !== 1;
     S.mpp = (S.metri * f) / px;
+    if (!S.misuraProposta) S.scalaDa = "mano";
     if (auto && S.spessoreMuri) {
       const r = S.mpp / auto;
       if (r > 1.7 || r < 1 / 1.7) S.scalaAvviso = Math.round(S.spessoreMuri * S.mpp * 100);
     }
-  } else S.mpp = auto;
+  } else {
+    S.mpp = auto;
+    S.scalaDa = S.ricavata?.da || (S.mppMuri ? "muri" : "");
+  }
   S.griglia = null;
+}
+
+/* Quando nessuno dice la scala (una foto senza muri leggibili, un PDF senza
+ * scala scritta ne' porte disegnate): si stima, e si dice che e' stimata.
+ *
+ *   1. dallo spessore dei muri pieni (30-45 cm quelli di fuori);
+ *   2. dalle porte: un arco di porta e' un quarto di cerchio di 80 cm. Non
+ *      sapendo la scala si prova la pianta a tre misure (12, 18 e 27 m sul
+ *      lato lungo: coprono dal monolocale alla villa) e si tiene quella in
+ *      cui si riconoscono piu' archi; il loro raggio da' la scala;
+ *   3. dalla misura del foglio, come se la casa lo riempisse (21 m sul lato
+ *      lungo): e' la stima piu' debole, e lo si dice. */
+function stimaLaScala() {
+  const S = state.S;
+  if (!S?.dritta) return;
+  let mpp = 0,
+    da = "stima";
+  const lato = Math.max(S.dritta.width, S.dritta.height);
+  try {
+    const g = S.dritta.getContext("2d");
+    const im = g.getImageData(0, 0, S.dritta.width, S.dritta.height);
+    const muri = scalaDaiMuri(im);
+    if (muri?.mpp) [mpp, da] = [muri.mpp, "muri"];
+    if (!mpp) {
+      const ink = inchiostro(im);
+      let meglio = null;
+      for (const lungo of [12, 18, 27]) {
+        const prova = lungo / lato;
+        const raggi = (grigliaDeiMuri(ink, im.width, im.height, prova).archi || [])
+          .map((a) => a.raggio * PASSO)
+          .sort((a, b) => a - b);
+        if (raggi.length >= 2 && (!meglio || raggi.length > meglio.n))
+          meglio = { n: raggi.length, mpp: (prova * 0.8) / raggi[raggi.length >> 1] };
+      }
+      if (meglio) [mpp, da] = [meglio.mpp, "porte"];
+    }
+  } catch (errore) {
+    root.console?.warn?.("[DashboardModern] Casa 3D: stima della scala", errore);
+  }
+  if (!mpp) mpp = (0.06 * 350) / lato;
+  S.ricavata = { mpp, da };
+  S.mpp = mpp;
+  S.scalaDa = da;
+  S.daScala = 0;
+}
+
+/* Al passo «Scala» la misura c'e' gia': la larghezza del disegno, coi due
+ * punti ai suoi capi. Non e' obbligatoria: chi la sa la corregge (scrivendo
+ * un altro numero, o toccando due punti di una misura nota). */
+function proponiLaMisura() {
+  const S = state.S;
+  if (!S?.dritta || (S.punti.length === 2 && S.metri)) return;
+  if (!S.mpp) stimaLaScala();
+  if (!S.mpp) return;
+  const w = S.dritta.width,
+    h = S.dritta.height;
+  let x0 = Math.round(w * 0.05),
+    x1 = Math.round(w * 0.95);
+  try {
+    /* i capi dell'inchiostro, sulla riga di mezzo e dintorni */
+    const d = S.dritta.getContext("2d").getImageData(0, 0, w, h).data;
+    let a = w,
+      b = -1;
+    for (let y = Math.round(h * 0.2); y < h * 0.8; y += Math.max(1, Math.round(h / 60)))
+      for (let x = 0; x < w; x++) {
+        const i = (y * w + x) * 4;
+        if (d[i] + d[i + 1] + d[i + 2] < 300) {
+          if (x < a) a = x;
+          if (x > b) b = x;
+        }
+      }
+    if (b - a > w * 0.2) [x0, x1] = [a, b];
+  } catch (_errore) {}
+  const y = Math.round(h / 2);
+  S.punti = [
+    [x0, y],
+    [x1, y],
+  ];
+  S.metri = Math.round((x1 - x0) * S.mpp * 100) / 100;
+  S.misuraProposta = true;
+  aggiornaScala();
 }
 
 function pennello(ev) {
@@ -3241,11 +3574,14 @@ function pianoDiAdesso() {
     }));
   const nomi = {};
   for (const s of S.casa.stanze) nomi[s.id] = nomeDi(s.id);
+  /* i vani del PDF (l'ascensore) rimasti fuori: via anche i loro muri */
+  const vani = new Set([...(S.pdf?.vani || [])].filter((id) => S.fuori.has(id)));
   return pianoDaRiconoscimento({
-    casa: S.casa,
+    casa: vani.size ? senzaIMuriDeiVani(S.casa, vani) : S.casa,
     nomi,
     aree: S.aree,
     fuori: S.fuori,
+    balconi: [...(S.balconi || [])].filter((id) => !S.fuori.has(id)),
     foto: fotoDerivate,
     dispositivi: S.manuali,
     arredi: S.arredi,
@@ -3330,6 +3666,21 @@ function vaiAvanti() {
   if (S.passo === P.muri && !S.casa?.stanze?.length) return;
   S.passo = Math.min(P.fine, S.passo + 1);
   S.aggiungi = null;
+  if (S.passo === P.scala) {
+    if (S.mpp) return proponiLaMisura();
+    /* la scala va stimata (dalle porte ci vuole qualche secondo): lo si
+     * dice, e la misura arriva appena pronta */
+    S.lavoro = t("Ricavo la scala…", "Working out the scale…");
+    setTimeout(() => {
+      try {
+        proponiLaMisura();
+      } catch (errore) {
+        root.console?.warn?.("[DashboardModern] Casa 3D: scala", errore);
+      }
+      S.lavoro = "";
+      disegna();
+    }, 30);
+  }
 }
 
 async function alClic(ev) {
@@ -3384,6 +3735,7 @@ async function alClic(ev) {
       S.passo =
         S.fonte === "stanzeFoto" && S.passo === P.muri ? P.planimetria : Math.max(0, S.passo - 1);
       S.aggiungi = null;
+      if (S.passo === P.scala && S.fonte !== "stanzeFoto") proponiLaMisura();
       break;
     case "avanti":
       if (S.passo === P.planimetria && S.fonte === "stanzeFoto") creaLaPiantaDalleFoto();
@@ -3416,6 +3768,7 @@ async function alClic(ev) {
   if (d.c3cP !== undefined && Number(d.c3cP) <= S.passo) {
     S.passo = Number(d.c3cP);
     if (S.fonte === "stanzeFoto" && S.passo === P.scala) S.passo = P.planimetria;
+    if (S.passo === P.scala && S.mpp) proponiLaMisura();
     S.aggiungi = null;
   }
   if (d.c3cLivello !== undefined) S.livello = Number(d.c3cLivello);
@@ -3424,17 +3777,29 @@ async function alClic(ev) {
       ? usaPiantaDelFoglio(S.dwg.piani[Number(d.c3cDwg)])
       : usaPianoDwg(S.dwg.piani[Number(d.c3cDwg)]);
   if (d.c3cStrumento) S.strumento = d.c3cStrumento;
-  if (d.c3cStanza && !ev.target.closest("select,input,[data-c3c-fuori]"))
+  if (d.c3cStanza && !ev.target.closest("select,input,[data-c3c-fuori],[data-c3c-balcone]"))
     S.sel = Number(d.c3cStanza);
   if (d.c3cStanza && ev.target.closest("select,input")) return;
   if (d.c3cViaArredo !== undefined) {
     const i = Number(d.c3cViaArredo);
     if (S.arredi?.[i]?.daPianta) S.arredi.splice(i, 1);
   }
+  if (d.c3cBalcone) {
+    const id = Number(d.c3cBalcone);
+    S.balconi ||= new Set();
+    if (S.balconi.has(id)) S.balconi.delete(id);
+    else {
+      S.balconi.add(id);
+      S.fuori.delete(id);
+    }
+  }
   if (d.c3cFuori) {
     const id = Number(d.c3cFuori);
     if (S.fuori.has(id)) S.fuori.delete(id);
-    else S.fuori.add(id);
+    else {
+      S.fuori.add(id);
+      S.balconi?.delete(id);
+    }
   }
   if (d.c3cStanzaf) {
     S.sel = Number(d.c3cStanzaf);
@@ -3710,6 +4075,7 @@ function alScrivere(ev) {
   if (!S || e.dataset.c3cMetri === undefined) return;
   const v = parseFloat(clean(e.value).replace(",", "."));
   S.metri = v > 0 && v < 5000 ? v : null;
+  S.misuraProposta = false;
   aggiornaScala();
   const b = nodo().querySelector("[data-c3c='avanti']");
   if (b) b.disabled = !S.mpp;
@@ -3755,7 +4121,9 @@ function giu(ev) {
     return pennello(ev);
   }
   if (S.passo === P.scala) {
-    if (S.punti.length >= 2) S.punti = [];
+    if (S.punti.length >= 2 || S.misuraProposta) S.punti = [];
+    if (S.misuraProposta) S.metri = null;
+    S.misuraProposta = false;
     S.punti.push([x, y]);
     aggiornaScala();
     return disegna();
@@ -3932,6 +4300,7 @@ function riprendi(dato) {
     nomi: r.nomi,
     aree: r.aree,
     finiture: r.finiture,
+    balconi: new Set(r.balconi || []),
     arredi: r.arredi,
     manuali: r.dispositivi.map((d) => ({ ...d })),
     ripreso: { k: dato.k, nome: dato.nome, livello: dato.livello },

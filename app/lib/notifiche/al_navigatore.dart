@@ -1,9 +1,11 @@
-/// Le notifiche della casa anche nel navigatore, mentre si guida.
+/// Le notifiche della casa anche nel navigatore, mentre lo si usa.
 ///
 /// Ogni notifica che il postino apre e mostra sul telefono (`postino.dart`)
-/// arriva anche a gdanav, che in guida la fa diventare un avviso sopra la
-/// mappa — sul telefono, su Android Auto e su CarPlay (`GestoreCasaInGuida`
-/// in gdanav). Sono **le stesse** che arrivano al telefono: le preferenze
+/// arriva anche a gdanav, che la fa diventare un avviso sopra la mappa — sul
+/// telefono, su Android Auto e su CarPlay (`GestoreCasaInGuida` in gdanav) —
+/// in guida e anche a mappa libera, senza percorso: con lo schermo dell'auto
+/// acceso o la mappa del telefono davanti. Prima solo in guida: «Lavatrice
+/// finita» arrivava al telefono e non all'auto. Sono **le stesse** che arrivano al telefono: le preferenze
 /// delle notifiche (quali eventi, le ore di silenzio, «solo da fuori casa»)
 /// le applica gia' la casa prima di mandarle. Nel navigatore se ne sceglie in
 /// piu' solo se vederle in guida, e quali categorie.
@@ -13,7 +15,10 @@
 /// La busta si apre dove arriva: con l'app aperta nel pezzo di Dart
 /// dell'app, ma su Android con l'app in sottofondo — in macchina, col
 /// telefono in tasca e Android Auto acceso — Firebase sveglia **un altro**
-/// pezzo di Dart, in un altro motore. Il navigatore sta nel primo. Fra i due
+/// pezzo di Dart, in un altro motore. Il navigatore sta nel primo. I due
+/// motori, il servizio dell'auto e quello di Firebase stanno nello **stesso
+/// processo** (nessun `android:process` nei manifesti: lo controlla
+/// `test/notifiche/al_navigatore_fra_motori_test.dart`). Fra i due motori
 /// c'e' [IsolateNameServer]: il navigatore, quando si accende, apre una porta
 /// col nome [nomeDellaPorta] ([ascoltaLeNotifiche]); chi apre una busta, da
 /// qualunque parte, la cerca e ci lascia la notifica ([mandaAlNavigatore]).

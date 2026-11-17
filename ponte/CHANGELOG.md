@@ -10,6 +10,31 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.19.9
+
+_App GdAHome e add-on._
+
+- **Musica e avvisi di casa in auto, sistemati**: la musica e gli avvisi
+  compaiono anche senza una destinazione. Se dai il permesso per la
+  musica con l'app già aperta, la musica parte subito, senza riavviare;
+  se manca, l'auto te lo dice da fermo e il telefono apre la pagina
+  giusta. Un avviso arrivato mentre guardi il Menu torna sulla mappa, e
+  un allarme non blocca più gli avvisi successivi. Il tasto della casa
+  resta sempre in alto.
+- **CarPlay**: i tasti della musica compaiono solo quando suona Apple
+  Music; con CarPlay acceso e il telefono bloccato la notifica arriva
+  comunque anche sul telefono.
+- **Navigatore 3D più leggero in auto**: la scena 3D disegna meno
+  fotogrammi e meno pixel, secondo la velocità e il calore del telefono,
+  e si ferma quando non serve: telefono e navigatore restano fluidi.
+- **Casa 3D dalla pianta in PDF**: i PDF dei progetti si leggono dal
+  disegno: muri, porte, stanze coi loro nomi e balconi, senza quote,
+  cartiglio e unità vicine. I metri non sono più da scrivere: la scala
+  si ricava dal foglio e si può correggere.
+- **Energia, una disposizione per zona**: con più impianti ogni zona
+  tiene i suoi cerchi; sistemarne una non scombina più l'altra, e i
+  cerchi non escono più dal riquadro.
+
 ## 1.19.8
 
 _App GdAHome e add-on._

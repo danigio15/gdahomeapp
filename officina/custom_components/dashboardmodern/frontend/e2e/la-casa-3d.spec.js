@@ -10,6 +10,7 @@ import { deflateSync } from "node:zlib";
 import { expect, test } from "@playwright/test";
 import { bootNamespacedDashboard } from "./helpers/namespaced-dashboard.js";
 import { casa3dPulita, comprimiGriglia } from "../src/core/casa-3d.js";
+import { tavolaFinta } from "../tests/helpers/tavola-finta-pdf.js";
 
 /* La scena e' WebGL: nel browser senza schermo la disegna SwiftShader. */
 test.describe.configure({ mode: "serial" });
@@ -943,6 +944,74 @@ test("il PDF del catasto: la scala dal foglio e le stanze", async ({ page, brows
   await fotoDiretta(page, testInfo, "crea-pdf-catasto");
 });
 
+/* «La gente carica i PDF e la casa 3D esce sballata»: la tavola
+ * dell'architetto (A3 a 1:50, finta e con nomi inventati) letta dai suoi
+ * tratti. Niente da scrivere: la scala viene dal foglio, le stanze coi loro
+ * nomi e le aree scritte, il balcone resta un balcone, l'ascensore e le
+ * altre unita' restano fuori; e il passo «Scala» ha gia' la sua misura. */
+test("il PDF dell'architetto: muri, nomi e scala dal disegno, senza scrivere i metri", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "basta una misura");
+  const crea = await apriLaProcedura(page, testInfo);
+  await crea.locator('[data-c3c-file="pianta"]').setInputFiles({
+    name: "tavola-progetto.pdf",
+    mimeType: "application/pdf",
+    buffer: Buffer.from(tavolaFinta()),
+  });
+  const pannello = crea.locator(".c3c-pannello");
+  /* sei stanze, il balcone e il vano dell'ascensore */
+  await expect(pannello).toContainText("Trovati 8 ambienti", { timeout: 120_000 });
+  await expect(pannello).toContainText("ricavata dalla scala 1:50 scritta sul foglio");
+  await expect(pannello).toContainText("Le aree scritte in 6 stanze tornano");
+  await expect(pannello).toContainText("Balconi: 1");
+  await fotoDiretta(page, testInfo, "crea-pdf-architetto-muri");
+  const stato = await page.evaluate(() => {
+    const S = window.__DASHBOARDMODERN_CASA3D_CREA__.S;
+    return S.casa.stanze.map((s) => ({
+      nome: S.nomi[s.id] || "",
+      area: s.area,
+      fuori: S.fuori.has(s.id),
+      balcone: S.balconi.has(s.id),
+    }));
+  });
+  const di = (nome) => stato.find((s) => s.nome === nome);
+  for (const [nome, mq] of [
+    ["Soggiorno", 23.94],
+    ["Camera", 15.12],
+    ["Bagno", 8.37],
+    ["Ingresso", 11.71],
+    ["Cameretta", 6.2],
+  ]) {
+    expect(di(nome), `${nome} fra ${JSON.stringify(stato)}`).toBeTruthy();
+    expect(Math.abs(di(nome).area / mq - 1), `${nome}: ${di(nome).area}`).toBeLessThan(0.12);
+  }
+  expect(di("Balcone").balcone).toBe(true);
+  expect(di("Balcone").fuori).toBe(false);
+  expect(stato.filter((s) => s.fuori).length).toBe(1); // l'ascensore
+  expect(stato.some((s) => /altra/i.test(s.nome))).toBe(false);
+  /* il passo «Scala»: la misura c'e' gia', si puo' andare avanti senza
+   * scrivere niente, e chi vuole la corregge */
+  await crea.locator('[data-c3c="indietro"]').click();
+  const metri = crea.locator("[data-c3c-metri]");
+  await expect(metri).toBeVisible();
+  expect(Number((await metri.inputValue()).replace(",", "."))).toBeGreaterThan(5);
+  await expect(crea.locator('[data-c3c="avanti"]')).toBeEnabled();
+  await fotoDiretta(page, testInfo, "crea-pdf-architetto-scala");
+  await crea.locator('[data-c3c="avanti"]').click();
+  await expect(pannello).toContainText("Trovati 8 ambienti", { timeout: 120_000 });
+  /* fino in fondo: nel piano salvato il balcone e' una stanza «fuori» col
+   * suo pavimento, l'ascensore non c'e' */
+  for (let i = 0; i < 8 && !(await crea.locator('[data-c3c="salva"]').count()); i++)
+    await crea.locator('[data-c3c="avanti"]').click();
+  await crea.locator('[data-c3c="salva"]').click();
+  await expect(crea).toBeHidden({ timeout: 20_000 });
+  const salvata = await page.evaluate(() => JSON.parse(localStorage.getItem("cd_casa3d")));
+  const piano = salvata.piani[0];
+  expect(piano.stanze.length).toBe(7);
+  expect(piano.stanze.filter((s) => s.fuori).map((s) => s.nome)).toEqual(["Balcone"]);
+});
+
 /* «Non è lavorabile così: tutta la parte di sopra bloccata e un piccolo
  * riquadro sotto che scorre». Sul Fold aperto (e su un telefono) scorre tutta
  * la pagina: il disegno resta grande e il pannello si legge fino in fondo. */
@@ -1134,7 +1203,7 @@ test("la foto della pianta dell'architetto: prospettiva, stanze, finestre e scal
   await fotoDiretta(page, testInfo, "crea-foto-raddrizzata");
   for (let i = 0; i < 4 && !(await crea.locator("[data-c3c-metri]").count()); i++)
     await crea.locator('[data-c3c="avanti"]').click();
-  await expect(crea).toContainText(/Scala trovata dallo spessore dei muri/);
+  await expect(crea).toContainText(/dallo spessore dei muri/);
   if (quota !== "auto") {
     const tela = crea.locator(".c3c-tela");
     const b = await tela.boundingBox();

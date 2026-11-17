@@ -18,7 +18,15 @@
 
 import { laPotenzaInParole, lEnergiaInParole } from "./le-unita-della-corrente.js";
 import { wattsFromState } from "./signed-energy.js";
-import { curvaFraCerchi, postoLibero, rettangolo } from "./posizioni-nei-disegni.js";
+import {
+  VARIANTI,
+  casellaDel,
+  curvaFraCerchi,
+  limita,
+  posizioniPulite,
+  postoLibero,
+  rettangolo,
+} from "./posizioni-nei-disegni.js";
 
 export const FLOW_MAX_LOADS = 8;
 
@@ -982,6 +990,121 @@ export const VARIANTE_DEL_PALCO = Object.freeze({ desktop: "computer", mobile: "
 /** Il nome di un carico nel disegno. */
 export const nodoDelCarico = (id) => `carico:${id}`;
 
+/* ── Una disposizione per ogni impianto ────────────────────────────────────
+ *
+ * «Ho cercato di spostare i flussi ma metto a posto una zona, la salvo e si
+ * incasina l'altra e viceversa.» Con piu' impianti (le linguette in cima
+ * all'Energia: «Zona notte», «Esterno»…) la disposizione era UNA, «energia»,
+ * per tutti: i cerchi che le zone hanno in comune — Rete, Casa, «Altro»,
+ * «Non monitorati» — avevano lo stesso nome nel disegno, e sistemarli in una
+ * zona li spostava nell'altra, dove stavano sopra cerchi che li' ci sono e
+ * di la' no.
+ *
+ * Adesso ogni impianto ha la sua casella, `energia-<id dell'impianto>`, e
+ * dentro ogni cerchio si chiama col suo id (`carico:stanza-cucina`), mai col
+ * suo posto in fila. Con un impianto solo resta «energia», com'e' sempre
+ * stato: chi non ha zone non migra niente.
+ *
+ * Il lavoro gia' fatto non si perde. Chi aveva gia' sistemato le zone prima
+ * di questa versione ha tutto in «energia»: finche' nessuna zona ha la sua
+ * casella, ognuna legge quella (si vede quello che si vedeva prima); al primo
+ * Salva si copia in ogni zona che non ne ha una sua e «energia» se ne va
+ * (`separaLeZone`). Cosi' «Ripristina» in una zona la rimette di serie, invece
+ * di farle rileggere la disposizione dell'altra. */
+const IMPIANTO_BUONO = /[^a-z0-9_-]+/g;
+
+function pezzoDellImpianto(id) {
+  const pulito = String(id ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(IMPIANTO_BUONO, "-")
+    .replace(/^[-_]+/, "")
+    .slice(0, 55);
+  return pulito || "impianto";
+}
+
+const idsDegliImpianti = (impianti) =>
+  (Array.isArray(impianti) ? impianti : [])
+    .map((voce) => String((voce && typeof voce === "object" ? voce.id : voce) ?? "").trim())
+    .filter(Boolean);
+
+/** Il disegno del flusso di un impianto: «energia» con un impianto solo,
+ * `energia-<id>` quando sono piu' d'uno. `impianti` sono gli id (o gli
+ * impianti) nell'ordine dell'elenco; senza `scelto` vale il primo. */
+export function disegnoDellImpianto(impianti = [], scelto = "") {
+  const ids = idsDegliImpianti(impianti);
+  if (ids.length <= 1) return DISEGNO_DELL_ENERGIA;
+  const id = ids.includes(String(scelto ?? "").trim()) ? String(scelto).trim() : ids[0];
+  return `${DISEGNO_DELL_ENERGIA}-${pezzoDellImpianto(id)}`;
+}
+
+/** L'impianto di una casella `energia-<id>`, o `null` se non e' una casella
+ * di un impianto. */
+export function impiantoDelDisegno(disegno, impianti = []) {
+  const testo = String(disegno ?? "");
+  const prefisso = `${DISEGNO_DELL_ENERGIA}-`;
+  if (!testo.startsWith(prefisso)) return null;
+  const pezzo = testo.slice(prefisso.length);
+  return idsDegliImpianti(impianti).find((id) => pezzoDellImpianto(id) === pezzo) || null;
+}
+
+const oggettoPieno = (v) =>
+  v && typeof v === "object" && !Array.isArray(v) && Object.keys(v).length > 0;
+
+/** Le posizioni salvate di un impianto in una variante, da tutta la casella
+ * `cd_disegni`, con le regole della migrazione (vedi sopra). */
+export function posizioniDellImpianto(
+  tutta = {},
+  impianti = [],
+  scelto = "",
+  variante = "computer",
+) {
+  const T = tutta && typeof tutta === "object" ? tutta : {};
+  const ids = idsDegliImpianti(impianti);
+  const casella = (disegno) => casellaDel(disegno, variante);
+  const propria = T[casella(disegnoDellImpianto(ids, scelto))];
+  if (oggettoPieno(propria)) return posizioniPulite(propria);
+  if (ids.length <= 1) {
+    /* Un impianto solo, dopo che ce n'erano due: la sua casella di allora. */
+    const diAllora = T[casella(`${DISEGNO_DELL_ENERGIA}-${pezzoDellImpianto(ids[0] || scelto)}`)];
+    return oggettoPieno(diAllora) ? posizioniPulite(diAllora) : {};
+  }
+  const separate = ids.some((id) =>
+    oggettoPieno(T[casella(`${DISEGNO_DELL_ENERGIA}-${pezzoDellImpianto(id)}`)]),
+  );
+  if (separate) return {};
+  const vecchia = T[casella(DISEGNO_DELL_ENERGIA)];
+  return oggettoPieno(vecchia) ? posizioniPulite(vecchia) : {};
+}
+
+/** La casella `cd_disegni` pronta per un Salva: con piu' impianti la vecchia
+ * disposizione comune («energia») si copia in ogni impianto che non ne ha una
+ * sua e se ne va; con uno solo la sua casella `energia-<id>` torna «energia».
+ * Le altre caselle restano com'erano. Non tocca `tutta`. */
+export function separaLeZone(tutta = {}, impianti = []) {
+  const uscita = { ...(tutta && typeof tutta === "object" ? tutta : {}) };
+  const ids = idsDegliImpianti(impianti);
+  for (const variante of VARIANTI) {
+    const vecchia = casellaDel(DISEGNO_DELL_ENERGIA, variante);
+    if (ids.length <= 1) {
+      const diAllora = casellaDel(`${DISEGNO_DELL_ENERGIA}-${pezzoDellImpianto(ids[0])}`, variante);
+      if (!(diAllora in uscita)) continue;
+      if (!oggettoPieno(uscita[vecchia]) && oggettoPieno(uscita[diAllora]))
+        uscita[vecchia] = posizioniPulite(uscita[diAllora]);
+      delete uscita[diAllora];
+      continue;
+    }
+    if (!(vecchia in uscita)) continue;
+    if (oggettoPieno(uscita[vecchia]))
+      for (const id of ids) {
+        const sua = casellaDel(`${DISEGNO_DELL_ENERGIA}-${pezzoDellImpianto(id)}`, variante);
+        if (!oggettoPieno(uscita[sua])) uscita[sua] = posizioniPulite(uscita[vecchia]);
+      }
+    delete uscita[vecchia];
+  }
+  return uscita;
+}
+
 /* Quando il palco non si vede (la variante dell'altro schermo) le misure non
  * ci sono: bastano quelle di serie, e quando torna visibile si rifa' tutto. */
 const MISURE_DI_SERIE = Object.freeze({
@@ -1033,13 +1156,23 @@ export function conLePosizioni(model, posizioni = {}, misure = {}) {
       const y = (r / m.altezza) * 100;
       return { sinistra: x, destra: x, sopra: y, sotto: y };
     };
-    /* Dove sta ogni cerchio: chi ha una scelta li', gli altri dove stanno. */
+    /* Dove sta ogni cerchio: chi ha una scelta li', gli altri dove stanno.
+     *
+     * La scelta pero' resta dentro il palco. Era stata presa con un cerchio
+     * di un'altra misura — un'altra zona, che ha piu' o meno cerchi e quindi
+     * li rimpicciolisce di piu' o di meno, o un altro schermo — e un posto al
+     * 97% che col cerchio piccolo ci stava, col cerchio grande lo tagliava al
+     * bordo («NON MONITORATI tagliato a destra»). Si tiene dentro di quel
+     * tanto che basta; due scelte che si sovrappongono restano come le ha
+     * volute l'utente. */
     const centri = new Map();
     for (const node of model.nodes) {
       const scelto = P[nodoDelCarico(node.id)];
       centri.set(
         node.id,
-        dentroIlPalco(scelto) ? scelto : { x: node[variant].left, y: node[variant].top },
+        dentroIlPalco(scelto)
+          ? limita(scelto, ingombro(raggioDi(node)))
+          : { x: node[variant].left, y: node[variant].top },
       );
     }
     const occupati = (tranne) => [
@@ -1062,6 +1195,9 @@ export function conLePosizioni(model, posizioni = {}, misure = {}) {
         toccati.add(node.id);
         continue;
       }
+      /* Il cerchio di serie sta gia' dentro il palco quando la fila e' quella
+       * di serie; con una disposizione intorno lo si mette al posto libero,
+       * e `postoLibero` lo tiene dentro anche lui. */
       const qui = centri.get(node.id);
       const libero = postoLibero(qui, ingombro(raggioDi(node)), occupati(node.id));
       if (Math.abs(libero.x - qui.x) > 0.01 || Math.abs(libero.y - qui.y) > 0.01) {
