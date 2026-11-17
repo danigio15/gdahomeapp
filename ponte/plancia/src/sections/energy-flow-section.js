@@ -6,6 +6,7 @@ import {
   fonteDiRipiego,
 } from "../core/energy-flow-topology.js";
 import {
+  mettiIPrincipali,
   misureDelFlusso,
   posaLeLinee,
   posizioniDelFlusso,
@@ -673,6 +674,8 @@ function vehiclePopupTarget() {
   return { entities };
 }
 
+const residuoDi = (period) => `${clean(impiantoScelto().plant?.id)}|${period}`;
+
 function stageModel(period) {
   const { loads, appliances, perStanza } = carichiDelFlusso();
   const model = flowStageModel({
@@ -696,10 +699,12 @@ function stageModel(period) {
      * misura ha un cerchio suo, «Non monitorati» (`conIlResiduo` nel nucleo). */
     casa: consumoDiCasa(period),
     nomeDelResiduo: t("Non monitorati", "Unmonitored"),
-    tieniIlResiduo: Boolean(state.nonMonitorati?.[period]),
+    /* Ricordato per impianto: il cerchio nato in una zona non deve restare
+     * a 0 W nell'altra, dove non e' mai servito. */
+    tieniIlResiduo: Boolean(state.nonMonitorati?.[residuoDi(period)]),
   });
   if (model.nodes.some((nodo) => nodo.residuo))
-    state.nonMonitorati = { ...state.nonMonitorati, [period]: true };
+    state.nonMonitorati = { ...state.nonMonitorati, [residuoDi(period)]: true };
   ricordaINumeri(period, model);
   return conLePosizioniDelFlusso(period, model);
 }
@@ -1270,7 +1275,21 @@ export function renderDynamicFlowLoads(period, model = stageModel(period)) {
   const desktopSvg = stage.querySelector("svg.desktop-svg") || stage.querySelector("svg");
   const mobileSvg = stage.querySelector("svg.mobile-svg");
   const keep = new Set();
-  const scala = quantoCiStaNelPalco(stage, model, model.scale);
+  /* Quanto stringere i cerchi lo dice la fila DI SERIE, non i posti scelti.
+   *
+   * Contato sui posti scelti, bastava portare un cerchio fuori dalla fila
+   * perche' ogni cerchio restasse «solo nella sua fila» e tornasse grande:
+   * sul telefono da settantaquattro punti a novantasei. Quelli mai toccati,
+   * che stavano giusti nella fila stretta, finivano uno sopra l'altro (e il
+   * disegno li sparpagliava al posto libero), e quelli messi vicino al bordo
+   * col cerchio piccolo restavano tagliati col cerchio grande. La misura e'
+   * una sola per la scena, qualunque cosa l'utente abbia spostato. */
+  const diSerie = state.modelliDiSerie?.[period];
+  const scala = quantoCiStaNelPalco(
+    stage,
+    diSerie?.nodes?.length === model.nodes.length ? diSerie : model,
+    model.scale,
+  );
   for (const node of model.nodes) {
     keep.add(node.id);
     ensureBubble(stage, node, period, scala);
@@ -1612,7 +1631,10 @@ export function refreshEnergyFlows() {
   if (!doc) return false;
   beginVisibilityPass();
   ensureGridBatteryPaths();
-  /* Le linee fra i cerchi spostati, prima che il binario ne copi la strada. */
+  /* I quattro principali dove li vuole l'impianto che si guarda (ognuno ha
+   * la sua disposizione), e le linee fra i cerchi spostati, prima che il
+   * binario ne copi la strada. */
+  mettiIPrincipali();
   posaLeLinee();
   let touched = false;
   for (const view of FLOW_VIEWS) {

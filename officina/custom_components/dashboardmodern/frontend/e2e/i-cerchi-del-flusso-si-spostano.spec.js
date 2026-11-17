@@ -190,7 +190,14 @@ test("un carico si trascina e la sua linea da Casa lo segue; Annulla rimette tut
   await trascina(page, "carico:frigo", 120, -90);
   await page.locator('[data-dm-disp-azione="salva"]').click();
   const scritta = await salvata(page);
-  expect(Object.keys(scritta["energia:computer"])).toEqual(["carico:frigo"]);
+  /* Il frigo dove l'ha lasciato la mano, e ogni altro carico fermo dove si
+   * vede, col suo id: un cerchio che arriva dopo («Non monitorati») non li fa
+   * scorrere. I quattro principali restano di serie. */
+  expect(scritta["energia:computer"]["carico:frigo"]).toBeTruthy();
+  expect(Object.keys(scritta["energia:computer"]).every((k) => k.startsWith("carico:"))).toBe(true);
+  expect(Object.keys(scritta["energia:computer"])).toEqual(
+    expect.arrayContaining(["carico:frigo", "carico:clima", "carico:lavatrice"]),
+  );
   await expect.poll(async () => (await centro(page, frigo)).y).toBeLessThan(daDove.y - 5);
 });
 

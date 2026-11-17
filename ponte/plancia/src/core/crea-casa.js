@@ -795,6 +795,8 @@ function latiDelVarco(casa, a) {
  *    aperture), eventualmente ritoccato a mano;
  *  - `nomi` / `aree`: id della stanza → nome, → area_id di Home Assistant;
  *  - `fuori`: gli id delle stanze che sono fuori (cortile, balcone);
+ *  - `balconi`: gli id dei balconi e dei terrazzi: fuori come le altre, ma
+ *    restano col loro pavimento (senza soffitto, chiusi dal parapetto);
  *  - `foto`: id della stanza → [{ verso, w, h, oggetti, dispositivi, pavimento, pareti }];
  *  - `dispositivi`: quelli aggiunti senza foto ({ k, stanza, entity, nome });
  *  - `livello`, `nome`, `k`: che piano e'.
@@ -804,6 +806,7 @@ export function pianoDaRiconoscimento({
   nomi = {},
   aree = {},
   fuori = [],
+  balconi = [],
   foto = {},
   dispositivi = [],
   arredi: arrediGia = [],
@@ -814,9 +817,13 @@ export function pianoDaRiconoscimento({
 } = {}) {
   if (!casa?.tipo || !casa.W || !casa.H) return null;
   const { W, H, passo } = casa;
-  const daFuori = new Set([...fuori].map(Number));
-  const vive = elenco(casa.stanze).filter((s) => !daFuori.has(s.id));
+  const daBalcone = new Set([...balconi].map(Number));
+  /* un balcone e' fuori per le aperture (verso di lui c'e' la portafinestra),
+   * ma resta col suo pavimento */
+  const daFuori = new Set([...fuori, ...daBalcone].map(Number));
+  const vive = elenco(casa.stanze).filter((s) => !daFuori.has(s.id) || daBalcone.has(s.id));
   const idVivi = new Set(vive.map((s) => s.id));
+  const interne = new Set(vive.filter((s) => !daBalcone.has(s.id)).map((s) => s.id));
   /* le stanze «fuori» diventano fuori anche nel 3D; le stanze sciolte pure */
   const tipo = Int16Array.from(casa.tipo, (v) => (v > 0 && !idVivi.has(v) ? CELLA.fuori : v));
 
@@ -861,6 +868,7 @@ export function pianoDaRiconoscimento({
       area: clean(aree[s.id]).slice(0, 64),
       pavimento: ultima ? pavimentoDalColore(ultima.pavimento) : finiture[s.id]?.pavimento || null,
       pareti: colore(ultima?.pareti) || colore(finiture[s.id]?.pareti),
+      ...(daBalcone.has(s.id) ? { fuori: true } : {}),
     };
   });
 
@@ -868,8 +876,15 @@ export function pianoDaRiconoscimento({
   const aperture = elenco(casa.aperture).flatMap((a) => {
     const lati = latiDelVarco(casa, a);
     const suFuori = lati.some((v) => daFuori.has(v)) || daFuori.has(a.stanza);
-    const stanza = idVivi.has(a.stanza) ? a.stanza : lati.find((v) => idVivi.has(v)) || 0;
+    /* la stanza dell'apertura e' quella di dentro, non il balcone */
+    const stanza = interne.has(a.stanza)
+      ? a.stanza
+      : lati.find((v) => interne.has(v)) ||
+        (idVivi.has(a.stanza) ? a.stanza : lati.find((v) => idVivi.has(v))) ||
+        0;
     if (!stanza && (suFuori || a.stanza)) return []; // fra due cose che sono fuori: non serve
+    /* fra un balcone e il fuori (o fra due pezzi di balcone): niente */
+    if (daBalcone.size && !interne.has(stanza)) return [];
     return [
       sposta({
         tipo: suFuori ? "finestra" : a.tipo,
@@ -955,7 +970,7 @@ export function pianoDaRiconoscimento({
  * ognuna ritrova la sua (quella salvata che le sta sotto di piu'): nome, area,
  * pavimento, pareti, dispositivi e arredi, spostati nelle nuove coordinate.
  *
- * Torna `{ griglia, casa, nomi, aree, finiture, dispositivi, arredi }`, o
+ * Torna `{ griglia, casa, nomi, aree, finiture, balconi, dispositivi, arredi }`, o
  * `null` se il piano non ha una griglia.
  */
 export function riprendiIlPiano(piano, { margine = 0.6 } = {}) {
@@ -1013,10 +1028,12 @@ export function riprendiIlPiano(piano, { margine = 0.6 } = {}) {
     if (!daA.has(vecchia) || daA.get(vecchia).n < n) daA.set(vecchia, { nuova, n });
   const nomi = {},
     aree = {},
-    finiture = {};
+    finiture = {},
+    balconi = [];
   for (const s of elenco(piano.stanze)) {
     const id = daA.get(Number(s?.id))?.nuova;
     if (!id) continue;
+    if (s.fuori === true) balconi.push(id);
     if (clean(s.nome)) nomi[id] = clean(s.nome);
     if (clean(s.area)) aree[id] = clean(s.area);
     if (s.pavimento || s.pareti)
@@ -1034,6 +1051,7 @@ export function riprendiIlPiano(piano, { margine = 0.6 } = {}) {
     nomi,
     aree,
     finiture,
+    balconi,
     dispositivi: elenco(piano.dispositivi).flatMap(sposta),
     arredi: elenco(piano.arredi).flatMap(sposta),
   };

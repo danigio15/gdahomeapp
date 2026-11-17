@@ -2125,7 +2125,7 @@ export const GUIDE_3D = Object.freeze({
     "scopo": "Dai alla procedura la forma del piano: da qui vengono muri, porte, finestre e stanze. Si sceglie anche quale piano della casa si sta facendo.",
     "campi": [
       "<b>«Il piano»</b>: i tasti dei piani, dal seminterrato al terzo piano.",
-      "<b>«Carica una foto o un PDF della planimetria»</b>: il PDF del catasto va bene così com'è, la scala la legge dal foglio.",
+      "<b>«Carica una foto o un PDF della planimetria»</b>: il PDF del catasto va bene così com'è, la scala la legge dal foglio. Il PDF del progetto (la tavola dell'architetto) lo legge dal disegno: muri, porte, finestre, balconi, i nomi delle stanze e la scala, senza scrivere niente.",
       "<b>«Carica il disegno DWG»</b>: scala e nomi delle stanze li prende dal disegno.",
       "<b>«Disegnala qui»</b>: scrivi larghezza e profondità del piano in metri, poi dividi le stanze col «Muro dritto».",
       "<b>«Dalle foto delle stanze»</b>: fotografi ogni stanza intera e la pianta si fa da sola, misurando le cose di misura nota (forno, WC, condizionatore…).",
@@ -2159,30 +2159,30 @@ export const GUIDE_3D = Object.freeze({
     ],
     "consigli": [
       "La foto non deve essere dritta e le scritte non danno fastidio: conta che il foglio sia intero e ben illuminato.",
-      "Il PDF del catasto è il modo più preciso: la scala la legge da solo."
+      "Il PDF del catasto o del progetto è il modo più preciso: la scala la legge da solo, e dal progetto prende anche i nomi delle stanze."
     ]
   },
   "1": {
     "titolo": "Scala",
-    "scopo": "Insegna alla procedura quanto è grande la casa: quanti pixel della foto fanno un metro. Senza la scala giusta le stanze vengono troppo grandi o troppo piccole.",
+    "scopo": "Dice alla procedura quanto è grande la casa: quanti pixel della foto fanno un metro. La misura la ricava da sola e non c'è niente da scrivere: questo passo serve solo a controllarla, o a correggerla.",
     "campi": [
-      "La pianta, su cui si toccano i due estremi di una misura nota.",
-      "«Punti: 0 di 2», che diventa «✓ Due punti scelti».",
-      "La casella «metri» e la riga «1 metro = … pixel della foto».",
-      "Spesso la scala la trova da sola: «✓ Scala trovata dallo spessore dei muri»."
+      "La pianta, con la misura ricavata già segnata da un capo all'altro.",
+      "La casella «metri», già compilata, e la riga «1 metro = … pixel della foto».",
+      "Da dove viene la misura, per esempio «✓ Scala: ricavata dalla scala 1:50 scritta sul foglio»: può venire dalla scala scritta, dalle quote, dalle aree scritte nelle stanze, dalle porte o dallo spessore dei muri.",
+      "Se compare «⚠️ Scala: stimata dalla misura del foglio: controllala», la procedura non ha trovato indizi sicuri: conviene correggerla."
     ],
     "passi": [
       {
-        "testo": "Tocca sulla pianta il primo estremo di una misura che conosci: una quota scritta, un muro intero, una porta (di solito 80 cm).",
-        "html": "Tocca sulla pianta il primo estremo di una misura che conosci: una quota scritta, un muro intero, una porta (di solito 80 cm)."
+        "testo": "Se la misura ti torna, premi «Riconosci i muri →»: non serve altro.",
+        "html": "Se la misura ti torna, premi «Riconosci i muri →»: non serve altro."
       },
       {
-        "testo": "Tocca il secondo estremo: compare «✓ Due punti scelti».",
-        "html": "Tocca il secondo estremo: compare «✓ Due punti scelti»."
+        "testo": "Per correggerla scrivi nella casella «metri» la larghezza vera (per esempio 12,30).",
+        "html": "Per correggerla scrivi nella casella «metri» la larghezza vera (per esempio 12,30)."
       },
       {
-        "testo": "Scrivi nella casella «metri» quanto è lunga (per esempio 12,30).",
-        "html": "Scrivi nella casella «metri» quanto è lunga (per esempio 12,30)."
+        "testo": "Oppure tocca sulla pianta i due estremi di una misura che conosci (una quota scritta, un muro intero, una porta di 80 cm) e scrivi quanto è lunga.",
+        "html": "Oppure tocca sulla pianta i due estremi di una misura che conosci (una quota scritta, un muro intero, una porta di 80 cm) e scrivi quanto è lunga."
       },
       {
         "testo": "Premi «Riconosci i muri →».",
@@ -2190,8 +2190,8 @@ export const GUIDE_3D = Object.freeze({
       }
     ],
     "consigli": [
-      "Scegli la misura più lunga che conosci, per esempio un lato intero della casa: l'errore si riduce.",
-      "Se alla fine le stanze hanno superfici strane, torna a «Scala» e rifai la misura."
+      "Con il PDF o il DWG questo passo si salta da solo: ci torni con «← Indietro» dal passo dei muri, se le stanze hanno superfici strane.",
+      "Per correggere scegli la misura più lunga che conosci, per esempio un lato intero della casa: l'errore si riduce."
     ]
   },
   "2": {

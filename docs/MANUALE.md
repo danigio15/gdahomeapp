@@ -3839,7 +3839,9 @@ facendo.
 **Cosa trovi**
 - **«Il piano»**: i tasti dei piani, dal seminterrato al terzo piano.
 - **«Carica una foto o un PDF della planimetria»**: il PDF del catasto va bene
-  così com'è, la scala la legge dal foglio.
+  così com'è, la scala la legge dal foglio. Il PDF del progetto (la tavola
+  dell'architetto) lo legge dal disegno: muri, porte, finestre, balconi, i
+  nomi delle stanze e la scala, senza scrivere niente.
 - **«Carica il disegno DWG»**: scala e nomi delle stanze li prende dal disegno.
 - **«Disegnala qui»**: scrivi larghezza e profondità del piano in metri, poi
   dividi le stanze col «Muro dritto».
@@ -3863,7 +3865,8 @@ facendo.
 **Consigli**
 - La foto non deve essere dritta e le scritte non danno fastidio: conta che
   il foglio sia intero e ben illuminato.
-- Il PDF del catasto è il modo più preciso: la scala la legge da solo.
+- Il PDF del catasto o del progetto è il modo più preciso: la scala la legge
+  da solo, e dal progetto prende anche i nomi delle stanze.
 
 <p align="center"><img src="manuale/img/c3d-1b.jpg" width="680" alt="Passo 1: planimetria caricata"></p>
 <p align="center"><sub>La planimetria caricata: ① «✓ Raddrizzata», ② «Avanti →».</sub></p>
@@ -3874,32 +3877,38 @@ facendo.
 <p align="center"><img src="manuale/img/c3d-2.jpg" width="680" alt="Passo 2: la scala"></p>
 
 **Legenda**
-- ① **La misura segnata**: i due punti toccati sulla pianta, con la lunghezza.
-- ② **La casella dei «metri»**: quanto è lunga davvero quella misura.
+- ① **La misura segnata**: la larghezza del disegno, con la lunghezza che la
+  procedura ha ricavato.
+- ② **La casella dei «metri»**: la misura già scritta, da correggere solo se
+  la conosci meglio.
 - ③ **«Riconosci i muri →»**: va al passo dei muri.
 
-**A cosa serve.** Insegna alla procedura quanto è grande la casa: quanti
-pixel della foto fanno un metro. Senza la scala giusta le stanze vengono
-troppo grandi o troppo piccole.
+**A cosa serve.** Dice alla procedura quanto è grande la casa: quanti pixel
+della foto fanno un metro. La misura la ricava da sola e non c'è niente da
+scrivere: questo passo serve solo a controllarla, o a correggerla.
 
 **Cosa trovi**
-- La pianta, su cui si toccano i due estremi di una misura nota.
-- «Punti: 0 di 2», che diventa «✓ Due punti scelti».
-- La casella «metri» e la riga «1 metro = … pixel della foto».
-- Spesso la scala la trova da sola: «✓ Scala trovata dallo spessore dei muri».
+- La pianta, con la misura ricavata già segnata da un capo all'altro.
+- La casella «metri», già compilata, e la riga «1 metro = … pixel della foto».
+- Da dove viene la misura, per esempio «✓ Scala: ricavata dalla scala 1:50
+  scritta sul foglio»: può venire dalla scala scritta, dalle quote, dalle
+  aree scritte nelle stanze, dalle porte o dallo spessore dei muri.
+- Se compare «⚠️ Scala: stimata dalla misura del foglio: controllala», la
+  procedura non ha trovato indizi sicuri: conviene correggerla.
 
 **Come si configura**
-1. Tocca sulla pianta il primo estremo di una misura che conosci: una quota
-   scritta, un muro intero, una porta (di solito 80 cm).
-2. Tocca il secondo estremo: compare «✓ Due punti scelti».
-3. Scrivi nella casella «metri» quanto è lunga (per esempio 12,30).
+1. Se la misura ti torna, premi «Riconosci i muri →»: non serve altro.
+2. Per correggerla scrivi nella casella «metri» la larghezza vera (per
+   esempio 12,30).
+3. Oppure tocca sulla pianta i due estremi di una misura che conosci (una
+   quota scritta, un muro intero, una porta di 80 cm) e scrivi quanto è lunga.
 4. Premi «Riconosci i muri →».
 
 **Consigli**
-- Scegli la misura più lunga che conosci, per esempio un lato intero della
-  casa: l'errore si riduce.
-- Se alla fine le stanze hanno superfici strane, torna a «Scala» e rifai la
-  misura.
+- Con il PDF o il DWG questo passo si salta da solo: ci torni con «← Indietro»
+  dal passo dei muri, se le stanze hanno superfici strane.
+- Per correggere scegli la misura più lunga che conosci, per esempio un lato
+  intero della casa: l'errore si riduce.
 
 ### 28.3 Muri (passo 3)
 <!-- passo3d: 2 -->

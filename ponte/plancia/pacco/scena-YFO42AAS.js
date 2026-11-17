@@ -1,7 +1,7 @@
 import {
   creaScena,
   installaLoStile
-} from "./chunk-AJCBXYOC.js";
+} from "./chunk-LT3OFOIJ.js";
 import "./chunk-EXLHWZMG.js";
 export {
   creaScena,

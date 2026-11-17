@@ -16,16 +16,27 @@
  *
  * Senza una scelta non si scrive niente: nessun foglio, nessun `d`, lo stesso
  * modello. Una disposizione vale per le tre viste (Istantaneo, Giorno, Mese).
+ *
+ * E ce n'e' una per impianto: le linguette in cima all'Energia («Zona notte»,
+ * «Esterno»…) hanno cerchi diversi, e sistemarne una non deve spostare
+ * l'altra. Come si chiamano le caselle, e come si legge la vecchia
+ * disposizione comune, sta in `core/energy-flow-topology.js`
+ * (`disegnoDellImpianto`, `posizioniDellImpianto`, `separaLeZone`).
  */
 import {
   CERCHI_PRINCIPALI,
   DISEGNO_DELL_ENERGIA,
   conLePosizioni,
+  disegnoDellImpianto,
+  impiantoDelDisegno,
   nodoDelCarico,
+  posizioniDellImpianto,
+  separaLeZone,
 } from "../core/energy-flow-topology.js";
+import { IMPIANTO_SCELTO_KEY, plantAt, plantLabel } from "../core/energy-plants.js";
 import { curvaFraCerchi } from "../core/posizioni-nei-disegni.js";
-import { posizioniInUso, registraIlDisegno } from "./disegni-che-si-spostano-section.js";
-import { doc, root, t } from "./shared.js";
+import { posizioniDellaVoce, registraIlDisegno } from "./disegni-che-si-spostano-section.js";
+import { doc, root, section, t } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_FLUSSO_CHE_SI_SPOSTA__";
 const FOGLIO_ID = "dm-flusso-posizioni";
@@ -83,11 +94,48 @@ export function varianteDelFlusso() {
   return root.matchMedia?.(TELEFONO)?.matches ? "telefono" : "computer";
 }
 
+/* Gli impianti, e quello che si sta guardando. */
+function gliImpianti() {
+  let scelto = "";
+  try {
+    scelto = String(root.localStorage?.getItem(IMPIANTO_SCELTO_KEY) ?? "").trim();
+  } catch (_errore) {}
+  const { list, plant, index } = plantAt(section("energy", {}) || {}, scelto);
+  return { list, plant, index, ids: list.map((voce) => voce.id) };
+}
+
+/** La casella della disposizione dell'impianto che si sta guardando:
+ * «energia» con un impianto solo, `energia-<id>` con piu' d'uno. */
+export function disegnoDelFlusso() {
+  const { ids, plant } = gliImpianti();
+  return disegnoDellImpianto(ids, plant?.id);
+}
+
+/* Il disegno come si iscrive fra quelli che si spostano: l'id resta
+ * «energia» (e' quello delle maniglie), la casella cambia con l'impianto. */
+const VOCE = {
+  id: DISEGNO_DELL_ENERGIA,
+  pagina: "energy",
+  disegno: disegnoDelFlusso,
+  salvate: (tutta, variante) => {
+    const { ids, plant } = gliImpianti();
+    return posizioniDellImpianto(tutta, ids, plant?.id, variante);
+  },
+  primaDiSalvare: (tutta) => separaLeZone(tutta, gliImpianti().ids),
+  nomeDi: (disegno) => {
+    const { list } = gliImpianti();
+    const id = impiantoDelDisegno(disegno, list);
+    if (!id) return "";
+    const indice = list.findIndex((voce) => voce.id === id);
+    return `${t("Flusso energetico", "Energy flow")} · ${plantLabel(list[indice], indice, t("Impianto", "Plant"))}`;
+  },
+};
+
 /** Le scelte delle due varianti, come le vuole il modello. */
 export function posizioniDelFlusso() {
   return {
-    computer: posizioniInUso(DISEGNO_DELL_ENERGIA, "computer"),
-    telefono: posizioniInUso(DISEGNO_DELL_ENERGIA, "telefono"),
+    computer: posizioniDellaVoce(VOCE, "computer"),
+    telefono: posizioniDellaVoce(VOCE, "telefono"),
   };
 }
 
@@ -130,7 +178,7 @@ function centroMisurato(el, palco) {
 /** Dove sta di serie un cerchio principale: misurato quando non ha una
  * scelta (e ricordato), se no l'ultimo misurato o il foglio di serie. */
 function serieDel(id, variante, vista = vistaInScena()) {
-  const P = posizioniInUso(DISEGNO_DELL_ENERGIA, variante);
+  const P = posizioniDellaVoce(VOCE, variante);
   if (!P[id] && vista && variante === varianteDelFlusso()) {
     const el = doc.getElementById(`${CERCHIO[id]}${vista.suffisso}`);
     const c = el && visibile(el) ? centroMisurato(el, vista.palco) : null;
@@ -146,10 +194,16 @@ function serieDel(id, variante, vista = vistaInScena()) {
  * c'e' una scelta, e una volta per giro (le tre viste hanno le stesse). */
 export function misureDelFlusso() {
   const variante = varianteDelFlusso();
-  const P = posizioniInUso(DISEGNO_DELL_ENERGIA, variante);
+  const P = posizioniDellaVoce(VOCE, variante);
   if (nessunaScelta(P)) return {};
   const adesso = Date.now();
-  if (state.misure && adesso - state.alle < 80 && state.misure.variante === variante)
+  const casella = disegnoDelFlusso();
+  if (
+    state.misure &&
+    adesso - state.alle < 80 &&
+    state.misure.variante === variante &&
+    state.misure.casella === casella
+  )
     return state.misure.perIlModello;
   const vista = vistaInScena();
   if (!vista) return {};
@@ -175,7 +229,7 @@ export function misureDelFlusso() {
       principali,
     },
   };
-  state.misure = { variante, perIlModello };
+  state.misure = { variante, casella, perIlModello };
   state.alle = adesso;
   return perIlModello;
 }
@@ -330,6 +384,10 @@ function nodiDelFlusso() {
     nodi.push({
       id: nodoDelCarico(node.id),
       nome: node.name,
+      carico: true,
+      /* Il modello lo tiene dentro il palco anche quando la sua scelta e' di
+       * un cerchio piu' piccolo: la maniglia sta dove si vede (`adesso`). */
+      dentro: true,
       centro: { x: node[chiave].left, y: node[chiave].top },
       /* Dove starebbe senza una scelta sua, con le scelte di adesso: un
        * carico nuovo messo al posto libero sta li', non dove lo vorrebbe la
@@ -347,6 +405,24 @@ function nodiDelFlusso() {
     });
   }
   return nodi;
+}
+
+/* Al Salva, in un impianto che si sta sistemando, ogni cerchio sotto Casa si
+ * ferma dove si vede, col suo id: un cerchio che arriva dopo («Non
+ * monitorati», una stanza nuova) non fa scorrere gli altri, e uno che se ne
+ * va non lascia il suo posto a chi stava accanto. Prima un cerchio mai
+ * toccato restava «di serie», e la serie e' una fila che si rifa' col numero
+ * dei cerchi. */
+function fissaICarichi(variante, posizioni) {
+  if (variante !== varianteDelFlusso()) return posizioni;
+  const uscita = { ...posizioni };
+  for (const nodo of nodiDelFlusso()) {
+    if (!nodo.carico || uscita[nodo.id]) continue;
+    const qui = nodo.adesso?.() || nodo.centro;
+    if (qui && Number.isFinite(qui.x) && Number.isFinite(qui.y))
+      uscita[nodo.id] = { x: qui.x, y: qui.y };
+  }
+  return uscita;
 }
 
 function stile() {
@@ -371,18 +447,18 @@ export function registraIlFlusso({ ridisegna }) {
     foglio.textContent = stile();
     doc.head.append(foglio);
   }
-  registraIlDisegno({
-    id: DISEGNO_DELL_ENERGIA,
-    pagina: "energy",
+  Object.assign(VOCE, {
     nome: () => t("Flusso energetico", "Energy flow"),
     scatola: () => vistaInScena()?.palco || null,
     variante: varianteDelFlusso,
     nodi: nodiDelFlusso,
+    fissa: fissaICarichi,
     ridisegna: () => {
       state.misure = null;
       mettiIPrincipali();
       state.ridisegna?.();
     },
   });
+  registraIlDisegno(VOCE);
   mettiIPrincipali();
 }

@@ -299,10 +299,12 @@ export function creaScena(THREE, opzioni = {}) {
     })
     .sort((a, b) => a.livello - b.livello);
   /* Dove sta la casa nella sua cornice: il rettangolo che contiene tutti i piani. */
+  /* i balconi (le stanze «fuori» col pavimento) non stanno sotto il tetto */
   const confini = (p) => {
+    const balconi = new Set(p.stanze.filter((s) => s.dati.fuori).map((s) => s.id));
     let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
     for (let i = 0; i < p.W * p.H; i++) {
-      if (p.tipo[i] === CELLA.fuori) continue;
+      if (p.tipo[i] === CELLA.fuori || balconi.has(p.tipo[i])) continue;
       const x = i % p.W, y = (i / p.W) | 0;
       if (x < x0) x0 = x;
       if (x > x1) x1 = x;
@@ -531,8 +533,36 @@ export function creaScena(THREE, opzioni = {}) {
       const riga = (y) => Array.from({ length: r.cw }, (_, i) => [r.cx + i, y]);
       return [lato(col(r.cx + r.cw)), lato(col(r.cx - 1)), muroMat, muroMat, lato(riga(r.cy + r.ch)), lato(riga(r.cy - 1))];
     };
+    /* Il parapetto dei balconi: il muro che di qua e di la' ha solo il
+     * balcone e il fuori (nessuna stanza entro 60 cm) e' alto un metro. */
+    const PARAPETTO = -9;
+    const tipoMuri = Int16Array.from(tipo);
+    if (fuoriId.size) {
+      const interna = (t) => (t > 0 && !fuoriId.has(t)) || t === CELLA.davanzale || t === CELLA.porta;
+      for (let y = 0; y < H; y++)
+        for (let x = 0; x < W; x++) {
+          if (tipo[y * W + x] !== CELLA.muro) continue;
+          let balcone = false, dentro = false;
+          for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            let X0 = x, Y0 = y;
+            for (let k = 0; k < 20; k++) {
+              X0 += dx;
+              Y0 += dy;
+              if (X0 < 0 || Y0 < 0 || X0 >= W || Y0 >= H) break;
+              const t = tipo[Y0 * W + X0];
+              if (t === CELLA.muro) continue;
+              if (interna(t)) dentro = true;
+              else if (fuoriId.has(t)) balcone = true;
+              break;
+            }
+          }
+          if (balcone && !dentro) tipoMuri[y * W + x] = PARAPETTO;
+        }
+    }
+    const conParapetti = { W, H, passo, tipo: tipoMuri };
     p.muri = [];
-    for (const r of rettangoli(p, (t) => t === CELLA.muro)) p.muri.push(box(G, r.w, HP, r.d, facce(r), X(r.x + r.w / 2), 0, Z(r.y + r.d / 2)));
+    for (const r of rettangoli(conParapetti, (t) => t === CELLA.muro)) p.muri.push(box(G, r.w, HP, r.d, facce(r), X(r.x + r.w / 2), 0, Z(r.y + r.d / 2)));
+    for (const r of rettangoli(conParapetti, (t) => t === PARAPETTO)) p.muri.push(box(G, r.w, 1.05, r.d, facce(r), X(r.x + r.w / 2), 0, Z(r.y + r.d / 2)));
     for (const r of rettangoli(p, (t) => t === CELLA.davanzale)) {
       p.muri.push(box(G, r.w, 0.9, r.d, facce(r), X(r.x + r.w / 2), 0, Z(r.y + r.d / 2)));
       p.muri.push(box(G, r.w, HP - 2.2, r.d, facce(r), X(r.x + r.w / 2), 2.2, Z(r.y + r.d / 2)));
@@ -550,7 +580,7 @@ export function creaScena(THREE, opzioni = {}) {
     p.cime = new THREE.Group();
     p.cime.visible = false;
     gr.add(p.cime);
-    for (const r of rettangoli(p, (t) => t === CELLA.muro)) {
+    for (const r of rettangoli(conParapetti, (t) => t === CELLA.muro)) {
       const c = new THREE.Mesh(new THREE.BoxGeometry(r.w, 0.012, r.d), cimaMat);
       c.position.set(X(r.x + r.w / 2), TAGLIO - 0.004, Z(r.y + r.d / 2));
       p.cime.add(c);

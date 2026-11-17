@@ -1693,8 +1693,12 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // (la finestra che lo carica), `sections/casa-3d/scena-modello.js` (la scena
   // col modello) e `sections/casa-3d/modello-dal-ponte.js` (a pezzi, su e giu').
   // three e i suoi caricatori non contano: si leggono solo quando la casa si apre.
+  // 556 con la planimetria dal PDF letta tratto per tratto:
+  // `core/pianta-da-pdf.js` (muri, quote, porte, balconi, la scala anche quando
+  // non e' scritta) e `core/scritte-disegnate.js` (le scritte di un PDF senza
+  // testo: i nomi delle stanze, i metri quadri, «scala 1:50»).
   assert.ok(
-    relative.length <= 554,
+    relative.length <= 556,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);
