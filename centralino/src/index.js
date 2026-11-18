@@ -125,7 +125,20 @@ export async function alzaIlCentralino({
     ...definiti({ nuovePerIndirizzo: caseNuovePerIndirizzo, nuoveInTutto: caseNuoveInTutto }),
   });
   const chiaveVera = chiaveLicenze === undefined ? CHIAVE_PUBBLICA_LICENZE : chiaveLicenze;
-  const modo = ilModoDelleLicenze(modoLicenze, { chiave: chiaveVera, registro });
+  const chiesto = ilModoDelleLicenze(modoLicenze, { chiave: chiaveVera, registro });
+  /* «Fai in modo che chi ha una versione precedente venga bloccato lo
+   * stesso». Acceso davvero, `registra` lasciava passare da fuori le case
+   * Base: e gli add-on di prima della 1.19.0 — che da se' non fermano
+   * nessuno — restavano aperti a chiunque avesse lasciato quella parola in
+   * `ambiente`. In produzione adesso impone: si conta come prima e in piu'
+   * si chiude. Per riaprire a tutti resta solo `spento`, scritto per intero.
+   * (`registra` resta per le prove, che accendono la classe da se'.) */
+  const modo = chiesto === "registra" ? "impone" : chiesto;
+  if (modo !== chiesto) {
+    registro.attenzione?.(
+      "MODO_LICENZE=registra non lascia piu' passare: fuori casa serve Premium, si impone",
+    );
+  }
   /* Le licenze tolte si chiedono solo se servono a qualcosa: a licenze spente
    * nessuno guarda i gettoni. */
   const revoche =

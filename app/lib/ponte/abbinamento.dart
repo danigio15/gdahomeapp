@@ -338,6 +338,13 @@ class Abbinamento {
   /// Come [cePonte], e in piu' quello che il ponte dice di chi bussa: se
   /// sta sulla rete di casa (`da_casa`, vedi `ponte/src/da-casa.js`). Un
   /// ponte di prima non lo dice, e [SaluteDetta.daCasa] resta `null`.
+  ///
+  /// E il `da_casa` vale solo se il ponte fa valere da se' la regola di Base
+  /// (`base_solo_casa`). Gli add-on di prima lo dicevano con una regola piu'
+  /// larga — una VPN con indirizzi privati, un proxy che scriveva un
+  /// indirizzo privato erano «casa» — e non fermavano nessuno: con Base si
+  /// entrava da fuori. Con un add-on cosi' il «da casa» del ponte non si
+  /// ascolta, e resta solo l'indirizzo di rete locale (`DaDove.daDentro`).
   static Future<SaluteDetta> salute(Uri salute, {http.Client? cliente}) async {
     final suo = cliente == null;
     final chi = cliente ?? http.Client();
@@ -346,9 +353,10 @@ class Abbinamento {
       if (risposta.statusCode != 200) return (vivo: false, daCasa: null);
       final detto = _leggi(risposta.body);
       final daCasa = detto['da_casa'];
+      final faValereBase = detto['base_solo_casa'] == true;
       return (
         vivo: detto['vivo'] == true,
-        daCasa: daCasa is bool ? daCasa : null,
+        daCasa: daCasa is bool && faValereBase ? daCasa : null,
       );
     } catch (_) {
       return (vivo: false, daCasa: null);

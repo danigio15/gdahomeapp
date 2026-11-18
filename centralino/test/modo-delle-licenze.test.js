@@ -236,7 +236,10 @@ test("il centralino vero, acceso come in produzione: spento senza chiave, impone
     [{ chiaveLicenze: "", modoLicenze: "impone" }, "spento"],
     [{ chiaveLicenze: "", modoLicenze: "registra" }, "spento"],
     [{ chiaveLicenze: PUBBLICA_DI_PROVA }, "impone"],
-    [{ chiaveLicenze: PUBBLICA_DI_PROVA, modoLicenze: "registra" }, "registra"],
+    /* Acceso davvero, `registra` impone: le case Base e gli add-on di prima
+     * da fuori si chiudono. */
+    [{ chiaveLicenze: PUBBLICA_DI_PROVA, modoLicenze: "registra" }, "impone"],
+    [{ chiaveLicenze: PUBBLICA_DI_PROVA, modoLicenze: "imponi" }, "impone"],
     [{ chiaveLicenze: PUBBLICA_DI_PROVA, modoLicenze: "impone" }, "impone"],
     [{ chiaveLicenze: PUBBLICA_DI_PROVA, modoLicenze: "spento" }, "spento"],
   ]) {
