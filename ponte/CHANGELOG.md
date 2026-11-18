@@ -10,6 +10,19 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.19.15
+
+_App GdAHome e add-on._
+
+- **Il navigatore ha la vista «Corsie»**: accanto al «3D aumentato», nel
+  tasto della vista (e su Android Auto nelle impostazioni della mappa),
+  una vista a corsie come nei navigatori più moderni. Le strade sono
+  larghe quanto le loro corsie, con la segnaletica vera: linee, frecce
+  sull'asfalto, strisce pedonali, linee d'arresto, semafori e uscite
+  dell'autostrada. Il percorso è una fascia verde sulla corsia da tenere,
+  che diventa arancio o rossa dove c'è coda. Traffico, autovelox,
+  segnalazioni, musica e avvisi ci sono come nelle altre viste.
+
 ## 1.19.14
 
 _App GdAHome e add-on._
