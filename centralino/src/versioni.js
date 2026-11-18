@@ -21,22 +21,24 @@
  * abbastanza perche' il giorno che si cambia si veda subito.
  */
 
-/* La minima scritta qui, sotto la quale non si scende qualunque cosa dica
+/* Le minime scritte qui, sotto le quali non si scende qualunque cosa dica
  * `VERSIONE_MINIMA_APP` sulla macchina.
  *
  * «Chi ha sia l'app vecchia sia l'add-on vecchio e passa da una sua VPN o
- * porta aperta»: con GdAHome Base li' non c'e' nessun nostro controllo — ne'
- * l'add-on di prima della 1.19.0 ne' l'app di prima della 1.19.14 fermano
- * chi e' fuori casa. Ma l'app, da settembre, chiede questa minima al
- * centralino all'avvio, tornando davanti e ogni sei ore, e sotto si ferma
- * finche' non la si aggiorna; e l'app nuova la regola di Base la fa valere
- * anche con l'add-on vecchio. Alzare questa riga a 1191400 (la 1.19.14) chiude
- * anche quel giro.
+ * porta aperta»: con GdAHome Base li' non c'e' nessun nostro controllo. Ma
+ * l'app, da settembre, chiede la minima al centralino all'avvio, tornando
+ * davanti e ogni sei ore, e sotto si ferma finche' non la si aggiorna.
  *
- * **Si alza solo quando la 1.19.14 e' nei negozi per tutti**, Play Store e App
- * Store: prima, chi la deve aggiornare non la trova, e resta fermo. Una riga,
- * e il tramite rimandato in produzione. Zero non ferma nessuno. */
-export const MINIMA_DI_SERIE = 0;
+ * Una per negozio, quella che ognuno ha gia' pubblicata per tutti: App
+ * Store 1.19.0, Play Store 1.16.12. Le app di prima leggono solo `minima`,
+ * uguale per tutti: e' la piu' bassa delle due, cosi' nessuno resta fermo
+ * con un negozio che non ha ancora la versione da prendere. Le app dalla
+ * 1.19.14 leggono quella del proprio negozio.
+ *
+ * Quando la 1.19.14 — che fa valere Base anche con l'add-on di prima — e'
+ * nei negozi per tutti, si alzano tutte e due a 1191400. */
+export const MINIME_DI_SERIE = Object.freeze({ ios: 1190000, android: 1161200 });
+export const MINIMA_DI_SERIE = Math.min(MINIME_DI_SERIE.ios, MINIME_DI_SERIE.android);
 
 /* Quello che si legge dalla configurazione: un intero da zero in su. Tutto il
  * resto — vuoto, una parola, un numero negativo o con la virgola — vale zero,
@@ -51,8 +53,18 @@ export function versioneMinimaDa(scritto) {
 
 /* Il corpo della risposta. Un oggetto per app, perche' un giorno potrebbe
  * servire anche a un'altra — gdanav — senza cambiare la forma. */
-export function leVersioni(minima) {
-  return { gdahome: { minima: versioneMinimaDa(minima) } };
+export function leVersioni(minima, diSerie = MINIME_DI_SERIE) {
+  const tutti = Math.max(
+    versioneMinimaDa(minima),
+    Math.min(diSerie.ios ?? 0, diSerie.android ?? 0),
+  );
+  return {
+    gdahome: {
+      minima: tutti,
+      ios: Math.max(tutti, diSerie.ios ?? 0),
+      android: Math.max(tutti, diSerie.android ?? 0),
+    },
+  };
 }
 
 /* La minima che vale davvero: quella della macchina, ma mai sotto quella

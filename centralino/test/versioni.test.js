@@ -38,12 +38,17 @@ async function banco(opzioni = {}) {
   };
 }
 
-test("di serie la minima e' zero: non si ferma nessuno", async () => {
+/* Quello che dice il centralino senza una minima sua, o con una piu' bassa:
+ * le minime dei negozi (App Store 1.19.0, Play Store 1.16.12), e per le app
+ * di prima la piu' bassa delle due. */
+const DEI_NEGOZI = { gdahome: { minima: 1161200, ios: 1190000, android: 1161200 } };
+
+test("di serie le minime dei negozi: nessuno resta senza la versione da prendere", async () => {
   const b = await banco();
   try {
     const risposta = await fetch(`${b.http}/versioni`);
     assert.equal(risposta.status, 200);
-    assert.deepEqual(await risposta.json(), { gdahome: { minima: 0 } });
+    assert.deepEqual(await risposta.json(), DEI_NEGOZI);
   } finally {
     await b.spegni();
   }
@@ -56,7 +61,11 @@ test("detta la minima, la dice a tutti: per poco, e a ogni origine", async () =>
       headers: { origin: "https://tramite.esempio" },
     });
     assert.equal(risposta.status, 200);
-    assert.deepEqual(await risposta.json(), { gdahome: { minima: 1070000 } });
+    assert.deepEqual(
+      await risposta.json(),
+      DEI_NEGOZI,
+      "piu' bassa di quelle dei negozi: valgono quelle",
+    );
     assert.equal(risposta.headers.get("cache-control"), "public, max-age=300");
     assert.equal(risposta.headers.get("access-control-allow-origin"), "*");
     assert.match(risposta.headers.get("content-type"), /^application\/json/);
@@ -82,7 +91,7 @@ test("una riga scritta male vale zero, non ferma tutti", () => {
   for (const male of ["", undefined, null, "zero", "-5", "1.5", "1e6", "10700000000000"]) {
     assert.equal(versioneMinimaDa(male), 0, String(male));
   }
-  assert.deepEqual(leVersioni("abc"), { gdahome: { minima: 0 } });
+  assert.deepEqual(leVersioni("abc"), DEI_NEGOZI);
 });
 
 test("il centralino acceso legge VERSIONE_MINIMA_APP", async () => {
@@ -98,7 +107,7 @@ test("il centralino acceso legge VERSIONE_MINIMA_APP", async () => {
     });
     try {
       const risposta = await fetch(`http://127.0.0.1:${acceso.server.address().port}/versioni`);
-      assert.deepEqual(await risposta.json(), { gdahome: { minima: 1070000 } });
+      assert.deepEqual(await risposta.json(), DEI_NEGOZI);
     } finally {
       await acceso.abbassa();
     }
@@ -116,7 +125,17 @@ test("la minima scritta nel codice: la macchina puo' alzarla, non abbassarla", (
   assert.equal(laMinimaCheVale("1070000", 1191400), 1191400);
   assert.equal(laMinimaCheVale("1200000", 1191400), 1200000);
   assert.equal(laMinimaCheVale("non un numero", 1191400), 1191400);
-  // E quella di oggi: zero, non ferma nessuno finché la 1.19.14 non è nei negozi.
-  assert.equal(MINIMA_DI_SERIE, 0);
-  assert.equal(laMinimaCheVale(""), 0);
+  // E quella di oggi: la piu' bassa delle due dei negozi.
+  assert.equal(MINIMA_DI_SERIE, 1161200);
+  assert.equal(laMinimaCheVale(""), 1161200);
+});
+
+test("una minima per negozio, e quella di tutti per le app di prima", () => {
+  assert.deepEqual(leVersioni(1161200), {
+    gdahome: { minima: 1161200, ios: 1190000, android: 1161200 },
+  });
+  // La macchina che alza la minima per tutti alza anche quelle dei negozi.
+  assert.deepEqual(leVersioni(1191400), {
+    gdahome: { minima: 1191400, ios: 1191400, android: 1191400 },
+  });
 });

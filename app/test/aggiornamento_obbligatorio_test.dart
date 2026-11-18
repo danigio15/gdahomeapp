@@ -147,6 +147,18 @@ void main() {
       }
     });
 
+    test('ogni negozio la sua minima; senza, quella di tutti', () {
+      final detto = {
+        'gdahome': {'minima': 1161200, 'ios': 1190000, 'android': 1161200},
+      };
+      expect(minimaDa(detto, piattaforma: TargetPlatform.iOS), 1190000);
+      expect(minimaDa(detto, piattaforma: TargetPlatform.android), 1161200);
+      final soloTutti = {
+        'gdahome': {'minima': 1161200},
+      };
+      expect(minimaDa(soloTutti, piattaforma: TargetPlatform.iOS), 1161200);
+    });
+
     test('i negozi: il Play Store di GdAHome, e l\'App Store', () {
       expect(
         indirizzoNelPlayStore.toString(),

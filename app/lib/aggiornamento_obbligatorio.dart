@@ -94,10 +94,22 @@ Future<int?> chiediLaMinimaAlCentralino() async {
 }
 
 /// La minima di gdahome in una risposta di `/versioni`, o `null`.
-int? minimaDa(Object? detto) {
+///
+/// Ogni negozio ha la sua: «su App Store 1.19.0 e su Play Store 1.16.12».
+/// Le app di prima leggono solo `minima` — la stessa per tutti, la piu'
+/// bassa delle due —; da qui si legge prima quella del proprio negozio
+/// (`ios`, `android`), se c'e', e se no `minima`.
+int? minimaDa(Object? detto, {TargetPlatform? piattaforma}) {
   if (detto is! Map) return null;
   final gdahome = detto['gdahome'];
   if (gdahome is! Map) return null;
+  final chiave = switch (piattaforma ?? defaultTargetPlatform) {
+    TargetPlatform.iOS || TargetPlatform.macOS => 'ios',
+    TargetPlatform.android => 'android',
+    _ => null,
+  };
+  final delNegozio = chiave == null ? null : gdahome[chiave];
+  if (delNegozio is int && delNegozio >= 0) return delNegozio;
   final minima = gdahome['minima'];
   return minima is int && minima >= 0 ? minima : null;
 }
