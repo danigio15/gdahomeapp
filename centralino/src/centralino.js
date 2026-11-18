@@ -569,6 +569,18 @@ export class Centralino {
       presa.chiudi(CHIUSURA.normale, "casa non collegata");
       return null;
     }
+    /* «Visto che le connessioni passano dal centralino, anche gli add-on
+     * vecchi possiamo bloccarli dicendo devi aggiornare». Un add-on che non
+     * si e' presentato con `base_solo_casa` e' di prima della 1.19.14: da
+     * se' non ferma chi e' fuori casa con Base, e dice «da casa» con una
+     * regola larga. Da fuori, attraverso qui, non si entra piu' finche' non
+     * si aggiorna: Premium o Base, `4426` — l'app dice di aggiornare
+     * l'add-on in Home Assistant. In casa, sulla rete di casa, resta com'e'. */
+    if (this.impone && !casa.faValereBase) {
+      this.conti.telefoniSenzaLicenza += 1;
+      presa.chiudi(ADDON_DA_AGGIORNARE.codice, ADDON_DA_AGGIORNARE.motivo);
+      return null;
+    }
     /* Da fuori casa si entra con gdahome Premium. Dopo «casa non
      * collegata», e non prima: una casa che non c'e' non c'e', Premium o no,
      * e il telefono deve riprovare fra poco invece di arrendersi.
@@ -870,6 +882,9 @@ class CasaCollegata {
      * Premium»: e' «il suo add-on sa che le licenze esistono». Vedi
      * `quantePronteAllaLicenza`. */
     this.dicelaLicenza = false;
+    /* Se il suo add-on fa valere da se' la regola di Base (dalla 1.19.14 lo
+     * dice presentandosi, `base_solo_casa`). Senza, da fuori non si entra. */
+    this.faValereBase = false;
     /* Quanti telefoni ha visto nella settimana, per versione dell'app, come
      * l'ha detto lei (`telefoni.js`). `null` finche' non lo dice: un add-on
      * di prima non lo dice mai. */
@@ -1023,6 +1038,7 @@ class CasaCollegata {
     if (gia && gia !== this) gia.chiudi("questa casa si e' ricollegata");
 
     this.id = detto.casa;
+    this.faValereBase = detto.base_solo_casa === true;
     this.centralino.collegate.set(this.id, this);
     /* Il gettone puo' arrivare anche dentro la presentazione, e l'add-on
      * nuovo ce lo mette sempre, anche vuoto: cosi' da qui si sa fin dal primo

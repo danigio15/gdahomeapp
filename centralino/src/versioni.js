@@ -53,16 +53,13 @@ export function versioneMinimaDa(scritto) {
 
 /* Il corpo della risposta. Un oggetto per app, perche' un giorno potrebbe
  * servire anche a un'altra — gdanav — senza cambiare la forma. */
-export function leVersioni(minima, diSerie = MINIME_DI_SERIE) {
-  const tutti = Math.max(
-    versioneMinimaDa(minima),
-    Math.min(diSerie.ios ?? 0, diSerie.android ?? 0),
-  );
+export function leVersioni(minima, negozi = {}) {
+  const tutti = versioneMinimaDa(minima);
   return {
     gdahome: {
       minima: tutti,
-      ios: Math.max(tutti, diSerie.ios ?? 0),
-      android: Math.max(tutti, diSerie.android ?? 0),
+      ios: Math.max(tutti, versioneMinimaDa(String(negozi.ios ?? 0))),
+      android: Math.max(tutti, versioneMinimaDa(String(negozi.android ?? 0))),
     },
   };
 }

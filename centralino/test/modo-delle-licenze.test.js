@@ -129,7 +129,9 @@ function unaCasa(dove, { id = unaCasaNuova(), segreto = unSegreto() } = {}) {
     chiudi: () => presa.close(),
     entra: async (altro = {}) => {
       await aperta;
-      presa.send(JSON.stringify({ t: "sono-io", casa: id, segreto, ...altro }));
+      presa.send(
+        JSON.stringify({ t: "sono-io", casa: id, segreto, base_solo_casa: true, ...altro }),
+      );
       await attendi(() => detti.some((uno) => uno.t === "bene" || uno.t === "no"));
     },
   };

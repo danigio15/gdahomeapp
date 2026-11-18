@@ -163,8 +163,11 @@ export function costruisciIlServer({
   /* Il numero di costruzione piu' piccolo che si puo' ancora usare (vedi
    * `versioni.js`). Zero, di serie: nessuna app si ferma. */
   versioneMinima = 0,
+  /* Le minime dei negozi (`versioni.js`, `MINIME_DI_SERIE`): le passa chi
+   * accende davvero; le prove ne fanno a meno. */
+  minimeDeiNegozi = {},
 }) {
-  const versioni = Buffer.from(JSON.stringify(leVersioni(versioneMinima)), "utf8");
+  const versioni = Buffer.from(JSON.stringify(leVersioni(versioneMinima, minimeDeiNegozi)), "utf8");
   const soglia = Buffer.from(laSoglia(dove), "utf8");
   const server = createServer((richiesta, risposta) => {
     for (const [nome, valore] of Object.entries(INTESTAZIONI_DI_SEMPRE)) {

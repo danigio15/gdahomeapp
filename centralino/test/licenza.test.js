@@ -102,7 +102,9 @@ function unaCasa(dove, { id = unaCasaNuova(), segreto = unSegreto() } = {}) {
     chiudi: () => presa.close(),
     entra: async (altro = {}) => {
       await aperta;
-      presa.send(JSON.stringify({ t: "sono-io", casa: id, segreto, ...altro }));
+      presa.send(
+        JSON.stringify({ t: "sono-io", casa: id, segreto, base_solo_casa: true, ...altro }),
+      );
       await attendi(() => detti.some((uno) => uno.t === "bene" || uno.t === "no"));
     },
   };
@@ -255,6 +257,36 @@ test("il gettone detto dalla casa apre la porta ai suoi telefoni", async () => {
     assert.equal(casa.canali()[0].via, "telefono");
     telefono.chiudi();
     casa.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});
+
+test("una casa Premium con un add-on di prima della 1.19.14: da fuori 4426, aggiorna l'add-on", async () => {
+  /* «Visto che le connessioni passano dal centralino, anche gli add-on
+   * vecchi possiamo bloccarli dicendo devi aggiornare». Senza
+   * `base_solo_casa` l'add-on e' di prima: Premium o no, da qui non si entra. */
+  const b = await banco();
+  try {
+    const casa = unaCasa(b.dove);
+    await casa.entra({ base_solo_casa: false });
+    casa.manda({ t: "licenza", tipo: "licenza", gettone: unGettone({ sog: casa.id }) });
+    await attendi(() => b.centralino.ePremium(casa.id));
+    const telefono = unTelefono(b.dove, `/telefono/${casa.id}`);
+    assert.deepEqual(await telefono.chiusa, { codice: 4426, motivo: "aggiorna-add-on" });
+    assert.equal(casa.canali().length, 0);
+    casa.chiudi();
+
+    /* Aggiornata, si ripresenta col segno: il telefono entra. */
+    const nuova = unaCasa(b.dove);
+    await nuova.entra();
+    nuova.manda({ t: "licenza", tipo: "licenza", gettone: unGettone({ sog: nuova.id }) });
+    await attendi(() => b.centralino.ePremium(nuova.id));
+    const dopo = unTelefono(b.dove, `/telefono/${nuova.id}`);
+    await dopo.aperta;
+    await attendi(() => nuova.canali().length === 1);
+    dopo.chiudi();
+    nuova.chiudi();
   } finally {
     await b.spegni();
   }

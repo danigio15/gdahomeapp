@@ -16,7 +16,7 @@ import { Ricevute } from "./ricevute.js";
 import { costruisciIlServer } from "./server.js";
 import { Sportello } from "./sportello.js";
 import { leggiLaChiaveDiFirebase, Spinte } from "./spinte.js";
-import { laMinimaCheVale, versioneMinimaDa } from "./versioni.js";
+import { MINIME_DI_SERIE, laMinimaCheVale, versioneMinimaDa } from "./versioni.js";
 
 const POTATURA = 12 * 60 * 60 * 1000;
 
@@ -221,6 +221,7 @@ export async function alzaIlCentralino({
     registro,
     dove: { sito: ilSito, app: lApp },
     versioneMinima: minima,
+    minimeDeiNegozi: MINIME_DI_SERIE,
   });
 
   await new Promise((riuscito, fallito) => {
