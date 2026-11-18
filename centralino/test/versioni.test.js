@@ -17,7 +17,7 @@ import { Case } from "../src/case.js";
 import { Centralino } from "../src/centralino.js";
 import { alzaIlCentralino } from "../src/index.js";
 import { costruisciIlServer } from "../src/server.js";
-import { leVersioni, versioneMinimaDa } from "../src/versioni.js";
+import { MINIMA_DI_SERIE, laMinimaCheVale, leVersioni, versioneMinimaDa } from "../src/versioni.js";
 
 async function banco(opzioni = {}) {
   const cartella = mkdtempSync(join(tmpdir(), "versioni-"));
@@ -107,4 +107,16 @@ test("il centralino acceso legge VERSIONE_MINIMA_APP", async () => {
     else process.env.VERSIONE_MINIMA_APP = vecchio;
     rmSync(cartella, { recursive: true, force: true });
   }
+});
+
+test("la minima scritta nel codice: la macchina puo' alzarla, non abbassarla", () => {
+  // Con la riga di serie a 1191400 (la 1.19.14 nei negozi), una macchina
+  // rimasta a «0» o a un numero vecchio non riapre le app di prima.
+  assert.equal(laMinimaCheVale("0", 1191400), 1191400);
+  assert.equal(laMinimaCheVale("1070000", 1191400), 1191400);
+  assert.equal(laMinimaCheVale("1200000", 1191400), 1200000);
+  assert.equal(laMinimaCheVale("non un numero", 1191400), 1191400);
+  // E quella di oggi: zero, non ferma nessuno finché la 1.19.14 non è nei negozi.
+  assert.equal(MINIMA_DI_SERIE, 0);
+  assert.equal(laMinimaCheVale(""), 0);
 });

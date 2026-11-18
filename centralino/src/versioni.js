@@ -21,6 +21,23 @@
  * abbastanza perche' il giorno che si cambia si veda subito.
  */
 
+/* La minima scritta qui, sotto la quale non si scende qualunque cosa dica
+ * `VERSIONE_MINIMA_APP` sulla macchina.
+ *
+ * «Chi ha sia l'app vecchia sia l'add-on vecchio e passa da una sua VPN o
+ * porta aperta»: con GdAHome Base li' non c'e' nessun nostro controllo — ne'
+ * l'add-on di prima della 1.19.0 ne' l'app di prima della 1.19.14 fermano
+ * chi e' fuori casa. Ma l'app, da settembre, chiede questa minima al
+ * centralino all'avvio, tornando davanti e ogni sei ore, e sotto si ferma
+ * finche' non la si aggiorna; e l'app nuova la regola di Base la fa valere
+ * anche con l'add-on vecchio. Alzare questa riga a 1191400 (la 1.19.14) chiude
+ * anche quel giro.
+ *
+ * **Si alza solo quando la 1.19.14 e' nei negozi per tutti**, Play Store e App
+ * Store: prima, chi la deve aggiornare non la trova, e resta fermo. Una riga,
+ * e il tramite rimandato in produzione. Zero non ferma nessuno. */
+export const MINIMA_DI_SERIE = 0;
+
 /* Quello che si legge dalla configurazione: un intero da zero in su. Tutto il
  * resto — vuoto, una parola, un numero negativo o con la virgola — vale zero,
  * cioe' «non si ferma nessuno»: sbagliare a scrivere questa riga non deve
@@ -36,6 +53,12 @@ export function versioneMinimaDa(scritto) {
  * servire anche a un'altra — gdanav — senza cambiare la forma. */
 export function leVersioni(minima) {
   return { gdahome: { minima: versioneMinimaDa(minima) } };
+}
+
+/* La minima che vale davvero: quella della macchina, ma mai sotto quella
+ * scritta qui ([MINIMA_DI_SERIE]). */
+export function laMinimaCheVale(scritto, diSerie = MINIMA_DI_SERIE) {
+  return Math.max(versioneMinimaDa(scritto), versioneMinimaDa(String(diSerie)));
 }
 
 /* Cinque minuti, per tutti: chi sta in mezzo lo puo' tenere, e nessuna

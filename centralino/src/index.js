@@ -16,7 +16,7 @@ import { Ricevute } from "./ricevute.js";
 import { costruisciIlServer } from "./server.js";
 import { Sportello } from "./sportello.js";
 import { leggiLaChiaveDiFirebase, Spinte } from "./spinte.js";
-import { versioneMinimaDa } from "./versioni.js";
+import { laMinimaCheVale, versioneMinimaDa } from "./versioni.js";
 
 const POTATURA = 12 * 60 * 60 * 1000;
 
@@ -210,7 +210,7 @@ export async function alzaIlCentralino({
     origini,
     registro,
   });
-  const minima = versioneMinimaDa(versioneMinimaDellApp);
+  const minima = laMinimaCheVale(versioneMinimaDellApp);
   const server = costruisciIlServer({
     centralino,
     sportello,
@@ -243,7 +243,10 @@ export async function alzaIlCentralino({
       ? `la chat ha ${chat.archivio.quanteLinee()} conversazioni`
       : "la chat riceve, ma la console e' chiusa: manca la chiave",
   );
-  if (!minima && !/^0*$/.test(String(versioneMinimaDellApp).trim())) {
+  if (
+    !versioneMinimaDa(versioneMinimaDellApp) &&
+    !/^0*$/.test(String(versioneMinimaDellApp).trim())
+  ) {
     registro.attenzione(
       `VERSIONE_MINIMA_APP non e' un numero di costruzione («${versioneMinimaDellApp}»): non si ferma nessuna app`,
     );
