@@ -21,6 +21,25 @@
  * abbastanza perche' il giorno che si cambia si veda subito.
  */
 
+/* Le minime scritte qui, sotto le quali non si scende qualunque cosa dica
+ * `VERSIONE_MINIMA_APP` sulla macchina.
+ *
+ * «Chi ha sia l'app vecchia sia l'add-on vecchio e passa da una sua VPN o
+ * porta aperta»: con GdAHome Base li' non c'e' nessun nostro controllo. Ma
+ * l'app, da settembre, chiede la minima al centralino all'avvio, tornando
+ * davanti e ogni sei ore, e sotto si ferma finche' non la si aggiorna.
+ *
+ * Una per negozio, quella che ognuno ha gia' pubblicata per tutti: App
+ * Store 1.19.0, Play Store 1.16.12. Le app di prima leggono solo `minima`,
+ * uguale per tutti: e' la piu' bassa delle due, cosi' nessuno resta fermo
+ * con un negozio che non ha ancora la versione da prendere. Le app dalla
+ * 1.19.14 leggono quella del proprio negozio.
+ *
+ * Quando la 1.19.14 — che fa valere Base anche con l'add-on di prima — e'
+ * nei negozi per tutti, si alzano tutte e due a 1191400. */
+export const MINIME_DI_SERIE = Object.freeze({ ios: 1190000, android: 1161200 });
+export const MINIMA_DI_SERIE = Math.min(MINIME_DI_SERIE.ios, MINIME_DI_SERIE.android);
+
 /* Quello che si legge dalla configurazione: un intero da zero in su. Tutto il
  * resto — vuoto, una parola, un numero negativo o con la virgola — vale zero,
  * cioe' «non si ferma nessuno»: sbagliare a scrivere questa riga non deve
@@ -34,8 +53,21 @@ export function versioneMinimaDa(scritto) {
 
 /* Il corpo della risposta. Un oggetto per app, perche' un giorno potrebbe
  * servire anche a un'altra — gdanav — senza cambiare la forma. */
-export function leVersioni(minima) {
-  return { gdahome: { minima: versioneMinimaDa(minima) } };
+export function leVersioni(minima, negozi = {}) {
+  const tutti = versioneMinimaDa(minima);
+  return {
+    gdahome: {
+      minima: tutti,
+      ios: Math.max(tutti, versioneMinimaDa(String(negozi.ios ?? 0))),
+      android: Math.max(tutti, versioneMinimaDa(String(negozi.android ?? 0))),
+    },
+  };
+}
+
+/* La minima che vale davvero: quella della macchina, ma mai sotto quella
+ * scritta qui ([MINIMA_DI_SERIE]). */
+export function laMinimaCheVale(scritto, diSerie = MINIMA_DI_SERIE) {
+  return Math.max(versioneMinimaDa(scritto), versioneMinimaDa(String(diSerie)));
 }
 
 /* Cinque minuti, per tutti: chi sta in mezzo lo puo' tenere, e nessuna

@@ -443,6 +443,10 @@ export class Chiamata {
         t: "sono-io",
         casa: this.identita.casa,
         segreto: this.identita.segreto,
+        /* Questo add-on la regola di Base la fa valere da se' (`portiere.js`):
+         * il centralino lascia passare da fuori solo i telefoni delle case
+         * che lo dicono, e a quelle di prima dice di aggiornare l'add-on. */
+        base_solo_casa: true,
         /* Con le licenze accese, anche vuoto: vedi in cima. */
         ...(this._licenza === null ? {} : { gettone: this._licenza, gdanav: this._gdanav }),
       });

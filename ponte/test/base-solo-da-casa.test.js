@@ -128,7 +128,7 @@ test("con Base, dalla porta dell'app raggiunta da fuori della rete di casa si re
   try {
     /* Il `/salute` lo dice, e il portiere lo fa valere. */
     const salute = await (await fetch(`http://${vero}:${b.porta}/salute`)).json();
-    assert.deepEqual(salute, { vivo: true, da_casa: false });
+    assert.deepEqual(salute, { vivo: true, da_casa: false, base_solo_casa: true });
 
     const fuori = bussa(b, vero);
     await assert.rejects(fuori.telefono.dentro);

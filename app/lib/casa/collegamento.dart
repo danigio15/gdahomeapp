@@ -1531,7 +1531,18 @@ class Collegamento {
       _fuoriSenzaPremium = true;
       rethrow;
     } on PonteIrraggiungibile {
-      if (daFuori || perLaLicenza || !adesso.haStradeDaFuori) rethrow;
+      if (daFuori || perLaLicenza) rethrow;
+      /* «Non mi apre più la casa quando sono fuori dal Wi-Fi: compare "Non
+       * trovo la casa"». Una casa Base senza strade di fuori nell'archivio,
+       * cercata solo sotto il Wi-Fi di casa, da fuori non risponde: e'
+       * proprio «fuori casa serve Premium», non una casa sparita. La pagina
+       * dice anche che sotto il Wi-Fi di casa si apre come sempre. */
+      final come = licenza.comeSta(adesso);
+      if (!adesso.haStradeDaFuori &&
+          come != ComeStaLaLicenza.base &&
+          come != ComeStaLaLicenza.casaSenzaLicenze) {
+        rethrow;
+      }
       _fuoriSenzaPremium = true;
       throw PremiumRichiesto(fuoriCasaServePremium);
     }

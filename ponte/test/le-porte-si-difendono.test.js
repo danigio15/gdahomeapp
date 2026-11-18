@@ -209,7 +209,7 @@ test("una cartella chiesta come file non fa cadere il ponte", async () => {
     assert.equal(pagina.headers.get("content-security-policy"), "frame-ancestors 'self'");
     const salute = await fetch(`${dove}/salute`);
     // In prova si bussa da 127.0.0.1: la rete di casa (`da-casa.js`).
-    assert.deepEqual(await salute.json(), { vivo: true, da_casa: true });
+    assert.deepEqual(await salute.json(), { vivo: true, da_casa: true, base_solo_casa: true });
     assert.equal(salute.headers.get("x-content-type-options"), "nosniff");
   } finally {
     await new Promise((ok) => server.close(ok));

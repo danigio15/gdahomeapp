@@ -373,7 +373,10 @@ export function costruisciLaPortaDellApp({
        * chi bussa una cosa di se', non della casa: con gdahome Base l'app
        * prova un indirizzo solo quando qui si arriva da casa, ed e' la stessa
        * regola con cui il portiere poi apre o chiude il filo. */
-      json(risposta, { vivo: true, da_casa: daCasa(richiesta) });
+      /* `base_solo_casa`: questo add-on la regola di Base la fa valere da se'
+       * (`portiere.js`): l'app ascolta il suo `da_casa`. Da quello di un
+       * add-on di prima, che con Base lasciava entrare da fuori, no. */
+      json(risposta, { vivo: true, da_casa: daCasa(richiesta), base_solo_casa: true });
       return;
     }
 

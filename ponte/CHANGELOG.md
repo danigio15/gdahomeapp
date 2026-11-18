@@ -10,6 +10,16 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.19.14
+
+_App GdAHome e add-on._
+
+- **Collegamento più sicuro**: per capire se il telefono è sulla rete di
+  casa l'app si fida solo dell'add-on aggiornato, e quando la casa non si
+  raggiunge spiega cosa fare invece di dire soltanto «Non trovo la casa».
+- **Se l'add-on è da aggiornare, l'app lo dice**: con un add-on di qualche
+  versione fa, fuori casa l'app chiede di aggiornarlo in Home Assistant.
+
 ## 1.19.13
 
 _App GdAHome e add-on._

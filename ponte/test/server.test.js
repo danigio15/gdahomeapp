@@ -245,7 +245,7 @@ test("la porta dell'app dice solo se e' viva", async () => {
     /* Solo «ci sono», e a chi bussa se sta bussando da casa (`da-casa.js`):
      * una cosa di lui, non della casa. Quanti telefoni ha la casa, e quanti
      * sono collegati, a chi bussa a una porta esposta non si dice. */
-    assert.deepEqual(detto, { vivo: true, da_casa: true });
+    assert.deepEqual(detto, { vivo: true, da_casa: true, base_solo_casa: true });
   } finally {
     await b.spegni();
   }
