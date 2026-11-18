@@ -262,31 +262,27 @@ test("il gettone detto dalla casa apre la porta ai suoi telefoni", async () => {
   }
 });
 
-test("una casa Premium con un add-on di prima della 1.19.14: da fuori 4426, aggiorna l'add-on", async () => {
-  /* «Visto che le connessioni passano dal centralino, anche gli add-on
-   * vecchi possiamo bloccarli dicendo devi aggiornare». Senza
-   * `base_solo_casa` l'add-on e' di prima: Premium o no, da qui non si entra. */
+test("con un add-on di prima della 1.19.14: la casa Premium entra, quella Base sente 4426", async () => {
+  /* Senza `base_solo_casa` l'add-on e' di prima. Chi paga entra lo stesso;
+   * la casa Base si sente dire di aggiornare l'add-on. */
   const b = await banco();
   try {
-    const casa = unaCasa(b.dove);
-    await casa.entra({ base_solo_casa: false });
-    casa.manda({ t: "licenza", tipo: "licenza", gettone: unGettone({ sog: casa.id }) });
-    await attendi(() => b.centralino.ePremium(casa.id));
-    const telefono = unTelefono(b.dove, `/telefono/${casa.id}`);
-    assert.deepEqual(await telefono.chiusa, { codice: 4426, motivo: "aggiorna-add-on" });
-    assert.equal(casa.canali().length, 0);
-    casa.chiudi();
+    const premium = unaCasa(b.dove);
+    await premium.entra({ base_solo_casa: false });
+    premium.manda({ t: "licenza", tipo: "licenza", gettone: unGettone({ sog: premium.id }) });
+    await attendi(() => b.centralino.ePremium(premium.id));
+    const suo = unTelefono(b.dove, `/telefono/${premium.id}`);
+    await suo.aperta;
+    await attendi(() => premium.canali().length === 1);
+    suo.chiudi();
+    premium.chiudi();
 
-    /* Aggiornata, si ripresenta col segno: il telefono entra. */
-    const nuova = unaCasa(b.dove);
-    await nuova.entra();
-    nuova.manda({ t: "licenza", tipo: "licenza", gettone: unGettone({ sog: nuova.id }) });
-    await attendi(() => b.centralino.ePremium(nuova.id));
-    const dopo = unTelefono(b.dove, `/telefono/${nuova.id}`);
-    await dopo.aperta;
-    await attendi(() => nuova.canali().length === 1);
-    dopo.chiudi();
-    nuova.chiudi();
+    const base = unaCasa(b.dove);
+    await base.entra({ base_solo_casa: false, gettone: "" });
+    const telefono = unTelefono(b.dove, `/telefono/${base.id}`);
+    assert.deepEqual(await telefono.chiusa, { codice: 4426, motivo: "aggiorna-add-on" });
+    assert.equal(base.canali().length, 0);
+    base.chiudi();
   } finally {
     await b.spegni();
   }
