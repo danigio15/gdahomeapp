@@ -10,6 +10,24 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.19.13
+
+_App GdAHome e add-on._
+
+- **Mai contromano, anche con l'app accesa da giorni**: dove due sensi
+  unici fanno un triangolo, il navigatore rifà il percorso sul ramo
+  giusto anche quando l'app resta accesa a lungo (le strade della mappa
+  si ricaricano da sole), e controlla i primi chilometri appena parte la
+  guida. In «Android Auto» (o «CarPlay») nel menu, la parte «I sensi
+  unici» dice cosa ha controllato e cosa ha corretto.
+- **Casa 3D, dispositivi che non si accavallano**: più luci nella stessa
+  stanza non finiscono più tutte al centro, una sopra l'altra: si
+  dispongono distanziate, e una casa già fatta si sistema da sola
+  aprendola. I tasti sullo schermo non si coprono.
+- **Casa 3D, spostare i dispositivi sul muro**: in «Arreda» termostato,
+  tapparella e gli altri dispositivi si trascinano anche prendendo il
+  loro tasto, e i comandi per girarli o toglierli stanno sopra il tasto.
+
 ## 1.19.12
 
 _App GdAHome e add-on._
