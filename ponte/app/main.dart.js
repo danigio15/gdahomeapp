@@ -32087,8 +32087,8 @@ return A.f(a.w1(),$async$anV)
 case 4:p=c
 o=t.N
 o=A.x(o,o)
-o.m(0,"app","1.19.14")
-o.m(0,"costruzione","1191400")
+o.m(0,"app","1.19.15")
+o.m(0,"costruzione","1191500")
 if(p.length!==0)o.m(0,"proprietario",p)
 q=o
 s=1
@@ -35224,7 +35224,7 @@ else h.m(0,"chi",b)
 h.m(0,"apertura",B.ei.gm_().bm(m))
 h.m(0,"mia",B.ei.gm_().bm(l))
 h.m(0,"mucchio",!0)
-h.m(0,"app",1191400)
+h.m(0,"app",1191500)
 h.m(0,"lega",1)
 p=B.am.j9(h,null)
 g.aqI(new A.bgz(o,e,g,n,m,c,d,p))
@@ -122178,7 +122178,7 @@ q=q.aj(p==null?m.k3:p)}p=t.p
 q=A.b7(A.aj(A.a([k,B.QL,s,B.aU,A.r(r,o,o,o,o,o,q,B.au,o,o)],p),B.o,o,B.dI,B.i,0,B.k),1)
 r=A.hR(o,o,B.kJ,o,o,o,o)
 k=A.iO(B.zG,o,A.r(l===B.Y?A.c("Update from the App Store","Aggiorna dall'App Store"):A.c("Update from Google Play","Aggiorna dal Play Store"),o,o,o,o,o,o,o,o,o),new A.aGI(this),r)
-s=A.c("This is 1.19.14 (1191400)","Questa \xe8 la 1.19.14 (1191400)")
+s=A.c("This is 1.19.15 (1191500)","Questa \xe8 la 1.19.15 (1191500)")
 r=n.Q
 if(r==null)l=o
 else{l=m.rx
@@ -128379,7 +128379,7 @@ i=t.N
 i=A.x(i,i)
 h=g
 if(h!=null)h.b02()
-i.m(0,"app","1.19.14")
+i.m(0,"app","1.19.15")
 if(k.length!==0)i.m(0,"proprietario",k)
 q=new A.ai3(i,j.a)
 s=1
@@ -130436,9 +130436,9 @@ else{l=a5.rx
 l=n.aj(l==null?a5.k3:l)}l=A.r(o,a4,a4,a4,a4,a4,l,a4,a4,a4)
 o=a6.w
 k=A.r(A.c("This app","Questa app"),a4,a4,a4,a4,a4,o,a4,a4,a4)
-j=p.$2(A.c("Version","Versione"),"1.19.14 (1191400)")
+j=p.$2(A.c("Version","Versione"),"1.19.15 (1191500)")
 i=A.c("Package","Pacchetto")
-i=p.$2(i,"105-4faf6d7")
+i=p.$2(i,"106-60fcea4")
 h=A.c("Relay","Centralino")
 g=t.p
 h=A.aj(A.a([k,B.bA,j,i,p.$2(h,$.aoJ()==null?A.c("none","nessuno"):"GdAHome")],g),B.t,a4,B.f,B.i,0,B.k)
@@ -130568,7 +130568,7 @@ A.IV.prototype={
 A(a){var s,r=null,q=A.u(a).ax,p=A.u(a).ok.Q
 if(p==null)p=r
 else{s=q.rx
-p=p.yj((s==null?q.k3:s).be(0.7),11)}return new A.ak(new A.Y(0,this.c,0,0),A.r("GdAHome 1.19.14 (1191400)",r,r,r,r,r,p,B.au,r,r),r)}}
+p=p.yj((s==null?q.k3:s).be(0.7),11)}return new A.ak(new A.Y(0,this.c,0,0),A.r("GdAHome 1.19.15 (1191500)",r,r,r,r,r,p,B.au,r,r),r)}}
 A.Jl.prototype={
 ad(){var s=$.al()
 return new A.R3(new A.bC(null,t.Pq),new A.bC(null,t.dS),B.d1,new A.bC(null,t.b7),new A.cp(!1,s),new A.cp(!1,s))}}
@@ -130723,7 +130723,7 @@ else s=!0
 return s},
 atP(){var s,r,q=null,p=this.a.c,o=t.N
 o=A.x(o,o)
-o.m(0,"app","105-4faf6d7")
+o.m(0,"app","106-60fcea4")
 o.m(0,"sistema","web")
 s=p.k1
 s=s==null?q:s.b
