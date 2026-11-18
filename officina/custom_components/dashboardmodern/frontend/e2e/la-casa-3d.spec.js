@@ -404,6 +404,115 @@ test("chi amministra arreda", async ({ page }, testInfo) => {
   await scatta(page, testInfo, "casa3d-arreda");
 });
 
+/* «In cucina ho 3 luci: quando le aggiungo i tasti quasi si sovrappongono».
+ * Le luci andavano tutte al centro della stanza. Una casa salvata cosi' si
+ * sistema da sola aprendola, e i tasti sullo schermo non si coprono. */
+test("tre luci nella stessa stanza: i tasti non si coprono", async ({ page }, testInfo) => {
+  const terra = CASA.piani[0];
+  const luci = ["light.cucina", "light.cucina_isola", "light.cucina_cappa"].map((entity) => ({
+    k: "luce",
+    stanza: 2,
+    x: 9.6,
+    y: 2.2,
+    entity,
+  }));
+  const casa = {
+    ...CASA,
+    piani: [
+      {
+        ...terra,
+        dispositivi: [
+          ...terra.dispositivi.filter((d) => d.k !== "luce" || d.stanza !== 2),
+          ...luci,
+        ],
+      },
+      CASA.piani[1],
+    ],
+  };
+  await boot(page, testInfo, { casa });
+  await page.evaluate(() => {
+    const s = (entity_id, state, friendly_name) => ({
+      entity_id,
+      state,
+      attributes: { friendly_name },
+    });
+    const nuovi = {
+      "light.cucina_isola": s("light.cucina_isola", "on", "Isola"),
+      "light.cucina_cappa": s("light.cucina_cappa", "off", "Cappa"),
+    };
+    Object.assign(_RAW_STATES, nuovi);
+    window.__HASS__ = { states: { ...(window.__HASS__?.states || {}), ...nuovi } };
+    window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready"));
+  });
+  await vai(page, "terra");
+  await page.mouse.move(2, 2);
+  const visibili = () =>
+    page.locator("#dm-casa3d .c3-chip").evaluateAll((nodi) =>
+      nodi
+        .filter((n) => n.style.display !== "none" && n.offsetWidth > 0)
+        .map((n) => {
+          const r = n.getBoundingClientRect();
+          return { x0: r.left, y0: r.top, x1: r.right, y1: r.bottom };
+        }),
+    );
+  await expect
+    .poll(async () => (await visibili()).length, { timeout: 30_000 })
+    .toBeGreaterThanOrEqual(9);
+  await page.waitForTimeout(500);
+  const tasti = await visibili();
+  const coperti = [];
+  for (let i = 0; i < tasti.length; i++)
+    for (let j = i + 1; j < tasti.length; j++) {
+      const [a, b] = [tasti[i], tasti[j]];
+      if (a.x0 < b.x1 - 1 && b.x0 < a.x1 - 1 && a.y0 < b.y1 - 1 && b.y0 < a.y1 - 1)
+        coperti.push([i, j]);
+    }
+  await scatta(page, testInfo, "casa3d-tre-luci");
+  expect(coperti).toEqual([]);
+});
+
+/* «Il termostato piuttosto che la tapparella non riesco a spostarli»: sono
+ * piccoli, sul muro, e sopra c'e' il loro tasto. Arredando, il tasto si
+ * trascina e il dispositivo va dove lo si porta. */
+test("arredando, un dispositivo sul muro si sposta trascinando il suo tasto", async ({
+  page,
+}, testInfo) => {
+  await boot(page, testInfo);
+  const casa = page.locator("#dm-casa3d");
+  await vai(page, "terra");
+  await casa.locator('[data-c3s="arreda"]').click();
+  await expect(casa.locator(".c3-arreda-posto")).toBeVisible();
+  const prima = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("cd_casa3d")).piani[0].dispositivi.find(
+      (d) => d.k === "termometro",
+    ),
+  );
+  const tasto = casa.locator(".c3-chip").filter({ hasText: "21,4°" });
+  await expect(tasto).toBeVisible();
+  const b = await tasto.boundingBox();
+  const [x, y] = [b.x + b.width / 2, b.y + b.height / 2];
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  for (let i = 1; i <= 10; i++) {
+    await page.mouse.move(x + 6 * i, y + 22 * i);
+    await page.waitForTimeout(60);
+  }
+  await page.mouse.up();
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const d = JSON.parse(localStorage.getItem("cd_casa3d")).piani[0].dispositivi.find(
+            (v) => v.k === "termometro",
+          );
+          return [d.x, d.y];
+        }),
+      { timeout: 10_000 },
+    )
+    .not.toEqual([prima.x, prima.y]);
+  await scatta(page, testInfo, "casa3d-termometro-spostato");
+});
+
 /* «Avevo selezionato 3D ma quando faccio Aggiungi va la classica»: una
  * plancia Casa 3D appena nata, senza casa, resta Casa 3D. Al posto della
  * casa l'invito a crearla, e il motore 3D non si scarica per niente. */

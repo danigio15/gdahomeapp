@@ -1480,7 +1480,14 @@ function creaScena(THREE, opzioni = {}) {
     gr.add(p.dispGr);
     p.disp = [];
     p.luci = [];
-    for (const dati of p.dati.dispositivi || []) mettiDispositivo(p, dati);
+    for (const dati of p.dati.dispositivi || []) {
+      const s = DISPOSITIVI_3D[dati.k] && p.stanze.find((x) => x.id === dati.stanza);
+      if (s && vicinoA(usatiIn(p, s), dati.x, dati.y, 0.3)) {
+        const posto = postoDispositivo(p, s, dati.k);
+        Object.assign(dati, { x: +posto.x.toFixed(3), y: +posto.y.toFixed(3), rot: +posto.rot.toFixed(4) });
+      }
+      mettiDispositivo(p, dati);
+    }
   }
   const voceDi = (k) => VOCI_ARREDI[k] || { k, icona: "📦", nome: [k, k], w: 0.6, d: 0.6 };
   const quarto = (rot) => Math.abs(Math.round(rot / (Math.PI / 2))) % 2 === 1;
@@ -1640,10 +1647,32 @@ function creaScena(THREE, opzioni = {}) {
     p.dati.dispositivi = p.dati.dispositivi.filter((x) => x !== Dv.dati);
   }
   const versoRot = (dx, dy) => Math.atan2(dx, dy);
+  const DISTANZA_FRA_DISPOSITIVI = 1.6;
+  const usatiIn = (p, s) => p.disp.filter((x) => x.dati.stanza === s.id).map((x) => [x.dati.x, x.dati.y]);
+  const vicinoA = (usati, x, y, r) => usati.some(([ux, uy]) => Math.hypot(ux - x, uy - y) < r);
+  function postoInMezzo(p, s, usati, staccoDalCentro = 0) {
+    const centro = { x: s.sx, y: s.sy + staccoDalCentro, rot: 0 };
+    if (!usati.length || !vicinoA(usati, centro.x, centro.y, DISTANZA_FRA_DISPOSITIVI)) return centro;
+    const passo = Math.max(1, Math.round(0.25 / p.passo));
+    const margine = Math.max(1, Math.round(0.45 / p.passo));
+    const dentro = (cx, cy) => cx >= 0 && cy >= 0 && cx < p.W && cy < p.H && p.tipo[cy * p.W + cx] === s.id;
+    let meglio = null;
+    for (let cy = 0; cy < p.H; cy += passo)
+      for (let cx = 0; cx < p.W; cx += passo) {
+        if (!dentro(cx, cy) || !dentro(cx - margine, cy) || !dentro(cx + margine, cy) || !dentro(cx, cy - margine) || !dentro(cx, cy + margine)) continue;
+        const x = (cx + 0.5) * p.passo, y = (cy + 0.5) * p.passo;
+        let lontano = Infinity;
+        for (const [ux, uy] of usati) lontano = Math.min(lontano, Math.hypot(ux - x, uy - y));
+        const voto = Math.min(lontano, DISTANZA_FRA_DISPOSITIVI) * 4 - Math.hypot(x - centro.x, y - centro.y);
+        if (!meglio || voto > meglio.voto) meglio = { x, y, voto };
+      }
+    return meglio ? { x: meglio.x, y: meglio.y, rot: 0 } : centro;
+  }
   function postoDispositivo(p, s, k) {
     const D = DISPOSITIVI_3D[k];
     const miei = p.bordi.filter((b2) => b2.id === s.id);
-    if (D.mont === "soffitto" || D.mont === "pavimento" || !miei.length) return { x: s.sx, y: s.sy + (D.mont === "pavimento" ? 0.6 : 0), rot: 0 };
+    const usati = usatiIn(p, s);
+    if (D.mont === "soffitto" || D.mont === "pavimento" || !miei.length) return postoInMezzo(p, s, usati, D.mont === "pavimento" ? 0.6 : 0);
     const vede = (b2) => {
       for (let t = 0; t <= 1; t += 0.04) {
         const cx = Math.floor((b2.x + (s.sx - b2.x) * t) / p.passo), cy = Math.floor((b2.y + (s.sy - b2.y) * t) / p.passo);
@@ -1654,21 +1683,22 @@ function creaScena(THREE, opzioni = {}) {
     if (D.mont === "angolo") {
       const ang = miei.filter((b3) => b3.angolo && vede(b3));
       const lista = ang.length ? ang : miei.filter(vede).length ? miei.filter(vede) : miei;
-      const usati = p.disp.filter((x) => x.dati.stanza === s.id).map((x) => [x.dati.x, x.dati.y]);
-      const pena = (q) => usati.some(([ux, uy]) => Math.hypot(ux - q.x, uy - q.y) < 1.5) ? -100 : 0;
-      const b2 = lista.slice().sort((a, c) => Math.hypot(c.x - s.sx, c.y - s.sy) + pena(c) - (Math.hypot(a.x - s.sx, a.y - s.sy) + pena(a)))[0];
+      const pena2 = (q) => vicinoA(usati, q.x, q.y, 1.5) ? -100 : 0;
+      const b2 = lista.slice().sort((a, c) => Math.hypot(c.x - s.sx, c.y - s.sy) + pena2(c) - (Math.hypot(a.x - s.sx, a.y - s.sy) + pena2(a)))[0];
       return { x: b2.x, y: b2.y, rot: versoRot(s.sx - b2.x, s.sy - b2.y) };
     }
     if (D.mont === "finestra" || D.mont === "porta") {
       const tipoA = D.mont === "porta" ? "porta" : "finestra";
       const ap = (p.dati.aperture || []).filter((a) => a.tipo === tipoA && (a.stanza === s.id || stanzaVicina(p, a) === s.id));
-      if (ap.length) {
-        const a = ap[0];
+      const posti = ap.map((a) => {
         const b2 = miei.slice().sort((u, v) => Math.hypot(u.x - a.x, u.y - a.y) - Math.hypot(v.x - a.x, v.y - a.y))[0];
         return { x: b2.x + (a.orizz ? a.largo / 2 : 0), y: b2.y + (a.orizz ? 0 : a.largo / 2), rot: versoRot(b2.nx, b2.ny) };
-      }
+      });
+      const libero = posti.find((q) => !vicinoA(usati, q.x, q.y, 0.6));
+      if (libero || posti.length) return libero || posti[0];
     }
-    const b = miei.filter((q) => !q.angolo).sort((u, v) => Math.hypot(u.x - s.sx, u.y - s.sy) - Math.hypot(v.x - s.sx, v.y - s.sy))[0] || miei[0];
+    const pena = (q) => vicinoA(usati, q.x, q.y, 1.2) ? 100 : 0;
+    const b = miei.filter((q) => !q.angolo).sort((u, v) => Math.hypot(u.x - s.sx, u.y - s.sy) + pena(u) - (Math.hypot(v.x - s.sx, v.y - s.sy) + pena(v)))[0] || miei[0];
     return { x: b.x, y: b.y, rot: versoRot(b.nx, b.ny) };
   }
   function stanzaVicina(p, a) {
@@ -2044,6 +2074,7 @@ function creaScena(THREE, opzioni = {}) {
     const el = document.createElement("button");
     el.type = "button";
     el.className = "c3-chip";
+    el.addEventListener("pointerdown", (ev) => prendiDalTasto(ev, Dv));
     el.addEventListener("click", (ev) => {
       ev.stopPropagation();
       tocca(Dv);
@@ -2075,6 +2106,7 @@ function creaScena(THREE, opzioni = {}) {
           s.el.innerHTML = testo;
         }
       }
+      const visti = [];
       for (const Dv of p.disp) {
         const el = chipDi(Dv);
         if (!aperto) {
@@ -2088,9 +2120,11 @@ function creaScena(THREE, opzioni = {}) {
           continue;
         }
         el.style.display = "";
-        el.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) translate(-50%,-100%)`;
         vestiChip(Dv, el);
+        if (Dv.misura?.testo !== el.textContent || !Dv.misura.w) Dv.misura = { testo: el.textContent, w: el.offsetWidth, h: el.offsetHeight };
+        visti.push({ el, x, y, w: Dv.misura.w, h: Dv.misura.h });
       }
+      scostaChip(visti);
     }
     const fuori = S.vista === "esterno" && S.taglio > 40;
     for (const Dv of ESTERNE) {
@@ -2124,8 +2158,22 @@ function creaScena(THREE, opzioni = {}) {
       const b = new THREE.Box3().setFromObject(S.pezzo.m);
       const [x, y] = proietta((b.min.x + b.max.x) / 2, Math.min(b.max.y, (S.pezzo.p.base || 0) + TAGLIO) + 0.15, (b.min.z + b.max.z) / 2);
       maniglie.style.display = "flex";
-      maniglie.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) translate(-50%,-130%)`;
+      const sopraIlTasto = S.pezzo.D && S.pezzo.el?.style.display !== "none" ? (S.pezzo.misura?.h || 22) + 6 : 0;
+      maniglie.style.transform = `translate(${x.toFixed(1)}px,${(y - sopraIlTasto).toFixed(1)}px) translate(-50%,-130%)`;
     } else maniglie.style.display = "none";
+  }
+  function scostaChip(visti, stacco = 3) {
+    visti.sort((a, b) => b.y - a.y);
+    const messi = [];
+    for (const c of visti) {
+      for (let giri = 0; giri <= messi.length; giri++) {
+        const sotto = messi.find((m) => Math.abs(m.x - c.x) < (m.w + c.w) / 2 + stacco && c.y > m.y - m.h - stacco && c.y - c.h < m.y + stacco);
+        if (!sotto) break;
+        c.y = sotto.y - sotto.h - stacco;
+      }
+      messi.push(c);
+      c.el.style.transform = `translate(${c.x.toFixed(1)}px,${c.y.toFixed(1)}px) translate(-50%,-100%)`;
+    }
   }
   function vestiChip(Dv, el, nome = "") {
     const st = Dv.stato || { testo: Dv.D.icona, tono: "neutro" };
@@ -2306,23 +2354,38 @@ function creaScena(THREE, opzioni = {}) {
     if (dita.size === 1 && S.arreda && p) {
       const A = pezzoSotto(ev, p);
       if (A) {
-        if (S.sel?.s !== A.s && A.s) scegliStanza(p, A.s);
-        else if (!A.s) {
-          const s = p.stanze.find((x) => x.id === A.dati.stanza);
-          if (s && S.sel?.s !== s) scegliStanza(p, s);
-        }
-        if (A.D) S.scheda = "dispositivi";
-        else if (S.scheda === "dispositivi") S.scheda = "arredi";
-        scegliPezzo(A);
-        const q = versoPavimento(ev, p);
-        if (q) S.presa = { A, dx: A.dati.x - q[0], dy: A.dati.y - q[1], mosso: false };
-        tela3d.style.cursor = "grabbing";
-        gesto = { tipo: "pezzo", x: ev.clientX, y: ev.clientY };
+        prendi(ev, p, A);
         return;
       }
     }
     gesto = { tipo: dita.size > 1 ? "pizzico" : "gira", x: ev.clientX, y: ev.clientY, mosso: false, distanza: distanzaDita() };
   });
+  function prendi(ev, p, A) {
+    if (S.sel?.s !== A.s && A.s) scegliStanza(p, A.s);
+    else if (!A.s) {
+      const s = p.stanze.find((x) => x.id === A.dati.stanza);
+      if (s && S.sel?.s !== s) scegliStanza(p, s);
+    }
+    if (A.D) S.scheda = "dispositivi";
+    else if (S.scheda === "dispositivi") S.scheda = "arredi";
+    scegliPezzo(A);
+    const q = versoPavimento(ev, p);
+    if (q) S.presa = { A, dx: A.dati.x - q[0], dy: A.dati.y - q[1], mosso: false };
+    tela3d.style.cursor = "grabbing";
+    gesto = { tipo: "pezzo", x: ev.clientX, y: ev.clientY };
+  }
+  function prendiDalTasto(ev, Dv) {
+    if (!S.arreda || Dv.esterna || ev.button > 0) return false;
+    const p = PIANI_MIEI.find((x) => x.k === S.vista);
+    if (!p || Dv.p !== p) return false;
+    ev.preventDefault();
+    ev.stopPropagation();
+    dita.clear();
+    dita.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+    tela3d.setPointerCapture?.(ev.pointerId);
+    prendi(ev, p, Dv);
+    return true;
+  }
   const distanzaDita = () => {
     const d = [...dita.values()];
     return d.length > 1 ? Math.hypot(d[0].x - d[1].x, d[0].y - d[1].y) : 0;
@@ -2947,6 +3010,7 @@ function installaLoStile() {
     background:rgba(var(--c,100,116,139),.88);color:#fff;border:1px solid rgba(var(--c,100,116,139),.6);will-change:transform}
   .c3-chip.c3-scollegato{opacity:.6;border-style:dashed}
   .c3-chip.c3-scelto{box-shadow:0 0 0 3px #38bdf8}
+  .c3-arreda .c3-chip{cursor:grab;touch-action:none}
   .c3-chip.c3-vivo{animation:c3-pulsa 1.2s infinite}
   @keyframes c3-pulsa{0%,100%{box-shadow:0 0 0 3px rgba(var(--c),.35)}50%{box-shadow:0 0 0 7px rgba(var(--c),.1)}}
   .c3-cartellino{position:absolute;left:0;top:0;pointer-events:auto;cursor:pointer;background:rgba(15,23,42,.84);border:1px solid rgba(148,163,184,.3);border-radius:12px;
