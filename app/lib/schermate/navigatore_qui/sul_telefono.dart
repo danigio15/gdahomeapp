@@ -23,7 +23,7 @@ import 'package:gdanav_app/gdanav_app.dart';
 
 import '../../casa/collegamento.dart';
 import '../../casa/ponte_del_portachiavi.dart';
-import '../../licenza/licenza.dart' show GestoreLicenza, licenzeInQuestaApp;
+import '../../licenza/licenza.dart' show licenzeInQuestaApp;
 import '../../notifiche/al_navigatore.dart';
 import '../../notifiche/postino.dart';
 import '../../parole.dart';
@@ -68,22 +68,14 @@ final _persone = GestorePersone();
 /// dell'iPhone un telefono che non e' un iPhone — tutto e' aperto.
 final _premiumOspite = ValueNotifier<bool>(!licenzeInQuestaApp);
 
-/// In auto si guida anche senza Premium, finche' non c'e' una casa abbinata.
-///
-/// «Se la casa non e' associata ancora non puo' avviarsi il navigatore
-/// direttamente su Android Auto.» La navigazione in auto e' di Premium, e
-/// Premium e' di una casa: senza casa nessuno lo era, e in macchina restava
-/// la pagina «gdahome Premium» al posto della mappa. Adesso il navigatore
-/// parte base; da quando c'e' una casa segue il suo abbonamento. Gli extra di
-/// Premium restano di Premium ([_premiumOspite]).
-///
-/// Vale solo quando le case si sono lette e non ce n'e' nessuna: prima di
-/// leggerle «nessuna casa» vuol dire «non lo so ancora».
-final _guidaSenzaCasa = ValueNotifier<bool>(false);
+/* In auto si guida solo con Premium: Android Auto e CarPlay sono di Premium
+ * (`docs/MANUALE.md`, «Base e Premium a confronto»), anche senza una casa
+ * abbinata. Prima senza casa si guidava base; con la regola «Base non deve
+ * avere né Android Auto né CarPlay» non piu': in auto vale [_premiumOspite]. */
 
-/// Per le prove: [_guidaSenzaCasa], e chi segue la casa.
+/// Per le prove: Premium per gdanav, come lo vede l'auto.
 @visibleForTesting
-ValueListenable<bool> get guidaInAutoSenzaCasa => _guidaSenzaCasa;
+ValueListenable<bool> get premiumPerGdanav => _premiumOspite;
 
 @visibleForTesting
 void seguiLaCasaPerLaProva(Object chi, Collegamento? casa) =>
@@ -139,14 +131,7 @@ ValueListenable<bool>? _premiumDellaCasa;
 void _copiaIlPremium() {
   final premium = _premiumDellaCasa;
   if (premium != null) _premiumOspite.value = premium.value;
-  final casa = _filoDellaVettura?.collegamento;
-  if (casa != null) {
-    _guidaSenzaCasa.value =
-        casa.licenza.conosciute && casa.archivio.tutte.isEmpty;
-  }
 }
-
-GestoreLicenza? _licenzaSeguita;
 
 /// [chi] segue [casa]: l'auto della sua plancia va a gdanav, e il suo
 /// Premium pure. Senza una casa, e' come lasciarla.
@@ -159,10 +144,6 @@ void _seguiLaCasa(Object chi, Collegamento? casa) {
   if (identical(_filoDellaVettura?.collegamento, casa)) return;
   _premiumDellaCasa?.removeListener(_copiaIlPremium);
   _premiumDellaCasa = casa.licenza.premiumQui..addListener(_copiaIlPremium);
-  /* Anche la licenza intera: una casa abbinata adesso non cambia Premium
-   * (resta no finche' la casa non lo dice), ma cambia [_guidaSenzaCasa]. */
-  _licenzaSeguita?.removeListener(_copiaIlPremium);
-  _licenzaSeguita = casa.licenza..addListener(_copiaIlPremium);
   _filoDellaVettura?.ferma();
   _filoDellaVettura = IlFiloDellaVettura(casa, _vettura, persone: _persone)
     ..avvia();
@@ -201,8 +182,6 @@ void _lasciaLaCasa(Object chi) {
   _attesaDeiComandi = null;
   _premiumDellaCasa?.removeListener(_copiaIlPremium);
   _premiumDellaCasa = null;
-  _licenzaSeguita?.removeListener(_copiaIlPremium);
-  _licenzaSeguita = null;
   _filoDellaVettura?.ferma();
   _filoDellaVettura = null;
 }
@@ -221,7 +200,6 @@ Future<GdanavApp> accendiIlNavigatore() => _acceso ??= () async {
      * con lei. Niente negozio di gdanav qui dentro: se manca, gdanav dice di
      * prenderlo in gdahome. */
     #premiumOspite: _premiumOspite,
-    #guidaInAutoSenzaPremium: _guidaSenzaCasa,
     /* Lo schermo dell'auto di gdanav si accende solo nella versione col
      * navigatore in auto; nella gdahome di sempre Android Auto e' la casa. */
     #conLAuto: await _conLAuto,
