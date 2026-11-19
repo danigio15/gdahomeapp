@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 /// Le prove di gdahome Premium nell'app: chi lo e', cosa si apre, e cosa
 /// la casa dice sul filo.
 ///
