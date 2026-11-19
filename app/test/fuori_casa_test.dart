@@ -69,7 +69,12 @@ void main() {
     return collegamento;
   }
 
-  Future<void> mostra(WidgetTester tester, Collegamento collegamento) async {
+  Future<void> mostra(
+    WidgetTester tester,
+    Collegamento collegamento, {
+    VoidCallback? menu,
+    VoidCallback? navigatore,
+  }) async {
     tester.view.physicalSize = const Size(390 * 3, 844 * 3);
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
@@ -86,6 +91,8 @@ void main() {
               dispensa: DispensaInMemoria(),
             ),
             vaiAlleCase: () {},
+            quandoChiedeIlMenu: menu,
+            quandoApreIlNavigatore: navigatore,
           ),
         ),
       ),
@@ -101,6 +108,28 @@ void main() {
     await mostra(tester, collegamento);
     expect(find.text('Scopri GdAHome Premium'), findsOneWidget);
     expect(find.text('Aggiorna l\'add-on GdAHome'), findsNothing);
+  });
+
+  testWidgets('fuori casa con Base il menu c\'è, e GdANav si apre da qui', (
+    tester,
+  ) async {
+    /* «Gdanav fuori casa non funziona»: la pagina che dice di Premium stava
+     * al posto della plancia, e il menu lo apre il ☰ della plancia. Senza un
+     * tasto suo non si arrivava da nessuna parte — nemmeno al navigatore,
+     * che è gratis e la casa non la vuole. */
+    final collegamento = await fuoriCasa(tester, addonVecchio: false);
+    var menu = 0, navigatore = 0;
+    await mostra(
+      tester,
+      collegamento,
+      menu: () => menu++,
+      navigatore: () => navigatore++,
+    );
+    await tester.tap(find.byKey(const Key('stato-menu')));
+    expect(menu, 1);
+    await tester.tap(find.byKey(const Key('stato-apri-gdanav')));
+    expect(navigatore, 1);
+    expect(find.text('Apri GdANav'), findsOneWidget);
   });
 
   testWidgets('con l\'add-on vecchio, fuori casa si chiede di aggiornarlo', (

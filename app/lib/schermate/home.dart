@@ -863,6 +863,14 @@ class _HomeState extends State<Home> {
                              * menu, qui dove la barra del titolo non c'e'. */
                                   quandoChiedeIlMenu: () =>
                                       _barra.currentState?.apri(),
+                                  /* GdANav, dalla pagina che dice perche'
+                                   * la casa non si apre: il navigatore
+                                   * gratis va anche fuori casa. Solo dove
+                                   * c'e' (sul telefono). */
+                                  quandoApreIlNavigatore:
+                                      widget.impostazioni.sulTelefono
+                                      ? () => _vai(Sezione.navigatore)
+                                      : null,
                                   /* «Apri in mappa» sulla scheda di una
                                    * persona: il navigatore, con la strada
                                    * fino a lei. */

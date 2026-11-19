@@ -33,7 +33,7 @@ import '../plancia/il_fondo.dart';
 import '../plancia/servitore_qui/qui.dart';
 import '../ponte/filo.dart';
 import '../vestito/pezzi.dart';
-import 'barra.dart' show nomeDelleCase;
+import 'barra.dart' show nomeDelTastoDellaBarra, nomeDelleCase;
 import 'caricamento.dart';
 import 'da_dove.dart';
 import 'premium.dart';
@@ -131,6 +131,7 @@ class PlanciaVera extends StatefulWidget {
     this.quandoCambiaPagina,
     this.quandoChiedeIlMenu,
     this.quandoApreLaPersona,
+    this.quandoApreIlNavigatore,
   });
 
   final Collegamento collegamento;
@@ -161,6 +162,11 @@ class PlanciaVera extends StatefulWidget {
   /// «Apri in mappa» sulla scheda di una persona: la pagina manda dove sta,
   /// `{nome, lat, lon, indirizzo}` in JSON, e l'app la apre nel navigatore.
   final void Function(String persona)? quandoApreLaPersona;
+
+  /// Apre GdANav, dove c'e'. Dalle pagine che dicono perche' la casa non si
+  /// apre: GdANav gratis non ha bisogno della casa, e fuori casa con Base
+  /// e' proprio quello che serve.
+  final VoidCallback? quandoApreIlNavigatore;
 
   @override
   State<PlanciaVera> createState() => PlanciaVeraState();
@@ -532,6 +538,7 @@ class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
         return _Stato(
           collegamento: collegamento,
           vaiAlleCase: widget.vaiAlleCase,
+          apriIlMenu: widget.quandoChiedeIlMenu,
           inCima: inCima,
           icona: Icons.home_outlined,
           titolo: inLingua(it: 'Nessuna casa', en: 'No homes yet'),
@@ -546,6 +553,7 @@ class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
         return _Stato(
           collegamento: collegamento,
           vaiAlleCase: widget.vaiAlleCase,
+          apriIlMenu: widget.quandoChiedeIlMenu,
           inCima: inCima,
           icona: Icons.link_off_rounded,
           titolo: inLingua(
@@ -591,6 +599,7 @@ class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
         return _Stato(
           collegamento: collegamento,
           vaiAlleCase: widget.vaiAlleCase,
+          apriIlMenu: widget.quandoChiedeIlMenu,
           inCima: inCima,
           icona: Icons.link_off_rounded,
           titolo: inLingua(
@@ -616,6 +625,7 @@ class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
         return _Stato(
           collegamento: collegamento,
           vaiAlleCase: widget.vaiAlleCase,
+          apriIlMenu: widget.quandoChiedeIlMenu,
           inCima: inCima,
           icona: Icons.sync_rounded,
           titolo: inLingua(it: 'Riconnessione…', en: 'Reconnecting…'),
@@ -639,6 +649,8 @@ class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
         return _Stato(
           collegamento: collegamento,
           vaiAlleCase: widget.vaiAlleCase,
+          apriIlMenu: widget.quandoChiedeIlMenu,
+          apriIlNavigatore: widget.quandoApreIlNavigatore,
           inCima: inCima,
           icona: Icons.system_update_alt_rounded,
           titolo: inLingua(
@@ -685,6 +697,8 @@ class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
         return _Stato(
           collegamento: collegamento,
           vaiAlleCase: widget.vaiAlleCase,
+          apriIlMenu: widget.quandoChiedeIlMenu,
+          apriIlNavigatore: widget.quandoApreIlNavigatore,
           inCima: inCima,
           icona: Icons.wifi_lock_rounded,
           titolo: inLingua(
@@ -726,6 +740,7 @@ class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
         return _Stato(
           collegamento: collegamento,
           vaiAlleCase: widget.vaiAlleCase,
+          apriIlMenu: widget.quandoChiedeIlMenu,
           inCima: inCima,
           icona: Icons.cloud_off_rounded,
           titolo: inLingua(
@@ -763,6 +778,7 @@ class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
         return _Stato(
           collegamento: collegamento,
           vaiAlleCase: widget.vaiAlleCase,
+          apriIlMenu: widget.quandoChiedeIlMenu,
           inCima: inCima,
           icona: Icons.lock_person_rounded,
           titolo: inLingua(
@@ -786,6 +802,7 @@ class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
       return _Stato(
         collegamento: collegamento,
         vaiAlleCase: widget.vaiAlleCase,
+        apriIlMenu: widget.quandoChiedeIlMenu,
         inCima: inCima,
         icona: Icons.dashboard_customize_rounded,
         titolo: inLingua(
@@ -826,6 +843,7 @@ class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
       return _Stato(
         collegamento: collegamento,
         vaiAlleCase: widget.vaiAlleCase,
+        apriIlMenu: widget.quandoChiedeIlMenu,
         inCima: inCima,
         icona: Icons.lock_outline_rounded,
         titolo: kIsWeb
@@ -1417,12 +1435,23 @@ class _Stato extends StatelessWidget {
     this.vaiAlleCase,
     this.azione,
     this.inCima = 0,
+    this.apriIlMenu,
+    this.apriIlNavigatore,
   });
 
   final Collegamento collegamento;
   final IconData icona;
   final String titolo;
   final String sotto;
+
+  /// Il menu dell'app. Sulla plancia la barra del titolo non c'e', e il menu
+  /// lo apre il ☰ della plancia: quando la plancia non si apre (fuori casa
+  /// con Base, la casa che non risponde) senza questo tasto non si arrivava
+  /// da nessuna parte — nemmeno a GdANav.
+  final VoidCallback? apriIlMenu;
+
+  /// GdANav, se c'e': va anche senza la casa.
+  final VoidCallback? apriIlNavigatore;
   final VoidCallback? vaiAlleCase;
   final Widget? azione;
 
@@ -1445,6 +1474,15 @@ class _Stato extends StatelessWidget {
         children: [
           Row(
             children: [
+              if (apriIlMenu != null) ...[
+                IconButton(
+                  key: const Key('stato-menu'),
+                  icon: const Icon(Icons.menu_rounded),
+                  tooltip: nomeDelTastoDellaBarra,
+                  onPressed: apriIlMenu,
+                ),
+                const SizedBox(width: 4),
+              ],
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1477,6 +1515,23 @@ class _Stato extends StatelessWidget {
             sotto: sotto,
             azione: azione,
           ),
+          /* GdANav non ha bisogno della casa: fuori casa con Base il
+           * navigatore gratis va lo stesso. */
+          if (apriIlNavigatore != null) ...[
+            const SizedBox(height: 14),
+            Center(
+              child: FilledButton.tonalIcon(
+                key: const Key('stato-apri-gdanav'),
+                onPressed: apriIlNavigatore,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(0, 48),
+                  padding: const EdgeInsets.symmetric(horizontal: 22),
+                ),
+                icon: const Icon(Icons.navigation_rounded),
+                label: Text(inLingua(it: 'Apri GdANav', en: 'Open GdANav')),
+              ),
+            ),
+          ],
           /* Le case abbinate, a portata di dito: da un telefono staccato, o da
            * una casa che non risponde, la prossima cosa da fare e' quasi
            * sempre li' — riabbinarla, sceglierne un'altra, toglierla. */
