@@ -10,6 +10,21 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.19.17
+
+_App GdAHome._
+
+- **Navigatore, percorso sulla strada**: nella mappa normale e nella vista
+  immersiva la linea del percorso sta sulla strada disegnata, non più
+  qualche metro di lato sui marciapiedi o sulla corsia d'emergenza.
+- **Vista immersiva più pulita**: niente più blocco grigio delle corsie
+  sopra la strada; il percorso è una linea sola dall'inizio alla fine, e la
+  freccia della manovra è larga quanto lei. Alle uscite la freccia segue la
+  rampa fin dove gira. Le corsie da tenere restano nella scheda della
+  manovra.
+- **Senza navigazione la freccia segue l'auto**: finita una navigazione, le
+  viste 3D, aumentato e Corsie restavano ferme dov'era finito il viaggio.
+
 ## 1.19.16
 
 _App GdAHome e add-on._
