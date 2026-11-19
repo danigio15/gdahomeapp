@@ -1558,6 +1558,13 @@ export function creaScena(THREE, opzioni = {}) {
       return;
     }
     const azione = azioneDelTocco(Dv.k, entity, S.stati[entity]);
+    /* «Quando clicchi vedere il menu per selezionare la funzione»: un clima
+     * chiede le sue modalita' (caldo, freddo…). Chi le mostra e' la pagina;
+     * l'azione di prima viaggia con lui, per chi le modalita' non le dice. */
+    if (String(entity).startsWith("climate.")) {
+      quandoTocchi({ pagina: "clima", entity, azione });
+      return;
+    }
     quandoTocchi(azione || { pagina: "entita", entity });
   }
   function apri(k) {

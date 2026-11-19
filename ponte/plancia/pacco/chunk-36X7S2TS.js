@@ -2275,6 +2275,10 @@ function creaScena(THREE, opzioni = {}) {
       return;
     }
     const azione = azioneDelTocco(Dv.k, entity, S.stati[entity]);
+    if (String(entity).startsWith("climate.")) {
+      quandoTocchi({ pagina: "clima", entity, azione });
+      return;
+    }
     quandoTocchi(azione || { pagina: "entita", entity });
   }
   function apri(k) {

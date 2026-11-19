@@ -8338,4 +8338,9 @@ export default Object.freeze({
   "🪴 = it's a balcony: it keeps its floor and railing, with no ceiling.": "🪴 = 발코니예요: 바닥과 난간은 그대로 두고 천장은 없어요.",
   "estimated from the doors in the drawing (a door is 80 cm)": "도면의 문으로 추정 (문 하나는 80cm)",
   "Working out the scale…": "축척을 계산하는 중…",
+  Floors: "층",
+  "Hide the device list": "기기 목록 숨기기",
+  "Hide the floors": "층 숨기기",
+  "Show the device list": "기기 목록 표시",
+  "Show the floors": "층 표시",
 });

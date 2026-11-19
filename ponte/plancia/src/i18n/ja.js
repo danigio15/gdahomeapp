@@ -8369,4 +8369,9 @@ export default Object.freeze({
   "🪴 = it's a balcony: it keeps its floor and railing, with no ceiling.": "🪴 = バルコニーです：床と手すりは残り、天井はありません。",
   "estimated from the doors in the drawing (a door is 80 cm)": "図面のドアから推定（ドアは 80 cm）",
   "Working out the scale…": "縮尺を算出しています…",
+  Floors: "フロア",
+  "Hide the device list": "デバイス一覧を隠す",
+  "Hide the floors": "フロアを隠す",
+  "Show the device list": "デバイス一覧を表示",
+  "Show the floors": "フロアを表示",
 });

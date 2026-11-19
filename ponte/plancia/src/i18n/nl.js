@@ -8400,4 +8400,9 @@ export default Object.freeze({
   "🪴 = it's a balcony: it keeps its floor and railing, with no ceiling.": "🪴 = het is een balkon: het houdt zijn vloer en balustrade, zonder plafond.",
   "estimated from the doors in the drawing (a door is 80 cm)": "geschat uit de deuren in de tekening (een deur is 80 cm)",
   "Working out the scale…": "Ik bepaal de schaal…",
+  Floors: "Verdiepingen",
+  "Hide the device list": "Apparatenlijst verbergen",
+  "Hide the floors": "Verdiepingen verbergen",
+  "Show the device list": "Apparatenlijst tonen",
+  "Show the floors": "Verdiepingen tonen",
 });
