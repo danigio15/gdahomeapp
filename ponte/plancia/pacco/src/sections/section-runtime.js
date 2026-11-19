@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-AHYRIU36.js";
+} from "../../chunk-PS4KYGL7.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -169823,7 +169823,7 @@ function finestraDelClimaMarkup(casa3, states) {
   const icona3 = DISPOSITIVI_3D[d?.k]?.icona || DISPOSITIVI_3D.clima.icona;
   const modi = modiDelClima(st);
   const assente = !st || ["unavailable", "unknown"].includes(clean(st.state).toLowerCase());
-  const inviato = f.inviato && Date.now() - (f.inviatoIl || 0) < INVIATO_PER2 ? f.inviato : "";
+  const inviato = f.inviato && Date.now() - (f.inviatoIl || 0) < INVIATO_PER2 && clean(st?.last_updated) === f.inviatoSu ? f.inviato : "";
   const corrente2 = (inviato || clean(st?.state)).toLowerCase();
   const comandabile = !assente && siComanda(f.entity);
   const tasto5 = (modo, nomeDi18 = (m) => nomeDelModoFra(m, modi)) => {
@@ -169881,7 +169881,12 @@ function scegliIlModo(entity2, modo) {
     data: { entity_id: id, hvac_mode: m }
   });
   if (partito && state193.finestra?.tipo === "clima" && state193.finestra.entity === id) {
-    state193.finestra = { ...state193.finestra, inviato: m, inviatoIl: Date.now() };
+    state193.finestra = {
+      ...state193.finestra,
+      inviato: m,
+      inviatoIl: Date.now(),
+      inviatoSu: clean(allStates()?.[id]?.last_updated)
+    };
     disegnaOra();
   }
 }
