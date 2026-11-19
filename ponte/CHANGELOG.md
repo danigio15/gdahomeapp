@@ -10,6 +10,30 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.19.16
+
+_App GdAHome e add-on._
+
+- **Casa 3D, più spazio alla casa**: le fasce ai lati (dispositivi e
+  comandi) si richiudono con un tocco e restano chiuse finché non le
+  riapri, così la casa prende tutto lo schermo.
+- **Casa 3D, modalità del clima**: toccando un climatizzatore o un
+  termostato nella casa, o il suo tasto nell'elenco, si sceglie la
+  modalità (caldo, freddo, automatico, spento…) da un menu.
+- **Vista «Corsie» del navigatore**:
+  - la fascia verde gira dove si incontrano le corsie, sull'asfalto, senza
+    tagliare sul marciapiede o andare oltre l'incrocio;
+  - sulla fascia ci sono le frecce delle manovre, anche agli svincoli;
+  - non va più al contrario né a scatti quando l'auto è ferma o lenta;
+  - dove mancano i dati delle corsie, le corsie si stimano dalla mappa.
+- **Navigatore, incroci a senso unico**: dove il percorso viene corretto
+  sulle strade vere, la linea resta sul ramo giusto dell'incrocio.
+- **Marciapiedi e palazzi**: i marciapiedi hanno il cordolo, le lastre e
+  gli angoli arrotondati, e si abbassano alle strisce; i palazzi si vedono
+  tutti, anche lontano, con altezze più vicine al vero.
+- **Android Auto, musica**: quando i tasti della mappa spariscono, il
+  riquadro della musica sale al suo posto, senza scatti.
+
 ## 1.19.15
 
 _App GdAHome e add-on._
