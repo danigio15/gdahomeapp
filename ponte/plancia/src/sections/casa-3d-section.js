@@ -13,6 +13,8 @@
  *     il video dal vivo col motore della plancia.
  *   · Chi amministra «arreda»: mobili, pavimenti, pareti, dispositivi da
  *     collegare alle entita'. Si salva nel config, come il resto.
+ *   · Le due fasce ai lati si chiudono, e la casa prende tutta la larghezza;
+ *     un clima toccato apre le sue modalita' (caldo, freddo…).
  *
  * three si scarica solo qui, e solo quando la casa si apre davvero: chi non
  * ha la Casa 3D non lo paga. I comandi passano dalla presa di chi e' entrato,
@@ -55,6 +57,18 @@ import {
   writeJsonIfChanged,
 } from "./shared.js";
 import { daiVendor } from "../core/cartella-della-plancia.js";
+/* Le parole e i disegni delle modalita' del clima: gli stessi della finestra
+ * del clima della plancia, perche' «Caldo» qui e «Riscalda» li' sarebbero due
+ * nomi per lo stesso tasto. */
+import {
+  altriModi,
+  colonneDeiModi,
+  glifoDelModo,
+  modiDelSegmentato,
+  nomeDelModo,
+  nomeDelModoFra,
+  tonoDelModo,
+} from "./home-widgets-section.js";
 
 const KEY = "__DASHBOARDMODERN_CASA_3D__";
 const ID = "dm-casa3d";
@@ -79,6 +93,9 @@ const state = (root[KEY] ||= {
    * finche' resta quello si mostra la casa generata. */
   modelloGuasto: "",
   attesaDelModello: "",
+  /* Le fasce ai lati chiuse su questo dispositivo: si leggono la prima volta
+   * che servono (vedi latiChiusi). */
+  lati: null,
 });
 
 /** La casa del config, pulita. */
@@ -319,6 +336,12 @@ function elencoMarkup(casa, states, guardabili) {
       const azione = azioneDelTocco(d.k, d.entity, states[d.entity]);
       if (azione?.service && siComanda(d.entity))
         comando = `<button type="button" class="c3-comando" data-c3s="comanda" data-c3s-k="${esc(d.k)}" data-c3s-e="${esc(d.entity)}" data-acceso="${Boolean(st?.attivo)}" aria-label="${esc(t("Comanda", "Toggle"))}">${segnoDelComando(azione)}</button>`;
+      /* Il clima ha anche le sue modalita': il tasto col disegno di quella di
+       * adesso apre la stessa finestra del tocco nella casa. */
+      if (eUnClima(d.entity) && modiDelClima(states[d.entity]).length) {
+        const tono = tonoDelModo(clean(states[d.entity]?.state), tipoDelClima(d.k));
+        comando = `<button type="button" class="c3-comando c3-comando-modo" data-c3s="clima" data-c3s-e="${esc(d.entity)}" data-tono="${esc(tono)}" aria-label="${esc(t("Modalità", "Mode"))}">${glifoDelModo(tono)}</button>${comando}`;
+      }
     }
     return `<li class="c3-disp" data-tono="${esc(st?.tono || "spento")}" data-attivo="${Boolean(st?.attivo)}">
         <span class="c3-disp-ic" aria-hidden="true">${D.icona}</span>
@@ -358,10 +381,200 @@ function elencoMarkup(casa, states, guardabili) {
     </section>`;
 }
 
+/* ── le fasce ai lati ─────────────────────────────────────────────────────
+ *
+ * «Si possono ridurre o eliminare le fasce laterali per avere un'area
+ * maggiore? Nel senso togliere o nascondere quella dove si vede l'elenco
+ * dispositivi.» Ognuna delle due — i piani a sinistra, i dispositivi a destra
+ * — si chiude col suo tasto sul bordo della casa, e la casa si prende il
+ * posto; col tasto di nuovo torna. I piani si cambiano lo stesso dalle
+ * pillole in cima.
+ *
+ * La scelta e' di questo dispositivo, non della casa: il tablet a muro e il
+ * telefono vogliono cose diverse. Sta nel browser, e se il browser non la
+ * tiene (navigazione privata, memoria piena) le fasce restano aperte come
+ * prima. Arredando la fascia di destra resta aperta: gli attrezzi stanno li'. */
+const CHIAVE_LATI = "dm_casa3d_lati";
+const LATI = ["sinistra", "destra"];
+
+function latiChiusi() {
+  if (state.lati) return state.lati;
+  let letti = {};
+  try {
+    letti = JSON.parse(root.localStorage?.getItem?.(CHIAVE_LATI) || "{}") || {};
+  } catch (_errore) {
+    letti = {};
+  }
+  state.lati = { sinistra: letti.sinistra === true, destra: letti.destra === true };
+  return state.lati;
+}
+
+function alternaIlLato(lato) {
+  if (!LATI.includes(lato)) return;
+  const chiusi = latiChiusi();
+  state.lati = { ...chiusi, [lato]: !chiusi[lato] };
+  try {
+    root.localStorage?.setItem?.(CHIAVE_LATI, JSON.stringify(state.lati));
+  } catch (_errore) {}
+}
+
+/* Le fasce chiuse su questo dispositivo, sulla tela, e i loro tasti (senza
+ * casa non c'e' niente da chiudere, e i tasti non ci sono). */
+function mettiILati(nodo, casa, vuota) {
+  const chiusi = latiChiusi();
+  nodo.dataset.sinistra = chiusi.sinistra ? "chiusa" : "aperta";
+  nodo.dataset.destra = chiusi.destra ? "chiusa" : "aperta";
+  scriviSeCambia(nodo.querySelector(".c3-lati"), vuota ? "" : latiMarkup(casa));
+}
+
+/* Sul bordo della casa una linguetta con la freccia verso dove la fascia se ne
+ * va (o da dove torna); sul telefono, dove le fasce stanno sotto la casa, una
+ * pillola col nome. */
+function latiMarkup(casa) {
+  const chiusi = latiChiusi();
+  return LATI.map((lato) => {
+    const chiuso = chiusi[lato];
+    const destra = lato === "destra";
+    const testo = destra
+      ? chiuso
+        ? t("Mostra l'elenco dei dispositivi", "Show the device list")
+        : t("Nascondi l'elenco dei dispositivi", "Hide the device list")
+      : chiuso
+        ? t("Mostra i piani", "Show the floors")
+        : t("Nascondi i piani", "Hide the floors");
+    const freccia = (destra ? !chiuso : chiuso) ? "›" : "‹";
+    const nome = destra
+      ? `⚡ ${t("Dispositivi", "Devices")}`
+      : `${casa.tipo === "palazzo" ? "🏢" : "🏡"} ${t("Piani", "Floors")}`;
+    return `<button type="button" class="c3-lato-tasto" data-c3s="lato" data-c3s-lato="${lato}" aria-expanded="${!chiuso}" aria-label="${esc(testo)}" title="${esc(testo)}">
+        <span class="c3-lato-freccia" aria-hidden="true">${freccia}</span><span class="c3-lato-nome" aria-hidden="true">${esc(nome)}</span>
+      </button>`;
+  }).join("");
+}
+
+/* ── il clima: le modalita' ───────────────────────────────────────────────
+ *
+ * «Mettendo i climatizzatori, quando clicchi vedere il menu per selezionare
+ * la funzione tipo riscaldamento piuttosto che raffreddamento.» Toccato un
+ * clima nella casa (o il suo tasto nell'elenco) si apre una finestra con le
+ * modalita' che l'unita' dichiara in `hvac_modes`, coi nomi e i disegni della
+ * finestra del clima della plancia: Spento, Caldo, Freddo, Auto,
+ * Deumidifica, Ventola, e sotto quelle che l'integrazione aggiunge di suo.
+ * Un tocco manda `climate.set_hvac_mode`. Un clima che non dice le sue
+ * modalita' fa quello che faceva: si accende e si spegne. */
+const eUnClima = (entity) => clean(entity).startsWith("climate.");
+const tipoDelClima = (k) => (k === "termostato" ? "termostato" : "clima");
+
+function modiDelClima(st) {
+  const modi = st?.attributes?.hvac_modes;
+  if (!Array.isArray(modi)) return [];
+  return [...new Set(modi.map((m) => clean(m).toLowerCase()).filter(Boolean))];
+}
+
+const dispositivoDi = (casa, entity) =>
+  [...casa.piani.flatMap((p) => p.dispositivi), ...casa.esterno.telecamere].find(
+    (x) => x.entity === entity,
+  );
+
+/* Il modo appena chiesto vale finche' Home Assistant non risponde: il tasto si
+ * accende subito, e se dopo un po' lo stato non e' arrivato torna il vero. */
+const INVIATO_PER = 10000;
+
+function finestraDelClimaMarkup(casa, states) {
+  const f = state.finestra;
+  const st = states?.[f.entity];
+  const d = dispositivoDi(casa, f.entity);
+  const tipo = tipoDelClima(d?.k);
+  const nome = d
+    ? nomeDelDispositivo(d, states)
+    : clean(st?.attributes?.friendly_name) || f.entity;
+  const icona = DISPOSITIVI_3D[d?.k]?.icona || DISPOSITIVI_3D.clima.icona;
+  const modi = modiDelClima(st);
+  const assente = !st || ["unavailable", "unknown"].includes(clean(st.state).toLowerCase());
+  const inviato = f.inviato && Date.now() - (f.inviatoIl || 0) < INVIATO_PER ? f.inviato : "";
+  const corrente = (inviato || clean(st?.state)).toLowerCase();
+  const comandabile = !assente && siComanda(f.entity);
+  const tasto = (modo, nomeDi = (m) => nomeDelModoFra(m, modi)) => {
+    const tono = tonoDelModo(modo, tipo);
+    const scelto = modo === corrente;
+    return `<button type="button" class="c3-modo" data-c3s="modo" data-c3s-e="${esc(f.entity)}" data-c3s-m="${esc(modo)}" data-tono="${esc(tono)}" aria-pressed="${scelto}"${comandabile ? "" : " disabled"}>${glifoDelModo(tono)}<span>${esc(nomeDi(modo))}</span></button>`;
+  };
+  const segmentato = modiDelSegmentato(modi);
+  const altri = altriModi(modi);
+  const letture = [];
+  const misura = Number(st?.attributes?.current_temperature);
+  if (st?.attributes?.current_temperature != null && Number.isFinite(misura))
+    letture.push(`🌡 ${gradi(misura)}`);
+  const obiettivo = Number(st?.attributes?.temperature);
+  if (st?.attributes?.temperature != null && Number.isFinite(obiettivo))
+    letture.push(`🎯 ${gradi(obiettivo)}`);
+  const parola = assente
+    ? t("Non disponibile", "Unavailable")
+    : nomeDelModoFra(clean(st?.state).toLowerCase(), modi);
+  return `<div class="c3-velo" data-c3s="velo">
+      <section class="c3-finestra c3-finestra-clima" role="dialog" aria-modal="true" aria-label="${esc(nome)}">
+        <div class="c3-finestra-testa"><h3>${icona} ${esc(nome)}</h3>
+          <button type="button" class="c3-chiudi" data-c3s="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
+        <div class="c3-clima" data-c3-clima="${esc(f.entity)}">
+          <p class="c3-clima-ora"><b>${esc(parola)}</b>${letture.map((l) => `<span>${esc(l)}</span>`).join("")}</p>
+          ${
+            segmentato.length
+              ? `<h4>${esc(t("Modalità", "Mode"))}</h4>
+                 <div class="c3-modi" role="group" aria-label="${esc(t("Modalità", "Mode"))}" style="--colonne:${colonneDeiModi(segmentato.length)}">${segmentato.map((modo) => tasto(modo)).join("")}</div>`
+              : ""
+          }
+          ${
+            altri.length
+              ? `<h4>${esc(t("Altre modalità", "Other modes"))}</h4>
+                 <div class="c3-modi c3-modi-altri" role="group" aria-label="${esc(t("Altre modalità", "Other modes"))}">${altri
+                   .map((modo) => tasto(modo, nomeDelModo))
+                   .join("")}</div>`
+              : ""
+          }
+          ${!assente && !comandabile ? `<p class="c3-nota">${esc(t("Solo da guardare", "View only"))}</p>` : ""}
+        </div>
+      </section>
+    </div>`;
+}
+
+/* Il tocco su un clima: la finestra delle modalita', o — senza modalita'
+ * dichiarate — quello che il tocco faceva prima. */
+function apriIlClima(entity, azione = null) {
+  const id = clean(entity);
+  if (!eUnClima(id)) return;
+  const st = allStates()?.[id];
+  if (modiDelClima(st).length) {
+    apriFinestra({ tipo: "clima", entity: id });
+    return;
+  }
+  if (azione?.domain) {
+    comanda(azione);
+    return;
+  }
+  const nome = clean(st?.attributes?.friendly_name) || t("Dispositivo", "Device");
+  avviso(`${nome}: ${clean(st?.state) || "—"}`);
+}
+
+function scegliIlModo(entity, modo) {
+  const id = clean(entity);
+  const m = clean(modo).toLowerCase();
+  if (!eUnClima(id) || !m) return;
+  const partito = comanda({
+    domain: "climate",
+    service: "set_hvac_mode",
+    data: { entity_id: id, hvac_mode: m },
+  });
+  if (partito && state.finestra?.tipo === "clima" && state.finestra.entity === id) {
+    state.finestra = { ...state.finestra, inviato: m, inviatoIl: Date.now() };
+    disegnaOra();
+  }
+}
+
 /* ── la finestra del video ────────────────────────────────────────────── */
 
 function finestraMarkup(casa, states) {
   const f = state.finestra;
+  if (f?.tipo === "clima") return finestraDelClimaMarkup(casa, states);
   if (f?.tipo !== "telecamera") return "";
   const d = [...casa.piani.flatMap((p) => p.dispositivi), ...casa.esterno.telecamere].find(
     (x) => x.entity === f.entity,
@@ -613,6 +826,7 @@ function alToccoDellaScena(azione) {
   if (!azione) return;
   vibra();
   if (azione.pagina === "telecamera") return guarda(azione.entity);
+  if (azione.pagina === "clima") return apriIlClima(azione.entity, azione.azione);
   if (azione.pagina === "scollegato") {
     avviso(
       puoConfigurare()
@@ -631,17 +845,19 @@ function alToccoDellaScena(azione) {
   if (azione.domain) comanda(azione);
 }
 
+/* Torna se il comando e' partito. */
 function comanda(azione) {
   const entity = clean(azione?.data?.entity_id);
   if (!siComanda(entity)) {
     avviso(t("Solo da guardare", "View only"), "male");
-    return;
+    return false;
   }
   if (!chiamaServizio(azione)) {
     avviso(t("⚠️ Non connesso", "⚠️ Not connected"), "male");
-    return;
+    return false;
   }
   avviso(t("Comando inviato", "Command sent"));
+  return true;
 }
 
 function guarda(entity) {
@@ -667,7 +883,7 @@ function tela() {
         <div class="c3-testa-posto"></div>
         <div class="c3-corpo">
           <aside class="c3-sinistra"></aside>
-          <div class="c3-palco"><div class="c3-posto"></div><div class="c3-attesa"></div></div>
+          <div class="c3-palco"><div class="c3-posto"></div><div class="c3-attesa"></div><div class="c3-lati"></div></div>
           <aside class="c3-destra"><div class="c3-elenco"></div><div class="c3-arreda-posto" hidden></div></aside>
         </div>
       </div><div class="c3-sopra"></div><div class="c3-avviso" role="status" aria-live="polite"></div>`;
@@ -720,6 +936,7 @@ function disegna() {
   /* Una plancia Casa 3D appena nata non ha ancora la casa: niente scena,
    * niente schede, e al posto della casa l'invito a crearla. */
   const vuota = !elencata.piani.length;
+  mettiILati(nodo, elencata, vuota);
   scriviSeCambia(
     nodo.querySelector(".c3-sinistra"),
     vuota ? "" : sinistraMarkup(elencata, states, admin),
@@ -813,16 +1030,27 @@ function avviso(testo, tipo = "bene") {
   state.avviso = root.setTimeout?.(() => el.classList.remove("visto"), 2200);
 }
 
+/* Le finestre si aprono e si chiudono sotto il dito, non al prossimo
+ * fotogramma: con la casa che si muove (un sensore che pulsa) il fotogramma
+ * puo' arrivare tardi, e un tocco che non risponde si ripete. */
+function disegnaOra() {
+  try {
+    disegna();
+  } catch (errore) {
+    root.console?.warn?.("[DashboardModern] casa 3d", errore);
+  }
+}
+
 function apriFinestra(finestra) {
   if (state.finestra?.tipo === "telecamera") chiudiIlVideo();
   state.finestra = finestra;
-  ridisegna();
+  disegnaOra();
 }
 
 function chiudi() {
   if (state.finestra?.tipo === "telecamera") chiudiIlVideo();
   state.finestra = null;
-  ridisegna();
+  disegnaOra();
 }
 
 function alClic(evento) {
@@ -858,6 +1086,25 @@ function alClic(evento) {
     state.vista = k;
     if (state.scena && !state.scena.apri(k)) state.vista = "esterno";
     return ridisegna();
+  }
+  if (cosa === "lato") {
+    alternaIlLato(clean(el.dataset.c3sLato));
+    vibra(6);
+    /* Subito, senza aspettare il prossimo disegno: la fascia se ne va sotto il
+     * dito. La scena si rimisura da sola quando il suo palco cambia
+     * (ResizeObserver). */
+    const nodo = doc.getElementById(ID);
+    if (nodo) mettiILati(nodo, casaDaElencare(casa3dDiQui()), false);
+    return ridisegna();
+  }
+  if (cosa === "clima") {
+    const entity = clean(el.dataset.c3sE);
+    vibra();
+    return apriIlClima(entity);
+  }
+  if (cosa === "modo") {
+    vibra();
+    return scegliIlModo(el.dataset.c3sE, el.dataset.c3sM);
   }
   if (cosa === "arreda") {
     state.arreda = !state.arreda;
@@ -964,7 +1211,23 @@ function installaLoStile() {
     ${C3} .c3-ora{flex:0 0 auto;padding:6px 10px;border-radius:999px;font-family:'Oswald',system-ui,sans-serif;font-size:13px;font-weight:700;
       letter-spacing:1px;background:var(--c3-morbido);border:1px solid var(--c3-bordo)}
 
-    ${C3} .c3-corpo{flex:1;min-height:0;display:grid;grid-template-columns:270px minmax(0,1fr) 330px;gap:14px}
+    ${C3} .c3-corpo{--c3-sx:270px;--c3-dx:330px;flex:1;min-height:0;display:grid;grid-template-columns:var(--c3-sx) minmax(0,1fr) var(--c3-dx);gap:14px}
+    /* Le fasce chiuse (latiChiusi): la casa si prende il loro posto. Arredando
+     * quella di destra resta, perche' gli attrezzi stanno li'. */
+    ${C3}[data-sinistra="chiusa"] .c3-sinistra,
+    ${C3}[data-destra="chiusa"]:not([data-arreda="true"]) .c3-destra{display:none}
+    ${C3}[data-sinistra="chiusa"] .c3-corpo{grid-template-columns:minmax(0,1fr) var(--c3-dx)}
+    ${C3}[data-destra="chiusa"]:not([data-arreda="true"]) .c3-corpo{grid-template-columns:var(--c3-sx) minmax(0,1fr)}
+    ${C3}[data-sinistra="chiusa"][data-destra="chiusa"]:not([data-arreda="true"]) .c3-corpo{grid-template-columns:minmax(0,1fr)}
+    ${C3} .c3-lati{position:absolute;inset:0;z-index:3;pointer-events:none}
+    ${C3} .c3-lato-tasto{position:absolute;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:26px;height:68px;padding:0;
+      pointer-events:auto;cursor:pointer;font-size:20px;font-weight:800;line-height:1;color:#e6edf7;background:rgba(15,23,42,.74);
+      border:1px solid rgba(148,163,184,.32);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+    @media(hover:hover){${C3} .c3-lato-tasto:hover{background:rgba(14,165,233,.85)}}
+    ${C3} .c3-lato-tasto[data-c3s-lato="sinistra"]{left:0;border-left:0;border-radius:0 14px 14px 0}
+    ${C3} .c3-lato-tasto[data-c3s-lato="destra"]{right:0;border-right:0;border-radius:14px 0 0 14px}
+    ${C3} .c3-lato-nome{display:none}
+    ${C3}[data-arreda="true"] .c3-lato-tasto[data-c3s-lato="destra"]{display:none}
     ${C3} .c3-sinistra,${C3} .c3-destra{display:flex;flex-direction:column;gap:14px;min-height:0;overflow-y:auto;scrollbar-width:thin}
     ${C3} .c3-scheda{padding:16px;border-radius:22px;background:var(--c3-card);border:1px solid var(--c3-bordo);box-shadow:var(--c3-ombra)}
     ${C3} .c3-scheda h2{display:flex;align-items:center;gap:8px;margin:0 0 12px;font-family:'Oswald',system-ui,sans-serif;font-size:15px;font-weight:500;
@@ -1025,6 +1288,29 @@ function installaLoStile() {
     ${C3} .c3-chiudi{display:grid;place-items:center;width:36px;height:36px;border:0;border-radius:50%;cursor:pointer;font-weight:800;
       color:var(--c3-fioco);background:var(--c3-morbido)}
     ${C3} .c3-video{min-height:220px;padding:12px}
+    ${C3} .c3-finestra-clima{max-width:460px}
+    ${C3} .c3-clima{display:flex;flex-direction:column;gap:12px;padding:16px 20px 20px;overflow-y:auto}
+    ${C3} .c3-clima-ora{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin:0;font-size:14px;font-weight:700;color:var(--c3-fioco)}
+    ${C3} .c3-clima-ora b{font-family:'Oswald',system-ui,sans-serif;font-size:21px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--c3-testo)}
+    ${C3} .c3-clima h4{margin:4px 0 0;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--c3-fioco)}
+    ${C3} .c3-modi{display:grid;grid-template-columns:repeat(var(--colonne,3),minmax(0,1fr));gap:8px}
+    ${C3} .c3-modo{--m:100,116,139;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:66px;padding:8px 4px;
+      border-radius:16px;cursor:pointer;font-size:12.5px;font-weight:800;border:1px solid var(--c3-bordo);background:var(--c3-morbido);color:var(--c3-testo)}
+    ${C3} .c3-modo svg{color:rgb(var(--m))}
+    ${C3} .c3-modo[data-tono="caldo"],${C3} .c3-comando-modo[data-tono="caldo"]{--m:234,88,12}
+    ${C3} .c3-modo[data-tono="freddo"],${C3} .c3-comando-modo[data-tono="freddo"]{--m:14,165,233}
+    ${C3} .c3-modo[data-tono="auto"],${C3} .c3-comando-modo[data-tono="auto"]{--m:99,102,241}
+    ${C3} .c3-modo[data-tono="secco"],${C3} .c3-comando-modo[data-tono="secco"]{--m:13,148,136}
+    ${C3} .c3-modo[data-tono="ventola"],${C3} .c3-comando-modo[data-tono="ventola"]{--m:71,85,105}
+    ${C3} .c3-modo[data-tono="notte"],${C3} .c3-comando-modo[data-tono="notte"]{--m:79,70,229}
+    ${C3} .c3-modo[data-tono="spento"],${C3} .c3-comando-modo[data-tono="spento"]{--m:100,116,139}
+    ${C3} .c3-modo[aria-pressed="true"]{background:rgb(var(--m));border-color:transparent;color:#fff}
+    ${C3} .c3-modo[aria-pressed="true"] svg{color:#fff}
+    ${C3} .c3-modo:disabled{opacity:.55;cursor:default}
+    ${C3} .c3-modi-altri{display:flex;flex-wrap:wrap}
+    ${C3} .c3-modi-altri .c3-modo{flex-direction:row;min-height:40px;padding:6px 14px;border-radius:999px}
+    ${C3} .c3-comando-modo{--m:100,116,139;color:rgb(var(--m))}
+    ${C3} .c3-comando-modo svg{width:19px;height:19px}
 
     ${C3} .c3-avviso{position:fixed;bottom:30px;left:50%;z-index:9;transform:translateX(-50%) translateY(20px);padding:13px 22px;border-radius:999px;
       font-size:14px;font-weight:800;white-space:nowrap;color:#fff;background:#059669;box-shadow:0 12px 32px rgba(0,0,0,.3);
@@ -1033,7 +1319,7 @@ function installaLoStile() {
     ${C3} .c3-avviso.visto{opacity:1;transform:translateX(-50%) translateY(0)}
 
     @media(max-width:1100px){
-      ${C3} .c3-corpo{grid-template-columns:230px minmax(0,1fr) 290px}
+      ${C3} .c3-corpo{--c3-sx:230px;--c3-dx:290px}
       ${C3} .c3-tasto{padding:9px 12px;font-size:12px}
     }
     @media(max-width:860px){
@@ -1047,6 +1333,18 @@ function installaLoStile() {
       ${C3} .c3-corpo{display:flex;flex-direction:column;gap:10px}
       ${C3} .c3-palco{order:-1;height:62vh;min-height:340px;border-radius:20px}
       ${C3} .c3-sinistra,${C3} .c3-destra{overflow:visible}
+      /* Sul telefono le fasce stanno sotto la casa: i tasti sono due pillole
+       * col nome in cima alla casa, e con tutte e due chiuse la casa prende
+       * lo schermo intero. */
+      ${C3} .c3-lato-tasto{top:10px;transform:none;display:inline-flex;align-items:center;width:auto;height:34px;padding:0 12px;
+        font-size:12px;border:1px solid rgba(148,163,184,.32);border-radius:999px}
+      ${C3} .c3-lato-tasto[data-c3s-lato="sinistra"]{left:10px;border:1px solid rgba(148,163,184,.32);border-radius:999px}
+      ${C3} .c3-lato-tasto[data-c3s-lato="destra"]{right:10px;border:1px solid rgba(148,163,184,.32);border-radius:999px}
+      ${C3} .c3-lato-tasto[aria-expanded="true"]{background:rgba(14,165,233,.85);border-color:transparent}
+      ${C3} .c3-lato-freccia{display:none}
+      ${C3} .c3-lato-nome{display:inline}
+      ${C3}[data-sinistra="chiusa"][data-destra="chiusa"]:not([data-arreda="true"]) .c3-pagina{height:100%}
+      ${C3}[data-sinistra="chiusa"][data-destra="chiusa"]:not([data-arreda="true"]) .c3-palco{flex:1 1 auto;height:auto}
     }
     `,
   );

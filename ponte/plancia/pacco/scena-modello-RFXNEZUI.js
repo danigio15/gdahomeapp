@@ -7,7 +7,7 @@ import {
 } from "./chunk-F3VEVFFR.js";
 import {
   installaLoStile
-} from "./chunk-AZEG3CXG.js";
+} from "./chunk-36X7S2TS.js";
 import {
   DISPOSITIVI_3D,
   azioneDelTocco,
@@ -374,7 +374,9 @@ function creaScenaDelModello(THREE, opzioni = {}) {
     const entity = Dv.dati.entity;
     if (!entity) return quandoTocchi({ pagina: "scollegato", k: Dv.k });
     if (Dv.k === "telecamera") return quandoTocchi({ pagina: "telecamera", entity });
-    quandoTocchi(azioneDelTocco(Dv.k, entity, S.stati[entity]) || { pagina: "entita", entity });
+    const azione = azioneDelTocco(Dv.k, entity, S.stati[entity]);
+    if (String(entity).startsWith("climate.")) return quandoTocchi({ pagina: "clima", entity, azione });
+    quandoTocchi(azione || { pagina: "entita", entity });
   }
   const raggio = new THREE.Raycaster(), pt = new THREE.Vector2();
   function punta(x, y) {

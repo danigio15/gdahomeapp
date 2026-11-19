@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-CSMYXJGU.js";
+} from "../../chunk-AHYRIU36.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -5935,9 +5935,11 @@ var SOURCE_INDEX = Object.freeze({
   "Mostra «Caldaia accesa» nella Home": "Show “Boiler on” on Home",
   "Mostra ${voce.nome}": "Show ${voce.nome}",
   "Mostra dispositivi ed entità che hanno consumato": "Show devices and energy sources",
+  "Mostra i piani": "Show the floors",
   "Mostra il cerchio quando configurato": "Show node when configured",
   "Mostra il citofono": "Show the intercom",
   "Mostra in pagina": "Show on the page",
+  "Mostra l'elenco dei dispositivi": "Show the device list",
   "Mostra le opzioni": "Show options",
   "Mostra le telecamere in Sicurezza": "Show the cameras under Security",
   "Mostra meno": "Show less",
@@ -5979,6 +5981,8 @@ var SOURCE_INDEX = Object.freeze({
   "Name the group (es. Piano Terra)": "Name the group (e.g. Ground Floor)",
   "Nascondi": "Hide",
   "Nascondi ${voce.nome}": "Hide ${voce.nome}",
+  "Nascondi i piani": "Hide the floors",
+  "Nascondi l'elenco dei dispositivi": "Hide the device list",
   "Nascondi tutto": "Hide everything",
   "nascosta": "hidden",
   "Naturale": "Natural",
@@ -6698,6 +6702,7 @@ var SOURCE_INDEX = Object.freeze({
   "pH troppo alto": "pH too high",
   "pH troppo basso": "pH too low",
   "piani": "flights",
+  "Piani": "Floors",
   "Piani del palazzo": "Floors of the building",
   "Piani saliti": "Flights climbed",
   "Pianifica i viaggi da qui e ritrovali sul telefono, su CarPlay e su Android Auto, con l'avviso per partire e il clima dell'auto acceso prima. Si sblocca dall'app GdAHome, nella pagina Premium.": "Plan trips from here and find them on your phone, CarPlay and Android Auto, with a reminder to leave and the car climate on in advance. Unlock it in the GdAHome app, on the Premium page.",
@@ -168988,7 +168993,7 @@ async function caricaIlMotore() {
   const [THREE, caricatori, scena2] = await Promise.all([
     import(MOTORE.tre),
     import(MOTORE.caricatori),
-    import("../../scena-modello-VV7MPKD2.js")
+    import("../../scena-modello-RFXNEZUI.js")
   ]);
   return { THREE, caricatori, scena: scena2 };
 }
@@ -169565,7 +169570,10 @@ var state193 = root[KEY196] ||= {
   /* Il modello di chi abita che qui non si apre (#440): il suo nome, e
    * finche' resta quello si mostra la casa generata. */
   modelloGuasto: "",
-  attesaDelModello: ""
+  attesaDelModello: "",
+  /* Le fasce ai lati chiuse su questo dispositivo: si leggono la prima volta
+   * che servono (vedi latiChiusi). */
+  lati: null
 };
 function casa3dDiQui() {
   return casa3dPulita(readJson(CHIAVE_CASA3D, null));
@@ -169722,6 +169730,10 @@ function elencoMarkup5(casa3, states, guardabili) {
       const azione = azioneDelTocco(d.k, d.entity, states[d.entity]);
       if (azione?.service && siComanda(d.entity))
         comando2 = `<button type="button" class="c3-comando" data-c3s="comanda" data-c3s-k="${esc(d.k)}" data-c3s-e="${esc(d.entity)}" data-acceso="${Boolean(st?.attivo)}" aria-label="${esc(t("Comanda", "Toggle"))}">${segnoDelComando(azione)}</button>`;
+      if (eUnClima(d.entity) && modiDelClima(states[d.entity]).length) {
+        const tono = tonoDelModo(clean(states[d.entity]?.state), tipoDelClima(d.k));
+        comando2 = `<button type="button" class="c3-comando c3-comando-modo" data-c3s="clima" data-c3s-e="${esc(d.entity)}" data-tono="${esc(tono)}" aria-label="${esc(t("Modalità", "Mode"))}">${glifoDelModo2(tono)}</button>${comando2}`;
+      }
     }
     return `<li class="c3-disp" data-tono="${esc(st?.tono || "spento")}" data-attivo="${Boolean(st?.attivo)}">
         <span class="c3-disp-ic" aria-hidden="true">${D.icona}</span>
@@ -169750,8 +169762,132 @@ function elencoMarkup5(casa3, states, guardabili) {
   )}</p>`}
     </section>`;
 }
+var CHIAVE_LATI = "dm_casa3d_lati";
+var LATI = ["sinistra", "destra"];
+function latiChiusi() {
+  if (state193.lati) return state193.lati;
+  let letti = {};
+  try {
+    letti = JSON.parse(root.localStorage?.getItem?.(CHIAVE_LATI) || "{}") || {};
+  } catch (_errore) {
+    letti = {};
+  }
+  state193.lati = { sinistra: letti.sinistra === true, destra: letti.destra === true };
+  return state193.lati;
+}
+function alternaIlLato(lato) {
+  if (!LATI.includes(lato)) return;
+  const chiusi = latiChiusi();
+  state193.lati = { ...chiusi, [lato]: !chiusi[lato] };
+  try {
+    root.localStorage?.setItem?.(CHIAVE_LATI, JSON.stringify(state193.lati));
+  } catch (_errore) {
+  }
+}
+function mettiILati(nodo4, casa3, vuota2) {
+  const chiusi = latiChiusi();
+  nodo4.dataset.sinistra = chiusi.sinistra ? "chiusa" : "aperta";
+  nodo4.dataset.destra = chiusi.destra ? "chiusa" : "aperta";
+  scriviSeCambia(nodo4.querySelector(".c3-lati"), vuota2 ? "" : latiMarkup(casa3));
+}
+function latiMarkup(casa3) {
+  const chiusi = latiChiusi();
+  return LATI.map((lato) => {
+    const chiuso = chiusi[lato];
+    const destra = lato === "destra";
+    const testo5 = destra ? chiuso ? t("Mostra l'elenco dei dispositivi", "Show the device list") : t("Nascondi l'elenco dei dispositivi", "Hide the device list") : chiuso ? t("Mostra i piani", "Show the floors") : t("Nascondi i piani", "Hide the floors");
+    const freccia3 = (destra ? !chiuso : chiuso) ? "›" : "‹";
+    const nome = destra ? `⚡ ${t("Dispositivi", "Devices")}` : `${casa3.tipo === "palazzo" ? "🏢" : "🏡"} ${t("Piani", "Floors")}`;
+    return `<button type="button" class="c3-lato-tasto" data-c3s="lato" data-c3s-lato="${lato}" aria-expanded="${!chiuso}" aria-label="${esc(testo5)}" title="${esc(testo5)}">
+        <span class="c3-lato-freccia" aria-hidden="true">${freccia3}</span><span class="c3-lato-nome" aria-hidden="true">${esc(nome)}</span>
+      </button>`;
+  }).join("");
+}
+var eUnClima = (entity2) => clean(entity2).startsWith("climate.");
+var tipoDelClima = (k) => k === "termostato" ? "termostato" : "clima";
+function modiDelClima(st) {
+  const modi = st?.attributes?.hvac_modes;
+  if (!Array.isArray(modi)) return [];
+  return [...new Set(modi.map((m) => clean(m).toLowerCase()).filter(Boolean))];
+}
+var dispositivoDi2 = (casa3, entity2) => [...casa3.piani.flatMap((p) => p.dispositivi), ...casa3.esterno.telecamere].find(
+  (x) => x.entity === entity2
+);
+var INVIATO_PER2 = 1e4;
+function finestraDelClimaMarkup(casa3, states) {
+  const f = state193.finestra;
+  const st = states?.[f.entity];
+  const d = dispositivoDi2(casa3, f.entity);
+  const tipo = tipoDelClima(d?.k);
+  const nome = d ? nomeDelDispositivo3(d, states) : clean(st?.attributes?.friendly_name) || f.entity;
+  const icona3 = DISPOSITIVI_3D[d?.k]?.icona || DISPOSITIVI_3D.clima.icona;
+  const modi = modiDelClima(st);
+  const assente = !st || ["unavailable", "unknown"].includes(clean(st.state).toLowerCase());
+  const inviato = f.inviato && Date.now() - (f.inviatoIl || 0) < INVIATO_PER2 ? f.inviato : "";
+  const corrente2 = (inviato || clean(st?.state)).toLowerCase();
+  const comandabile = !assente && siComanda(f.entity);
+  const tasto5 = (modo, nomeDi18 = (m) => nomeDelModoFra(m, modi)) => {
+    const tono = tonoDelModo(modo, tipo);
+    const scelto = modo === corrente2;
+    return `<button type="button" class="c3-modo" data-c3s="modo" data-c3s-e="${esc(f.entity)}" data-c3s-m="${esc(modo)}" data-tono="${esc(tono)}" aria-pressed="${scelto}"${comandabile ? "" : " disabled"}>${glifoDelModo2(tono)}<span>${esc(nomeDi18(modo))}</span></button>`;
+  };
+  const segmentato2 = modiDelSegmentato(modi);
+  const altri = altriModi(modi);
+  const letture2 = [];
+  const misura9 = Number(st?.attributes?.current_temperature);
+  if (st?.attributes?.current_temperature != null && Number.isFinite(misura9))
+    letture2.push(`🌡 ${gradi12(misura9)}`);
+  const obiettivo2 = Number(st?.attributes?.temperature);
+  if (st?.attributes?.temperature != null && Number.isFinite(obiettivo2))
+    letture2.push(`🎯 ${gradi12(obiettivo2)}`);
+  const parola2 = assente ? t("Non disponibile", "Unavailable") : nomeDelModoFra(clean(st?.state).toLowerCase(), modi);
+  return `<div class="c3-velo" data-c3s="velo">
+      <section class="c3-finestra c3-finestra-clima" role="dialog" aria-modal="true" aria-label="${esc(nome)}">
+        <div class="c3-finestra-testa"><h3>${icona3} ${esc(nome)}</h3>
+          <button type="button" class="c3-chiudi" data-c3s="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
+        <div class="c3-clima" data-c3-clima="${esc(f.entity)}">
+          <p class="c3-clima-ora"><b>${esc(parola2)}</b>${letture2.map((l) => `<span>${esc(l)}</span>`).join("")}</p>
+          ${segmentato2.length ? `<h4>${esc(t("Modalità", "Mode"))}</h4>
+                 <div class="c3-modi" role="group" aria-label="${esc(t("Modalità", "Mode"))}" style="--colonne:${colonneDeiModi(segmentato2.length)}">${segmentato2.map((modo) => tasto5(modo)).join("")}</div>` : ""}
+          ${altri.length ? `<h4>${esc(t("Altre modalità", "Other modes"))}</h4>
+                 <div class="c3-modi c3-modi-altri" role="group" aria-label="${esc(t("Altre modalità", "Other modes"))}">${altri.map((modo) => tasto5(modo, nomeDelModo3)).join("")}</div>` : ""}
+          ${!assente && !comandabile ? `<p class="c3-nota">${esc(t("Solo da guardare", "View only"))}</p>` : ""}
+        </div>
+      </section>
+    </div>`;
+}
+function apriIlClima(entity2, azione = null) {
+  const id = clean(entity2);
+  if (!eUnClima(id)) return;
+  const st = allStates()?.[id];
+  if (modiDelClima(st).length) {
+    apriFinestra3({ tipo: "clima", entity: id });
+    return;
+  }
+  if (azione?.domain) {
+    comanda4(azione);
+    return;
+  }
+  const nome = clean(st?.attributes?.friendly_name) || t("Dispositivo", "Device");
+  avviso3(`${nome}: ${clean(st?.state) || "—"}`);
+}
+function scegliIlModo(entity2, modo) {
+  const id = clean(entity2);
+  const m = clean(modo).toLowerCase();
+  if (!eUnClima(id) || !m) return;
+  const partito = comanda4({
+    domain: "climate",
+    service: "set_hvac_mode",
+    data: { entity_id: id, hvac_mode: m }
+  });
+  if (partito && state193.finestra?.tipo === "clima" && state193.finestra.entity === id) {
+    state193.finestra = { ...state193.finestra, inviato: m, inviatoIl: Date.now() };
+    disegnaOra();
+  }
+}
 function finestraMarkup2(casa3, states) {
   const f = state193.finestra;
+  if (f?.tipo === "clima") return finestraDelClimaMarkup(casa3, states);
   if (f?.tipo !== "telecamera") return "";
   const d = [...casa3.piani.flatMap((p) => p.dispositivi), ...casa3.esterno.telecamere].find(
     (x) => x.entity === f.entity
@@ -169905,7 +170041,7 @@ async function avviaLaScena(admin) {
   state193.caricando = true;
   state193.guasto = "";
   try {
-    const [THREE, { creaScena }] = await Promise.all([import(TRE), import("../../scena-ELFNVKDG.js")]);
+    const [THREE, { creaScena }] = await Promise.all([import(TRE), import("../../scena-PJO76BIX.js")]);
     const nodo4 = doc.getElementById(ID5);
     const posto = nodo4?.querySelector(".c3-posto");
     if (!posto) return;
@@ -169961,6 +170097,7 @@ function alToccoDellaScena(azione) {
   if (!azione) return;
   vibra2();
   if (azione.pagina === "telecamera") return guarda2(azione.entity);
+  if (azione.pagina === "clima") return apriIlClima(azione.entity, azione.azione);
   if (azione.pagina === "scollegato") {
     avviso3(
       puoConfigurare() ? t("Da collegare: «Arreda» → Dispositivi", "Not linked: «Furnish» → Devices") : t("Non ancora collegato", "Not linked yet"),
@@ -169980,13 +170117,14 @@ function comanda4(azione) {
   const entity2 = clean(azione?.data?.entity_id);
   if (!siComanda(entity2)) {
     avviso3(t("Solo da guardare", "View only"), "male");
-    return;
+    return false;
   }
   if (!chiamaServizio(azione)) {
     avviso3(t("⚠️ Non connesso", "⚠️ Not connected"), "male");
-    return;
+    return false;
   }
   avviso3(t("Comando inviato", "Command sent"));
+  return true;
 }
 function guarda2(entity2) {
   const casa3 = casaDaElencare(casa3dDiQui());
@@ -170008,7 +170146,7 @@ function tela3() {
         <div class="c3-testa-posto"></div>
         <div class="c3-corpo">
           <aside class="c3-sinistra"></aside>
-          <div class="c3-palco"><div class="c3-posto"></div><div class="c3-attesa"></div></div>
+          <div class="c3-palco"><div class="c3-posto"></div><div class="c3-attesa"></div><div class="c3-lati"></div></div>
           <aside class="c3-destra"><div class="c3-elenco"></div><div class="c3-arreda-posto" hidden></div></aside>
         </div>
       </div><div class="c3-sopra"></div><div class="c3-avviso" role="status" aria-live="polite"></div>`;
@@ -170053,6 +170191,7 @@ function disegna18() {
   nodo4.dataset.arreda = String(state193.arreda);
   scriviSeCambia(nodo4.querySelector(".c3-testa-posto"), testataMarkup3(elencata, admin, modello2));
   const vuota2 = !elencata.piani.length;
+  mettiILati(nodo4, elencata, vuota2);
   scriviSeCambia(
     nodo4.querySelector(".c3-sinistra"),
     vuota2 ? "" : sinistraMarkup(elencata, states, admin)
@@ -170124,15 +170263,22 @@ function avviso3(testo5, tipo = "bene") {
   root.clearTimeout?.(state193.avviso);
   state193.avviso = root.setTimeout?.(() => el.classList.remove("visto"), 2200);
 }
+function disegnaOra() {
+  try {
+    disegna18();
+  } catch (errore) {
+    root.console?.warn?.("[DashboardModern] casa 3d", errore);
+  }
+}
 function apriFinestra3(finestra6) {
   if (state193.finestra?.tipo === "telecamera") chiudiIlVideo2();
   state193.finestra = finestra6;
-  ridisegna34();
+  disegnaOra();
 }
 function chiudi5() {
   if (state193.finestra?.tipo === "telecamera") chiudiIlVideo2();
   state193.finestra = null;
-  ridisegna34();
+  disegnaOra();
 }
 function alClic6(evento) {
   const el = evento.target?.closest?.("[data-c3s]");
@@ -170165,6 +170311,22 @@ function alClic6(evento) {
     state193.vista = k;
     if (state193.scena && !state193.scena.apri(k)) state193.vista = "esterno";
     return ridisegna34();
+  }
+  if (cosa === "lato") {
+    alternaIlLato(clean(el.dataset.c3sLato));
+    vibra2(6);
+    const nodo4 = doc.getElementById(ID5);
+    if (nodo4) mettiILati(nodo4, casaDaElencare(casa3dDiQui()), false);
+    return ridisegna34();
+  }
+  if (cosa === "clima") {
+    const entity2 = clean(el.dataset.c3sE);
+    vibra2();
+    return apriIlClima(entity2);
+  }
+  if (cosa === "modo") {
+    vibra2();
+    return scegliIlModo(el.dataset.c3sE, el.dataset.c3sM);
   }
   if (cosa === "arreda") {
     state193.arreda = !state193.arreda;
@@ -170260,7 +170422,23 @@ function installaLoStile11() {
     ${C3} .c3-ora{flex:0 0 auto;padding:6px 10px;border-radius:999px;font-family:'Oswald',system-ui,sans-serif;font-size:13px;font-weight:700;
       letter-spacing:1px;background:var(--c3-morbido);border:1px solid var(--c3-bordo)}
 
-    ${C3} .c3-corpo{flex:1;min-height:0;display:grid;grid-template-columns:270px minmax(0,1fr) 330px;gap:14px}
+    ${C3} .c3-corpo{--c3-sx:270px;--c3-dx:330px;flex:1;min-height:0;display:grid;grid-template-columns:var(--c3-sx) minmax(0,1fr) var(--c3-dx);gap:14px}
+    /* Le fasce chiuse (latiChiusi): la casa si prende il loro posto. Arredando
+     * quella di destra resta, perche' gli attrezzi stanno li'. */
+    ${C3}[data-sinistra="chiusa"] .c3-sinistra,
+    ${C3}[data-destra="chiusa"]:not([data-arreda="true"]) .c3-destra{display:none}
+    ${C3}[data-sinistra="chiusa"] .c3-corpo{grid-template-columns:minmax(0,1fr) var(--c3-dx)}
+    ${C3}[data-destra="chiusa"]:not([data-arreda="true"]) .c3-corpo{grid-template-columns:var(--c3-sx) minmax(0,1fr)}
+    ${C3}[data-sinistra="chiusa"][data-destra="chiusa"]:not([data-arreda="true"]) .c3-corpo{grid-template-columns:minmax(0,1fr)}
+    ${C3} .c3-lati{position:absolute;inset:0;z-index:3;pointer-events:none}
+    ${C3} .c3-lato-tasto{position:absolute;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:26px;height:68px;padding:0;
+      pointer-events:auto;cursor:pointer;font-size:20px;font-weight:800;line-height:1;color:#e6edf7;background:rgba(15,23,42,.74);
+      border:1px solid rgba(148,163,184,.32);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+    @media(hover:hover){${C3} .c3-lato-tasto:hover{background:rgba(14,165,233,.85)}}
+    ${C3} .c3-lato-tasto[data-c3s-lato="sinistra"]{left:0;border-left:0;border-radius:0 14px 14px 0}
+    ${C3} .c3-lato-tasto[data-c3s-lato="destra"]{right:0;border-right:0;border-radius:14px 0 0 14px}
+    ${C3} .c3-lato-nome{display:none}
+    ${C3}[data-arreda="true"] .c3-lato-tasto[data-c3s-lato="destra"]{display:none}
     ${C3} .c3-sinistra,${C3} .c3-destra{display:flex;flex-direction:column;gap:14px;min-height:0;overflow-y:auto;scrollbar-width:thin}
     ${C3} .c3-scheda{padding:16px;border-radius:22px;background:var(--c3-card);border:1px solid var(--c3-bordo);box-shadow:var(--c3-ombra)}
     ${C3} .c3-scheda h2{display:flex;align-items:center;gap:8px;margin:0 0 12px;font-family:'Oswald',system-ui,sans-serif;font-size:15px;font-weight:500;
@@ -170321,6 +170499,29 @@ function installaLoStile11() {
     ${C3} .c3-chiudi{display:grid;place-items:center;width:36px;height:36px;border:0;border-radius:50%;cursor:pointer;font-weight:800;
       color:var(--c3-fioco);background:var(--c3-morbido)}
     ${C3} .c3-video{min-height:220px;padding:12px}
+    ${C3} .c3-finestra-clima{max-width:460px}
+    ${C3} .c3-clima{display:flex;flex-direction:column;gap:12px;padding:16px 20px 20px;overflow-y:auto}
+    ${C3} .c3-clima-ora{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin:0;font-size:14px;font-weight:700;color:var(--c3-fioco)}
+    ${C3} .c3-clima-ora b{font-family:'Oswald',system-ui,sans-serif;font-size:21px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--c3-testo)}
+    ${C3} .c3-clima h4{margin:4px 0 0;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--c3-fioco)}
+    ${C3} .c3-modi{display:grid;grid-template-columns:repeat(var(--colonne,3),minmax(0,1fr));gap:8px}
+    ${C3} .c3-modo{--m:100,116,139;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:66px;padding:8px 4px;
+      border-radius:16px;cursor:pointer;font-size:12.5px;font-weight:800;border:1px solid var(--c3-bordo);background:var(--c3-morbido);color:var(--c3-testo)}
+    ${C3} .c3-modo svg{color:rgb(var(--m))}
+    ${C3} .c3-modo[data-tono="caldo"],${C3} .c3-comando-modo[data-tono="caldo"]{--m:234,88,12}
+    ${C3} .c3-modo[data-tono="freddo"],${C3} .c3-comando-modo[data-tono="freddo"]{--m:14,165,233}
+    ${C3} .c3-modo[data-tono="auto"],${C3} .c3-comando-modo[data-tono="auto"]{--m:99,102,241}
+    ${C3} .c3-modo[data-tono="secco"],${C3} .c3-comando-modo[data-tono="secco"]{--m:13,148,136}
+    ${C3} .c3-modo[data-tono="ventola"],${C3} .c3-comando-modo[data-tono="ventola"]{--m:71,85,105}
+    ${C3} .c3-modo[data-tono="notte"],${C3} .c3-comando-modo[data-tono="notte"]{--m:79,70,229}
+    ${C3} .c3-modo[data-tono="spento"],${C3} .c3-comando-modo[data-tono="spento"]{--m:100,116,139}
+    ${C3} .c3-modo[aria-pressed="true"]{background:rgb(var(--m));border-color:transparent;color:#fff}
+    ${C3} .c3-modo[aria-pressed="true"] svg{color:#fff}
+    ${C3} .c3-modo:disabled{opacity:.55;cursor:default}
+    ${C3} .c3-modi-altri{display:flex;flex-wrap:wrap}
+    ${C3} .c3-modi-altri .c3-modo{flex-direction:row;min-height:40px;padding:6px 14px;border-radius:999px}
+    ${C3} .c3-comando-modo{--m:100,116,139;color:rgb(var(--m))}
+    ${C3} .c3-comando-modo svg{width:19px;height:19px}
 
     ${C3} .c3-avviso{position:fixed;bottom:30px;left:50%;z-index:9;transform:translateX(-50%) translateY(20px);padding:13px 22px;border-radius:999px;
       font-size:14px;font-weight:800;white-space:nowrap;color:#fff;background:#059669;box-shadow:0 12px 32px rgba(0,0,0,.3);
@@ -170329,7 +170530,7 @@ function installaLoStile11() {
     ${C3} .c3-avviso.visto{opacity:1;transform:translateX(-50%) translateY(0)}
 
     @media(max-width:1100px){
-      ${C3} .c3-corpo{grid-template-columns:230px minmax(0,1fr) 290px}
+      ${C3} .c3-corpo{--c3-sx:230px;--c3-dx:290px}
       ${C3} .c3-tasto{padding:9px 12px;font-size:12px}
     }
     @media(max-width:860px){
@@ -170343,6 +170544,18 @@ function installaLoStile11() {
       ${C3} .c3-corpo{display:flex;flex-direction:column;gap:10px}
       ${C3} .c3-palco{order:-1;height:62vh;min-height:340px;border-radius:20px}
       ${C3} .c3-sinistra,${C3} .c3-destra{overflow:visible}
+      /* Sul telefono le fasce stanno sotto la casa: i tasti sono due pillole
+       * col nome in cima alla casa, e con tutte e due chiuse la casa prende
+       * lo schermo intero. */
+      ${C3} .c3-lato-tasto{top:10px;transform:none;display:inline-flex;align-items:center;width:auto;height:34px;padding:0 12px;
+        font-size:12px;border:1px solid rgba(148,163,184,.32);border-radius:999px}
+      ${C3} .c3-lato-tasto[data-c3s-lato="sinistra"]{left:10px;border:1px solid rgba(148,163,184,.32);border-radius:999px}
+      ${C3} .c3-lato-tasto[data-c3s-lato="destra"]{right:10px;border:1px solid rgba(148,163,184,.32);border-radius:999px}
+      ${C3} .c3-lato-tasto[aria-expanded="true"]{background:rgba(14,165,233,.85);border-color:transparent}
+      ${C3} .c3-lato-freccia{display:none}
+      ${C3} .c3-lato-nome{display:inline}
+      ${C3}[data-sinistra="chiusa"][data-destra="chiusa"]:not([data-arreda="true"]) .c3-pagina{height:100%}
+      ${C3}[data-sinistra="chiusa"][data-destra="chiusa"]:not([data-arreda="true"]) .c3-palco{flex:1 1 auto;height:auto}
     }
     `
   );

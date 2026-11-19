@@ -8349,4 +8349,9 @@ export default Object.freeze({
   "🪴 = it's a balcony: it keeps its floor and railing, with no ceiling.": "🪴 = यह बालकनी है: इसका फ़र्श और रेलिंग रहती है, छत नहीं।",
   "estimated from the doors in the drawing (a door is 80 cm)": "ड्रॉइंग के दरवाज़ों से अनुमानित (एक दरवाज़ा 80 सेमी का होता है)",
   "Working out the scale…": "पैमाना निकाल रहा हूँ…",
+  Floors: "मंज़िलें",
+  "Hide the device list": "उपकरणों की सूची छिपाएँ",
+  "Hide the floors": "मंज़िलें छिपाएँ",
+  "Show the device list": "उपकरणों की सूची दिखाएँ",
+  "Show the floors": "मंज़िलें दिखाएँ",
 });

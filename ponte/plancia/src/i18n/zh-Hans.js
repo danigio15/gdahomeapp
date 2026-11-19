@@ -8237,4 +8237,9 @@ export default Object.freeze({
   "🪴 = it's a balcony: it keeps its floor and railing, with no ceiling.": "🪴 = 这是阳台：保留地面和栏杆，没有天花板。",
   "estimated from the doors in the drawing (a door is 80 cm)": "根据图中的门估算（一扇门宽 80 厘米）",
   "Working out the scale…": "正在计算比例…",
+  Floors: "楼层",
+  "Hide the device list": "隐藏设备列表",
+  "Hide the floors": "隐藏楼层",
+  "Show the device list": "显示设备列表",
+  "Show the floors": "显示楼层",
 });

@@ -8388,4 +8388,9 @@ export default Object.freeze({
   "🪴 = it's a balcony: it keeps its floor and railing, with no ceiling.": "🪴 = to balkon: zachowuje podłogę i balustradę, bez sufitu.",
   "estimated from the doors in the drawing (a door is 80 cm)": "oszacowana z drzwi na rysunku (drzwi mają 80 cm)",
   "Working out the scale…": "Wyliczam skalę…",
+  Floors: "Piętra",
+  "Hide the device list": "Ukryj listę urządzeń",
+  "Hide the floors": "Ukryj piętra",
+  "Show the device list": "Pokaż listę urządzeń",
+  "Show the floors": "Pokaż piętra",
 });

@@ -8368,4 +8368,9 @@ export default Object.freeze({
   "🪴 = it's a balcony: it keeps its floor and railing, with no ceiling.": "🪴 = bu bir balkon: zemini ve korkuluğu kalır, tavanı olmaz.",
   "estimated from the doors in the drawing (a door is 80 cm)": "çizimdeki kapılardan tahmin edildi (bir kapı 80 cm'dir)",
   "Working out the scale…": "Ölçeği hesaplıyorum…",
+  Floors: "Katlar",
+  "Hide the device list": "Cihaz listesini gizle",
+  "Hide the floors": "Katları gizle",
+  "Show the device list": "Cihaz listesini göster",
+  "Show the floors": "Katları göster",
 });

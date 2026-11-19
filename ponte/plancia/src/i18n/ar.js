@@ -8315,4 +8315,9 @@ export default Object.freeze({
   "🪴 = it's a balcony: it keeps its floor and railing, with no ceiling.": "🪴 = هذه شرفة: تحتفظ بأرضيتها ودرابزينها، بلا سقف.",
   "estimated from the doors in the drawing (a door is 80 cm)": "مقدَّر من أبواب الرسم (عرض الباب 80 سم)",
   "Working out the scale…": "أحسب المقياس…",
+  Floors: "الطوابق",
+  "Hide the device list": "إخفاء قائمة الأجهزة",
+  "Hide the floors": "إخفاء الطوابق",
+  "Show the device list": "إظهار قائمة الأجهزة",
+  "Show the floors": "إظهار الطوابق",
 });

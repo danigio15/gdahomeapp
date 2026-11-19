@@ -232,23 +232,34 @@ function stati(notte) {
     }),
     "climate.camera": s("climate.camera", "heat", {
       current_temperature: 20.5,
+      temperature: 22,
+      hvac_modes: ["off", "heat", "cool", "auto", "dry", "fan_only"],
       friendly_name: "Clima camera",
     }),
   };
 }
 
-async function boot(page, testInfo, { tema = "light", notte = false, casa = CASA } = {}) {
+/* `orologio: false` lascia il tempo vero: l'ora finta fa comodo alle foto
+ * (sempre le 12:30, sempre lo stesso sole), ma col suo `requestAnimationFrame`
+ * finto il volo della scena e il disegno della plancia a volte si fermano a
+ * meta'. Le prove che toccano e aspettano una risposta non ne hanno bisogno. */
+async function boot(
+  page,
+  testInfo,
+  { tema = "light", notte = false, casa = CASA, orologio = true } = {},
+) {
   test.setTimeout(480_000);
   await page.addInitScript(() => {
     window.__GDAHOME_PREMIUM__ = true;
   });
-  await page.clock.install({ time: ADESSO });
+  if (orologio) await page.clock.install({ time: ADESSO });
   const motore = [];
   page.on("request", (r) => {
     if (r.url().includes("three.module.min.js")) motore.push(r.url());
   });
   await page.addInitScript(() => {
     window.__CHIAMATE = [];
+    window.__DATI = [];
     class MockSocket extends EventTarget {
       static OPEN = 1;
       readyState = 1;
@@ -273,6 +284,7 @@ async function boot(page, testInfo, { tema = "light", notte = false, casa = CASA
             m.service,
             m.service_data?.entity_id || m.target?.entity_id,
           ]);
+          window.__DATI.push({ domain: m.domain, service: m.service, data: m.service_data || {} });
           result = {};
         }
         setTimeout(
@@ -402,6 +414,173 @@ test("chi amministra arreda", async ({ page }, testInfo) => {
   await casa.locator('[data-c3s="arreda"]').click();
   await expect(casa.locator(".c3-arreda-posto")).toBeVisible();
   await scatta(page, testInfo, "casa3d-arreda");
+});
+
+/* Niente che pulsa: la scena si ferma e ridisegna solo quando serve. Col
+ * sensore di movimento acceso, nel browser senza schermo la casa si
+ * ridisegna di continuo col processore, e a tutta larghezza la pagina non
+ * risponde piu' alla prova. */
+async function senzaMovimento(page) {
+  await page.evaluate(() => {
+    const fermo = {
+      entity_id: "binary_sensor.movimento_soggiorno",
+      state: "off",
+      attributes: { device_class: "motion", friendly_name: "Movimento soggiorno" },
+    };
+    _RAW_STATES[fermo.entity_id] = fermo;
+    window.__HASS__ = { states: { ...(window.__HASS__?.states || {}), [fermo.entity_id]: fermo } };
+    window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready"));
+  });
+}
+
+/* «Si possono ridurre o eliminare le fasce laterali della casa 3D per avere
+ * un'area maggiore? Togliere o nascondere quella dove si vede l'elenco dei
+ * dispositivi.» Ognuna si chiude col suo tasto, la casa si allarga, e la
+ * scelta resta a questo dispositivo anche dopo aver ricaricato. Arredando la
+ * fascia di destra torna, perche' gli attrezzi stanno li'.
+ *
+ * La foto si fa dopo i tocchi, a fasce chiuse. */
+test("le fasce ai lati si chiudono e la casa prende tutta la larghezza", async ({
+  page,
+}, testInfo) => {
+  await boot(page, testInfo, { orologio: false });
+  await senzaMovimento(page);
+  const casa = page.locator("#dm-casa3d");
+  const telefono = page.viewportSize().width <= 860;
+  await vai(page, "terra");
+  const palco = casa.locator(".c3-palco");
+  const destra = casa.locator('[data-c3s="lato"][data-c3s-lato="destra"]');
+  const sinistra = casa.locator('[data-c3s="lato"][data-c3s-lato="sinistra"]');
+  await expect(destra).toHaveAttribute("aria-expanded", "true");
+  await expect(destra).toHaveAttribute("aria-label", "Nascondi l'elenco dei dispositivi");
+  await expect(casa.locator(".c3-elenco")).toBeVisible();
+  const prima = await palco.boundingBox();
+
+  /* via l'elenco dei dispositivi */
+  await destra.click();
+  await expect(casa.locator(".c3-destra")).toBeHidden({ timeout: 30_000 });
+  await expect(destra).toHaveAttribute("aria-expanded", "false");
+  await expect(destra).toHaveAttribute("aria-label", "Mostra l'elenco dei dispositivi");
+  /* nascosta la fascia, il disegno della pagina e' gia' deciso: si misura */
+  if (!telefono) expect((await palco.boundingBox()).width).toBeGreaterThan(prima.width + 300);
+
+  /* e i piani: la casa e' tutta la larghezza (sul telefono tutta l'altezza) */
+  await sinistra.click();
+  await expect(casa.locator(".c3-sinistra")).toBeHidden({ timeout: 30_000 });
+  const corpo = await casa.locator(".c3-corpo").boundingBox();
+  const dopo = await palco.boundingBox();
+  if (telefono) expect(dopo.height).toBeGreaterThan(prima.height + 40);
+  else expect(Math.round(dopo.width)).toBeGreaterThanOrEqual(Math.round(corpo.width) - 1);
+  /* i piani si cambiano lo stesso dalle pillole in cima */
+  await expect(casa.locator('.c3-pillole [data-c3s-k="primo"]')).toBeVisible();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("dm_casa3d_lati")))).toEqual({
+    sinistra: true,
+    destra: true,
+  });
+
+  /* arredando la destra torna, finito l'arredo se ne riva */
+  await casa.locator('[data-c3s="arreda"]').click();
+  await expect(casa.locator(".c3-arreda-posto")).toBeVisible({ timeout: 30_000 });
+  await expect(destra).toBeHidden();
+  await casa.locator('[data-c3s="arreda"]').click();
+  await expect(casa.locator(".c3-destra")).toBeHidden({ timeout: 30_000 });
+  await expect(destra).toBeVisible();
+  await scatta(page, testInfo, "casa3d-fasce-dopo");
+
+  /* ricaricata la pagina, le fasce restano chiuse */
+  await page.reload();
+  await expect(page.locator("#dm-casa3d canvas")).toHaveCount(1, { timeout: 60_000 });
+  await expect(casa.locator(".c3-destra")).toBeHidden({ timeout: 30_000 });
+  await expect(casa.locator(".c3-sinistra")).toBeHidden();
+  await vai(page, "terra");
+  /* e si riaprono */
+  await destra.click();
+  await expect(casa.locator(".c3-destra")).toBeVisible({ timeout: 30_000 });
+  await sinistra.click();
+  await expect(casa.locator(".c3-sinistra")).toBeVisible({ timeout: 30_000 });
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("dm_casa3d_lati")))).toEqual({
+    sinistra: false,
+    destra: false,
+  });
+});
+
+/* «Mettendo i climatizzatori, quando clicchi vedere il menu per selezionare
+ * la funzione tipo riscaldamento piuttosto che raffreddamento.» Toccato il
+ * clima nella casa si apre la finestra con le modalita' che dichiara, coi
+ * nomi della finestra del clima della plancia; un tocco manda
+ * `climate.set_hvac_mode`. Si apre anche dal suo tasto nell'elenco. Un clima
+ * senza modalita' dichiarate fa quello che faceva: si accende e si spegne. */
+test("toccato il clima si sceglie la modalità: caldo, freddo…", async ({ page }, testInfo) => {
+  await boot(page, testInfo, { orologio: false });
+  const casa = page.locator("#dm-casa3d");
+  await vai(page, "terra");
+  await page.mouse.move(2, 2);
+  const tasto = casa.locator(".c3-chip").filter({ hasText: "20,5°" });
+  await expect(tasto).toBeVisible({ timeout: 30_000 });
+  await tasto.click();
+  const finestra = casa.locator(".c3-finestra-clima");
+  await expect(finestra).toBeVisible({ timeout: 30_000 });
+  await expect(finestra.locator("h3")).toContainText("Clima camera");
+  await expect(finestra.locator(".c3-clima-ora")).toContainText("Caldo");
+  await expect(finestra.locator(".c3-clima-ora")).toContainText("20,5°");
+  const modi = finestra.locator('.c3-modo[data-c3s="modo"]');
+  await expect(modi).toHaveText(["Spento", "Caldo", "Freddo", "Auto", "Deumidifica", "Ventola"]);
+  await expect(modi.filter({ hasText: "Caldo" })).toHaveAttribute("aria-pressed", "true");
+  /* un tocco: il servizio delle modalita', e il tasto si accende subito */
+  await modi.filter({ hasText: "Freddo" }).click();
+  await expect
+    .poll(() => page.evaluate(() => window.__DATI.filter((c) => c.domain === "climate")), {
+      timeout: 20_000,
+    })
+    .toEqual([
+      {
+        domain: "climate",
+        service: "set_hvac_mode",
+        data: { entity_id: "climate.camera", hvac_mode: "cool" },
+      },
+    ]);
+  await expect(modi.filter({ hasText: "Freddo" })).toHaveAttribute("aria-pressed", "true", {
+    timeout: 30_000,
+  });
+  await expect(modi.filter({ hasText: "Caldo" })).toHaveAttribute("aria-pressed", "false");
+  await expect(casa.locator(".c3-avviso")).toContainText("Comando inviato");
+  await finestra.locator('[data-c3s="chiudi"]').click();
+  await expect(finestra).toHaveCount(0, { timeout: 30_000 });
+
+  /* dall'elenco: il tasto col disegno della modalita' apre la stessa finestra */
+  const riga = casa.locator(".c3-disp").filter({ hasText: "Clima camera" });
+  await riga.locator('[data-c3s="clima"]').click();
+  await expect(finestra).toBeVisible({ timeout: 30_000 });
+  await page.keyboard.press("Escape");
+  await expect(finestra).toHaveCount(0, { timeout: 30_000 });
+
+  /* senza modalita' dichiarate il tocco resta quello di prima: spegne */
+  const clima = (modi) => {
+    const nuovo = {
+      entity_id: "climate.camera",
+      state: "heat",
+      attributes: { current_temperature: 20.5, temperature: 22, friendly_name: "Clima camera" },
+    };
+    if (modi) nuovo.attributes.hvac_modes = modi;
+    _RAW_STATES["climate.camera"] = nuovo;
+    window.__HASS__ = { states: { ...(window.__HASS__?.states || {}), "climate.camera": nuovo } };
+    window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready"));
+  };
+  await page.evaluate(clima, null);
+  await page.mouse.move(2, 2);
+  await tasto.click();
+  await expect
+    .poll(() => page.evaluate(() => window.__CHIAMATE.map((c) => c.join(" "))), { timeout: 20_000 })
+    .toContain("climate turn_off climate.camera");
+  await expect(finestra).toHaveCount(0);
+
+  /* tornate le modalita', la finestra di nuovo: la foto */
+  await page.evaluate(clima, ["off", "heat", "cool", "auto", "dry", "fan_only"]);
+  await page.mouse.move(2, 2);
+  await tasto.click();
+  await expect(finestra).toBeVisible({ timeout: 30_000 });
+  const dove = foto(testInfo, "casa3d-clima-modalita");
+  if (dove) await page.screenshot({ path: dove });
 });
 
 /* «In cucina ho 3 luci: quando le aggiungo i tasti quasi si sovrappongono».

@@ -430,7 +430,10 @@ export function creaScenaDelModello(THREE, opzioni = {}) {
     const entity = Dv.dati.entity;
     if (!entity) return quandoTocchi({ pagina: "scollegato", k: Dv.k });
     if (Dv.k === "telecamera") return quandoTocchi({ pagina: "telecamera", entity });
-    quandoTocchi(azioneDelTocco(Dv.k, entity, S.stati[entity]) || { pagina: "entita", entity });
+    const azione = azioneDelTocco(Dv.k, entity, S.stati[entity]);
+    /* un clima chiede le sue modalita', come nella casa generata (scena.js) */
+    if (String(entity).startsWith("climate.")) return quandoTocchi({ pagina: "clima", entity, azione });
+    quandoTocchi(azione || { pagina: "entita", entity });
   }
   const raggio = new THREE.Raycaster(),
     pt = new THREE.Vector2();
