@@ -1,4 +1,3 @@
-// ignore_for_file: avoid_print
 /// Le prove di gdahome Premium nell'app: chi lo e', cosa si apre, e cosa
 /// la casa dice sul filo.
 ///
@@ -17,9 +16,11 @@ import 'package:gdahome/licenza/chiave.dart';
 import 'package:gdahome/licenza/licenza.dart';
 import 'package:gdahome/licenza/ricevuta_da_fuori.dart';
 import 'package:gdahome/ponte/indirizzo.dart';
+import 'package:gdahome/ponte/presa.dart';
 import 'package:gdahome/ponte/sonda.dart';
 import 'package:gdahome/schermate/barra.dart';
 import 'package:gdahome/schermate/menu.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../ponte/ponte_finto.dart';
 import 'gettoni_di_prova.dart';
@@ -325,20 +326,30 @@ void main() {
     late PonteFinto ponte;
 
     setUp(() async {
-      print('[diagnosi] ${DateTime.now()} setUp');
       archivio = ArchivioDelleCase(CassaforteInMemoria());
       await archivio.apri();
       ponte = await PonteFinto.alza();
-      print('[diagnosi] ${DateTime.now()} setUp fatto');
     });
 
     tearDown(() async {
-      print('[diagnosi] ${DateTime.now()} tearDown');
       await collegamento.chiudi();
-      print('[diagnosi] ${DateTime.now()} chiuso');
       await ponte.spegni();
-      print('[diagnosi] ${DateTime.now()} spento');
     });
+
+    /* Le prese vere solo verso il ponte finto (127.0.0.1). Le altre si
+     * rifiutano subito, come una rete che non porta da nessuna parte.
+     *
+     * «Da fuori il centralino si prova» cadeva su GitHub e qui no: la prova
+     * da fuori apre davvero il filo verso `wss://centralino.esempio.it`. Qui
+     * passa dal proxy, che dice di no in un attimo; su GitHub si va diretti,
+     * il nome esiste e il filo resta appeso fino ai quindici secondi della
+     * sua apertura, due volte, oltre i trenta della prova. Nessuna prova
+     * deve dipendere da un posto vero della rete. */
+    Future<Presa> soloInProva(Uri dove) => dove.host == '127.0.0.1'
+        ? PresaSuWebSocket.apri(dove)
+        : Future.error(
+            WebSocketChannelException('in prova niente rete vera: $dove'),
+          );
 
     Sonda sondaChe(Set<IndirizzoDelPonte> vivi, {List<Uri>? bussate}) => Sonda(
       attesa: const Duration(milliseconds: 200),
@@ -366,6 +377,7 @@ void main() {
       );
       collegamento = Collegamento(
         archivio: archivio,
+        apriLaPresa: soloInProva,
         sonda: sondaChe({ponte.indirizzo}),
         licenza: GestoreLicenza(chiave: ''),
       );
@@ -398,6 +410,7 @@ void main() {
           );
           collegamento = Collegamento(
             archivio: archivio,
+            apriLaPresa: soloInProva,
             sonda: sondaChe({ponte.indirizzo}),
             licenza: GestoreLicenza(chiave: chiaveDiProva),
           );
@@ -429,6 +442,7 @@ void main() {
         );
         collegamento = Collegamento(
           archivio: archivio,
+          apriLaPresa: soloInProva,
           sonda: sondaChe({ponte.indirizzo}),
           licenza: GestoreLicenza(chiave: chiaveDiProva),
         );
@@ -468,6 +482,7 @@ void main() {
         );
         collegamento = Collegamento(
           archivio: archivio,
+          apriLaPresa: soloInProva,
           sonda: sondaChe({ponte.indirizzo}),
           licenza: GestoreLicenza(chiave: chiaveDiProva),
         );
@@ -501,6 +516,7 @@ void main() {
         await archivio.segnaSenzaLicenze(casa.id);
         collegamento = Collegamento(
           archivio: archivio,
+          apriLaPresa: soloInProva,
           /* Nessuno risponde: la casa e' spenta, o si e' fuori. */
           sonda: sondaChe({}),
           licenza: GestoreLicenza(chiave: chiaveDiProva),
@@ -526,6 +542,7 @@ void main() {
       );
       collegamento = Collegamento(
         archivio: archivio,
+        apriLaPresa: soloInProva,
         sonda: sondaChe({ponte.indirizzo}),
         licenza: GestoreLicenza(chiave: chiaveDiProva),
         ogniQuantoLaLicenza: const Duration(milliseconds: 100),
@@ -563,6 +580,7 @@ void main() {
       final consegnate = <Uri>[];
       collegamento = Collegamento(
         archivio: archivio,
+        apriLaPresa: soloInProva,
         sonda: sondaChe({}),
         licenza: GestoreLicenza(chiave: chiaveDiProva),
         /* Il centralino di prova non risponde: si aspetta poco. */
@@ -618,6 +636,7 @@ void main() {
       Map<String, Object?>? corpo;
       collegamento = Collegamento(
         archivio: archivio,
+        apriLaPresa: soloInProva,
         sonda: sondaChe({}),
         licenza: GestoreLicenza(chiave: chiaveDiProva),
         attesaPerLaRicevuta: const Duration(milliseconds: 300),
@@ -678,6 +697,7 @@ void main() {
       await archivio.segnaIlGettone(casa.id, '');
       collegamento = Collegamento(
         archivio: archivio,
+        apriLaPresa: soloInProva,
         sonda: sondaChe({}),
         licenza: GestoreLicenza(chiave: chiaveDiProva),
         attesaPerLaRicevuta: const Duration(milliseconds: 300),
@@ -725,6 +745,7 @@ void main() {
       Map<String, Object?>? corpo;
       collegamento = Collegamento(
         archivio: archivio,
+        apriLaPresa: soloInProva,
         sonda: sondaChe({}),
         licenza: GestoreLicenza(chiave: chiaveDiProva),
         consegnaAlCentralino: (d, c) async {
@@ -786,6 +807,7 @@ void main() {
         var consegnati = 0;
         collegamento = Collegamento(
           archivio: archivio,
+          apriLaPresa: soloInProva,
           sonda: sondaChe({}),
           licenza: GestoreLicenza(chiave: chiaveDiProva),
           attesaPerLaRicevuta: const Duration(milliseconds: 300),
@@ -828,6 +850,7 @@ void main() {
         var consegnati = 0;
         collegamento = Collegamento(
           archivio: archivio,
+          apriLaPresa: soloInProva,
           sonda: sondaChe({}),
           licenza: GestoreLicenza(chiave: chiaveDiProva),
           consegnaAlCentralino: (_, _) async {
@@ -899,6 +922,7 @@ void main() {
       );
       collegamento = Collegamento(
         archivio: archivio,
+        apriLaPresa: soloInProva,
         sonda: sondaChe({ponte.indirizzo}),
         licenza: GestoreLicenza(chiave: chiaveDiProva),
       );
@@ -936,25 +960,12 @@ void main() {
       await archivio.segnaIlGettone(casa.id, '');
       collegamento = Collegamento(
         archivio: archivio,
+        apriLaPresa: soloInProva,
         /* Nessuno risponde: si e' fuori casa, e il centralino non c'e'. */
         sonda: sondaChe({}, bussate: bussate),
         licenza: GestoreLicenza(chiave: chiaveDiProva),
       );
-      final orologio = Stopwatch()..start();
-      collegamento.cambiamenti.listen((_) {
-        print(
-          '[diagnosi] +${orologio.elapsedMilliseconds} ms '
-          '${collegamento.comeVa} fuori=${collegamento.fuoriCasaSenzaPremium} '
-          'premium=${collegamento.licenza.premium} '
-          'ricevuta=${collegamento.licenza.ricevutaDaPortare} '
-          'perche=${collegamento.perche}',
-        );
-      });
-      print('[diagnosi] ${DateTime.now()} prima di apri');
       await collegamento.apri();
-      print(
-        '[diagnosi] ${DateTime.now()} dopo apri: ${collegamento.comeVa} $bussate',
-      );
       expect(collegamento.comeVa, ComeVa.irraggiungibile);
       expect(collegamento.fuoriCasaSenzaPremium, isTrue);
       expect(collegamento.perche, contains('Premium'));
@@ -967,9 +978,7 @@ void main() {
       /* Riaperta subito — il gesto di aggiornare — il centralino si
        * riprova: non ha risposto nessuno, e non c'e' niente da sapere. */
       bussate.clear();
-      print('[diagnosi] ${DateTime.now()} prima di apri(forza)');
       await collegamento.apri(forza: true);
-      print('[diagnosi] ${DateTime.now()} dopo apri(forza): $bussate');
       expect(collegamento.fuoriCasaSenzaPremium, isTrue);
       expect(
         bussate.where((una) => una.host == 'centralino.esempio.it'),
@@ -990,6 +999,7 @@ void main() {
       );
       collegamento = Collegamento(
         archivio: archivio,
+        apriLaPresa: soloInProva,
         sonda: sondaChe({ponte.indirizzo}),
         licenza: GestoreLicenza(chiave: chiaveDiProva),
       );
@@ -1018,6 +1028,7 @@ void main() {
         );
         collegamento = Collegamento(
           archivio: archivio,
+          apriLaPresa: soloInProva,
           sonda: sondaChe({ponte.indirizzo}),
           licenza: GestoreLicenza(chiave: chiaveDiProva),
         );
@@ -1061,6 +1072,7 @@ void main() {
       );
       collegamento = Collegamento(
         archivio: archivio,
+        apriLaPresa: soloInProva,
         sonda: sondaChe({ponte.indirizzo}),
         licenza: GestoreLicenza(chiave: chiaveDiProva),
       );
@@ -1091,6 +1103,7 @@ void main() {
       );
       collegamento = Collegamento(
         archivio: archivio,
+        apriLaPresa: soloInProva,
         sonda: sondaChe({ponte.indirizzo}),
         licenza: GestoreLicenza(chiave: chiaveDiProva),
       );
