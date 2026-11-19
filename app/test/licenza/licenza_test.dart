@@ -324,14 +324,19 @@ void main() {
     late PonteFinto ponte;
 
     setUp(() async {
+      print('[diagnosi] ${DateTime.now()} setUp');
       archivio = ArchivioDelleCase(CassaforteInMemoria());
       await archivio.apri();
       ponte = await PonteFinto.alza();
+      print('[diagnosi] ${DateTime.now()} setUp fatto');
     });
 
     tearDown(() async {
+      print('[diagnosi] ${DateTime.now()} tearDown');
       await collegamento.chiudi();
+      print('[diagnosi] ${DateTime.now()} chiuso');
       await ponte.spegni();
+      print('[diagnosi] ${DateTime.now()} spento');
     });
 
     Sonda sondaChe(Set<IndirizzoDelPonte> vivi, {List<Uri>? bussate}) => Sonda(
@@ -934,7 +939,11 @@ void main() {
         sonda: sondaChe({}, bussate: bussate),
         licenza: GestoreLicenza(chiave: chiaveDiProva),
       );
+      print('[diagnosi] ${DateTime.now()} prima di apri');
       await collegamento.apri();
+      print(
+        '[diagnosi] ${DateTime.now()} dopo apri: ${collegamento.comeVa} $bussate',
+      );
       expect(collegamento.comeVa, ComeVa.irraggiungibile);
       expect(collegamento.fuoriCasaSenzaPremium, isTrue);
       expect(collegamento.perche, contains('Premium'));
@@ -947,7 +956,9 @@ void main() {
       /* Riaperta subito — il gesto di aggiornare — il centralino si
        * riprova: non ha risposto nessuno, e non c'e' niente da sapere. */
       bussate.clear();
+      print('[diagnosi] ${DateTime.now()} prima di apri(forza)');
       await collegamento.apri(forza: true);
+      print('[diagnosi] ${DateTime.now()} dopo apri(forza): $bussate');
       expect(collegamento.fuoriCasaSenzaPremium, isTrue);
       expect(
         bussate.where((una) => una.host == 'centralino.esempio.it'),
