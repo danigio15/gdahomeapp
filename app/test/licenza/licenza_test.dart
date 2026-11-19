@@ -940,6 +940,16 @@ void main() {
         sonda: sondaChe({}, bussate: bussate),
         licenza: GestoreLicenza(chiave: chiaveDiProva),
       );
+      final orologio = Stopwatch()..start();
+      collegamento.cambiamenti.listen((_) {
+        print(
+          '[diagnosi] +${orologio.elapsedMilliseconds} ms '
+          '${collegamento.comeVa} fuori=${collegamento.fuoriCasaSenzaPremium} '
+          'premium=${collegamento.licenza.premium} '
+          'ricevuta=${collegamento.licenza.ricevutaDaPortare} '
+          'perche=${collegamento.perche}',
+        );
+      });
       print('[diagnosi] ${DateTime.now()} prima di apri');
       await collegamento.apri();
       print(
