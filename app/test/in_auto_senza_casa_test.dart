@@ -1,6 +1,6 @@
-/// «Se la casa non è associata ancora non può avviarsi il navigatore
-/// direttamente su Android Auto.» Senza una casa abbinata in auto si guida
-/// base; da quando c'è una casa vale il suo abbonamento.
+/// In auto si guida solo con Premium: Android Auto e CarPlay non sono di
+/// Base, e nemmeno di chi una casa non l'ha ancora abbinata. Prima senza
+/// casa si guidava base; adesso vale sempre il Premium della casa.
 library;
 
 import 'package:flutter_test/flutter_test.dart';
@@ -16,7 +16,7 @@ import 'licenza/gettoni_di_prova.dart';
 import 'ponte/ponte_finto.dart';
 
 void main() {
-  testWidgets('senza casa si guida base; abbinata una casa, decide lei', (
+  testWidgets('senza casa niente guida in auto; con una casa Base nemmeno', (
     tester,
   ) async {
     await tester.runAsync(() async {
@@ -36,18 +36,10 @@ void main() {
         await collegamento.chiudi();
       });
 
-      /* Prima di leggere le case non si sa: niente guida regalata. */
       seguiLaCasaPerLaProva(chi, collegamento);
-      expect(guidaInAutoSenzaCasa.value, isFalse);
-
-      /* Lette, e non ce n'è nessuna: si guida base. */
+      /* Lette, e non ce n'è nessuna: in auto niente, come con Base. */
       await collegamento.apri();
-      expect(guidaInAutoSenzaCasa.value, isTrue);
-      expect(
-        collegamento.licenza.premium,
-        isFalse,
-        reason: 'base, non Premium',
-      );
+      expect(premiumPerGdanav.value, isFalse);
 
       /* Una casa abbinata, Base: in auto vale il suo abbonamento. */
       final casa = await archivio.aggiungi(
@@ -59,7 +51,7 @@ void main() {
       );
       await archivio.segnaIlGettone(casa.id, '');
       await collegamento.apri();
-      expect(guidaInAutoSenzaCasa.value, isFalse);
+      expect(premiumPerGdanav.value, isFalse);
     });
   });
 }
