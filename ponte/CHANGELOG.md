@@ -10,6 +10,28 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+## 1.19.19
+
+_App GdAHome._
+
+- **Navigatore in auto, zoom e dito**: nella vista «Corsie» i tasti + e −
+  funzionano anche da fermi (prima da fermi + non cambiava niente, e con −
+  la vista finiva lontana e in alto); con la scena 3D la mappa si sposta
+  col dito, e torna sull'auto da sola o con «Centra».
+- **Navigatore, la freccia dov'è l'auto**: la freccia usa anche
+  l'accelerometro del telefono, e sente le frenate e le ripartenze quando
+  succedono invece che un secondo dopo col GPS. Al semaforo si ferma dove
+  ci si ferma e non torna più indietro; andando sta sull'auto. Il telefono
+  impara da solo com'è messo nel supporto con qualche frenata (se lo si
+  sposta, reimpara). Nella diagnosi di Android Auto, «La freccia: frenate e
+  ripartenze» dice se l'auto passa la sua velocità e se l'accelerometro è
+  pronto.
+- **Navigatore, rotonde**: entrando piano in una rotonda la freccia non
+  salta più avanti sull'anello prima dell'auto.
+- **Navigatore, viadotti e svincoli**: niente più linee bianche di
+  traverso sulla carreggiata dove una rampa si stacca dal viadotto, né
+  pareti in mezzo alle corsie o nella zebratura fra due rampe.
+
 ## 1.19.18
 
 _App GdAHome._
