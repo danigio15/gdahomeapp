@@ -10,6 +10,10 @@ serve: è l'app sul telefono, il ponte in casa, il tramite che fa entrare da
 fuori. La plancia dentro continua a dire la sua, e si legge nella console,
 alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 
+**Dalla 1.19.19 qui c'è solo l'add-on.** L'app sul telefono ha numero e note
+suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
+aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
+
 ## 1.19.19
 
 _App GdAHome._

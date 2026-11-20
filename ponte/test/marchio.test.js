@@ -175,63 +175,24 @@ test("il manifesto dice GdAHome tre volte: il nome, lo slug e la voce nella barr
   }
 });
 
-test("l'app e l'add-on portano lo stesso numero", () => {
+/* App e add-on hanno ognuno il suo numero (dalla 1.19.19): «se si aggiorna
+ * solo l'app non rilasciare alcun aggiornamento per l'add-on, e al
+ * contrario». Prima portavano sempre lo stesso, e un rilascio dell'uno faceva
+ * comparire un aggiornamento vuoto dell'altro. Restano le regole dentro
+ * ognuno: i suoi posti dicono lo stesso numero (`strumenti/versione.mjs`). */
+test("l'add-on dice lo stesso numero nei suoi due posti", () => {
   const manifesto = readFileSync(fileURLToPath(new URL("../config.yaml", import.meta.url)), "utf8");
-  const pubspec = readFileSync(
-    fileURLToPath(new URL("../../app/pubspec.yaml", import.meta.url)),
-    "utf8",
-  );
-
   const dellAddon = /^version: "([^"]+)"$/m.exec(manifesto);
-  const dellApp = /^version: ([0-9]+)\.([0-9]+)\.([0-9]+)\+([0-9]+)$/m.exec(pubspec);
   assert.ok(dellAddon, "il manifesto non dice che versione e'");
-  assert.ok(dellApp, "il pubspec non dice che versione e'");
-
-  /* Lo stesso numero, perche' sono la stessa cosa: chi apre l'app e apre la
-   * console si aspetta di leggere due volte quello che ha installato.
-   *
-   * Con una differenza ammessa, e una sola: l'add-on puo' portarsi un **quarto
-   * numero** — le sue correzioni fra due versioni della plancia, che nel
-   * negozio sono l'unico modo di far comparire «Aggiorna» — e il **nome**
-   * dell'app no, perche' un numero fatto cosi' i negozi dei telefoni non lo
-   * prendono. Quel quarto numero l'app se lo porta nel numero di costruzione,
-   * qui sotto. */
-  const [, grande, medio, piccolo, costruzione] = dellApp;
   const suoi = dellAddon[1].split(".");
-  assert.deepEqual(suoi.slice(0, 3), [grande, medio, piccolo]);
   assert.ok(
-    suoi.length === 3 || suoi.length === 4,
-    `la versione dell'add-on ha ${suoi.length} numeri: tre, o quattro col nostro`,
+    (suoi.length === 3 || suoi.length === 4) && suoi.every((n) => /^\d+$/.test(n)),
+    `la versione dell'add-on ha ${suoi.length} numeri: tre, o quattro con la correzione`,
   );
+  const correzione = suoi.length === 4 ? Number(suoi[3]) : 0;
+  assert.ok(correzione >= 0 && correzione <= 99, "di correzioni ce ne stanno cento, da 0 a 99");
 
-  /* E il numero di costruzione — quello che vogliono i negozi, che deve solo
-   * crescere — si deriva dal nome: 1.4.24 diventa 1042400, e la correzione
-   * dell'add-on sono le ultime due cifre: 1.4.24.1 diventa 1042401. Cosi' non
-   * c'e' un secondo numero da ricordarsi, e ogni versione della plancia ha
-   * **cento** correzioni a disposizione per andare anche nel negozio.
-   *
-   * Cento e non dieci: dieci sono finite alla 1.4.32.9, e la 1.4.32.10 con una
-   * cifra sola dava lo stesso numero della 1.4.33 — che il negozio rifiuta il
-   * giorno che si fa la plancia nuova, non il giorno dello sbaglio. */
-  /* E il terzo posto: il numero che l'app **fa vedere**.
-   *
-   * Il `pubspec` lo legge chi costruisce, non l'app che gira, e per rileggerlo
-   * da dentro servirebbe un pacchetto in piu': quindi lo stesso programma che
-   * scrive questi due scrive anche un file Dart, e l'app legge quello. Tre
-   * posti sono tre occasioni di dire tre numeri diversi — meno questa prova. */
-  const dart = readFileSync(
-    fileURLToPath(new URL("../../app/lib/versione.dart", import.meta.url)),
-    "utf8",
-  );
-  const nome = /^const String versioneDiQuestApp = "([^"]+)";$/m.exec(dart);
-  const costruito = /^const int costruzioneDiQuestApp = (\d+);$/m.exec(dart);
-  const scritto = /^const String numeroDiQuestApp = "([^"]+)";$/m.exec(dart);
-  assert.ok(nome && costruito && scritto, "l'app non dice che numero e'");
-  assert.equal(nome[1], `${grande}.${medio}.${piccolo}`);
-  assert.equal(costruito[1], costruzione);
-  assert.equal(scritto[1], `${nome[1]} (${costruzione})`);
-
-  /* E il quarto posto: quello che **la plancia dichiara mentre gira**.
+  /* Il secondo posto: quello che **la plancia dichiara mentre gira**.
    *
    * `ORIGINE.json` porta il numero che il ponte mette nel rapporto, e da li'
    * finisce nella console dell'add-on, nel cruscotto di chi installa e
@@ -247,17 +208,52 @@ test("l'app e l'add-on portano lo stesso numero", () => {
   );
   assert.equal(
     origine.versione,
-    `${grande}.${medio}.${piccolo}`,
-    "la plancia dichiara una versione diversa da quella dell'app e dell'add-on",
+    suoi.slice(0, 3).join("."),
+    "la plancia dichiara una versione diversa da quella dell'add-on",
+  );
+});
+
+test("l'app dice lo stesso numero nei suoi due posti", () => {
+  const pubspec = readFileSync(
+    fileURLToPath(new URL("../../app/pubspec.yaml", import.meta.url)),
+    "utf8",
+  );
+  const dellApp = /^version: ([0-9]+)\.([0-9]+)\.([0-9]+)\+([0-9]+)$/m.exec(pubspec);
+  assert.ok(dellApp, "il pubspec non dice che versione e'");
+  const [, grande, medio, piccolo, costruzione] = dellApp;
+
+  /* Il numero di costruzione — quello che vogliono i negozi, che deve solo
+   * crescere — si deriva dal nome: 1.4.24 diventa 1042400. Le ultime due cifre
+   * restano libere per la correzione che un rilascio di tutti e due porta
+   * dall'add-on (1.4.24.1 → 1042401). Cento e non dieci: dieci sono finite
+   * alla 1.4.32.9, e la 1.4.32.10 con una cifra sola dava lo stesso numero
+   * della 1.4.33 — che il negozio rifiuta il giorno che si fa la versione
+   * nuova, non il giorno dello sbaglio. */
+  const base = (Number(grande) * 10000 + Number(medio) * 100 + Number(piccolo)) * 100;
+  assert.ok(
+    Number(costruzione) >= base && Number(costruzione) - base <= 99,
+    `la costruzione ${costruzione} non viene da ${grande}.${medio}.${piccolo}`,
   );
 
-  const correzione = suoi.length === 4 ? Number(suoi[3]) : 0;
-  assert.ok(correzione >= 0 && correzione <= 99, "di correzioni ce ne stanno cento, da 0 a 99");
-  assert.equal(
-    Number(costruzione),
-    (Number(grande) * 10000 + Number(medio) * 100 + Number(piccolo)) * 100 + correzione,
+  /* Il secondo posto: il numero che l'app **fa vedere**.
+   *
+   * Il `pubspec` lo legge chi costruisce, non l'app che gira, e per rileggerlo
+   * da dentro servirebbe un pacchetto in piu': quindi lo stesso programma che
+   * scrive il pubspec scrive anche un file Dart, e l'app legge quello. */
+  const dart = readFileSync(
+    fileURLToPath(new URL("../../app/lib/versione.dart", import.meta.url)),
+    "utf8",
   );
+  const nome = /^const String versioneDiQuestApp = "([^"]+)";$/m.exec(dart);
+  const costruito = /^const int costruzioneDiQuestApp = (\d+);$/m.exec(dart);
+  const scritto = /^const String numeroDiQuestApp = "([^"]+)";$/m.exec(dart);
+  assert.ok(nome && costruito && scritto, "l'app non dice che numero e'");
+  assert.equal(nome[1], `${grande}.${medio}.${piccolo}`);
+  assert.equal(costruito[1], costruzione);
+  assert.equal(scritto[1], `${nome[1]} (${costruzione})`);
+});
 
+test("due versioni diverse non fanno lo stesso numero di costruzione", () => {
   /* E due versioni diverse non fanno lo stesso numero di costruzione: e' la
    * regola che si era rotta, e questa la tiene. */
   const numeroDi = (v) => {

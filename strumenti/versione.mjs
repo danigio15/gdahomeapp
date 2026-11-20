@@ -1,33 +1,34 @@
-/* Il numero di versione, scritto nei quattro posti che lo devono dire uguale.
+/* I numeri di versione: quello dell'app e quello dell'add-on.
  *
- * L'add-on e l'app portano lo stesso numero, ed e' quello della plancia che
- * sta dentro: chi apre l'app e chi apre la console si aspetta di leggere due
- * volte quello che ha installato. I posti sono due e sono fatti diversi —
- * `ponte/config.yaml` vuole `version: "1.4.25"`, `app/pubspec.yaml` vuole
- * `version: 1.4.25+10425` — e finche' li scriveva una `sed` dentro un
- * workflow, la regola stava in una riga di shell che nessuno provava.
+ * **Sono due, e vanno ognuno per conto suo** (dalla 1.19.19): «se si aggiorna
+ * solo l'app non rilasciare alcun aggiornamento per l'add-on, e al
+ * contrario». Fino ad allora app e add-on portavano sempre lo stesso numero, e
+ * ogni rilascio dell'app faceva comparire in Home Assistant un «Aggiornamento
+ * disponibile» dell'add-on che dentro non aveva niente di nuovo (e viceversa
+ * un'app nei negozi uguale a quella di prima). Adesso si dice quale cambia:
  *
- * Qui invece sta in un programma, e una prova la tiene ferma
- * (`ponte/test/marchio.test.js`): il numero di costruzione si deriva dal nome
- * — 1.4.25 diventa 104250 — cosi' non c'e' un secondo numero da ricordarsi, e
- * cresce sempre, che e' l'unica cosa che i negozi dei telefoni chiedono.
+ *     node strumenti/versione.mjs --app 1.19.20      solo l'app: pubspec e versione.dart
+ *     node strumenti/versione.mjs --add-on 1.19.20   solo l'add-on: manifesto e plancia
+ *     node strumenti/versione.mjs --add-on 1.19.19.1 l'add-on con la correzione
+ *     node strumenti/versione.mjs 1.19.20            tutti e due, quando cambiano tutti e due
+ *     node strumenti/versione.mjs --dimmi            dice cosa c'e' scritto adesso
  *
- * L'add-on puo' portarsi un **quarto numero** per le sue correzioni fra due
- * versioni della plancia (`1.4.25.1`): un numero fatto cosi' i negozi dei
- * telefoni non lo prendono, e il **nome** dell'app infatti non cambia — resta
- * 1.4.25, che e' la plancia che ha dentro. Cambia il numero di costruzione:
- * 1.4.25.1 diventa 104251, che e' il posto dove quel quarto numero ci sta.
+ * I posti sono quattro e sono fatti diversi: l'add-on ha `ponte/config.yaml`
+ * (`version: "1.4.25"`) e la versione che la plancia dichiara
+ * (`ponte/plancia/ORIGINE.json`); l'app ha `app/pubspec.yaml`
+ * (`version: 1.4.25+1042500`) e il numero che fa vedere (`app/lib/versione.dart`).
+ * Le prove (`ponte/test/marchio.test.js`) tengono ferme le regole che restano:
+ * dentro l'app i suoi due posti dicono lo stesso, dentro l'add-on anche.
  *
- * E' per questo che il numero di costruzione ha uno zero in fondo: senza,
- * fra 10425 e 10426 non c'era spazio per le correzioni, e una correzione
- * dell'add-on che va anche nell'app — succede: quella di oggi e' un comando
- * nuovo nel ponte e la domanda che glielo fa nell'app — non si poteva
- * portare nel negozio senza inventare una versione della plancia che non
- * esiste.
+ * Il numero di costruzione dell'app si deriva dal nome — 1.4.25 diventa
+ * 1042500 — cosi' non c'e' un secondo numero da ricordarsi, e cresce sempre,
+ * che e' l'unica cosa che i negozi dei telefoni chiedono: un numero piu'
+ * piccolo di quello che c'e' il programma lo rifiuta.
  *
- *     node strumenti/versione.mjs 1.4.25     app 1.4.25+104250, add-on 1.4.25
- *     node strumenti/versione.mjs 1.4.25.1   app 1.4.25+104251, add-on 1.4.25.1
- *     node strumenti/versione.mjs --dimmi    dice cosa c'e' scritto adesso
+ * L'add-on puo' portarsi un **quarto numero** per le sue correzioni
+ * (`1.4.25.1`): i negozi non c'entrano. Col numero unico di prima (`1.4.25.1`
+ * per tutti e due) il quarto finiva anche nella costruzione dell'app
+ * (1042501); si fa ancora, per chi lo chiede senza dire quale.
  */
 
 import { execFileSync } from "node:child_process";
@@ -103,38 +104,42 @@ export function laCostruzione(versione) {
   return (grande * 10000 + medio * 100 + piccolo) * CORREZIONI + correzione;
 }
 
-function scrivi(quale) {
+function controlla(quale, { quattro = true } = {}) {
   const pezzi = quale.split(".");
-  if (pezzi.length < 3 || pezzi.length > 4 || pezzi.some((uno) => !/^\d+$/.test(uno))) {
+  const massimo = quattro ? 4 : 3;
+  if (pezzi.length < 3 || pezzi.length > massimo || pezzi.some((uno) => !/^\d+$/.test(uno))) {
     process.stderr.write(
-      `«${quale}» non e' una versione: ci vogliono tre numeri, o quattro con la\n` +
-        "correzione dell'add-on. Per esempio 1.4.25 oppure 1.4.25.1\n",
+      quattro
+        ? `«${quale}» non e' una versione: ci vogliono tre numeri, o quattro con la\n` +
+            "correzione dell'add-on. Per esempio 1.4.25 oppure 1.4.25.1\n"
+        : `«${quale}» non e' una versione dell'app: ci vogliono tre numeri, per esempio\n` +
+            "1.4.25 (il quarto e' solo dell'add-on: i negozi non lo prendono)\n",
     );
     process.exit(64);
   }
   /* La correzione deve stare nel posto che ha. Se no il numero di costruzione
-   * si accavalla con quello della plancia dopo, e non lo si scopre qui: lo
+   * si accavalla con quello della versione dopo, e non lo si scopre qui: lo
    * scopre il negozio, mesi dopo, rifiutando un numero gia' usato. */
   if (pezzi.length === 4 && Number(pezzi[3]) >= CORREZIONI) {
     process.stderr.write(
       `la correzione «${pezzi[3]}» non ci sta: da 0 a ${CORREZIONI - 1}.\n` +
-        "Oltre, il numero di costruzione sarebbe quello della plancia dopo.\n",
+        "Oltre, il numero di costruzione sarebbe quello della versione dopo.\n",
     );
     process.exit(64);
   }
+  return pezzi;
+}
 
+/* L'add-on: il manifesto, e la versione che la plancia dice di se'. */
+function scriviLAddon(quale) {
+  const pezzi = controlla(quale);
   const manifesto = readFileSync(MANIFESTO, "utf8");
   const prima = laVersioneDellAddon(manifesto);
   writeFileSync(MANIFESTO, manifesto.replace(/^version: "[^"]+"$/m, `version: "${quale}"`), "utf8");
   process.stdout.write(`l'add-on: ${prima || "?"} → ${quale}\n`);
-
-  /* Il **nome** dell'app segue solo i primi tre numeri — il quarto e' una
-   * correzione dell'add-on, e un numero fatto cosi' i negozi non lo prendono —
-   * ma il numero di costruzione se lo porta dentro: una correzione che tocca
-   * anche l'app deve poter entrare nel negozio senza inventare una versione
-   * della plancia che non esiste. */
-  const tre = pezzi.slice(0, 3).join(".");
-  scriviLOrigine(tre);
+  /* La plancia dichiara il numero a tre cifre: il quarto e' una correzione
+   * dell'add-on, e la plancia dentro e' la stessa. */
+  scriviLOrigine(pezzi.slice(0, 3).join("."));
   /* E le versioni che la plancia dice di se' (la scheda Runtime del config):
    * si risigilla, che le riscrive con il numero nuovo. Senza, il Runtime
    * diceva ancora il numero di prima. */
@@ -142,18 +147,41 @@ function scrivi(quale) {
   if (existsSync(join(RADICE, "ponte", "plancia"))) {
     execFileSync(process.execPath, [sigilla], { cwd: RADICE, stdio: "inherit" });
   }
+}
+
+/* L'app: il pubspec e il numero che fa vedere. [nome] a tre numeri,
+ * [costruzione] quella che va nei negozi. */
+function scriviLApp(nome, costruzione) {
   const pubspec = readFileSync(PUBSPEC, "utf8");
-  const suo = `${tre}+${laCostruzione(quale)}`;
+  const suo = `${nome}+${costruzione}`;
   const era = laVersioneDellApp(pubspec);
+  const costruzioneDiPrima = Number(/\+(\d+)$/.exec(era)?.[1] || 0);
+  /* I negozi vogliono un numero sempre piu' grande: uno uguale o piu'
+   * piccolo lo rifiutano, e lo si scopre a pacchetto fatto. */
+  if (costruzioneDiPrima && costruzione < costruzioneDiPrima) {
+    process.stderr.write(
+      `l'app e' gia' alla costruzione ${costruzioneDiPrima}: ${suo} e' piu' indietro, e i negozi la rifiuterebbero.\n`,
+    );
+    process.exit(65);
+  }
   /* Il numero dentro l'app si riscrive comunque: il `pubspec` puo' essere
    * gia' quello giusto e quel file no — e' nato dopo. */
-  scriviIlDart(tre, laCostruzione(quale));
+  scriviIlDart(nome, costruzione);
   if (era === suo) {
     process.stdout.write(`l'app: ${era}, gia' quella giusta\n`);
     return;
   }
   writeFileSync(PUBSPEC, pubspec.replace(/^version: \S+$/m, `version: ${suo}`), "utf8");
   process.stdout.write(`l'app: ${era || "?"} → ${suo}\n`);
+}
+
+/* Tutti e due allo stesso numero, come si faceva prima: quando cambiano
+ * tutti e due. Il quarto numero dell'add-on finisce nella costruzione
+ * dell'app (1.4.25.1 → 1042501), il nome dell'app resta a tre. */
+function scrivi(quale) {
+  const pezzi = controlla(quale);
+  scriviLAddon(quale);
+  scriviLApp(pezzi.slice(0, 3).join("."), laCostruzione(quale));
 }
 
 /* Quello che la plancia dichiara mentre gira. Se non c'e' — una copia della
@@ -183,9 +211,9 @@ function scriviIlDart(nome, costruzione) {
     VERSIONE_DART,
     `/// Il numero di questa app, quello che si legge nel negozio.
 ///
-/// **Lo scrive \`strumenti/versione.mjs\`**, insieme al manifesto dell'add-on e
-/// al \`pubspec\`: a mano non si tocca, e una prova tiene ferma la regola che
-/// siano lo stesso numero (\`ponte/test/marchio.test.js\`).
+/// **Lo scrive \`strumenti/versione.mjs --app\`**, insieme al \`pubspec\`: a mano
+/// non si tocca, e una prova tiene ferma la regola che dicano lo stesso
+/// numero (\`ponte/test/marchio.test.js\`). L'add-on ha un numero suo.
 ///
 /// Il \`pubspec\` lo legge chi costruisce, non l'app che gira. Per rileggerlo
 /// da dentro servirebbe un pacchetto in piu' — uno che chieda al sistema che
@@ -193,7 +221,7 @@ function scriviIlDart(nome, costruzione) {
 /// «Come va l'app» e nella riga in fondo alle schermate.
 library;
 
-/// Come si chiama: e' la versione della plancia che l'app ha dentro.
+/// Come si chiama: la versione dell'app (l'add-on ha la sua).
 const String versioneDiQuestApp = "${nome}";
 
 /// Il numero di costruzione, quello che vogliono i negozi.
@@ -221,14 +249,22 @@ function dimmi() {
   }
 }
 
-const detto = process.argv[2];
+const [detto, numero] = process.argv.slice(2);
 if (!detto) {
   process.stderr.write(
-    "Uso: node strumenti/versione.mjs <versione>\n" + "     node strumenti/versione.mjs --dimmi\n",
+    "Uso: node strumenti/versione.mjs --app <versione>       solo l'app\n" +
+      "     node strumenti/versione.mjs --add-on <versione>    solo l'add-on\n" +
+      "     node strumenti/versione.mjs <versione>             tutti e due\n" +
+      "     node strumenti/versione.mjs --dimmi\n",
   );
   process.exit(64);
 } else if (detto === "--dimmi") {
   dimmi();
+} else if (detto === "--app") {
+  const pezzi = controlla(numero || "", { quattro: false });
+  scriviLApp(pezzi.join("."), laCostruzione(numero));
+} else if (detto === "--add-on") {
+  scriviLAddon(numero || "");
 } else {
   scrivi(detto);
 }

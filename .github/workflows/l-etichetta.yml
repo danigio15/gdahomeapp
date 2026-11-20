@@ -47,16 +47,29 @@ name: L'etichetta
 # l'etichetta e la release nascono da se' sul commit che l'ha cambiato. Se
 # l'etichetta c'e' gia' (la si era messa a mano, o il file e' cambiato per
 # un'altra riga) ci si ferma senza errore: un'etichetta non si riscrive.
+#
+# ─── Due numeri, due etichette (dalla 1.19.19) ───────────────────────────
+#
+# App e add-on hanno numeri e rilasci separati: «se si aggiorna solo l'app non
+# rilasciare alcun aggiornamento per l'add-on, e al contrario». L'add-on ha le
+# etichette `v1.19.20` (da `ponte/config.yaml`, note da `ponte/CHANGELOG.md`),
+# l'app `app-v1.19.20` (da `app/pubspec.yaml`, note da `app/CHANGELOG.md`).
+# Cambia uno dei due e nasce la sua; l'altra c'e' gia', e ci si ferma.
 on:
   push:
     branches: [main]
-    paths: [ponte/config.yaml]
+    paths: [ponte/config.yaml, app/pubspec.yaml]
   workflow_dispatch:
     inputs:
+      cosa:
+        description: "Di cosa: l'add-on (v…) o l'app (app-v…)"
+        type: choice
+        options: [add-on, app]
+        default: add-on
       nome:
         description: >-
-          Come si chiama (per esempio v1.5.9.1). Vuoto: la prende da
-          ponte/config.yaml, col v davanti.
+          Come si chiama (per esempio v1.5.9.1, o app-v1.19.20). Vuoto: la
+          prende da ponte/config.yaml (add-on) o da app/pubspec.yaml (app).
         required: false
         default: ""
       commit:
@@ -83,8 +96,15 @@ concurrency:
 
 jobs:
   metti:
-    name: Metti l'etichetta
+    name: Metti l'etichetta (${{ matrix.cosa }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        # Da main, da sola, tutte e due (una delle due c'e' gia'); a mano,
+        # quella scelta.
+        cosa: ${{ github.event_name == 'push' && fromJSON('["add-on","app"]') || fromJSON(format('["{0}"]', inputs.cosa)) }}
     permissions:
       contents: write
     steps:
@@ -99,6 +119,7 @@ jobs:
           COMMIT: ${{ inputs.commit }}
           SOLO_LE_NOTE: ${{ inputs.solo_le_note }}
           EVENTO: ${{ github.event_name }}
+          COSA: ${{ matrix.cosa }}
         run: |
           set -euo pipefail
 
@@ -126,17 +147,31 @@ jobs:
           # e' un'altra cosa.
           nome="$NOME"
           if [ -z "$nome" ]; then
-            versione="$(git show "$sha:ponte/config.yaml" | sed -n 's/^version: "\(.*\)"$/\1/p')"
+            if [ "$COSA" = "app" ]; then
+              versione="$(git show "$sha:app/pubspec.yaml" | sed -n 's/^version: \([0-9.]*\)+.*$/\1/p')"
+              prefisso="app-v"
+            else
+              versione="$(git show "$sha:ponte/config.yaml" | sed -n 's/^version: "\(.*\)"$/\1/p')"
+              prefisso="v"
+            fi
             [ -n "$versione" ] || {
-              echo "::error::in ponte/config.yaml di $sha non c'e' nessuna versione."
+              echo "::error::nel manifesto ($COSA) di $sha non c'e' nessuna versione."
               exit 1
             }
-            nome="v$versione"
+            nome="$prefisso$versione"
           fi
+          # L'etichetta dev'essere della cosa giusta: app-v per l'app, v per l'add-on.
+          case "$COSA:$nome" in
+            app:app-v*|add-on:v*) ;;
+            *)
+              echo "::error::«$nome» non e' un'etichetta di «$COSA»: app-v… per l'app, v… per l'add-on."
+              exit 1
+              ;;
+          esac
           # Una v, e poi solo cifre, lettere, punti e trattini: e' un nome di
           # versione, e con questa forma resta un nome anche quando lo si
           # scrive in un comando o in un riepilogo.
-          if ! printf '%s' "$nome" | grep -qE '^v[0-9][0-9A-Za-z.+-]{0,63}$'; then
+          if ! printf '%s' "$nome" | grep -qE '^(app-)?v[0-9][0-9A-Za-z.+-]{0,63}$'; then
             echo "::error::quello scritto non e' un'etichetta di versione: ci vuole la v davanti, e poi cifre, lettere, punti e trattini."
             exit 1
           fi
@@ -201,16 +236,25 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           NOME: ${{ steps.quale.outputs.nome }}
           SHA: ${{ steps.quale.outputs.sha }}
+          COSA: ${{ matrix.cosa }}
         run: |
           set -euo pipefail
-          quale="${NOME#v}"
+          quale="${NOME#app-}"
+          quale="${quale#v}"
           # Solo il CHANGELOG torna indietro: il programma che lo legge resta
           # quello di adesso, e a un'etichetta vecchia — la `v1.6.9` — non
           # esisteva nemmeno.
-          git checkout --quiet "$SHA" -- ponte/CHANGELOG.md
-          node strumenti/le-note-della-versione.mjs "$quale" > note.md
-          gh release create "$NOME" --title "GdAHome $quale" --notes-file note.md ||
-            gh release edit "$NOME" --title "GdAHome $quale" --notes-file note.md
+          if [ "$COSA" = "app" ]; then
+            git checkout --quiet "$SHA" -- app/CHANGELOG.md
+            node strumenti/le-note-della-versione.mjs --app "$quale" > note.md
+            titolo="GdAHome app $quale"
+          else
+            git checkout --quiet "$SHA" -- ponte/CHANGELOG.md
+            node strumenti/le-note-della-versione.mjs "$quale" > note.md
+            titolo="GdAHome add-on $quale"
+          fi
+          gh release create "$NOME" --title "$titolo" --notes-file note.md ||
+            gh release edit "$NOME" --title "$titolo" --notes-file note.md
           {
             printf '## Le note di `%s`\n' "$NOME"
             echo ""
@@ -227,6 +271,7 @@ jobs:
           NOME: ${{ steps.quale.outputs.nome }}
           SHA: ${{ steps.quale.outputs.sha }}
           CORTO: ${{ steps.quale.outputs.corto }}
+          COSA: ${{ matrix.cosa }}
         run: |
           titolo="$(git log -1 --format=%s "$SHA")"
           {
@@ -234,12 +279,17 @@ jobs:
             echo ""
             printf '> %s\n' "$titolo"
             echo ""
-            echo "Adesso il secondo bottone: **Actions → «L'app da provare» → Run"
-            echo "workflow**, e come riferimento si sceglie"
-            printf '`%s` invece di `main`. Da li%s partono i\n' "$NOME" "'"
-            echo "pacchetti e la release con le sue note."
-            echo ""
-            echo "Non parte da sola: quello che un workflow spinge col gettone di"
-            echo "serie non accende altri workflow, ed e' una regola di GitHub, non"
-            echo "una dimenticanza."
+            if [ "$COSA" = "app" ]; then
+              echo "Adesso il secondo bottone: **Actions → «L'app da provare» → Run"
+              echo "workflow**, e come riferimento si sceglie"
+              printf '`%s` invece di `main`. Da li%s partono i\n' "$NOME" "'"
+              echo "pacchetti per i negozi."
+              echo ""
+              echo "Non parte da sola: quello che un workflow spinge col gettone di"
+              echo "serie non accende altri workflow, ed e' una regola di GitHub, non"
+              echo "una dimenticanza."
+            else
+              echo "E' l'add-on: le immagini le fa «Le immagini dell'add-on» da main."
+              echo "L'app non cambia."
+            fi
           } >>"$GITHUB_STEP_SUMMARY"
