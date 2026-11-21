@@ -55,3 +55,17 @@ test("una presa da rifare si rifà dopo tre secondi anche senza numeri in mano",
   const da = energia.indexOf("const presaCaduta = presaDaRifare(state.lastError);");
   assert.match(energia.slice(da, da + 600), /if \(presaCaduta\) \{\s*scheduleEnergyRefresh\(true, RIPRESA_DOPO_LA_PRESA_MS\);/);
 });
+
+test("gli stati che non arrivano dopo il collegamento si richiedono, poi la presa si rifa'", async () => {
+  // «Lampadario Cucina è accesa e me la dà spenta»: «0 accese su 16».
+  const { cosaFareSugliStati, TENTATIVI_DEGLI_STATI } = await import("../src/sections/energy-section.js");
+  assert.equal(cosaFareSugliStati({ connesso: true, arrivati: true, tentativi: 0 }), "niente");
+  assert.equal(cosaFareSugliStati({ connesso: false, arrivati: false, tentativi: 0 }), "niente");
+  assert.equal(cosaFareSugliStati({ connesso: true, arrivati: false, tentativi: 0 }), "richiedi");
+  assert.equal(cosaFareSugliStati({ connesso: true, arrivati: false, tentativi: TENTATIVI_DEGLI_STATI - 1 }), "richiedi");
+  assert.equal(cosaFareSugliStati({ connesso: true, arrivati: false, tentativi: TENTATIVI_DEGLI_STATI }), "riapri");
+  const energia = readFileSync(join(qui, "..", "src", "sections", "energy-section.js"), "utf8");
+  // La richiesta e' quella del guscio: stessa presa, stesso contatore.
+  assert.match(energia, /ws\.send\(JSON\.stringify\(\{ id: msgId\+\+, type: 'get_states' \}\)\)/);
+  assert.match(energia, /state\.statiArrivatiAlle = Date\.now\(\);/);
+});

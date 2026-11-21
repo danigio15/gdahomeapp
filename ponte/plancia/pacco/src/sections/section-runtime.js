@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-DL7MPUS3.js";
+} from "../../chunk-L537YNML.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -12521,6 +12521,7 @@ function subscribeStore2() {
   });
 }
 function annunciaGliStati() {
+  state6.statiArrivatiAlle = Date.now();
   if (state6.lastError && hasConfiguredEnergy()) scheduleEnergyRefresh(true);
   root.dispatchEvent?.(
     new CustomEvent("dashboardmodern:states-ready", {
@@ -12544,6 +12545,56 @@ function startBroker() {
   if (!delGuscio) return;
   if (lexicalGlobal("_cdStatiArrivati") === true) annunciaGliStati();
   wrapFunction("cdBootStatiArrivati", "__dmStatiDelGuscio", annunciaGliStati);
+  vegliaSugliStati();
+}
+var ATTESA_DEGLI_STATI_MS = 15e3;
+var TENTATIVI_DEGLI_STATI = 3;
+function cosaFareSugliStati({ connesso, arrivati, tentativi }) {
+  if (!connesso || arrivati) return "niente";
+  return tentativi < TENTATIVI_DEGLI_STATI ? "richiedi" : "riapri";
+}
+function vegliaSugliStati() {
+  const punto3 = doc?.getElementById?.("live-dot");
+  if (!punto3 || typeof root.MutationObserver !== "function" || state6.vegliaSugliStati) return;
+  state6.vegliaSugliStati = true;
+  let collegatoAlle = Date.now();
+  let tentativi = 0;
+  let timer = 0;
+  const controlla = () => {
+    timer = 0;
+    const fare = cosaFareSugliStati({
+      connesso: punto3.classList.contains("connected"),
+      arrivati: (state6.statiArrivatiAlle || 0) >= collegatoAlle,
+      tentativi
+    });
+    if (fare === "niente") return;
+    try {
+      if (fare === "riapri") {
+        tentativi = 0;
+        root.eval?.("typeof ws !== 'undefined' && ws && ws.close()");
+        return;
+      }
+      tentativi += 1;
+      root.eval?.(
+        "typeof ws !== 'undefined' && ws && ws.readyState === 1 && ws.send(JSON.stringify({ id: msgId++, type: 'get_states' }))"
+      );
+    } catch (_error) {
+    }
+    timer = root.setTimeout?.(controlla, ATTESA_DEGLI_STATI_MS);
+  };
+  const daCapo = () => {
+    collegatoAlle = Date.now();
+    tentativi = 0;
+    root.clearTimeout?.(timer);
+    timer = root.setTimeout?.(controlla, ATTESA_DEGLI_STATI_MS);
+  };
+  let era = punto3.classList.contains("connected");
+  if (era && lexicalGlobal("_cdStatiArrivati") !== true) daCapo();
+  new root.MutationObserver(() => {
+    const ora7 = punto3.classList.contains("connected");
+    if (ora7 && !era) daCapo();
+    era = ora7;
+  }).observe(punto3, { attributes: true, attributeFilter: ["class"] });
 }
 function installEnergySection() {
   if (!doc) return;

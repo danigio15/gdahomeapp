@@ -2792,6 +2792,7 @@ function subscribeStore() {
  * aspettare il prossimo giro (dal campo: l'app tornata davanti dopo il
  * background, «la casa non risponde» e i numeri fermi). */
 function annunciaGliStati() {
+  state.statiArrivatiAlle = Date.now();
   if (state.lastError && hasConfiguredEnergy()) scheduleEnergyRefresh(true);
   root.dispatchEvent?.(
     new CustomEvent("dashboardmodern:states-ready", {
@@ -2827,6 +2828,71 @@ function startBroker() {
   if (!delGuscio) return;
   if (lexicalGlobal("_cdStatiArrivati") === true) annunciaGliStati();
   wrapFunction("cdBootStatiArrivati", "__dmStatiDelGuscio", annunciaGliStati);
+  vegliaSugliStati();
+}
+
+/* La veglia sugli stati.
+ *
+ * «Lampadario Cucina è accesa e me la dà spenta, e i comandi sono lenti»:
+ * nelle Luci «0 accese su 16». A ogni collegamento il guscio chiede
+ * `get_states` una volta sola, e intanto tiene gli stati di prima; se quella
+ * risposta — un megabyte e mezzo, tornando dal background, magari da fuori
+ * casa — si perde, nessuno la richiede: le luci restano com'erano prima e si
+ * muovono solo quelle che cambiano dopo. Il pallino resta verde.
+ *
+ * Adesso, collegati da [ATTESA_DEGLI_STATI_MS] senza che gli stati siano
+ * arrivati, si richiedono; dopo [TENTATIVI_DEGLI_STATI] tentativi a vuoto si
+ * chiude la presa, e il guscio la riapre da capo come sa fare. */
+export const ATTESA_DEGLI_STATI_MS = 15_000;
+export const TENTATIVI_DEGLI_STATI = 3;
+
+export function cosaFareSugliStati({ connesso, arrivati, tentativi }) {
+  if (!connesso || arrivati) return "niente";
+  return tentativi < TENTATIVI_DEGLI_STATI ? "richiedi" : "riapri";
+}
+
+function vegliaSugliStati() {
+  const punto = doc?.getElementById?.("live-dot");
+  if (!punto || typeof root.MutationObserver !== "function" || state.vegliaSugliStati) return;
+  state.vegliaSugliStati = true;
+  let collegatoAlle = Date.now();
+  let tentativi = 0;
+  let timer = 0;
+  const controlla = () => {
+    timer = 0;
+    const fare = cosaFareSugliStati({
+      connesso: punto.classList.contains("connected"),
+      arrivati: (state.statiArrivatiAlle || 0) >= collegatoAlle,
+      tentativi,
+    });
+    if (fare === "niente") return;
+    try {
+      if (fare === "riapri") {
+        tentativi = 0;
+        root.eval?.("typeof ws !== 'undefined' && ws && ws.close()");
+        return;
+      }
+      tentativi += 1;
+      root.eval?.(
+        "typeof ws !== 'undefined' && ws && ws.readyState === 1 && ws.send(JSON.stringify({ id: msgId++, type: 'get_states' }))",
+      );
+    } catch (_error) {}
+    timer = root.setTimeout?.(controlla, ATTESA_DEGLI_STATI_MS);
+  };
+  const daCapo = () => {
+    collegatoAlle = Date.now();
+    tentativi = 0;
+    root.clearTimeout?.(timer);
+    timer = root.setTimeout?.(controlla, ATTESA_DEGLI_STATI_MS);
+  };
+  let era = punto.classList.contains("connected");
+  /* Gia' collegati e gli stati non ancora arrivati: si veglia da adesso. */
+  if (era && lexicalGlobal("_cdStatiArrivati") !== true) daCapo();
+  new root.MutationObserver(() => {
+    const ora = punto.classList.contains("connected");
+    if (ora && !era) daCapo();
+    era = ora;
+  }).observe(punto, { attributes: true, attributeFilter: ["class"] });
 }
 
 export function installEnergySection() {
