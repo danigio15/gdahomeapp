@@ -84,6 +84,8 @@ export default Object.freeze({
   "quiet ${quando}": "rust ${quando}",
   "Rated range (km)": "Officiële actieradius (km)",
   "Reading the history from the Recorder…": "Geschiedenis uit de Recorder lezen…",
+  "Reconnecting to your home: the numbers arrive as soon as it answers.":
+    "Opnieuw verbinden met het huis: de cijfers komen zodra het antwoordt.",
   "Remaining energy (kWh)": "Resterende energie (kWh)",
   "Scheduled charging (on/off)": "Gepland laden (aan/uit)",
   "Scheduled charging end (time)": "Einde van gepland laden (tijd)",

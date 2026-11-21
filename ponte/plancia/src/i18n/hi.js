@@ -84,6 +84,8 @@ export default Object.freeze({
   "quiet ${quando}": "शांत ${quando}",
   "Rated range (km)": "प्रमाणित रेंज (किमी)",
   "Reading the history from the Recorder…": "Recorder से इतिहास पढ़ा जा रहा है…",
+  "Reconnecting to your home: the numbers arrive as soon as it answers.":
+    "घर से फिर से जुड़ रहे हैं: जवाब मिलते ही आंकड़े आ जाएंगे।",
   "Remaining energy (kWh)": "बची हुई ऊर्जा (kWh)",
   "Scheduled charging (on/off)": "निर्धारित चार्जिंग (चालू/बंद)",
   "Scheduled charging end (time)": "निर्धारित चार्जिंग का अंत (समय)",

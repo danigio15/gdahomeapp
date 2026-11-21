@@ -84,6 +84,8 @@ export default Object.freeze({
   "quiet ${quando}": "静か ${quando}",
   "Rated range (km)": "カタログ航続距離（km）",
   "Reading the history from the Recorder…": "レコーダーから履歴を読み込み中…",
+  "Reconnecting to your home: the numbers arrive as soon as it answers.":
+    "家に再接続しています。応答があり次第、数値が表示されます。",
   "Remaining energy (kWh)": "残りエネルギー（kWh）",
   "Scheduled charging (on/off)": "予約充電（オン/オフ）",
   "Scheduled charging end (time)": "予約充電の終了（時刻）",

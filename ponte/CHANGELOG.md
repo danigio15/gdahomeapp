@@ -14,6 +14,17 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.20
+
+- **Campanello**: la notifica di chi ha suonato ha sempre la foto, anche se
+  la stessa telecamera aveva appena mandato quella di un movimento.
+- **Energia**: con la casa collegata (il pallino verde) non compare più
+  «la casa non risponde»; se il collegamento cade, i numeri tornano da soli
+  in pochi secondi.
+- **Luci e dispositivi**: se dopo il collegamento gli stati della casa non
+  arrivano, la plancia li richiede da sola, e una luce accesa non resta più
+  mostrata spenta.
+
 ## 1.19.19
 
 _App GdAHome._

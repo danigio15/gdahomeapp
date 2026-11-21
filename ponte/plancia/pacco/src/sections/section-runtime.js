@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-GCNKAE2V.js";
+} from "../../chunk-5JJ62IPL.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -5846,6 +5846,7 @@ var SOURCE_INDEX = Object.freeze({
   "mettila in coda": "queue it",
   "Mettilo in ${nomeDellaSezione(suo)}": "Put it in ${nomeDellaSezione(suo)}",
   "Mezzo": "Vehicle kind",
+  "Mi sto ricollegando alla casa: i numeri arrivano appena risponde.": "Reconnecting to your home: the numbers arrive as soon as it answers.",
   "Micio": "Whiskers",
   "Microonde": "Microwave",
   "min ${cifre(pacco.minima.volt, 3)} V · cella ${pacco.minima.numero}": "min ${cifre(pacco.minima.volt, 3)} V · cell ${pacco.minima.numero}",
@@ -12002,6 +12003,11 @@ function spiegazioneDellErrore(testo5, states = allStates()) {
       "Instant values are shown meanwhile."
     )}`;
   }
+  if (/casa non risponde|home is not answering/i.test(grezzo2))
+    return t(
+      "Mi sto ricollegando alla casa: i numeri arrivano appena risponde.",
+      "Reconnecting to your home: the numbers arrive as soon as it answers."
+    );
   if (/connection (lost|timeout|unavailable)/i.test(grezzo2))
     return t(
       "La connessione con Home Assistant si è interrotta: mi ricollego da solo.",
@@ -12078,8 +12084,10 @@ async function eseguiIlRefresh(period, carico) {
     );
     segnaLaRagione(state6.lastError);
     const presaCaduta = presaDaRifare(state6.lastError);
-    if (state6.bundle || state6.retryCount >= 40) {
-      scheduleEnergyRefresh(true, presaCaduta ? RIPRESA_DOPO_LA_PRESA_MS : riposoDeiPeriodi());
+    if (presaCaduta) {
+      scheduleEnergyRefresh(true, RIPRESA_DOPO_LA_PRESA_MS);
+    } else if (state6.bundle || state6.retryCount >= 40) {
+      scheduleEnergyRefresh(true, riposoDeiPeriodi());
     } else {
       state6.retryCount += 1;
       const inAffanno = Boolean(broker?.recorderInAffanno?.());
@@ -12514,6 +12522,7 @@ function subscribeStore2() {
   });
 }
 function annunciaGliStati() {
+  state6.statiArrivatiAlle = Date.now();
   if (state6.lastError && hasConfiguredEnergy()) scheduleEnergyRefresh(true);
   root.dispatchEvent?.(
     new CustomEvent("dashboardmodern:states-ready", {
@@ -12537,6 +12546,56 @@ function startBroker() {
   if (!delGuscio) return;
   if (lexicalGlobal("_cdStatiArrivati") === true) annunciaGliStati();
   wrapFunction("cdBootStatiArrivati", "__dmStatiDelGuscio", annunciaGliStati);
+  vegliaSugliStati();
+}
+var ATTESA_DEGLI_STATI_MS = 15e3;
+var TENTATIVI_DEGLI_STATI = 3;
+function cosaFareSugliStati({ connesso, arrivati, tentativi }) {
+  if (!connesso || arrivati) return "niente";
+  return tentativi < TENTATIVI_DEGLI_STATI ? "richiedi" : "riapri";
+}
+function vegliaSugliStati() {
+  const punto3 = doc?.getElementById?.("live-dot");
+  if (!punto3 || typeof root.MutationObserver !== "function" || state6.vegliaSugliStati) return;
+  state6.vegliaSugliStati = true;
+  let collegatoAlle = Date.now();
+  let tentativi = 0;
+  let timer = 0;
+  const controlla = () => {
+    timer = 0;
+    const fare = cosaFareSugliStati({
+      connesso: punto3.classList.contains("connected"),
+      arrivati: (state6.statiArrivatiAlle || 0) >= collegatoAlle,
+      tentativi
+    });
+    if (fare === "niente") return;
+    try {
+      if (fare === "riapri") {
+        tentativi = 0;
+        root.eval?.("typeof ws !== 'undefined' && ws && ws.close()");
+        return;
+      }
+      tentativi += 1;
+      root.eval?.(
+        "typeof ws !== 'undefined' && ws && ws.readyState === 1 && ws.send(JSON.stringify({ id: msgId++, type: 'get_states' }))"
+      );
+    } catch (_error) {
+    }
+    timer = root.setTimeout?.(controlla, ATTESA_DEGLI_STATI_MS);
+  };
+  const daCapo = () => {
+    collegatoAlle = Date.now();
+    tentativi = 0;
+    root.clearTimeout?.(timer);
+    timer = root.setTimeout?.(controlla, ATTESA_DEGLI_STATI_MS);
+  };
+  let era = punto3.classList.contains("connected");
+  if (era && lexicalGlobal("_cdStatiArrivati") !== true) daCapo();
+  new root.MutationObserver(() => {
+    const ora7 = punto3.classList.contains("connected");
+    if (ora7 && !era) daCapo();
+    era = ora7;
+  }).observe(punto3, { attributes: true, attributeFilter: ["class"] });
 }
 function installEnergySection() {
   if (!doc) return;

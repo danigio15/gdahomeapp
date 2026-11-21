@@ -84,6 +84,8 @@ export default Object.freeze({
   "quiet ${quando}": "calma ${quando}",
   "Rated range (km)": "Autonomía homologada (km)",
   "Reading the history from the Recorder…": "Leyendo el historial del Recorder…",
+  "Reconnecting to your home: the numbers arrive as soon as it answers.":
+    "Reconectando con la casa: los números llegan en cuanto responda.",
   "Remaining energy (kWh)": "Energía restante (kWh)",
   "Scheduled charging (on/off)": "Carga programada (encendido/apagado)",
   "Scheduled charging end (time)": "Fin de la carga programada (hora)",

@@ -84,6 +84,8 @@ export default Object.freeze({
   "quiet ${quando}": "조용함 ${quando}",
   "Rated range (km)": "인증 주행 가능 거리 (km)",
   "Reading the history from the Recorder…": "레코더에서 기록을 읽는 중…",
+  "Reconnecting to your home: the numbers arrive as soon as it answers.":
+    "집에 다시 연결하는 중입니다. 응답하는 대로 수치가 표시됩니다.",
   "Remaining energy (kWh)": "남은 에너지 (kWh)",
   "Scheduled charging (on/off)": "예약 충전 (켜짐/꺼짐)",
   "Scheduled charging end (time)": "예약 충전 종료 (시각)",

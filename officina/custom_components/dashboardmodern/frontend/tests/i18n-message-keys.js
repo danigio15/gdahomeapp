@@ -5044,6 +5044,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "RECOMMENDED",
   "Recommended: running ${a} W, standby ${b} W, delay ${minuti} min.",
   "Reconnect",
+  "Reconnecting to your home: the numbers arrive as soon as it answers.",
   "Reconnecting…",
   "Recovery",
   "Recycling · Next collections",

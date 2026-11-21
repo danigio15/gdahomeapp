@@ -84,6 +84,8 @@ export default Object.freeze({
   "quiet ${quando}": "安静 ${quando}",
   "Rated range (km)": "标称续航（公里）",
   "Reading the history from the Recorder…": "正在从记录器读取历史…",
+  "Reconnecting to your home: the numbers arrive as soon as it answers.":
+    "正在重新连接家中设备：一有响应，数据就会显示。",
   "Remaining energy (kWh)": "剩余能量（kWh）",
   "Scheduled charging (on/off)": "预约充电（开/关）",
   "Scheduled charging end (time)": "预约充电结束（时间）",

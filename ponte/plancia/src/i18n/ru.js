@@ -84,6 +84,8 @@ export default Object.freeze({
   "quiet ${quando}": "тишина ${quando}",
   "Rated range (km)": "Запас хода по стандарту (км)",
   "Reading the history from the Recorder…": "Читаю историю из Recorder…",
+  "Reconnecting to your home: the numbers arrive as soon as it answers.":
+    "Переподключение к дому: цифры появятся, как только он ответит.",
   "Remaining energy (kWh)": "Оставшаяся энергия (кВт·ч)",
   "Scheduled charging (on/off)": "Зарядка по расписанию (вкл./выкл.)",
   "Scheduled charging end (time)": "Конец зарядки по расписанию (время)",
