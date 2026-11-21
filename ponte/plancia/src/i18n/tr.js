@@ -84,6 +84,8 @@ export default Object.freeze({
   "quiet ${quando}": "sessiz ${quando}",
   "Rated range (km)": "Homologasyon menzili (km)",
   "Reading the history from the Recorder…": "Geçmiş Recorder'dan okunuyor…",
+  "Reconnecting to your home: the numbers arrive as soon as it answers.":
+    "Eve yeniden bağlanılıyor: ev yanıt verir vermez rakamlar gelecek.",
   "Remaining energy (kWh)": "Kalan enerji (kWh)",
   "Scheduled charging (on/off)": "Programlı şarj (açık/kapalı)",
   "Scheduled charging end (time)": "Programlı şarjın bitişi (saat)",
