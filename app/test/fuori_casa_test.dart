@@ -127,6 +127,8 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('stato-menu')));
     expect(menu, 1);
+    await tester.ensureVisible(find.byKey(const Key('stato-apri-gdanav')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('stato-apri-gdanav')));
     expect(navigatore, 1);
     expect(find.text('Apri GdANav'), findsOneWidget);

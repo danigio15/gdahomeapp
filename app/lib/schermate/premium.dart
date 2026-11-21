@@ -442,262 +442,299 @@ class _SchermataPremiumState extends State<SchermataPremium> {
       child: Text(scritta),
     );
 
-    return ListView(
+    /* Tutta costruita, non pigra: la pagina non e' lunga, e cosi' quello
+     * che sta in fondo (il codice regalo) c'e' anche senza scorrere. */
+    return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-      children: [
-        if (widget.perche case final perche? when !premium) ...[
-          _IlPerche(perche),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (widget.perche case final perche? when !premium) ...[
+            _IlPerche(perche),
+            const SizedBox(height: 16),
+          ],
+          _Testata(
+            premium: premium,
+            testo: premium
+                ? _comeSta(
+                    licenza.gettoneDi(casa),
+                    licenza.controlliAccesi,
+                    casa?.nome,
+                  )
+                : _perChi(acquisti, dalNegozio, siCompraQui),
+          ),
           const SizedBox(height: 16),
-        ],
-        Row(
-          children: [
-            Icon(Icons.workspace_premium, color: s.primary, size: 36),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'GdAHome Premium',
-                style: t.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+          if (!premium && come == ComeStaLaLicenza.casaSenzaLicenze)
+            _Riquadro(
+              chiave: const Key('premium-addon-vecchio'),
+              icona: Icons.system_update_alt_rounded,
+              titolo: inLingua(
+                it: 'Aggiorna prima l\'add-on GdAHome',
+                en: 'Update the GdAHome add-on first',
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          premium
-              ? _comeSta(
-                  licenza.gettoneDi(casa),
-                  licenza.controlliAccesi,
-                  casa?.nome,
-                )
-              : _perChi(acquisti, dalNegozio, siCompraQui),
-          key: const Key('stato-premium'),
-          style: t.bodyLarge,
-        ),
-        const SizedBox(height: 12),
-        for (final (icona, titolo, testo) in _funzioni(widget.sulWeb))
-          _Voce(icona: icona, titolo: titolo, testo: testo),
-        const SizedBox(height: 8),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              Icons.check_circle_outline,
-              size: 18,
-              color: s.onSurfaceVariant,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                inLingua(
-                  it:
-                      'Gratis per tutti: una plancia, una casa, il '
-                      'collegamento da casa.',
-                  en:
-                      'Free for everyone: one dashboard, one home, the '
-                      'connection from home.',
-                ),
-                style: t.bodySmall?.copyWith(color: s.onSurfaceVariant),
+              testo: inLingua(
+                it:
+                    'L\'add-on GdAHome installato in «${casa?.nome ?? 'questa '
+                            'casa'}» è una versione vecchia e non può attivare '
+                    'Premium. Per questo l\'acquisto non è disponibile. '
+                    'Aggiorna l\'add-on in Home Assistant (Impostazioni → '
+                    'Componenti aggiuntivi → GdAHome → Aggiorna), poi torna su '
+                    'questa pagina.',
+                en:
+                    'The GdAHome add-on installed in “${casa?.nome ?? 'this '
+                            'home'}” is an old version and can\'t turn on Premium, '
+                    'so buying isn\'t available. Update the add-on in Home '
+                    'Assistant (Settings → Add-ons → GdAHome → Update), then '
+                    'come back to this page.',
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        if (!premium && come == ComeStaLaLicenza.casaSenzaLicenze)
-          _Riquadro(
-            chiave: const Key('premium-addon-vecchio'),
-            icona: Icons.system_update_alt_rounded,
-            titolo: inLingua(
-              it: 'Aggiorna prima l\'add-on GdAHome',
-              en: 'Update the GdAHome add-on first',
-            ),
-            testo: inLingua(
-              it:
-                  'L\'add-on GdAHome installato in «${casa?.nome ?? 'questa '
-                          'casa'}» è una versione vecchia e non può attivare '
-                  'Premium. Per questo l\'acquisto non è disponibile. '
-                  'Aggiorna l\'add-on in Home Assistant (Impostazioni → '
-                  'Componenti aggiuntivi → GdAHome → Aggiorna), poi torna su '
-                  'questa pagina.',
-              en:
-                  'The GdAHome add-on installed in “${casa?.nome ?? 'this '
-                          'home'}” is an old version and can\'t turn on Premium, '
-                  'so buying isn\'t available. Update the add-on in Home '
-                  'Assistant (Settings → Add-ons → GdAHome → Update), then '
-                  'come back to this page.',
-            ),
-            azione: inLingua(
-              it: 'Ho aggiornato, controlla di nuovo',
-              en: 'I\'ve updated, check again',
-            ),
-            inCorso: _controllo,
-            fai: () => unawaited(_ricontrolla()),
-          )
-        else if (!premium && come == ComeStaLaLicenza.maiChiesto)
-          _Riquadro(
-            chiave: const Key('premium-mai-sentita'),
-            icona: Icons.sync_rounded,
-            titolo: inLingua(
-              it: 'L\'app non ha ancora parlato con la casa',
-              en: 'The app hasn\'t talked to your home yet',
-            ),
-            testo: inLingua(
-              it:
-                  'Per sapere se «${casa?.nome ?? 'questa casa'}» può passare '
-                  'a Premium, l\'app deve collegarsi alla casa almeno una '
-                  'volta. Apri l\'app mentre sei connesso al Wi-Fi di casa, '
-                  'oppure riprova tra poco.',
-              en:
-                  'To know whether “${casa?.nome ?? 'this home'}” can go '
-                  'Premium, the app has to connect to it at least once. Open '
-                  'the app while you\'re on your home Wi-Fi, or try again '
-                  'shortly.',
-            ),
-            azione: inLingua(it: 'Riprova', en: 'Try again'),
-            inCorso: _controllo,
-            fai: () => unawaited(_ricontrolla()),
-          )
-        else if (!premium && (acquisti?.ceUnaRicevutaInSospeso ?? false))
-          /* Pagato, e la ricevuta aspetta la casa: niente bottone per
+              azione: inLingua(
+                it: 'Ho aggiornato, controlla di nuovo',
+                en: 'I\'ve updated, check again',
+              ),
+              inCorso: _controllo,
+              fai: () => unawaited(_ricontrolla()),
+            )
+          else if (!premium && come == ComeStaLaLicenza.maiChiesto)
+            _Riquadro(
+              chiave: const Key('premium-mai-sentita'),
+              icona: Icons.sync_rounded,
+              titolo: inLingua(
+                it: 'L\'app non ha ancora parlato con la casa',
+                en: 'The app hasn\'t talked to your home yet',
+              ),
+              testo: inLingua(
+                it:
+                    'Per sapere se «${casa?.nome ?? 'questa casa'}» può passare '
+                    'a Premium, l\'app deve collegarsi alla casa almeno una '
+                    'volta. Apri l\'app mentre sei connesso al Wi-Fi di casa, '
+                    'oppure riprova tra poco.',
+                en:
+                    'To know whether “${casa?.nome ?? 'this home'}” can go '
+                    'Premium, the app has to connect to it at least once. Open '
+                    'the app while you\'re on your home Wi-Fi, or try again '
+                    'shortly.',
+              ),
+              azione: inLingua(it: 'Riprova', en: 'Try again'),
+              inCorso: _controllo,
+              fai: () => unawaited(_ricontrolla()),
+            )
+          else if (!premium && (acquisti?.ceUnaRicevutaInSospeso ?? false))
+            /* Pagato, e la ricevuta aspetta la casa: niente bottone per
            * comprare di nuovo, solo quello che succede. */
-          _InAttesa(
-            inLingua(
-              it:
-                  'In questo momento «${casa?.nome ?? 'la casa'}» non '
-                  'risponde. L\'abbonamento è valido e si attiverà da solo '
-                  'appena la casa torna collegata: non devi acquistarlo di '
-                  'nuovo. Se la casa è spenta, riaccendila.',
-              en:
-                  '“${casa?.nome ?? 'Your home'}” isn\'t answering right now. '
-                  'Your subscription is valid and will turn on by itself as '
-                  'soon as your home is back online: you don\'t need to buy '
-                  'it again. If your home is switched off, turn it back on.',
-            ),
-          )
-        else if (!premium || diProva) ...[
-          if (diProva) const _DiProva(),
-          for (final id in [pianoAnnuale, pianoMensile])
-            _Piano(
-              id: id,
-              prezzo: prezzo(id),
-              scelto: _scelto == id,
-              nota: id == pianoAnnuale
-                  ? _risparmio(prezzo(pianoMensile), prezzo(pianoAnnuale))
-                  : null,
-              onTap: () => setState(() => _scelto = id),
-            ),
-          const SizedBox(height: 8),
-          if (widget.sulWeb)
-            const _SulWeb()
-          else ...[
-            FilledButton(
-              key: const Key('compra-premium'),
-              onPressed: inCorso || !dalNegozio
-                  ? null
-                  : () => unawaited(acquisti.compra(_scelto)),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(52),
+            _InAttesa(
+              inLingua(
+                it:
+                    'In questo momento «${casa?.nome ?? 'la casa'}» non '
+                    'risponde. L\'abbonamento è valido e si attiverà da solo '
+                    'appena la casa torna collegata: non devi acquistarlo di '
+                    'nuovo. Se la casa è spenta, riaccendila.',
+                en:
+                    '“${casa?.nome ?? 'Your home'}” isn\'t answering right now. '
+                    'Your subscription is valid and will turn on by itself as '
+                    'soon as your home is back online: you don\'t need to buy '
+                    'it again. If your home is switched off, turn it back on.',
               ),
-              child: inCorso
-                  ? const SizedBox.square(
-                      dimension: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(
-                      !dalNegozio
-                          ? inLingua(it: 'Prova gratis', en: 'Try for free')
-                          : giorni > 0
-                          ? inLingua(
-                              it: 'Prova gratis per $giorni giorni',
-                              en: 'Try free for $giorni days',
-                            )
-                          : inLingua(
-                              it: 'Abbonati a ${prezzo(_scelto)}',
-                              en: 'Subscribe for ${prezzo(_scelto)}',
-                            ),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                dalNegozio
-                    ? _ilRinnovo(prezzo(_scelto), giorni > 0)
-                    : _senzaNegozio(),
-                key: dalNegozio ? null : const Key('negozio-assente'),
-                textAlign: TextAlign.center,
-                style: t.bodySmall?.copyWith(color: s.onSurfaceVariant),
+            )
+          else if (!premium || diProva) ...[
+            if (diProva) const _DiProva(),
+            const SizedBox(height: 6),
+            for (final id in [pianoAnnuale, pianoMensile])
+              _Piano(
+                id: id,
+                prezzo: prezzo(id),
+                scelto: _scelto == id,
+                nota: id == pianoAnnuale
+                    ? _risparmio(prezzo(pianoMensile), prezzo(pianoAnnuale))
+                    : null,
+                onTap: () => setState(() => _scelto = id),
               ),
-            ),
-            /* L'App Store vuole i due link accanto all'abbonamento (regola
-             * 3.1.2): subito sotto la nota, su una riga. */
-            Wrap(
-              alignment: WrapAlignment.center,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                link(
-                  inLingua(it: 'Termini d\'uso', en: 'Terms of Use'),
-                  SchermataPremium.condizioni(defaultTargetPlatform),
+            const SizedBox(height: 8),
+            if (widget.sulWeb)
+              const _SulWeb()
+            else ...[
+              FilledButton(
+                key: const Key('compra-premium'),
+                onPressed: inCorso || !dalNegozio
+                    ? null
+                    : () => unawaited(acquisti.compra(_scelto)),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(56),
+                  backgroundColor:
+                      Theme.of(context).brightness == Brightness.dark
+                      ? Colori.ambra
+                      : Colori.notte,
+                  foregroundColor:
+                      Theme.of(context).brightness == Brightness.dark
+                      ? Colori.notte
+                      : Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
-                Text(
-                  '·',
+                child: inCorso
+                    ? const SizedBox.square(
+                        dimension: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(
+                        !dalNegozio
+                            ? inLingua(it: 'Prova gratis', en: 'Try for free')
+                            : giorni > 0
+                            ? inLingua(
+                                it: 'Prova gratis per $giorni giorni',
+                                en: 'Try free for $giorni days',
+                              )
+                            : inLingua(
+                                it: 'Abbonati a ${prezzo(_scelto)}',
+                                en: 'Subscribe for ${prezzo(_scelto)}',
+                              ),
+                        style: t.labelLarge?.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colori.notte
+                              : Colors.white,
+                        ),
+                      ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  dalNegozio
+                      ? _ilRinnovo(prezzo(_scelto), giorni > 0)
+                      : _senzaNegozio(),
+                  key: dalNegozio ? null : const Key('negozio-assente'),
+                  textAlign: TextAlign.center,
                   style: t.bodySmall?.copyWith(color: s.onSurfaceVariant),
                 ),
-                link(
-                  inLingua(it: 'Privacy', en: 'Privacy Policy'),
-                  SchermataPremium.privacy,
+              ),
+              /* L'App Store vuole i due link accanto all'abbonamento (regola
+             * 3.1.2): subito sotto la nota, su una riga. */
+              Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  link(
+                    inLingua(it: 'Termini d\'uso', en: 'Terms of Use'),
+                    SchermataPremium.condizioni(defaultTargetPlatform),
+                  ),
+                  Text(
+                    '·',
+                    style: t.bodySmall?.copyWith(color: s.onSurfaceVariant),
+                  ),
+                  link(
+                    inLingua(it: 'Privacy', en: 'Privacy Policy'),
+                    SchermataPremium.privacy,
+                  ),
+                ],
+              ),
+              TextButton(
+                key: const Key('ripristina-abbonamento'),
+                onPressed: dalNegozio && !inCorso
+                    ? () => unawaited(_ripristina(acquisti))
+                    : null,
+                child: Text(
+                  inLingua(
+                    it: 'Ripristina abbonamento',
+                    en: 'Restore subscription',
+                  ),
+                ),
+              ),
+            ],
+          ],
+          /* «Gestisci abbonamento»: chi ha disdetto lo riattiva da qui, chi
+         * vuole cambiare piano o disdire anche. Solo per l'abbonamento del
+         * negozio, e dove il negozio c'e'. */
+          if (premium &&
+              siCompraQui &&
+              licenza.gettoneDi(casa)?.origine == 'negozio') ...[
+            OutlinedButton.icon(
+              key: const Key('gestisci-abbonamento'),
+              onPressed: () => _apri(
+                SchermataPremium.gestioneDelNegozio(defaultTargetPlatform),
+              ),
+              icon: const Icon(Icons.autorenew),
+              label: Text(
+                inLingua(it: 'Gestisci abbonamento', en: 'Manage subscription'),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+          const SizedBox(height: 22),
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 10),
+            child: Text(
+              inLingua(it: 'COSA COMPRENDE', en: 'WHAT\'S INCLUDED'),
+              style: t.labelMedium?.copyWith(
+                color: s.onSurfaceVariant,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.4,
+              ),
+            ),
+          ),
+          Container(
+            key: const Key('premium-funzioni'),
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xFF151F33)
+                  : Colors.white,
+              borderRadius: BorderRadius.circular(22),
+            ),
+            child: Column(
+              children: [
+                for (final (icona, titolo, testo) in _funzioni(widget.sulWeb))
+                  _Voce(icona: icona, titolo: titolo, testo: testo),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.check_circle_outline,
+                  size: 18,
+                  color: s.onSurfaceVariant,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    inLingua(
+                      it:
+                          'Gratis per tutti: una plancia, una casa, il '
+                          'collegamento da casa.',
+                      en:
+                          'Free for everyone: one dashboard, one home, the '
+                          'connection from home.',
+                    ),
+                    style: t.bodySmall?.copyWith(color: s.onSurfaceVariant),
+                  ),
                 ),
               ],
             ),
-            TextButton(
-              key: const Key('ripristina-abbonamento'),
-              onPressed: dalNegozio && !inCorso
-                  ? () => unawaited(_ripristina(acquisti))
-                  : null,
-              child: Text(
-                inLingua(
-                  it: 'Ripristina abbonamento',
-                  en: 'Restore subscription',
-                ),
+          ),
+          const SizedBox(height: 16),
+          if (come != ComeStaLaLicenza.casaSenzaLicenze &&
+              (widget.codiceRegalo ??
+                  (widget.sulWeb ||
+                      defaultTargetPlatform != TargetPlatform.iOS)))
+            OutlinedButton.icon(
+              key: const Key('codice-regalo'),
+              onPressed: () => _ilCodice(context),
+              icon: const Icon(Icons.redeem),
+              label: Text(
+                inLingua(it: 'Ho un codice regalo', en: 'I have a gift code'),
               ),
             ),
-          ],
+          if (acquisti?.errore case final errore?)
+            _Riga(errore, colore: s.error),
+          if (acquisti?.fatto case final fatto?)
+            _Riga(fatto, colore: Colori.bene),
         ],
-        /* «Gestisci abbonamento»: chi ha disdetto lo riattiva da qui, chi
-         * vuole cambiare piano o disdire anche. Solo per l'abbonamento del
-         * negozio, e dove il negozio c'e'. */
-        if (premium &&
-            siCompraQui &&
-            licenza.gettoneDi(casa)?.origine == 'negozio') ...[
-          OutlinedButton.icon(
-            key: const Key('gestisci-abbonamento'),
-            onPressed: () => _apri(
-              SchermataPremium.gestioneDelNegozio(defaultTargetPlatform),
-            ),
-            icon: const Icon(Icons.autorenew),
-            label: Text(
-              inLingua(it: 'Gestisci abbonamento', en: 'Manage subscription'),
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
-        if (come != ComeStaLaLicenza.casaSenzaLicenze &&
-            (widget.codiceRegalo ??
-                (widget.sulWeb || defaultTargetPlatform != TargetPlatform.iOS)))
-          OutlinedButton.icon(
-            key: const Key('codice-regalo'),
-            onPressed: () => _ilCodice(context),
-            icon: const Icon(Icons.redeem),
-            label: Text(
-              inLingua(it: 'Ho un codice regalo', en: 'I have a gift code'),
-            ),
-          ),
-        if (acquisti?.errore case final errore?) _Riga(errore, colore: s.error),
-        if (acquisti?.fatto case final fatto?)
-          _Riga(fatto, colore: Colori.bene),
-      ],
+      ),
     );
   }
 
@@ -1104,7 +1141,9 @@ class _DiProva extends StatelessWidget {
   }
 }
 
-/// Un piano da scegliere: il pallino, il nome, il prezzo a destra.
+/// Un piano da scegliere: una scheda col nome, il risparmio e il prezzo
+/// grande; quella scelta e' piena del colore di Premium, col segno di spunta.
+/// L'annuale porta «Consigliato».
 class _Piano extends StatelessWidget {
   const _Piano({
     required this.id,
@@ -1124,49 +1163,106 @@ class _Piano extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
     final s = Theme.of(context).colorScheme;
+    final scuro = Theme.of(context).brightness == Brightness.dark;
+    final ambra = scuro ? Colori.ambra : Colori.ambraScura;
+    final annuale = id == pianoAnnuale;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 5),
       child: Material(
+        color: scelto
+            ? Colori.ambra.withValues(alpha: scuro ? 0.16 : 0.1)
+            : (scuro ? const Color(0xFF151F33) : Colors.white),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           side: BorderSide(
-            color: scelto ? s.primary : s.outline.withValues(alpha: 0.45),
+            color: scelto ? ambra : s.outline.withValues(alpha: 0.25),
             width: scelto ? 2 : 1,
           ),
         ),
         child: InkWell(
           key: Key('piano-$id'),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 12, 16, 12),
+            padding: const EdgeInsets.fromLTRB(16, 16, 18, 16),
             child: Row(
               children: [
-                Icon(
-                  scelto ? Icons.radio_button_checked : Icons.radio_button_off,
-                  color: scelto ? s.primary : null,
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  width: 26,
+                  height: 26,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: scelto ? ambra : Colors.transparent,
+                    border: Border.all(
+                      color: scelto ? ambra : s.outline.withValues(alpha: 0.6),
+                      width: 2,
+                    ),
+                  ),
+                  child: scelto
+                      ? const Icon(
+                          Icons.check_rounded,
+                          size: 17,
+                          color: Colors.white,
+                        )
+                      : null,
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        id == pianoAnnuale
-                            ? inLingua(it: 'Annuale', en: 'Yearly')
-                            : inLingua(it: 'Mensile', en: 'Monthly'),
-                        style: t.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(
+                            annuale
+                                ? inLingua(it: 'Annuale', en: 'Yearly')
+                                : inLingua(it: 'Mensile', en: 'Monthly'),
+                            style: t.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          if (annuale)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: ambra,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                inLingua(it: 'CONSIGLIATO', en: 'BEST VALUE'),
+                                style: t.labelSmall?.copyWith(
+                                  color: scuro ? Colori.notte : Colors.white,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0.6,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
-                      if (nota case final n?)
-                        Text(n, style: t.bodySmall?.copyWith(color: s.primary)),
+                      if (nota case final n?) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          n,
+                          style: t.bodySmall?.copyWith(
+                            color: ambra,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
                 Text(
                   prezzo,
-                  style: t.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                  style: t.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                 ),
               ],
             ),
@@ -1177,7 +1273,124 @@ class _Piano extends StatelessWidget {
   }
 }
 
-/// Una voce di cosa comprende: l'icona, il titolo, una riga sotto.
+/// In cima alla pagina: un riquadro scuro con la medaglia, il nome e come
+/// sta la casa. Con Premium attivo, il bollino «Attivo».
+class _Testata extends StatelessWidget {
+  const _Testata({required this.premium, required this.testo});
+
+  final bool premium;
+  final String testo;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    return Container(
+      key: const Key('premium-testata'),
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(26),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF0F172A), Color(0xFF1E2A4A), Color(0xFF3B2A12)],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colori.notte.withValues(alpha: 0.22),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFFFCD34D), Colori.ambraScura],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colori.ambra.withValues(alpha: 0.45),
+                      blurRadius: 18,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.workspace_premium_rounded,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+              const Spacer(),
+              if (premium)
+                Container(
+                  key: const Key('premium-attivo'),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colori.bene.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colori.bene.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.check_circle_rounded,
+                        size: 15,
+                        color: Color(0xFF4ADE80),
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        inLingua(it: 'Attivo', en: 'Active'),
+                        style: t.labelMedium?.copyWith(
+                          color: const Color(0xFFBBF7D0),
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'GdAHome Premium',
+            style: t.headlineSmall?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            testo,
+            key: const Key('stato-premium'),
+            style: t.bodyLarge?.copyWith(
+              color: Colors.white.withValues(alpha: 0.82),
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Una voce di cosa comprende: l'icona nel suo quadratino ambra, il titolo,
+/// una riga sotto.
 class _Voce extends StatelessWidget {
   const _Voce({required this.icona, required this.titolo, required this.testo});
 
@@ -1188,22 +1401,41 @@ class _Voce extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
+    final scuro = Theme.of(context).brightness == Brightness.dark;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icona, size: 22),
-          const SizedBox(width: 12),
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: Colori.ambra.withValues(alpha: scuro ? 0.18 : 0.14),
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: Icon(
+              icona,
+              size: 20,
+              color: scuro ? Colori.ambra : Colori.ambraScura,
+            ),
+          ),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   titolo,
-                  style: t.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                  style: t.titleSmall?.copyWith(fontWeight: FontWeight.w800),
                 ),
-                Text(testo, style: t.bodySmall),
+                const SizedBox(height: 2),
+                Text(
+                  testo,
+                  style: t.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ],
             ),
           ),
