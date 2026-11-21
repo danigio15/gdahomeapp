@@ -8,6 +8,23 @@ i suoi in `ponte/CHANGELOG.md`, ed è quello che Home Assistant fa vedere. Un
 rilascio dell'app non fa comparire un aggiornamento dell'add-on, e al
 contrario.
 
+## 1.19.20
+
+- **Navigatore, strade in 3D**: le curve sono arrotondate, senza spigoli, e
+  nelle vie strette con le case a filo strada la strada si stringe invece di
+  entrare nelle case.
+- **Navigatore, viadotti e svincoli**: ponti e rampe stanno all'altezza di
+  quello che scavalcano davvero, salgono e scendono senza scalini né salite
+  impossibili, e agli svincoli e alle biforcazioni le carreggiate non
+  entrano più una dentro l'altra. Le strade che si uniscono o corrono
+  affiancate stanno alla stessa quota.
+- **Navigatore, vista «Corsie» sui viadotti**: la telecamera segue la quota
+  dell'auto e niente (ponti, piloni) si mette più fra la telecamera e
+  l'auto; i piloni non stanno più sull'asfalto delle rampe di sotto; nei
+  sottopassi la linea del percorso è tratteggiata; la zebratura c'è solo
+  nel triangolo dove le strade si dividono; la linea del percorso e le
+  corsie non fanno più salti.
+
 ## 1.19.19
 
 - **Navigatore in auto, zoom e dito**: nella vista «Corsie» i tasti + e −
