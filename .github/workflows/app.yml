@@ -69,9 +69,13 @@ on:
         type: boolean
         required: false
         default: false
+  # Solo le etichette dell'app (`app-v1.19.20`): quelle dell'add-on (`v…`)
+  # non sono un rilascio dell'app. App e add-on hanno numeri e rilasci separati
+  # (dalla 1.19.19), e un add-on nuovo non deve rimandare nei negozi un'app
+  # uguale a quella di prima.
   push:
     tags:
-      - "v*"
+      - "app-v*"
 
 permissions:
   contents: read
@@ -365,7 +369,7 @@ jobs:
           # chi ha installato una release deve poter dire quale ha, con le stesse
           # parole con cui gliel'hanno data.
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
-            VERSIONE="${GITHUB_REF_NAME#v}"
+            VERSIONE="${GITHUB_REF_NAME#app-v}"
           else
             VERSIONE="$CORSA-${GITHUB_SHA:0:7}"
           fi
@@ -403,7 +407,7 @@ jobs:
           HERE: ${{ secrets.GDANAV_HERE_CHIAVE }}
         run: |
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
-            VERSIONE="${GITHUB_REF_NAME#v}"
+            VERSIONE="${GITHUB_REF_NAME#app-v}"
           else
             VERSIONE="$CORSA-${GITHUB_SHA:0:7}"
           fi
@@ -667,7 +671,7 @@ jobs:
         run: |
           # Su un'etichetta il numero e' quello del rilascio, come su Android.
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
-            VERSIONE="${GITHUB_REF_NAME#v}"
+            VERSIONE="${GITHUB_REF_NAME#app-v}"
           else
             VERSIONE="$CORSA-${GITHUB_SHA:0:7}"
           fi

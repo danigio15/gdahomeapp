@@ -9,7 +9,9 @@ import { fileURLToPath } from "node:url";
 
 import {
   COME_SI_PRENDE,
+  COME_SI_PRENDE_L_APP,
   DOVE_STA_IL_CHANGELOG,
+  DOVE_STA_IL_CHANGELOG_DELL_APP,
   ilCapitolo,
   ilNumero,
   leNote,
@@ -94,4 +96,24 @@ test("il CHANGELOG vero ha il capitolo della versione che stiamo per rilasciare"
   const note = leNoteDelCambiario(versione, { radice: RADICE });
   assert.ok(note.length > COME_SI_PRENDE.length, `la ${versione} ha il suo capitolo nel CHANGELOG`);
   assert.ok(readFileSync(join(RADICE, DOVE_STA_IL_CHANGELOG), "utf8").includes(`## ${versione}`));
+});
+
+/* App e add-on hanno rilasci separati (dalla 1.19.19): l'app le sue note le
+ * ha in un CHANGELOG suo, e le sue etichette sono `app-v…`. */
+test("l'app: l'etichetta app-v, il suo CHANGELOG e come si prende", () => {
+  assert.equal(ilNumero("app-v1.19.20"), "1.19.20");
+  assert.equal(ilNumero("v1.19.20"), "1.19.20");
+  const note = leNote(FINTO, "app-v1.6.10", { app: true });
+  assert.ok(note.startsWith("Quello che cambia nella dieci."));
+  assert.ok(note.includes(COME_SI_PRENDE_L_APP));
+  assert.ok(!note.includes(COME_SI_PRENDE));
+});
+
+test("il CHANGELOG dell'app c'e', e ha il capitolo della versione dell'app", () => {
+  const pubspec = readFileSync(join(RADICE, "app", "pubspec.yaml"), "utf8");
+  const versione = /^version: ([0-9.]+)\+/m.exec(pubspec)?.[1];
+  assert.ok(versione, "il pubspec non dice che versione e'");
+  assert.ok(readFileSync(join(RADICE, DOVE_STA_IL_CHANGELOG_DELL_APP), "utf8").length > 0);
+  // L'etichetta che «L'etichetta» mettera' su main deve trovare le sue note.
+  assert.ok(leNoteDelCambiario(`app-v${versione}`, { radice: RADICE, app: true }).length > 0);
 });

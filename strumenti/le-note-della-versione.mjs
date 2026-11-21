@@ -22,6 +22,7 @@
  *
  *     node strumenti/le-note-della-versione.mjs 1.6.11
  *     node strumenti/le-note-della-versione.mjs v1.6.11 > note.md
+ *     node strumenti/le-note-della-versione.mjs --app app-v1.19.20 > note.md
  */
 
 import { readFileSync } from "node:fs";
@@ -31,6 +32,11 @@ import { fileURLToPath } from "node:url";
 const RADICE = dirname(dirname(fileURLToPath(import.meta.url)));
 
 export const DOVE_STA_IL_CHANGELOG = join("ponte", "CHANGELOG.md");
+
+/* L'app ha il suo (dalla 1.19.19): app e add-on hanno numeri e rilasci
+ * separati, e Home Assistant fa vedere il CHANGELOG dell'add-on, dove le
+ * novità dell'app non c'entrano. */
+export const DOVE_STA_IL_CHANGELOG_DELL_APP = join("app", "CHANGELOG.md");
 
 /* Quello che vale per ogni versione, e che nel CHANGELOG non c'entra: il
  * CHANGELOG racconta cosa cambia, questo racconta come si prende. Sta qui e
@@ -45,10 +51,19 @@ quello firmato da noi e quello firmato da Google non si installano uno sopra
 l'altro, e partire da qui vorrebbe dire disinstallare e riabbinare il telefono
 il giorno che si passa al negozio.`;
 
-/** Il numero senza la `v` davanti: l'etichetta ce l'ha, il CHANGELOG no. */
+/** Come si prende l'app: dai negozi, non da qui. */
+export const COME_SI_PRENDE_L_APP = `**L'app arriva dai negozi**: Google Play e App Store la propongono da soli.
+Qui il pacchetto non c'e', ed e' voluto: quello firmato da noi e quello
+firmato dai negozi non si installano uno sopra l'altro.
+
+**L'add-on in casa non cambia** con questa versione dell'app: ha numero e
+note suoi.`;
+
+/** Il numero senza la `v` davanti (o `app-v` per l'app): l'etichetta ce l'ha, il CHANGELOG no. */
 export function ilNumero(nome) {
   return String(nome || "")
     .trim()
+    .replace(/^app-/, "")
     .replace(/^v/, "");
 }
 
@@ -76,29 +91,32 @@ export function ilCapitolo(testo, versione) {
   return capitolo;
 }
 
-/** Le note intere: cosa cambia, e poi come si prende. */
-export function leNote(testo, versione) {
-  return `${ilCapitolo(testo, versione)}\n\n---\n\n${COME_SI_PRENDE}\n`;
+/** Le note intere: cosa cambia, e poi come si prende ([app]: l'app). */
+export function leNote(testo, versione, { app = false } = {}) {
+  return `${ilCapitolo(testo, versione)}\n\n---\n\n${app ? COME_SI_PRENDE_L_APP : COME_SI_PRENDE}\n`;
 }
 
-/** Le stesse, leggendo il CHANGELOG dal disco. */
-export function leNoteDelCambiario(versione, { radice = RADICE } = {}) {
+/** Le stesse, leggendo il CHANGELOG dal disco (quello dell'app con [app]). */
+export function leNoteDelCambiario(versione, { radice = RADICE, app = false } = {}) {
+  const dove = app ? DOVE_STA_IL_CHANGELOG_DELL_APP : DOVE_STA_IL_CHANGELOG;
   let testo = "";
   try {
-    testo = readFileSync(join(radice, DOVE_STA_IL_CHANGELOG), "utf8");
+    testo = readFileSync(join(radice, dove), "utf8");
   } catch (_errore) {
-    throw new Error(`il CHANGELOG non si legge: manca ${DOVE_STA_IL_CHANGELOG}`);
+    throw new Error(`il CHANGELOG non si legge: manca ${dove}`);
   }
-  return leNote(testo, versione);
+  return leNote(testo, versione, { app });
 }
 
 /* ─── Lanciato da se' ──────────────────────────────────────────────────────── */
 
 if (process.argv[1] && process.argv[1].endsWith("le-note-della-versione.mjs")) {
   try {
-    const quale = process.argv[2] || "";
-    if (!quale) throw new Error("uso: node strumenti/le-note-della-versione.mjs <versione>");
-    process.stdout.write(leNoteDelCambiario(quale));
+    const app = process.argv.includes("--app");
+    const quale = process.argv.slice(2).find((una) => una !== "--app") || "";
+    if (!quale)
+      throw new Error("uso: node strumenti/le-note-della-versione.mjs [--app] <versione>");
+    process.stdout.write(leNoteDelCambiario(quale, { app }));
   } catch (errore) {
     console.error(errore?.message || errore);
     process.exit(1);
