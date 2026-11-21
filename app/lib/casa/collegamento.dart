@@ -598,6 +598,9 @@ class Collegamento {
          * bussa solo in casa. Se era la prova, e' il suo verdetto: per il
          * prossimo minuto non si riprova da fuori. */
         _fuoriSenzaPremium = true;
+        /* Anche per la licenza: finche' la casa non porta un gettone nuovo,
+         * qui e' Base (la pagina Premium fa comprare, i lucchetti ci sono). */
+        licenza.negataDaFuori(casa.id);
         if (dallaProva) {
           _provataDaFuoriIl[casa.id] = DateTime.now();
           _daRiprovare = null;

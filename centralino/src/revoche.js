@@ -89,6 +89,7 @@ const RISPOSTA_MASSIMA = 2 * 1024 * 1024;
 /* Quante licenze tolte al massimo, e com'e' fatta una. */
 const LICENZE_AL_MASSIMO = 50_000;
 const LICENZA = /^lic_[0-9a-f]{16}$/;
+const CASA = /^casa_[0-9a-f]{32}$/;
 const PEZZO = /^[A-Za-z0-9_-]+$/;
 
 /**
@@ -128,7 +129,16 @@ export function leggiLElenco(firmato, chiave) {
   const gdanav = Array.isArray(detto.gdanav) ? detto.gdanav : [];
   if (gdanav.length > LICENZE_AL_MASSIMO) return null;
   const buone = (elenco) => elenco.filter((una) => typeof una === "string" && LICENZA.test(una));
-  return { emesso: detto.emesso, lic: buone(detto.lic), gdanav: buone(gdanav) };
+  /* Le case con una licenza appena data (`date`): un elenco di prima non ce
+   * l'ha. */
+  const date = Array.isArray(detto.date) ? detto.date : [];
+  if (date.length > LICENZE_AL_MASSIMO) return null;
+  return {
+    emesso: detto.emesso,
+    lic: buone(detto.lic),
+    gdanav: buone(gdanav),
+    date: date.filter((una) => typeof una === "string" && CASA.test(una)),
+  };
 }
 
 export class Revoche {
@@ -143,6 +153,9 @@ export class Revoche {
      * centralino, che chiude e avvisa le case. Si chiama con le gdahome
      * nuove, e le gdanav nuove accanto. */
     alleNuove = null,
+    /* Chi vuole sapere quali case hanno appena avuto una licenza: il
+     * centralino, che dice loro di ricontrollare. */
+    alleDate = null,
   } = {}) {
     this.dove = String(dove || "");
     this.chiave = String(chiave || "");
@@ -151,6 +164,10 @@ export class Revoche {
     this.ogni = ogni;
     this.prendi = prendi;
     this.alleNuove = alleNuove;
+    this.alleDate = alleDate;
+    /* Le case gia' avvisate di una licenza data, per non avvisarle a ogni
+     * minuto per dieci minuti: si avvisano quando entrano nell'elenco. */
+    this.date = new Set();
     /** Le licenze tolte dell'ultimo elenco buono, e quando l'ha firmato il quadro. */
     this.tolte = new Set();
     /** E le gdanav tolte alle case, dello stesso elenco: non chiudono niente. */
@@ -216,6 +233,15 @@ export class Revoche {
         this.alleNuove?.(nuove, nuoveGdanav);
       } catch (errore) {
         this.registro.attenzione(`le licenze appena tolte: ${errore?.message || errore}`);
+      }
+    }
+    const date = detto.date.filter((una) => !this.date.has(una));
+    this.date = new Set(detto.date);
+    if (date.length) {
+      try {
+        this.alleDate?.(date);
+      } catch (errore) {
+        this.registro.attenzione(`le licenze appena date: ${errore?.message || errore}`);
       }
     }
     return true;

@@ -164,6 +164,11 @@ const finitaDavvero = (una) => rimborsata(una) || una.negozio?.abbonamento?.rinn
 
 /* Tolta dal gestore o da un installatore negli ultimi otto giorni: prima,
  * ogni suo gettone e' gia' scaduto da se'. */
+/* Per quanto una licenza appena data resta nell'elenco del centralino: il
+ * centralino lo chiede ogni minuto, e dieci minuti bastano anche se ne salta
+ * qualcuno. */
+export const DATE_DA_POCO = 10 * 60 * 1000;
+
 const tolta = (una, ora) => Boolean(una.revocata) && ora - una.revocata < OTTO_GIORNI;
 
 /** Quanto si aspetta il negozio mentre qualcuno aspetta i suoi gettoni. */
@@ -1001,7 +1006,28 @@ export class Licenze {
       emesso: ora,
       lic: this.tolte(ora, "gdahome"),
       gdanav: this.tolte(ora, "gdanav"),
+      date: this.dateDaPoco(ora),
     });
+  }
+
+  /* ─── Le licenze appena date, per il centralino ────────────────────────
+   *
+   * «Ho revocato una licenza, poi l'ho regalata di nuovo, ma non si collega
+   * Premium». Togliere arrivava alla casa in un minuto (l'elenco qui sopra);
+   * dare no: la casa se ne accorgeva al suo giro delle sei ore, e fino ad
+   * allora restava Base. Nello stesso elenco vanno allora le case che hanno
+   * avuto una licenza buona negli ultimi [DATE_DA_POCO] minuti: il centralino
+   * dice a quelle collegate di ricontrollare (`ricontrolla-licenza`), e la
+   * casa si prende il gettone nuovo subito. Ci va solo l'identita' della
+   * casa, come per le tolte: niente di piu'. */
+  dateDaPoco(ora = this.adesso()) {
+    const case_ = new Set();
+    for (const una of this.licenze) {
+      if (!CASA.test(String(una.sog)) || !Number.isFinite(una.creata)) continue;
+      if (ora - una.creata > DATE_DA_POCO || una.creata > ora) continue;
+      if (this.vale(una, ora)) case_.add(una.sog);
+    }
+    return [...case_];
   }
 
   /* ─── Fare, e togliere ──────────────────────────────────────────────── */

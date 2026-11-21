@@ -182,6 +182,25 @@ void main() {
       expect(licenza.gettoneDi(licenza.casaInUso)!.origine, 'installatore');
     });
 
+    test('il no del centralino fa Base, finche\' la casa non porta un gettone nuovo', () async {
+      /* «Non esce la possibilita' di acquistare l'abbonamento»: licenza tolta,
+       * gettone di prima ancora in mano, e la casa restava Premium qui. */
+      final licenza = GestoreLicenza(chiave: chiaveDiProva);
+      final vecchio = await firmaUnGettone();
+      await licenza.conosci([unaCasa('a', gettone: vecchio)]);
+      licenza.inUso('a');
+      expect(licenza.premium, isTrue);
+      licenza.negataDaFuori('a');
+      expect(licenza.premium, isFalse);
+      expect(licenza.premiumQui.value, isFalse, reason: 'anche il navigatore');
+      /* Lo stesso gettone di nuovo non cambia niente; uno nuovo si'. */
+      await licenza.conosci([unaCasa('a', gettone: vecchio)]);
+      expect(licenza.premium, isFalse);
+      final nuovo = await firmaUnGettone(origine: 'regalo');
+      await licenza.conosci([unaCasa('a', gettone: nuovo)]);
+      expect(licenza.premium, isTrue);
+    });
+
     test('il gettone di un\'altra casa non fa Premium questa', () async {
       final licenza = GestoreLicenza(chiave: chiaveDiProva);
       await licenza.conosci([

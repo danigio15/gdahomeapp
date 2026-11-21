@@ -772,6 +772,7 @@ test("l'elenco porta le gdanav a parte, e uno di prima senza gdanav si legge com
     emesso: leggiLElenco(nuovo, PUBBLICA_DI_PROVA).emesso,
     lic: [UNA_LICENZA],
     gdanav: [UNA_GDANAV],
+    date: [],
   });
   /* Di prima: niente `gdanav`, nessuna gdanav tolta. */
   assert.deepEqual(leggiLElenco(unElenco({ lic: [UNA_LICENZA] }), PUBBLICA_DI_PROVA).gdanav, []);
@@ -929,4 +930,24 @@ test("registra: una licenza tolta si conta e non chiude", async () => {
   } finally {
     await b.spegni();
   }
+});
+
+test("le case con una licenza appena data: si avvisano una volta sola, e uno elenco di prima non ne ha", () => {
+  const CASA_UNA = `casa_${"a".repeat(32)}`;
+  const CASA_DUE = `casa_${"b".repeat(32)}`;
+  assert.deepEqual(leggiLElenco(unElenco({ lic: [] }), PUBBLICA_DI_PROVA).date, []);
+  const letto = leggiLElenco(
+    unElenco({ lic: [], date: [CASA_UNA, "non-una-casa"] }),
+    PUBBLICA_DI_PROVA,
+  );
+  assert.deepEqual(letto.date, [CASA_UNA]);
+
+  const revoche = new Revoche({ dove: "x", chiave: PUBBLICA_DI_PROVA });
+  const date = [];
+  revoche.alleDate = (case_) => date.push(case_);
+  assert.equal(revoche.tieni(unElenco({ lic: [], date: [CASA_UNA] })), true);
+  assert.deepEqual(date, [[CASA_UNA]]);
+  /* Il minuto dopo e' ancora nell'elenco: non si ridice. Una nuova si'. */
+  revoche.tieni(unElenco({ lic: [], date: [CASA_UNA, CASA_DUE] }));
+  assert.deepEqual(date, [[CASA_UNA], [CASA_DUE]]);
 });

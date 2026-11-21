@@ -204,6 +204,10 @@ class GestoreLicenza extends ChangeNotifier {
     _diProva.removeWhere((id) => !_case.containsKey(id));
     for (final casa in _case.values) {
       final grezzo = casa.gettone ?? '';
+      /* Un gettone nuovo: quello che ha detto il centralino era di prima. */
+      if (_grezzi.containsKey(casa.id) && _grezzi[casa.id] != grezzo) {
+        _negateDaFuori.remove(casa.id);
+      }
       if (_grezzi[casa.id] != grezzo || !_letti.containsKey(casa.id)) {
         final letto = await leggiIlGettone(grezzo, chiave: chiave);
         _grezzi[casa.id] = grezzo;
@@ -264,7 +268,24 @@ class GestoreLicenza extends ChangeNotifier {
   bool premiumDi(CasaConosciuta? casa) {
     if (_forza != null) return _forza!;
     if (!controlliAccesi) return true;
+    if (casa != null && _negateDaFuori.contains(casa.id)) return false;
     return gettoneDi(casa) != null;
+  }
+
+  /* Le case che il centralino ha appena detto Base (`premium-richiesto`).
+   *
+   * «Non esce la possibilita' di acquistare l'abbonamento»: con la licenza
+   * tolta, il telefono aveva ancora in mano il gettone di prima, che vale
+   * qualche giorno. Il centralino da fuori diceva di no, ma per l'app la
+   * casa restava Premium: la pagina diceva «attivo» senza farlo comprare, il
+   * menu non metteva i lucchetti e il navigatore teneva il suo Premium. Il
+   * no del centralino non e' firmato, e allora non tocca il gettone: dice
+   * solo che, finche' la casa non ne porta uno nuovo, qui si fa come Base. */
+  final Set<String> _negateDaFuori = {};
+
+  /// Il centralino ha detto che questa casa non e' Premium.
+  void negataDaFuori(String idDellaCasa) {
+    if (_negateDaFuori.add(idDellaCasa)) _ricalcola();
   }
 
   /// Se la casa in uso e' Premium.
@@ -394,6 +415,8 @@ class GestoreLicenza extends ChangeNotifier {
       await conosci(archivio.tutte);
       return true;
     }
+    /* La casa ha risposto lei: vale la sua risposta, non il no di prima. */
+    _negateDaFuori.remove(casa.id);
     await ricordaLaRisposta(detto, casa, archivio);
     return true;
   }

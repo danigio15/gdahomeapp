@@ -208,10 +208,23 @@ test("l'elenco e' firmato come un gettone, e non si confonde con un gettone", ()
       emesso: orologio.ora,
       lic: [una.lic],
       gdanav: [nav.lic],
+      /* Tolte tutte e due: nessuna casa ha una licenza appena data. */
+      date: [],
     });
     /* Niente `sog` e niente `fino`: nessuno lo puo' prendere per un gettone. */
     assert.equal(detto.sog, undefined);
     assert.equal(detto.fino, undefined);
+  });
+});
+
+test("le case con una licenza appena data vanno nell'elenco per dieci minuti, le tolte no", () => {
+  conLeLicenze((licenze, orologio) => {
+    licenze.regala({ app: "gdahome", casa: UNA, mesi: 12 });
+    const nav = licenze.regala({ app: "gdanav", casa: ALTRA, mesi: 12 });
+    licenze.togli(nav.lic);
+    assert.deepEqual(apri(licenze.elencoDelleTolte()).date, [UNA]);
+    orologio.ora += 11 * 60 * 1000;
+    assert.deepEqual(apri(licenze.elencoDelleTolte()).date, []);
   });
 });
 

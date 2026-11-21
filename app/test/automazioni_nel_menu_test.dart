@@ -86,6 +86,29 @@ void main() {
     }
   });
 
+  test(
+    'senza Premium le voci col lucchetto ci sono sempre, in casa e fuori',
+    () {
+      /* «Senza premium sono scomparse le altre opzioni tipo zigbee,
+     * automazioni: devono esserci, ma con l'indicazione premium.» Fuori casa
+     * il ponte non dice ne' chi amministra ne' se c'e' Zigbee. */
+      final bloccate = {
+        for (final una in Sezione.values)
+          if (una.diPremium) una,
+      };
+      final fuori = vociDellaBarra(bloccate: bloccate);
+      for (final una in bloccate) {
+        expect(fuori, contains(una), reason: '$una senza Premium, fuori casa');
+      }
+      /* Nel browser restano fuori quelle che vogliono il telefono. */
+      final browser = vociDellaBarra(nellApp: false, bloccate: bloccate);
+      expect(browser, isNot(contains(Sezione.zigbee)));
+      expect(browser, contains(Sezione.automazioni));
+      /* Con Premium torna la regola di sempre: solo chi amministra. */
+      expect(vociDellaBarra(), isNot(contains(Sezione.automazioni)));
+    },
+  );
+
   test('ha il suo disegno, la sveglia con le stelline', () {
     expect(Sezione.automazioni.disegno, 'automazioni');
     expect(disegniDegliOggetti, contains('automazioni'));

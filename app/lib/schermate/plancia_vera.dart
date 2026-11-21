@@ -33,6 +33,7 @@ import '../plancia/il_fondo.dart';
 import '../plancia/servitore_qui/qui.dart';
 import '../ponte/filo.dart';
 import '../vestito/pezzi.dart';
+import '../vestito/tema.dart' show Colori;
 import 'barra.dart' show nomeDelTastoDellaBarra, nomeDelleCase;
 import 'caricamento.dart';
 import 'da_dove.dart';
@@ -693,46 +694,19 @@ class PlanciaVeraState extends State<PlanciaVera> with WidgetsBindingObserver {
         );
       case ComeVa.irraggiungibile when collegamento.fuoriCasaSenzaPremium:
         /* Non e' un guasto: la casa c'e', e da fuori ci si arriva con
-         * Premium. Si dice cosi', col tasto per andarci. */
-        return _Stato(
+         * Premium. Una pagina sua, non quella dei guasti: «migliora
+         * graficamente questa maschera che non mi piace». */
+        return _FuoriCasaConPremium(
           collegamento: collegamento,
           vaiAlleCase: widget.vaiAlleCase,
           apriIlMenu: widget.quandoChiedeIlMenu,
           apriIlNavigatore: widget.quandoApreIlNavigatore,
           inCima: inCima,
-          icona: Icons.wifi_lock_rounded,
-          titolo: inLingua(
-            it: 'Fuori casa serve GdAHome Premium',
-            en: 'Away from home you need GdAHome Premium',
-          ),
-          sotto: inLingua(
-            it:
-                'Sotto il Wi-Fi di «${collegamento.casa?.nome ?? 'casa'}» si '
-                'apre come sempre. Con Premium ci entri da ovunque, senza '
-                'aprire porte sul router e cifrato da un capo all\'altro.',
-            en:
-                'On the Wi-Fi of “${collegamento.casa?.nome ?? 'home'}” it '
-                'opens as always. With Premium you get in from anywhere, '
-                'with no router ports to open and encrypted end to end.',
-          ),
-          azione: FilledButton.icon(
-            onPressed: () => unawaited(
-              apriLaPaginaPremium(
-                context,
-                collegamento,
-                perche: PerchePremium.fuoriCasa,
-              ),
-            ),
-            style: FilledButton.styleFrom(
-              minimumSize: const Size(0, 48),
-              padding: const EdgeInsets.symmetric(horizontal: 22),
-            ),
-            icon: const Icon(Icons.star_rounded),
-            label: Text(
-              inLingua(
-                it: 'Scopri GdAHome Premium',
-                en: 'Discover GdAHome Premium',
-              ),
+          scopri: () => unawaited(
+            apriLaPaginaPremium(
+              context,
+              collegamento,
+              perche: PerchePremium.fuoriCasa,
             ),
           ),
         );
@@ -1556,6 +1530,403 @@ class _Stato extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// Fuori casa con la casa Base: non un guasto, una porta che si apre con
+/// Premium. In cima la casa (come nelle altre pagine), poi un riquadro solo
+/// con quello che serve — perche' non si entra, cosa da' Premium, il tasto —
+/// e sotto, in due mattonelle, quello che si puo' fare intanto.
+class _FuoriCasaConPremium extends StatelessWidget {
+  const _FuoriCasaConPremium({
+    required this.collegamento,
+    required this.scopri,
+    this.vaiAlleCase,
+    this.apriIlMenu,
+    this.apriIlNavigatore,
+    this.inCima = 0,
+  });
+
+  final Collegamento collegamento;
+  final VoidCallback scopri;
+  final VoidCallback? vaiAlleCase;
+  final VoidCallback? apriIlMenu;
+  final VoidCallback? apriIlNavigatore;
+  final double inCima;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    final testi = tema.textTheme;
+    final scuro = tema.brightness == Brightness.dark;
+    final nome = collegamento.casa?.nome ?? inLingua(it: 'Casa', en: 'Home');
+    final carta = scuro ? const Color(0xFF151F33) : Colors.white;
+    final tenue = tema.colorScheme.onSurface.withValues(alpha: 0.62);
+    return RefreshIndicator(
+      onRefresh: () => collegamento.apri(forza: true),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.fromLTRB(16, 20 + inCima, 16, 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                if (apriIlMenu != null) ...[
+                  IconButton(
+                    key: const Key('stato-menu'),
+                    icon: const Icon(Icons.menu_rounded),
+                    tooltip: nomeDelTastoDellaBarra,
+                    onPressed: apriIlMenu,
+                  ),
+                  const SizedBox(width: 4),
+                ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        nome,
+                        style: testi.titleLarge,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 3),
+                      DaDoveSiPassa(collegamento, piccolo: true),
+                    ],
+                  ),
+                ),
+                if (vaiAlleCase != null)
+                  IconButton(
+                    icon: const Icon(Icons.home_work_rounded),
+                    tooltip: nomeDelleCase,
+                    onPressed: vaiAlleCase,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 22),
+            Container(
+              key: const Key('fuori-casa-premium'),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(28),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: scuro
+                      ? const [Color(0xFF2A2112), Color(0xFF151F33)]
+                      : const [Color(0xFFFFF4DC), Colors.white],
+                ),
+                border: Border.all(
+                  color: Colori.ambra.withValues(alpha: scuro ? 0.35 : 0.3),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colori.ambra.withValues(alpha: scuro ? 0.08 : 0.16),
+                    blurRadius: 30,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.fromLTRB(22, 26, 22, 22),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [Color(0xFFFBBF24), Colori.ambraScura],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colori.ambra.withValues(alpha: 0.4),
+                              blurRadius: 16,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.workspace_premium_rounded,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colori.ambra.withValues(alpha: 0.16),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'GDAHOME PREMIUM',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.8,
+                            color: scuro ? Colori.ambra : Colori.ambraScura,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    inLingua(
+                      it: 'Fuori casa serve GdAHome Premium',
+                      en: 'Away from home you need GdAHome Premium',
+                    ),
+                    style: testi.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      height: 1.15,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    inLingua(
+                      it:
+                          'Con Premium entri in «$nome» da ovunque: senza aprire '
+                          'porte sul router, e cifrato da un capo all\'altro.',
+                      en:
+                          'With Premium you get into “$nome” from anywhere: no '
+                          'router ports to open, encrypted end to end.',
+                    ),
+                    style: testi.bodyLarge?.copyWith(color: tenue, height: 1.4),
+                  ),
+                  const SizedBox(height: 18),
+                  for (final (icona, riga) in [
+                    (
+                      Icons.public_rounded,
+                      inLingua(
+                        it: 'La casa sul telefono, ovunque tu sia',
+                        en: 'Your home on your phone, wherever you are',
+                      ),
+                    ),
+                    (
+                      Icons.auto_awesome_rounded,
+                      inLingua(
+                        it: 'Automazioni, Zigbee e la salute dall\'orologio',
+                        en: 'Automations, Zigbee and health from your watch',
+                      ),
+                    ),
+                    (
+                      Icons.navigation_rounded,
+                      inLingua(
+                        it: 'GdANav Premium compreso, anche in auto',
+                        en: 'GdANav Premium included, in the car too',
+                      ),
+                    ),
+                  ])
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 30,
+                            height: 30,
+                            decoration: BoxDecoration(
+                              color: Colori.ambra.withValues(alpha: 0.16),
+                              borderRadius: BorderRadius.circular(9),
+                            ),
+                            child: Icon(
+                              icona,
+                              size: 17,
+                              color: scuro ? Colori.ambra : Colori.ambraScura,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(child: Text(riga, style: testi.bodyMedium)),
+                        ],
+                      ),
+                    ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      key: const Key('fuori-casa-scopri'),
+                      onPressed: scopri,
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(0, 54),
+                        backgroundColor: scuro ? Colori.ambra : Colori.notte,
+                        foregroundColor: scuro ? Colori.notte : Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        textStyle: testi.labelLarge?.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      icon: const Icon(Icons.star_rounded),
+                      label: Text(
+                        inLingua(
+                          it: 'Scopri GdAHome Premium',
+                          en: 'Discover GdAHome Premium',
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 1, left: 6),
+                  child: Icon(Icons.wifi_rounded, size: 18, color: tenue),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    inLingua(
+                      it:
+                          'Sotto il Wi-Fi di «$nome» si apre come sempre, '
+                          'anche senza Premium.',
+                      en:
+                          'On the Wi-Fi of “$nome” it opens as always, even '
+                          'without Premium.',
+                    ),
+                    style: testi.bodyMedium?.copyWith(color: tenue),
+                  ),
+                ),
+              ],
+            ),
+            if (apriIlNavigatore != null || vaiAlleCase != null) ...[
+              const SizedBox(height: 26),
+              Padding(
+                padding: const EdgeInsets.only(left: 6, bottom: 10),
+                child: Text(
+                  inLingua(it: 'INTANTO', en: 'MEANWHILE'),
+                  style: testi.labelMedium?.copyWith(
+                    color: tenue,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.4,
+                  ),
+                ),
+              ),
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (apriIlNavigatore != null)
+                      Expanded(
+                        child: _Mattonella(
+                          chiave: const Key('stato-apri-gdanav'),
+                          carta: carta,
+                          icona: Icons.navigation_rounded,
+                          colore: Colori.ambraScura,
+                          titolo: inLingua(
+                            it: 'Apri GdANav',
+                            en: 'Open GdANav',
+                          ),
+                          sotto: inLingua(
+                            it: 'Il navigatore va anche senza la casa',
+                            en: 'The navigator works without your home',
+                          ),
+                          onTap: apriIlNavigatore!,
+                        ),
+                      ),
+                    if (apriIlNavigatore != null && vaiAlleCase != null)
+                      const SizedBox(width: 12),
+                    if (vaiAlleCase != null)
+                      Expanded(
+                        child: _Mattonella(
+                          chiave: const Key('stato-vai-alle-case'),
+                          carta: carta,
+                          icona: Icons.home_work_rounded,
+                          colore: Colori.blu,
+                          titolo: inLingua(it: 'Le tue case', en: 'Your homes'),
+                          sotto: inLingua(
+                            it: 'Riabbinala o scegline un\'altra',
+                            en: 'Pair it again or pick another',
+                          ),
+                          onTap: vaiAlleCase!,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Una mattonella di «intanto»: un'icona nel suo tondo, il titolo, una riga.
+class _Mattonella extends StatelessWidget {
+  const _Mattonella({
+    required this.chiave,
+    required this.carta,
+    required this.icona,
+    required this.colore,
+    required this.titolo,
+    required this.sotto,
+    required this.onTap,
+  });
+
+  final Key chiave;
+  final Color carta;
+  final IconData icona;
+  final Color colore;
+  final String titolo;
+  final String sotto;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final testi = Theme.of(context).textTheme;
+    return Material(
+      color: carta,
+      borderRadius: BorderRadius.circular(22),
+      child: InkWell(
+        key: chiave,
+        borderRadius: BorderRadius.circular(22),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: colore.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icona, color: colore, size: 22),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                titolo,
+                style: testi.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                sotto,
+                style: testi.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface
+                      .withValues(alpha: 0.6),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

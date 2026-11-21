@@ -8,6 +8,21 @@ i suoi in `ponte/CHANGELOG.md`, ed è quello che Home Assistant fa vedere. Un
 rilascio dell'app non fa comparire un aggiornamento dell'add-on, e al
 contrario.
 
+## 1.19.21
+
+- **Navigatore, la linea del percorso sulla strada giusta**: anche quando
+  alla partenza il GPS non c'è ancora o le strade attorno arrivano tardi,
+  la linea si rimette da sola sulla carreggiata giusta e non taglia più
+  fra un ramo e l'altro degli incroci a triangolo.
+- **Navigatore, la linea dove si guarda**: spostando la mappa col dito, la
+  linea del percorso resta quella in 3D attaccata all'asfalto anche lontano
+  dall'auto.
+- **Navigatore, al semaforo**: fermi da qualche secondo, la freccia si
+  porta dove l'auto è davvero invece di restare qualche metro indietro.
+- **Navigatore, le rotonde**: nella vista «Corsie» la rotonda ha il suo
+  anello e l'isola in mezzo, e le strade che arrivano si fermano al bordo
+  invece di finirci dentro con linee e marciapiedi.
+
 ## 1.19.20
 
 - **Navigatore, strade in 3D**: le curve sono arrotondate, senza spigoli, e

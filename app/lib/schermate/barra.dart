@@ -1476,12 +1476,13 @@ class _IlBollinoPremium extends StatelessWidget {
   }
 }
 
-/// Il lucchetto di gdahome Premium, addosso a una mattonella.
+/// Il lucchetto di gdahome Premium, addosso a una mattonella: il lucchetto e
+/// la parola, «il catenaccio ovunque ma con scritta premium».
 ///
 /// Ambra come il numero degli aggiornamenti, e per lo stesso motivo: non e'
 /// un guasto, e' una porta che si apre con Premium. La mattonella resta viva
-/// — si preme, e porta alla pagina che spiega — perche' una voce spenta non
-/// dice niente di cosa c'e' dietro.
+/// — si preme, e porta alla pagina che spiega e vende — perche' una voce
+/// spenta non dice niente di cosa c'e' dietro.
 class _IlLucchetto extends StatelessWidget {
   const _IlLucchetto({this.sulloScuro = false});
 
@@ -1492,13 +1493,29 @@ class _IlLucchetto extends StatelessWidget {
     return Tooltip(
       message: 'GdAHome Premium',
       child: Container(
-        width: 22,
-        height: 22,
+        key: const Key('lucchetto-premium'),
+        padding: const EdgeInsets.fromLTRB(6, 3, 8, 3),
         decoration: BoxDecoration(
           color: sulloScuro ? Colori.ambra : Colori.ambraScura,
-          shape: BoxShape.circle,
+          borderRadius: BorderRadius.circular(11),
         ),
-        child: const Icon(Icons.lock_rounded, size: 13, color: Colors.white),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.lock_rounded, size: 12, color: Colors.white),
+            SizedBox(width: 4),
+            Text(
+              'PREMIUM',
+              style: TextStyle(
+                fontSize: 9.5,
+                height: 1.2,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.6,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1542,16 +1559,23 @@ List<Sezione> vociDellaBarra({
   bool nellApp = true,
   bool conPremium = false,
   bool conLaSalute = true,
+  Set<Sezione> bloccate = const {},
 }) => [
   for (final una in Sezione.values)
-    if ((una != Sezione.console || conLaConsole) &&
-        (una != Sezione.premium || conPremium) &&
-        (una != Sezione.cruscotto || conIlCruscotto) &&
-        (una != Sezione.gestione || conLaGestione) &&
-        (una != Sezione.zigbee || conZigbee) &&
-        (una != Sezione.salute || conLaSalute) &&
-        (chiAmministra || !una.soloPerChiAmministra) &&
-        (nellApp || !una.soloNellApp))
+    if ((nellApp || !una.soloNellApp) &&
+        /* Le voci col lucchetto ci sono sempre, in casa e fuori: «senza
+         * premium sono scomparse le altre opzioni tipo zigbee, automazioni:
+         * devono esserci, con l'indicazione premium». Fuori casa il ponte
+         * non risponde, e non si sapeva se c'e' Zigbee o chi amministra: le
+         * voci sparivano. Premute, portano a Premium. */
+        ((bloccate.contains(una) && (una != Sezione.salute || conLaSalute)) ||
+            ((una != Sezione.console || conLaConsole) &&
+                (una != Sezione.premium || conPremium) &&
+                (una != Sezione.cruscotto || conIlCruscotto) &&
+                (una != Sezione.gestione || conLaGestione) &&
+                (una != Sezione.zigbee || conZigbee) &&
+                (una != Sezione.salute || conLaSalute) &&
+                (chiAmministra || !una.soloPerChiAmministra))))
       una,
 ];
 

@@ -330,6 +330,8 @@ void main() {
       tester,
       SchermataPremium(collegamento: collegamento, sulWeb: false),
     );
+    await tester.ensureVisible(find.byKey(const Key('codice-regalo')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('codice-regalo')));
     await tester.pumpAndSettle();
     expect(find.text('Codice regalo'), findsOneWidget);
