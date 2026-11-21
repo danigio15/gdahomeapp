@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-GCNKAE2V.js";
+} from "../../chunk-DL7MPUS3.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -12002,6 +12002,11 @@ function spiegazioneDellErrore(testo5, states = allStates()) {
       "Instant values are shown meanwhile."
     )}`;
   }
+  if (/casa non risponde|home is not answering/i.test(grezzo2))
+    return t(
+      "Mi sto ricollegando alla casa: i numeri arrivano appena risponde.",
+      "Reconnecting to your home: the numbers arrive as soon as it answers."
+    );
   if (/connection (lost|timeout|unavailable)/i.test(grezzo2))
     return t(
       "La connessione con Home Assistant si è interrotta: mi ricollego da solo.",
@@ -12078,8 +12083,10 @@ async function eseguiIlRefresh(period, carico) {
     );
     segnaLaRagione(state6.lastError);
     const presaCaduta = presaDaRifare(state6.lastError);
-    if (state6.bundle || state6.retryCount >= 40) {
-      scheduleEnergyRefresh(true, presaCaduta ? RIPRESA_DOPO_LA_PRESA_MS : riposoDeiPeriodi());
+    if (presaCaduta) {
+      scheduleEnergyRefresh(true, RIPRESA_DOPO_LA_PRESA_MS);
+    } else if (state6.bundle || state6.retryCount >= 40) {
+      scheduleEnergyRefresh(true, riposoDeiPeriodi());
     } else {
       state6.retryCount += 1;
       const inAffanno = Boolean(broker?.recorderInAffanno?.());

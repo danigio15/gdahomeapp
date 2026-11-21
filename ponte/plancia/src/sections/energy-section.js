@@ -2005,6 +2005,15 @@ export function spiegazioneDellErrore(testo, states = allStates()) {
    * storico, e lo si alleggerisce. */
   /* La presa morta dopo che il telefono ha dormito non e' colpa del
    * Recorder: la plancia se ne apre un'altra da sola. */
+  /* «Che significa la casa non risponde se il pallino è verde?»: tornando
+   * dal background la presa della pagina si riapre prima del filo dell'app,
+   * e per qualche secondo la casa non si raggiunge. Si dice cosa succede,
+   * non la parola grezza, e intanto si riprova (vedi `presaDaRifare`). */
+  if (/casa non risponde|home is not answering/i.test(grezzo))
+    return t(
+      "Mi sto ricollegando alla casa: i numeri arrivano appena risponde.",
+      "Reconnecting to your home: the numbers arrive as soon as it answers.",
+    );
   if (/connection (lost|timeout|unavailable)/i.test(grezzo))
     return t(
       "La connessione con Home Assistant si è interrotta: mi ricollego da solo.",
@@ -2130,8 +2139,13 @@ async function eseguiIlRefresh(period, carico) {
      * se la presa e' caduta (la prossima domanda ne apre una nuova), al
      * passo di sempre negli altri casi. */
     const presaCaduta = presaDaRifare(state.lastError);
-    if (state.bundle || state.retryCount >= 40) {
-      scheduleEnergyRefresh(true, presaCaduta ? RIPRESA_DOPO_LA_PRESA_MS : riposoDeiPeriodi());
+    /* Una presa da rifare si rifà presto anche senza numeri in mano: prima,
+     * dopo i primi tentativi, si aspettavano venti secondi con la casa gia'
+     * tornata, e sopra restava «la casa non risponde» col pallino verde. */
+    if (presaCaduta) {
+      scheduleEnergyRefresh(true, RIPRESA_DOPO_LA_PRESA_MS);
+    } else if (state.bundle || state.retryCount >= 40) {
+      scheduleEnergyRefresh(true, riposoDeiPeriodi());
     } else {
       state.retryCount += 1;
       /* Dopo i primi tentativi si rallenta: un Recorder che non risponde non

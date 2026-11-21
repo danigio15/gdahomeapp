@@ -9,7 +9,7 @@ import { dirname, join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { presaDaRifare } from "../src/sections/energy-section.js";
+import { presaDaRifare, spiegazioneDellErrore } from "../src/sections/energy-section.js";
 
 const qui = dirname(fileURLToPath(import.meta.url));
 
@@ -39,4 +39,19 @@ test("gli stati che tornano richiedono subito i totali rimasti su un errore", ()
     /if \(state\.lastError && hasConfiguredEnergy\(\)\) scheduleEnergyRefresh\(true\);/,
   );
   assert.match(energia, /const presaCaduta = presaDaRifare\(state\.lastError\);/);
+});
+
+test("col pallino verde la riga non dice «la casa non risponde»: dice che si ricollega", () => {
+  // «Che significa la casa non risponde se il pallino è verde?»
+  for (const grezzo of ["la casa non risponde", "your home is not answering"]) {
+    const riga = spiegazioneDellErrore(grezzo, {});
+    assert.doesNotMatch(riga, /casa non risponde|not answering/i);
+    assert.match(riga, /ricollegando|Reconnecting/);
+  }
+});
+
+test("una presa da rifare si rifà dopo tre secondi anche senza numeri in mano", () => {
+  const energia = readFileSync(join(qui, "..", "src", "sections", "energy-section.js"), "utf8");
+  const da = energia.indexOf("const presaCaduta = presaDaRifare(state.lastError);");
+  assert.match(energia.slice(da, da + 600), /if \(presaCaduta\) \{\s*scheduleEnergyRefresh\(true, RIPRESA_DOPO_LA_PRESA_MS\);/);
 });
