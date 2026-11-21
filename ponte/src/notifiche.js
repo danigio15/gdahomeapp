@@ -1973,8 +1973,12 @@ export class Notifiche {
     evento._foto = (async () => {
       const ora = this.adesso();
       /* Una prova la foto la porta sempre: chi la preme due volte di fila
-       * vuole vederla anche la seconda. */
-      const sempre = evento.tipo === "antifurto" || evento.tipo === "prova";
+       * vuole vederla anche la seconda. E il campanello: chi suona prima si
+       * avvicina, e il movimento davanti alla stessa telecamera, pochi
+       * secondi prima, si prendeva la foto del minuto — «quando arriva la
+       * notifica il riquadro della telecamera rimane vuoto». */
+      const sempre =
+        evento.tipo === "antifurto" || evento.tipo === "prova" || evento.tipo === "campanello";
       if (!sempre && ora - (this._fotoDi.get(camera) || 0) < MINUTO) return null;
       this._fotoDi.set(camera, ora);
       if (typeof this.casa?.immagine !== "function") return null;

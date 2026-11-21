@@ -91,3 +91,30 @@ test("la foto di una prova parte anche se la stessa telecamera ne ha appena mand
     rmSync(cartella, { recursive: true, force: true });
   }
 });
+
+test("il campanello porta la foto anche se il movimento davanti alla stessa telecamera l'ha appena presa", async () => {
+  /* «Quando arriva questa notifica il riquadro della telecamera rimane
+   * vuoto»: chi suona prima si avvicina, e il movimento si prendeva la foto
+   * del minuto. */
+  const cartella = mkdtempSync(join(tmpdir(), "campanello-foto-"));
+  try {
+    const notifiche = new Notifiche({
+      cartella,
+      casa: {
+        chiedi: async () => [],
+        ascolta: async () => () => {},
+        immagine: async () => Buffer.from([0xff, 0xd8, 0xff, 1, 2, 3]),
+      },
+      registro: { info() {}, debug() {}, errore() {}, attenzione() {} },
+      adesso: () => ADESSO,
+    });
+    assert.ok(await notifiche._laFoto({ tipo: "movimento" }, "camera.ingresso"));
+    assert.ok(await notifiche._laFoto({ tipo: "campanello" }, "camera.ingresso"));
+    assert.ok(
+      await notifiche._laFoto({ tipo: "campanello" }, "camera.ingresso"),
+      "e anche chi suona due volte",
+    );
+  } finally {
+    rmSync(cartella, { recursive: true, force: true });
+  }
+});
