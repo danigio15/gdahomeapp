@@ -64,6 +64,7 @@ NotificaArrivata _movimento({
 );
 
 void main() {
+  _campanello();
   group('«Quali» del movimento', () {
     testWidgets('prima le telecamere, poi i sensori', (tester) async {
       final ordine = entitaPerQuali('movimento', _entita);
@@ -380,4 +381,64 @@ void main() {
       });
     });
   });
+}
+
+/* «Quando arriva questa notifica il riquadro della telecamera rimane vuoto»:
+ * il campanello mostrava solo il dal vivo, e col filo che non c'e' ancora
+ * (telefono appena sbloccato, fuori casa) restava l'icona. La foto di chi ha
+ * suonato e' arrivata con la notifica: si vede subito. */
+void _campanello() {
+  testWidgets(
+    'il campanello mostra subito la foto della notifica, anche senza la casa',
+    (tester) async {
+      late Collegamento collegamento;
+      late Directory cartella;
+      final foto = File('test/notifiche/porta-di-prova.jpg').readAsBytesSync();
+      final suona = NotificaArrivata(
+        id: 'campanello-1',
+        tipo: 'campanello',
+        categoria: 'sicurezza',
+        urgenza: 'alta',
+        titolo: '🔔 Suona il campanello',
+        testo: 'Ingresso · adesso',
+        quando: DateTime.now(),
+        scade: DateTime(2100),
+        camera: _ingresso,
+        chiamata: true,
+      );
+      await tester.runAsync(() async {
+        final archivio = ArchivioDelleCase(CassaforteInMemoria());
+        await archivio.apri();
+        collegamento = Collegamento(archivio: archivio);
+        cartella = Directory.systemTemp.createTempSync('campanello-');
+        await tieniLImmagine(suona.id, foto, cartella: cartella);
+      });
+      addTearDown(() => cartella.deleteSync(recursive: true));
+      // Alta: nelle prove i caratteri sono quadrotti larghi.
+      tester.view.physicalSize = const Size(520 * 3, 1600 * 3);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: temaChiaro(),
+          home: SchermataDelCampanello(
+            tocco: ToccoDellaNotifica(casa: 'c', notifica: suona),
+            collegamento: collegamento,
+            sopraIlBlocco: false,
+            cartellaDelleImmagini: cartella,
+          ),
+        ),
+      );
+      for (var i = 0; i < 10 && find.byType(Image).evaluate().length < 2; i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 50)),
+        );
+        await tester.pump();
+      }
+      // Il marchio in cima e la foto: non l'icona della telecamera vuota.
+      expect(find.byIcon(Icons.videocam_rounded), findsNothing);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 61));
+    },
+  );
 }

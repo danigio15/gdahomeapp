@@ -845,6 +845,7 @@ class SchermataDelCampanello extends StatefulWidget {
     this.postino,
     this.fotoIniziale,
     this.sopraIlBlocco = true,
+    this.cartellaDelleImmagini,
   });
 
   final ToccoDellaNotifica tocco;
@@ -856,6 +857,9 @@ class SchermataDelCampanello extends StatefulWidget {
 
   /// Se accendere lo schermo e passare sopra il blocco, come una chiamata.
   final bool sopraIlBlocco;
+
+  /// Dove stanno le immagini delle notifiche (per le prove).
+  final Directory? cartellaDelleImmagini;
 
   @override
   State<SchermataDelCampanello> createState() => _StatoDelCampanello();
@@ -877,6 +881,13 @@ class _StatoDelCampanello extends State<SchermataDelCampanello> {
     if (widget.sopraIlBlocco) unawaited(loSchermoApreIlCampanello());
     final camera = _notifica.camera;
     if (camera != null && widget.fotoIniziale == null) {
+      /* «Quando arriva questa notifica il riquadro della telecamera rimane
+       * vuoto.» Il dal vivo lo da' la casa sul filo, e col telefono appena
+       * sbloccato (o fuori casa) il filo non c'e' ancora, o non c'e'. Ma la
+       * foto di chi ha suonato e' arrivata con la notifica e il telefono la
+       * tiene (`le_immagini.dart`): si mostra subito, e il dal vivo la
+       * sostituisce appena arriva. */
+      unawaited(_fotoDellaNotifica());
       unawaited(_unaFoto(camera));
       /* «Dal vivo»: una foto ogni due secondi, finche' la schermata e'
        * aperta. Non un video: una foto per volta passa dal filo come tutto il
@@ -890,6 +901,16 @@ class _StatoDelCampanello extends State<SchermataDelCampanello> {
     Timer(const Duration(seconds: 60), () {
       if (mounted) Navigator.of(context).maybePop();
     });
+  }
+
+  Future<void> _fotoDellaNotifica() async {
+    final tenuta = await prendiLImmagine(
+      _notifica.id,
+      cartella: widget.cartellaDelleImmagini,
+    );
+    if (tenuta != null && mounted && _foto == null) {
+      setState(() => _foto = tenuta);
+    }
   }
 
   Future<void> _unaFoto(String camera) async {
