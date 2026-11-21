@@ -4107,6 +4107,7 @@ export const SOURCE_INDEX = Object.freeze({
   "mettila in coda": "queue it",
   "Mettilo in ${nomeDellaSezione(suo)}": "Put it in ${nomeDellaSezione(suo)}",
   "Mezzo": "Vehicle kind",
+  "Mi sto ricollegando alla casa: i numeri arrivano appena risponde.": "Reconnecting to your home: the numbers arrive as soon as it answers.",
   "Micio": "Whiskers",
   "Microonde": "Microwave",
   "min ${cifre(pacco.minima.volt, 3)} V · cella ${pacco.minima.numero}": "min ${cifre(pacco.minima.volt, 3)} V · cell ${pacco.minima.numero}",
