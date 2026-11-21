@@ -114,7 +114,8 @@ if (process.argv[1] && process.argv[1].endsWith("le-note-della-versione.mjs")) {
   try {
     const app = process.argv.includes("--app");
     const quale = process.argv.slice(2).find((una) => una !== "--app") || "";
-    if (!quale) throw new Error("uso: node strumenti/le-note-della-versione.mjs [--app] <versione>");
+    if (!quale)
+      throw new Error("uso: node strumenti/le-note-della-versione.mjs [--app] <versione>");
     process.stdout.write(leNoteDelCambiario(quale, { app }));
   } catch (errore) {
     console.error(errore?.message || errore);
