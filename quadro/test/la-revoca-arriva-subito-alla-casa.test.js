@@ -283,7 +283,9 @@ test("gdanav revocata a una casa che tiene gdahome: gdahome non si tocca", async
     assert.equal(revoche.tolta(home), false);
 
     /* La casa ricontrolla e il gettone gdanav se ne va... */
-    await attendi(() => richieste.length === 1);
+    /* (Puo' richiedere anche due volte: gdahome e' stata data da poco, e
+     * il centralino dice di ricontrollare anche per quella.) */
+    await attendi(() => richieste.length >= 1);
     await attendi(() => licenze.stato().gettoni.gdanav === undefined);
     await attendi(() => !centralino.gdanavDi.has(casa));
     /* ...ma gdahome resta: Premium in casa, gdanav compreso, e il telefono da
@@ -364,4 +366,43 @@ test("la spiegazione della conferma va a capo sotto la riga, in ogni elenco", ()
   assert.match(GESTORE, /\.elenco > li\.in-conferma > \.riga-testo \{\s*flex: 1 1 12rem;/);
   assert.match(GESTORE, /riga\?\.classList\.add\("in-conferma"\);/);
   assert.match(GESTORE, /riga\?\.classList\.remove\("in-conferma"\);/);
+});
+
+test("revocata e poi regalata di nuovo: la casa torna Premium al giro del minuto, non dopo sei ore", async () => {
+  /* «Ho revocato una licenza poi l'ho regalata di nuovo ma non si collega
+   * Premium»: la revoca arrivava subito, il regalo nuovo solo al rinnovo
+   * delle sei ore. */
+  const b = await iTrePezzi();
+  const { casa, centralino, licenze, chiamata, revoche, richieste } = b;
+  try {
+    const prima = await b.regala("gdahome");
+    await licenze.rinnova();
+    chiamata.avvia();
+    await attendi(() => chiamata.dentro && centralino.ePremium(casa));
+
+    /* Revoca, e la casa Base. */
+    b.orologio.avanti = 60 * 1000;
+    assert.equal((await b.gestore(`/licenze/${prima}`, "DELETE")).stato, 200);
+    assert.equal(await revoche.aggiorna(), true);
+    await attendi(() => licenze.premium === false);
+    const dopoLaRevoca = richieste.length;
+
+    /* Il regalo di nuovo: nessun rinnovo a mano, solo il giro del minuto. */
+    b.orologio.avanti = 2 * 60 * 1000;
+    const dopo = await b.regala("gdahome");
+    assert.notEqual(dopo, prima);
+    assert.equal(await revoche.aggiorna(), true);
+    await attendi(() => richieste.length > dopoLaRevoca);
+    await attendi(() => licenze.premium === true);
+    await attendi(() => centralino.ePremium(casa));
+
+    /* Al giro dopo la stessa casa non si richiama di nuovo. */
+    const quante = richieste.length;
+    b.orologio.avanti = 3 * 60 * 1000;
+    assert.equal(await revoche.aggiorna(), true);
+    await new Promise((ok) => setTimeout(ok, 50));
+    assert.equal(richieste.length, quante);
+  } finally {
+    await b.spegni();
+  }
 });

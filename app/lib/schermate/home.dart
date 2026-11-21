@@ -1028,6 +1028,7 @@ class _HomeState extends State<Home> {
                 conPremium: collegamento.licenza.siVende,
                 /* Nel browser la Salute non c'e' (`laSaluteCe`). */
                 conLaSalute: laSaluteCe,
+                bloccate: _bloccate,
               ),
               bloccate: _bloccate,
               apriPremium: () => unawaited(

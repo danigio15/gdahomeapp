@@ -277,6 +277,7 @@ export class Centralino {
     this.revoche = revoche;
     /* Una licenza appena tolta chiude subito, non al giro di controllo. */
     if (revoche) revoche.alleNuove = (lic, gdanav) => this.licenzeAppenaTolte(lic, gdanav);
+    if (revoche) revoche.alleDate = (case_) => this.licenzeAppenaDate(case_);
     this.vitaDelCanaleDiAbbinamento = vitaDelCanaleDiAbbinamento;
     /** Fino a quando una casa e' gdahome Premium, per identificativo.
      *
@@ -769,6 +770,17 @@ export class Centralino {
       } else if (tolteGdanav.has(this.gdanavDi.get(casa.id))) {
         casa.ricontrollaLaLicenza();
       }
+    }
+  }
+
+  /* Il quadro ha appena dato una licenza a queste case (un regalo, un
+   * acquisto, un installatore): quelle collegate richiedono subito il loro
+   * gettone, invece di aspettare il giro delle sei ore. Come per le tolte, la
+   * casa non si fida del messaggio: richiede e basta. */
+  licenzeAppenaDate(case_) {
+    const date = new Set(case_);
+    for (const casa of [...this.collegate.values()]) {
+      if (casa.id && date.has(casa.id)) casa.ricontrollaLaLicenza();
     }
   }
 
