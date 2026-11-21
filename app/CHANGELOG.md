@@ -8,6 +8,21 @@ i suoi in `ponte/CHANGELOG.md`, ed è quello che Home Assistant fa vedere. Un
 rilascio dell'app non fa comparire un aggiornamento dell'add-on, e al
 contrario.
 
+## 1.19.22
+
+- **Navigatore, sensi unici**: la linea del percorso si rimette sulla
+  carreggiata giusta lungo tutto il percorso, subito, anche a chilometri di
+  distanza e con la mappa spostata col dito, non solo arrivandoci vicino.
+- **Navigatore, ferrovie**: ai passaggi a livello la strada resta a terra,
+  senza un ponte che non c'è; dove la strada passa sopra i binari, i binari
+  scendono sotto in trincea.
+- **Navigatore, vista «Corsie»**: la fascia verde del percorso resta
+  sull'asfalto e va liscia anche attorno alle isole e alle rotonde, senza
+  zig-zag e senza denti.
+- **Navigatore, assistenza**: nel menu, «Copia il percorso per
+  l'assistenza» copia il percorso da mandarci quando la linea non va.
+- **Campanello**: nella notifica di chi ha suonato la foto si vede subito.
+
 ## 1.19.21
 
 - **Navigatore, la linea del percorso sulla strada giusta**: anche quando
