@@ -32090,8 +32090,8 @@ return A.f(a.w2(),$async$anZ)
 case 4:p=c
 o=t.N
 o=A.x(o,o)
-o.m(0,"app","1.19.22")
-o.m(0,"costruzione","1192200")
+o.m(0,"app","1.19.23")
+o.m(0,"costruzione","1192300")
 if(p.length!==0)o.m(0,"proprietario",p)
 q=o
 s=1
@@ -35229,7 +35229,7 @@ else h.m(0,"chi",b)
 h.m(0,"apertura",B.ek.gm_().bm(m))
 h.m(0,"mia",B.ek.gm_().bm(l))
 h.m(0,"mucchio",!0)
-h.m(0,"app",1192200)
+h.m(0,"app",1192300)
 h.m(0,"lega",1)
 p=B.am.j9(h,null)
 g.aqJ(new A.bgH(o,e,g,n,m,c,d,p))
@@ -122219,7 +122219,7 @@ q=q.ai(p==null?m.k3:p)}p=t.p
 q=A.b5(A.ag(A.a([k,B.uw,s,B.aO,A.r(r,o,o,o,o,o,q,B.av,o,o)],p),B.o,o,B.dL,B.i,0,B.k),1)
 r=A.hw(o,o,B.kN,o,o,o,o)
 k=A.iO(B.zP,o,A.r(l===B.Y?A.c("Update from the App Store","Aggiorna dall'App Store"):A.c("Update from Google Play","Aggiorna dal Play Store"),o,o,o,o,o,o,o,o,o),new A.aGN(this),r)
-s=A.c("This is 1.19.22 (1192200)","Questa \xe8 la 1.19.22 (1192200)")
+s=A.c("This is 1.19.23 (1192300)","Questa \xe8 la 1.19.23 (1192300)")
 r=n.Q
 if(r==null)l=o
 else{l=m.rx
@@ -128424,7 +128424,7 @@ i=t.N
 i=A.x(i,i)
 h=g
 if(h!=null)h.b04()
-i.m(0,"app","1.19.22")
+i.m(0,"app","1.19.23")
 if(k.length!==0)i.m(0,"proprietario",k)
 q=new A.ai6(i,j.a)
 s=1
@@ -130481,9 +130481,9 @@ else{l=a5.rx
 l=n.ai(l==null?a5.k3:l)}l=A.r(o,a4,a4,a4,a4,a4,l,a4,a4,a4)
 o=a6.w
 k=A.r(A.c("This app","Questa app"),a4,a4,a4,a4,a4,o,a4,a4,a4)
-j=p.$2(A.c("Version","Versione"),"1.19.22 (1192200)")
+j=p.$2(A.c("Version","Versione"),"1.19.23 (1192300)")
 i=A.c("Package","Pacchetto")
-i=p.$2(i,"111-40faf3d")
+i=p.$2(i,"112-4b49620")
 h=A.c("Relay","Centralino")
 g=t.p
 h=A.ag(A.a([k,B.br,j,i,p.$2(h,$.aoN()==null?A.c("none","nessuno"):"GdAHome")],g),B.r,a4,B.f,B.i,0,B.k)
@@ -130613,7 +130613,7 @@ A.IV.prototype={
 A(a){var s,r=null,q=A.u(a).ax,p=A.u(a).ok.Q
 if(p==null)p=r
 else{s=q.rx
-p=p.yk((s==null?q.k3:s).aN(0.7),11)}return new A.ah(new A.X(0,this.c,0,0),A.r("GdAHome 1.19.22 (1192200)",r,r,r,r,r,p,B.av,r,r),r)}}
+p=p.yk((s==null?q.k3:s).aN(0.7),11)}return new A.ah(new A.X(0,this.c,0,0),A.r("GdAHome 1.19.23 (1192300)",r,r,r,r,r,p,B.av,r,r),r)}}
 A.Jl.prototype={
 ad(){var s=$.al()
 return new A.R4(new A.bD(null,t.Pq),new A.bD(null,t.dS),B.d4,new A.bD(null,t.b7),new A.cp(!1,s),new A.cp(!1,s))}}
@@ -130768,7 +130768,7 @@ else s=!0
 return s},
 atQ(){var s,r,q=null,p=this.a.c,o=t.N
 o=A.x(o,o)
-o.m(0,"app","111-40faf3d")
+o.m(0,"app","112-4b49620")
 o.m(0,"sistema","web")
 s=p.k1
 s=s==null?q:s.b
