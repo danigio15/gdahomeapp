@@ -166,6 +166,11 @@ flutter:
     # Gli elettrodomestici, uno per tipo: i disegni della plancia
     # (`appliance-artwork.js`), per «Chi ha consumato di più».
     - assets/elettrodomestici/
+    # Le novità dell'app: il suo CHANGELOG, com'e', per la scheda «Novità»
+    # dopo un aggiornamento e la pagina in Impostazioni app
+    # (`schermate/novita.dart`). Il file e' quello della release, non una
+    # copia: le note si scrivono una volta sola, e l'app legge le stesse.
+    - CHANGELOG.md
 
   # I caratteri sono quelli della plancia, e non per pigrizia: chi passa dal
   # telefono alla dashboard non deve avere l'impressione di due prodotti.

@@ -14,7 +14,7 @@
 /// Un'impostazione come questa si cerca **una volta sola**, a mente fredda, e
 /// si cerca dove stanno le impostazioni. Adesso e' una voce del menu.
 ///
-/// ## I due capitoli
+/// ## I capitoli
 ///
 ///  - **La plancia**: la plancia leggera e la composizione ibrida. Stavano in
 ///    «Come va l'app» — adesso «Diagnostica app» — accanto ai fotogrammi che
@@ -22,6 +22,10 @@
 ///    ha ragione, ed e' la stessa riga che divide le due pagine. Li' si
 ///    **guarda** per capire, qui si **tocca** per cambiare; un interruttore in
 ///    mezzo ai numeri e' un interruttore in una pagina che non e' sua;
+///
+///  - **Novità**: cosa e' cambiato nelle ultime versioni dell'app, le stesse
+///    note della scheda che compare dopo un aggiornamento (`novita.dart`).
+///    La scheda si chiude con «Ho capito» e non torna: qui si ritrova;
 ///
 ///  - **Sicurezza**: il lucchetto, il volto, l'impronta, e i momenti in cui
 ///    l'app li chiede — tutto quello che c'era sotto il catenaccio, spostato
@@ -48,6 +52,7 @@ import '../casa/la_guardia.dart';
 import '../parole.dart';
 import '../vestito/pezzi.dart';
 import 'il_lucchetto.dart';
+import 'novita.dart';
 
 /// La pagina «Impostazioni app».
 class SchermataDelleImpostazioniDellApp extends StatefulWidget {
@@ -57,10 +62,15 @@ class SchermataDelleImpostazioniDellApp extends StatefulWidget {
     required this.guardia,
     this.nuda = false,
     this.visibile = true,
+    this.novita,
   });
 
   final Impostazioni impostazioni;
   final LaGuardia guardia;
+
+  /// Dove si leggono le note della pagina «Novità». Di solito quelle
+  /// dell'app; nelle prove se ne mettono di finte.
+  final LeNovitaDellApp? novita;
 
   /// `true` quando la barra del titolo la mette chi ospita — dentro la home
   /// ce n'e' gia' una, e due una sopra l'altra sono due.
@@ -78,6 +88,9 @@ class SchermataDelleImpostazioniDellApp extends StatefulWidget {
 
 class _StatoDelleImpostazioniDellApp
     extends State<SchermataDelleImpostazioniDellApp> {
+  late final LeNovitaDellApp _novita =
+      widget.novita ?? LeNovitaDellApp(impostazioni: widget.impostazioni);
+
   @override
   Widget build(BuildContext context) {
     /* Il capitolo della sicurezza e' la schermata del lucchetto **com'e'**,
@@ -89,9 +102,15 @@ class _StatoDelleImpostazioniDellApp
       guardia: widget.guardia,
       nuda: true,
       visibile: widget.visibile,
-      inTesta: _LaPlancia(
-        impostazioni: widget.impostazioni,
-        cambiato: () => setState(() {}),
+      inTesta: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _LeNovita(novita: _novita),
+          _LaPlancia(
+            impostazioni: widget.impostazioni,
+            cambiato: () => setState(() {}),
+          ),
+        ],
       ),
     );
     if (widget.nuda) return dentro;
@@ -100,6 +119,40 @@ class _StatoDelleImpostazioniDellApp
         title: Text(inLingua(it: 'Impostazioni app', en: 'App settings')),
       ),
       body: dentro,
+    );
+  }
+}
+
+/// Il capitolo «Novità»: una riga sola, che porta alla pagina con le note.
+class _LeNovita extends StatelessWidget {
+  const _LeNovita({required this.novita});
+
+  final LeNovitaDellApp novita;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Insegna(inLingua(it: 'L\'app', en: 'The app')),
+        Scheda(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          child: ListTile(
+            key: const Key('impostazioni-novita'),
+            leading: const Cerchietto(icona: Icons.auto_awesome_rounded),
+            title: Text(inLingua(it: 'Novità', en: 'What\'s new')),
+            subtitle: Text(
+              inLingua(
+                it: 'Versione ${novita.adesso}: cosa è cambiato',
+                en: 'Version ${novita.adesso}: what changed',
+              ),
+            ),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => apriLaPaginaDelleNovita(context, novita),
+          ),
+        ),
+        const SizedBox(height: 18),
+      ],
     );
   }
 }

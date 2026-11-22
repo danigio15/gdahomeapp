@@ -34,6 +34,7 @@ import 'schermate/home.dart';
 import 'schermate/le_case.dart';
 import 'schermate/misure.dart';
 import 'schermate/navigatore_qui/qui.dart' as navigatore;
+import 'schermate/novita.dart' show LeNovitaDellApp;
 import 'licenza/negozio.dart';
 import 'casa/lo_schermo.dart' show loSchermoRimetti;
 import 'schermate/plancia_vera.dart';
@@ -917,6 +918,23 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
      * schermo. E se in macchina l'ha gia' aperto il servizio dell'auto, qui
      * non si rifa' niente. */
     await apriIlFiloConLaCasa(_collegamento);
+    /* L'installazione nuova: nessuna casa, e nessuna versione delle novita'
+     * scritta. Si segna questa e basta — chi ha appena scaricato l'app non
+     * deve trovarsi davanti «Novità della versione…» di un'app che non ha mai
+     * visto (`schermate/novita.dart`). Chi una casa ce l'ha e la versione no
+     * arriva da prima della scheda, e le novita' le vede. Si guarda adesso,
+     * prima del benvenuto: dopo l'abbinamento una casa c'e', e sembrerebbe un
+     * aggiornamento. */
+    final primaVolta = _collegamento.archivio.vuoto;
+    void segnaLaPrimaVolta() => unawaited(
+      LeNovitaDellApp(impostazioni: _impostazioni)
+          .seEAppenaArrivata(primaVolta: primaVolta),
+    );
+    if (_impostazioni.caricate) {
+      segnaLaPrimaVolta();
+    } else {
+      unawaited(_caricate.then((_) => segnaLaPrimaVolta()));
+    }
     /* Il lucchetto si decide su quello che c'e' scritto nelle impostazioni,
      * che `main` ha gia' letto dal disco. E si decide **insieme** a «pronto»,
      * nello stesso giro: la home non si disegna nemmeno una volta prima di
@@ -1071,6 +1089,7 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
       impostazioni: _impostazioni,
       guardia: _guardia,
       veloSu: _veloSu,
+      davanti: appDavanti,
       vaiAlleCase: () async {
         await Navigator.of(context).push<void>(
           MaterialPageRoute(
