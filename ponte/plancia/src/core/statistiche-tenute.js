@@ -86,7 +86,8 @@ export function unisciLeRighe(risposte = []) {
  * solo un'impronta, che serve a non mescolare due case. */
 export function improntaDellaCasa(root = globalThis) {
   try {
-    const casa = root.STATES?.["zone.home"]?.attributes || root._RAW_STATES?.["zone.home"]?.attributes;
+    const casa =
+      root.STATES?.["zone.home"]?.attributes || root._RAW_STATES?.["zone.home"]?.attributes;
     const lat = Number(casa?.latitude);
     const lon = Number(casa?.longitude);
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) return "";
@@ -171,7 +172,10 @@ export class StatisticheTenute {
     tenute.push([completa, { fino: ora + this.durata, righe }]);
     while (tenute.length) {
       const testo = JSON.stringify(Object.fromEntries(tenute));
-      if (testo.length <= this.spazio && scrivi(this.storage, CHIAVE_DELLE_RIGHE, Object.fromEntries(tenute)))
+      if (
+        testo.length <= this.spazio &&
+        scrivi(this.storage, CHIAVE_DELLE_RIGHE, Object.fromEntries(tenute))
+      )
         return true;
       /* Una sola voce che da sola non ci sta non si tiene. */
       if (tenute.length === 1) break;
