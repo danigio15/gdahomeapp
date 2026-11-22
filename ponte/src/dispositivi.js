@@ -363,7 +363,19 @@ export class Dispositivi {
    *
    * Il segno esce da qui una volta sola, adesso. Chi lo perde riabbina: non
    * c'e' nessuna strada per rileggerlo, ed e' voluto. */
-  abbina({ nome, sistema, utente = "", finoA = null, lega = false, ...detto } = {}) {
+  abbina({
+    nome,
+    sistema,
+    utente = "",
+    finoA = null,
+    lega = false,
+    sostituisce = "",
+    ...detto
+  } = {}) {
+    /* Il QR per riabbinare un telefono gia' abbinato (l'app cancellata e
+     * rimessa): quel telefono riprende il suo posto. */
+    const diPrima = sostituisce ? this.lista.find((uno) => uno.id === sostituisce) : null;
+    if (diPrima) return this._riabbina(diPrima, { nome, sistema, utente, lega, ...detto });
     const massimi = this.massimi;
     const diProva = Number.isFinite(finoA);
     if ((!diProva || this._provaNeiMassimi) && this.postiPresi() >= massimi) {
@@ -414,6 +426,41 @@ export class Dispositivi {
       /* Si rifa' al giro della sentinella. */
     }
     return { dispositivo: this._pulito(dispositivo), segno, chiave };
+  }
+
+  /* Lo stesso telefono, rientrato.
+   *
+   * «Dai la possibilita' di rigenerare il QR vicino al dispositivo, nel caso
+   * si cancella e reinstalla l'app.» Un'app rimessa ha perso il suo segno: per
+   * la casa era un telefono nuovo, con un nome nuovo, un posto in piu' fra
+   * quelli contati, e i sensori della Salute che ripartivano da zero. Col QR
+   * di quel telefono resta lui: stesso identificativo, stesso nome (se lo si
+   * era rinominato), stessa persona; cambiano solo il segno e la chiave del
+   * filo, che il telefono di prima non ha piu'. Non occupa un posto: lo aveva
+   * gia'. */
+  _riabbina(quello, { nome, sistema, utente = "", lega = false, ...detto } = {}) {
+    const segno = segnoNuovo();
+    const chiave = chiaveDelFiloNuova();
+    const chi = chiE(detto);
+    Object.assign(quello, chi, {
+      nome: quello.rinominato
+        ? quello.nome
+        : nomeDalModello(chi) || nomePulito(nome) || quello.nome,
+      sistema: nomePulito(sistema) || quello.sistema,
+      impronta: impronta(segno),
+      chiave,
+      vistoIl: this.adesso(),
+      utente: utentePulito(utente) || quello.utente,
+    });
+    delete quello.lega;
+    if (lega === true) quello.lega = true;
+    this.archivio.salva();
+    try {
+      this.dopoLAbbinamento?.();
+    } catch (_errore) {
+      /* Si rifa' al giro della sentinella. */
+    }
+    return { dispositivo: this._pulito(quello), segno, chiave, riabbinato: true };
   }
 
   /* ─── Con Base, due telefoni e non di piu' ────────────────────────────
