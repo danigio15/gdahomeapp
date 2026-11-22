@@ -86,7 +86,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "./chunk-XZD4LHEA.js";
+} from "./chunk-A7RTODPV.js";
 
 // src/core/appliance-program.js
 var clean2 = (value) => String(value ?? "").trim();
@@ -35666,7 +35666,7 @@ function installSegnalazioniSection() {
 senzaCadere(installSegnalazioniSection);
 
 // legacy/build-info.js
-var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.19.20", "dashboardVersion": "1.19.20", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-11-21T20:55:19+00:00", "commit": "f520cac2215fd3738e1e0e3a20788a1a0c3497c9", "assetHash": "778a1e5a73c4fb1f" });
+var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.19.20", "dashboardVersion": "1.19.20", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-11-22T07:24:33+00:00", "commit": "45b6a8e55afca1eb696e612ecace1ed6e0e1583d", "assetHash": "4792d6f9a70d943d" });
 
 export {
   faseInParole,

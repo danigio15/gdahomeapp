@@ -1,6 +1,7 @@
 // DM-FIX-20260812B
 /* Pure period/statistics service. */
 import { runtimeMetrics } from "./runtime-metrics.js";
+import { StatisticheTenute, spicchiDellArco, unisciLeRighe } from "./statistiche-tenute.js";
 
 export const PERIOD_SOURCES = Object.freeze([
   {
@@ -1135,8 +1136,11 @@ export class HomeAssistantBroker {
     cacheCurrentMs = PASSO_DELLE_STATISTICHE_MS,
     cacheHistoricalMs = 600000,
     ripresaDelFlussoMs = RIPRESA_DEL_FLUSSO_MS,
+    tenute = new StatisticheTenute(),
   } = {}) {
     this.timeout = timeout;
+    /* Le righe dei periodi chiusi sul dispositivo (`statistiche-tenute.js`). */
+    this.tenute = tenute;
     this.cacheCurrentMs = cacheCurrentMs;
     this.cacheHistoricalMs = cacheHistoricalMs;
     this.ripresaDelFlussoMs = ripresaDelFlussoMs;
@@ -1548,7 +1552,6 @@ export class HomeAssistantBroker {
     const statisticIds = [...new Set([...mapped.values()].filter(Boolean))];
     const startIso = new Date(start).toISOString();
     const endIso = new Date(end).toISOString();
-    const historical = arcoChiuso(endIso);
     /* La chiave porta la fine arrotondata, non quella al millisecondo: due
      * domande dello stesso arco corrente dentro lo stesso passo di
      * compilazione sono la stessa domanda, e la seconda si serve da qui. */
@@ -1566,6 +1569,63 @@ export class HomeAssistantBroker {
       types: ["sum", "state"],
       units: { energy: "kWh" },
     };
+    const { result, grezze } = await this.righeDelRecorder(payload, key, startIso, endIso);
+    return Object.fromEntries(
+      originals.map((id) => {
+        const righe = result?.[mapped.get(id)] || result?.[id] || [];
+        if (!grezze) return [id, righe];
+        return [id, righeInKilowattora(righe, unita?.[id] || unita?.[mapped.get(id)] || "")];
+      }),
+    );
+  }
+
+  /* Le righe di un arco: intero, o un mese alla volta se intero non ci sta.
+   *
+   * Vedi `statistiche-tenute.js`: l'anno in una domanda sola, su una casa con
+   * lo storico grande, scadeva sempre, e scadendo non si teneva mai. Un arco
+   * piu' lungo di un mese che scade si rifa' a spicchi — le stesse righe — e
+   * per una settimana quella casa si chiede direttamente a spicchi, senza
+   * buttare ogni volta il minuto della domanda intera. */
+  async righeDelRecorder(payload, key, startIso, endIso) {
+    const spicchi = spicchiDellArco(startIso, endIso);
+    if (spicchi.length > 1 && this.tenute.recorderLento())
+      return this.righeASpicchi(payload, key, spicchi);
+    try {
+      return await this.righeDiUnArco(payload, key, startIso, endIso);
+    } catch (errore) {
+      if (spicchi.length < 2 || !/timeout/i.test(String(errore?.message || errore))) throw errore;
+      this.tenute.segnaIlRecorderLento();
+      return this.righeASpicchi(payload, key, spicchi);
+    }
+  }
+
+  async righeASpicchi(payload, key, spicchi) {
+    const risposte = await Promise.all(
+      spicchi.map(({ start, end }) => {
+        const da = start.toISOString();
+        const a = end.toISOString();
+        return this.righeDiUnArco(
+          { ...payload, start_time: da, end_time: a },
+          `${key}|spicchio|${da}|${fineDaChiave(a)}`,
+          da,
+          a,
+        );
+      }),
+    );
+    return {
+      result: unisciLeRighe(risposte.map((risposta) => risposta.result)),
+      grezze: risposte.some((risposta) => risposta.grezze),
+    };
+  }
+
+  /* Una domanda sola al Recorder. Se l'arco e' chiuso, la risposta si tiene
+   * anche sul dispositivo (`StatisticheTenute`), e da li' si riprende. */
+  async righeDiUnArco(payload, key, startIso, endIso) {
+    const historical = arcoChiuso(endIso);
+    if (historical) {
+      const tenuta = this.tenute.prendi(key);
+      if (tenuta?.result) return tenuta;
+    }
     const eta = this.cacheHistoricalMs;
     const attesa = tempoPerLeStatistiche(startIso, endIso, this.timeout);
     let result;
@@ -1608,13 +1668,12 @@ export class HomeAssistantBroker {
        * mai di qua, perche' li' ha gia' convertito Home Assistant. */
       grezze = true;
     }
-    return Object.fromEntries(
-      originals.map((id) => {
-        const righe = result?.[mapped.get(id)] || result?.[id] || [];
-        if (!grezze) return [id, righe];
-        return [id, righeInKilowattora(righe, unita?.[id] || unita?.[mapped.get(id)] || "")];
-      }),
-    );
+    /* Una risposta vuota di un arco chiuso non si tiene: puo' essere il
+     * Recorder che non aveva ancora finito di compilare, e tenerla due
+     * settimane vorrebbe dire due settimane di zeri. */
+    if (historical && result && Object.values(result).some((righe) => righe?.length))
+      this.tenute.metti(key, { result, grezze });
+    return { result, grezze };
   }
 
   /* Chi si legge dallo stato e chi lo deve ricavare il Recorder.

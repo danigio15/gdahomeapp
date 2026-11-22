@@ -4367,6 +4367,143 @@ function createRuntimeMetrics() {
 }
 var runtimeMetrics = createRuntimeMetrics();
 
+// src/core/statistiche-tenute.js
+var DURATA_DELLE_STATISTICHE_TENUTE_MS = 14 * 864e5;
+var SPAZIO_DELLE_STATISTICHE_TENUTE = 15e5;
+var RICORDO_DEL_RECORDER_LENTO_MS = 7 * 864e5;
+var CHIAVE_DELLE_RIGHE = "dm_statistiche_tenute_v1";
+var CHIAVE_DEL_RECORDER_LENTO = "dm_recorder_a_spicchi_v1";
+function spicchiDellArco(start, end) {
+  const da = new Date(start);
+  const a = new Date(end);
+  if (!(da < a)) return [];
+  const spicchi = [];
+  let inizio = da;
+  while (inizio < a) {
+    const prossimo = new Date(inizio.getFullYear(), inizio.getMonth() + 1, 1);
+    const fine = prossimo < a ? prossimo : a;
+    spicchi.push({ start: inizio, end: fine });
+    inizio = fine;
+  }
+  return spicchi;
+}
+function unisciLeRighe(risposte = []) {
+  const perEntita = /* @__PURE__ */ new Map();
+  for (const risposta of risposte) {
+    for (const [id, righe2] of Object.entries(risposta || {})) {
+      if (!Array.isArray(righe2)) continue;
+      const viste = perEntita.get(id) || /* @__PURE__ */ new Map();
+      for (const riga of righe2) {
+        const quando = Date.parse(riga?.start) || Number(riga?.start) || 0;
+        if (!viste.has(quando)) viste.set(quando, riga);
+      }
+      perEntita.set(id, viste);
+    }
+  }
+  return Object.fromEntries(
+    [...perEntita].map(([id, viste]) => [
+      id,
+      [...viste.entries()].sort((x, y) => x[0] - y[0]).map(([, riga]) => riga)
+    ])
+  );
+}
+function improntaDellaCasa(root3 = globalThis) {
+  try {
+    const casa = root3.STATES?.["zone.home"]?.attributes || root3._RAW_STATES?.["zone.home"]?.attributes;
+    const lat = Number(casa?.latitude);
+    const lon = Number(casa?.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return "";
+    const testo2 = [
+      lat.toFixed(4),
+      lon.toFixed(4),
+      root3.location?.host || "",
+      root3.__DASHBOARDMODERN_INSTANCE__ || ""
+    ].join("|");
+    let h = 2166136261;
+    for (let i = 0; i < testo2.length; i += 1) {
+      h ^= testo2.charCodeAt(i);
+      h = Math.imul(h, 16777619) >>> 0;
+    }
+    return h.toString(36);
+  } catch (_errore) {
+    return "";
+  }
+}
+function leggi(storage, chiave) {
+  try {
+    const testo2 = storage?.getItem?.(chiave);
+    if (!testo2) return null;
+    const valore = JSON.parse(testo2);
+    return valore && typeof valore === "object" ? valore : null;
+  } catch (_errore) {
+    return null;
+  }
+}
+function scrivi(storage, chiave, valore) {
+  try {
+    storage?.setItem?.(chiave, JSON.stringify(valore));
+    return true;
+  } catch (_errore) {
+    return false;
+  }
+}
+var StatisticheTenute = class {
+  constructor({
+    storage = globalThis.localStorage,
+    impronta = () => improntaDellaCasa(),
+    adesso: adesso3 = () => Date.now(),
+    durata = DURATA_DELLE_STATISTICHE_TENUTE_MS,
+    spazio = SPAZIO_DELLE_STATISTICHE_TENUTE
+  } = {}) {
+    this.storage = storage;
+    this.impronta = impronta;
+    this.adesso = adesso3;
+    this.durata = durata;
+    this.spazio = spazio;
+  }
+  chiaveDi(chiave) {
+    const casa = this.impronta();
+    return casa ? `${casa}|${chiave}` : "";
+  }
+  prendi(chiave) {
+    const completa = this.chiaveDi(chiave);
+    if (!completa) return null;
+    const voce = leggi(this.storage, CHIAVE_DELLE_RIGHE)?.[completa];
+    if (!voce || !(Number(voce.fino) > this.adesso())) return null;
+    return voce.righe ?? null;
+  }
+  metti(chiave, righe2) {
+    const completa = this.chiaveDi(chiave);
+    if (!completa || righe2 == null) return false;
+    const tutte = leggi(this.storage, CHIAVE_DELLE_RIGHE) || {};
+    const ora = this.adesso();
+    const tenute2 = Object.entries(tutte).filter(
+      ([nome, voce]) => nome !== completa && Number(voce?.fino) > ora
+    );
+    tenute2.push([completa, { fino: ora + this.durata, righe: righe2 }]);
+    while (tenute2.length) {
+      const testo2 = JSON.stringify(Object.fromEntries(tenute2));
+      if (testo2.length <= this.spazio && scrivi(this.storage, CHIAVE_DELLE_RIGHE, Object.fromEntries(tenute2)))
+        return true;
+      if (tenute2.length === 1) break;
+      tenute2.shift();
+    }
+    return false;
+  }
+  /* Se di recente un arco lungo e' scaduto: allora si va a spicchi subito. */
+  recorderLento() {
+    const casa = this.impronta();
+    const da = Number(leggi(this.storage, CHIAVE_DEL_RECORDER_LENTO)?.[casa || "_"]);
+    return Number.isFinite(da) && this.adesso() - da < RICORDO_DEL_RECORDER_LENTO_MS;
+  }
+  segnaIlRecorderLento() {
+    const casa = this.impronta() || "_";
+    const tutte = leggi(this.storage, CHIAVE_DEL_RECORDER_LENTO) || {};
+    tutte[casa] = this.adesso();
+    scrivi(this.storage, CHIAVE_DEL_RECORDER_LENTO, tutte);
+  }
+};
+
 // src/core/period-service.js
 var PERIOD_SOURCES = Object.freeze([
   {
@@ -4876,9 +5013,11 @@ var HomeAssistantBroker = class {
     timeout = 12e3,
     cacheCurrentMs = PASSO_DELLE_STATISTICHE_MS,
     cacheHistoricalMs = 6e5,
-    ripresaDelFlussoMs = RIPRESA_DEL_FLUSSO_MS
+    ripresaDelFlussoMs = RIPRESA_DEL_FLUSSO_MS,
+    tenute: tenute2 = new StatisticheTenute()
   } = {}) {
     this.timeout = timeout;
+    this.tenute = tenute2;
     this.cacheCurrentMs = cacheCurrentMs;
     this.cacheHistoricalMs = cacheHistoricalMs;
     this.ripresaDelFlussoMs = ripresaDelFlussoMs;
@@ -5243,7 +5382,6 @@ var HomeAssistantBroker = class {
     const statisticIds = [...new Set([...mapped.values()].filter(Boolean))];
     const startIso = new Date(start).toISOString();
     const endIso = new Date(end).toISOString();
-    const historical = arcoChiuso(endIso);
     const key = `statistics|${period}|${startIso}|${fineDaChiave(endIso)}|${statisticIds.join(",")}`;
     const payload = {
       type: "recorder/statistics_during_period",
@@ -5258,6 +5396,60 @@ var HomeAssistantBroker = class {
       types: ["sum", "state"],
       units: { energy: "kWh" }
     };
+    const { result, grezze } = await this.righeDelRecorder(payload, key, startIso, endIso);
+    return Object.fromEntries(
+      originals.map((id) => {
+        const righe2 = result?.[mapped.get(id)] || result?.[id] || [];
+        if (!grezze) return [id, righe2];
+        return [id, righeInKilowattora(righe2, unita?.[id] || unita?.[mapped.get(id)] || "")];
+      })
+    );
+  }
+  /* Le righe di un arco: intero, o un mese alla volta se intero non ci sta.
+   *
+   * Vedi `statistiche-tenute.js`: l'anno in una domanda sola, su una casa con
+   * lo storico grande, scadeva sempre, e scadendo non si teneva mai. Un arco
+   * piu' lungo di un mese che scade si rifa' a spicchi — le stesse righe — e
+   * per una settimana quella casa si chiede direttamente a spicchi, senza
+   * buttare ogni volta il minuto della domanda intera. */
+  async righeDelRecorder(payload, key, startIso, endIso) {
+    const spicchi = spicchiDellArco(startIso, endIso);
+    if (spicchi.length > 1 && this.tenute.recorderLento())
+      return this.righeASpicchi(payload, key, spicchi);
+    try {
+      return await this.righeDiUnArco(payload, key, startIso, endIso);
+    } catch (errore) {
+      if (spicchi.length < 2 || !/timeout/i.test(String(errore?.message || errore))) throw errore;
+      this.tenute.segnaIlRecorderLento();
+      return this.righeASpicchi(payload, key, spicchi);
+    }
+  }
+  async righeASpicchi(payload, key, spicchi) {
+    const risposte = await Promise.all(
+      spicchi.map(({ start, end }) => {
+        const da = start.toISOString();
+        const a = end.toISOString();
+        return this.righeDiUnArco(
+          { ...payload, start_time: da, end_time: a },
+          `${key}|spicchio|${da}|${fineDaChiave(a)}`,
+          da,
+          a
+        );
+      })
+    );
+    return {
+      result: unisciLeRighe(risposte.map((risposta) => risposta.result)),
+      grezze: risposte.some((risposta) => risposta.grezze)
+    };
+  }
+  /* Una domanda sola al Recorder. Se l'arco e' chiuso, la risposta si tiene
+   * anche sul dispositivo (`StatisticheTenute`), e da li' si riprende. */
+  async righeDiUnArco(payload, key, startIso, endIso) {
+    const historical = arcoChiuso(endIso);
+    if (historical) {
+      const tenuta2 = this.tenute.prendi(key);
+      if (tenuta2?.result) return tenuta2;
+    }
     const eta = this.cacheHistoricalMs;
     const attesa = tempoPerLeStatistiche(startIso, endIso, this.timeout);
     let result;
@@ -5282,13 +5474,9 @@ var HomeAssistantBroker = class {
       );
       grezze = true;
     }
-    return Object.fromEntries(
-      originals.map((id) => {
-        const righe2 = result?.[mapped.get(id)] || result?.[id] || [];
-        if (!grezze) return [id, righe2];
-        return [id, righeInKilowattora(righe2, unita?.[id] || unita?.[mapped.get(id)] || "")];
-      })
-    );
+    if (historical && result && Object.values(result).some((righe2) => righe2?.length))
+      this.tenute.metti(key, { result, grezze });
+    return { result, grezze };
   }
   /* Chi si legge dallo stato e chi lo deve ricavare il Recorder.
    *
@@ -6046,12 +6234,12 @@ function segnaSoloLettura(entity, bloccata) {
   }
   return writeJsonIfChanged(CHIAVE_SOLO_LETTURA, mappa, { sync: false });
 }
-function righeDelDocumento(body, attributo, lista, leggi, tieni2) {
+function righeDelDocumento(body, attributo, lista, leggi2, tieni2) {
   const next = Array.isArray(lista) ? lista.slice() : [];
   for (const riga of body?.querySelectorAll?.(`[${attributo}]`) || []) {
     const posizione = Number(riga.getAttribute(attributo));
     if (!Number.isFinite(posizione) || !next[posizione]) continue;
-    const bozza = leggi(riga, next[posizione], posizione);
+    const bozza = leggi2(riga, next[posizione], posizione);
     if (!tieni2 || tieni2(bozza, next[posizione], posizione)) next[posizione] = bozza;
   }
   return next;
