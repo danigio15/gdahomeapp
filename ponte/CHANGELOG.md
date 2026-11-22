@@ -14,6 +14,15 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.22
+
+- **I tuoi telefoni**: nel menu ••• di ogni telefono, «Nuovo QR per questo
+  telefono», per quando l'app è stata cancellata e rimessa: il telefono
+  rientra col suo nome, la sua persona e i suoi dati, senza occupare un posto
+  in più.
+- **Energia sul tablet**: la prima linguetta, «Report», non resta più tagliata
+  a sinistra.
+
 ## 1.19.21
 
 - **Energia**: sparisce «Maximum call stack size exceeded». Con la sola

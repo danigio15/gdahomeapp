@@ -3946,7 +3946,10 @@
 
       .kpi-numero {
         margin-top: 12px;
-        font-size: 2.25rem;
+        /* Si stringe con la carta, invece di uscirne. */
+        font-size: clamp(1.55rem, 2.6vw + 0.4rem, 2.25rem);
+        overflow: hidden;
+        text-overflow: ellipsis;
         font-weight: 800;
         letter-spacing: -0.045em;
         line-height: 1.05;
@@ -3959,6 +3962,14 @@
         font-size: 1rem;
         font-weight: 700;
         letter-spacing: -0.01em;
+      }
+
+      .kpi-altre {
+        margin-top: 4px;
+        color: var(--ink-2);
+        font-size: 1.05rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
       }
 
       .kpi-nota {
@@ -9695,12 +9706,20 @@
           righe
             .filter((riga) => riga.stato === stato && typeof riga.quando === "number")
             .sort((a, b) => a.quando - b.quando)[0] || null;
-        const carta = (tinta, nome, valore, piccolo, nota, spiega) => `
+        /* Piu' valute non stanno su una riga: «≈ 43,71 € + 4,58 USD /mese» in
+         * una carta di un terzo di tablet usciva dal bordo e non si leggeva.
+         * La prima valuta resta il numero grande; le altre vanno sotto, piu'
+         * piccole, una dopo l'altra. */
+        const carta = (tinta, nome, valore, piccolo, nota, spiega) => {
+          const [primo, ...altre] = String(valore).split(" + ");
+          return `
           <div class="kpi ${testo(tinta)}">
             <span class="kpi-capo"><i class="pallino" aria-hidden="true"></i><span class="kpi-nome">${testo(nome)}</span>${/* già HTML */ laBolla(spiega)}</span>
-            <span class="kpi-numero">${testo(valore)}${piccolo ? `<small>${testo(piccolo)}</small>` : ""}</span>
+            <span class="kpi-numero">${testo(primo)}${piccolo ? `<small>${testo(piccolo)}</small>` : ""}</span>
+            ${altre.length ? `<span class="kpi-altre">${altre.map((una) => `+ ${testo(una)}`).join(" ")}</span>` : ""}
             <span class="kpi-nota">${testo(nota)}</span>
           </div>`;
+        };
 
         const laPrimaProva = prima("prova");
         const laPrimaCheTermina = prima("nonrinnova");

@@ -1425,7 +1425,22 @@ async function api({
     } catch (_errore) {
       detto = {};
     }
-    const perChi = String(detto?.utente || "").trim();
+    /* Il QR per riabbinare un telefono che c'e' gia' (l'app cancellata e
+     * rimessa): «per chi» e' la persona di quel telefono, se non se ne
+     * sceglie un'altra. Un telefono che non c'e' non si riabbina. */
+    const perIl = String(
+      detto?.perIl || new URL(richiesta.url || "/", "http://ponte").searchParams.get("perIl") || "",
+    ).trim();
+    const diPrima = perIl ? dispositivi.elenco().find((uno) => uno.id === perIl) : null;
+    if (perIl && !diPrima) {
+      json(
+        risposta,
+        { errore: "telefono_sconosciuto", spiegazione: "quel telefono non e' piu' in questa casa" },
+        404,
+      );
+      return;
+    }
+    const perChi = String(detto?.utente || diPrima?.utente || "").trim();
     if (!perChi) {
       json(
         risposta,
@@ -1463,15 +1478,20 @@ async function api({
       );
       return;
     }
-    const { codice, scadeIl, utente } = abbinamento.nuovo(perChi);
+    const { codice, scadeIl, utente } = abbinamento.nuovo(perChi, { perIl });
     /* Al centralino ne va detta l'**impronta**, perche' possa instradare chi
      * si presenta con questo codice. Il codice li' non arriva mai. */
     chiamata?.apriLAbbinamento(impronta(codice));
-    registro.info("codice di abbinamento fabbricato dalla console");
+    registro.info(
+      perIl
+        ? "codice per riabbinare un telefono fabbricato dalla console"
+        : "codice di abbinamento fabbricato dalla console",
+    );
     json(risposta, {
       codice,
       scadeIl,
       utente,
+      ...(perIl ? { perIl } : {}),
       invito: await unInvito(codice, ritorno, chiamata),
     });
     return;

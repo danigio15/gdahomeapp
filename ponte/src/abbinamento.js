@@ -97,7 +97,11 @@ export class Abbinamento {
    * Vuoto vuol dire «non si sa di chi e'», e un telefono senza utente vede
    * tutto: e' come sono i telefoni abbinati prima di oggi, e non si spengono
    * a tradimento. */
-  nuovo(utente = "") {
+  /* `perIl` e' il telefono che questo codice **riabbina**: «l'app l'ho
+   * cancellata e rimessa». Chi lo usa non e' un telefono nuovo ma quello di
+   * prima, che riprende il suo posto — nome, persona, sensori della Salute — e
+   * non ne occupa un altro (vedi `Dispositivi.abbina`, `sostituisce`). */
+  nuovo(utente = "", { perIl = "" } = {}) {
     const codice = codiceNuovo();
     this._codice = {
       /* Il codice **in chiaro**, e solo qui.
@@ -113,13 +117,19 @@ export class Abbinamento {
       impronta: impronta(codice),
       scadeIl: this.adesso() + this.minutiDelCodice * MINUTO,
       utente: utentePulito(utente),
+      perIl: String(perIl || ""),
     };
     /* Un codice nuovo azzera i tentativi: chi lo ha appena fabbricato sta
      * guardando lo schermo, e non deve pagare per chi ha bussato prima. */
     this._sbagliati = [];
     this._perChi.clear();
     this._azzerati += 1;
-    return { codice, scadeIl: this._codice.scadeIl, utente: this._codice.utente };
+    return {
+      codice,
+      scadeIl: this._codice.scadeIl,
+      utente: this._codice.utente,
+      ...(this._codice.perIl ? { perIl: this._codice.perIl } : {}),
+    };
   }
 
   /* Il codice vivo, per chi lo deve rimettere a schermo. Non esce mai dalla
@@ -132,6 +142,7 @@ export class Abbinamento {
       codice: this._codice.codice,
       scadeIl: this._codice.scadeIl,
       utente: this._codice.utente,
+      ...(this._codice.perIl ? { perIl: this._codice.perIl } : {}),
     };
   }
 
@@ -182,11 +193,12 @@ export class Abbinamento {
      * `dispositivi.abbina`. Resta vero come prima per chi lo usava come un
      * sì — una stringa vuota non e' falsa, ma un oggetto sì lo e' sempre. */
     const utente = this._codice.utente;
+    const perIl = this._codice.perIl || "";
     this._codice = null;
     this._sbagliati = [];
     this._perChi.clear();
     this._azzerati += 1;
-    return { utente };
+    return perIl ? { utente, perIl } : { utente };
   }
 
   /* Un tentativo che comincia: la stretta di mano dell'abbinamento, prima

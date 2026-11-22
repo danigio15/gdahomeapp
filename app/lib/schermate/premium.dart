@@ -552,50 +552,70 @@ class _SchermataPremiumState extends State<SchermataPremium> {
             if (widget.sulWeb)
               const _SulWeb()
             else ...[
-              FilledButton(
-                key: const Key('compra-premium'),
-                onPressed: inCorso || !dalNegozio
-                    ? null
-                    : () => unawaited(acquisti.compra(_scelto)),
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(56),
-                  backgroundColor:
-                      Theme.of(context).brightness == Brightness.dark
-                      ? Colori.ambra
-                      : Colori.notte,
-                  foregroundColor:
-                      Theme.of(context).brightness == Brightness.dark
-                      ? Colori.notte
-                      : Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: inCorso
-                    ? const SizedBox.square(
-                        dimension: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(
-                        !dalNegozio
-                            ? inLingua(it: 'Prova gratis', en: 'Try for free')
-                            : giorni > 0
-                            ? inLingua(
-                                it: 'Prova gratis per $giorni giorni',
-                                en: 'Try free for $giorni days',
-                              )
-                            : inLingua(
-                                it: 'Abbonati a ${prezzo(_scelto)}',
-                                en: 'Subscribe for ${prezzo(_scelto)}',
-                              ),
-                        style: t.labelLarge?.copyWith(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colori.notte
-                              : Colors.white,
+              /* Il bottone d'oro, come la medaglia: quando si puo' comprare
+               * brilla; quando no (il negozio non risponde) resta spento. */
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  gradient: inCorso || !dalNegozio
+                      ? null
+                      : const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFFFDE68A),
+                            Color(0xFFF59E0B),
+                            Color(0xFFD97706),
+                          ],
                         ),
-                      ),
+                  boxShadow: inCorso || !dalNegozio
+                      ? null
+                      : [
+                          BoxShadow(
+                            color: Colori.ambra.withValues(alpha: 0.35),
+                            blurRadius: 22,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                ),
+                child: FilledButton(
+                  key: const Key('compra-premium'),
+                  onPressed: inCorso || !dalNegozio
+                      ? null
+                      : () => unawaited(acquisti.compra(_scelto)),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(58),
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    foregroundColor: Colori.notte,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                  ),
+                  child: inCorso
+                      ? const SizedBox.square(
+                          dimension: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(
+                          !dalNegozio
+                              ? inLingua(it: 'Prova gratis', en: 'Try for free')
+                              : giorni > 0
+                              ? inLingua(
+                                  it: 'Prova gratis per $giorni giorni',
+                                  en: 'Try free for $giorni days',
+                                )
+                              : inLingua(
+                                  it: 'Abbonati a ${prezzo(_scelto)}',
+                                  en: 'Subscribe for ${prezzo(_scelto)}',
+                                ),
+                          style: t.labelLarge?.copyWith(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w800,
+                            color: inCorso || !dalNegozio ? null : Colori.notte,
+                          ),
+                        ),
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.only(top: 8),
@@ -1284,15 +1304,32 @@ class _Testata extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
+    /* La notte del benvenuto, con due aloni (oro e blu) dietro la medaglia:
+     * la stessa faccia della prima schermata, perche' e' la stessa app. */
+    Widget alone(Color colore, double lato, double forza) => IgnorePointer(
+      child: Container(
+        width: lato,
+        height: lato,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
+            colors: [
+              colore.withValues(alpha: forza),
+              colore.withValues(alpha: 0),
+            ],
+          ),
+        ),
+      ),
+    );
     return Container(
       key: const Key('premium-testata'),
-      padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(28),
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF0F172A), Color(0xFF1E2A4A), Color(0xFF3B2A12)],
+          colors: [Color(0xFF0B1E4D), Color(0xFF0A1128), Color(0xFF2A1A08)],
         ),
         boxShadow: [
           BoxShadow(
@@ -1302,91 +1339,172 @@ class _Testata extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          Row(
-            children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFFFCD34D), Colori.ambraScura],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colori.ambra.withValues(alpha: 0.45),
-                      blurRadius: 18,
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.workspace_premium_rounded,
-                  color: Colors.white,
-                  size: 28,
-                ),
-              ),
-              const Spacer(),
-              if (premium)
-                Container(
-                  key: const Key('premium-attivo'),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colori.bene.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Colori.bene.withValues(alpha: 0.6),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.check_circle_rounded,
-                        size: 15,
-                        color: Color(0xFF4ADE80),
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        inLingua(it: 'Attivo', en: 'Active'),
-                        style: t.labelMedium?.copyWith(
-                          color: const Color(0xFFBBF7D0),
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-            ],
+          Positioned(
+            top: -90,
+            left: -70,
+            child: alone(const Color(0xFFF59E0B), 260, 0.45),
           ),
-          const SizedBox(height: 16),
-          Text(
-            'GdAHome Premium',
-            style: t.headlineSmall?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
-            ),
+          Positioned(
+            bottom: -110,
+            right: -80,
+            child: alone(const Color(0xFF3B82F6), 280, 0.40),
           ),
-          const SizedBox(height: 6),
-          Text(
-            testo,
-            key: const Key('stato-premium'),
-            style: t.bodyLarge?.copyWith(
-              color: Colors.white.withValues(alpha: 0.82),
-              height: 1.4,
-            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
+            child: _contenuto(t),
           ),
         ],
       ),
     );
   }
+
+  Widget _contenuto(TextTheme t) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFFCD34D), Colori.ambraScura],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colori.ambra.withValues(alpha: 0.45),
+                    blurRadius: 18,
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.workspace_premium_rounded,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
+            const Spacer(),
+            if (premium)
+              Container(
+                key: const Key('premium-attivo'),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: Colori.bene.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colori.bene.withValues(alpha: 0.6)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.check_circle_rounded,
+                      size: 15,
+                      color: Color(0xFF4ADE80),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      inLingua(it: 'Attivo', en: 'Active'),
+                      style: t.labelMedium?.copyWith(
+                        color: const Color(0xFFBBF7D0),
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        /* Il nome in oro: e' la cosa che si compra. */
+        ShaderMask(
+          blendMode: BlendMode.srcIn,
+          shaderCallback: (lato) => const LinearGradient(
+            colors: [Color(0xFFFDE68A), Color(0xFFF59E0B), Color(0xFFFCD34D)],
+          ).createShader(lato),
+          child: Text(
+            'GdAHome Premium',
+            style: t.headlineMedium?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.6,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          testo,
+          key: const Key('stato-premium'),
+          style: t.bodyLarge?.copyWith(
+            color: Colors.white.withValues(alpha: 0.82),
+            height: 1.4,
+          ),
+        ),
+        if (!premium) ...[
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _Vetrino(
+                icona: Icons.public_rounded,
+                testo: inLingua(it: 'Da fuori casa', en: 'Away from home'),
+              ),
+              _Vetrino(
+                icona: Icons.auto_awesome_rounded,
+                testo: inLingua(it: 'Automazioni', en: 'Automations'),
+              ),
+              _Vetrino(
+                icona: Icons.directions_car_rounded,
+                testo: inLingua(
+                  it: 'Navigatore in auto',
+                  en: 'In-car navigator',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Una pillola di vetro sulla testata: una cosa che Premium sblocca.
+class _Vetrino extends StatelessWidget {
+  const _Vetrino({required this.icona, required this.testo});
+
+  final IconData icona;
+  final String testo;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+    decoration: BoxDecoration(
+      color: Colors.white.withValues(alpha: 0.09),
+      borderRadius: BorderRadius.circular(100),
+      border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icona, size: 15, color: const Color(0xFFFCD34D)),
+        const SizedBox(width: 6),
+        Text(
+          testo,
+          style: Theme.of(context).textTheme.labelMedium
+              ?.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+      ],
+    ),
+  );
 }
 
 /// Una voce di cosa comprende: l'icona nel suo quadratino ambra, il titolo,

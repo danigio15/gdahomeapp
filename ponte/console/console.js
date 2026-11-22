@@ -301,6 +301,12 @@
   /* Un tocco su un `data-vai`: la sezione voluta resta la richiesta, anche se
    * la sua linguetta non c'e' ancora — ci si va appena compare. */
   function vaiDove(voluta) {
+    /* Chi ci arriva da solo (la mattonella «Collega l'app») collega un'app
+     * nuova: il QR per riabbinare un telefono si chiede dal suo menu. */
+    if (riabbinaIl) {
+      riabbinaIl = null;
+      disegnaIlRiabbina();
+    }
     vaiA(voluta);
     richiesta = voluta === "indietro" ? laSezione : voluta;
   }
@@ -1389,6 +1395,27 @@
       menu.setAttribute("role", "menu");
       menu.hidden = !aperto;
       tasti.appendChild(menu);
+
+      /* Per l'app cancellata e rimessa: un QR che riabbina proprio questo
+       * telefono (vedi `riabbinaIl`). Non per i browser: quelli si
+       * ricollegano dalla pagina. */
+      if (uno.sistema !== "browser") {
+        var riabbina = unTasto(
+          due("Nuovo QR per questo telefono", "New QR for this phone"),
+          "voce-menu",
+        );
+        riabbina.setAttribute("role", "menuitem");
+        riabbina.addEventListener("click", function () {
+          menuAperto = "";
+          riabbinaIl = { id: uno.id, nome: comeSiChiama(uno) };
+          if (uno.utente) trova("per-chi").value = uno.utente;
+          spiegaIlPerChi();
+          disegnaIlRiabbina();
+          disegnaLeTappe();
+          vaiA("abbina");
+        });
+        menu.appendChild(riabbina);
+      }
 
       var rinomina = unTasto(due("Rinomina", "Rename"), "voce-menu");
       rinomina.setAttribute("role", "menuitem");
@@ -2657,6 +2684,51 @@
    * piu' bene. */
   var codicePer = "";
 
+  /* Il telefono che il prossimo QR riabbina, se lo si e' chiesto dal suo menu
+   * in «I tuoi telefoni» ({id, nome}); `null` per un'app nuova.
+   *
+   * «Dai la possibilita' di rigenerare il QR vicino al dispositivo, nel caso
+   * si cancella e reinstalla l'app.» Un'app rimessa ha perso il suo segno, e
+   * col QR di tutti i giorni rientrava come un telefono nuovo: un nome nuovo,
+   * un posto in piu' (con Base, al tetto, non entrava proprio) e i sensori
+   * della Salute da capo. Col QR di quel telefono riprende il suo posto. */
+  var riabbinaIl = null;
+
+  /* La riga sopra le tappe che dice quale telefono si sta riabbinando. */
+  function disegnaIlRiabbina() {
+    var avviso = trova("riabbina-avviso");
+    if (!avviso) {
+      var scheda = vediPagina.querySelector("#sezione-abbina .scheda.abbina");
+      if (!scheda) return;
+      avviso = vediPagina.createElement("div");
+      avviso.id = "riabbina-avviso";
+      avviso.className = "riabbina-avviso";
+      avviso.setAttribute("role", "status");
+      var parole = vediPagina.createElement("p");
+      parole.id = "riabbina-parole";
+      avviso.appendChild(parole);
+      var lascia = unTasto(due("Collega un'app nuova", "Connect a new app"), "tenue");
+      lascia.addEventListener("click", function () {
+        riabbinaIl = null;
+        disegnaIlRiabbina();
+        disegnaLeTappe();
+      });
+      avviso.appendChild(lascia);
+      scheda.parentNode.insertBefore(avviso, scheda);
+    }
+    avviso.hidden = !riabbinaIl;
+    if (riabbinaIl) {
+      trova("riabbina-parole").textContent = due(
+        "Questo QR riabbina «" +
+          riabbinaIl.nome +
+          "», per quando l'app è stata cancellata e rimessa: resta lo stesso telefono, con il suo nome, la sua persona e i suoi dati, e non occupa un posto in più.",
+        "This QR re-pairs “" +
+          riabbinaIl.nome +
+          "”, for when the app was deleted and reinstalled: it stays the same phone, with its name, its person and its data, and takes no extra slot.",
+      );
+    }
+  }
+
   /* Le tre tappe, in una funzione che non tocca la pagina: dice a che punto
    * si e', e se il tasto si puo' premere. La pagina la disegna, e la prova
    * `il-qr-chiede-per-chi` la compila e la interroga. */
@@ -2686,7 +2758,8 @@
   function disegnaLeTappe() {
     var scelto = trova("per-chi").value;
     var vivo = !trova("codice-vivo").hidden;
-    var tappe = leTappe(scelto, vivo, pieno);
+    /* Riabbinare non occupa un posto: il tetto non c'entra. */
+    var tappe = leTappe(scelto, vivo, pieno && !riabbinaIl);
     trova("tappa-chi").dataset.stato = tappe.chi;
     trova("tappa-genera").dataset.stato = tappe.genera;
     trova("tappa-qr").dataset.stato = tappe.qr;
@@ -2820,7 +2893,9 @@
       return;
     }
     trova("fabbrica").disabled = true;
-    chiedi("api/codice", {
+    /* Il telefono da riabbinare viaggia nell'indirizzo: il corpo resta
+     * quello di sempre, per qualcuno e solo per qualcuno. */
+    chiedi(riabbinaIl ? "api/codice?perIl=" + encodeURIComponent(riabbinaIl.id) : "api/codice", {
       method: "POST",
       body: JSON.stringify({ utente: voluto }),
     })

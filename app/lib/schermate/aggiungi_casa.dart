@@ -24,6 +24,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import '../casa/ingresso_qui/qui.dart';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show SystemUiOverlayStyle;
 
 import '../casa/archivio_delle_case.dart';
 import '../casa/casa_conosciuta.dart';
@@ -415,86 +416,234 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
     return '$detto\n\n(${errore.spiegazione})';
   }
 
-  /* ─── Quello che si vede ───────────────────────────────────────────────── */
+  /* ─── Quello che si vede ───────────────────────────────────────────────── *
+   *
+   * «Rifai più bella questa schermata, che è la prima che vedono le persone
+   * quando scaricano», e poi «riesci a fare ancora di meglio?». Era un foglio
+   * bianco con un titolo e un bottone, e non diceva nemmeno cosa fa l'app.
+   * Adesso ha due parti:
+   *
+   * - la **copertina** (solo alla prima casa): una notte blu col marchio, «La
+   *   tua casa, in tasca.» e quattro vetrine che fanno vedere cosa si fa —
+   *   le luci, il sole, il clima, il navigatore — come le mattonelle vere;
+   * - la **scheda per collegarsi**, che sale sulla copertina: il titolo, i
+   *   tre passi esatti in Home Assistant, il bottone, la promessa sulla
+   *   password e le due caselle facoltative.
+   *
+   * Sul telefono stanno una sotto l'altra, e il bottone si vede senza
+   * scorrere; su uno schermo largo, o basso e largo (il telefono in
+   * orizzontale), una accanto all'altra. Le animazioni sono solo d'ingresso,
+   * una volta: niente che giri per sempre. */
 
   @override
   Widget build(BuildContext context) {
+    final primaCasa = widget.archivio.vuoto;
+    final scuro = Theme.of(context).brightness == Brightness.dark;
+
+    final corpo = Stack(
+      children: [
+        Positioned.fill(child: _Fondo(scuro: scuro)),
+        LayoutBuilder(
+          builder: (context, spazio) {
+            final w = spazio.maxWidth, h = spazio.maxHeight;
+            final largo = primaCasa && (w >= 860 || (w >= 700 && w > h));
+            final scheda = _laScheda(context, primaCasa: primaCasa);
+            if (largo) {
+              final margine = w >= 1000 ? 40.0 : 20.0;
+              final larghezzaScheda = ((w - margine * 2) * 0.48).clamp(
+                340.0,
+                470.0,
+              );
+              final basso = h < 560;
+              return SafeArea(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.all(margine),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: (h - margine * 2 - 48).clamp(0, 2000),
+                    ),
+                    child: IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            child: _Copertina(largo: true, compatta: basso),
+                          ),
+                          SizedBox(width: w >= 1000 ? 40 : 20),
+                          SizedBox(
+                            width: larghezzaScheda,
+                            child: Align(
+                              alignment: basso
+                                  ? Alignment.topCenter
+                                  : Alignment.center,
+                              child: scheda,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }
+            if (!primaCasa) {
+              return SafeArea(
+                child: Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 480),
+                      child: scheda,
+                    ),
+                  ),
+                ),
+              );
+            }
+            /* La copertina va fino in cima, sotto l'ora e la batteria: la
+             * scheda le sale sopra di un pezzo. */
+            return SingleChildScrollView(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 560),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const _Copertina(largo: false, compatta: false),
+                      Transform.translate(
+                        offset: const Offset(0, -34),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          child: SafeArea(top: false, child: scheda),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      /* Sulla copertina notte l'ora e la batteria vanno in bianco. */
+      value: primaCasa || scuro
+          ? SystemUiOverlayStyle.light
+          : SystemUiOverlayStyle.dark,
+      child: Scaffold(
+        appBar: primaCasa
+            ? null
+            : AppBar(
+                title: Text(
+                  inLingua(it: 'Aggiungi una casa', en: 'Add a home'),
+                ),
+                backgroundColor: Colors.transparent,
+              ),
+        body: corpo,
+      ),
+    );
+  }
+
+  /// La scheda per collegarsi: i passi, il bottone, le caselle.
+  Widget _laScheda(BuildContext context, {required bool primaCasa}) {
     final colori = Theme.of(context).colorScheme;
     final testi = Theme.of(context).textTheme;
-    final primaCasa = widget.archivio.vuoto;
-
-    return Scaffold(
-      appBar: primaCasa
-          ? null
-          : AppBar(
-              title: Text(inLingua(it: 'Aggiungi una casa', en: 'Add a home')),
+    final scuro = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _Entra(
+          ritardo: 0.25,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: colori.surfaceContainerLowest.withValues(
+                alpha: scuro ? 0.92 : 0.96,
+              ),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: scuro
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : Colors.white,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: (scuro ? Colors.black : const Color(0xFF1E3A8A))
+                      .withValues(alpha: scuro ? 0.40 : 0.08),
+                  blurRadius: 40,
+                  offset: const Offset(0, 12),
+                ),
+              ],
             ),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 460),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(22, 20, 22, 18),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   if (primaCasa) ...[
-                    const Center(child: Marchio(lato: 84)),
-                    const SizedBox(height: 22),
                     Text(
                       inLingua(
                         it: 'Colleghiamo la casa',
                         en: 'Let\'s connect your home',
                       ),
-                      textAlign: TextAlign.center,
-                      style: testi.headlineMedium,
+                      style: testi.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.4,
+                      ),
                     ),
-                    const SizedBox(height: 10),
-                  ],
-                  /* Due frasi, e quale delle due dipende da **dove gira
-                     questa copia dell'app**.
-                     
+                    const SizedBox(height: 4),
+                    Text(
+                      inLingua(
+                        it: 'Tre passi, un minuto.',
+                        en: 'Three steps, one minute.',
+                      ),
+                      style: testi.bodyMedium?.copyWith(
+                        color: colori.onSurfaceVariant,
+                      ),
+                    ),
+                  ] else
+                    Text(
+                      inLingua(it: 'Come si collega', en: 'How to connect'),
+                      style: testi.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  const SizedBox(height: 14),
+                  /* Due modi di dirlo, e quale dipende da **dove gira questa
+                     copia dell'app**.
+
                      Chi ha il telefono in mano ha Home Assistant su un altro
-                     schermo, e «apri gdahome dalla barra laterale» e' il
+                     schermo, e «apri GdAHome dalla barra laterale» e' il
                      consiglio giusto. Ma questa stessa app la serve anche
                      l'add-on, dentro Home Assistant, dalla console che ha un
                      tasto «Apri gdahome» — e li' quella frase chiudeva un
                      anello: la barra laterale riportava all'app, e il codice
                      non si generava mai. Qualcuno ha riavviato tre volte e poi
                      e' andato a chiederlo su Facebook.
-                     
+
                      Quindi da dentro l'ingress non si manda nessuno nella
                      barra laterale: si apre la console, con un tasto che ci
                      porta. */
-                  Text(
-                    dentroHomeAssistant
-                        ? inLingua(
-                            it:
-                                'Il codice lo fabbrica la console di GdAHome, '
-                                'qui in Home Assistant. Aprila, premi «Genera '
-                                'QR code», e riporta qui il codice.',
-                            en:
-                                'The code is made by the GdAHome console, here '
-                                'in Home Assistant. Open it, press “Generate '
-                                'the QR code”, and bring the code back here.',
-                          )
-                        : inLingua(
-                            it:
-                                'In Home Assistant apri «GdAHome» dalla barra '
-                                'laterale e premi «Genera QR code». Poi '
-                                'inquadralo.',
-                            en:
-                                'In Home Assistant open “GdAHome” from the '
-                                'sidebar and press “Generate the QR code”. '
-                                'Then scan it.',
-                          ),
-                    textAlign: TextAlign.center,
-                    style: testi.bodyLarge?.copyWith(
-                      color: colori.onSurfaceVariant,
-                    ),
-                  ),
                   if (dentroHomeAssistant) ...[
+                    Text(
+                      inLingua(
+                        it:
+                            'Il codice lo fabbrica la console di GdAHome, '
+                            'qui in Home Assistant. Aprila, premi «Collega '
+                            'l\'app», scegli per chi è, premi «Genera il QR '
+                            'code» e riporta qui il codice.',
+                        en:
+                            'The code is made by the GdAHome console, here '
+                            'in Home Assistant. Open it, press “Connect the '
+                            'app”, choose who it is for, press “Generate the '
+                            'QR code” and bring the code back here.',
+                      ),
+                      style: testi.bodyLarge?.copyWith(
+                        color: colori.onSurfaceVariant,
+                      ),
+                    ),
                     const SizedBox(height: 16),
                     OutlinedButton.icon(
                       onPressed: apriLaConsole,
@@ -509,28 +658,45 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                         ),
                       ),
                     ),
-                  ],
-                  const SizedBox(height: 28),
-                  FilledButton.icon(
-                    onPressed: _sto ? null : _inquadra,
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(58),
-                    ),
-                    icon: _sto
-                        ? SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: colori.onPrimary,
-                            ),
-                          )
-                        : const Icon(Icons.qr_code_scanner_rounded),
-                    label: Text(
-                      inLingua(
-                        it: 'Inquadra il QR code',
-                        en: 'Scan the QR code',
+                  ] else ...[
+                    _Passo(
+                      numero: 1,
+                      testo: inLingua(
+                        it:
+                            'In Home Assistant apri «Configura GdAHome» '
+                            'dalla barra laterale',
+                        en:
+                            'In Home Assistant, open “Configura GdAHome” from '
+                            'the sidebar',
                       ),
+                    ),
+                    _Passo(
+                      numero: 2,
+                      testo: inLingua(
+                        it:
+                            'Premi «Collega l\'app», scegli per chi è e premi '
+                            '«Genera il QR code»',
+                        en:
+                            'Press “Connect the app”, choose who it is for and '
+                            'press “Generate the QR code”',
+                      ),
+                    ),
+                    _Passo(
+                      numero: 3,
+                      testo: inLingua(
+                        it: 'Inquadralo con il tasto qui sotto',
+                        en: 'Scan it with the button below',
+                      ),
+                      ultimo: true,
+                    ),
+                  ],
+                  const SizedBox(height: 22),
+                  _BottoneGrande(
+                    quandoPremuto: _sto ? null : _inquadra,
+                    occupato: _sto,
+                    testo: inLingua(
+                      it: 'Inquadra il QR code',
+                      en: 'Scan the QR code',
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -572,7 +738,7 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                       color: colori.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 22),
                   TextField(
                     controller: _nome,
                     enabled: !_sto,
@@ -586,6 +752,7 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                         it: 'Casa, Dai miei, Al mare',
                         en: 'Home, Mum\'s, Beach house',
                       ),
+                      prefixIcon: const Icon(Icons.cottage_outlined),
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -607,13 +774,13 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                       ),
                     ),
                   ],
-                  const Firma(),
                 ],
               ),
             ),
           ),
         ),
-      ),
+        const Firma(),
+      ],
     );
   }
 
@@ -712,4 +879,955 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
       ),
     ),
   ];
+}
+
+/* ─── I pezzi della schermata ───────────────────────────────────────────── */
+
+/// Il fondo: un cielo appena colorato, con due aloni — blu in alto, ambra in
+/// basso, i colori del marchio — al posto del bianco piatto.
+class _Fondo extends StatelessWidget {
+  const _Fondo({required this.scuro});
+
+  final bool scuro;
+
+  @override
+  Widget build(BuildContext context) {
+    final alone1 = scuro ? const Color(0xFF1D4ED8) : const Color(0xFF93C5FD);
+    final alone2 = scuro ? const Color(0xFFB45309) : const Color(0xFFFCD34D);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: scuro
+              ? const [Color(0xFF0B1733), Color(0xFF080F1C), Color(0xFF0A1222)]
+              : const [Color(0xFFEAF1FF), Color(0xFFF3F6FB), Color(0xFFFFF7E8)],
+        ),
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            top: -160,
+            right: -120,
+            child: _Alone(
+              colore: alone1,
+              lato: 460,
+              forza: scuro ? 0.35 : 0.55,
+            ),
+          ),
+          Positioned(
+            bottom: -180,
+            left: -140,
+            child: _Alone(
+              colore: alone2,
+              lato: 480,
+              forza: scuro ? 0.18 : 0.45,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Alone extends StatelessWidget {
+  const _Alone({required this.colore, required this.lato, required this.forza});
+
+  final Color colore;
+  final double lato;
+  final double forza;
+
+  @override
+  Widget build(BuildContext context) => IgnorePointer(
+    child: Container(
+      width: lato,
+      height: lato,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [
+            colore.withValues(alpha: forza),
+            colore.withValues(alpha: 0),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+/// Entra una volta, salendo appena e accendendosi. [ritardo] e' la frazione
+/// dell'animazione in cui comincia: i pezzi arrivano uno dopo l'altro.
+class _Entra extends StatelessWidget {
+  const _Entra({required this.child, this.ritardo = 0});
+
+  final Widget child;
+  final double ritardo;
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) return child;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 900),
+      curve: Interval(ritardo, 1, curve: Curves.easeOutCubic),
+      child: child,
+      builder: (context, t, figlio) => Opacity(
+        opacity: t,
+        child: Transform.translate(
+          offset: Offset(0, (1 - t) * 18),
+          child: figlio,
+        ),
+      ),
+    );
+  }
+}
+
+/// La copertina: la notte blu col marchio, il saluto e le quattro vetrine.
+///
+/// E' scura anche col tema chiaro: e' la faccia dell'app, e il marchio (un
+/// quadrato nero con le lettere d'oro e d'azzurro) si accende solo sul buio.
+class _Copertina extends StatelessWidget {
+  const _Copertina({required this.largo, required this.compatta});
+
+  /// Accanto alla scheda (tablet, orizzontale): una tessera arrotondata
+  /// tutt'intorno invece di una fascia che parte dal bordo in alto.
+  final bool largo;
+
+  /// Su uno schermo basso: senza le vetrine.
+  final bool compatta;
+
+  @override
+  Widget build(BuildContext context) {
+    final testi = Theme.of(context).textTheme;
+    final sopra = largo ? 0.0 : MediaQuery.paddingOf(context).top;
+    final forma = largo
+        ? BorderRadius.circular(32)
+        : const BorderRadius.vertical(bottom: Radius.circular(36));
+    return ClipRRect(
+      borderRadius: forma,
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF0B1E4D), Color(0xFF0A1128), Color(0xFF21104A)],
+          ),
+        ),
+        child: Stack(
+          /* Accanto alla scheda la copertina e' alta quanto lei: il contenuto
+           * sta in mezzo, non appeso in cima. */
+          fit: largo ? StackFit.expand : StackFit.loose,
+          children: [
+            const Positioned(
+              top: -120,
+              right: -90,
+              child: _Alone(colore: Color(0xFF3B82F6), lato: 340, forza: 0.55),
+            ),
+            const Positioned(
+              bottom: -150,
+              left: -110,
+              child: _Alone(colore: Color(0xFFF59E0B), lato: 340, forza: 0.30),
+            ),
+            const Positioned(
+              bottom: -60,
+              right: -40,
+              child: _Alone(colore: Color(0xFF8B5CF6), lato: 260, forza: 0.35),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                24,
+                sopra + (largo ? 28 : 18),
+                24,
+                largo ? 28 : 58,
+              ),
+              child: Column(
+                mainAxisSize: largo ? MainAxisSize.max : MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _Entra(
+                    child: Row(
+                      children: [
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF3B82F6)
+                                    .withValues(alpha: 0.45),
+                                blurRadius: 24,
+                              ),
+                            ],
+                          ),
+                          child: Marchio(lato: largo ? 56 : 46),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'GdAHome',
+                          style: testi.titleLarge?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: largo ? 30 : 18),
+                  if (compatta)
+                    _Entra(
+                      ritardo: 0.1,
+                      child: Text(
+                        inLingua(
+                          it: 'La tua casa,\nin tasca.',
+                          en: 'Your home,\nin your pocket.',
+                        ),
+                        style: testi.displaySmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          height: 1.05,
+                          letterSpacing: -1.2,
+                        ),
+                      ),
+                    )
+                  else
+                    _Entra(ritardo: 0.1, child: _Carosello(largo: largo)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Il carosello della copertina: quattro schede che scorrono da sole (e col
+/// dito), ognuna con la sua scena — la casa, l'energia, il navigatore, la
+/// sicurezza — il titolo e una riga.
+///
+/// Scorre da solo ogni pochi secondi, ma non con «riduci animazioni»: li' si
+/// scorre solo col dito. Il timer muore con la schermata.
+class _Carosello extends StatefulWidget {
+  const _Carosello({required this.largo});
+
+  final bool largo;
+
+  @override
+  State<_Carosello> createState() => _CaroselloState();
+}
+
+class _CaroselloState extends State<_Carosello> {
+  static const _quante = 4;
+  static const _ogni = Duration(milliseconds: 4500);
+
+  final _pagine = PageController();
+  Timer? _giro;
+  var _qui = 0;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _riparti();
+  }
+
+  void _riparti() {
+    _giro?.cancel();
+    _giro = null;
+    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) return;
+    _giro = Timer.periodic(_ogni, (_) {
+      if (!mounted || !_pagine.hasClients) return;
+      _pagine.animateToPage(
+        (_qui + 1) % _quante,
+        duration: const Duration(milliseconds: 650),
+        curve: Curves.easeInOutCubic,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _giro?.cancel();
+    _pagine.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final testi = Theme.of(context).textTheme;
+    final schede = [
+      (
+        scena: const _ScenaCasa(),
+        titolo: inLingua(
+          it: 'La tua casa,\nin tasca.',
+          en: 'Your home,\nin your pocket.',
+        ),
+        riga: inLingua(
+          it: 'Luci, clima e dispositivi a portata di dito, ovunque tu sia.',
+          en: 'Lights, climate and devices at your fingertips, wherever you are.',
+        ),
+      ),
+      (
+        scena: const _ScenaEnergia(),
+        titolo: inLingua(
+          it: "L'energia,\nsotto controllo.",
+          en: 'Your energy,\nunder control.',
+        ),
+        riga: inLingua(
+          it: 'Sole, batteria e consumi in tempo reale, giorno per giorno.',
+          en: 'Sun, battery and usage in real time, day by day.',
+        ),
+      ),
+      (
+        scena: const _ScenaNavigatore(),
+        titolo: inLingua(
+          it: 'Il navigatore\nche conosce casa.',
+          en: 'The navigator\nthat knows home.',
+        ),
+        riga: inLingua(
+          it: 'Sul telefono, con Android Auto e CarPlay: e la casa ti aspetta.',
+          en: 'On your phone, Android Auto and CarPlay: and home is ready for you.',
+        ),
+      ),
+      (
+        scena: const _ScenaSicurezza(),
+        titolo: inLingua(
+          it: 'Sicurezza,\nsempre con te.',
+          en: 'Security,\nalways with you.',
+        ),
+        riga: inLingua(
+          it: 'Telecamere, campanello e allarmi, anche fuori casa.',
+          en: 'Cameras, doorbell and alarms, even away from home.',
+        ),
+      ),
+    ];
+    final altezza = widget.largo ? 420.0 : 314.0;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          height: altezza,
+          child: NotificationListener<ScrollStartNotification>(
+            /* Chi scorre col dito ha la precedenza: il giro riparte da li'. */
+            onNotification: (avviso) {
+              if (avviso.dragDetails != null) _riparti();
+              return false;
+            },
+            child: PageView.builder(
+              controller: _pagine,
+              itemCount: _quante,
+              onPageChanged: (i) => setState(() => _qui = i),
+              itemBuilder: (context, i) {
+                final scheda = schede[i];
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      height: widget.largo ? 170 : 154,
+                      child: scheda.scena,
+                    ),
+                    SizedBox(height: widget.largo ? 28 : 18),
+                    Text(
+                      scheda.titolo,
+                      style:
+                          (widget.largo
+                                  ? testi.displaySmall
+                                  : testi.headlineLarge)
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                height: 1.05,
+                                letterSpacing: -1,
+                              ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      scheda.riga,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: testi.bodyLarge?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.72),
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            for (var i = 0; i < _quante; i++)
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+                margin: const EdgeInsets.only(right: 6),
+                width: i == _qui ? 26 : 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: i == _qui
+                      ? Colors.white
+                      : Colors.white.withValues(alpha: 0.28),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// La scena della casa: le quattro vetrine.
+class _ScenaCasa extends StatelessWidget {
+  const _ScenaCasa();
+
+  @override
+  Widget build(BuildContext context) => Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Row(
+        children: [
+          Expanded(
+            child: _Vetrina(
+              icona: Icons.lightbulb_rounded,
+              colore: const Color(0xFFFBBF24),
+              valore: inLingua(it: '5 accese', en: '5 on'),
+              cosa: inLingua(it: 'Luci', en: 'Lights'),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _Vetrina(
+              icona: Icons.thermostat_rounded,
+              colore: const Color(0xFFFB7185),
+              valore: '21,5°',
+              cosa: inLingua(it: 'Soggiorno', en: 'Living room'),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 10),
+      Row(
+        children: [
+          Expanded(
+            child: _Vetrina(
+              icona: Icons.blinds_rounded,
+              colore: const Color(0xFF60A5FA),
+              valore: inLingua(it: 'Aperte', en: 'Open'),
+              cosa: inLingua(it: 'Tapparelle', en: 'Shutters'),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _Vetrina(
+              icona: Icons.local_laundry_service_rounded,
+              colore: const Color(0xFFA78BFA),
+              valore: '18 min',
+              cosa: inLingua(it: 'Lavatrice', en: 'Washer'),
+            ),
+          ),
+        ],
+      ),
+    ],
+  );
+}
+
+/// La scena dell'energia: il sole, la casa e la batteria, legati.
+class _ScenaEnergia extends StatelessWidget {
+  const _ScenaEnergia();
+
+  @override
+  Widget build(BuildContext context) {
+    Widget filo(Color da, Color a) => Expanded(
+      child: Container(
+        height: 3,
+        margin: const EdgeInsets.only(bottom: 24),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(3),
+          gradient: LinearGradient(colors: [da, a]),
+        ),
+      ),
+    );
+    return Row(
+      children: [
+        _Bolla(
+          icona: Icons.wb_sunny_rounded,
+          colore: const Color(0xFFFBBF24),
+          valore: '3,2 kW',
+          cosa: inLingua(it: 'Sole', en: 'Sun'),
+        ),
+        filo(const Color(0xFFFBBF24), const Color(0xFF60A5FA)),
+        _Bolla(
+          icona: Icons.home_rounded,
+          colore: const Color(0xFF60A5FA),
+          valore: '1,1 kW',
+          cosa: inLingua(it: 'Casa', en: 'Home'),
+          grande: true,
+        ),
+        filo(const Color(0xFF60A5FA), const Color(0xFF34D399)),
+        _Bolla(
+          icona: Icons.battery_charging_full_rounded,
+          colore: const Color(0xFF34D399),
+          valore: '78%',
+          cosa: inLingua(it: 'Batteria', en: 'Battery'),
+        ),
+      ],
+    );
+  }
+}
+
+/// Un cerchio di vetro col suo valore, come nel flusso dell'energia.
+class _Bolla extends StatelessWidget {
+  const _Bolla({
+    required this.icona,
+    required this.colore,
+    required this.valore,
+    required this.cosa,
+    this.grande = false,
+  });
+
+  final IconData icona;
+  final Color colore;
+  final String valore;
+  final String cosa;
+  final bool grande;
+
+  @override
+  Widget build(BuildContext context) {
+    final testi = Theme.of(context).textTheme;
+    final lato = grande ? 96.0 : 80.0;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: lato,
+          height: lato,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white.withValues(alpha: 0.08),
+            border: Border.all(
+              color: colore.withValues(alpha: 0.7),
+              width: 2.5,
+            ),
+            boxShadow: [
+              BoxShadow(color: colore.withValues(alpha: 0.35), blurRadius: 24),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icona, color: colore, size: grande ? 28 : 24),
+              const SizedBox(height: 2),
+              Text(
+                valore,
+                style: testi.labelLarge?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          cosa,
+          style: testi.labelMedium?.copyWith(
+            color: Colors.white.withValues(alpha: 0.7),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// La scena del navigatore: la manovra, e la casa che chiede.
+class _ScenaNavigatore extends StatelessWidget {
+  const _ScenaNavigatore();
+
+  @override
+  Widget build(BuildContext context) {
+    final testi = Theme.of(context).textTheme;
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.75),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF3B82F6), Color(0xFF4338CA)],
+                  ),
+                ),
+                child: const Icon(
+                  Icons.turn_right_rounded,
+                  color: Colors.white,
+                  size: 34,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '200 m',
+                      style: testi.headlineSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Text(
+                      inLingua(
+                        it: 'Arrivo 18:42 · 12 min',
+                        en: 'Arrive 6:42 PM · 12 min',
+                      ),
+                      style: testi.labelLarge?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(100),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.garage_rounded,
+                color: Color(0xFFFBBF24),
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  inLingua(
+                    it: 'Quasi a casa: apro il cancello?',
+                    en: 'Almost home: open the gate?',
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  style: testi.labelLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// La scena della sicurezza: la telecamera dal vivo e il campanello.
+class _ScenaSicurezza extends StatelessWidget {
+  const _ScenaSicurezza();
+
+  @override
+  Widget build(BuildContext context) {
+    final testi = Theme.of(context).textTheme;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          flex: 4,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+              gradient: const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFF1E3A5F), Color(0xFF0B1220)],
+              ),
+            ),
+            child: Stack(
+              children: [
+                const Center(
+                  child: Icon(
+                    Icons.videocam_rounded,
+                    color: Colors.white24,
+                    size: 54,
+                  ),
+                ),
+                Positioned(
+                  top: 10,
+                  left: 10,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE11D48),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      inLingua(it: 'DAL VIVO', en: 'LIVE'),
+                      style: testi.labelSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 10,
+                  left: 10,
+                  child: Text(
+                    inLingua(it: 'Ingresso', en: 'Front door'),
+                    style: testi.labelLarge?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          flex: 5,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _Vetrina(
+                icona: Icons.doorbell_rounded,
+                colore: const Color(0xFFFBBF24),
+                valore: inLingua(it: 'Campanello', en: 'Doorbell'),
+                cosa: inLingua(it: 'ha suonato ora', en: 'rang just now'),
+              ),
+              const SizedBox(height: 10),
+              _Vetrina(
+                icona: Icons.shield_rounded,
+                colore: const Color(0xFF34D399),
+                valore: inLingua(it: 'Attivo', en: 'Armed'),
+                cosa: inLingua(it: 'Antifurto', en: 'Alarm'),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Una vetrina: una mattonella di vetro con quello che l'app fa vedere.
+class _Vetrina extends StatelessWidget {
+  const _Vetrina({
+    required this.icona,
+    required this.colore,
+    required this.valore,
+    required this.cosa,
+  });
+
+  final IconData icona;
+  final Color colore;
+  final String valore;
+  final String cosa;
+
+  @override
+  Widget build(BuildContext context) {
+    final testi = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: colore.withValues(alpha: 0.18),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icona, size: 20, color: colore),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  valore,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: testi.titleMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                Text(
+                  cosa,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: testi.labelMedium?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.65),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Un passo numerato, col filo che lo lega al passo dopo.
+class _Passo extends StatelessWidget {
+  const _Passo({
+    required this.numero,
+    required this.testo,
+    this.ultimo = false,
+  });
+
+  final int numero;
+  final String testo;
+  final bool ultimo;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Column(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF3B82F6), Color(0xFF4338CA)],
+                  ),
+                ),
+                child: Text(
+                  '$numero',
+                  style: testi.labelLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              if (!ultimo)
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    color: colori.primary.withValues(alpha: 0.18),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(top: 6, bottom: ultimo ? 0 : 12),
+              child: Text(
+                testo,
+                style: testi.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Il bottone che conta: largo, col colore del marchio che sfuma.
+class _BottoneGrande extends StatelessWidget {
+  const _BottoneGrande({
+    required this.quandoPremuto,
+    required this.occupato,
+    required this.testo,
+  });
+
+  final VoidCallback? quandoPremuto;
+  final bool occupato;
+  final String testo;
+
+  @override
+  Widget build(BuildContext context) {
+    final forma = BorderRadius.circular(20);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: forma,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8), Color(0xFF4338CA)],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF2563EB).withValues(alpha: 0.30),
+            blurRadius: 24,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: FilledButton.icon(
+        onPressed: quandoPremuto,
+        style: FilledButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          disabledBackgroundColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          disabledForegroundColor: Colors.white.withValues(alpha: 0.8),
+          shadowColor: Colors.transparent,
+          minimumSize: const Size.fromHeight(60),
+          shape: RoundedRectangleBorder(borderRadius: forma),
+          textStyle: Theme.of(context).textTheme.titleMedium
+              ?.copyWith(fontSize: 17, fontWeight: FontWeight.w700),
+        ),
+        icon: occupato
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : const Icon(Icons.qr_code_scanner_rounded),
+        label: Text(testo),
+      ),
+    );
+  }
 }

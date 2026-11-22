@@ -2245,3 +2245,27 @@ code {
     grid-row: 4;
   }
 }
+
+/* Il QR per riabbinare un telefono gia' abbinato: sopra le tappe dice quale. */
+.riabbina-avviso {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin: 0 0 14px;
+  padding: 14px 16px;
+  border-radius: var(--r);
+  background: var(--acceso-soft);
+  color: var(--testo);
+}
+
+.riabbina-avviso[hidden] {
+  display: none;
+}
+
+.riabbina-avviso p {
+  flex: 1 1 260px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+}

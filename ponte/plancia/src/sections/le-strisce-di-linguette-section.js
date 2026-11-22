@@ -25,6 +25,15 @@
  *
  * Le Stanze questo giro ce l'avevano gia', scritto in casa loro. Adesso e'
  * qui per tutt'e tre: una regola sola, un padrone solo.
+ *
+ * TERZO: centrata, la fila perdeva la testa. «Il primo tab, Report, non esce
+ * nello schermo e non scorre», sul tablet: sopra i 480 punti il nastro dei
+ * periodi centrava la fila (`justify-content: center`), e una fila centrata
+ * che non ci sta deborda da tutt'e due le parti — quella a destra si
+ * raggiunge scorrendo, quella a sinistra no, mai. Il nastro adesso parte da
+ * sinistra e la fila si centra coi margini automatici: quando ci sta resta in
+ * mezzo come prima, quando non ci sta i margini vanno a zero e la prima
+ * linguetta e' al suo posto, raggiungibile.
  */
 import { installStyle, root } from "./shared.js";
 
@@ -48,6 +57,12 @@ function stile() {
     righe.push(
       `${voce.nastro}{padding-top:${voce.sopra}px!important;padding-bottom:${voce.sotto}px!important}`,
     );
+    if (voce.fila) {
+      righe.push(`${voce.nastro}{justify-content:flex-start!important}`);
+      righe.push(
+        `${voce.nastro} ${voce.fila}{margin-left:auto!important;margin-right:auto!important}`,
+      );
+    }
   }
   /* `hover:hover` e `pointer:fine` insieme vogliono dire «c'e' un mouse»: un
    * telefono non li ha, un tablet col dito nemmeno, e li' il nastro resta

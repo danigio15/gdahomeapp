@@ -614,6 +614,8 @@ export class Portiere {
     this.abbinamento.restituisci(tentativo);
 
     let perChi = "";
+    /* Il telefono che questo codice riabbina, se e' il QR di uno gia' abbinato. */
+    let riabbina = "";
     let finoA = null;
     try {
       if (prova) {
@@ -629,7 +631,9 @@ export class Portiere {
          * usa una volta — e dice **per chi** era: il telefono si intesta a
          * quello li', e da quel momento vede le plance che vede lui. Se nel
          * frattempo la console ne ha fatto un altro, questo non vale piu'. */
-        perChi = this.abbinamento.consuma(codice, { da })?.utente || "";
+        const speso = this.abbinamento.consuma(codice, { da });
+        perChi = speso?.utente || "";
+        riabbina = speso?.perIl || "";
       }
     } catch (errore) {
       if (errore instanceof TroppiTentativi) {
@@ -665,6 +669,8 @@ export class Portiere {
         proprietario: detto?.proprietario,
         utente: perChi,
         ...(finoA ? { finoA } : {}),
+        /* Il QR di un telefono gia' abbinato: riprende il suo posto. */
+        ...(riabbina ? { sostituisce: riabbina } : {}),
         /* La conferma si e' appena aperta con la chiave legata: questo
          * telefono lega, e lo si pretende gia' dal primo collegamento. */
         lega: legata,
