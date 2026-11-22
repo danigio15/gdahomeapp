@@ -415,86 +415,186 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
     return '$detto\n\n(${errore.spiegazione})';
   }
 
-  /* ─── Quello che si vede ───────────────────────────────────────────────── */
+  /* ─── Quello che si vede ───────────────────────────────────────────────── *
+   *
+   * «Rifai più bella questa schermata, che è la prima che vedono le persone
+   * quando scaricano»: era un foglio bianco con un titolo e un bottone, e non
+   * diceva nemmeno cosa fa l'app. Adesso ha due parti:
+   *
+   * - la **presentazione** (solo alla prima casa): il marchio che si accende,
+   *   cosa si fa con GdAHome in quattro mattonelle, e il titolo;
+   * - la **scheda per collegarsi**: i tre passi numerati, il bottone, la
+   *   promessa sulla password e le due caselle facoltative.
+   *
+   * Sul telefono stanno una sotto l'altra; su uno schermo largo (il tablet in
+   * orizzontale) una accanto all'altra, invece di una colonna stretta in
+   * mezzo a due mari di vuoto. Le animazioni sono solo d'ingresso, una volta:
+   * niente che giri per sempre su una schermata che si guarda a lungo. */
 
   @override
   Widget build(BuildContext context) {
-    final colori = Theme.of(context).colorScheme;
-    final testi = Theme.of(context).textTheme;
     final primaCasa = widget.archivio.vuoto;
+    final scuro = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: primaCasa
           ? null
           : AppBar(
               title: Text(inLingua(it: 'Aggiungi una casa', en: 'Add a home')),
+              backgroundColor: Colors.transparent,
             ),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 460),
+      body: Stack(
+        children: [
+          Positioned.fill(child: _Fondo(scuro: scuro)),
+          SafeArea(
+            child: LayoutBuilder(
+              builder: (context, spazio) {
+                /* Affiancate sullo schermo largo, e anche su quello basso e
+                 * largo (il telefono in orizzontale): una sotto l'altra il
+                 * bottone finirebbe sotto il bordo. */
+                final w = spazio.maxWidth, h = spazio.maxHeight;
+                final largo = primaCasa && (w >= 860 || (w >= 700 && w > h));
+                final margine = w >= 1000 ? 48.0 : 24.0;
+                final larghezzaScheda = ((w - margine * 2) * 0.52).clamp(
+                  340.0,
+                  470.0,
+                );
+                final scheda = _laScheda(context);
+                if (largo) {
+                  return Center(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: margine,
+                        vertical: 24,
+                      ),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1120),
+                        child: Row(
+                          /* Sullo schermo basso la scheda e' piu' alta della
+                           * finestra: centrata, la presentazione finiva in
+                           * fondo. Li' sta in alto, accanto ai passi. */
+                          crossAxisAlignment: h < 560
+                              ? CrossAxisAlignment.start
+                              : CrossAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              child: _Presentazione(
+                                aSinistra: true,
+                                compatta: h < 560,
+                              ),
+                            ),
+                            SizedBox(width: w >= 1000 ? 56 : 28),
+                            SizedBox(width: larghezzaScheda, child: scheda),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }
+                return Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 480),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (primaCasa) ...[
+                            const _Presentazione(aSinistra: false),
+                            const SizedBox(height: 20),
+                          ],
+                          scheda,
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// La scheda per collegarsi: i passi, il bottone, le caselle.
+  Widget _laScheda(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+    final scuro = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _Entra(
+          ritardo: 0.25,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: colori.surfaceContainerLowest.withValues(
+                alpha: scuro ? 0.92 : 0.96,
+              ),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: scuro
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : Colors.white,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: (scuro ? Colors.black : const Color(0xFF1E3A8A))
+                      .withValues(alpha: scuro ? 0.40 : 0.08),
+                  blurRadius: 40,
+                  offset: const Offset(0, 12),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(22, 20, 22, 18),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (primaCasa) ...[
-                    const Center(child: Marchio(lato: 84)),
-                    const SizedBox(height: 22),
-                    Text(
-                      inLingua(
-                        it: 'Colleghiamo la casa',
-                        en: 'Let\'s connect your home',
-                      ),
-                      textAlign: TextAlign.center,
-                      style: testi.headlineMedium,
+                  Text(
+                    inLingua(it: 'Come si collega', en: 'How to connect'),
+                    style: testi.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
                     ),
-                    const SizedBox(height: 10),
-                  ],
-                  /* Due frasi, e quale delle due dipende da **dove gira
-                     questa copia dell'app**.
-                     
+                  ),
+                  const SizedBox(height: 14),
+                  /* Due modi di dirlo, e quale dipende da **dove gira questa
+                     copia dell'app**.
+
                      Chi ha il telefono in mano ha Home Assistant su un altro
-                     schermo, e «apri gdahome dalla barra laterale» e' il
+                     schermo, e «apri GdAHome dalla barra laterale» e' il
                      consiglio giusto. Ma questa stessa app la serve anche
                      l'add-on, dentro Home Assistant, dalla console che ha un
                      tasto «Apri gdahome» — e li' quella frase chiudeva un
                      anello: la barra laterale riportava all'app, e il codice
                      non si generava mai. Qualcuno ha riavviato tre volte e poi
                      e' andato a chiederlo su Facebook.
-                     
+
                      Quindi da dentro l'ingress non si manda nessuno nella
                      barra laterale: si apre la console, con un tasto che ci
                      porta. */
-                  Text(
-                    dentroHomeAssistant
-                        ? inLingua(
-                            it:
-                                'Il codice lo fabbrica la console di GdAHome, '
-                                'qui in Home Assistant. Aprila, premi «Genera '
-                                'QR code», e riporta qui il codice.',
-                            en:
-                                'The code is made by the GdAHome console, here '
-                                'in Home Assistant. Open it, press “Generate '
-                                'the QR code”, and bring the code back here.',
-                          )
-                        : inLingua(
-                            it:
-                                'In Home Assistant apri «GdAHome» dalla barra '
-                                'laterale e premi «Genera QR code». Poi '
-                                'inquadralo.',
-                            en:
-                                'In Home Assistant open “GdAHome” from the '
-                                'sidebar and press “Generate the QR code”. '
-                                'Then scan it.',
-                          ),
-                    textAlign: TextAlign.center,
-                    style: testi.bodyLarge?.copyWith(
-                      color: colori.onSurfaceVariant,
-                    ),
-                  ),
                   if (dentroHomeAssistant) ...[
+                    Text(
+                      inLingua(
+                        it:
+                            'Il codice lo fabbrica la console di GdAHome, '
+                            'qui in Home Assistant. Aprila, premi «Collega '
+                            'l\'app», scegli per chi è, premi «Genera il QR '
+                            'code» e riporta qui il codice.',
+                        en:
+                            'The code is made by the GdAHome console, here '
+                            'in Home Assistant. Open it, press “Connect the '
+                            'app”, choose who it is for, press “Generate the '
+                            'QR code” and bring the code back here.',
+                      ),
+                      style: testi.bodyLarge?.copyWith(
+                        color: colori.onSurfaceVariant,
+                      ),
+                    ),
                     const SizedBox(height: 16),
                     OutlinedButton.icon(
                       onPressed: apriLaConsole,
@@ -509,28 +609,45 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                         ),
                       ),
                     ),
-                  ],
-                  const SizedBox(height: 28),
-                  FilledButton.icon(
-                    onPressed: _sto ? null : _inquadra,
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(58),
-                    ),
-                    icon: _sto
-                        ? SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: colori.onPrimary,
-                            ),
-                          )
-                        : const Icon(Icons.qr_code_scanner_rounded),
-                    label: Text(
-                      inLingua(
-                        it: 'Inquadra il QR code',
-                        en: 'Scan the QR code',
+                  ] else ...[
+                    _Passo(
+                      numero: 1,
+                      testo: inLingua(
+                        it:
+                            'In Home Assistant apri «Configura GdAHome» '
+                            'dalla barra laterale',
+                        en:
+                            'In Home Assistant, open “Configura GdAHome” from '
+                            'the sidebar',
                       ),
+                    ),
+                    _Passo(
+                      numero: 2,
+                      testo: inLingua(
+                        it:
+                            'Premi «Collega l\'app», scegli per chi è e premi '
+                            '«Genera il QR code»',
+                        en:
+                            'Press “Connect the app”, choose who it is for and '
+                            'press “Generate the QR code”',
+                      ),
+                    ),
+                    _Passo(
+                      numero: 3,
+                      testo: inLingua(
+                        it: 'Inquadralo con il tasto qui sotto',
+                        en: 'Scan it with the button below',
+                      ),
+                      ultimo: true,
+                    ),
+                  ],
+                  const SizedBox(height: 22),
+                  _BottoneGrande(
+                    quandoPremuto: _sto ? null : _inquadra,
+                    occupato: _sto,
+                    testo: inLingua(
+                      it: 'Inquadra il QR code',
+                      en: 'Scan the QR code',
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -572,7 +689,7 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                       color: colori.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 22),
                   TextField(
                     controller: _nome,
                     enabled: !_sto,
@@ -586,6 +703,7 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                         it: 'Casa, Dai miei, Al mare',
                         en: 'Home, Mum\'s, Beach house',
                       ),
+                      prefixIcon: const Icon(Icons.cottage_outlined),
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -607,13 +725,13 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                       ),
                     ),
                   ],
-                  const Firma(),
                 ],
               ),
             ),
           ),
         ),
-      ),
+        const Firma(),
+      ],
     );
   }
 
@@ -712,4 +830,434 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
       ),
     ),
   ];
+}
+
+/* ─── I pezzi della schermata ───────────────────────────────────────────── */
+
+/// Il fondo: un cielo appena colorato, con due aloni — blu in alto, ambra in
+/// basso, i colori del marchio — al posto del bianco piatto.
+class _Fondo extends StatelessWidget {
+  const _Fondo({required this.scuro});
+
+  final bool scuro;
+
+  @override
+  Widget build(BuildContext context) {
+    final alone1 = scuro ? const Color(0xFF1D4ED8) : const Color(0xFF93C5FD);
+    final alone2 = scuro ? const Color(0xFFB45309) : const Color(0xFFFCD34D);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: scuro
+              ? const [Color(0xFF0B1733), Color(0xFF080F1C), Color(0xFF0A1222)]
+              : const [Color(0xFFEAF1FF), Color(0xFFF3F6FB), Color(0xFFFFF7E8)],
+        ),
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            top: -160,
+            right: -120,
+            child: _Alone(
+              colore: alone1,
+              lato: 460,
+              forza: scuro ? 0.35 : 0.55,
+            ),
+          ),
+          Positioned(
+            bottom: -180,
+            left: -140,
+            child: _Alone(
+              colore: alone2,
+              lato: 480,
+              forza: scuro ? 0.18 : 0.45,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Alone extends StatelessWidget {
+  const _Alone({required this.colore, required this.lato, required this.forza});
+
+  final Color colore;
+  final double lato;
+  final double forza;
+
+  @override
+  Widget build(BuildContext context) => IgnorePointer(
+    child: Container(
+      width: lato,
+      height: lato,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [
+            colore.withValues(alpha: forza),
+            colore.withValues(alpha: 0),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+/// Entra una volta, salendo appena e accendendosi. [ritardo] e' la frazione
+/// dell'animazione in cui comincia: i pezzi arrivano uno dopo l'altro.
+class _Entra extends StatelessWidget {
+  const _Entra({required this.child, this.ritardo = 0});
+
+  final Widget child;
+  final double ritardo;
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) return child;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 900),
+      curve: Interval(ritardo, 1, curve: Curves.easeOutCubic),
+      child: child,
+      builder: (context, t, figlio) => Opacity(
+        opacity: t,
+        child: Transform.translate(
+          offset: Offset(0, (1 - t) * 18),
+          child: figlio,
+        ),
+      ),
+    );
+  }
+}
+
+/// La presentazione: il marchio acceso, il benvenuto, cosa si fa.
+class _Presentazione extends StatelessWidget {
+  const _Presentazione({required this.aSinistra, this.compatta = false});
+
+  /// Sullo schermo largo sta a sinistra della scheda, allineata a sinistra.
+  final bool aSinistra;
+
+  /// Su uno schermo basso (il telefono in orizzontale) solo marchio, saluto
+  /// e titolo: il resto non ci starebbe, e il titolo finiva sotto il bordo.
+  final bool compatta;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+    final scuro = Theme.of(context).brightness == Brightness.dark;
+    final allinea = aSinistra
+        ? CrossAxisAlignment.start
+        : CrossAxisAlignment.center;
+    final testo = aSinistra ? TextAlign.start : TextAlign.center;
+    final logo = compatta ? 64.0 : (aSinistra ? 120.0 : 88.0);
+    final alone = compatta ? 104.0 : (aSinistra ? 190.0 : 136.0);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: allinea,
+      children: [
+        _Entra(
+          child: SizedBox(
+            width: alone,
+            height: alone,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                /* L'alone: il marchio si accende, non si appoggia. */
+                _Alone(
+                  colore: const Color(0xFF3B82F6),
+                  lato: alone,
+                  forza: scuro ? 0.55 : 0.40,
+                ),
+                Positioned(
+                  bottom: 6,
+                  child: _Alone(
+                    colore: const Color(0xFFF59E0B),
+                    lato: logo,
+                    forza: scuro ? 0.30 : 0.28,
+                  ),
+                ),
+                Marchio(lato: logo),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        _Entra(
+          ritardo: 0.1,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+            decoration: BoxDecoration(
+              color: colori.primary.withValues(alpha: scuro ? 0.16 : 0.10),
+              borderRadius: BorderRadius.circular(100),
+            ),
+            child: Text(
+              inLingua(it: 'Benvenuto in GdAHome', en: 'Welcome to GdAHome'),
+              style: testi.labelLarge?.copyWith(
+                color: colori.primary,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        _Entra(
+          ritardo: 0.15,
+          child: Text(
+            inLingua(it: 'Colleghiamo la casa', en: 'Let\'s connect your home'),
+            textAlign: testo,
+            style:
+                (aSinistra && !compatta
+                        ? testi.displaySmall
+                        : testi.headlineLarge)
+                    ?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.8,
+                    ),
+          ),
+        ),
+        if (!compatta) ...[
+          const SizedBox(height: 12),
+          _Entra(
+            ritardo: 0.2,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Text(
+                inLingua(
+                  it:
+                      'Luci, clima, energia, telecamere e il navigatore per '
+                      "l'auto: tutta la tua casa in un'app sola.",
+                  en:
+                      'Lights, climate, energy, cameras and the car navigator: '
+                      'your whole home in one app.',
+                ),
+                textAlign: testo,
+                style: testi.bodyLarge?.copyWith(
+                  color: colori.onSurfaceVariant,
+                  height: 1.45,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          _Entra(
+            ritardo: 0.25,
+            child: Wrap(
+              alignment: aSinistra ? WrapAlignment.start : WrapAlignment.center,
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                _Vantaggio(
+                  icona: Icons.lightbulb_rounded,
+                  colore: const Color(0xFFF59E0B),
+                  testo: inLingua(
+                    it: 'Luci e dispositivi',
+                    en: 'Lights & devices',
+                  ),
+                ),
+                _Vantaggio(
+                  icona: Icons.bolt_rounded,
+                  colore: const Color(0xFF16A34A),
+                  testo: inLingua(it: 'Energia', en: 'Energy'),
+                ),
+                _Vantaggio(
+                  icona: Icons.thermostat_rounded,
+                  colore: const Color(0xFFE11D48),
+                  testo: inLingua(it: 'Clima', en: 'Climate'),
+                ),
+                _Vantaggio(
+                  icona: Icons.navigation_rounded,
+                  colore: const Color(0xFF2563EB),
+                  testo: inLingua(it: 'Navigatore', en: 'Navigator'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Una mattonella di cosa si fa con l'app.
+class _Vantaggio extends StatelessWidget {
+  const _Vantaggio({
+    required this.icona,
+    required this.colore,
+    required this.testo,
+  });
+
+  final IconData icona;
+  final Color colore;
+  final String testo;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final scuro = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(6, 6, 12, 6),
+      decoration: BoxDecoration(
+        color: colori.surfaceContainerLowest.withValues(
+          alpha: scuro ? 0.7 : 0.85,
+        ),
+        borderRadius: BorderRadius.circular(100),
+        border: Border.all(
+          color: scuro ? Colors.white.withValues(alpha: 0.06) : Colors.white,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 26,
+            height: 26,
+            decoration: BoxDecoration(
+              color: colore.withValues(alpha: scuro ? 0.22 : 0.14),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icona, size: 15, color: colore),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            testo,
+            style: Theme.of(context).textTheme.labelLarge
+                ?.copyWith(fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Un passo numerato, col filo che lo lega al passo dopo.
+class _Passo extends StatelessWidget {
+  const _Passo({
+    required this.numero,
+    required this.testo,
+    this.ultimo = false,
+  });
+
+  final int numero;
+  final String testo;
+  final bool ultimo;
+
+  @override
+  Widget build(BuildContext context) {
+    final colori = Theme.of(context).colorScheme;
+    final testi = Theme.of(context).textTheme;
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Column(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF3B82F6), Color(0xFF4338CA)],
+                  ),
+                ),
+                child: Text(
+                  '$numero',
+                  style: testi.labelLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              if (!ultimo)
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    color: colori.primary.withValues(alpha: 0.18),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(top: 6, bottom: ultimo ? 0 : 12),
+              child: Text(
+                testo,
+                style: testi.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Il bottone che conta: largo, col colore del marchio che sfuma.
+class _BottoneGrande extends StatelessWidget {
+  const _BottoneGrande({
+    required this.quandoPremuto,
+    required this.occupato,
+    required this.testo,
+  });
+
+  final VoidCallback? quandoPremuto;
+  final bool occupato;
+  final String testo;
+
+  @override
+  Widget build(BuildContext context) {
+    final forma = BorderRadius.circular(20);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: forma,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8), Color(0xFF4338CA)],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF2563EB).withValues(alpha: 0.30),
+            blurRadius: 24,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: FilledButton.icon(
+        onPressed: quandoPremuto,
+        style: FilledButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          disabledBackgroundColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          disabledForegroundColor: Colors.white.withValues(alpha: 0.8),
+          shadowColor: Colors.transparent,
+          minimumSize: const Size.fromHeight(60),
+          shape: RoundedRectangleBorder(borderRadius: forma),
+          textStyle: Theme.of(context).textTheme.titleMedium
+              ?.copyWith(fontSize: 17, fontWeight: FontWeight.w700),
+        ),
+        icon: occupato
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : const Icon(Icons.qr_code_scanner_rounded),
+        label: Text(testo),
+      ),
+    );
+  }
 }
