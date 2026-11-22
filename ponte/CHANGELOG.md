@@ -14,6 +14,22 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.24
+
+- **Collega l'app**: sotto il QR c'è sempre il codice con «Copia il codice»,
+  e «Apri GdAHome su questo telefono» per chi apre la pagina dal telefono da
+  collegare. Riabbinando un telefono, il tasto per un'app nuova non si scambia
+  più per quello da premere.
+- **Plancia a muro, il riposo**: oltre all'orologio, «Cielo di casa» (il cielo
+  che segue l'ora e il meteo, con la luna di notte) o «Cornice foto», con le
+  foto caricate dalla configurazione che restano in casa.
+- **Casa 3D**: le scritte dei dispositivi non si coprono più, e il tasto
+  «Nomi» sceglie fra tutti, solo gli accesi o nessuno.
+- **Home, «Flusso energia»**: un blocco grande con sole, rete, batteria e
+  casa, da accendere in Configurazione › Home.
+- **Configurazione sul telefono**: la colonna delle schede scorre fino
+  all'ultima.
+
 ## 1.19.23
 
 - **Sicurezza, i testi dei sensori**: un sensore che restituisce un testo (lo
