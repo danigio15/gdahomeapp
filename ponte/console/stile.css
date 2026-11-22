@@ -2276,6 +2276,30 @@ code {
   cursor: pointer;
 }
 
+/* «Apri GdAHome su questo telefono»: il tasto pieno, largo quanto il QR, e
+ * la riga piccola sotto che manda al codice. */
+.apri-qui {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+  max-width: 360px;
+}
+
+.apri-qui[hidden] {
+  display: none;
+}
+
+.apri-qui a.bottone {
+  width: 100%;
+  white-space: normal;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.apri-qui .minuta {
+  margin: 0;
+}
+
 /* Il codice da copiare, sotto il QR: sempre in vista. */
 .a-mano {
   margin-top: 16px;

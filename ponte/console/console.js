@@ -517,8 +517,30 @@
   /* Le sedici lettere del codice a schermo, per il tasto «Copia il codice». */
   var codiceACopiare = "";
 
-  function disegnaIlCodice(codice, scadeIl) {
+  /* Il link che apre GdAHome sullo stesso telefono, con l'invito del QR
+   * dentro: la stessa riga, scritta con `encodeURIComponent` perche' le
+   * sbarre e i due punti non rompano l'indirizzo. Lo legge
+   * `app/lib/ponte/il_link.dart`.
+   *
+   * Su Android `intent://`, che dice anche quale app: dove GdAHome non c'e'
+   * il telefono apre la sua pagina nel Play Store (lo fanno Chrome e l'app di
+   * Home Assistant), invece di un tocco che non fa niente. */
+  function ilLinkDiGdAHome(invito, android) {
+    var dentro = "collega?invito=" + encodeURIComponent(invito);
+    if (android) {
+      return "intent://" + dentro + "#Intent;scheme=gdahome;package=com.gdahome.gdahome;end";
+    }
+    return "gdahome://" + dentro;
+  }
+
+  var SU_ANDROID = /android/i.test(navigator.userAgent || "");
+
+  function disegnaIlCodice(codice, scadeIl, invito) {
     codiceACopiare = codice;
+    /* Senza invito — un ponte di prima — il bottone non c'e': restano il QR
+     * e le lettere. */
+    trova("apri-gdahome").href = invito ? ilLinkDiGdAHome(invito, SU_ANDROID) : "#";
+    trova("apri-qui").hidden = !invito;
     trova("codice").textContent = aGruppi(codice);
     trova("copia-codice").textContent = due("Copia il codice", "Copy the code");
     /* La marca del tempo non e' scaramanzia: senza, il browser rimette il
@@ -545,6 +567,8 @@
 
   function nascondiIlCodice() {
     codiceACopiare = "";
+    trova("apri-qui").hidden = true;
+    trova("apri-gdahome").href = "#";
     trova("codice-vivo").hidden = true;
     trova("senza-codice").hidden = false;
     trova("a-mano").hidden = true;
@@ -2679,7 +2703,7 @@
         if (vivo.utente) trova("per-chi").value = vivo.utente;
         codicePer = trova("per-chi").value;
         spiegaIlPerChi();
-        disegnaIlCodice(vivo.codice, vivo.scadeIl);
+        disegnaIlCodice(vivo.codice, vivo.scadeIl, vivo.invito);
       })
       .catch(function () {
         /* Se non si riesce a riprenderlo si resta senza: il bottone e' li'. */
@@ -2733,10 +2757,10 @@
       trova("riabbina-parole").textContent = due(
         "Il QR qui sotto riabbina «" +
           riabbinaIl.nome +
-          "», per quando l'app è stata cancellata e rimessa: resta lo stesso telefono, con il suo nome, la sua persona e i suoi dati, e non occupa un posto in più. Inquadralo con GdAHome da quel telefono, o se sei proprio su quel telefono copia il codice qui sotto.",
+          "», per quando l'app è stata cancellata e rimessa: resta lo stesso telefono, con il suo nome, la sua persona e i suoi dati, e non occupa un posto in più. Inquadralo con GdAHome da quel telefono, o se sei proprio su quel telefono premi «Apri GdAHome su questo telefono» qui sotto.",
         "The QR below re-pairs “" +
           riabbinaIl.nome +
-          "”, for when the app was deleted and reinstalled: it stays the same phone, with its name, its person and its data, and takes no extra slot. Scan it with GdAHome from that phone or, if you are on that very phone, copy the code below.",
+          "”, for when the app was deleted and reinstalled: it stays the same phone, with its name, its person and its data, and takes no extra slot. Scan it with GdAHome from that phone or, if you are on that very phone, press “Open GdAHome on this phone” below.",
       );
     }
   }
@@ -2913,7 +2937,7 @@
     })
       .then(function (fatto) {
         codicePer = voluto;
-        disegnaIlCodice(fatto.codice, fatto.scadeIl);
+        disegnaIlCodice(fatto.codice, fatto.scadeIl, fatto.invito);
       })
       .catch(function (errore) {
         avvisa(errore.message);

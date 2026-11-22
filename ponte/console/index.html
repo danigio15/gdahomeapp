@@ -512,6 +512,33 @@
                       Il QR code comparirà qui.
                     </p>
                   </div>
+                  <!-- Il bottone per chi guarda questa pagina dal telefono da
+                       collegare (l'app di Home Assistant su quel telefono):
+                       apre GdAHome con l'invito del QR dentro un link,
+                       `gdahome://collega?invito=…` (su Android `intent://`,
+                       che senza l'app porta al Play Store). Sempre in vista: il
+                       telefono non si indovina, e chi e' al computer lo salta.
+
+                       `target="_blank"` e non `_top`: dentro l'app di Home
+                       Assistant per iPhone una pagina nuova va al sistema, che
+                       apre GdAHome, mentre un `gdahome://` caricato al posto
+                       della pagina diventa «indirizzo non valido». Su Android
+                       l'app di Home Assistant manda al sistema ogni indirizzo
+                       che non e' suo. -->
+                  <div class="apri-qui" id="apri-qui" hidden>
+                    <a
+                      class="bottone"
+                      id="apri-gdahome"
+                      href="#"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-en="Open GdAHome on this phone"
+                      >Apri GdAHome su questo telefono</a
+                    >
+                    <p class="minuta" data-en="If GdAHome doesn't open, copy the code below.">
+                      Se GdAHome non si apre, copia il codice qui sotto.
+                    </p>
+                  </div>
                   <!-- Le sedici lettere sempre in vista, col tasto per copiarle.
                        Chi guarda questa pagina dal telefono da collegare (l'app di
                        Home Assistant su quel telefono) il QR non lo puo'

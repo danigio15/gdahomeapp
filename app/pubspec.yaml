@@ -143,6 +143,12 @@ dependencies:
   flutter_local_notifications: ^22.3.3
   health: ^13.3.2
 
+  # I link che aprono l'app: `gdahome://collega?invito=…`, dal bottone «Apri
+  # GdAHome su questo telefono» della console (`ponte/il_link.dart`). Chi
+  # guarda la console dallo stesso telefono che vuole collegare il QR non lo
+  # puo' inquadrare: il link porta l'invito al posto della fotocamera.
+  app_links: ^7.2.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

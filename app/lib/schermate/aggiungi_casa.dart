@@ -40,9 +40,35 @@ import '../vestito/marchio.dart';
 import '../vestito/pezzi.dart';
 import '../vestito/tema.dart' show temaScuro;
 import 'benvenuto_villa.dart';
+import 'collega_dal_link.dart';
 import 'di_chi_e.dart';
 import 'firma.dart';
 import 'lettore.dart';
+
+/// Come si abbina con quello che c'e' scritto in un invito: di serie
+/// [abbinaConLInvito], nelle prove uno finto.
+typedef AbbinaConLInvito = Future<Entrata> Function(
+  Invito invito, {
+  required String nome,
+  required String sistema,
+  required Map<String, String> modello,
+  IndirizzoDelCentralino? centralinoDiRipiego,
+});
+
+/// [Abbinamento.conLInvito], con la forma di [AbbinaConLInvito].
+Future<Entrata> abbinaConLInvito(
+  Invito invito, {
+  required String nome,
+  required String sistema,
+  required Map<String, String> modello,
+  IndirizzoDelCentralino? centralinoDiRipiego,
+}) => Abbinamento.conLInvito(
+  invito,
+  nome: nome,
+  sistema: sistema,
+  modello: modello,
+  centralinoDiRipiego: centralinoDiRipiego,
+);
 
 class AggiungiCasa extends StatefulWidget {
   const AggiungiCasa({
@@ -51,6 +77,10 @@ class AggiungiCasa extends StatefulWidget {
     required this.quandoFatto,
     this.centralino,
     this.inquadra = colLaFotocamera,
+    this.invitoDaUnLink,
+    this.soloCaseGiaNote = false,
+    this.quandoRinuncia,
+    this.abbina = abbinaConLInvito,
   });
 
   final ArchivioDelleCase archivio;
@@ -68,6 +98,31 @@ class AggiungiCasa extends StatefulWidget {
   /// si vuole provare non e' lei: e' cosa fa questa schermata di quello che ha
   /// letto.
   final Inquadra inquadra;
+
+  /// L'invito arrivato con un link (`ponte/il_link.dart`), al posto del QR.
+  ///
+  /// La schermata si apre col foglio «Collegare questa casa?», e abbina solo
+  /// dopo il si': un link puo' arrivare da chiunque. Poi la strada e' la
+  /// stessa del QR inquadrato.
+  final Invito? invitoDaUnLink;
+
+  /// Si puo' solo **ricollegare** una casa che c'e' gia'.
+  ///
+  /// E' il caso di Base con una casa nell'app: la seconda e' di Premium, e
+  /// «Aggiungi» porta alla sua pagina. Ma il link del «Nuovo QR per questo
+  /// telefono» della console riabbina quasi sempre la stessa casa, e quella
+  /// Premium non la chiede: l'archivio la fonde con quella che c'e'
+  /// (`ArchivioDelleCase.aggiungi`). Quale casa sia lo si sa solo dopo,
+  /// dall'`Abbinato` (`casaAlCentralino`); se e' un'altra non la si scrive, e
+  /// si dice perche'.
+  final bool soloCaseGiaNote;
+
+  /// Al «no» del foglio del link: chi ha aperto la schermata la chiude.
+  final VoidCallback? quandoRinuncia;
+
+  /// Come si abbina con un invito. Nelle prove non c'e' nessuna casa che
+  /// risponda, e quello che si prova e' che l'invito arrivi qui intero.
+  final AbbinaConLInvito abbina;
 
   @override
   State<AggiungiCasa> createState() => _AggiungiCasaState();
@@ -100,6 +155,12 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
   void initState() {
     super.initState();
     unawaited(_ritrovaIlProprietario());
+    final dalLink = widget.invitoDaUnLink;
+    if (dalLink != null) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => unawaited(_chiediSeCollegare(dalLink)),
+      );
+    }
   }
 
   Future<void> _ritrovaIlProprietario() async {
@@ -186,18 +247,43 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
       return;
     }
 
-    /* Il nome che si e' battuto vale lo stesso: e' l'unica cosa che l'app non
-     * puo' sapere da sola. */
-    await _prova(() async {
-      final chi = await _chiSono();
-      return Abbinamento.conLInvito(
-        invito,
-        nome: chi.nome,
-        sistema: _questo.sistema,
-        modello: chi.modello,
-        centralinoDiRipiego: _centralino,
-      );
-    });
+    await _conLInvito(invito);
+  }
+
+  /* L'invito letto, dal QR o da un link: da qui la strada e' una sola.
+   *
+   * Il nome che si e' battuto vale lo stesso: e' l'unica cosa che l'app non
+   * puo' sapere da sola. */
+  Future<void> _conLInvito(Invito invito) => _prova(() async {
+    final chi = await _chiSono();
+    return widget.abbina(
+      invito,
+      nome: chi.nome,
+      sistema: _questo.sistema,
+      modello: chi.modello,
+      centralinoDiRipiego: _centralino,
+    );
+  });
+
+  /* ─── Il link ──────────────────────────────────────────────────────────── */
+
+  /* Prima si chiede, poi si abbina: un link non e' un QR inquadrato da chi
+   * sta davanti alla console. Al primo avvio il pannello coi passi sale da
+   * solo, perche' la rotella e un eventuale errore stanno li' dentro. */
+  Future<void> _chiediSeCollegare(Invito invito) async {
+    if (!mounted) return;
+    final si = await chiediSeCollegare(
+      context,
+      invito,
+      soloCaseGiaNote: widget.soloCaseGiaNote,
+    );
+    if (!mounted) return;
+    if (!si) {
+      widget.quandoRinuncia?.call();
+      return;
+    }
+    if (widget.archivio.vuoto) setState(() => _pannello = true);
+    await _conLInvito(invito);
   }
 
   /* ─── Scriverlo a mano ─────────────────────────────────────────────────── */
@@ -281,6 +367,36 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
        * tiene quello che risponde: sono i millesimi contro i decimi, cioe' la
        * differenza fra una luce che si accende quando la tocchi e una che ci
        * pensa su. */
+      /* Base, con una casa gia' nell'app: il link poteva ricollegare solo
+       * quella (vedi [AggiungiCasa.soloCaseGiaNote]). Un'altra non si
+       * scrive. La casa intanto il telefono l'ha segnato fra i suoi, e il
+       * posto si libera togliendolo dalla console. */
+      if (widget.soloCaseGiaNote &&
+          !widget.archivio.tutte.any(
+            (una) =>
+                una.casaAlCentralino != null &&
+                una.casaAlCentralino!.isNotEmpty &&
+                una.casaAlCentralino == abbinato.casaAlCentralino,
+          )) {
+        if (!mounted) return;
+        setState(() {
+          _sto = false;
+          _male = inLingua(
+            it:
+                'Questa è un\'altra casa: con GdAHome Base nell\'app ne tieni '
+                'una, e per aggiungerne un\'altra serve Premium.\n\nLa casa '
+                'ha già segnato questo telefono: toglilo da «I tuoi '
+                'telefoni» nella console di GdAHome, così il posto si libera.',
+            en:
+                'This is another home: with GdAHome Base the app keeps one, '
+                'and adding another needs Premium.\n\nThat home has already '
+                'listed this phone: remove it from “Your phones” in the '
+                'GdAHome console to free the slot.',
+          );
+        });
+        return;
+      }
+
       final scoperto = await Abbinamento.qualeIndirizzo(abbinato.indirizzi);
 
       final casa = await widget.archivio.aggiungi(
