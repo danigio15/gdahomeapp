@@ -185,6 +185,9 @@ export const SCHEDE = Object.freeze({
   /* ── 🛋️ Casa ───────────────────────────────────────────────────────── */
   stanze: { famiglia: "casa", posizione: 10 },
   luci: { famiglia: "casa", posizione: 20 },
+  /* Le luci di Natale: accanto alle luci, perche' lo sono. La linguetta c'e'
+   * solo nelle feste (`luci-di-natale-editor-section.js`). */
+  feste: { famiglia: "casa", posizione: 22 },
   tapp: { famiglia: "casa", posizione: 30 }, // Finestre e tapparelle
   appliances: { famiglia: "casa", posizione: 40 }, // Elettrodomestici
   media: { famiglia: "casa", posizione: 50 }, // Musica

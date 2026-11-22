@@ -14583,7 +14583,7 @@ function persistSignedSource(store2, group, signed, plantId = "") {
 }
 
 // src/core/chiavi-di-configurazione.js
-var CONFIG_KEYS_REVISION = 78;
+var CONFIG_KEYS_REVISION = 79;
 var CONFIG_KEYS = Object.freeze([
   "dm_dashboard_state",
   "dm_schema_version",
@@ -14914,7 +14914,10 @@ var CONFIG_KEYS = Object.freeze([
   "cd_disegni",
   /* I testi della sicurezza: la ragione per cui stanno qui è scritta accanto
    * alla revisione 78. */
-  "cd_testi_sicurezza"
+  "cd_testi_sicurezza",
+  /* Le luci di Natale: la ragione per cui stanno qui è scritta accanto alla
+   * revisione 79. */
+  "cd_feste"
 ]);
 
 // src/sections/ricordati-di-salvare-section.js
@@ -19678,6 +19681,9 @@ var SCHEDE = Object.freeze({
   /* ── 🛋️ Casa ───────────────────────────────────────────────────────── */
   stanze: { famiglia: "casa", posizione: 10 },
   luci: { famiglia: "casa", posizione: 20 },
+  /* Le luci di Natale: accanto alle luci, perche' lo sono. La linguetta c'e'
+   * solo nelle feste (`luci-di-natale-editor-section.js`). */
+  feste: { famiglia: "casa", posizione: 22 },
   tapp: { famiglia: "casa", posizione: 30 },
   // Finestre e tapparelle
   appliances: { famiglia: "casa", posizione: 40 },
@@ -35674,7 +35680,7 @@ function installSegnalazioniSection() {
 senzaCadere(installSegnalazioniSection);
 
 // legacy/build-info.js
-var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.19.22", "dashboardVersion": "1.19.22", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-11-22T16:08:16+00:00", "commit": "6307fc3a1a3e984aeaf579555d8817735931eb61", "assetHash": "8191de1db5fbe1b9" });
+var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.19.23", "dashboardVersion": "1.19.23", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-11-22T17:59:13+00:00", "commit": "b37b1d0145c853e68fd3f48f4e92b68ac52c2bfe", "assetHash": "857b6ae71bf1956c" });
 
 export {
   faseInParole,

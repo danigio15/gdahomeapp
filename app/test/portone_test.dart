@@ -459,31 +459,21 @@ void main() {
     expect(find.textContaining('Manca il codice'), findsOneWidget);
   });
 
-  testWidgets('l\'indirizzo si può scrivere lo stesso, per chi ne ha bisogno', (
+  testWidgets('col centralino l\'indirizzo di casa non si chiede', (
     tester,
   ) async {
-    /* La casella c'e' ancora, ma sta di la': serve a chi il centralino non
-       * ce l'ha, o a chi vuole abbinare senza far passare niente da fuori. Ci
-       * si arriva dallo stesso bottone delle lettere, e quello che si scrive
-       * dentro viene controllato come prima. */
+    /* «Togli indirizzo di casa, non serve»: col centralino il codice basta,
+     * la casa si trova da sola. La casella resta solo per chi il centralino
+     * non ce l'ha (il caso sotto). */
     await tester.pumpWidget(AppDiCasa(cassaforte: CassaforteInMemoria()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Indirizzo di casa (facoltativo)'), findsNothing);
     await tester.ensureVisible(find.textContaining('Inserisci il codice'));
     await tester.tap(find.textContaining('Inserisci il codice'));
     await tester.pumpAndSettle();
 
-    await tester.enterText(
-      find.widgetWithText(TextField, 'Indirizzo di casa (facoltativo)'),
-      'non un indirizzo',
-    );
-    await tester.ensureVisible(find.text('Abbina'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Abbina'));
-    await tester.pump();
-
-    expect(find.text('L\'indirizzo di casa non si capisce.'), findsOneWidget);
+    expect(find.textContaining('Indirizzo di'), findsNothing);
+    expect(find.text('Abbina'), findsOneWidget);
   });
 
   testWidgets(

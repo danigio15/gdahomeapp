@@ -34,8 +34,10 @@ test("i testi della guida sono quelli del manuale, rifatti dallo script", () => 
 test("ogni scheda del Config ha la sua guida, con lo scopo e i passi", () => {
   /* Runtime e' diagnostica per l'assistenza; colpo d'occhio e gdanav si
    * spiegano nei capitoli loro; «avvisi» e' la linguetta storica che ora sta
-   * in fondo ai Widget. */
-  const senza = new Set(["runtime", "occhio", "gdanav", "avvisi"]);
+   * in fondo ai Widget. Le luci di Natale («feste») sono una sorpresa: la
+   * linguetta compare solo nelle feste, e il manuale — da cui la guida si
+   * rifa' — non la racconta. */
+  const senza = new Set(["runtime", "occhio", "gdanav", "avvisi", "feste"]);
   for (const scheda of Object.keys(SCHEDE)) {
     if (senza.has(scheda)) continue;
     const guida = guidaDi(scheda);

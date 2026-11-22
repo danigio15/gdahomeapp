@@ -1706,8 +1706,14 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // una frase di un sensore dice qualcosa, e quando e' «Nessuna anomalia») e
   // `sections/testi-della-sicurezza-section.js` (la scheda in configurazione, il
   // riquadro sotto l'antifurto e la riga che scorre in Home).
+  // 565 con le feste: `core/feste.js` (quando e' festa, e cosa fanno le luci
+  // di Natale), `sections/disegni-delle-feste.js` (le lampadine, la neve, la
+  // Vigilia, il conto e i fuochi su canvas), `sections/feste-section.js` (la
+  // ghirlanda, la neve e il riquadro delle luci in Home),
+  // `sections/feste-al-muro.js` (le scene del tablet al riposo) e
+  // `sections/luci-di-natale-editor-section.js` (la scheda nel config).
   assert.ok(
-    relative.length <= 560,
+    relative.length <= 565,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

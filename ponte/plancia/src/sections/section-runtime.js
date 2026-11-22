@@ -109,6 +109,8 @@ import { installElencoDelleSezioni } from "./lelenco-delle-sezioni-section.js";
 import { installModoChiosco } from "./modo-chiosco-section.js";
 import { installPlanciaAMuro } from "./plancia-a-muro-section.js";
 import { installPlanciaAMuroEditor } from "./plancia-a-muro-editor-section.js";
+import { installFeste } from "./feste-section.js";
+import { installLuciDiNataleEditor } from "./luci-di-natale-editor-section.js";
 import { installTestaFissa } from "./testa-fissa-section.js";
 import { installBatterie } from "./batterie-section.js";
 import { installBatterieEditor } from "./batterie-editor-section.js";
@@ -1262,6 +1264,12 @@ export function installSectionRuntime() {
      * config. Dopo il chiosco, che accende quando serve. */
     senzaCadere(installPlanciaAMuro);
     senzaCadere(installPlanciaAMuroEditor);
+    /* Le feste: la ghirlanda, la neve e il riquadro delle luci di Natale in
+     * Home, e la loro scheda nel config. Fuori dalle feste non fanno niente
+     * e non si vedono (`core/feste.js`). Dopo il pannello a muro, che quando
+     * c'e' copre la pagina e ferma la neve. */
+    senzaCadere(installFeste);
+    senzaCadere(installLuciDiNataleEditor);
     senzaCadere(installVarchi);
     senzaCadere(installVarchiEditor);
     senzaCadere(installPresenza);

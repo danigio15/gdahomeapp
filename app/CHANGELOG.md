@@ -8,8 +8,11 @@ i suoi in `ponte/CHANGELOG.md`, ed è quello che Home Assistant fa vedere. Un
 rilascio dell'app non fa comparire un aggiornamento dell'add-on, e al
 contrario.
 
-## Prossima
+## 1.19.25
 
+- **Il benvenuto**: una pagina sola, con la scheda per collegarsi sullo
+  stesso cielo della copertina e il bottone sempre in vista; inserendo il
+  codice a mano non si chiede più l'indirizzo di casa.
 - **Mac e iPhone**: l'app non si chiude più quando si chiude la finestra
   (sul Mac) mentre il navigatore o la plancia sono aperti.
 - **Navigatore, «Voce di guida»**: dal menu si sceglie la voce che parla fra
