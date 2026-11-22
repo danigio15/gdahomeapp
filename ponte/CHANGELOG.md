@@ -14,6 +14,23 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.21
+
+- **Energia**: sparisce «Maximum call stack size exceeded». Con la sola
+  potenza d'immissione della rete (o la sola scarica della batteria) la
+  plancia finiva per leggere all'infinito un suo stesso numero, e con lui si
+  fermavano anche altre letture della casa. Le configurazioni già salvate così
+  tornano a funzionare da sole.
+- **Energia, storico**: con uno storico grande l'anno non resta più fermo su
+  «Sto ancora leggendo le statistiche del Recorder»: se il Recorder non ce la
+  fa in un colpo solo, l'anno si legge un mese alla volta, e i mesi già chiusi
+  si tengono sul dispositivo, così alla volta dopo arrivano subito.
+- **Barra in basso**: con la plancia accesa a lungo, nascondere e mostrare le
+  voci continua a funzionare.
+- **Salute dal telefono**: riabbinando il telefono (o con un telefono nuovo
+  della stessa persona) i sensori della Salute restano gli stessi, e il loro
+  storico continua invece di restare orfano nel Recorder.
+
 ## 1.19.20
 
 - **Campanello**: la notifica di chi ha suonato ha sempre la foto, anche se

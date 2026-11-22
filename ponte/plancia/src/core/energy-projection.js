@@ -196,7 +196,9 @@ export function adoptEnergySlots(energy = {}, overrides = {}) {
   let fuori = sorgente;
   for (const [path, slot] of Object.entries(ENERGY_SLOT_MAP)) {
     const entita = configured(mappate[slot]);
-    if (!entita) continue;
+    /* Le letture ricavate della plancia non si adottano come configurazione:
+     * sono il suo prodotto, non una sorgente (vedi `powerPairSource`). */
+    if (!entita || String(entita).startsWith("dm_derived.")) continue;
     const [group, key] = path.split(".");
     if (configured(fuori[group]?.[key])) continue;
     if (fuori === sorgente) fuori = { ...sorgente };

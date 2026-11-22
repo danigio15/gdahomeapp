@@ -13,7 +13,11 @@
  * anche non enumerabili: non si affacciano nell'elenco del selettore entita' e
  * non falsano i conteggi di chi cicla sugli stati.
  */
-import { derivedEnergyStates, signedSourceEntities } from "../core/signed-energy.js";
+import {
+  derivedEnergyStates,
+  isDerivedEntity,
+  signedSourceEntities,
+} from "../core/signed-energy.js";
 import { dashboardStore, lexicalGlobal, root } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_ENERGY_SIGNED__";
@@ -41,8 +45,12 @@ function registry() {
  * lettura la fusione di tutte le entita' della casa. */
 function sourceView(states, model) {
   const view = {};
-  for (const id of signedSourceEntities(model))
+  for (const id of signedSourceEntities(model)) {
+    /* Mai una lettura ricavata fra le sorgenti: il suo getter passa di qui, e
+     * leggerla vorrebbe dire richiamarsi senza fine. */
+    if (isDerivedEntity(id)) continue;
     view[id] = states?.[id] || root.__HASS__?.states?.[id] || root.hass?.states?.[id];
+  }
   return view;
 }
 

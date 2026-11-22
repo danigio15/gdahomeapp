@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-5JJ62IPL.js";
+} from "../../chunk-OKRHXQNU.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -659,7 +659,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-XZD4LHEA.js";
+} from "../../chunk-A7RTODPV.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -12635,8 +12635,10 @@ function registry() {
 }
 function sourceView(states, model2) {
   const view = {};
-  for (const id of signedSourceEntities(model2))
+  for (const id of signedSourceEntities(model2)) {
+    if (isDerivedEntity(id)) continue;
     view[id] = states?.[id] || root.__HASS__?.states?.[id] || root.hass?.states?.[id];
+  }
   return view;
 }
 function refreshDerivedStates() {
@@ -46493,6 +46495,7 @@ function insegnaLaVisibilita() {
     const mappa2 = precedente.apply(this, args) || {};
     return { ...mappa2, [ANIMALI_TAB]: ANIMALI_TAB };
   };
+  Object.assign(avvolta, precedente);
   avvolta.__dmAnimali = true;
   avvolta.__dmPrevious = precedente;
   root.cdNavVisMap = avvolta;
@@ -89370,6 +89373,7 @@ function teachNavVisibility() {
     const map = previous.apply(this, args) || {};
     return { ...map, [ROOMS_TAB]: ROOMS_TAB };
   };
+  Object.assign(wrapped, previous);
   wrapped.__dmStanze = true;
   wrapped.__dmPrevious = previous;
   root.cdNavVisMap = wrapped;
@@ -139499,6 +139503,7 @@ function teachNavVisibility2() {
     const map = previous.apply(this, args) || {};
     return { ...map, [ROBOT_TAB]: ROBOT_TAB };
   };
+  Object.assign(wrapped, previous);
   wrapped.__dmRobot = true;
   wrapped.__dmPrevious = previous;
   root.cdNavVisMap = wrapped;
@@ -140514,7 +140519,9 @@ function teachNavVisibility3() {
     const map = previous.apply(this, args) || {};
     return { ...map, [GDANAV_TAB]: GDANAV_TAB };
   };
+  Object.assign(wrapped, previous);
   wrapped.__dmGdanav = true;
+  wrapped.__dmPrevious = previous;
   root.cdNavVisMap = wrapped;
 }
 var ICONE2 = { una: "📅", settimana: "🔁", tappe: "🗺️" };
@@ -149083,6 +149090,7 @@ function insegnaLaVisibilita2() {
     const mappa2 = prima.apply(this, args) || {};
     return { ...mappa2, [AUTOMAZIONI_CASA_TAB]: AUTOMAZIONI_CASA_TAB };
   };
+  Object.assign(avvolta, prima);
   avvolta.__dmAutomazioni = true;
   avvolta.__dmPrevious = prima;
   root.cdNavVisMap = avvolta;
@@ -169330,7 +169338,7 @@ async function correggi() {
   S.lavoro = t("Scarico il modello… 0%", "Downloading the model… 0%");
   disegna17();
   try {
-    const { scaricaIlModello } = await import("../../modello-dal-ponte-YQMVY57T.js");
+    const { scaricaIlModello } = await import("../../modello-dal-ponte-BQDP4ZBH.js");
     const byte = await scaricaIlModello(m, {
       quandoAvanza: (fatti, tutti) => {
         const pct4 = Math.round(fatti / Math.max(1, tutti) * 100);
@@ -169365,7 +169373,7 @@ async function usa() {
     S.lavoro = t("Caricamento… 0%", "Uploading… 0%");
     disegna17();
     try {
-      const { caricaIlModello } = await import("../../modello-dal-ponte-YQMVY57T.js");
+      const { caricaIlModello } = await import("../../modello-dal-ponte-BQDP4ZBH.js");
       const fatto2 = await caricaIlModello(S.file.byte, {
         profilo: profilo3(),
         quandoAvanza: (fatti, tutti) => {
@@ -169389,7 +169397,7 @@ async function usa() {
     modello: { ...dati, ...S.imp, triangoli: S.triangoli, attivo: true }
   });
   if (prima && prima.id !== dati.id) {
-    const { togliIlModello } = await import("../../modello-dal-ponte-YQMVY57T.js");
+    const { togliIlModello } = await import("../../modello-dal-ponte-BQDP4ZBH.js");
     togliIlModello(prima.id, { profilo: profilo3() });
   }
   chiudi4();
@@ -169406,7 +169414,7 @@ async function togli3() {
   );
   if (ok === false) return;
   scrivi6({ ...casaSalvata(), modello: null });
-  const { togliIlModello } = await import("../../modello-dal-ponte-YQMVY57T.js");
+  const { togliIlModello } = await import("../../modello-dal-ponte-BQDP4ZBH.js");
   togliIlModello(m.id, { profilo: profilo3() });
   chiudi4();
 }
@@ -170040,7 +170048,7 @@ async function avviaIlModello(admin) {
   try {
     const [{ THREE, caricatori, scena: scena2 }, { scaricaIlModello }] = await Promise.all([
       caricaIlMotore(),
-      import("../../modello-dal-ponte-YQMVY57T.js")
+      import("../../modello-dal-ponte-BQDP4ZBH.js")
     ]);
     const byte = await scaricaIlModello(m, {
       quandoAvanza: (fatti, tutti) => {

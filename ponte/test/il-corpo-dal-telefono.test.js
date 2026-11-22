@@ -256,3 +256,53 @@ test("l'anello Attività: distanza, piani, esercizio, ore in piedi, calorie a ri
   ))
     assert.equal(di(c).corpo.attributes.state_class, "total_increasing");
 });
+
+test("riabbinato il telefono, i sensori della persona restano gli stessi", async () => {
+  /* «Sei tu che hai cancellato qualcosa?»: cancellati i dati dell'app e
+   * riabbinato, il telefono e' nuovo per la casa. I sensori no. */
+  const telefoni = ["tel-marco"];
+  const { corpo, chiamate } = prepara({ telefoni });
+  await corpo.rispondi(
+    { id: 1, type: SALUTE_MISURE, persona: "Marco", misure: MISURE },
+    { dispositivo: MARCO },
+  );
+  const radice = radiceDelTelefono("tel-marco");
+  /* Il telefono vecchio esce dall'elenco, arriva quello nuovo dello stesso
+   * utente prima che il giro dei dieci minuti lo veda. */
+  telefoni.splice(0, 1, "tel-marco-nuovo");
+  chiamate.length = 0;
+  const nuovo = { id: "tel-marco-nuovo", utente: "marco", proprietario: "Marco" };
+  await corpo.rispondi(
+    { id: 2, type: SALUTE_MISURE, persona: "Marco", misure: MISURE },
+    { dispositivo: nuovo },
+  );
+  assert.ok(
+    chiamate.some((c) => c.metodo === "POST" && c.percorso === `states/sensor.${radice}_passi`),
+    "il telefono nuovo scrive sui sensori di prima",
+  );
+  /* E il giro dei dieci minuti non li cancella come se fossero del vecchio. */
+  chiamate.length = 0;
+  await corpo.rimettiGliStati();
+  assert.ok(!chiamate.some((c) => c.metodo === "DELETE"), "nessun sensore cancellato");
+  assert.ok(chiamate.some((c) => c.percorso === `states/sensor.${radice}_passi`));
+});
+
+test("due telefoni vivi della stessa persona hanno ognuno i suoi sensori", async () => {
+  const { corpo, chiamate } = prepara({ telefoni: ["tel-marco", "tablet-marco"] });
+  await corpo.rispondi(
+    { id: 1, type: SALUTE_MISURE, persona: "Marco", misure: MISURE },
+    { dispositivo: MARCO },
+  );
+  const tablet = { id: "tablet-marco", utente: "marco", proprietario: "Marco" };
+  chiamate.length = 0;
+  await corpo.rispondi(
+    { id: 2, type: SALUTE_MISURE, persona: "Marco", misure: MISURE },
+    { dispositivo: tablet },
+  );
+  assert.ok(
+    chiamate.some((c) => c.percorso === `states/sensor.${radiceDelTelefono("tablet-marco")}_passi`),
+  );
+  assert.ok(
+    !chiamate.some((c) => c.percorso === `states/sensor.${radiceDelTelefono("tel-marco")}_passi`),
+  );
+});

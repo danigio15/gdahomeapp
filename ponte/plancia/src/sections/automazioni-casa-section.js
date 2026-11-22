@@ -202,6 +202,10 @@ function insegnaLaVisibilita() {
     const mappa = prima.apply(this, args) || {};
     return { ...mappa, [AUTOMAZIONI_CASA_TAB]: AUTOMAZIONI_CASA_TAB };
   };
+  /* I segni di chi ha avvolto prima si portano avanti (vedi `wrapFunction` in
+   * shared.js): senza, ognuno riavvolgeva la funzione degli altri a ogni
+   * giro, e la catena cresceva finche' la pila non bastava piu'. */
+  Object.assign(avvolta, prima);
   avvolta.__dmAutomazioni = true;
   avvolta.__dmPrevious = prima;
   root.cdNavVisMap = avvolta;

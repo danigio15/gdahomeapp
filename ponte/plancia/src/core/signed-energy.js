@@ -56,9 +56,17 @@ export function powerPairSource(energy = {}, group = "") {
   if (signedSource(energy, group)?.entities?.power) return null;
   const opposite = clean(energy?.[group]?.[pair.opposite]);
   if (!opposite) return null;
+  /* Una lettura ricavata non e' mai una sorgente: e' quello che esce da qui.
+   *
+   * «Maximum call stack size exceeded» sull'Energia: con la sola immissione
+   * dichiarata, la plancia scriveva il nome della propria lettura
+   * (`dm_derived.grid_power`) nel campo vuoto della potenza; da li' la
+   * lettura chiedeva a se stessa, e cosi' via fino a esaurire la pila. Anche
+   * una configurazione che quel nome l'ha gia' salvato torna a funzionare. */
+  const principale = clean(energy?.[group]?.power);
   return {
     group,
-    main: clean(energy?.[group]?.power),
+    main: isDerivedEntity(principale) ? "" : principale,
     opposite,
     oppositeIsRuntimePositive: pair.oppositeIsRuntimePositive,
   };
@@ -180,7 +188,8 @@ export function signedSource(energy = {}, group = "") {
 function potenzaDelGruppo(energy, group, source) {
   if (source.entities.power) return source.entities.power;
   if (powerPairSource(energy, group)) return "";
-  return clean(energy?.[group]?.[SIGNED_GROUPS[group].powerField]);
+  const potenza = clean(energy?.[group]?.[SIGNED_GROUPS[group].powerField]);
+  return isDerivedEntity(potenza) ? "" : potenza;
 }
 
 /**

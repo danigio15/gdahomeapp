@@ -86,7 +86,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "./chunk-XZD4LHEA.js";
+} from "./chunk-A7RTODPV.js";
 
 // src/core/appliance-program.js
 var clean2 = (value) => String(value ?? "").trim();
@@ -2463,7 +2463,7 @@ function adoptEnergySlots(energy = {}, overrides = {}) {
   let fuori = sorgente;
   for (const [path, slot] of Object.entries(ENERGY_SLOT_MAP)) {
     const entita = configured(mappate[slot]);
-    if (!entita) continue;
+    if (!entita || String(entita).startsWith("dm_derived.")) continue;
     const [group, key] = path.split(".");
     if (configured(fuori[group]?.[key])) continue;
     if (fuori === sorgente) fuori = { ...sorgente };
@@ -2992,9 +2992,10 @@ function powerPairSource(energy = {}, group = "") {
   if (signedSource(energy, group)?.entities?.power) return null;
   const opposite = clean8(energy?.[group]?.[pair.opposite]);
   if (!opposite) return null;
+  const principale = clean8(energy?.[group]?.power);
   return {
     group,
-    main: clean8(energy?.[group]?.power),
+    main: isDerivedEntity(principale) ? "" : principale,
     opposite,
     oppositeIsRuntimePositive: pair.oppositeIsRuntimePositive
   };
@@ -3070,7 +3071,8 @@ function signedSource(energy = {}, group = "") {
 function potenzaDelGruppo(energy, group, source) {
   if (source.entities.power) return source.entities.power;
   if (powerPairSource(energy, group)) return "";
-  return clean8(energy?.[group]?.[SIGNED_GROUPS[group].powerField]);
+  const potenza = clean8(energy?.[group]?.[SIGNED_GROUPS[group].powerField]);
+  return isDerivedEntity(potenza) ? "" : potenza;
 }
 function applySignedSources(energy = {}) {
   let result = energy;
@@ -8010,6 +8012,7 @@ function teachNavVisibility() {
     const map = previous.apply(this, args) || {};
     return { ...map, [LIGHTS_TAB]: LIGHTS_TAB };
   };
+  Object.assign(wrapped, previous);
   wrapped.__dmLightsPage = true;
   wrapped.__dmPrevious = previous;
   root.cdNavVisMap = wrapped;
@@ -12524,6 +12527,7 @@ function insegnaLaVisibilita() {
     const mappa = precedente.apply(this, args) || {};
     return { ...mappa, [PRESE_TAB]: PRESE_TAB };
   };
+  Object.assign(avvolta, precedente);
   avvolta.__dmPrese = true;
   avvolta.__dmPrevious = precedente;
   root.cdNavVisMap = avvolta;
@@ -29881,7 +29885,7 @@ function recoverEnergyConfiguration(state36, captured = {}) {
   for (const [path, slot] of Object.entries(ENERGY_SLOT_MAP)) {
     const [group, key] = path.split(".");
     const value = clean23(overrides[slot]);
-    if (!value || clean23(energy[group]?.[key])) continue;
+    if (!value || value.startsWith("dm_derived.") || clean23(energy[group]?.[key])) continue;
     energy[group] ||= {};
     energy[group][key] = value;
     recovered += 1;
@@ -35248,6 +35252,7 @@ function insegnaLaVisibilitaDelCruscotto() {
     const mappa = precedente.apply(this, args) || {};
     return { ...mappa, [CRUSCOTTO_TAB]: CRUSCOTTO_TAB };
   };
+  Object.assign(avvolta, precedente);
   avvolta.__dmCruscotto = true;
   avvolta.__dmPrevious = precedente;
   root.cdNavVisMap = avvolta;
@@ -35666,7 +35671,7 @@ function installSegnalazioniSection() {
 senzaCadere(installSegnalazioniSection);
 
 // legacy/build-info.js
-var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.19.20", "dashboardVersion": "1.19.20", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-11-21T20:55:19+00:00", "commit": "f520cac2215fd3738e1e0e3a20788a1a0c3497c9", "assetHash": "778a1e5a73c4fb1f" });
+var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.19.21", "dashboardVersion": "1.19.21", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-11-22T08:07:37+00:00", "commit": "b95513c8df473811107e80b158272047ca74efaf", "assetHash": "12083826c1b19032" });
 
 export {
   faseInParole,

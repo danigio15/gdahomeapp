@@ -122,7 +122,9 @@ export function recoverEnergyConfiguration(state, captured = {}) {
   for (const [path, slot] of Object.entries(ENERGY_SLOT_MAP)) {
     const [group, key] = path.split(".");
     const value = clean(overrides[slot]);
-    if (!value || clean(energy[group]?.[key])) continue;
+    /* Una lettura ricavata (`dm_derived.*`) non torna nella configurazione:
+     * scritta li', leggeva se stessa all'infinito. */
+    if (!value || value.startsWith("dm_derived.") || clean(energy[group]?.[key])) continue;
     /* E il gruppo si apre se non c'e'.
      *
      * La riga sopra ha l'optional chaining e non esplode in LETTURA; quella

@@ -203,6 +203,10 @@ function insegnaLaVisibilita() {
     const mappa = precedente.apply(this, args) || {};
     return { ...mappa, [PRESE_TAB]: PRESE_TAB };
   };
+  /* I segni di chi ha avvolto prima si portano avanti (vedi `wrapFunction` in
+   * shared.js): senza, ognuno riavvolgeva la funzione degli altri a ogni
+   * giro, e la catena cresceva finche' la pila non bastava piu'. */
+  Object.assign(avvolta, precedente);
   avvolta.__dmPrese = true;
   avvolta.__dmPrevious = precedente;
   root.cdNavVisMap = avvolta;
