@@ -33,6 +33,14 @@
  *   - **SPEGNERE E' TOGLIERE.** Dall'app si spegne con un interruttore: il
  *     ponte cancella i sensori da Home Assistant e le misure dal disco. Un
  *     telefono staccato dalla casa perde le sue misure al giro dopo.
+ *   - **I SENSORI SONO DELLA PERSONA, NON DEL TELEFONO.** «Sei tu che hai
+ *     cancellato qualcosa?»: riabbinato il telefono (i dati dell'app
+ *     cancellati), per la casa era un telefono nuovo, e i sensori nascevano
+ *     con un nome nuovo; quelli di prima sparivano e il loro storico restava
+ *     orfano nel Recorder. Adesso il nome nato col primo telefono di un
+ *     utente di Home Assistant resta suo (`radici`): il telefono che lo
+ *     sostituisce scrive sugli stessi sensori, e lo storico continua. Due
+ *     telefoni vivi della stessa persona hanno ognuno i suoi.
  *
  * I sensori si chiamano «Marco Steps», «Marco Heart rate»…: il nome della
  * persona (quello che si e' scritto nell'app) e la misura in inglese, come li
@@ -266,6 +274,40 @@ export class IlCorpoDalTelefono {
     this.timer = [];
   }
 
+  /* Il nome dei sensori di ogni persona (l'utente di Home Assistant): quello
+   * nato col suo primo telefono. */
+  get radici() {
+    const tutte = this.archivio.dati.radici;
+    return tutte && typeof tutte === "object" ? tutte : (this.archivio.dati.radici = {});
+  }
+
+  /* Il nome dei sensori di un telefono: il suo, o quello della persona che
+   * ha ereditato. */
+  _radiceDi(telefono) {
+    return this.telefoni[telefono]?.radice || radiceDelTelefono(telefono);
+  }
+
+  /* Che nome prende un telefono che manda le misure per la prima volta: quello
+   * della sua persona, se nessun altro telefono suo lo sta usando. */
+  _radicePer(telefono, utente) {
+    const sua = utente ? this.radici[utente] : "";
+    if (!sua) return radiceDelTelefono(telefono);
+    const vivi = this.dispositivi?.elenco
+      ? new Set(this.dispositivi.elenco().map((d) => String(d.id)))
+      : null;
+    const chiLaTiene = Object.keys(this.telefoni).filter(
+      (altro) => altro !== telefono && this._radiceDi(altro) === sua,
+    );
+    /* Un telefono vivo della stessa persona la sta usando: due telefoni,
+     * due nomi. Senza l'elenco dei telefoni non si sa chi e' vivo, e nel
+     * dubbio non si prende. */
+    if (chiLaTiene.some((altro) => !vivi || vivi.has(altro))) return radiceDelTelefono(telefono);
+    /* Il telefono di prima non c'e' piu': i suoi sensori passano a questo, e
+     * la sua voce se ne va senza cancellarli (sono gli stessi). */
+    for (const altro of chiLaTiene) delete this.telefoni[altro];
+    return sua;
+  }
+
   get telefoni() {
     const tutti = this.archivio.dati.telefoni;
     return tutti && typeof tutti === "object" ? tutti : (this.archivio.dati.telefoni = {});
@@ -343,6 +385,13 @@ export class IlCorpoDalTelefono {
         const persona =
           personaPulita(detto.persona) || personaPulita(dispositivo?.proprietario) || "GdAHome";
         const prima = this.telefoni[telefono];
+        const utente = String(dispositivo?.utente || "").trim();
+        const radice =
+          prima?.radice ||
+          (prima ? radiceDelTelefono(telefono) : this._radicePer(telefono, utente));
+        /* La persona ricorda il nome dei suoi sensori, anche quello dei
+         * telefoni abbinati prima di questa regola. */
+        if (utente && !this.radici[utente]) this.radici[utente] = radice;
         /* Una misura che non arriva piu' (si e' tolta dalle scelte nell'app)
          * si cancella anche da Home Assistant. */
         const tolte = Object.keys(prima?.misure || {}).filter(
@@ -350,6 +399,7 @@ export class IlCorpoDalTelefono {
         );
         const voce = {
           persona,
+          radice,
           misure: detto.aggiungi ? { ...(prima?.misure || {}), ...misure } : misure,
           aggiornato: this.adesso(),
         };
@@ -377,7 +427,7 @@ export class IlCorpoDalTelefono {
   }
 
   _entita(telefono, chiave) {
-    return `sensor.${radiceDelTelefono(telefono)}_${chiave.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`)}`;
+    return `sensor.${this._radiceDi(telefono)}_${chiave.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`)}`;
   }
 
   async _scrivi(telefono, voce) {

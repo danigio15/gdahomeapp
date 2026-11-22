@@ -27,6 +27,9 @@ aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
   si tengono sul dispositivo, così alla volta dopo arrivano subito.
 - **Barra in basso**: con la plancia accesa a lungo, nascondere e mostrare le
   voci continua a funzionare.
+- **Salute dal telefono**: riabbinando il telefono (o con un telefono nuovo
+  della stessa persona) i sensori della Salute restano gli stessi, e il loro
+  storico continua invece di restare orfano nel Recorder.
 
 ## 1.19.20
 
