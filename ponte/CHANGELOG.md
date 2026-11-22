@@ -14,6 +14,13 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.23
+
+- **Sicurezza, i testi dei sensori**: un sensore che restituisce un testo (lo
+  stato dell'impianto, le anomalie) si sceglie nella configurazione della
+  Sicurezza: la pagina Sicurezza lo mostra per intero sotto l'antifurto, e in
+  Home compare una riga piccola che scorre quando segnala qualcosa.
+
 ## 1.19.22
 
 - **I tuoi telefoni**: nel menu ••• di ogni telefono, «Nuovo QR per questo
