@@ -86,6 +86,19 @@ void main() {
           find.byType(MaterialApp),
           matchesGoldenFile('$_cartella/benvenuto-${schermo.key}-$tinta.png'),
         );
+        /* Le altre schede del carosello, col dito. */
+        if (schermo.key == 'telefono') {
+          for (var pagina = 2; pagina <= 4; pagina++) {
+            await tester.drag(find.byType(PageView), const Offset(-500, 0));
+            await tester.pumpAndSettle();
+            await expectLater(
+              find.byType(MaterialApp),
+              matchesGoldenFile(
+                '$_cartella/benvenuto-telefono-$tinta-scheda-$pagina.png',
+              ),
+            );
+          }
+        }
       });
     }
   }

@@ -1073,112 +1073,567 @@ class _Copertina extends StatelessWidget {
                       ],
                     ),
                   ),
-                  SizedBox(height: largo ? 34 : 22),
-                  _Entra(
-                    ritardo: 0.1,
-                    child: Text(
-                      inLingua(
-                        it: 'La tua casa,\nin tasca.',
-                        en: 'Your home,\nin your pocket.',
-                      ),
-                      style:
-                          (largo && !compatta
-                                  ? testi.displayMedium
-                                  : testi.displaySmall)
-                              ?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w800,
-                                height: 1.05,
-                                letterSpacing: -1.2,
-                              ),
-                    ),
-                  ),
-                  if (!compatta) ...[
-                    const SizedBox(height: 12),
+                  SizedBox(height: largo ? 30 : 18),
+                  if (compatta)
                     _Entra(
-                      ritardo: 0.15,
+                      ritardo: 0.1,
                       child: Text(
                         inLingua(
-                          it:
-                              'Luci, clima, energia, telecamere e il '
-                              "navigatore per l'auto, in un'app sola.",
-                          en:
-                              'Lights, climate, energy, cameras and the car '
-                              'navigator, in one app.',
+                          it: 'La tua casa,\nin tasca.',
+                          en: 'Your home,\nin your pocket.',
                         ),
-                        style: testi.bodyLarge?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.72),
-                          height: 1.4,
+                        style: testi.displaySmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          height: 1.05,
+                          letterSpacing: -1.2,
                         ),
                       ),
-                    ),
-                    SizedBox(height: largo ? 30 : 20),
-                    _Entra(
-                      ritardo: 0.22,
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _Vetrina(
-                                  icona: Icons.lightbulb_rounded,
-                                  colore: const Color(0xFFFBBF24),
-                                  valore: inLingua(it: '5 accese', en: '5 on'),
-                                  cosa: inLingua(it: 'Luci', en: 'Lights'),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: _Vetrina(
-                                  icona: Icons.wb_sunny_rounded,
-                                  colore: const Color(0xFF34D399),
-                                  valore: '2,4 kW',
-                                  cosa: inLingua(
-                                    it: 'Dal sole',
-                                    en: 'From the sun',
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _Vetrina(
-                                  icona: Icons.thermostat_rounded,
-                                  colore: const Color(0xFFFB7185),
-                                  valore: '21,5°',
-                                  cosa: inLingua(
-                                    it: 'Soggiorno',
-                                    en: 'Living room',
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: _Vetrina(
-                                  icona: Icons.navigation_rounded,
-                                  colore: const Color(0xFF60A5FA),
-                                  valore: '12 min',
-                                  cosa: inLingua(
-                                    it: 'Verso casa',
-                                    en: 'Heading home',
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                    )
+                  else
+                    _Entra(ritardo: 0.1, child: _Carosello(largo: largo)),
                 ],
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Il carosello della copertina: quattro schede che scorrono da sole (e col
+/// dito), ognuna con la sua scena — la casa, l'energia, il navigatore, la
+/// sicurezza — il titolo e una riga.
+///
+/// Scorre da solo ogni pochi secondi, ma non con «riduci animazioni»: li' si
+/// scorre solo col dito. Il timer muore con la schermata.
+class _Carosello extends StatefulWidget {
+  const _Carosello({required this.largo});
+
+  final bool largo;
+
+  @override
+  State<_Carosello> createState() => _CaroselloState();
+}
+
+class _CaroselloState extends State<_Carosello> {
+  static const _quante = 4;
+  static const _ogni = Duration(milliseconds: 4500);
+
+  final _pagine = PageController();
+  Timer? _giro;
+  var _qui = 0;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _riparti();
+  }
+
+  void _riparti() {
+    _giro?.cancel();
+    _giro = null;
+    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) return;
+    _giro = Timer.periodic(_ogni, (_) {
+      if (!mounted || !_pagine.hasClients) return;
+      _pagine.animateToPage(
+        (_qui + 1) % _quante,
+        duration: const Duration(milliseconds: 650),
+        curve: Curves.easeInOutCubic,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _giro?.cancel();
+    _pagine.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final testi = Theme.of(context).textTheme;
+    final schede = [
+      (
+        scena: const _ScenaCasa(),
+        titolo: inLingua(
+          it: 'La tua casa,\nin tasca.',
+          en: 'Your home,\nin your pocket.',
+        ),
+        riga: inLingua(
+          it: 'Luci, clima e dispositivi a portata di dito, ovunque tu sia.',
+          en: 'Lights, climate and devices at your fingertips, wherever you are.',
+        ),
+      ),
+      (
+        scena: const _ScenaEnergia(),
+        titolo: inLingua(
+          it: "L'energia,\nsotto controllo.",
+          en: 'Your energy,\nunder control.',
+        ),
+        riga: inLingua(
+          it: 'Sole, batteria e consumi in tempo reale, giorno per giorno.',
+          en: 'Sun, battery and usage in real time, day by day.',
+        ),
+      ),
+      (
+        scena: const _ScenaNavigatore(),
+        titolo: inLingua(
+          it: 'Il navigatore\nche conosce casa.',
+          en: 'The navigator\nthat knows home.',
+        ),
+        riga: inLingua(
+          it: 'Sul telefono, con Android Auto e CarPlay: e la casa ti aspetta.',
+          en: 'On your phone, Android Auto and CarPlay: and home is ready for you.',
+        ),
+      ),
+      (
+        scena: const _ScenaSicurezza(),
+        titolo: inLingua(
+          it: 'Sicurezza,\nsempre con te.',
+          en: 'Security,\nalways with you.',
+        ),
+        riga: inLingua(
+          it: 'Telecamere, campanello e allarmi, anche fuori casa.',
+          en: 'Cameras, doorbell and alarms, even away from home.',
+        ),
+      ),
+    ];
+    final altezza = widget.largo ? 420.0 : 314.0;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          height: altezza,
+          child: NotificationListener<ScrollStartNotification>(
+            /* Chi scorre col dito ha la precedenza: il giro riparte da li'. */
+            onNotification: (avviso) {
+              if (avviso.dragDetails != null) _riparti();
+              return false;
+            },
+            child: PageView.builder(
+              controller: _pagine,
+              itemCount: _quante,
+              onPageChanged: (i) => setState(() => _qui = i),
+              itemBuilder: (context, i) {
+                final scheda = schede[i];
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      height: widget.largo ? 170 : 154,
+                      child: scheda.scena,
+                    ),
+                    SizedBox(height: widget.largo ? 28 : 18),
+                    Text(
+                      scheda.titolo,
+                      style:
+                          (widget.largo
+                                  ? testi.displaySmall
+                                  : testi.headlineLarge)
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                height: 1.05,
+                                letterSpacing: -1,
+                              ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      scheda.riga,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: testi.bodyLarge?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.72),
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            for (var i = 0; i < _quante; i++)
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+                margin: const EdgeInsets.only(right: 6),
+                width: i == _qui ? 26 : 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: i == _qui
+                      ? Colors.white
+                      : Colors.white.withValues(alpha: 0.28),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// La scena della casa: le quattro vetrine.
+class _ScenaCasa extends StatelessWidget {
+  const _ScenaCasa();
+
+  @override
+  Widget build(BuildContext context) => Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Row(
+        children: [
+          Expanded(
+            child: _Vetrina(
+              icona: Icons.lightbulb_rounded,
+              colore: const Color(0xFFFBBF24),
+              valore: inLingua(it: '5 accese', en: '5 on'),
+              cosa: inLingua(it: 'Luci', en: 'Lights'),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _Vetrina(
+              icona: Icons.thermostat_rounded,
+              colore: const Color(0xFFFB7185),
+              valore: '21,5°',
+              cosa: inLingua(it: 'Soggiorno', en: 'Living room'),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 10),
+      Row(
+        children: [
+          Expanded(
+            child: _Vetrina(
+              icona: Icons.blinds_rounded,
+              colore: const Color(0xFF60A5FA),
+              valore: inLingua(it: 'Aperte', en: 'Open'),
+              cosa: inLingua(it: 'Tapparelle', en: 'Shutters'),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _Vetrina(
+              icona: Icons.local_laundry_service_rounded,
+              colore: const Color(0xFFA78BFA),
+              valore: '18 min',
+              cosa: inLingua(it: 'Lavatrice', en: 'Washer'),
+            ),
+          ),
+        ],
+      ),
+    ],
+  );
+}
+
+/// La scena dell'energia: il sole, la casa e la batteria, legati.
+class _ScenaEnergia extends StatelessWidget {
+  const _ScenaEnergia();
+
+  @override
+  Widget build(BuildContext context) {
+    Widget filo(Color da, Color a) => Expanded(
+      child: Container(
+        height: 3,
+        margin: const EdgeInsets.only(bottom: 24),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(3),
+          gradient: LinearGradient(colors: [da, a]),
+        ),
+      ),
+    );
+    return Row(
+      children: [
+        _Bolla(
+          icona: Icons.wb_sunny_rounded,
+          colore: const Color(0xFFFBBF24),
+          valore: '3,2 kW',
+          cosa: inLingua(it: 'Sole', en: 'Sun'),
+        ),
+        filo(const Color(0xFFFBBF24), const Color(0xFF60A5FA)),
+        _Bolla(
+          icona: Icons.home_rounded,
+          colore: const Color(0xFF60A5FA),
+          valore: '1,1 kW',
+          cosa: inLingua(it: 'Casa', en: 'Home'),
+          grande: true,
+        ),
+        filo(const Color(0xFF60A5FA), const Color(0xFF34D399)),
+        _Bolla(
+          icona: Icons.battery_charging_full_rounded,
+          colore: const Color(0xFF34D399),
+          valore: '78%',
+          cosa: inLingua(it: 'Batteria', en: 'Battery'),
+        ),
+      ],
+    );
+  }
+}
+
+/// Un cerchio di vetro col suo valore, come nel flusso dell'energia.
+class _Bolla extends StatelessWidget {
+  const _Bolla({
+    required this.icona,
+    required this.colore,
+    required this.valore,
+    required this.cosa,
+    this.grande = false,
+  });
+
+  final IconData icona;
+  final Color colore;
+  final String valore;
+  final String cosa;
+  final bool grande;
+
+  @override
+  Widget build(BuildContext context) {
+    final testi = Theme.of(context).textTheme;
+    final lato = grande ? 96.0 : 80.0;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: lato,
+          height: lato,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white.withValues(alpha: 0.08),
+            border: Border.all(
+              color: colore.withValues(alpha: 0.7),
+              width: 2.5,
+            ),
+            boxShadow: [
+              BoxShadow(color: colore.withValues(alpha: 0.35), blurRadius: 24),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icona, color: colore, size: grande ? 28 : 24),
+              const SizedBox(height: 2),
+              Text(
+                valore,
+                style: testi.labelLarge?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          cosa,
+          style: testi.labelMedium?.copyWith(
+            color: Colors.white.withValues(alpha: 0.7),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// La scena del navigatore: la manovra, e la casa che chiede.
+class _ScenaNavigatore extends StatelessWidget {
+  const _ScenaNavigatore();
+
+  @override
+  Widget build(BuildContext context) {
+    final testi = Theme.of(context).textTheme;
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.75),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF3B82F6), Color(0xFF4338CA)],
+                  ),
+                ),
+                child: const Icon(
+                  Icons.turn_right_rounded,
+                  color: Colors.white,
+                  size: 34,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '200 m',
+                      style: testi.headlineSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Text(
+                      inLingua(
+                        it: 'Arrivo 18:42 · 12 min',
+                        en: 'Arrive 6:42 PM · 12 min',
+                      ),
+                      style: testi.labelLarge?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(100),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.garage_rounded,
+                color: Color(0xFFFBBF24),
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  inLingua(
+                    it: 'Quasi a casa: apro il cancello?',
+                    en: 'Almost home: open the gate?',
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  style: testi.labelLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// La scena della sicurezza: la telecamera dal vivo e il campanello.
+class _ScenaSicurezza extends StatelessWidget {
+  const _ScenaSicurezza();
+
+  @override
+  Widget build(BuildContext context) {
+    final testi = Theme.of(context).textTheme;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          flex: 4,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+              gradient: const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFF1E3A5F), Color(0xFF0B1220)],
+              ),
+            ),
+            child: Stack(
+              children: [
+                const Center(
+                  child: Icon(
+                    Icons.videocam_rounded,
+                    color: Colors.white24,
+                    size: 54,
+                  ),
+                ),
+                Positioned(
+                  top: 10,
+                  left: 10,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE11D48),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      inLingua(it: 'DAL VIVO', en: 'LIVE'),
+                      style: testi.labelSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 10,
+                  left: 10,
+                  child: Text(
+                    inLingua(it: 'Ingresso', en: 'Front door'),
+                    style: testi.labelLarge?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          flex: 5,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _Vetrina(
+                icona: Icons.doorbell_rounded,
+                colore: const Color(0xFFFBBF24),
+                valore: inLingua(it: 'Campanello', en: 'Doorbell'),
+                cosa: inLingua(it: 'ha suonato ora', en: 'rang just now'),
+              ),
+              const SizedBox(height: 10),
+              _Vetrina(
+                icona: Icons.shield_rounded,
+                colore: const Color(0xFF34D399),
+                valore: inLingua(it: 'Attivo', en: 'Armed'),
+                cosa: inLingua(it: 'Antifurto', en: 'Alarm'),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
