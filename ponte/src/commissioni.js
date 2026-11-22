@@ -105,6 +105,7 @@ import {
   FOTO_MASSIMA,
 } from "./foto.js";
 import { ModelloRifiutato } from "./modelli-3d.js";
+import { FotoDelRiposoNo } from "./le-foto-del-riposo.js";
 import { BASE as BASE_DELLA_PLANCIA } from "./plancia.js";
 import { ChatHaDettoNo } from "./chat.js";
 import { I_MARCHI, QuestoNoNo, ilMarchioDi } from "./aggiornamenti.js";
@@ -299,6 +300,14 @@ const FOTO_CARICA = "dashboardmodern/www/upload";
  * a rifare tutte le stanze, meno di quelle che servono a riempire un disco. */
 const FOTO_PER_FINESTRA = 40;
 const FOTO_FINESTRA = 10 * 60 * 1000;
+/* Le foto della cornice del tablet a muro (`le-foto-del-riposo.js`): stanno
+ * nel ponte e non escono di casa. L'elenco e le foto le legge chi e' entrato
+ * e vede una plancia; caricarle e toglierle lo fa solo chi amministra. */
+const RIPOSO_ELENCO = "ponte/riposo/foto/elenco";
+const RIPOSO_LEGGI = "ponte/riposo/foto/leggi";
+const RIPOSO_CARICA = "ponte/riposo/foto/carica";
+const RIPOSO_TOGLI = "ponte/riposo/foto/togli";
+const COMANDI_DEL_RIPOSO = new Set([RIPOSO_ELENCO, RIPOSO_LEGGI, RIPOSO_CARICA, RIPOSO_TOGLI]);
 /* Il modello 3D della Casa 3D (#440, `modelli-3d.js`): arriva a pezzi e
  * riparte a pezzi. Quanti se ne finiscono per persona in dieci minuti: uno
  * sbagliato e rifatto, due, tre — non trenta. */
@@ -494,6 +503,10 @@ const SOLO_CHI_AMMINISTRA = new Set([
   "dashboardmodern/fornitori/annulla",
   "dashboardmodern/fornitori/aggiorna",
   "dashboardmodern/fornitori/scollega",
+  /* Le foto della cornice del tablet a muro: le vede tutta la casa, e chi le
+   * mette e le toglie e' chi la amministra. */
+  "ponte/riposo/foto/carica",
+  "ponte/riposo/foto/togli",
 ]);
 
 /* Un file della plancia sta sotto il megabyte; una risposta di Home Assistant
@@ -583,6 +596,17 @@ function PER_CHI_NON_E_ENTRATO(tipo, detto) {
   return eLaCopiaVecchia(detto);
 }
 
+/* Un file in base64 dentro il messaggio, tornato byte: `null` se non e'
+ * base64 o se in byte passerebbe `massimo` (si guarda prima di decodificare,
+ * per non mettere in memoria quello che poi si butta). */
+function dalBase64(testo, massimo) {
+  if (typeof testo !== "string" || !testo) return null;
+  if (testo.length > Math.ceil((massimo * 4) / 3) + 4) return null;
+  if (!/^[A-Za-z0-9+/]+=*$/.test(testo)) return null;
+  const byte = Buffer.from(testo, "base64");
+  return byte.length ? byte : null;
+}
+
 function eLaCopiaVecchia(detto) {
   const tipo = detto?.type;
   if (tipo !== "frontend/get_user_data" && tipo !== "frontend/set_user_data") return false;
@@ -650,6 +674,8 @@ export class Commissioni {
     foto = null,
     fotoDiCasa = null,
     modelli3d = null,
+    /* Le foto della cornice del tablet a muro (`le-foto-del-riposo.js`). */
+    fotoDelRiposo = null,
     segnalazioni = null,
     chat = null,
     /* Se questo Home Assistant e' di chi installa. Solo un si' o un no: il
@@ -741,6 +767,8 @@ export class Commissioni {
     this.fotoDiCasa = fotoDiCasa;
     /* I modelli 3D della Casa 3D fatti con un altro programma (#440). */
     this.modelli3d = modelli3d;
+    /* E le foto della cornice del tablet a muro, che non escono di casa. */
+    this.fotoDelRiposo = fotoDelRiposo;
     /* Le segnalazioni dell'app, che passano dal centralino di gdahome. */
     this.segnalazioni = segnalazioni;
     /* E le stesse, scritte dalla finestra della plancia in Home Assistant:
@@ -1205,6 +1233,7 @@ export class Commissioni {
     if (tipo === CHI_SONO) return this._chiSono(detto, chiChiede, puoAmministrare);
     if (COMANDI_DEL_MODELLO.has(tipo))
       return this._ilModello3d(detto, chiChiede, amministra, puoAmministrare);
+    if (COMANDI_DEL_RIPOSO.has(tipo)) return this._leFotoDelRiposo(detto, chiChiede, amministra);
     if (tipo === DOVE_TORNARE) return this._doveTornare(detto);
     if (tipo === CATALOGO) return this._catalogo(detto);
     if (tipo === FOTO_ELENCO) return this._elencoDelleFoto(detto);
@@ -2997,6 +3026,65 @@ export class Commissioni {
       const rifiuto = no(
         id,
         errore.codice === "pieno" ? "storage_full" : "invalid_upload",
+        errore.message,
+      );
+      rifiuto.error.motivo = errore.codice;
+      return rifiuto;
+    }
+  }
+
+  /* Le foto della cornice del tablet a muro: vedi `le-foto-del-riposo.js`.
+   *
+   * SOLO CHI E' ENTRATO, come ogni commissione (lo ha gia' chiesto
+   * `rispondi`), e che vede almeno una plancia: sono foto di casa, non roba
+   * da dare a un filo qualunque. Caricare e togliere stanno in
+   * `SOLO_CHI_AMMINISTRA`, e `rispondi` li ha gia' fermati per chi non
+   * amministra. Di qui esce solo quello che chiede chi e' di casa: nessuna
+   * foto parte verso nessun altro posto. */
+  _leFotoDelRiposo(detto, chiChiede = "", amministra = null) {
+    const id = detto.id ?? null;
+    const tipo = detto.type;
+    const f = this.fotoDelRiposo;
+    if (!f?.cE) return no(id, "unknown_command", `non conosco ${tipo}`);
+    if (!this._vedeQualchePlancia(chiChiede, amministra))
+      return no(id, NIENTE_PER_TE, "in questa casa non ci sono plance per la tua utenza");
+    const quale = typeof detto.foto === "string" ? detto.foto : "";
+    try {
+      if (tipo === RIPOSO_ELENCO)
+        return si(id, {
+          foto: f.elenco(),
+          al_massimo: f.quante,
+          peso_massimo: f.massima,
+        });
+      if (tipo === RIPOSO_LEGGI) {
+        const letta = f.leggi(quale, { mini: detto.mini === true });
+        if (!letta) return no(id, "not_found", "Questa foto non c'e'.");
+        return si(id, { foto: letta.id, tipo: letta.tipo, data: letta.byte.toString("base64") });
+      }
+      if (tipo === RIPOSO_TOGLI) return si(id, { tolta: f.togli(quale) });
+      /* Il caricamento: quante per persona, come le altre foto, e poi i
+       * controlli del magazzino. */
+      const chi = String(chiChiede || "").trim();
+      const adesso = Date.now();
+      this._fotoDelRiposoCaricate ??= new Map();
+      const caricate = (this._fotoDelRiposoCaricate.get(chi) || []).filter(
+        (quando) => adesso - quando < FOTO_FINESTRA,
+      );
+      this._fotoDelRiposoCaricate.set(chi, caricate);
+      if (caricate.length >= FOTO_PER_FINESTRA)
+        return no(id, "rate_limited", "Troppe foto caricate di fila: riprova fra qualche minuto.");
+      const byte = dalBase64(detto.data, f.massima);
+      if (!byte) return no(id, "invalid_format", "manca la foto");
+      const mini = detto.mini == null ? null : dalBase64(detto.mini, 128 * 1024);
+      if (detto.mini != null && !mini) return no(id, "invalid_format", "la miniatura non si legge");
+      const messa = f.carica(byte, detto.tipo, mini);
+      caricate.push(adesso);
+      return si(id, messa);
+    } catch (errore) {
+      if (!(errore instanceof FotoDelRiposoNo)) throw errore;
+      const rifiuto = no(
+        id,
+        errore.codice === "piena" ? "storage_full" : "invalid_upload",
         errore.message,
       );
       rifiuto.error.motivo = errore.codice;

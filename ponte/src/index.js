@@ -24,6 +24,7 @@ import { portaNellaPrincipale } from "./la-plancia-di-base.js";
 import { Ferro } from "./ferro.js";
 import { BASE_DI_CASA, Foto } from "./foto.js";
 import { Modelli3D } from "./modelli-3d.js";
+import { FotoDelRiposo } from "./le-foto-del-riposo.js";
 import { inventarioSenzaDati } from "./inventario.js";
 import { Plancia } from "./plancia.js";
 import { Plance } from "./plance.js";
@@ -160,6 +161,9 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   });
   /* I modelli 3D della Casa 3D fatti con un altro programma (#440). */
   const modelli3d = new Modelli3D({ cartella: join(opzioni.cartella, "modelli3d") });
+  /* Le foto della cornice del tablet a muro: in `/data/riposo-foto/`, e di
+   * li' non escono (`le-foto-del-riposo.js`). */
+  const fotoDelRiposo = new FotoDelRiposo({ cartella: join(opzioni.cartella, "riposo-foto") });
   /* Chi e' questa casa per il centralino: serve alla chiamata, e alle
    * segnalazioni, che al centralino si presentano allo stesso modo. */
   const identita = new Identita({ cartella: opzioni.cartella });
@@ -282,6 +286,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     foto,
     fotoDiCasa,
     modelli3d,
+    fotoDelRiposo,
     segnalazioni,
     chat,
     installatore: opzioni.installatore,
