@@ -369,7 +369,12 @@
  * #379): dove stanno il collettore, l'accumulo, la pompa nel disegno del
  * solare termico, una scelta per il computer e una per il telefono. E' della
  * casa come la disposizione delle sezioni, e si fonde disegno per disegno. */
-export const CONFIG_KEYS_REVISION = 77;
+/* La revisione 78 aggiunge i testi della sicurezza (`cd_testi_sicurezza`,
+ * #472): quali due sensori di testo raccontano l'impianto — lo stato, le
+ * anomalie — con la loro etichetta, e se si vedono anche in Home. Sono
+ * sensori della casa: scelti dal computer, il tablet in cucina deve dire le
+ * stesse anomalie. */
+export const CONFIG_KEYS_REVISION = 78;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -702,4 +707,7 @@ export const CONFIG_KEYS = Object.freeze([
   /* Le posizioni dentro i disegni: la ragione per cui sta qui è scritta
    * accanto alla revisione 77. */
   "cd_disegni",
+  /* I testi della sicurezza: la ragione per cui stanno qui è scritta accanto
+   * alla revisione 78. */
+  "cd_testi_sicurezza",
 ]);

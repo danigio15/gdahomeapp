@@ -8,6 +8,16 @@ i suoi in `ponte/CHANGELOG.md`, ed è quello che Home Assistant fa vedere. Un
 rilascio dell'app non fa comparire un aggiornamento dell'add-on, e al
 contrario.
 
+## Prossima
+
+- **Mac e iPhone**: l'app non si chiude più quando si chiude la finestra
+  (sul Mac) mentre il navigatore o la plancia sono aperti.
+- **Navigatore, «Voce di guida»**: dal menu si sceglie la voce che parla fra
+  quelle italiane del telefono (ascoltandola prima), e anche volume e
+  velocità, non più solo dall'auto.
+- **Navigatore, vista «Corsie»**: col telefono in orizzontale il menu delle
+  viste mostra tutte le voci, «Corsie» compresa.
+
 ## 1.19.24
 
 - **Il benvenuto nuovo**: la prima schermata dopo il download ha una

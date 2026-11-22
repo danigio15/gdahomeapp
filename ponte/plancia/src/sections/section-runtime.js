@@ -59,6 +59,7 @@ import { installAntifurtoSuMisuraEditorSection } from "./antifurto-su-misura-edi
 import { installRilevamentiEditorSection } from "./rilevamenti-editor-section.js";
 import { installTelecamereRiservateEditorSection } from "./telecamere-riservate-editor-section.js";
 import { installTelecamereSpenteEditorSection } from "./telecamere-si-spengono-editor-section.js";
+import { installTestiDellaSicurezza } from "./testi-della-sicurezza-section.js";
 import { installTesseraDallaSchedaSection } from "./la-tessera-si-accende-dalla-scheda-section.js";
 import { installLaFotoVaInAuto } from "./la-foto-va-in-auto-section.js";
 import { installQuickClimateEditorSection } from "./quick-climate-editor-section.js";
@@ -1008,6 +1009,10 @@ export function installSectionRuntime() {
      * accetta: si installa dopo di lei, che quella risposta la pubblica. */
     senzaCadere(installAlarmModesEditorSection);
     senzaCadere(installAntifurtoSuMisuraEditorSection);
+    /* I testi della sicurezza (#472): la scheda si mette sotto i tasti su
+     * misura, che devono gia' esserci, e il riquadro si aggancia al
+     * `renderSecurity` della vetrina, installata qui sopra. */
+    senzaCadere(installTestiDellaSicurezza);
     senzaCadere(installRilevamentiEditorSection);
     /* La spunta «solo a casa vuota» sta sotto le telecamere, e delle telecamere
      * parla: dopo i rilevamenti, che stanno gia' li'. */

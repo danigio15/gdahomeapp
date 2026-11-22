@@ -86,7 +86,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "./chunk-A7RTODPV.js";
+} from "./chunk-GT4H4BIJ.js";
 
 // src/core/appliance-program.js
 var clean2 = (value) => String(value ?? "").trim();
@@ -14583,7 +14583,7 @@ function persistSignedSource(store2, group, signed, plantId = "") {
 }
 
 // src/core/chiavi-di-configurazione.js
-var CONFIG_KEYS_REVISION = 77;
+var CONFIG_KEYS_REVISION = 78;
 var CONFIG_KEYS = Object.freeze([
   "dm_dashboard_state",
   "dm_schema_version",
@@ -14911,7 +14911,10 @@ var CONFIG_KEYS = Object.freeze([
   "cd_disposizione",
   /* Le posizioni dentro i disegni: la ragione per cui sta qui è scritta
    * accanto alla revisione 77. */
-  "cd_disegni"
+  "cd_disegni",
+  /* I testi della sicurezza: la ragione per cui stanno qui è scritta accanto
+   * alla revisione 78. */
+  "cd_testi_sicurezza"
 ]);
 
 // src/sections/ricordati-di-salvare-section.js
@@ -35671,7 +35674,7 @@ function installSegnalazioniSection() {
 senzaCadere(installSegnalazioniSection);
 
 // legacy/build-info.js
-var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.19.22", "dashboardVersion": "1.19.22", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-11-22T10:48:43+00:00", "commit": "774f7aa3798c4b4c4b3c82b0575a80556df2fb50", "assetHash": "13c1a91294b9407e" });
+var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.19.22", "dashboardVersion": "1.19.22", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-11-22T16:08:16+00:00", "commit": "6307fc3a1a3e984aeaf579555d8817735931eb61", "assetHash": "8191de1db5fbe1b9" });
 
 export {
   faseInParole,

@@ -72,6 +72,7 @@ const SCHEDA_DELLA_CASELLA = Object.freeze({
   cd_centrali: "sez4",
   cd_centrale_scelta: "sez4",
   cd_antifurto_modi: "sez4",
+  cd_testi_sicurezza: "sez4",
   cd_security_doors: "doors",
   cd_clima_units: "sez9",
   cd_termico_caldo: "sez9",

@@ -1702,8 +1702,12 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // di qualcun altro).
   // 558 con `core/statistiche-tenute.js`: l'anno a spicchi quando il Recorder
   // non ce la fa, e i mesi chiusi tenuti sul dispositivo.
+  // 560 coi testi della sicurezza (#472): `core/testi-della-sicurezza.js` (quando
+  // una frase di un sensore dice qualcosa, e quando e' «Nessuna anomalia») e
+  // `sections/testi-della-sicurezza-section.js` (la scheda in configurazione, il
+  // riquadro sotto l'antifurto e la riga che scorre in Home).
   assert.ok(
-    relative.length <= 558,
+    relative.length <= 560,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

@@ -286,7 +286,10 @@ test("togliere una chiave non alza la revisione", async () => {
   /* La 76 con la disposizione delle sezioni (`cd_disposizione`), la 77 con
    * le posizioni dentro i disegni (`cd_disegni`): dove sta la pompa nel
    * disegno del solare termico e' una scelta della casa. */
-  assert.equal(CONFIG_KEYS_REVISION, 77);
+  /* E la 78 coi testi della sicurezza (`cd_testi_sicurezza`, #472): le
+   * anomalie scelte dal computer devono comparire anche sul tablet. */
+  assert.equal(CONFIG_KEYS_REVISION, 78);
+  assert.ok(CONFIG_KEYS.includes("cd_testi_sicurezza"));
   assert.ok(CONFIG_KEYS.includes("cd_disegni"));
   assert.ok(CONFIG_KEYS.includes("cd_salute"));
   assert.ok(CONFIG_KEYS.includes("cd_alexa"));
