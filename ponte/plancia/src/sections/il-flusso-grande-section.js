@@ -3,9 +3,8 @@
  * «Vorrei una card da esporre in primo piano del fotovoltaico e non il
  * semplice widget, si può fare?» Si': un blocco della Home, «Flusso energia»,
  * che si accende nella scheda Home del Config e si mette in fila con gli altri
- * blocchi (`home-blocchi-section.js`). Il sole, la rete, la batteria, la casa
- * — e l'auto, quando il flusso dell'Energia ha la sua wallbox — coi numeri
- * dal vivo, la batteria in percento, e le frecce di puntini che corrono nel
+ * blocchi (`home-blocchi-section.js`). Il sole, la rete, la batteria e la
+ * casa, coi numeri dal vivo, la batteria in percento, e le frecce di puntini che corrono nel
  * verso dell'energia, piu' grosse quanto piu' passa. Un tocco apre l'Energia.
  *
  * Chi decide quali nodi e quali frecce e' il modulo puro
@@ -36,7 +35,6 @@ import {
   tokenDellaCarta,
 } from "../core/le-vesti-della-carta.js";
 import { lettureDiCasa } from "./home-widgets-section.js";
-import { lAutoNelFlusso } from "./energy-flow-section.js";
 import { allStates, doc, esc, installStyle, locale, readJson, root, t } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_FLUSSO_IN_HOME__";
@@ -85,17 +83,13 @@ export function ilFlussoEAcceso() {
   return ilFlussoSiVede(readJson(CHIAVE_FLUSSO_IN_HOME, null));
 }
 
-function laWallbox() {
-  try {
-    return lAutoNelFlusso();
-  } catch (_errore) {
-    return null;
-  }
-}
-
-/** Il modello di adesso: le letture di casa, spartite. */
+/** Il modello di adesso: le letture di casa, spartite.
+ *
+ * Sotto la casa, per ora, nessun carico: «Non mostrare alcun carico sotto
+ * la casa al momento.» L'auto della wallbox il modulo puro la sa disegnare
+ * (`auto` di `ilFlussoDiCasa`), ma qui non gliela si passa. */
 export function modelloDelFlusso(states = allStates()) {
-  return ilFlussoDiCasa(lettureDiCasa(states), { auto: laWallbox() });
+  return ilFlussoDiCasa(lettureDiCasa(states));
 }
 
 const potenza = (watt) =>

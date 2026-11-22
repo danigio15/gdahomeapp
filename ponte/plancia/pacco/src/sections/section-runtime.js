@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-GYGPNQYR.js";
+} from "../../chunk-MPZZ5CBI.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -85667,2133 +85667,11 @@ if (doc?.readyState === "loading") {
   senzaCadere(installHomeWidgetsSection);
 }
 
-// src/sections/il-flusso-che-si-sposta-section.js
-var KEY65 = "__DASHBOARDMODERN_FLUSSO_CHE_SI_SPOSTA__";
-var FOGLIO_ID = "dm-flusso-posizioni";
-var STILE_ID2 = "dm-flusso-che-si-sposta";
-var TELEFONO2 = "(max-width: 768px)";
-var state61 = root[KEY65] ||= { serie: {}, misure: null, alle: 0, ridisegna: null };
-var VISTE_DEL_FLUSSO = Object.freeze([
-  { id: "view-ist", suffisso: "", periodo: "instant" },
-  { id: "view-day", suffisso: "-day", periodo: "day" },
-  { id: "view-month", suffisso: "-month", periodo: "month" }
-]);
-var CERCHIO = Object.freeze({
-  solare: "n-solar",
-  rete: "n-grid",
-  batteria: "n-battery",
-  casa: "n-home"
-});
-var DI_SERIE = Object.freeze({
-  computer: {
-    solare: { x: 50, y: 15 },
-    rete: { x: 25, y: 33 },
-    batteria: { x: 75, y: 33 },
-    casa: { x: 50, y: 50 }
-  },
-  telefono: {
-    solare: { x: 50, y: 15 },
-    rete: { x: 20, y: 28 },
-    batteria: { x: 80, y: 28 },
-    casa: { x: 50, y: 46 }
-  }
-});
-var ARCHI = Object.freeze([
-  { linea: "line-solar-home", da: "solare", a: "casa", piega: 0 },
-  { linea: "line-grid-home", da: "rete", a: "casa" },
-  { linea: "line-battery-home", da: "batteria", a: "casa" },
-  { linea: "line-solar-grid", da: "solare", a: "rete" },
-  { linea: "line-solar-battery", da: "solare", a: "batteria" },
-  { linea: "line-grid-battery", da: "rete", a: "batteria", sopra: true },
-  { linea: "line-battery-grid", da: "batteria", a: "rete", sopra: true }
-]);
-var PIEGA = 0.2;
-function varianteDelFlusso() {
-  return root.matchMedia?.(TELEFONO2)?.matches ? "telefono" : "computer";
-}
-function gliImpianti() {
-  let scelto = "";
-  try {
-    scelto = String(root.localStorage?.getItem(IMPIANTO_SCELTO_KEY) ?? "").trim();
-  } catch (_errore) {
-  }
-  const { list, plant, index } = plantAt(section("energy", {}) || {}, scelto);
-  return { list, plant, index, ids: list.map((voce3) => voce3.id) };
-}
-function disegnoDelFlusso() {
-  const { ids, plant } = gliImpianti();
-  return disegnoDellImpianto(ids, plant?.id);
-}
-var VOCE = {
-  id: DISEGNO_DELL_ENERGIA,
-  pagina: "energy",
-  disegno: disegnoDelFlusso,
-  salvate: (tutta, variante2) => {
-    const { ids, plant } = gliImpianti();
-    return posizioniDellImpianto(tutta, ids, plant?.id, variante2);
-  },
-  primaDiSalvare: (tutta) => separaLeZone(tutta, gliImpianti().ids),
-  nomeDi: (disegno8) => {
-    const { list } = gliImpianti();
-    const id = impiantoDelDisegno(disegno8, list);
-    if (!id) return "";
-    const indice = list.findIndex((voce3) => voce3.id === id);
-    return `${t("Flusso energetico", "Energy flow")} · ${plantLabel(list[indice], indice, t("Impianto", "Plant"))}`;
-  }
-};
-function posizioniDelFlusso() {
-  return {
-    computer: posizioniDellaVoce(VOCE, "computer"),
-    telefono: posizioniDellaVoce(VOCE, "telefono")
-  };
-}
-var nessunaScelta = (P12) => !P12 || !Object.keys(P12).length;
-function vistaInScena() {
-  for (const vista2 of VISTE_DEL_FLUSSO) {
-    const palco = doc?.getElementById(vista2.id)?.querySelector?.(".flow-stage");
-    const r = palco?.getBoundingClientRect?.();
-    if (r && r.width > 10 && r.height > 10) return { ...vista2, palco };
-  }
-  return null;
-}
-function visibile3(el) {
-  const r = el?.getBoundingClientRect?.();
-  return Boolean(r && r.width > 1 && r.height > 1);
-}
-function raggioDi(el) {
-  const r = el.getBoundingClientRect();
-  return Math.max(r.width, r.height) / 2;
-}
-function centroMisurato(el, palco) {
-  const stile9 = doc.defaultView?.getComputedStyle?.(el);
-  const x = Number.parseFloat(stile9?.left);
-  const y = Number.parseFloat(stile9?.top);
-  if (!Number.isFinite(x) || !Number.isFinite(y) || !palco.clientWidth || !palco.clientHeight)
-    return null;
-  return {
-    x: Math.round(x / palco.clientWidth * 1e4) / 100,
-    y: Math.round(y / palco.clientHeight * 1e4) / 100
-  };
-}
-function serieDel(id, variante2, vista2 = vistaInScena()) {
-  const P12 = posizioniDellaVoce(VOCE, variante2);
-  if (!P12[id] && vista2 && variante2 === varianteDelFlusso()) {
-    const el = doc.getElementById(`${CERCHIO[id]}${vista2.suffisso}`);
-    const c = el && visibile3(el) ? centroMisurato(el, vista2.palco) : null;
-    if (c) {
-      state61.serie[variante2] = { ...state61.serie[variante2], [id]: c };
-      return c;
-    }
-  }
-  return state61.serie[variante2]?.[id] || DI_SERIE[variante2][id];
-}
-function misureDelFlusso() {
-  const variante2 = varianteDelFlusso();
-  const P12 = posizioniDellaVoce(VOCE, variante2);
-  if (nessunaScelta(P12)) return {};
-  const adesso2 = Date.now();
-  const casella7 = disegnoDelFlusso();
-  if (state61.misure && adesso2 - state61.alle < 80 && state61.misure.variante === variante2 && state61.misure.casella === casella7)
-    return state61.misure.perIlModello;
-  const vista2 = vistaInScena();
-  if (!vista2) return {};
-  const { palco } = vista2;
-  const principali = {};
-  for (const id of CERCHI_PRINCIPALI) {
-    const el = doc.getElementById(`${CERCHIO[id]}${vista2.suffisso}`);
-    if (!el || !visibile3(el)) continue;
-    principali[id] = { ...P12[id] || serieDel(id, variante2, vista2), r: raggioDi(el) };
-  }
-  const raggi = {};
-  for (const el of palco.querySelectorAll("[data-dm-flow-node]")) {
-    if (visibile3(el)) raggi[nodoDelCarico(el.dataset.dmFlowNode)] = raggioDi(el);
-  }
-  const casa3 = principali.casa || { ...serieDel("casa", variante2, vista2), r: 62 };
-  const chiave2 = variante2 === "telefono" ? "mobile" : "desktop";
-  const perIlModello = {
-    [chiave2]: {
-      larghezza: palco.clientWidth,
-      altezza: palco.clientHeight,
-      casa: { ...serieDel("casa", variante2, vista2), r: casa3.r },
-      raggi,
-      principali
-    }
-  };
-  state61.misure = { variante: variante2, casella: casella7, perIlModello };
-  state61.alle = adesso2;
-  return perIlModello;
-}
-function regoleDeiPrincipali(P12) {
-  return CERCHI_PRINCIPALI.filter((id) => P12?.[id]).map((id) => {
-    const ids = VISTE_DEL_FLUSSO.map((v) => `#${CERCHIO[id]}${v.suffisso}`).join(",");
-    return `html body #page-energy .flow-stage > :is(${ids}){left:${P12[id].x}% !important;top:${P12[id].y}% !important}`;
-  }).join("\n");
-}
-function mettiIPrincipali() {
-  if (!doc?.head) return;
-  const { computer, telefono } = posizioniDelFlusso();
-  const css13 = [
-    [computer, "(min-width: 769px)"],
-    [telefono, TELEFONO2]
-  ].map(([P12, media4]) => {
-    const regole = regoleDeiPrincipali(P12);
-    return regole ? `@media ${media4} {
-${regole}
-}` : "";
-  }).filter(Boolean).join("\n");
-  let foglio6 = doc.getElementById(FOGLIO_ID);
-  if (!css13) {
-    foglio6?.remove();
-    return;
-  }
-  if (!foglio6) {
-    foglio6 = doc.createElement("style");
-    foglio6.id = FOGLIO_ID;
-    doc.head.append(foglio6);
-  }
-  if (foglio6.textContent !== css13) foglio6.textContent = css13;
-}
-function rimettiDiSerie(linea) {
-  const serie2 = linea?.getAttribute?.("data-dm-d-di-serie");
-  if (serie2 === null || serie2 === void 0) return;
-  if (linea.getAttribute("d") !== serie2) linea.setAttribute("d", serie2);
-  linea.removeAttribute("data-dm-d-di-serie");
-}
-function posaLeLinee() {
-  if (!doc) return;
-  const variante2 = varianteDelFlusso();
-  const scelte5 = posizioniDelFlusso();
-  if (nessunaScelta(scelte5.computer) && nessunaScelta(scelte5.telefono) && !state61.lineeToccate)
-    return;
-  state61.lineeToccate = false;
-  const vista2 = scelte5[variante2] && !nessunaScelta(scelte5[variante2]) ? vistaInScena() : null;
-  let misure = null;
-  if (vista2) {
-    const P12 = scelte5[variante2];
-    const { palco } = vista2;
-    const W2 = palco.clientWidth;
-    const H7 = palco.clientHeight;
-    const cerchi = {};
-    for (const id of CERCHI_PRINCIPALI) {
-      const el = doc.getElementById(`${CERCHIO[id]}${vista2.suffisso}`);
-      if (!el || !visibile3(el)) continue;
-      const c = P12[id] || serieDel(id, variante2, vista2);
-      cerchi[id] = { p: [c.x / 100 * W2, c.y / 100 * H7], r: raggioDi(el) };
-    }
-    misure = { W: W2, H: H7, cerchi };
-  }
-  for (const [nome, prefisso, box2] of [
-    ["computer", "", [1e3, 600]],
-    ["telefono", "m-", [1e3, 1e3]]
-  ]) {
-    const P12 = scelte5[nome];
-    for (const { suffisso } of VISTE_DEL_FLUSSO) {
-      for (const arco4 of ARCHI) {
-        const linea = doc.getElementById(`${prefisso}${arco4.linea}${suffisso}`);
-        if (!linea) continue;
-        const tocca2 = !nessunaScelta(P12) && (P12[arco4.da] || P12[arco4.a]);
-        if (!tocca2) {
-          rimettiDiSerie(linea);
-          continue;
-        }
-        state61.lineeToccate = true;
-        if (nome !== variante2 || !misure) continue;
-        const A2 = misure.cerchi[arco4.da];
-        const B = misure.cerchi[arco4.a];
-        if (!A2 || !B) continue;
-        const meta = [(A2.p[0] + B.p[0]) / 2, (A2.p[1] + B.p[1]) / 2];
-        const d = curvaFraCerchi(A2.p, A2.r, B.p, B.r, {
-          piega: arco4.piega ?? PIEGA,
-          verso: arco4.sopra ? [meta[0], meta[1] - 1e3] : [B.p[0], A2.p[1]],
-          scala: [box2[0] / misure.W, box2[1] / misure.H]
-        });
-        if (!d) continue;
-        if (!linea.hasAttribute("data-dm-d-di-serie"))
-          linea.setAttribute("data-dm-d-di-serie", linea.getAttribute("d") || "");
-        if (linea.getAttribute("d") !== d) linea.setAttribute("d", d);
-      }
-    }
-  }
-}
-var NOMI4 = {
-  solare: () => t("Solare", "Solar"),
-  rete: () => t("Rete", "Grid"),
-  batteria: () => t("Batteria", "Battery"),
-  casa: () => t("Casa", "Home")
-};
-function ricordaIlModello(periodo, diSerie, disegnato) {
-  state61.modelli = { ...state61.modelli, [periodo]: { diSerie, disegnato } };
-}
-function nodiDelFlusso() {
-  const vista2 = vistaInScena();
-  if (!vista2) return [];
-  const variante2 = varianteDelFlusso();
-  const chiave2 = variante2 === "telefono" ? "mobile" : "desktop";
-  const nodi2 = [];
-  for (const id of CERCHI_PRINCIPALI) {
-    const el = doc.getElementById(`${CERCHIO[id]}${vista2.suffisso}`);
-    if (!el || !visibile3(el)) continue;
-    nodi2.push({
-      id,
-      nome: NOMI4[id](),
-      centro: serieDel(id, variante2, vista2),
-      pezzi: () => [doc.getElementById(`${CERCHIO[id]}${vista2.suffisso}`)].filter(visibile3)
-    });
-  }
-  const modelli2 = state61.modelli?.[vista2.periodo];
-  for (const node of modelli2?.diSerie?.nodes || []) {
-    const sel2 = `[data-dm-flow-node="${String(node.id).replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"]`;
-    const el = vista2.palco.querySelector(sel2);
-    if (!el || !visibile3(el)) continue;
-    nodi2.push({
-      id: nodoDelCarico(node.id),
-      nome: node.name,
-      carico: true,
-      /* Il modello lo tiene dentro il palco anche quando la sua scelta e' di
-       * un cerchio piu' piccolo: la maniglia sta dove si vede (`adesso`). */
-      dentro: true,
-      centro: { x: node[chiave2].left, y: node[chiave2].top },
-      /* Dove starebbe senza una scelta sua, con le scelte di adesso: un
-       * carico nuovo messo al posto libero sta li', non dove lo vorrebbe la
-       * fila. Si rifa' ogni volta — il modello disegnato per ultimo ha gia'
-       * dentro il posto che gli si sta dando con la mano. */
-      adesso: () => {
-        const diSerie = state61.modelli?.[vista2.periodo]?.diSerie;
-        if (!diSerie) return null;
-        const qui = conLePosizioni2(diSerie, posizioniDelFlusso(), misureDelFlusso()).nodes?.find(
-          (n) => n.id === node.id
-        );
-        return qui ? { x: qui[chiave2].left, y: qui[chiave2].top } : null;
-      },
-      pezzi: () => [vista2.palco.querySelector(sel2)].filter(visibile3)
-    });
-  }
-  return nodi2;
-}
-function fissaICarichi(variante2, posizioni) {
-  if (variante2 !== varianteDelFlusso()) return posizioni;
-  const uscita = { ...posizioni };
-  for (const nodo4 of nodiDelFlusso()) {
-    if (!nodo4.carico || uscita[nodo4.id]) continue;
-    const qui = nodo4.adesso?.() || nodo4.centro;
-    if (qui && Number.isFinite(qui.x) && Number.isFinite(qui.y))
-      uscita[nodo4.id] = { x: qui.x, y: qui.y };
-  }
-  return uscita;
-}
-function stile3() {
-  return `
-  /* In modifica i cerchi non scivolano: seguono la mano. */
-  #page-energy .flow-stage[data-dm-disegno-in-modifica] > .node {
-    transition-property:transform, box-shadow, border-color, background-color, color, opacity !important;
-  }
-  /* Un carico arrivato dopo, messo al posto libero: in modifica si vede. */
-  #page-energy .flow-stage[data-dm-disegno-in-modifica] > .dm-flow-node[data-dm-flow-nuovo="true"] {
-    border-style:dashed !important;
-  }`;
-}
-function registraIlFlusso({ ridisegna: ridisegna42 }) {
-  state61.ridisegna = ridisegna42;
-  if (doc?.head && !doc.getElementById(STILE_ID2)) {
-    const foglio6 = doc.createElement("style");
-    foglio6.id = STILE_ID2;
-    foglio6.textContent = stile3();
-    doc.head.append(foglio6);
-  }
-  Object.assign(VOCE, {
-    nome: () => t("Flusso energetico", "Energy flow"),
-    scatola: () => vistaInScena()?.palco || null,
-    variante: varianteDelFlusso,
-    nodi: nodiDelFlusso,
-    fissa: fissaICarichi,
-    ridisegna: () => {
-      state61.misure = null;
-      mettiIPrincipali();
-      state61.ridisegna?.();
-    }
-  });
-  registraIlDisegno(VOCE);
-  mettiIPrincipali();
-}
-
-// src/core/i-cerchi-delle-stanze.js
-var CERCHI_AL_MASSIMO = 8;
-var PREFISSO_DELLA_STANZA = "stanza-";
-var CERCHIO_ALTRO = "stanza-altro";
-var PREFISSO_DEL_PIANO = "piano-";
-var pulito46 = (valore3) => valore3 == null ? "" : String(valore3).trim();
-var WALLBOX_NOME = /wallbox|colonnina|ev[ _-]?charger|car[ _-]?charger/i;
-function eLaWallbox(carico = {}, entitaDellaWallbox = []) {
-  if (pulito46(carico?.metadata?.flow_kind) === "ev") return true;
-  if (pulito46(carico?.id) === "load-wallbox") return true;
-  const note = new Set((entitaDellaWallbox || []).map(pulito46).filter(Boolean));
-  if (note.size) {
-    for (const campo6 of [
-      "power_entity",
-      "daily_energy_entity",
-      "monthly_energy_entity",
-      "total_energy_entity",
-      "history_entity"
-    ])
-      if (pulito46(carico?.[campo6]) && note.has(pulito46(carico[campo6]))) return true;
-  }
-  return WALLBOX_NOME.test(pulito46(carico?.name));
-}
-var gruppoDi = (voce3) => pulito46(voce3?.metadata?.beta27_subload_group);
-var gruppoDelCerchio = (carico) => pulito46(carico?.metadata?.flow_group) || pulito46(carico?.id);
-function misurabile(voce3) {
-  return Boolean(
-    pulito46(voce3?.power_entity) || pulito46(voce3?.power) || pulito46(voce3?.daily_energy_entity) || pulito46(voce3?.daily) || pulito46(voce3?.monthly_energy_entity) || pulito46(voce3?.monthly) || pulito46(voce3?.total_energy_entity) || pulito46(voce3?.history_entity) || /* La casella dei modelli vecchi: il flusso la sa leggere (vedi
-     * `fonteDiRipiego`), e un apparecchio con lei sola ha la sua stanza. */
-    pulito46(voce3?.energy_entity)
-  );
-}
-var potenzaDi = (voce3) => pulito46(voce3?.power_entity) || pulito46(voce3?.power);
-function stanzaDi(voce3, stanze4) {
-  const scritte = [voce3?.room_id, voce3?.roomId, voce3?.room].map(pulito46).filter(Boolean);
-  if (!scritte.length) return null;
-  for (const scritta of scritte) {
-    const minuscola = scritta.toLowerCase();
-    const trovata2 = stanze4.find(
-      (stanza2) => stanza2.id === scritta || stanza2.nome.toLowerCase() === minuscola
-    );
-    if (trovata2) return trovata2;
-  }
-  return null;
-}
-function elencoDelleStanze(stanze4 = []) {
-  return (Array.isArray(stanze4) ? stanze4 : []).map((stanza2, indice) => ({
-    id: pulito46(stanza2?.id) || pulito46(stanza2?.room_id) || `room-${indice}`,
-    nome: pulito46(stanza2?.name) || pulito46(stanza2?.nome),
-    icona: pulito46(stanza2?.icon),
-    piano: pulito46(stanza2?.floor),
-    indice
-  })).filter((stanza2) => stanza2.nome);
-}
-var conIlGruppo = (voce3, gruppo2, extra = {}) => ({
-  ...voce3,
-  ...extra,
-  metadata: { ...voce3?.metadata || {}, beta27_subload_group: gruppo2 }
-});
-function cerchiDelleStanze({
-  loads = [],
-  appliances: appliances4 = [],
-  rooms: rooms2 = [],
-  entitaDellaWallbox = [],
-  altro = "Altro",
-  perPiano = false,
-  stanzeDelPiano = (quante3) => `${quante3}`
-} = {}) {
-  const carichi = (Array.isArray(loads) ? loads : []).filter(Boolean);
-  const apparecchi2 = (Array.isArray(appliances4) ? appliances4 : []).filter(Boolean);
-  const misurati = apparecchi2.filter(misurabile);
-  if (!misurati.length) return { loads: carichi, appliances: apparecchi2, perStanza: false };
-  const stanze4 = elencoDelleStanze(rooms2);
-  if (!misurati.some((voce3) => stanzaDi(voce3, stanze4)))
-    return { loads: carichi, appliances: apparecchi2, perStanza: false };
-  const cerchi = carichi.filter(
-    (carico) => !gruppoDi(carico) && carico.category !== "manual-report"
-  );
-  const wallbox2 = cerchi.filter((carico) => eLaWallbox(carico, entitaDellaWallbox));
-  const gruppiDellaWallbox = new Set(wallbox2.map(gruppoDelCerchio));
-  const gruppiDiCarichi = new Set(cerchi.map(gruppoDelCerchio));
-  const pieni = new Set(
-    [...carichi, ...apparecchi2].map(gruppoDi).filter((gruppo2) => gruppiDiCarichi.has(gruppo2))
-  );
-  const carichiDaSistemare = [];
-  for (const carico of carichi) {
-    if (carico.category === "manual-report") continue;
-    const suo2 = gruppoDi(carico);
-    if (suo2) {
-      if (gruppiDellaWallbox.has(suo2)) continue;
-      carichiDaSistemare.push(carico);
-      continue;
-    }
-    if (wallbox2.includes(carico)) continue;
-    if (pieni.has(gruppoDelCerchio(carico))) continue;
-    if (misurabile(carico)) carichiDaSistemare.push(carico);
-  }
-  const apparecchiDaSistemare = apparecchi2.filter(
-    (voce3) => !gruppiDellaWallbox.has(gruppoDi(voce3)) && misurabile(voce3)
-  );
-  const potenzeDegliApparecchi = new Set(apparecchiDaSistemare.map(potenzaDi).filter(Boolean));
-  const carichiSenzaDoppi = carichiDaSistemare.filter(
-    (carico) => !potenzaDi(carico) || !potenzeDegliApparecchi.has(potenzaDi(carico))
-  );
-  const perStanza = /* @__PURE__ */ new Map();
-  const metti6 = (voce3, tipo) => {
-    const stanza2 = stanzaDi(voce3, stanze4);
-    const chiave2 = stanza2 ? stanza2.id : "";
-    if (!perStanza.has(chiave2)) perStanza.set(chiave2, { stanza: stanza2, carichi: [], apparecchi: [] });
-    perStanza.get(chiave2)[tipo].push(voce3);
-  };
-  for (const voce3 of apparecchiDaSistemare) metti6(voce3, "apparecchi");
-  for (const voce3 of carichiSenzaDoppi) metti6(voce3, "carichi");
-  let conStanza = [...perStanza.values()].filter((gruppo2) => gruppo2.stanza).sort((a, b2) => a.stanza.indice - b2.stanza.indice);
-  if (perPiano) {
-    const perPianoMappa = /* @__PURE__ */ new Map();
-    const fusi = [];
-    for (const gruppo2 of conStanza) {
-      const piano2 = gruppo2.stanza.piano;
-      if (!piano2) {
-        fusi.push(gruppo2);
-        continue;
-      }
-      const chiave2 = piano2.toLowerCase();
-      let unito3 = perPianoMappa.get(chiave2);
-      if (!unito3) {
-        unito3 = {
-          stanza: {
-            id: chiave2,
-            nome: piano2,
-            icona: "mdi:floor-plan",
-            indice: gruppo2.stanza.indice
-          },
-          piano: true,
-          stanzeDentro: [],
-          carichi: [],
-          apparecchi: []
-        };
-        perPianoMappa.set(chiave2, unito3);
-        fusi.push(unito3);
-      }
-      unito3.stanzeDentro.push({ id: gruppo2.stanza.id, nome: gruppo2.stanza.nome });
-      unito3.carichi.push(...gruppo2.carichi);
-      unito3.apparecchi.push(...gruppo2.apparecchi);
-    }
-    conStanza = fusi;
-  }
-  const posti = Math.max(1, CERCHI_AL_MASSIMO - wallbox2.length);
-  const senzaStanza = perStanza.get("") || { stanza: null, carichi: [], apparecchi: [] };
-  const serveAltro = senzaStanza.carichi.length + senzaStanza.apparecchi.length > 0;
-  const tenute = conStanza.length + (serveAltro ? 1 : 0) > posti ? posti - 1 : conStanza.length;
-  const inAltro = {
-    carichi: [...senzaStanza.carichi],
-    apparecchi: [...senzaStanza.apparecchi]
-  };
-  for (const gruppo2 of conStanza.slice(tenute)) {
-    inAltro.carichi.push(...gruppo2.carichi);
-    inAltro.apparecchi.push(...gruppo2.apparecchi);
-  }
-  const nuoviCarichi = [];
-  const ritaggati = /* @__PURE__ */ new Map();
-  let ordine = 0;
-  for (const carico of wallbox2) nuoviCarichi.push({ ...carico, order: ordine++ });
-  for (const carico of carichi)
-    if (gruppiDellaWallbox.has(gruppoDi(carico))) nuoviCarichi.push(carico);
-  const cerchio2 = (id, nome, icona3, gruppo2) => {
-    const delPiano = gruppo2.piano === true;
-    nuoviCarichi.push({
-      id,
-      name: nome,
-      icon: icona3 || "mdi:home",
-      order: ordine++,
-      show_in_dashboard: true,
-      metadata: delPiano ? {
-        flow_group: id,
-        cerchio_della_stanza: true,
-        cerchio_del_piano: true,
-        stanze: gruppo2.stanzeDentro,
-        sottotitolo: stanzeDelPiano(gruppo2.stanzeDentro.length)
-      } : { flow_group: id, cerchio_della_stanza: true }
-    });
-    for (const carico of gruppo2.carichi)
-      nuoviCarichi.push(conIlGruppo(carico, id, { show_in_dashboard: false }));
-    for (const voce3 of gruppo2.apparecchi) ritaggati.set(voce3, conIlGruppo(voce3, id));
-  };
-  for (const gruppo2 of conStanza.slice(0, tenute))
-    cerchio2(
-      gruppo2.piano ? `${PREFISSO_DEL_PIANO}${gruppo2.stanza.id.replace(/[^a-z0-9]+/g, "-")}` : `${PREFISSO_DELLA_STANZA}${gruppo2.stanza.id}`,
-      gruppo2.stanza.nome,
-      gruppo2.stanza.icona,
-      gruppo2
-    );
-  if (inAltro.carichi.length || inAltro.apparecchi.length)
-    cerchio2(CERCHIO_ALTRO, altro, "mdi:home-outline", inAltro);
-  const nuoviApparecchi = apparecchi2.map((voce3) => ritaggati.get(voce3) || voce3);
-  return { loads: nuoviCarichi, appliances: nuoviApparecchi, perStanza: true };
-}
-
-// src/core/kwh-dalla-potenza.js
-var pulito47 = (valore3) => String(valore3 ?? "").trim();
-var numero45 = (valore3) => {
-  if (valore3 === "" || valore3 == null) return null;
-  const n = Number(String(valore3).replace(",", "."));
-  return Number.isFinite(n) ? n : null;
-};
-function inizioDelPeriodo(periodo, adesso2) {
-  const inizio = new Date(Number(adesso2));
-  inizio.setHours(0, 0, 0, 0);
-  if (periodo === "month") inizio.setDate(1);
-  return inizio;
-}
-function domandaDeiKwhDallaPotenza(entita4, periodo, adesso2) {
-  return {
-    type: "recorder/statistics_during_period",
-    start_time: inizioDelPeriodo(periodo, adesso2).toISOString(),
-    end_time: new Date(Number(adesso2)).toISOString(),
-    statistic_ids: [...new Set((entita4 || []).map(pulito47).filter(Boolean))],
-    period: "hour",
-    types: ["mean"]
-  };
-}
-function wattPerUnita(unita3) {
-  const scritta = pulito47(unita3).toLowerCase();
-  if (scritta === "kw") return 1e3;
-  if (scritta === "mw") return 1e6;
-  return 1;
-}
-function kwhDallaPotenza(risposta, entity2, unita3 = "W") {
-  const elenco18 = risposta?.[pulito47(entity2)];
-  if (!Array.isArray(elenco18) || !elenco18.length) return null;
-  const fattore = wattPerUnita(unita3);
-  let wattora = 0;
-  let ore3 = 0;
-  for (const voce3 of elenco18) {
-    const media4 = numero45(voce3?.mean);
-    if (media4 === null) continue;
-    wattora += Math.max(0, media4) * fattore;
-    ore3 += 1;
-  }
-  return ore3 ? wattora / 1e3 : null;
-}
-function domandaDellaStoria(entita4, periodo, adesso2) {
-  return {
-    type: "history/history_during_period",
-    start_time: inizioDelPeriodo(periodo, adesso2).toISOString(),
-    end_time: new Date(Number(adesso2)).toISOString(),
-    entity_ids: [...new Set((entita4 || []).map(pulito47).filter(Boolean))],
-    include_start_time_state: true,
-    significant_changes_only: false,
-    minimal_response: true,
-    no_attributes: true
-  };
-}
-function istante5(valore3) {
-  if (typeof valore3 === "number") return valore3 < 1e12 ? valore3 * 1e3 : valore3;
-  const letto = Date.parse(pulito47(valore3));
-  return Number.isFinite(letto) ? letto : null;
-}
-function righeDellaStoria2(risposta, entity2) {
-  const elenco18 = risposta?.[pulito47(entity2)];
-  if (!Array.isArray(elenco18)) return [];
-  return elenco18.map((voce3) => ({
-    quando: istante5(voce3?.lc ?? voce3?.lu ?? voce3?.last_changed ?? voce3?.last_updated),
-    valore: numero45(voce3?.s ?? voce3?.state)
-  })).filter((riga5) => riga5.quando !== null).sort((a, b2) => a.quando - b2.quando);
-}
-function kwhDallaStoriaDellaPotenza(risposta, entity2, unita3 = "W", inizio, adesso2) {
-  const righe4 = righeDellaStoria2(risposta, entity2);
-  if (!righe4.some((riga5) => riga5.valore !== null)) return null;
-  const fattore = wattPerUnita(unita3);
-  const da = Number(inizio);
-  const a = Number(adesso2);
-  let wattora = 0;
-  righe4.forEach((riga5, indice) => {
-    if (riga5.valore === null) return;
-    const partenza = Number.isFinite(da) ? Math.max(riga5.quando, da) : riga5.quando;
-    const fine = indice + 1 < righe4.length ? righe4[indice + 1].quando : a;
-    if (!Number.isFinite(fine) || fine <= partenza) return;
-    wattora += Math.max(0, riga5.valore) * fattore * ((fine - partenza) / 36e5);
-  });
-  return wattora / 1e3;
-}
-function kwhPerUnita(unita3) {
-  const scritta = pulito47(unita3).toLowerCase();
-  if (scritta === "wh") return 1e-3;
-  if (scritta === "mwh") return 1e3;
-  return 1;
-}
-function kwhDallaStoriaDelContatore(risposta, entity2, unita3 = "kWh") {
-  const numeri = righeDellaStoria2(risposta, entity2).map((riga5) => riga5.valore).filter((valore3) => valore3 !== null);
-  if (!numeri.length) return null;
-  let crescita = 0;
-  let prima = numeri[0];
-  for (const dopo of numeri.slice(1)) {
-    const ritocco = dopo < prima && dopo > prima * 0.1;
-    if (ritocco) continue;
-    crescita += dopo >= prima ? dopo - prima : Math.max(0, dopo);
-    prima = dopo;
-  }
-  return crescita * kwhPerUnita(unita3);
-}
-
-// src/sections/energy-flow-section.js
-root.__DM_20260817A__ = true;
-var KEY66 = "__DASHBOARDMODERN_ENERGY_FLOW_SECTION__";
-var state62 = root[KEY66] ||= { installed: false, frame: 0, attesaMisura: 0 };
-var COLORS = Object.freeze({
-  solar: "#ff9f0a",
-  grid: "#2563eb",
-  battery: "#14b8a6",
-  home: "#2563eb"
-});
-var FLOW_VIEWS = Object.freeze([
-  { period: "instant", id: "view-ist", suffix: "" },
-  { period: "day", id: "view-day", suffix: "-day" },
-  { period: "month", id: "view-month", suffix: "-month" }
-]);
-var LEGACY_LOAD_SELECTOR = ".node.n-load,[id^='line-home-'],[id^='m-line-home-']";
-var SVG_NS = "http://www.w3.org/2000/svg";
-function stateNumber2(states, entity2) {
-  const value = states?.[entity2]?.state ?? states?.[entity2];
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-function renderBatterySoc(targetDocument, energy = {}, states = {}) {
-  const node = nodoDelSoc(targetDocument);
-  if (!node) return "—";
-  const entity2 = clean(
-    energy?.battery?.soc || energy?.battery?.battery_soc_entity || energy?.battery?.battery_soc
-  );
-  if (!entity2) {
-    node.hidden = true;
-    scriviTestoSeCambia(node, "");
-    node.removeAttribute("data-entity");
-    return "—";
-  }
-  const value = stateNumber2(states, entity2);
-  const text = value === null ? "—" : `${Math.round(value)}%`;
-  node.hidden = false;
-  scriviTestoSeCambia(node, text);
-  if (node.dataset.entity !== entity2) node.dataset.entity = entity2;
-  return text;
-}
-function nodoDelSoc(targetDocument) {
-  const gia = targetDocument?.getElementById?.("v-battery-soc");
-  if (gia) return gia;
-  const bolla = targetDocument?.querySelector?.("#view-ist #n-battery,#n-battery");
-  if (!bolla) return null;
-  const nuovo = targetDocument.createElement("small");
-  nuovo.id = "v-battery-soc";
-  nuovo.className = "dm-battery-soc";
-  bolla.append(nuovo);
-  return nuovo;
-}
-function parseNumber(node) {
-  const source = String(node?.textContent || "").trim();
-  const match = source.match(/-?\d[\d.,]*/);
-  if (!match) return 0;
-  let token = match[0];
-  const comma = token.lastIndexOf(",");
-  const dot = token.lastIndexOf(".");
-  if (comma >= 0 && dot >= 0) {
-    if (comma > dot) token = token.replaceAll(".", "").replace(",", ".");
-    else token = token.replaceAll(",", "");
-  } else if (comma >= 0) token = token.replace(",", ".");
-  const value = Number(token);
-  return Number.isFinite(value) ? value : 0;
-}
-function numberFrom(node) {
-  return Math.abs(parseNumber(node));
-}
-function setStyleProperty(node, name, value, priority = "") {
-  if (!node?.style) return;
-  if (node.style.getPropertyValue(name) === value && node.style.getPropertyPriority(name) === priority)
-    return;
-  node.style.setProperty(name, value, priority);
-}
-function scriviDatoSeCambia(node, chiave2, valore3) {
-  if (!node?.dataset) return;
-  if (node.dataset[chiave2] === valore3) return;
-  node.dataset[chiave2] = valore3;
-}
-var visibility = { token: 0, cache: /* @__PURE__ */ new WeakMap() };
-function beginVisibilityPass() {
-  visibility.token += 1;
-}
-function nodeVisible(node) {
-  if (!node || node.hidden) return false;
-  const cached = visibility.cache.get(node);
-  if (cached && cached.token === visibility.token) return cached.value;
-  const style = root.getComputedStyle?.(node);
-  const value = !(style && (style.display === "none" || style.visibility === "hidden" || Number(style.opacity) === 0));
-  visibility.cache.set(node, { token: visibility.token, value });
-  return value;
-}
-function flowNodeOverrides() {
-  const impianti2 = plantList(section("energy", {}) || {});
-  return specchioDeiCerchi(readJson("cd_flow_nodes", null), impianti2.length);
-}
-function tuttiICarichi() {
-  const value = section("loads", null);
-  if (Array.isArray(value)) return value;
-  const stored = readJson("cd_loads", []);
-  return Array.isArray(stored) ? stored : [];
-}
-function configuredLoads() {
-  const carichi = tuttiICarichi();
-  const scelto = clean(root.localStorage?.getItem(IMPIANTO_SCELTO_KEY));
-  const { plant, index } = plantAt(section("energy", {}) || {}, scelto);
-  return plant ? plantLoads(carichi, plant, index) : carichi;
-}
-function bundleValuesFor(loads, period) {
-  const bundle = period === "day" ? state62.bundle?.deviceDay : state62.bundle?.deviceMonth;
-  const devices3 = bundle?.devices || [];
-  const values = bundle?.values;
-  const resolved = {};
-  if (!values?.get) return resolved;
-  for (const load of loads) {
-    const device = devices3.find(
-      (item) => clean(item.id) === clean(load.id) || clean(item.key) === clean(load.id) || clean(item.name) === clean(load.name)
-    );
-    const source = clean(device?.history || device?.entity) || flowRecorderEntity(load) || flowPeriodEntity(load, period);
-    const value = Number(values.get(source));
-    if (Number.isFinite(value)) resolved[chiaveDellaVoce(load)] = value;
-  }
-  return resolved;
-}
-var chiaveDellaVoce = (voce3) => clean(voce3?.id) || clean(voce3?.name);
-function lettureDelPeriodo(loads, period) {
-  const valori = bundleValuesFor(loads, period);
-  const attese = /* @__PURE__ */ new Set();
-  if (period !== "day" && period !== "month") return { valori, attese };
-  const states = allStates();
-  const richieste = [];
-  const perVoce = [];
-  for (const voce3 of loads) {
-    const chiave2 = chiaveDellaVoce(voce3);
-    if (!chiave2) continue;
-    const potenza4 = soloPotenza(voce3);
-    if (potenza4) {
-      perVoce.push([chiave2, { kind: "potenza", entity: potenza4 }]);
-      continue;
-    }
-    if (Number.isFinite(valori[chiave2])) continue;
-    const diretta = flowPeriodEntity(voce3, period, states);
-    if (diretta && Number.isFinite(Number(states?.[diretta]?.state))) continue;
-    const fonte = fonteDiRipiego(voce3, period, states);
-    if (!fonte) continue;
-    const entity2 = resolvedEntity3(fonte.entity);
-    if (fonte.kind === "contatore" && !state62.bundle && Date.now() - (state62.installatoAlle || 0) < 6e4) {
-      attese.add(chiave2);
-      continue;
-    }
-    perVoce.push([chiave2, { kind: fonte.kind, entity: entity2 }]);
-  }
-  for (const [, richiesta] of perVoce) richieste.push(richiesta);
-  chiediIKwh(period, richieste);
-  const memoria = state62.kwhRicavati?.[period];
-  for (const [chiave2, { kind, entity: entity2 }] of perVoce) {
-    const id = `${kind}:${entity2}`;
-    if (memoria?.valori.has(id)) valori[chiave2] = memoria.valori.get(id);
-    else if (memoria?.inCorso.has(id)) attese.add(chiave2);
-  }
-  return { valori, attese };
-}
-function recorderValuesFor(loads, period) {
-  const { valori } = lettureDelPeriodo(loads, period);
-  return Object.keys(valori).length ? valori : null;
-}
-var ATTESA_DEI_KWH = 10 * 60 * 1e3;
-var CAMPI_DEI_CONTATORI = Object.freeze([
-  "daily_energy_entity",
-  "daily",
-  "monthly_energy_entity",
-  "monthly",
-  "total_energy_entity",
-  "history_entity",
-  "energy_entity"
-]);
-function soloPotenza(voce3) {
-  if (!clean(voce3?.power_entity) && !clean(voce3?.power)) return "";
-  if (CAMPI_DEI_CONTATORI.some((campo6) => clean(voce3?.[campo6]))) return "";
-  return resolvedEntity3(clean(voce3.power_entity) || clean(voce3.power));
-}
-function chiaveDelPeriodo(periodo, adesso2 = Date.now()) {
-  const data = new Date(adesso2);
-  return periodo === "month" ? `${data.getFullYear()}-${data.getMonth() + 1}` : data.toDateString();
-}
-function memoriaDei(periodo) {
-  const memorie = state62.kwhRicavati ||= {};
-  const chiave2 = chiaveDelPeriodo(periodo);
-  if (memorie[periodo]?.chiave !== chiave2)
-    memorie[periodo] = {
-      chiave: chiave2,
-      valori: /* @__PURE__ */ new Map(),
-      quando: /* @__PURE__ */ new Map(),
-      inCorso: /* @__PURE__ */ new Set()
-    };
-  return memorie[periodo];
-}
-function chiediIKwh(periodo, richieste) {
-  const broker3 = root.DashboardModernEnergyService?.broker;
-  if (!broker3?.request || !richieste.length) return;
-  const voce3 = memoriaDei(periodo);
-  const adesso2 = Date.now();
-  const daChiedere = [];
-  const viste2 = /* @__PURE__ */ new Set();
-  for (const richiesta of richieste) {
-    const id = `${richiesta.kind}:${richiesta.entity}`;
-    if (viste2.has(id)) continue;
-    viste2.add(id);
-    if (voce3.inCorso.has(id)) continue;
-    if (adesso2 - (voce3.quando.get(id) ?? -Infinity) < ATTESA_DEI_KWH) continue;
-    daChiedere.push({ ...richiesta, id });
-  }
-  if (!daChiedere.length) return;
-  for (const { id } of daChiedere) voce3.inCorso.add(id);
-  const chiudi9 = () => {
-    for (const { id } of daChiedere) {
-      voce3.inCorso.delete(id);
-      voce3.quando.set(id, Date.now());
-    }
-  };
-  ricavaIKwh(broker3, periodo, daChiedere, adesso2).then((trovati) => {
-    if (memoriaDei(periodo) !== voce3) return;
-    for (const [id, kwh5] of trovati) voce3.valori.set(id, kwh5);
-  }).catch(() => {
-  }).finally(() => {
-    chiudi9();
-    refreshEnergyFlows();
-  });
-}
-async function ricavaIKwh(broker3, periodo, daChiedere, adesso2) {
-  const stati4 = allStates();
-  const unita3 = (entity2) => stati4[entity2]?.attributes?.unit_of_measurement;
-  const trovati = /* @__PURE__ */ new Map();
-  const potenze = daChiedere.filter((richiesta) => richiesta.kind === "potenza");
-  if (potenze.length) {
-    try {
-      const medie = await broker3.request(
-        domandaDeiKwhDallaPotenza(
-          potenze.map((richiesta) => richiesta.entity),
-          periodo,
-          adesso2
-        ),
-        15e3
-      );
-      for (const { id, entity: entity2 } of potenze) {
-        const kwh5 = kwhDallaPotenza(medie, entity2, unita3(entity2) || "W");
-        if (kwh5 !== null) trovati.set(id, kwh5);
-      }
-    } catch (_errore) {
-    }
-  }
-  const dallaStoria = daChiedere.filter((richiesta) => !trovati.has(richiesta.id));
-  if (!dallaStoria.length) return trovati;
-  let storia;
-  try {
-    storia = await broker3.request(
-      domandaDellaStoria(
-        dallaStoria.map((richiesta) => richiesta.entity),
-        periodo,
-        adesso2
-      ),
-      3e4
-    );
-  } catch (_errore) {
-    return trovati;
-  }
-  const inizio = inizioDelPeriodo(periodo, adesso2).getTime();
-  for (const { id, kind, entity: entity2 } of dallaStoria) {
-    const kwh5 = kind === "potenza" ? kwhDallaStoriaDellaPotenza(storia, entity2, unita3(entity2) || "W", inizio, adesso2) : kwhDallaStoriaDelContatore(storia, entity2, unita3(entity2) || "kWh");
-    if (kwh5 !== null) trovati.set(id, kwh5);
-  }
-  return trovati;
-}
-function kwhDelPeriodo(voci4, periodo) {
-  return recorderValuesFor(voci4 || [], periodo) || {};
-}
-var ULTIMI_NUMERI_KEY = "dm_flusso_ultimi_numeri";
-function chiaveDeiRicordati(periodo) {
-  const impianto = clean(root.localStorage?.getItem(IMPIANTO_SCELTO_KEY));
-  return `${chiaveDelPeriodo(periodo)}|${impianto}`;
-}
-function ultimiNumeri(periodo) {
-  const memorie = state62.ultimiNumeri ||= {};
-  const chiave2 = chiaveDeiRicordati(periodo);
-  if (memorie[periodo]?.chiave === chiave2) return memorie[periodo];
-  let salvati = null;
-  try {
-    salvati = JSON.parse(root.localStorage?.getItem(ULTIMI_NUMERI_KEY) || "null")?.[periodo];
-  } catch (_errore) {
-    salvati = null;
-  }
-  memorie[periodo] = {
-    chiave: chiave2,
-    valori: salvati?.chiave === chiave2 && salvati.valori ? { ...salvati.valori } : {}
-  };
-  return memorie[periodo];
-}
-function ricordaINumeri(periodo, model2) {
-  if (periodo !== "day" && periodo !== "month") return;
-  const memoria = ultimiNumeri(periodo);
-  let cambiato = false;
-  for (const nodo4 of model2.nodes) {
-    if (!Number.isFinite(nodo4.value) || memoria.valori[nodo4.id] === nodo4.value) continue;
-    memoria.valori[nodo4.id] = nodo4.value;
-    cambiato = true;
-  }
-  if (!cambiato) return;
-  try {
-    const tutti = JSON.parse(root.localStorage?.getItem(ULTIMI_NUMERI_KEY) || "{}") || {};
-    tutti[periodo] = { chiave: memoria.chiave, valori: memoria.valori };
-    root.localStorage?.setItem(ULTIMI_NUMERI_KEY, JSON.stringify(tutti));
-  } catch (_errore) {
-  }
-}
-function configuredAppliances() {
-  const value = section("appliances", null);
-  if (Array.isArray(value)) return value;
-  const stored = readJson("cd_appliances", []);
-  return Array.isArray(stored) ? stored : [];
-}
-function stanzeDiCasa2() {
-  const stanze4 = section("rooms", null);
-  return Array.isArray(stanze4) ? stanze4 : readJson("cd_stanze", []);
-}
-function appliancesOfThePlant(plant = impiantoScelto2().plant) {
-  const apparecchi2 = configuredAppliances();
-  if (!plant) return apparecchi2;
-  return elettrodomesticiDellImpianto(apparecchi2, plant, {
-    impianti: plantList(section("energy", {}) || {}),
-    carichi: tuttiICarichi(),
-    stanze: stanzeDiCasa2()
-  });
-}
-function impiantoScelto2() {
-  const scelto = clean(root.localStorage?.getItem(IMPIANTO_SCELTO_KEY));
-  return plantAt(section("energy", {}) || {}, scelto);
-}
-function carichiDelFlusso() {
-  const { plant } = impiantoScelto2();
-  const loads = configuredLoads();
-  const appliances4 = appliancesOfThePlant(plant);
-  if (plant && !cerchiDalleStanzeAccesi(plant)) return { loads, appliances: appliances4, perStanza: false };
-  return cerchiDelleStanze({
-    loads,
-    appliances: appliances4,
-    rooms: stanzeDiCasa2(),
-    entitaDellaWallbox: WALLBOX_REFS.map(resolvedEntity3).filter(Boolean),
-    altro: t("Altro", "Other"),
-    perPiano: Boolean(plant && pianiNelFlusso(plant))
-  });
-}
-function resolvedEntity3(reference) {
-  const id = clean(reference);
-  if (!id) return "";
-  try {
-    return clean(root.resolveEntity?.(id)) || id;
-  } catch (_error) {
-    return id;
-  }
-}
-var WALLBOX_REFS = Object.freeze([
-  "dm.ev_potenza_wallbox",
-  "dm.ev_charge_power",
-  "dm.ev_energia_wallbox_oggi",
-  "dm.ev_energia_wallbox_mese"
-]);
-function vehiclePopupTarget() {
-  if (typeof root.apriPopup !== "function") return null;
-  if (!doc?.getElementById?.("ev-popup")) return null;
-  const states = allStates();
-  const battery = resolvedEntity3(vehicleBatteryEntity());
-  if (!battery || !states[battery]) return null;
-  const entities = [];
-  for (const reference of WALLBOX_REFS) {
-    const entity2 = resolvedEntity3(reference);
-    if (entity2 && entity2 !== reference) entities.push(entity2);
-  }
-  return { entities };
-}
-function lAutoNelFlusso() {
-  const { loads, appliances: appliances4 } = carichiDelFlusso();
-  if (!loads.length && !appliances4.length) return null;
-  const entities = [];
-  for (const reference of WALLBOX_REFS) {
-    const entity2 = resolvedEntity3(reference);
-    if (entity2 && entity2 !== reference) entities.push(entity2);
-  }
-  const states = allStates();
-  const model2 = flowStageModel({
-    loads,
-    appliances: appliances4,
-    states,
-    period: "instant",
-    locale: locale(),
-    wallbox: { entities }
-  });
-  const nodo4 = model2.nodes.find((voce3) => voce3.click?.kind === "ev" && voce3.sensore);
-  if (!nodo4) return null;
-  const batteria = resolvedEntity3(vehicleBatteryEntity());
-  const carica2 = Number(states?.[batteria]?.state);
-  return {
-    watt: Number.isFinite(nodo4.value) ? nodo4.value : null,
-    soc: batteria && states?.[batteria] && Number.isFinite(carica2) ? carica2 : null,
-    nome: clean(nodo4.name)
-  };
-}
-var residuoDi = (period) => `${clean(impiantoScelto2().plant?.id)}|${period}`;
-function stageModel(period) {
-  const { loads, appliances: appliances4, perStanza } = carichiDelFlusso();
-  const model2 = flowStageModel({
-    loads,
-    appliances: appliances4,
-    /* I ritocchi dei cerchi vecchi — nome, icona, colore per posto — valgono
-     * per i carichi scritti a mano: sui cerchi delle stanze il primo posto non
-     * e' piu' il «boiler» di una volta. */
-    flowNodes: perStanza ? null : flowNodeOverrides(),
-    states: allStates(),
-    period,
-    /* Anche gli apparecchi, non solo i carichi: quando il cerchio di gruppo
-     * somma quello che ha dentro, i figli sono apparecchi — e cercarli in un
-     * paniere che contiene i soli carichi vuol dire una somma che non trova
-     * niente. Il paniere del Recorder e' l'unico posto dove un apparecchio
-     * misurato dal solo contatore di vita ha un numero per oggi. */
-    ...letturePerLaScena([...loads, ...appliances4], period),
-    locale: locale(),
-    wallbox: vehiclePopupTarget(),
-    /* Il consumo di Casa dello stesso periodo: il resto che nessun cerchio
-     * misura ha un cerchio suo, «Non monitorati» (`conIlResiduo` nel nucleo). */
-    casa: consumoDiCasa(period),
-    nomeDelResiduo: t("Non monitorati", "Unmonitored"),
-    /* Ricordato per impianto: il cerchio nato in una zona non deve restare
-     * a 0 W nell'altra, dove non e' mai servito. */
-    tieniIlResiduo: Boolean(state62.nonMonitorati?.[residuoDi(period)])
-  });
-  if (model2.nodes.some((nodo4) => nodo4.residuo))
-    state62.nonMonitorati = { ...state62.nonMonitorati, [residuoDi(period)]: true };
-  ricordaINumeri(period, model2);
-  return conLePosizioniDelFlusso(period, model2);
-}
-function conLePosizioniDelFlusso(period, diSerie) {
-  state62.modelliDiSerie = { ...state62.modelliDiSerie, [period]: diSerie };
-  const disegnato = conLePosizioni2(diSerie, posizioniDelFlusso(), misureDelFlusso());
-  ricordaIlModello(period, diSerie, disegnato);
-  return disegnato;
-}
-function ridisegnaIlDisegno() {
-  if (!doc) return;
-  ensureGridBatteryPaths();
-  for (const view of FLOW_VIEWS) {
-    const diSerie = state62.modelliDiSerie?.[view.period];
-    if (diSerie) renderDynamicFlowLoads(view.period, conLePosizioniDelFlusso(view.period, diSerie));
-  }
-  posaLeLinee();
-  for (const view of FLOW_VIEWS) {
-    const period = view.period === "instant" ? "" : view.period;
-    mirrorLegacyMainFlows(scopeFor(period), period);
-  }
-}
-var CASA_DEL_PERIODO = Object.freeze({
-  day: "dm.energy_consumo_casa_oggi",
-  month: "dm.energy_consumo_casa_mese"
-});
-function casaDalPacchetto(bundle, period) {
-  if (!bundle || period !== "day" && period !== "month") return null;
-  if (bundle.letti && bundle.letti[period] === false) return null;
-  const valore3 = bundle[period]?.house;
-  return typeof valore3 === "number" && Number.isFinite(valore3) ? valore3 : null;
-}
-function consumoDiCasa(period) {
-  if (period === "instant") {
-    const viva = potenzaViva(SORGENTI_ISTANTANEE.home);
-    if (viva !== null) return viva;
-    const fonti = [
-      SORGENTI_ISTANTANEE.solar,
-      SORGENTI_ISTANTANEE.grid,
-      SORGENTI_ISTANTANEE.battery
-    ].map((ref2) => ({ configurata: resolvedEntity3(ref2) !== clean(ref2), valore: potenzaViva(ref2) }));
-    if (fonti[1].valore === null) return null;
-    if (fonti.some((fonte) => fonte.configurata && fonte.valore === null)) return null;
-    return Math.max(
-      0,
-      fonti.reduce((somma4, fonte) => somma4 + (fonte.valore ?? 0), 0)
-    );
-  }
-  const ref = CASA_DEL_PERIODO[period];
-  if (!ref) return null;
-  const dalPacchetto = casaDalPacchetto(root.__DASHBOARDMODERN_RUNTIME_0150__?.bundle, period);
-  if (dalPacchetto !== null) return dalPacchetto;
-  return allStates()[resolvedEntity3(ref)] || null;
-}
-function letturePerLaScena(voci4, period) {
-  if (period === "instant") return { recorderValues: null };
-  const { valori, attese } = lettureDelPeriodo(voci4, period);
-  return {
-    recorderValues: Object.keys(valori).length ? valori : null,
-    inAttesa: attese,
-    ricordati: ultimiNumeri(period).valori
-  };
-}
-function rememberConnectorVisibility(node) {
-  if (!node || node.dataset.dmFlowVisibilityCaptured === "true") return;
-  node.dataset.dmFlowVisibilityCaptured = "true";
-  node.dataset.dmFlowWasHidden = node.hidden ? "true" : "false";
-  node.dataset.dmFlowDisplay = node.style.getPropertyValue("display") || "";
-  node.dataset.dmFlowDisplayPriority = node.style.getPropertyPriority("display") || "";
-  node.dataset.dmFlowVisibility = node.style.getPropertyValue("visibility") || "";
-  node.dataset.dmFlowVisibilityPriority = node.style.getPropertyPriority("visibility") || "";
-}
-function restoreConnectorVisibility(node) {
-  if (!node || node.dataset.dmFlowVisibilityCaptured !== "true") return;
-  node.hidden = node.dataset.dmFlowWasHidden === "true";
-  const display2 = node.dataset.dmFlowDisplay || "";
-  const displayPriority = node.dataset.dmFlowDisplayPriority || "";
-  const visibility2 = node.dataset.dmFlowVisibility || "";
-  const visibilityPriority = node.dataset.dmFlowVisibilityPriority || "";
-  if (display2) setStyleProperty(node, "display", display2, displayPriority);
-  else node.style.removeProperty("display");
-  if (visibility2) setStyleProperty(node, "visibility", visibility2, visibilityPriority);
-  else node.style.removeProperty("visibility");
-  for (const key of [
-    "dmFlowVisibilityCaptured",
-    "dmFlowWasHidden",
-    "dmFlowDisplay",
-    "dmFlowDisplayPriority",
-    "dmFlowVisibility",
-    "dmFlowVisibilityPriority"
-  ])
-    delete node.dataset[key];
-}
-function exposeConnector(node, active) {
-  if (!node) return;
-  if (active) {
-    if (node.dataset.dmFlowForcedVisible !== "true") rememberConnectorVisibility(node);
-    if (node.hidden) node.hidden = false;
-    setStyleProperty(node, "display", "inline", "important");
-    setStyleProperty(node, "visibility", "visible", "important");
-    scriviDatoSeCambia(node, "dmFlowForcedVisible", "true");
-  } else if (node.dataset.dmFlowForcedVisible === "true") {
-    restoreConnectorVisibility(node);
-    scriviDatoSeCambia(node, "dmFlowForcedVisible", "false");
-  }
-}
-var FORME2 = ["d", "x1", "y1", "x2", "y2", "points"];
-function binario(node, color, active) {
-  const madre = node.parentNode;
-  if (!madre || !/^(path|line|polyline)$/i.test(node.tagName)) return;
-  let sotto = node.__dmBinario;
-  if (!sotto || sotto.parentNode !== madre) {
-    sotto = doc.createElementNS(SVG_NS, node.tagName.toLowerCase());
-    sotto.classList.add("dm-flow-binario");
-    sotto.setAttribute("aria-hidden", "true");
-    madre.insertBefore(sotto, node);
-    node.__dmBinario = sotto;
-  }
-  sotto.__dmLinea = node;
-  if (node.getAttribute("pathLength") !== "100") node.setAttribute("pathLength", "100");
-  for (const nome of FORME2) {
-    const valore3 = node.getAttribute(nome);
-    if (valore3 === null) continue;
-    if (sotto.getAttribute(nome) !== valore3) sotto.setAttribute(nome, valore3);
-  }
-  setStyleProperty(sotto, "--dm-flow-color", color);
-  const larghezza = node.style?.getPropertyValue?.("--dm-flow-width");
-  if (larghezza) setStyleProperty(sotto, "--dm-flow-width", larghezza);
-  scriviDatoSeCambia(sotto, "acceso", active ? "true" : "false");
-}
-function colorNode(node, color, active) {
-  if (!node) return;
-  exposeConnector(node, active);
-  binario(node, color, active);
-  node.classList.toggle("active", active);
-  node.classList.toggle("dm-energy-flow-active", active);
-  node.classList.toggle("dm-energy-flow-idle", !active);
-  setStyleProperty(node, "--dm-flow-color", color);
-  const animated = active ? "true" : "false";
-  if (node.dataset.dmFlowAnimated !== animated) node.dataset.dmFlowAnimated = animated;
-  if (/^(path|line|polyline|circle)$/i.test(node.tagName)) {
-    const stroke = active ? color : "var(--divider-color,#dbe4ee)";
-    if (node.dataset.dmFlowStroke !== stroke) {
-      node.dataset.dmFlowStroke = stroke;
-      node.style.stroke = stroke;
-    }
-    if (node.getAttribute("fill") && node.getAttribute("fill") !== "none") {
-      const fill = active ? color : "var(--divider-color,#dbe4ee)";
-      if (node.dataset.dmFlowFill !== fill) {
-        node.dataset.dmFlowFill = fill;
-        node.style.fill = fill;
-      }
-    }
-  }
-}
-function scopeFor(period) {
-  if (period === "day") return doc?.getElementById("view-day");
-  if (period === "month") return doc?.getElementById("view-month");
-  return doc?.getElementById("view-ist");
-}
-var cssEscape = (value) => String(value).replaceAll("\\", "\\\\").replaceAll('"', '\\"');
-function regolaDelleBolleVecchie() {
-  return `${FLOW_VIEWS.flatMap(
-    ({ id }) => LEGACY_LOAD_SELECTOR.split(",").map(
-      (pezzo3) => `#${id} ${pezzo3.trim()}:not([data-dm-flow-node]):not([data-dm-flow-arc])`
-    )
-  ).join(",")}{display:none!important}`;
-}
-function hideLegacyLoadTopology(stage) {
-  stage?.querySelectorAll?.(LEGACY_LOAD_SELECTOR).forEach((node) => {
-    if (node.dataset.dmFlowNode || node.dataset.dmFlowArc) return;
-    if (node.dataset.dmLegacyEnergyLoad === "replaced") return;
-    node.hidden = true;
-    setStyleProperty(node, "display", "none", "important");
-    node.dataset.dmLegacyEnergyLoad = "replaced";
-  });
-}
-function writeIcon(target, icon2) {
-  if (!target || target.dataset.dmFlowIcon === icon2) return;
-  target.dataset.dmFlowIcon = icon2;
-  writeIconGlyph(target, icon2, { size: 28, kind: "load" });
-}
-function bindNodeClick(element5, node, period) {
-  const click = node.click;
-  const signature4 = click ? `${click.kind}:${click.target || click.entity || ""}` : "";
-  if (element5.dataset.dmFlowClick === signature4) return;
-  element5.dataset.dmFlowClick = signature4;
-  element5.classList.toggle("hist-clickable", Boolean(click));
-  element5.onclick = click ? (event) => {
-    if (click.kind === "ev") root.apriPopup?.();
-    else if (click.kind === "subloads") root.apriSubLoads?.(click.target);
-    else root.apriStorico?.(event, click.entity, click.title);
-  } : null;
-  if (click) element5.dataset.dmFlowClickPeriod = period;
-}
-function adattaIlNome(cerchio2, nome) {
-  const largo = cerchio2?.clientWidth || 0;
-  if (!nome || !largo) return;
-  const chiave2 = `${nome.textContent}|${largo}`;
-  if (nome.dataset.dmAdattato === chiave2) return;
-  nome.style.removeProperty("font-size");
-  delete nome.dataset.dmNomeLungo;
-  const stile9 = doc.defaultView?.getComputedStyle?.(nome);
-  const misura9 = Number.parseFloat(stile9?.fontSize) || 0;
-  const troppo = nome.scrollWidth > nome.clientWidth + 1 || nome.scrollHeight > misura9 * 1.1 * 2 + 1;
-  if (troppo) nome.dataset.dmNomeLungo = "true";
-  nome.dataset.dmAdattato = chiave2;
-}
-function ensureBubble(stage, node, period, scale) {
-  let element5 = stage.querySelector(`[data-dm-flow-node="${cssEscape(node.id)}"]`);
-  if (!element5) {
-    element5 = doc.createElement("div");
-    element5.className = "node n-load dm-flow-node";
-    element5.dataset.dmFlowNode = node.id;
-    for (const [tag, className] of [
-      ["div", "node-label"],
-      ["div", "node-icon"],
-      ["span", "dm-flow-value"]
-    ]) {
-      const child = doc.createElement(tag);
-      child.className = className;
-      element5.append(child);
-    }
-    stage.append(element5);
-  }
-  setStyleProperty(element5, "left", `${node.desktop.left}%`);
-  setStyleProperty(element5, "top", `${node.desktop.top}%`);
-  setStyleProperty(element5, "--n-color", node.color);
-  setStyleProperty(element5, "--dm-flow-color", node.color);
-  setStyleProperty(element5, "--dm-flow-scale", String(scale));
-  setStyleProperty(element5, "--dm-flow-mobile-left", `${node.mobile.left}%`);
-  setStyleProperty(element5, "--dm-flow-mobile-top", `${node.mobile.top}%`);
-  const label = element5.querySelector(".node-label");
-  scriviTestoSeCambia(label, node.name);
-  adattaIlNome(element5, label);
-  writeIcon(element5.querySelector(".node-icon"), node.icon);
-  const value = element5.querySelector(".dm-flow-value");
-  scriviTestoSeCambia(value, node.text);
-  scriviDatoSeCambia(element5, "dmCanonicalLoad", node.id);
-  scriviDatoSeCambia(element5, "dmFlowPeriod", period);
-  scriviDatoSeCambia(element5, "dmFlowActive", node.active ? "true" : "false");
-  scriviDatoSeCambia(element5, "dmFlowWaiting", node.waiting ? "true" : "false");
-  scriviDatoSeCambia(element5, "dmFlowSensore", node.sensore === false ? "false" : "true");
-  if (node.nuovo) scriviDatoSeCambia(element5, "dmFlowNuovo", "true");
-  else if (element5.dataset && "dmFlowNuovo" in element5.dataset) delete element5.dataset.dmFlowNuovo;
-  const residuo = node.nonMisurato !== void 0;
-  if (residuo) scriviDatoSeCambia(element5, "dmFlowNonMisurato", String(node.nonMisurato));
-  else if (element5.dataset && "dmFlowNonMisurato" in element5.dataset)
-    delete element5.dataset.dmFlowNonMisurato;
-  const suggerimento = node.sensore === false ? t("Nessun sensore collegato.", "No sensor linked.") : node.waiting ? t("Sto leggendo i consumi da Home Assistant…", "Reading consumption from Home Assistant…") : residuo ? t(
-    "Consumo di Casa non misurato dai carichi configurati (Casa meno la somma dei carichi).",
-    "Home consumption not measured by the configured loads (Home minus the sum of the loads)."
-  ) : "";
-  if ((element5.title || "") !== suggerimento) element5.title = suggerimento;
-  bindNodeClick(element5, node, period);
-  return element5;
-}
-function ensureArc(svg3, node, variant) {
-  if (!svg3) return null;
-  let path = svg3.querySelector(`[data-dm-flow-arc="${cssEscape(node.id)}"]`);
-  if (!path) {
-    path = doc.createElementNS(SVG_NS, "path");
-    path.dataset.dmFlowArc = node.id;
-    path.classList.add("flow-line", "dm-flow-arc");
-    svg3.append(path);
-  }
-  const geometry = variant === "mobile" ? node.mobile : node.desktop;
-  if (path.getAttribute("d") !== geometry.path) path.setAttribute("d", geometry.path);
-  setStyleProperty(path, "--line-color", node.color);
-  setStyleProperty(path, "--dm-flow-width", `${node.intensity.width}px`);
-  setStyleProperty(path, "--dm-flow-duration", `${node.intensity.duration}s`);
-  scriviDatoSeCambia(path, "dmFlowValue", String(node.value ?? ""));
-  colorNode(path, node.color, node.active);
-  return path;
-}
-function pruneStale(stage, keep) {
-  stage.querySelectorAll("[data-dm-flow-node],[data-dm-flow-arc]").forEach((node) => {
-    const id = node.dataset.dmFlowNode || node.dataset.dmFlowArc;
-    if (keep.has(id)) return;
-    node.__dmBinario?.remove?.();
-    node.remove();
-  });
-  togliIBinariSenzaLinea(stage);
-}
-function togliIBinariSenzaLinea(radice3) {
-  let tolti = 0;
-  for (const sotto of radice3?.querySelectorAll?.(".dm-flow-binario") || []) {
-    const linea = sotto.__dmLinea;
-    if (linea && linea.__dmBinario === sotto && linea.parentNode === sotto.parentNode) continue;
-    sotto.remove();
-    tolti += 1;
-  }
-  return tolti;
-}
-var ARIA_FRA_BOLLE = 16;
-var QUANTO_STRETTE_AL_MASSIMO = 0.55;
-var SOGLIE = Object.freeze([
-  { quando: "(max-width: 480px)", bolla: 96, stretto: true },
-  { quando: "(max-width: 768px)", bolla: 104, stretto: true }
-]);
-var BOLLA_LARGA = 130;
-function comeSiamoMessi() {
-  for (const soglia3 of SOGLIE) {
-    try {
-      if (root.matchMedia?.(soglia3.quando)?.matches) return soglia3;
-    } catch (_errore) {
-    }
-  }
-  return { bolla: BOLLA_LARGA, stretto: false };
-}
-function misureDelCarico(lato) {
-  const misura9 = Number(lato) > 0 ? Number(lato) : BOLLA_LARGA;
-  const aMezzoPunto = (valore3) => Math.round(valore3 * 2) / 2;
-  const fra = (valore3, minimo, massimo) => Math.min(massimo, Math.max(minimo, valore3));
-  return Object.freeze({
-    numero: fra(aMezzoPunto(misura9 * 0.155), 11, 20),
-    nome: fra(aMezzoPunto(misura9 * 0.099), 8, 11.5),
-    icona: fra(Math.round(misura9 * 0.22), 16, 26),
-    disegno: fra(Math.round(misura9 * 0.22), 18, 28)
-  });
-}
-function regoleDelCarico(lato) {
-  const { numero: numero67, nome, icona: icona3, disegno: disegno8 } = misureDelCarico(lato);
-  return [
-    `#page-energy .n-load{width:${lato}px!important;height:${lato}px!important}`,
-    `#page-energy .n-load .node-label{font-size:${nome}px!important;letter-spacing:0!important}`,
-    `#page-energy :is(#view-ist,#view-day,#view-month) .n-load span:not(.dual-val){font-size:${numero67}px!important}`,
-    `#page-energy .n-load .node-icon{font-size:${icona3}px!important}`,
-    `#page-energy .n-load .node-icon svg{width:${disegno8}px!important;height:${disegno8}px!important}`
-  ].join("\n    ");
-}
-function quanteInFila(nodes, stretto) {
-  const perFila = /* @__PURE__ */ new Map();
-  for (const nodo4 of nodes) {
-    const dove3 = stretto ? nodo4.mobile?.top : nodo4.desktop?.top;
-    perFila.set(dove3, (perFila.get(dove3) || 0) + 1);
-  }
-  return perFila.size ? Math.max(...perFila.values()) : 1;
-}
-function passoPiuStretto(nodes, stretto) {
-  const perFila = /* @__PURE__ */ new Map();
-  for (const nodo4 of nodes) {
-    const dove3 = stretto ? nodo4.mobile : nodo4.desktop;
-    if (!dove3) continue;
-    const fila2 = perFila.get(dove3.top) || [];
-    fila2.push(Number(dove3.left));
-    perFila.set(dove3.top, fila2);
-  }
-  let passo = 0;
-  for (const fila2 of perFila.values()) {
-    fila2.sort((a, b2) => a - b2);
-    for (let i = 1; i < fila2.length; i += 1) {
-      const qui = fila2[i] - fila2[i - 1];
-      if (qui > 0 && (!passo || qui < passo)) passo = qui;
-    }
-  }
-  return passo;
-}
-function quantoCiStaNelPalco(stage, model2, scala2) {
-  const largo = stage?.getBoundingClientRect?.().width || 0;
-  const { bolla, stretto } = comeSiamoMessi();
-  const inFila = quanteInFila(model2.nodes, stretto);
-  if (!largo || inFila <= 1) return scala2;
-  const passo = largo * passoPiuStretto(model2.nodes, stretto) / 100 || largo / (inFila + 1);
-  const ciSta = Math.max(0, passo - ARIA_FRA_BOLLE) / bolla;
-  const tetto = stretto ? 1 : scala2;
-  return Math.max(QUANTO_STRETTE_AL_MASSIMO, Math.min(tetto, Number(ciSta.toFixed(3))));
-}
-function renderDynamicFlowLoads(period, model2 = stageModel(period)) {
-  const view = FLOW_VIEWS.find((entry) => entry.period === period);
-  const scope = view ? doc?.getElementById(view.id) : null;
-  const stage = scope?.querySelector?.(".flow-stage");
-  if (!stage) return 0;
-  hideLegacyLoadTopology(stage);
-  const desktopSvg = stage.querySelector("svg.desktop-svg") || stage.querySelector("svg");
-  const mobileSvg = stage.querySelector("svg.mobile-svg");
-  const keep = /* @__PURE__ */ new Set();
-  const diSerie = state62.modelliDiSerie?.[period];
-  const scala2 = quantoCiStaNelPalco(
-    stage,
-    diSerie?.nodes?.length === model2.nodes.length ? diSerie : model2,
-    model2.scale
-  );
-  for (const node of model2.nodes) {
-    keep.add(node.id);
-    ensureBubble(stage, node, period, scala2);
-    ensureArc(desktopSvg, node, "desktop");
-    ensureArc(mobileSvg, node, "mobile");
-  }
-  pruneStale(stage, keep);
-  scriviDatoSeCambia(stage, "dmFlowLoads", String(model2.count));
-  scriviDatoSeCambia(scope, "dmCanonicalLoadCount", String(model2.count));
-  scriviDatoSeCambia(scope, "dmFlowOwner", "beta30");
-  return model2.count;
-}
-function energiaDellImpianto() {
-  const scelto = clean(root.localStorage?.getItem(IMPIANTO_SCELTO_KEY));
-  return plantModel(section("energy", {}), scelto);
-}
-function potenzaViva(reference) {
-  const entity2 = resolvedEntity3(reference);
-  const states = allStates();
-  const nodo4 = states[entity2] || states[clean(reference)];
-  if (!nodo4 || nodo4.state === void 0) return null;
-  const raw = String(nodo4.state);
-  if (raw === "unknown" || raw === "unavailable") return null;
-  return wattsFromState(nodo4);
-}
-var SORGENTI_ISTANTANEE = Object.freeze({
-  solar: "dm.energy_potenza_fotovoltaico",
-  grid: "dm.energy_potenza_scambio_rete",
-  battery: "dm.energy_potenza_batteria",
-  home: "dm.energy_potenza_consumo_casa"
-});
-function instantSourceFlows() {
-  const fonti = [
-    SORGENTI_ISTANTANEE.solar,
-    SORGENTI_ISTANTANEE.grid,
-    SORGENTI_ISTANTANEE.battery
-  ].map((ref) => ({
-    configurata: resolvedEntity3(ref) !== clean(ref),
-    valore: potenzaViva(ref)
-  }));
-  const [sole, rete, batteria] = fonti;
-  if (fonti.every((fonte) => fonte.valore === null)) return null;
-  if (fonti.some((fonte) => fonte.configurata && fonte.valore === null)) return null;
-  return allocateSourceFlows({
-    solar: sole.valore ?? 0,
-    grid: rete.valore ?? 0,
-    battery: batteria.valore ?? 0
-  });
-}
-function loSbilancioDaDire() {
-  const detto3 = laQuadraturaNonTorna({
-    solar: potenzaViva(SORGENTI_ISTANTANEE.solar),
-    grid: potenzaViva(SORGENTI_ISTANTANEE.grid),
-    battery: potenzaViva(SORGENTI_ISTANTANEE.battery),
-    home: potenzaViva(SORGENTI_ISTANTANEE.home)
-  });
-  const cera = state62.sbilancioDiPrima;
-  state62.sbilancioDiPrima = Boolean(detto3);
-  return cera && detto3 ? detto3 : null;
-}
-var BOLLE_SOSPETTABILI = Object.freeze([
-  ["battery", "n-battery"],
-  ["grid", "n-grid"]
-]);
-function disegnaLoSbilancio() {
-  const scope = scopeFor("");
-  if (!scope) return false;
-  const detto3 = loSbilancioDaDire();
-  for (const [quale, id] of BOLLE_SOSPETTABILI) {
-    const bolla = scope.querySelector(`#${id}`);
-    if (!bolla) continue;
-    const suo2 = Boolean(detto3) && detto3.chi === quale;
-    if (bolla.hasAttribute("data-dm-sbilancio") !== suo2)
-      bolla.toggleAttribute("data-dm-sbilancio", suo2);
-  }
-  let nota2 = scope.querySelector("[data-dm-flow-sbilancio]");
-  if (!detto3) {
-    nota2?.remove();
-    return false;
-  }
-  if (!nota2) {
-    nota2 = doc.createElement("div");
-    nota2.setAttribute("data-dm-flow-sbilancio", "");
-    nota2.className = "dm-flow-sbilancio";
-    scope.append(nota2);
-  }
-  scriviTestoSeCambia(
-    nota2,
-    `⚠️ ${t("I conti non tornano", "The numbers do not add up")} · ${Math.round(
-      detto3.entra
-    )} W → ${Math.round(detto3.esce)} W. ${t(
-      "Esce più corrente di quanta ne entra: di solito è il verso di un sensore al contrario.",
-      "More power is going out than coming in: usually a sensor's direction is reversed."
-    )}`
-  );
-  return true;
-}
-function instantEdgeValue(node, flussi) {
-  const id = String(node?.id || "").toLowerCase();
-  if (id.includes("grid-battery")) return flussi.gridToBattery;
-  if (id.includes("battery-grid")) return flussi.batteryToGrid;
-  if (id.includes("solar-grid")) return flussi.solarToGrid;
-  if (id.includes("solar-battery")) return flussi.solarToBattery;
-  if (id.includes("grid-home")) return flussi.gridToHome;
-  if (id.includes("battery-home")) return flussi.batteryToHome;
-  if (id.includes("solar-home")) return flussi.solarToHome;
-  return null;
-}
-var ARCHI_RETE_BATTERIA = Object.freeze([
-  { anchor: "line-grid-home", id: "line-grid-battery", d: "M 307 185 Q 500 132 693 185" },
-  { anchor: "m-line-grid-home", id: "m-line-grid-battery", d: "M 200 280 Q 500 180 800 280" },
-  /* Lo stesso corridoio, percorso al contrario: la batteria che immette in
-   * rete. Non si accendono mai insieme — prelievo e immissione sono i due
-   * segni dello stesso numero — quindi condividere l'arco non sovrappone
-   * niente. Senza questo, l'immissione della batteria si appoggiava alla
-   * linea del solare: un'esportazione disegnata da un pannello che non sta
-   * producendo. */
-  { anchor: "line-grid-home", id: "line-battery-grid", d: "M 693 185 Q 500 132 307 185" },
-  { anchor: "m-line-grid-home", id: "m-line-battery-grid", d: "M 800 280 Q 500 180 200 280" }
-]);
-function ensureGridBatteryPaths() {
-  for (const arco4 of ARCHI_RETE_BATTERIA) {
-    if (doc.getElementById(arco4.id)) continue;
-    const vicino = doc.getElementById(arco4.anchor);
-    if (!vicino?.parentNode) continue;
-    const path = doc.createElementNS(SVG_NS, "path");
-    path.id = arco4.id;
-    path.setAttribute("class", "flow-line");
-    path.setAttribute("d", arco4.d);
-    vicino.parentNode.insertBefore(path, vicino);
-  }
-}
-function mainLineColor(node) {
-  const id = String(node?.id || "").toLowerCase();
-  if (id.includes("solar")) return COLORS.solar;
-  if (id.includes("battery")) return COLORS.battery;
-  if (id.includes("grid")) return COLORS.grid;
-  if (id.includes("home")) return COLORS.home;
-  return "var(--text-dim,#64748b)";
-}
-function isLoadLine(node) {
-  if (node?.dataset?.dmFlowArc) return true;
-  const id = String(node?.id || "");
-  return /line-home-(?:boiler|wb|clima|lav|cuc)(?:-(?:day|month))?$/i.test(id);
-}
-function mainValueNode(kind, period) {
-  const suffix = period ? `-${period}` : "";
-  return doc?.getElementById(`v-${kind}${suffix}`) || null;
-}
-function mainKinds(node) {
-  const id = String(node?.id || "").toLowerCase();
-  return ["solar", "grid", "battery", "home"].filter((kind) => id.includes(kind));
-}
-function periodDirectionalValue(node, direction) {
-  if (!nodeVisible(node)) return null;
-  const parts = [...node.querySelectorAll?.("span") || []].filter(nodeVisible);
-  const index = direction === "import" || direction === "charge" ? 0 : 1;
-  const part = parts[index];
-  return part ? numberFrom(part) : null;
-}
-function directionalEndpointValue(kind, node, period) {
-  const valueNode = mainValueNode(kind, period);
-  if (!valueNode || !nodeVisible(valueNode)) return null;
-  const id = String(node?.id || "").toLowerCase();
-  if (!period) {
-    const signed = potenzaViva(SORGENTI_ISTANTANEE[kind]);
-    if (signed === null) return null;
-    if (kind === "grid")
-      return id.includes("solar-grid") ? Math.max(0, -signed) : Math.max(0, signed);
-    if (kind === "battery")
-      return id.includes("solar-battery") ? Math.max(0, -signed) : Math.max(0, signed);
-    return Math.abs(signed);
-  }
-  if (kind === "grid")
-    return periodDirectionalValue(valueNode, id.includes("solar-grid") ? "export" : "import");
-  if (kind === "battery")
-    return periodDirectionalValue(valueNode, id.includes("solar-battery") ? "charge" : "discharge");
-  return numberFrom(valueNode);
-}
-function directionalMainFlowValue(node, period) {
-  const id = String(node?.id || "").toLowerCase();
-  if (id.includes("grid-battery") || id.includes("battery-grid")) return null;
-  if (id.includes("solar-grid")) return directionalEndpointValue("grid", node, period);
-  if (id.includes("solar-battery")) return directionalEndpointValue("battery", node, period);
-  if (id.includes("grid-home")) return directionalEndpointValue("grid", node, period);
-  if (id.includes("battery-home")) return directionalEndpointValue("battery", node, period);
-  if (id.includes("solar-home")) return directionalEndpointValue("solar", node, period);
-  const kinds = mainKinds(node);
-  for (const kind of kinds) {
-    if (kind === "home") continue;
-    const value = directionalEndpointValue(kind, node, period);
-    if (value !== null) return value;
-  }
-  return kinds.includes("home") ? directionalEndpointValue("home", node, period) : null;
-}
-function displayedMainFlow(node, period) {
-  const threshold = period ? 5e-4 : 0.5;
-  const value = directionalMainFlowValue(node, period);
-  return value === null ? null : value > threshold;
-}
-function mirrorLegacyMainFlows(scope, period) {
-  if (!scope) return false;
-  let touched = false;
-  const flussi = period ? null : instantSourceFlows();
-  scope.querySelectorAll(".flow-line,path[id*='line-' i],line[id*='line-' i],polyline[id*='line-' i]").forEach((node) => {
-    if (!/^(path|line|polyline)$/i.test(node.tagName) || isLoadLine(node)) return;
-    const legacyActive = node.classList.contains("active");
-    const edge = flussi ? instantEdgeValue(node, flussi) : null;
-    const displayedActive = edge === null ? displayedMainFlow(node, period) : edge > 0.5;
-    const active = displayedActive === null ? legacyActive : displayedActive;
-    colorNode(node, mainLineColor(node), active);
-    const kinds = mainKinds(node);
-    scriviDatoSeCambia(node, "dmMainFlow", kinds.join("-"));
-    scriviDatoSeCambia(node, "dmFlowPeriod", period || "instant");
-    const value = edge === null ? directionalMainFlowValue(node, period) : edge;
-    if (value !== null) scriviDatoSeCambia(node, "dmFlowValue", String(value));
-    touched = true;
-  });
-  return touched;
-}
-function refreshEnergyFlows() {
-  if (!doc) return false;
-  beginVisibilityPass();
-  ensureGridBatteryPaths();
-  mettiIPrincipali();
-  posaLeLinee();
-  let touched = false;
-  for (const view of FLOW_VIEWS) {
-    const period = view.period === "instant" ? "" : view.period;
-    const scope = scopeFor(period);
-    if (!scope) continue;
-    touched = mirrorLegacyMainFlows(scope, period) || touched;
-    touched = renderDynamicFlowLoads(view.period) > 0 || touched;
-    scriviDatoSeCambia(scope, "dmEnergyFlows", "directional-value-bound");
-  }
-  disegnaLoSbilancio();
-  const batteria = potenzaViva(SORGENTI_ISTANTANEE.battery);
-  const testo5 = batteria === null ? "—" : batteryReadout(batteria) ?? "0 W";
-  for (const id of ["v-battery", "m-v-battery"]) {
-    scriviTestoSeCambia(doc.getElementById(id), testo5);
-  }
-  const impianto = energiaDellImpianto();
-  renderBatterySoc(doc, impianto, allStates());
-  mostraBolleDellImpianto(impianto);
-  adattaINumeriDelleBolle(doc);
-  riempiGliAnelli(doc);
-  return touched;
-}
-var SCALE_DEL_NUMERO = { w: 1, kw: 1e3, mw: 1e6, wh: 1, kwh: 1e3, mwh: 1e6 };
-function numeroDellaBolla(testo5) {
-  const scritto3 = String(testo5 ?? "");
-  const trovato = scritto3.match(/(\d[\d.,]*)\s*(mwh|kwh|wh|mw|kw|w)\b/i);
-  if (!trovato) return null;
-  let cifre3 = trovato[1];
-  if (cifre3.includes(",")) cifre3 = cifre3.replace(/\./g, "").replace(",", ".");
-  const valore3 = Number.parseFloat(cifre3);
-  if (!Number.isFinite(valore3)) return null;
-  return valore3 * SCALE_DEL_NUMERO[trovato[2].toLowerCase()];
-}
-function quotaDellAnello(valore3, riferimento2) {
-  if (!(valore3 > 0) || !(riferimento2 > 0)) return 0;
-  return Math.min(1, Math.max(0.04, valore3 / riferimento2));
-}
-function numeroScrittoNellaBolla(bolla) {
-  return bolla?.querySelector?.(".dm-flow-value") || [...bolla?.children || []].find((figlio) => figlio.tagName === "SPAN") || null;
-}
-function riempiGliAnelli(targetDocument = doc) {
-  for (const palco of targetDocument?.querySelectorAll?.("#page-energy .flow-stage") || []) {
-    const bolle = [...palco.querySelectorAll(".node")];
-    const valori = /* @__PURE__ */ new Map();
-    let massimo = 0;
-    for (const bolla of bolle) {
-      const valore3 = numeroDellaBolla(numeroScrittoNellaBolla(bolla)?.textContent);
-      valori.set(bolla, valore3);
-      if (valore3 > massimo) massimo = valore3;
-    }
-    for (const bolla of bolle) {
-      let quota = quotaDellAnello(valori.get(bolla), massimo);
-      const carica2 = /n-battery/.test(bolla.id || "") ? Number.parseFloat(bolla.querySelector("#v-battery-soc,.dm-battery-soc")?.textContent) : Number.NaN;
-      if (Number.isFinite(carica2)) quota = Math.min(1, Math.max(0, carica2 / 100));
-      setStyleProperty(bolla, "--dm-quota", String(Math.round(quota * 1e3) / 1e3));
-    }
-  }
-}
-var QUANTO_AL_PIU_SI_STRINGE = 0.62;
-var FIRMA_DELLA_STRETTA = "__dmStretta";
-var I_NUMERI_DELLE_BOLLE = "#page-energy .node span, #page-energy .dm-flow-value";
-function stringiIlNumero(nodo4, misuraDelCarattere) {
-  if (!nodo4) return false;
-  const testo5 = String(nodo4.textContent ?? "");
-  const firma2 = `${testo5}|${ilPostoDelNumero(nodo4)}`;
-  if (nodo4[FIRMA_DELLA_STRETTA] === firma2) return false;
-  nodo4.style?.removeProperty?.("font-size");
-  const largo = Number(nodo4.scrollWidth) || 0;
-  const scatola2 = Number(nodo4.clientWidth) || 0;
-  if (!scatola2) return false;
-  const spazio = Math.min(scatola2, cordaDelCerchio(nodo4) ?? Infinity);
-  nodo4[FIRMA_DELLA_STRETTA] = firma2;
-  nodo4[MISURA_SUA] = 0;
-  if (!testo5.trim()) return false;
-  const base = Number(misuraDelCarattere?.(nodo4)) || 0;
-  nodo4[MISURA_DEL_FOGLIO] = base;
-  if (!largo || largo <= spazio + 1) {
-    nodo4[MISURA_SUA] = base;
-    return false;
-  }
-  if (!base) return false;
-  const quanto = Math.max(spazio / largo, QUANTO_AL_PIU_SI_STRINGE);
-  const misura9 = Math.floor(base * quanto * 10) / 10;
-  nodo4.style.setProperty("font-size", `${misura9}px`, "important");
-  nodo4[MISURA_SUA] = misura9;
-  return true;
-}
-var MISURA_SUA = "__dmMisuraSua";
-var MISURA_DEL_FOGLIO = "__dmMisuraDelFoglio";
-function stessaMisuraPerFascia(nodi2) {
-  const gruppi2 = /* @__PURE__ */ new Map();
-  for (const nodo4 of nodi2) {
-    const bolla = nodo4?.closest?.(".node");
-    const misura9 = Number(nodo4?.[MISURA_SUA]) || 0;
-    if (!bolla || !misura9) continue;
-    if (!/[\d—–]/.test(String(nodo4.textContent ?? ""))) continue;
-    if (eUnContenitore(nodo4)) continue;
-    const vista2 = bolla.closest?.("[id^='view-']") || bolla.parentElement;
-    const fascia2 = bolla.classList?.contains?.("n-load") ? "carichi" : "cerchioni";
-    if (!gruppi2.has(vista2)) gruppi2.set(vista2, /* @__PURE__ */ new Map());
-    const perFascia = gruppi2.get(vista2);
-    if (!perFascia.has(fascia2)) perFascia.set(fascia2, []);
-    perFascia.get(fascia2).push({ nodo: nodo4, misura: misura9 });
-  }
-  let tocchi = 0;
-  for (const perFascia of gruppi2.values()) {
-    for (const voci4 of perFascia.values()) {
-      const minima = Math.min(...voci4.map((voce3) => voce3.misura));
-      for (const { nodo: nodo4 } of voci4) {
-        const voluta = minima >= (Number(nodo4[MISURA_DEL_FOGLIO]) || 0) ? "" : `${minima}px`;
-        const adesso2 = nodo4.style?.getPropertyValue?.("font-size") || "";
-        if (voluta === adesso2) continue;
-        if (voluta) nodo4.style.setProperty("font-size", voluta, "important");
-        else nodo4.style.removeProperty("font-size");
-        tocchi += 1;
-      }
-    }
-  }
-  return tocchi;
-}
-function eUnContenitore(nodo4) {
-  return Boolean(nodo4?.querySelector?.("span"));
-}
-function ilPostoDelNumero(nodo4) {
-  const bolla = nodo4?.closest?.(".node");
-  if (!bolla) return "";
-  const nome = bolla.querySelector?.(".node-label");
-  return `${bolla.offsetWidth || 0}x${nome?.offsetHeight || 0}`;
-}
-var BORDO_E_ARIA = 8;
-function cordaDelCerchio(nodo4) {
-  const bolla = nodo4?.closest?.(".node");
-  if (!bolla?.getBoundingClientRect || !nodo4.getBoundingClientRect) return null;
-  const b2 = bolla.getBoundingClientRect();
-  const t2 = nodo4.getBoundingClientRect();
-  if (!b2.width || !t2.height) return null;
-  const scala2 = bolla.offsetWidth > 0 ? b2.width / bolla.offsetWidth : 1;
-  const r = b2.width / 2 - BORDO_E_ARIA * scala2;
-  const cy = b2.top + b2.height / 2;
-  const dy = Math.max(Math.abs(t2.top - cy), Math.abs(t2.bottom - cy));
-  if (r <= 0) return null;
-  return dy >= r ? 0 : 2 * Math.sqrt(r * r - dy * dy) / scala2;
-}
-function misuraDalFoglio(nodo4) {
-  const vista2 = root.getComputedStyle?.(nodo4);
-  return vista2 ? Number.parseFloat(vista2.fontSize) : 0;
-}
-function adattaINumeriDelleBolle(targetDocument = doc) {
-  const nodi2 = targetDocument?.querySelectorAll?.(I_NUMERI_DELLE_BOLLE);
-  if (!nodi2) return 0;
-  let tocchi = 0;
-  for (const nodo4 of nodi2) {
-    if (eUnContenitore(nodo4)) continue;
-    if (stringiIlNumero(nodo4, misuraDalFoglio)) tocchi += 1;
-  }
-  tocchi += stessaMisuraPerFascia(nodi2);
-  return tocchi;
-}
-function mostraBolleDellImpianto(impianto) {
-  const risolto = applySignedSources(impianto || {});
-  const assente = {
-    solar: !clean(risolto?.solar?.power),
-    battery: !clean(risolto?.battery?.power)
-  };
-  if (!assente.solar && !assente.battery) {
-    for (const nodo4 of doc?.querySelectorAll?.("[data-dm-impianto-nasconde]") || []) {
-      riportaInScena(nodo4);
-    }
-    return;
-  }
-  const nomina = (id, sorgente) => id.includes(sorgente);
-  for (const nodo4 of doc?.querySelectorAll?.(SELETTORE_DEL_FLUSSO) || []) {
-    const id = String(nodo4.id || "").toLowerCase();
-    const via = assente.solar && nomina(id, "solar") || assente.battery && nomina(id, "battery");
-    if (via) {
-      setStyleProperty(nodo4, "display", "none", "important");
-      scriviDatoSeCambia(nodo4, "dmImpiantoNasconde", "true");
-    } else {
-      riportaInScena(nodo4);
-    }
-  }
-}
-var SELETTORE_DEL_FLUSSO = "#page-energy [id^='n-solar'],#page-energy [id^='n-battery'],#page-energy [id^='m-n-solar'],#page-energy [id^='m-n-battery'],#page-energy [id*='line-']";
-function riportaInScena(nodo4) {
-  if (nodo4?.dataset?.dmImpiantoNasconde !== "true") return;
-  nodo4.style.removeProperty("display");
-  delete nodo4.dataset.dmImpiantoNasconde;
-}
-function laScenaSiVede() {
-  const pagina3 = doc?.getElementById?.("page-energy");
-  return !pagina3 || pagina3.classList.contains("active");
-}
-function schedule23() {
-  if (state62.frame) return;
-  const run2 = () => {
-    state62.frame = 0;
-    if (!laScenaSiVede()) return;
-    refreshEnergyFlows();
-  };
-  state62.frame = root.requestAnimationFrame?.(run2) || root.setTimeout?.(run2, 0);
-}
-function scheduleSettled2() {
-  schedule23();
-  root.setTimeout?.(schedule23, 80);
-}
-function bindStore() {
-  if (state62.storeBound) return;
-  const store = dashboardStore();
-  if (!store?.subscribe) return;
-  state62.storeBound = true;
-  store.subscribe((change) => {
-    if (["loads", "energy"].includes(change?.section)) scheduleSettled2();
-  });
-}
-function installStyles28() {
-  installStyle(
-    "dm-energy-flow-section-style",
-    `
-    ${regolaDelleBolleVecchie()}
-    /* La nota di quando i conti non tornano (#134), e il cerchio sospettato.
-     *
-     * La nota sta sotto la mappa e non sopra: chi apre questa pagina viene
-     * per il disegno, e un cartello in cima glielo copre. L'ambra e non il
-     * rosso perche' non e' un guasto — l'impianto sta funzionando benissimo,
-     * e' un numero che arriva girato — e il rosso qui dentro e' gia' la
-     * tinta di un'altra cosa.
-     *
-     * Il cerchio si segna con un anello tratteggiato dello stesso colore,
-     * cosi' chi legge la nota sa dove guardare senza che la nota debba
-     * nominarlo: tre frasi diverse per dire «la batteria» o «la rete»
-     * sarebbero tre frasi in tredici lingue per quello che un anello dice
-     * meglio. */
-    .dm-flow-sbilancio{margin:10px 12px 2px!important;padding:9px 12px!important;border-radius:12px!important;background:color-mix(in srgb,#f59e0b 12%,transparent)!important;border:1px solid color-mix(in srgb,#f59e0b 42%,transparent)!important;color:var(--primary-text-color,#0f172a)!important;font-size:12px!important;line-height:1.5!important}
-    [data-dm-sbilancio]{outline:2px dashed #f59e0b!important;outline-offset:3px!important;border-radius:50%!important}
-    .dm-energy-flow-active{display:inline!important;visibility:visible!important;opacity:1!important;filter:drop-shadow(0 0 6px color-mix(in srgb,var(--dm-flow-color) 52%,transparent))!important;transition:stroke .18s ease,fill .18s ease,opacity .18s ease!important}
-    /* Un collegamento spento non si disegna affatto.
-     *
-     * «Nello sfondo si vedono le linee tratteggiate che vanno da un cerchio
-     * all'altro: le linee devono comparire solo quando c'e' il flow colorato
-     * che va verso il cerchio.»
-     *
-     * Le rotaie grigie erano la mappa dell'impianto — tutti i collegamenti
-     * possibili, sempre — e sopra ci scorreva il tratteggio colorato di quelli
-     * vivi. Ma la scena dice una cosa sola: dove sta passando l'energia
-     * adesso. Una rotaia spenta e' un collegamento che non porta niente
-     * disegnato accanto a uno che porta, e a colpo d'occhio sono la stessa
-     * cosa: il solare che va in rete sembrava disegnato anche a mezzanotte.
-     *
-     * Adesso si vede quello che scorre, e basta. La riga che il collegamento
-     * occupa resta dov'e' — il tratteggio ricompare nello stesso posto appena
-     * il ramo riparte, e la dissolvenza di mezzo secondo del guscio lo fa
-     * entrare e uscire senza scatti. */
-    .dm-energy-flow-idle{opacity:0!important;filter:none!important;transition:stroke .18s ease,fill .18s ease,opacity .18s ease!important}
-    /* Anche le linee dei carichi disegnate dal guscio, che la scena non
-       colora: la loro accensione e' la classe «active» di sempre.
-       
-       Ma solo dentro una scena che questa pagina ha gia' dipinto almeno una
-       volta — da qui il segno sull'ambito, che la passata scrive a ogni giro.
-       Senza quel vincolo questa riga era capace di svuotare la mappa da sola:
-       una passata che non parte — un guscio fatto in un altro modo, un
-       fotogramma che non arriva mai su un browser che non abbiamo qui — non
-       mette nessuna classe su nessuna linea, e allora la regola le spegneva
-       TUTTE, comprese quelle che il guscio aveva acceso. «Da iPad non si
-       vedono i flussi» (#548) ha questa forma, e comunque vada a finire una
-       nostra riga di stile non deve poter cancellare il disegno di chi c'era
-       prima: se non stiamo guidando noi, si vede quello che dice il guscio. */
-    [data-dm-energy-flows] .flow-line:not(.active):not(.dm-energy-flow-active){opacity:0!important}
-    /* La scia di luce: una cometa per tratto, che corre sul binario tenue
-       della sua strada. Il percorso e' lungo cento (\`pathLength\`, vedi
-       \`binario\`): una scia di quattordici, e il vuoto per il resto. */
-    .flow-line.dm-energy-flow-active,path.dm-energy-flow-active,line.dm-energy-flow-active,polyline.dm-energy-flow-active{stroke:var(--dm-flow-color)!important;stroke-dasharray:14 86!important;stroke-linecap:round!important;animation-name:dmEnergyFlowDash!important;animation-duration:1.6s!important;animation-timing-function:linear!important;animation-iteration-count:infinite!important;animation-play-state:running!important;will-change:stroke-dashoffset!important}
-    @keyframes dmEnergyFlowDash{from{stroke-dashoffset:0}to{stroke-dashoffset:-100}}
-    .dm-flow-binario{fill:none!important;stroke:var(--dm-flow-color)!important;stroke-opacity:.2!important;stroke-width:var(--dm-flow-width,3px)!important;stroke-linecap:round!important;stroke-dasharray:none!important;animation:none!important;filter:none!important;pointer-events:none!important;opacity:1!important}
-    .dm-flow-binario[data-acceso="false"]{display:none!important}
-    #page-energy .flow-line.dm-energy-flow-active,#page-energy path.dm-energy-flow-active{stroke-width:calc(var(--dm-flow-width,3px) + 1.5px)!important;filter:drop-shadow(0 0 5px var(--dm-flow-color))!important}
-    .flow-stage path.dm-flow-arc.dm-energy-flow-active{animation-duration:calc(var(--dm-flow-duration,.8s) * 2)!important}
-    /* I cerchi come le tessere della plancia: la stessa carta, lo stesso
-       bordo sottile, la stessa ombra morbida. Il colore non sta piu' nel
-       bordo pieno ma nell'anello che gira intorno e si riempie quanto pesa
-       il numero (\`riempiGliAnelli\`): la batteria quanto e' carica, gli
-       altri rispetto al piu' grosso della scena. */
-    #page-energy .flow-stage .node{
-      background:var(--card-bg,#fff)!important;
-      border:1px solid var(--card-border,rgba(148,163,184,.25))!important;
-      box-shadow:0 4px 14px rgba(15,23,42,.08)!important}
-    #page-energy .flow-stage .node::before{content:""!important;position:absolute!important;inset:-7px!important;border-radius:50%!important;z-index:-1!important;pointer-events:none!important;
-      background:conic-gradient(var(--n-color,#64748b) calc(var(--dm-quota,0) * 1turn),color-mix(in srgb,var(--n-color,#64748b) 16%,transparent) 0)!important;
-      -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4.5px))!important;
-      mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4.5px))!important;
-      transition:background .4s ease!important}
-    #page-energy .flow-stage .node::after{display:none!important}
-    #page-energy .flow-stage .node.active,#page-energy .flow-stage .node.dm-flow-node[data-dm-flow-active="true"]{
-      box-shadow:0 4px 14px rgba(15,23,42,.08),0 0 22px color-mix(in srgb,var(--n-color,#3b82f6) 30%,transparent)!important}
-    #page-energy .flow-stage .n-home{--n-color:#3b82f6!important}
-    /* Nessuna eccezione per "riduci movimento": il tratteggio che scorre non e'
-       una decorazione ma l'unico segnale che l'energia sta passando, e la
-       plancia deve mostrare le stesse linee su ogni schermo. Quella preferenza
-       e' spesso attiva su un computer e quasi mai su un telefono, quindi
-       rispettarla qui rendeva il desktop immobile mentre il telefono scorreva:
-       stessa plancia, due letture diverse. Le altre sezioni continuano a
-       rispettarla, perche' li' il moto e' effettivamente decorativo. */
-    /* An mdi icon resolved by the engine sits inside .node-icon, which already
-       sizes the emoji of the hand-authored circles at every breakpoint: the
-       glyph inherits it so a configured circle matches its neighbours. */
-    .dm-flow-node .node-icon .dm-icon-engine-glyph{font-size:inherit!important;height:auto!important}
-    /* Computed load bubbles. Width and speed of a connector follow the reading,
-       so a wallbox at 7 kW is visibly heavier than a fridge at 60 W. */
-    .flow-stage .node.dm-flow-node{display:flex!important;visibility:visible!important;transform:translate(-50%,-50%) scale(var(--dm-flow-scale,1))!important;transition:left .28s ease,top .28s ease,transform .28s ease!important}
-    .flow-stage .node.dm-flow-node[data-dm-flow-active="false"]{opacity:.62!important}
-    /* Il nome sta dentro il cerchio: largo quanto la corda in cima, al massimo
-       due righe; la misura la stringe adattaIlNome. */
-    .flow-stage .node.dm-flow-node .node-label{width:78%!important;white-space:normal!important;overflow:hidden!important;text-overflow:clip!important;line-height:1.1!important;max-height:2.25em;flex:0 0 auto!important;overflow-wrap:normal!important;word-break:normal!important}
-    .flow-stage .node.dm-flow-node .node-label[data-dm-nome-lungo]{white-space:nowrap!important;text-overflow:ellipsis!important}
-    .flow-stage path.dm-flow-arc{stroke-width:var(--dm-flow-width,3px)!important;fill:none!important}
-    /* La soglia e' quella del guscio, 768, e non una nostra.
-     *
-     * Qui c'era 820. Sembra un dettaglio e non lo e': il guscio cambia TUTTO a
-     * 768 — l'altezza del palco (da 550 a 750), la misura dei cerchi (la Casa
-     * da 160 a 125, un carico da 115 a 85), l'altezza della Casa (dal 50% al
-     * 46%) e quale dei due disegni si vede — mentre questa riga spostava da
-     * sola le bolle sulla riga stretta. Fra 769 e 820 succedeva che la bolla
-     * salisse al 68% restando grande dentro un palco rimasto alto 550: la
-     * Casa arriva a 360 e la bolla comincia a 317. **Si sovrappongono di
-     * quarantaquattro punti**, misurati, con la linea che spunta di sotto
-     * perche' il disegno mostrato e' ancora quello largo, che porta all'83%.
-     *
-     * «Wallbox sta troppo attaccato a casa»: era questo, e non era attaccato,
-     * era sopra. Il 68% e' giusto dove e' nato — nel palco alto 750 con i
-     * cerchi piccoli lascia cinquantacinque punti di aria — e sbagliato
-     * altrove. Due soglie per una stessa decisione sono due decisioni, e
-     * prima o poi non vanno d'accordo. */
-    @media(max-width:768px){
-      .flow-stage .node.dm-flow-node{left:var(--dm-flow-mobile-left,50%)!important;top:var(--dm-flow-mobile-top,83%)!important}
-    }
-    /* E la Casa un poco piu' piccola: «riesci a fare un po' piu' piccolo
-     * quello della casa». Resta il cerchio piu' grande, ma non schiaccia piu'
-     * la fila di sotto. */
-    #page-energy .n-home{width:145px!important;height:145px!important}
-    /* I cerchi sotto la Casa, che si leggono.
-     *
-     * «I dati dentro entrano a mala pena e sono troppo piccoli, il testo
-     * ancora tagliato.» Le stanze e i carichi erano i cerchi piu' piccoli del
-     * palco — 75 punti sul telefono — e per farci stare il nome il guscio lo
-     * portava a 7 pixel: «LOCALE TECNICO» toccava il bordo. Crescono solo
-     * loro, coi loro nomi e numeri; Solare, Rete, Batteria e Casa restano come
-     * sono. Le misure sono le stesse che legge \`comeSiamoMessi\`, cosi' il
-     * conto di quante bolle stanno in fila resta giusto: sul telefono tre per
-     * fila si prendono tutto lo spazio che c'e', e non di piu'.
-     *
-     * Dentro il cerchio, nome numero e icona vengono dal lato del cerchio
-     * (\`misureDelCarico\`), uguali per tutta la fila: anche nel giorno e nel
-     * mese, «i valori dei carichi sotto casa si leggono per la parte
-     * istantanea, ma sono piu' piccoli per giornaliera e mensile». */
-    ${regoleDelCarico(BOLLA_LARGA)}
-    @media(max-width:768px){
-      #page-energy .flow-stage{height:800px!important}
-      #page-energy .n-home{width:110px!important;height:110px!important}
-      ${regoleDelCarico(SOGLIE[1].bolla)}
-      /* Il guscio scriveva «BATTERIA» a 7 e gli altri tre a 8: i cerchioni
-       * sono una fascia sola, col nome della stessa misura. */
-      #page-energy .node:not(.n-load) .node-label{font-size:8px!important}
-    }
-    @media(max-width:480px){
-      #page-energy .flow-stage{height:720px!important}
-      #page-energy .n-home{width:96px!important;height:96px!important}
-      ${regoleDelCarico(SOGLIE[0].bolla)}
-    }
-  `
-  );
-}
-function installEnergyFlowSection() {
-  if (!doc || state62.installed) return;
-  state62.installed = true;
-  state62.installatoAlle = Date.now();
-  installStyles28();
-  root.dmRefreshEnergyFlows = refreshEnergyFlows;
-  for (const name of [
-    "renderEnergyMonth",
-    "renderEnergyDay",
-    "renderEnergyDashboard",
-    "applyAtomicEnergyBundle",
-    "switchEnergyView",
-    "render"
-  ])
-    wrapFunction(name, `__dmEnergyFlow_${name}`, scheduleSettled2);
-  root.addEventListener?.("dashboardmodern:period-bundle", (event) => {
-    state62.bundle = event?.detail || null;
-    scheduleSettled2();
-  });
-  root.addEventListener?.("dashboardmodern:energy-bundle", scheduleSettled2);
-  root.addEventListener?.("dashboardmodern:energy-stable", scheduleSettled2);
-  root.addEventListener?.("dashboardmodern:state-changed", schedule23);
-  root.addEventListener?.("resize", () => {
-    if (state62.attesaMisura) root.clearTimeout?.(state62.attesaMisura);
-    state62.attesaMisura = root.setTimeout?.(() => {
-      state62.attesaMisura = 0;
-      scheduleSettled2();
-    }, 160);
-  });
-  root.addEventListener?.("dashboardmodern:states-ready", scheduleSettled2);
-  root.addEventListener?.("dashboardmodern:runtime-ready", scheduleSettled2);
-  root.addEventListener?.("dashboardmodern:legacy-ready", scheduleSettled2);
-  doc.addEventListener(
-    "click",
-    (event) => {
-      if (event.target?.closest?.("[data-energy-tab],.energy-tab,.sub-tab-btn,.tab[data-tab]"))
-        scheduleSettled2();
-    },
-    true
-  );
-  bindStore();
-  rivendicaLeBolleDellaBatteria();
-  registraIlFlusso({ ridisegna: ridisegnaIlDisegno });
-  scheduleSettled2();
-}
-function rivendicaLeBolleDellaBatteria() {
-  for (const id of ["v-battery", "m-v-battery", "v-battery-soc"]) {
-    const nodo4 = doc?.getElementById?.(id);
-    if (nodo4?.dataset && nodo4.dataset.dmPadrone !== "moduli") nodo4.dataset.dmPadrone = "moduli";
-  }
-}
-if (doc?.readyState === "loading")
-  doc.addEventListener("DOMContentLoaded", installEnergyFlowSection, { once: true });
-else senzaCadere(installEnergyFlowSection);
-
 // src/sections/il-flusso-grande-section.js
-var KEY67 = "__DASHBOARDMODERN_FLUSSO_IN_HOME__";
+var KEY65 = "__DASHBOARDMODERN_FLUSSO_IN_HOME__";
 var STYLE_ID11 = "dm-flusso-home-style";
 var BLOCCO_ID = "dm-flusso-home";
-var state63 = root[KEY67] ||= {
+var state61 = root[KEY65] ||= {
   installed: false,
   frame: 0,
   struttura: "",
@@ -87807,7 +85685,7 @@ var DISEGNO = Object.freeze({
   batteria: "accumulo",
   auto: "ev"
 });
-var NOMI5 = () => ({
+var NOMI4 = () => ({
   solare: t("Solare", "Solar"),
   rete: t("Rete", "Grid"),
   casa: t("Casa", "Home"),
@@ -87827,19 +85705,12 @@ var VERSI2 = () => ({
 function ilFlussoEAcceso() {
   return ilFlussoSiVede(readJson(CHIAVE_FLUSSO_IN_HOME, null));
 }
-function laWallbox() {
-  try {
-    return lAutoNelFlusso();
-  } catch (_errore) {
-    return null;
-  }
-}
 function modelloDelFlusso(states = allStates()) {
-  return ilFlussoDiCasa(lettureDiCasa(states), { auto: laWallbox() });
+  return ilFlussoDiCasa(lettureDiCasa(states));
 }
 var potenza2 = (watt5) => watt5 == null ? "—" : laPotenzaInParole(Math.abs(watt5), { lingua: locale() });
 function nodoMarkup2(nodo4, posto) {
-  const nome = NOMI5()[nodo4.k];
+  const nome = NOMI4()[nodo4.k];
   const dove3 = posto ? ` style="left:${posto.x}%;top:${posto.y}%"` : "";
   if (nodo4.k === "casa")
     return `<div class="dm-fh-nodo" data-k="casa" data-lato="dentro"${dove3} title="${esc(nome)}">
@@ -87909,7 +85780,7 @@ function posaLeStrade(blocco3, modello2) {
       if (path && path.getAttribute("d") !== d) path.setAttribute("d", d);
     }
   }
-  state63.posti = `${larghezza}x${altezza}`;
+  state61.posti = `${larghezza}x${altezza}`;
 }
 function aggiornaINumeri(blocco3, modello2) {
   const versi = VERSI2();
@@ -87940,7 +85811,7 @@ function aggiornaINumeri(blocco3, modello2) {
       puntini.dataset.capi = capi;
       puntini.dataset.da = arco4.da;
       binario2.dataset.da = arco4.da;
-      state63.posti = null;
+      state61.posti = null;
     }
     binario2.dataset.si = String(arco4.attivo || arco4.sempre);
     puntini.dataset.si = String(arco4.attivo);
@@ -87972,18 +85843,18 @@ function host(pagina3) {
   return nodo4;
 }
 function osserva(blocco3) {
-  if (state63.osservatore || typeof root.ResizeObserver !== "function") return;
-  state63.osservatore = new root.ResizeObserver(() => {
-    state63.posti = null;
-    schedule24();
+  if (state61.osservatore || typeof root.ResizeObserver !== "function") return;
+  state61.osservatore = new root.ResizeObserver(() => {
+    state61.posti = null;
+    schedule23();
   });
-  state63.osservatore.observe(blocco3);
+  state61.osservatore.observe(blocco3);
 }
 function togli() {
-  state63.osservatore?.disconnect?.();
-  state63.osservatore = null;
-  state63.struttura = "";
-  state63.posti = null;
+  state61.osservatore?.disconnect?.();
+  state61.osservatore = null;
+  state61.struttura = "";
+  state61.posti = null;
   doc?.getElementById?.(BLOCCO_ID)?.remove();
 }
 function renderIlFlussoInHome() {
@@ -88004,14 +85875,14 @@ function renderIlFlussoInHome() {
     modello2.archi.map((arco4) => arco4.id).join(","),
     t("Flusso energia", "Energy flow")
   ].join("|");
-  if (state63.struttura !== struttura || !blocco3.querySelector(".dm-fh-palco")) {
+  if (state61.struttura !== struttura || !blocco3.querySelector(".dm-fh-palco")) {
     blocco3.innerHTML = strutturaMarkup(modello2);
-    state63.struttura = struttura;
-    state63.posti = null;
+    state61.struttura = struttura;
+    state61.posti = null;
   }
   osserva(blocco3);
   aggiornaINumeri(blocco3, modello2);
-  if (!state63.posti) posaLeStrade(blocco3, modello2);
+  if (!state61.posti) posaLeStrade(blocco3, modello2);
   fermaSeNonSiVede();
   return true;
 }
@@ -88021,22 +85892,22 @@ function fermaSeNonSiVede() {
   const fermo = String(Boolean(doc.hidden));
   if (blocco3.dataset.fermo !== fermo) blocco3.dataset.fermo = fermo;
 }
-function schedule24() {
-  if (state63.frame) return;
+function schedule23() {
+  if (state61.frame) return;
   const giro = () => {
-    state63.frame = 0;
+    state61.frame = 0;
     try {
       renderIlFlussoInHome();
     } catch (errore) {
       root.console?.warn?.("[DashboardModern] flusso in home", errore);
     }
   };
-  state63.frame = root.requestAnimationFrame?.(giro) || 0;
-  if (!state63.frame) giro();
+  state61.frame = root.requestAnimationFrame?.(giro) || 0;
+  if (!state61.frame) giro();
 }
 function ridisegnaIlFlussoInHome() {
-  state63.struttura = "";
-  schedule24();
+  state61.struttura = "";
+  schedule23();
 }
 function apriLEnergia() {
   const voce3 = doc?.querySelector?.('.tab[data-tab="energy"]');
@@ -88058,7 +85929,7 @@ function onKey(evento) {
 }
 var COLORI3 = `
   --fh-solare:#f59e0b;--fh-rete:#2563eb;--fh-batteria:#10b981;--fh-auto:#06b6d4;--fh-casa:var(--text,#0f172a)`;
-function stile4() {
+function stile3() {
   const B = `#${BLOCCO_ID}`;
   installStyle(
     STYLE_ID11,
@@ -88158,9 +86029,9 @@ function stile4() {
   );
 }
 function installIlFlussoInHome() {
-  if (!doc || state63.installed) return false;
-  state63.installed = true;
-  stile4();
+  if (!doc || state61.installed) return false;
+  state61.installed = true;
+  stile3();
   doc.addEventListener("click", onClick13);
   doc.addEventListener("keydown", onKey);
   doc.addEventListener("visibilitychange", fermaSeNonSiVede);
@@ -88171,14 +86042,14 @@ function installIlFlussoInHome() {
     "dashboardmodern:state-changed",
     "dashboardmodern:persistence-restored"
   ])
-    root.addEventListener?.(evento, schedule24);
+    root.addEventListener?.(evento, schedule23);
   doc.addEventListener("click", (evento) => {
     if (evento.target?.closest?.(".tab,[data-tab]")) {
-      state63.posti = null;
-      schedule24();
+      state61.posti = null;
+      schedule23();
     }
   });
-  schedule24();
+  schedule23();
   return true;
 }
 
@@ -88189,14 +86060,14 @@ function lePastiglieSiVedono(scritto3) {
 }
 
 // src/core/stanze-in-plancia.js
-var pulito48 = (valore3) => String(valore3 ?? "").trim();
+var pulito46 = (valore3) => String(valore3 ?? "").trim();
 var CHIAVE_STANZE_IN_PLANCIA = "cd_home_stanze";
 function idDellaStanza(stanza2) {
-  return pulito48(stanza2?.id) || pulito48(stanza2?.name);
+  return pulito46(stanza2?.id) || pulito46(stanza2?.name);
 }
 function stanzeInPlancia(scelte5, stanze4) {
   const volute = new Set(
-    (Array.isArray(scelte5) ? scelte5 : []).map((voce3) => pulito48(voce3)).filter(Boolean)
+    (Array.isArray(scelte5) ? scelte5 : []).map((voce3) => pulito46(voce3)).filter(Boolean)
   );
   if (!volute.size) return [];
   return (Array.isArray(stanze4) ? stanze4 : []).filter((stanza2) => stanza2 && typeof stanza2 === "object").filter((stanza2) => volute.has(idDellaStanza(stanza2)));
@@ -88204,18 +86075,18 @@ function stanzeInPlancia(scelte5, stanze4) {
 function laStanzaSiVede(scelte5, stanza2) {
   const id = idDellaStanza(stanza2);
   if (!id) return false;
-  return (Array.isArray(scelte5) ? scelte5 : []).map((voce3) => pulito48(voce3)).includes(id);
+  return (Array.isArray(scelte5) ? scelte5 : []).map((voce3) => pulito46(voce3)).includes(id);
 }
 function conLaStanza(scelte5, stanza2, accesa3, _stanze = null) {
   const id = idDellaStanza(stanza2);
-  const fila2 = (Array.isArray(scelte5) ? scelte5 : []).map((voce3) => pulito48(voce3)).filter(Boolean);
+  const fila2 = (Array.isArray(scelte5) ? scelte5 : []).map((voce3) => pulito46(voce3)).filter(Boolean);
   if (!id) return fila2;
   const senza = fila2.filter((voce3) => voce3 !== id);
   return accesa3 ? [...senza, id] : senza;
 }
 
 // src/core/le-stanze-per-piano.js
-var pulito49 = (valore3) => String(valore3 ?? "").trim();
+var pulito47 = (valore3) => String(valore3 ?? "").trim();
 var conta3 = (valore3) => {
   const numero67 = Number(valore3);
   return Number.isFinite(numero67) && numero67 > 0 ? Math.round(numero67) : 0;
@@ -88224,11 +86095,11 @@ function stanzePerPiano(pagine, { piani = [] } = {}) {
   const elenco18 = Array.isArray(pagine) ? pagine.filter(Boolean) : [];
   const gruppi2 = /* @__PURE__ */ new Map();
   for (const stanza2 of elenco18) {
-    const piano2 = pulito49(stanza2.floor);
+    const piano2 = pulito47(stanza2.floor);
     if (!gruppi2.has(piano2)) gruppi2.set(piano2, []);
     gruppi2.get(piano2).push(stanza2);
   }
-  const dichiarati = (Array.isArray(piani) ? piani : []).map(pulito49).filter(Boolean);
+  const dichiarati = (Array.isArray(piani) ? piani : []).map(pulito47).filter(Boolean);
   const posto = (piano2) => {
     if (!piano2) return Number.MAX_SAFE_INTEGER;
     const indice = dichiarati.indexOf(piano2);
@@ -88275,7 +86146,7 @@ var QUANTO_DURA_LA_DOMANDA = 2e3;
 var QUANTO_DURA_L_ANNULLA = 5e3;
 function acceseNelPiano(gruppo2, conti2 = {}) {
   let accese = 0;
-  for (const stanza2 of gruppo2?.stanze || []) accese += conta3(conti2[pulito49(stanza2?.id)]?.luci);
+  for (const stanza2 of gruppo2?.stanze || []) accese += conta3(conti2[pulito47(stanza2?.id)]?.luci);
   return accese;
 }
 
@@ -88314,7 +86185,7 @@ function blocchiDellaTavola(pagina3 = null) {
   };
   return blocchi.map((blocco3, arrivo) => ({ blocco: blocco3, arrivo })).sort((a, b2) => posto(a.blocco) - posto(b2.blocco) || a.arrivo - b2.arrivo).map(({ blocco: blocco3 }) => blocco3);
 }
-var numero46 = (valore3) => {
+var numero45 = (valore3) => {
   const n = Number.parseFloat(clean26(valore3).replace(",", "."));
   return Number.isFinite(n) ? n : null;
 };
@@ -88337,13 +86208,13 @@ function climaDellaStanza(entita4 = [], states = {}) {
      * prende l'estremo che la modalita' rende vero (il basso in caldo, l'alto
      * in freddo). In automatico i numeri sono due, e in un posto da uno solo
      * non se ne sceglie uno a caso: non si scrive. */
-    obiettivo: numero46(attributi2.temperature) ?? obiettivoMostrato(obiettiviDelClima(attributi2, stato3)),
-    ambiente: numero46(attributi2.current_temperature)
+    obiettivo: numero45(attributi2.temperature) ?? obiettivoMostrato(obiettiviDelClima(attributi2, stato3)),
+    ambiente: numero45(attributi2.current_temperature)
   };
 }
 function comeStaLaCopertura(stato3 = null, { invertita = false } = {}) {
   const parola2 = statoSecondoVerso(stato3?.state, invertita);
-  const dichiarata = posizioneSecondoVerso(numero46(stato3?.attributes?.current_position), invertita);
+  const dichiarata = posizioneSecondoVerso(numero45(stato3?.attributes?.current_position), invertita);
   const posizione = dichiarata !== null ? Math.round(dichiarata) : parola2 === "open" || parola2 === "on" ? 100 : parola2 === "closed" || parola2 === "off" ? 0 : null;
   if (parola2 === "opening") return { posizione, stato: "sale" };
   if (parola2 === "closing") return { posizione, stato: "scende" };
@@ -88354,7 +86225,7 @@ function comeStaLaCopertura(stato3 = null, { invertita = false } = {}) {
 }
 
 // src/core/i-piani-della-casa.js
-var pulito50 = (valore3) => String(valore3 ?? "").trim();
+var pulito48 = (valore3) => String(valore3 ?? "").trim();
 var CHIAVE_PIANI = "cd_floors";
 var CHIAVE_SEGNI_DEI_PIANI = "cd_floor_icons";
 var SEGNO_DI_SERIE = "🏢";
@@ -88364,7 +86235,7 @@ function nomiDeiPiani(salvati) {
   const visti = /* @__PURE__ */ new Set();
   const fuori = [];
   for (const voce3 of elenco10(salvati)) {
-    const nome = pulito50(voce3);
+    const nome = pulito48(voce3);
     if (!nome || visti.has(nome)) continue;
     visti.add(nome);
     fuori.push(nome);
@@ -88372,7 +86243,7 @@ function nomiDeiPiani(salvati) {
   return fuori;
 }
 function segnoDelPiano(segni, nome) {
-  const suo2 = pulito50(segni?.[pulito50(nome)]);
+  const suo2 = pulito48(segni?.[pulito48(nome)]);
   return suo2 || SEGNO_DI_SERIE;
 }
 function iPianiDellaCasa(salvati, stanze4 = [], segni = {}) {
@@ -88380,7 +86251,7 @@ function iPianiDellaCasa(salvati, stanze4 = [], segni = {}) {
   const ordine = new Map(dichiarati.map((nome, indice) => [nome, indice]));
   const dentro3 = new Map(dichiarati.map((nome) => [nome, []]));
   for (const stanza2 of elenco10(stanze4)) {
-    const nome = pulito50(stanza2?.floor);
+    const nome = pulito48(stanza2?.floor);
     if (!nome) continue;
     if (!dentro3.has(nome)) {
       dentro3.set(nome, []);
@@ -88393,17 +86264,17 @@ function iPianiDellaCasa(salvati, stanze4 = [], segni = {}) {
     segno: segnoDelPiano(segni, nome),
     /* Se il segno e' suo o e' quello di serie: un piano a cui nessuno ha
      * scelto un'icona non deve sembrare un piano che ha scelto il palazzo. */
-    suo: Boolean(pulito50(segni?.[nome])),
+    suo: Boolean(pulito48(segni?.[nome])),
     stanze: sue,
     dichiarato: ordine.get(nome) < dichiarati.length
   }));
 }
 function stanzeSenzaPiano(stanze4 = []) {
-  return elenco10(stanze4).filter((stanza2) => stanza2 && !pulito50(stanza2.floor));
+  return elenco10(stanze4).filter((stanza2) => stanza2 && !pulito48(stanza2.floor));
 }
 function spostaIlPiano(salvati, nome, verso3) {
   const nomi2 = nomiDeiPiani(salvati);
-  const quale = pulito50(nome);
+  const quale = pulito48(nome);
   const dove3 = nomi2.indexOf(quale);
   const passo = Number(verso3) < 0 ? -1 : 1;
   const meta = dove3 + passo;
@@ -88418,16 +86289,16 @@ var PIANO_SCONOSCIUTO = "sconosciuto";
 var TROPPI_PIANI = "troppi";
 function rinominaIlPiano(salvati, stanze4, segni, vecchio, nuovo) {
   const nomi2 = nomiDeiPiani(salvati);
-  const prima = pulito50(vecchio);
-  const dopo = pulito50(nuovo);
+  const prima = pulito48(vecchio);
+  const dopo = pulito48(nuovo);
   if (!dopo) return { errore: NOME_VUOTO };
   const dove3 = nomi2.indexOf(prima);
-  if (dove3 < 0 && !elenco10(stanze4).some((stanza2) => pulito50(stanza2?.floor) === prima))
+  if (dove3 < 0 && !elenco10(stanze4).some((stanza2) => pulito48(stanza2?.floor) === prima))
     return { errore: PIANO_SCONOSCIUTO };
   if (dopo !== prima && nomi2.includes(dopo)) return { errore: NOME_GIA_PRESO };
   const fuori = dove3 < 0 ? [...nomi2, dopo] : nomi2.map((nome) => nome === prima ? dopo : nome);
   const spostate = elenco10(stanze4).map(
-    (stanza2) => pulito50(stanza2?.floor) === prima ? { ...stanza2, floor: dopo } : stanza2
+    (stanza2) => pulito48(stanza2?.floor) === prima ? { ...stanza2, floor: dopo } : stanza2
   );
   const segniNuovi = { ...segni || {} };
   if (prima !== dopo && segniNuovi[prima] !== void 0) {
@@ -88438,23 +86309,23 @@ function rinominaIlPiano(salvati, stanze4, segni, vecchio, nuovo) {
     piani: fuori,
     stanze: spostate,
     segni: segniNuovi,
-    quante: spostate.filter((stanza2) => pulito50(stanza2?.floor) === dopo).length
+    quante: spostate.filter((stanza2) => pulito48(stanza2?.floor) === dopo).length
   };
 }
 function aggiungiIlPiano(salvati, nome) {
   const nomi2 = nomiDeiPiani(salvati);
-  const quale = pulito50(nome);
+  const quale = pulito48(nome);
   if (!quale) return { errore: NOME_VUOTO };
   if (nomi2.includes(quale)) return { errore: NOME_GIA_PRESO };
   if (nomi2.length >= QUANTI_PIANI) return { errore: TROPPI_PIANI };
   return { piani: [...nomi2, quale] };
 }
 function cancellaIlPiano(salvati, stanze4, segni, nome) {
-  const quale = pulito50(nome);
+  const quale = pulito48(nome);
   const nomi2 = nomiDeiPiani(salvati).filter((voce3) => voce3 !== quale);
   const scoperte = [];
   const rimaste = elenco10(stanze4).map((stanza2) => {
-    if (pulito50(stanza2?.floor) !== quale) return stanza2;
+    if (pulito48(stanza2?.floor) !== quale) return stanza2;
     scoperte.push(stanza2);
     const senza = { ...stanza2 };
     delete senza.floor;
@@ -88465,10 +86336,10 @@ function cancellaIlPiano(salvati, stanze4, segni, nome) {
   return { piani: nomi2, stanze: rimaste, segni: segniNuovi, quante: scoperte.length };
 }
 function segnaIlPiano(segni, nome, segno5) {
-  const quale = pulito50(nome);
+  const quale = pulito48(nome);
   const fuori = { ...segni || {} };
   if (!quale) return fuori;
-  const scelto = pulito50(segno5);
+  const scelto = pulito48(segno5);
   if (scelto) fuori[quale] = scelto;
   else delete fuori[quale];
   return fuori;
@@ -88478,7 +86349,7 @@ function ordinaLeStanzePerPiano(stanze4, salvati) {
   const dove3 = new Map(dichiarati.map((nome, indice) => [nome, indice]));
   const conosciuti = new Map(dove3);
   const posto = (stanza2) => {
-    const piano2 = pulito50(stanza2?.floor);
+    const piano2 = pulito48(stanza2?.floor);
     if (!piano2) return Number.MAX_SAFE_INTEGER;
     if (!conosciuti.has(piano2)) conosciuti.set(piano2, dichiarati.length + conosciuti.size);
     return conosciuti.get(piano2);
@@ -88493,7 +86364,7 @@ function stessoOrdine(une, altre) {
 }
 
 // src/core/modo-del-clima.js
-var pulito51 = (valore3) => String(valore3 ?? "").trim();
+var pulito49 = (valore3) => String(valore3 ?? "").trim();
 var inglese = (locale3) => !String(locale3 ?? "it").toLowerCase().startsWith("it");
 var scegli = (it, en, locale3) => inglese(locale3) ? en : it;
 var MUTI13 = /* @__PURE__ */ new Set(["unknown", "unavailable", "none", "null", ""]);
@@ -88577,7 +86448,7 @@ var FAMIGLIE2 = Object.freeze([
 var PER_PAROLA = /* @__PURE__ */ new Map();
 for (const voce3 of FAMIGLIE2) for (const parola2 of voce3.parole) PER_PAROLA.set(parola2, voce3);
 function piatto(valore3) {
-  return pulito51(valore3).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\s\-.]+/g, "_").replace(/^_+|_+$/g, "");
+  return pulito49(valore3).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\s\-.]+/g, "_").replace(/^_+|_+$/g, "");
 }
 function famigliaDelModo(valore3) {
   const chiave2 = piatto(valore3);
@@ -88589,10 +86460,10 @@ function famigliaDelModo(valore3) {
 }
 var PER_FAMIGLIA = new Map(FAMIGLIE2.map((voce3) => [voce3.famiglia, voce3]));
 function glifoDelModo2(famiglia) {
-  return PER_FAMIGLIA.get(pulito51(famiglia))?.glifo || "🌡️";
+  return PER_FAMIGLIA.get(pulito49(famiglia))?.glifo || "🌡️";
 }
 function nomeAlNaturale(valore3) {
-  const grezzo2 = pulito51(valore3).replaceAll("_", " ").trim();
+  const grezzo2 = pulito49(valore3).replaceAll("_", " ").trim();
   if (!grezzo2) return "";
   return grezzo2.charAt(0).toUpperCase() + grezzo2.slice(1);
 }
@@ -88603,7 +86474,7 @@ function nomeDelModo3(valore3, locale3 = "it") {
   return nomeAlNaturale(valore3);
 }
 var dominio = (id) => {
-  const testo5 = pulito51(id);
+  const testo5 = pulito49(id);
   const punto3 = testo5.indexOf(".");
   return punto3 > 0 ? testo5.slice(0, punto3).toLowerCase() : "";
 };
@@ -88620,11 +86491,11 @@ function comandoPer(id, attributi2) {
   return null;
 }
 function valoreDelModo(id, stato3) {
-  if (dominio(id) === "climate") return pulito51(stato3?.attributes?.preset_mode);
-  return pulito51(stato3?.state);
+  if (dominio(id) === "climate") return pulito49(stato3?.attributes?.preset_mode);
+  return pulito49(stato3?.state);
 }
 function letturaDelModo(id, stato3, locale3 = "it") {
-  const entita4 = pulito51(id);
+  const entita4 = pulito49(id);
   if (!entita4) return { disponibile: false };
   const valore3 = valoreDelModo(entita4, stato3);
   if (!valore3 || MUTI13.has(piatto(valore3))) {
@@ -88632,7 +86503,7 @@ function letturaDelModo(id, stato3, locale3 = "it") {
   }
   const famiglia = famigliaDelModo(valore3);
   const comando2 = comandoPer(entita4, stato3?.attributes);
-  const scelte5 = (comando2?.scelte || []).map((voce3) => pulito51(voce3)).filter(Boolean).map((voce3) => ({
+  const scelte5 = (comando2?.scelte || []).map((voce3) => pulito49(voce3)).filter(Boolean).map((voce3) => ({
     valore: voce3,
     nome: nomeDelModo3(voce3, locale3),
     glifo: glifoDelModo2(famigliaDelModo(voce3)),
@@ -88654,7 +86525,7 @@ function letturaDelModo(id, stato3, locale3 = "it") {
   };
 }
 function chiamataDelModo2(lettura4, valore3) {
-  const scelto = pulito51(valore3);
+  const scelto = pulito49(valore3);
   if (!lettura4?.cambiabile || !scelto || !lettura4.servizio) return null;
   const esiste = (lettura4.scelte || []).some((voce3) => piatto(voce3.valore) === piatto(scelto));
   if (!esiste) return null;
@@ -88691,13 +86562,13 @@ var FERMI_DELLO_SLIDER = Object.freeze([
 ]);
 var MINIMO_MINUTI = FERMI_DELLO_SLIDER[0];
 var MASSIMO_MINUTI = FERMI_DELLO_SLIDER.at(-1);
-var numero47 = (valore3) => {
+var numero46 = (valore3) => {
   if (valore3 === null || valore3 === void 0 || valore3 === "") return null;
   const n = Number(valore3);
   return Number.isFinite(n) ? n : null;
 };
 function normalizzaIMinuti(valore3) {
-  const grezzo2 = numero47(valore3);
+  const grezzo2 = numero46(valore3);
   if (grezzo2 === null || grezzo2 <= 0) return 0;
   const dentro3 = Math.min(Math.max(Math.round(grezzo2), MINIMO_MINUTI), MASSIMO_MINUTI);
   let scelto = FERMI_DELLO_SLIDER[0];
@@ -88712,13 +86583,13 @@ function fermoDeiMinuti(minuti2) {
   return FERMI_DELLO_SLIDER.indexOf(scelto);
 }
 function minutiDelFermo(posizione) {
-  const indice = Math.trunc(numero47(posizione) ?? -1);
+  const indice = Math.trunc(numero46(posizione) ?? -1);
   if (indice < 0) return 0;
   return FERMI_DELLO_SLIDER[Math.min(indice, FERMI_DELLO_SLIDER.length - 1)];
 }
 var inglese2 = (locale3) => !String(locale3 ?? "it").toLowerCase().startsWith("it");
 function durataScritta(minuti2, locale3 = "it") {
-  const totale = Math.max(0, Math.round(numero47(minuti2) ?? 0));
+  const totale = Math.max(0, Math.round(numero46(minuti2) ?? 0));
   if (!totale) return "";
   const ore3 = Math.floor(totale / 60);
   const resto = totale % 60;
@@ -88727,8 +86598,8 @@ function durataScritta(minuti2, locale3 = "it") {
   return inglese2(locale3) ? `${ore3}h ${resto}m` : `${ore3} h ${resto}`;
 }
 function quantoManca3(scadenzaMs, adessoMs) {
-  const fine = numero47(scadenzaMs);
-  const adesso2 = numero47(adessoMs);
+  const fine = numero46(scadenzaMs);
+  const adesso2 = numero46(adessoMs);
   if (fine === null || adesso2 === null) return { armato: false, scaduto: false, restaMs: 0 };
   const resta = fine - adesso2;
   if (resta <= 0) return { armato: true, scaduto: true, restaMs: 0, minuti: 0 };
@@ -88751,14 +86622,14 @@ function timerVivi(mappa2, adessoMs) {
   const vivi = {};
   for (const [entita4, scadenza] of Object.entries(mappa2 || {})) {
     const quanto = quantoManca3(scadenza, adessoMs);
-    if (quanto.armato && !quanto.scaduto) vivi[entita4] = numero47(scadenza);
+    if (quanto.armato && !quanto.scaduto) vivi[entita4] = numero46(scadenza);
   }
   return vivi;
 }
 
 // src/core/stagione-del-clima.js
 var SEMPRE = Object.freeze([]);
-var NOMI6 = Object.freeze([
+var NOMI5 = Object.freeze([
   ["gennaio", "January"],
   ["febbraio", "February"],
   ["marzo", "March"],
@@ -88789,7 +86660,7 @@ var SIGLE2 = Object.freeze([
 var inglese3 = (locale3) => !String(locale3 ?? "it").toLowerCase().startsWith("it");
 var scegli2 = (it, en, locale3) => inglese3(locale3) ? en : it;
 function nomeDelMese(mese, locale3 = "it") {
-  const voce3 = NOMI6[Number(mese) - 1];
+  const voce3 = NOMI5[Number(mese) - 1];
   return voce3 ? scegli2(voce3[0], voce3[1], locale3) : "";
 }
 function siglaDelMese(mese, locale3 = "it") {
@@ -88797,7 +86668,7 @@ function siglaDelMese(mese, locale3 = "it") {
   return voce3 ? scegli2(voce3[0], voce3[1], locale3) : "";
 }
 function iDodiciMesi(locale3 = "it") {
-  return NOMI6.map((_voce, indice) => ({
+  return NOMI5.map((_voce, indice) => ({
     mese: indice + 1,
     nome: nomeDelMese(indice + 1, locale3),
     sigla: siglaDelMese(indice + 1, locale3)
@@ -88861,8 +86732,8 @@ function chiSiVede(unita3 = [], { adesso: adesso2 = /* @__PURE__ */ new Date(), 
 }
 
 // src/sections/spegnimento-programmato-section.js
-var KEY68 = "__DASHBOARDMODERN_SPEGNIMENTO__";
-var state64 = root[KEY68] ||= {
+var KEY66 = "__DASHBOARDMODERN_SPEGNIMENTO__";
+var state62 = root[KEY66] ||= {
   installed: false,
   scadenze: {},
   chiesto: 0,
@@ -88881,46 +86752,46 @@ function annuncia6() {
   }
 }
 function regolaIlBattito() {
-  const servono = Object.keys(state64.scadenze).length > 0;
-  if (servono && !state64.battito) {
-    state64.battito = root.setInterval?.(() => {
-      const prima = Object.keys(state64.scadenze).length;
-      state64.scadenze = timerVivi(state64.scadenze, Date.now());
-      if (Object.keys(state64.scadenze).length !== prima) regolaIlBattito();
+  const servono = Object.keys(state62.scadenze).length > 0;
+  if (servono && !state62.battito) {
+    state62.battito = root.setInterval?.(() => {
+      const prima = Object.keys(state62.scadenze).length;
+      state62.scadenze = timerVivi(state62.scadenze, Date.now());
+      if (Object.keys(state62.scadenze).length !== prima) regolaIlBattito();
       annuncia6();
     }, 3e4);
     return;
   }
-  if (!servono && state64.battito) {
-    root.clearInterval?.(state64.battito);
-    state64.battito = 0;
+  if (!servono && state62.battito) {
+    root.clearInterval?.(state62.battito);
+    state62.battito = 0;
   }
 }
 function aggiorna(mappa2) {
-  state64.scadenze = timerVivi(mappa2, Date.now());
-  state64.chiesto = Date.now();
+  state62.scadenze = timerVivi(mappa2, Date.now());
+  state62.chiesto = Date.now();
   regolaIlBattito();
   annuncia6();
 }
 function scadenzaDi(entita4) {
   const id = clean(entita4);
-  return id && state64.scadenze[id] != null ? state64.scadenze[id] : null;
+  return id && state62.scadenze[id] != null ? state62.scadenze[id] : null;
 }
 async function leggiGliSpegnimenti({ force = false } = {}) {
-  if (!force && Date.now() - state64.chiesto < FRESCO_MS) return state64.scadenze;
-  if (state64.inVolo) return state64.inVolo;
-  state64.inVolo = (async () => {
+  if (!force && Date.now() - state62.chiesto < FRESCO_MS) return state62.scadenze;
+  if (state62.inVolo) return state62.inVolo;
+  state62.inVolo = (async () => {
     try {
       const risposta = await chiediAHomeAssistant({ type: TIPO_ELENCO }, 8e3);
       aggiorna(risposta?.scadenze || {});
     } catch (_error) {
-      state64.chiesto = Date.now();
+      state62.chiesto = Date.now();
     } finally {
-      state64.inVolo = null;
+      state62.inVolo = null;
     }
-    return state64.scadenze;
+    return state62.scadenze;
   })();
-  return state64.inVolo;
+  return state62.inVolo;
 }
 async function programmaSpegnimento(entita4, minuti2) {
   const id = clean(entita4);
@@ -88929,7 +86800,7 @@ async function programmaSpegnimento(entita4, minuti2) {
   try {
     if (!quanti4) {
       await chiediAHomeAssistant({ type: TIPO_TOGLI, entity_id: id }, 8e3);
-      const resto = { ...state64.scadenze };
+      const resto = { ...state62.scadenze };
       delete resto[id];
       aggiorna(resto);
       return true;
@@ -88940,7 +86811,7 @@ async function programmaSpegnimento(entita4, minuti2) {
     );
     const scadenza = Number(risposta?.scadenza);
     if (!Number.isFinite(scadenza)) return false;
-    aggiorna({ ...state64.scadenze, [id]: scadenza });
+    aggiorna({ ...state62.scadenze, [id]: scadenza });
     return true;
   } catch (_error) {
     return false;
@@ -88958,14 +86829,14 @@ function avvisaCheNonSiPuo() {
   }
 }
 function installSpegnimentoProgrammatoSection() {
-  if (!doc || state64.installed) return;
-  state64.installed = true;
+  if (!doc || state62.installed) return;
+  state62.installed = true;
   leggiGliSpegnimenti({ force: true });
 }
 
 // src/sections/climate-power-section.js
-var KEY69 = "__DASHBOARDMODERN_CLIMATE_POWER__";
-var state65 = root[KEY69] ||= { installed: false, ultime: /* @__PURE__ */ new Map() };
+var KEY67 = "__DASHBOARDMODERN_CLIMATE_POWER__";
+var state63 = root[KEY67] ||= { installed: false, ultime: /* @__PURE__ */ new Map() };
 function statoDi3(entity2) {
   const id = clean(entity2);
   if (!id) return null;
@@ -88976,9 +86847,9 @@ function ricordaModalita(entity2) {
   const id = clean(entity2);
   const corrente2 = clean(statoDi3(id)?.state).toLowerCase();
   if (id && corrente2 && corrente2 !== "off" && corrente2 !== "unavailable") {
-    state65.ultime.set(id, corrente2);
+    state63.ultime.set(id, corrente2);
   }
-  return state65.ultime.get(id) || "";
+  return state63.ultime.get(id) || "";
 }
 function chiama6(entity2, service, data) {
   const payload = { entity_id: entity2, ...data };
@@ -89101,13 +86972,13 @@ function installaComandi() {
 }
 function installClimatePowerSection() {
   installaComandi();
-  if (state65.installed) return;
-  state65.installed = true;
+  if (state63.installed) return;
+  state63.installed = true;
   for (const evento of ["dashboardmodern:legacy-ready", "dashboardmodern:runtime-ready", "pageshow"]) {
     root.addEventListener?.(evento, installaComandi);
   }
   root.addEventListener?.("dashboardmodern:state-changed", () => {
-    for (const id of state65.ultime.keys()) ricordaModalita(id);
+    for (const id of state63.ultime.keys()) ricordaModalita(id);
   });
 }
 senzaCadere(installClimatePowerSection);
@@ -89311,7 +87182,7 @@ var STILE_VMC = `
 `;
 
 // src/core/deumidificatori.js
-var pulito52 = (valore3) => String(valore3 ?? "").trim();
+var pulito50 = (valore3) => String(valore3 ?? "").trim();
 var MUTI14 = /^(unknown|unavailable|none|null|)$/i;
 var CHIAVE_DEUMIDIFICATORI = "cd_deumidificatori";
 var MASSIMO_DEUMIDIFICATORI = 6;
@@ -89324,19 +87195,19 @@ var CAMPI_DEUMIDIFICATORE = Object.freeze([
   "consumo"
 ]);
 var PASSO_DI_SERIE = 5;
-var numero48 = (valore3) => {
+var numero47 = (valore3) => {
   const letto = Number.parseFloat(valore3);
   return Number.isFinite(letto) ? letto : null;
 };
 function normalizzaDeumidificatore(input = {}, indice = 0) {
   const grezzo2 = input && typeof input === "object" ? input : {};
   const unita3 = {
-    id: pulito52(grezzo2.id) || `deum-${indice + 1}`,
-    nome: pulito52(grezzo2.nome ?? grezzo2.name),
-    stanza: pulito52(grezzo2.stanza ?? grezzo2.room ?? grezzo2.room_id)
+    id: pulito50(grezzo2.id) || `deum-${indice + 1}`,
+    nome: pulito50(grezzo2.nome ?? grezzo2.name),
+    stanza: pulito50(grezzo2.stanza ?? grezzo2.room ?? grezzo2.room_id)
   };
-  for (const campo6 of CAMPI_DEUMIDIFICATORE) unita3[campo6] = pulito52(grezzo2[campo6]);
-  if (!unita3.entita) unita3.entita = pulito52(grezzo2.entity ?? grezzo2.entity_id);
+  for (const campo6 of CAMPI_DEUMIDIFICATORE) unita3[campo6] = pulito50(grezzo2[campo6]);
+  if (!unita3.entita) unita3.entita = pulito50(grezzo2.entity ?? grezzo2.entity_id);
   return unita3;
 }
 function normalizzaDeumidificatori(input = []) {
@@ -89354,20 +87225,20 @@ function normalizzaDeumidificatori(input = []) {
   }
   return fuori;
 }
-var eUnUmidificatore = (entita4) => pulito52(entita4).startsWith("humidifier.");
+var eUnUmidificatore = (entita4) => pulito50(entita4).startsWith("humidifier.");
 function deumidificatoriDalClima(unitaDelClima = []) {
   const elenco18 = Array.isArray(unitaDelClima) ? unitaDelClima : [];
   const visti = /* @__PURE__ */ new Set();
   const fuori = [];
   for (const unita3 of elenco18) {
-    const entita4 = pulito52(unita3?.entity ?? unita3?.entity_id);
+    const entita4 = pulito50(unita3?.entity ?? unita3?.entity_id);
     if (!eUnUmidificatore(entita4) || visti.has(entita4)) continue;
     visti.add(entita4);
     fuori.push(
       normalizzaDeumidificatore({
         id: `clima-${entita4}`,
         nome: unita3?.name,
-        stanza: pulito52(unita3?.room) || pulito52(unita3?.room_id),
+        stanza: pulito50(unita3?.room) || pulito50(unita3?.room_id),
         entita: entita4,
         consumo: unita3?.consumo
       })
@@ -89382,16 +87253,16 @@ function deumidificatoriDaMostrare(config = [], unitaDelClima = []) {
   return [...suoi2, ...dalClima].slice(0, MASSIMO_DEUMIDIFICATORI);
 }
 function stato(entita4, states) {
-  const id = pulito52(entita4);
+  const id = pulito50(entita4);
   if (!id) return null;
   const voce3 = states?.[id];
-  const grezzo2 = pulito52(voce3?.state);
+  const grezzo2 = pulito50(voce3?.state);
   return { id, voce: voce3, grezzo: grezzo2, muto: !voce3 || MUTI14.test(grezzo2) };
 }
 function numeroDi(entita4, states) {
   const letto = stato(entita4, states);
   if (!letto || letto.muto) return null;
-  return numero48(letto.grezzo);
+  return numero47(letto.grezzo);
 }
 function letturaVentola(entita4, states) {
   const letto = stato(entita4, states);
@@ -89399,18 +87270,18 @@ function letturaVentola(entita4, states) {
   const dominio7 = letto.id.split(".")[0];
   const attributi2 = letto.voce?.attributes || {};
   if (dominio7 === "fan") {
-    const opzioni2 = Array.isArray(attributi2.preset_modes) ? attributi2.preset_modes.map(pulito52) : [];
+    const opzioni2 = Array.isArray(attributi2.preset_modes) ? attributi2.preset_modes.map(pulito50) : [];
     return {
       entita: letto.id,
       dominio: dominio7,
       muto: letto.muto,
       opzioni: opzioni2.filter(Boolean),
-      scelta: pulito52(attributi2.preset_mode),
-      percentuale: numero48(attributi2.percentage)
+      scelta: pulito50(attributi2.preset_mode),
+      percentuale: numero47(attributi2.percentage)
     };
   }
   if (dominio7 === "select" || dominio7 === "input_select") {
-    const opzioni2 = Array.isArray(attributi2.options) ? attributi2.options.map(pulito52) : [];
+    const opzioni2 = Array.isArray(attributi2.options) ? attributi2.options.map(pulito50) : [];
     return {
       entita: letto.id,
       dominio: dominio7,
@@ -89433,35 +87304,35 @@ function letturaDeumidificatore(unita3 = {}, states = {}) {
   const attributi2 = letto?.voce?.attributes || {};
   const muto2 = !letto || letto.muto;
   const acceso6 = muto2 ? null : letto.grezzo === "on";
-  const minimo = numero48(attributi2.min_humidity) ?? 30;
-  const massimo = numero48(attributi2.max_humidity) ?? 80;
-  const passo = numero48(attributi2.target_humidity_step) ?? PASSO_DI_SERIE;
-  const attuale = numero48(attributi2.current_humidity) ?? numeroDi(sua.umidita, states);
-  const modi = Array.isArray(attributi2.available_modes) ? attributi2.available_modes.map(pulito52).filter(Boolean) : [];
+  const minimo = numero47(attributi2.min_humidity) ?? 30;
+  const massimo = numero47(attributi2.max_humidity) ?? 80;
+  const passo = numero47(attributi2.target_humidity_step) ?? PASSO_DI_SERIE;
+  const attuale = numero47(attributi2.current_humidity) ?? numeroDi(sua.umidita, states);
+  const modi = Array.isArray(attributi2.available_modes) ? attributi2.available_modes.map(pulito50).filter(Boolean) : [];
   const pieno = serbatoioPieno(sua.serbatoio, states);
   const avvisi = [];
   if (pieno === true) avvisi.push({ chiave: "serbatoio_pieno", gravita: "attenzione" });
   return {
     id: sua.id,
-    nome: sua.nome || pulito52(attributi2.friendly_name) || sua.entita,
+    nome: sua.nome || pulito50(attributi2.friendly_name) || sua.entita,
     stanza: sua.stanza,
     entita: sua.entita,
     muto: muto2,
     acceso: acceso6,
     /* Umidificatore o deumidificatore: la stessa entita' in Home Assistant, ma
      * uno toglie acqua dall'aria e l'altro ce la mette, e la card lo dice. */
-    tipo: pulito52(attributi2.device_class) === "humidifier" ? "umidificatore" : "deumidificatore",
+    tipo: pulito50(attributi2.device_class) === "humidifier" ? "umidificatore" : "deumidificatore",
     /* Cosa sta facendo: `drying`, `humidifying`, `idle`, `off`. Un acceso che
      * sta fermo perche' l'aria e' gia' secca e' una notizia diversa da uno che
      * lavora. */
-    azione: pulito52(attributi2.action),
+    azione: pulito50(attributi2.action),
     attuale,
-    obiettivo: numero48(attributi2.humidity),
+    obiettivo: numero47(attributi2.humidity),
     minimo,
     massimo,
     passo,
     modi,
-    modo: pulito52(attributi2.mode),
+    modo: pulito50(attributi2.mode),
     serbatoioPieno: pieno,
     temperatura: numeroDi(sua.temperatura, states),
     consumo: numeroDi(sua.consumo, states),
@@ -89481,7 +87352,7 @@ function obiettivoVicino(lettura4, verso3) {
   return Math.max(minimo, Math.min(massimo, prossimo));
 }
 function comandoDeumidificatore(lettura4, azione, valore3) {
-  const entita4 = pulito52(lettura4?.entita);
+  const entita4 = pulito50(lettura4?.entita);
   if (!entita4) return null;
   switch (azione) {
     case "accendi":
@@ -89491,7 +87362,7 @@ function comandoDeumidificatore(lettura4, azione, valore3) {
     case "commuta":
       return comandoDeumidificatore(lettura4, lettura4?.acceso ? "spegni" : "accendi");
     case "umidita": {
-      const voluta = numero48(valore3);
+      const voluta = numero47(valore3);
       if (voluta === null) return null;
       const giusta = Math.max(
         lettura4.minimo ?? 0,
@@ -89504,13 +87375,13 @@ function comandoDeumidificatore(lettura4, azione, valore3) {
       };
     }
     case "modo": {
-      const modo = pulito52(valore3);
+      const modo = pulito50(valore3);
       if (!modo || !(lettura4.modi || []).includes(modo)) return null;
       return { domain: "humidifier", service: "set_mode", data: { entity_id: entita4, mode: modo } };
     }
     case "ventola": {
       const ventola2 = lettura4?.ventola;
-      const scelta4 = pulito52(valore3);
+      const scelta4 = pulito50(valore3);
       if (!ventola2 || !scelta4 || !ventola2.opzioni.includes(scelta4)) return null;
       if (ventola2.dominio === "fan")
         return {
@@ -89535,7 +87406,7 @@ var PAROLE5 = Object.freeze({
   consumo: /(power|potenza|watt)/i
 });
 function oggetto3(entita4) {
-  return pulito52(entita4).split(".").slice(1).join(".");
+  return pulito50(entita4).split(".").slice(1).join(".");
 }
 function caselleProposte(entita4, states = {}) {
   const radice3 = oggetto3(entita4);
@@ -89551,20 +87422,20 @@ function caselleProposte(entita4, states = {}) {
   );
   const prima = (filtro) => vicine.find(filtro) || "";
   const dominio7 = (id) => id.split(".")[0];
-  const unita3 = (id) => pulito52(states[id]?.attributes?.unit_of_measurement);
+  const unita3 = (id) => pulito50(states[id]?.attributes?.unit_of_measurement);
   const proposte = {
     serbatoio: prima(
       (id) => ["binary_sensor", "sensor"].includes(dominio7(id)) && PAROLE5.serbatoio.test(oggetto3(id))
     ),
     umidita: prima(
-      (id) => dominio7(id) === "sensor" && (pulito52(states[id]?.attributes?.device_class) === "humidity" || PAROLE5.umidita.test(oggetto3(id)) && unita3(id) === "%")
+      (id) => dominio7(id) === "sensor" && (pulito50(states[id]?.attributes?.device_class) === "humidity" || PAROLE5.umidita.test(oggetto3(id)) && unita3(id) === "%")
     ),
     temperatura: prima(
-      (id) => dominio7(id) === "sensor" && (pulito52(states[id]?.attributes?.device_class) === "temperature" || PAROLE5.temperatura.test(oggetto3(id)))
+      (id) => dominio7(id) === "sensor" && (pulito50(states[id]?.attributes?.device_class) === "temperature" || PAROLE5.temperatura.test(oggetto3(id)))
     ),
     ventola: prima((id) => dominio7(id) === "fan") || prima((id) => dominio7(id) === "select" && /fan|ventola|speed|velocita/i.test(oggetto3(id))),
     consumo: prima(
-      (id) => dominio7(id) === "sensor" && (pulito52(states[id]?.attributes?.device_class) === "power" || PAROLE5.consumo.test(oggetto3(id)) && /^k?W$/.test(unita3(id)))
+      (id) => dominio7(id) === "sensor" && (pulito50(states[id]?.attributes?.device_class) === "power" || PAROLE5.consumo.test(oggetto3(id)) && /^k?W$/.test(unita3(id)))
     )
   };
   return Object.fromEntries(Object.entries(proposte).filter(([, valore3]) => valore3));
@@ -89577,14 +87448,14 @@ function completaDeumidificatore(unita3, states = {}) {
 }
 
 // src/sections/deumidificatori-section.js
-var KEY70 = "__DASHBOARDMODERN_DEUMIDIFICATORI__";
-var state66 = root[KEY70] ||= { attese: /* @__PURE__ */ new Map() };
+var KEY68 = "__DASHBOARDMODERN_DEUMIDIFICATORI__";
+var state64 = root[KEY68] ||= { attese: /* @__PURE__ */ new Map() };
 var ATTESA_MS4 = 6e3;
 function obiettivoInAttesa(lettura4) {
-  const attesa = state66.attese.get(lettura4.entita);
+  const attesa = state64.attese.get(lettura4.entita);
   if (!attesa) return null;
   if (Date.now() - attesa.quando > ATTESA_MS4 || attesa.valore === lettura4.obiettivo) {
-    state66.attese.delete(lettura4.entita);
+    state64.attese.delete(lettura4.entita);
     return null;
   }
   return attesa.valore;
@@ -89813,7 +87684,7 @@ function toccaUnDeumidificatore(event, unitaDelClima = [], states = allStates())
     const voluto = obiettivoVicino(lettura4, azione === "piu" ? 1 : -1);
     comando2 = comandoDeumidificatore(lettura4, "umidita", voluto);
     if (comando2) {
-      state66.attese.set(lettura4.entita, { valore: comando2.data.humidity, quando: Date.now() });
+      state64.attese.set(lettura4.entita, { valore: comando2.data.humidity, quando: Date.now() });
       scrivi2(card2.querySelector("[data-dm-deum-obiettivo]"), percento5(comando2.data.humidity));
     }
   } else {
@@ -89862,9 +87733,9 @@ var STILE_DEUMIDIFICATORI = `
 `;
 
 // src/sections/termico-del-caldo-section.js
-var KEY71 = "__DASHBOARDMODERN_TERMICO_CALDO__";
+var KEY69 = "__DASHBOARDMODERN_TERMICO_CALDO__";
 var STYLE_ID12 = "dm-termico-caldo-style";
-var state67 = root[KEY71] ||= { installed: false };
+var state65 = root[KEY69] ||= { installed: false };
 var CHIAVE2 = "cd_termico_caldo";
 var CHIAVE_IN_HOME = "cd_caldaia_in_home";
 function caldaiaInHome() {
@@ -90184,7 +88055,7 @@ var STILE13 = `
 .dm-termico-riga .dm-termico-via{grid-column:3}}
 `;
 function installTermicoDelCaldo() {
-  if (state67.installed) return false;
+  if (state65.installed) return false;
   if (!doc?.getElementById) return false;
   installStyle(STYLE_ID12, STILE13);
   wrapFunction("renderThermalPanel", "__dmTermicoCaldo", () => disegnaPannello());
@@ -90212,7 +88083,7 @@ function installTermicoDelCaldo() {
   );
   for (const nome of ["apriQuickClima", "setQuickClimaMode"])
     wrapFunction(nome, "__dmTermicoCaldoApertura", disegnaPannello);
-  state67.installed = true;
+  state65.installed = true;
   return true;
 }
 if (doc?.readyState === "loading") {
@@ -90222,9 +88093,9 @@ if (doc?.readyState === "loading") {
 }
 
 // src/sections/climate-thermal-section.js
-var KEY72 = "__DASHBOARDMODERN_CLIMATE_THERMAL__";
+var KEY70 = "__DASHBOARDMODERN_CLIMATE_THERMAL__";
 var STYLE_ID13 = "dm-climate-thermal-style";
-var state68 = root[KEY72] ||= {
+var state66 = root[KEY70] ||= {
   installed: false,
   listeners: false,
   history: /* @__PURE__ */ new Map(),
@@ -90481,12 +88352,12 @@ function ratio(value, scala2) {
 }
 function pushSample(entity2, ambient) {
   if (ambient === null) return false;
-  const series = state68.history.get(entity2) || [];
+  const series = state66.history.get(entity2) || [];
   const last = series[series.length - 1];
   if (last !== void 0 && Math.abs(last - ambient) < 0.05) return false;
   series.push(ambient);
   while (series.length > SPARK.samples) series.shift();
-  state68.history.set(entity2, series);
+  state66.history.set(entity2, series);
   return true;
 }
 function filoFraMinimoEMassimo(series, { width, height, pad } = SPARK) {
@@ -90921,7 +88792,7 @@ function paintCard(card2, unit, reading, labels) {
   paintSpark(card2, unit, reading);
 }
 var ATTESA_DELLA_COPPIA = 4e3;
-var coppieInAttesa = state68.coppieInAttesa ||= /* @__PURE__ */ new Map();
+var coppieInAttesa = state66.coppieInAttesa ||= /* @__PURE__ */ new Map();
 function coppiaDellaCard(entity2, attributi2, adesso2 = Date.now()) {
   const vera2 = coppiaDelTermostato(attributi2);
   const chiave2 = clean(entity2);
@@ -91112,7 +88983,7 @@ function paintSpark(card2, unit, reading) {
   const svg3 = card2.querySelector("[data-dm-cl-spark]");
   if (!svg3) return;
   const changed = pushSample(unit.entity, reading.ambient);
-  const series = state68.history.get(unit.entity) || [];
+  const series = state66.history.get(unit.entity) || [];
   const path = filoFraMinimoEMassimo(series);
   if (!path) {
     svg3.hidden = true;
@@ -91145,7 +89016,7 @@ function paintSummary(shell, units, states, labels) {
   if (runningEl) runningEl.innerHTML = `${running}<small> / ${inZone.length}</small>`;
   const fuoriEl = shell.querySelector("[data-dm-cl-fuori]");
   if (fuoriEl) {
-    const quante3 = state68.fuoriStagione;
+    const quante3 = state66.fuoriStagione;
     fuoriEl.hidden = !quante3;
     if (quante3) scriviSeCambia(fuoriEl, `🗓️ ${labels.fuoriStagione(quante3)}`);
   }
@@ -91229,12 +89100,12 @@ function renderClimate({ rebuild = false, force = false } = {}) {
   const host3 = doc?.getElementById?.("page-clima");
   if (!host3) return false;
   if (!force && !climaInVista()) {
-    if (rebuild) state68.ridisegnoRimandato = true;
+    if (rebuild) state66.ridisegnoRimandato = true;
     return false;
   }
-  if (state68.ridisegnoRimandato) {
+  if (state66.ridisegnoRimandato) {
     rebuild = true;
-    state68.ridisegnoRimandato = false;
+    state66.ridisegnoRimandato = false;
   }
   const labels = copy3();
   ensureSkeleton3(host3, labels);
@@ -91246,9 +89117,9 @@ function renderClimate({ rebuild = false, force = false } = {}) {
     adesso: /* @__PURE__ */ new Date(),
     accesa: (unita3) => climateReading(unita3.entity, statiOra).on
   });
-  const units = state68.mostraFuoriStagione ? tutte : stagione.dentro;
-  const fuori = state68.mostraFuoriStagione ? [] : stagione.fuori;
-  state68.fuoriStagione = fuori.length;
+  const units = state66.mostraFuoriStagione ? tutte : stagione.dentro;
+  const fuori = state66.mostraFuoriStagione ? [] : stagione.fuori;
+  state66.fuoriStagione = fuori.length;
   paintZoneTabs(shell, units);
   for (const zone of ZONE_DEL_CLIMA) {
     const grid = doc.getElementById(`clima-grid-${zone}`);
@@ -91313,7 +89184,7 @@ function onClick14(event) {
   if (toccaUnDeumidificatore(event, unitaDelClimaScritte())) return;
   if (event.target?.closest?.("[data-dm-cl-mostra-fuori]")) {
     event.preventDefault();
-    state68.mostraFuoriStagione = true;
+    state66.mostraFuoriStagione = true;
     renderClimate({ rebuild: true, force: true });
     return;
   }
@@ -91482,8 +89353,8 @@ function clickDopoLaPresa(presa, card2, adesso2 = Date.now()) {
   return presa.card === card2;
 }
 function installRailDrag() {
-  if (state68.railDrag || !doc) return;
-  state68.railDrag = true;
+  if (state66.railDrag || !doc) return;
+  state66.railDrag = true;
   let presa = null;
   let lasciata = null;
   doc.addEventListener(
@@ -91543,7 +89414,7 @@ function installTemperatureStep() {
   const current = root.cpSetTemp;
   if (typeof current !== "function" || current.__dmClimateThermal) return;
   function cpSetTempThermal(delta) {
-    const aperta2 = clean(state68.climaAperta || lexicalGlobal("cpCurrentEntity"));
+    const aperta2 = clean(state66.climaAperta || lexicalGlobal("cpCurrentEntity"));
     const verso3 = Number(delta) < 0 ? -1 : 1;
     if (muoviIlClimaDoppio(aperta2, verso3)) return void 0;
     const casella7 = doc?.getElementById("cp-temp-val");
@@ -91869,20 +89740,20 @@ function installPannelloDellaFinestra() {
   if (typeof originale !== "function" || originale.__dmClimaPopupPanel) return false;
   function avvolto(entity2, ...resto) {
     const esito2 = originale.call(this, entity2, ...resto);
-    state68.climaAperta = clean(entity2);
-    root.queueMicrotask?.(() => pannelloNellaFinestra(state68.climaAperta));
+    state66.climaAperta = clean(entity2);
+    root.queueMicrotask?.(() => pannelloNellaFinestra(state66.climaAperta));
     return esito2;
   }
   Object.assign(avvolto, originale);
   avvolto.__dmClimaPopupPanel = true;
   avvolto.__dmPrevious = originale;
   root.apriClimaPopup = avvolto;
-  if (!state68.climaAscolto) {
-    state68.climaAscolto = true;
+  if (!state66.climaAscolto) {
+    state66.climaAscolto = true;
     root.addEventListener?.("dashboardmodern:state-changed", () => {
       const velo5 = doc?.getElementById?.("clima-popup-overlay");
-      if (velo5?.classList?.contains("show") && state68.climaAperta)
-        pannelloNellaFinestra(state68.climaAperta);
+      if (velo5?.classList?.contains("show") && state66.climaAperta)
+        pannelloNellaFinestra(state66.climaAperta);
     });
   }
   return true;
@@ -91921,16 +89792,16 @@ function montaFlagCarta() {
   return true;
 }
 function osservaLaPagina() {
-  if (state68.osservatore || typeof root.MutationObserver !== "function") return false;
+  if (state66.osservatore || typeof root.MutationObserver !== "function") return false;
   const pagina3 = doc?.getElementById?.("page-clima");
   if (!pagina3) return false;
   let eraInVista = climaInVista();
-  state68.osservatore = new root.MutationObserver(() => {
+  state66.osservatore = new root.MutationObserver(() => {
     const inVista3 = climaInVista();
     if (inVista3 && !eraInVista) renderClimate();
     eraInVista = inVista3;
   });
-  state68.osservatore.observe(pagina3, { attributes: true, attributeFilter: ["class"] });
+  state66.osservatore.observe(pagina3, { attributes: true, attributeFilter: ["class"] });
   return true;
 }
 function installClimateThermalSection() {
@@ -91938,8 +89809,8 @@ function installClimateThermalSection() {
   installStyle(STYLE_ID13, climateCss());
   installStyle("dm-clima-rapido-taglia-style", climaRapidoCss());
   installOverrides3();
-  if (!state68.listeners) {
-    state68.listeners = true;
+  if (!state66.listeners) {
+    state66.listeners = true;
     doc.addEventListener("click", onClick14);
     doc.addEventListener("click", suiPastiglie, true);
     installRailDrag();
@@ -91977,7 +89848,7 @@ function installClimateThermalSection() {
       true
     );
   }
-  state68.installed = true;
+  state66.installed = true;
   renderClimate({ rebuild: true });
 }
 function climaRapidoCss() {
@@ -92555,8 +90426,8 @@ ${STILE_DEUMIDIFICATORI}
 }
 
 // src/sections/rooms-page-section.js
-var KEY73 = "__DASHBOARDMODERN_ROOMS_PAGE__";
-var state69 = root[KEY73] ||= {
+var KEY71 = "__DASHBOARDMODERN_ROOMS_PAGE__";
+var state67 = root[KEY71] ||= {
   installed: false,
   frame: 0,
   signature: "",
@@ -92832,7 +90703,7 @@ function ensureRoomsTab() {
     tab.classList.add("active");
     ensureRoomsPage()?.classList.add("active");
     root.navigator?.vibrate?.(5);
-    schedule25();
+    schedule24();
   });
   if (before) before.before(tab);
   else nav.append(tab);
@@ -92845,8 +90716,8 @@ function apriLaStanza(id) {
   if (!voce3 || !pagina3) return false;
   const scelta4 = clean(id);
   if (scelta4) {
-    state69.room = scelta4;
-    state69.signature = "";
+    state67.room = scelta4;
+    state67.signature = "";
   }
   for (const nodo4 of doc.querySelectorAll(".tab")) nodo4.classList.remove("active");
   for (const nodo4 of doc.querySelectorAll(".page")) nodo4.classList.remove("active");
@@ -92854,7 +90725,7 @@ function apriLaStanza(id) {
   pagina3.classList.add("active");
   root.navigator?.vibrate?.(8);
   root.scrollTo?.({ top: 0, behavior: "instant" });
-  schedule25();
+  schedule24();
   return true;
 }
 function teachNavVisibility() {
@@ -93260,8 +91131,8 @@ function alToccoDellaVista(evento) {
   );
   root.navigator?.vibrate?.(8);
   disegnaLaSceltaDellaVista();
-  state69.signature = "";
-  schedule25();
+  state67.signature = "";
+  schedule24();
 }
 function iPiani() {
   const salvati = readJson(CHIAVE_PIANI, []);
@@ -93411,7 +91282,7 @@ function vivo(momento) {
   return Boolean(momento) && Number(momento.fino) > Date.now();
 }
 function veloDellaTessera(pagina3, conti2) {
-  const chiesta = state69.chiesta;
+  const chiesta = state67.chiesta;
   if (vivo(chiesta) && chiesta.stanza === pagina3.id) {
     const quante3 = Math.max(1, Number(conti2?.[chiesta.chiave]) || 0);
     const frase4 = `${t("Spengo", "Turn off")} ${cosaSiSpegneAParole(chiesta.chiave, quante3)}?`;
@@ -93422,7 +91293,7 @@ function veloDellaTessera(pagina3, conti2) {
     )}</button>
       </div>`;
   }
-  const annulla3 = state69.annulla;
+  const annulla3 = state67.annulla;
   if (vivo(annulla3) && annulla3.stanza === pagina3.id)
     return `<div class="dm-stanze-velo" data-dm-stanza-velo="annulla">
         <span>${esc(parolaDelFatto(annulla3.chiave, annulla3.entita?.length || 0))}</span>
@@ -93515,7 +91386,7 @@ function signature2(pagine, scelta4, states) {
     clean(scelta4) ? "" : JSON.stringify(tuttiIConti(pagine, states)),
     /* E il velo aperto su una tessera: la domanda e l'annulla nascono e
      * muoiono senza che cambi nessuno stato della casa. */
-    [state69.chiesta?.stanza, state69.chiesta?.chiave, state69.annulla?.stanza, state69.annulla?.chiave].map((voce3) => voce3 || "").join("~")
+    [state67.chiesta?.stanza, state67.chiesta?.chiave, state67.annulla?.stanza, state67.annulla?.chiave].map((voce3) => voce3 || "").join("~")
   ].join("§");
 }
 function renderRoomsPage() {
@@ -93527,11 +91398,11 @@ function paint4() {
   if (!paginaVisibile(ROOMS_PAGE_ID)) return;
   const pagine = roomPages();
   const states = allStates();
-  if (state69.room && !pagine.some((pagina3) => pagina3.id === state69.room)) state69.room = "";
-  const firma2 = signature2(pagine, state69.room, states);
-  if (firma2 !== state69.signature) {
-    state69.signature = firma2;
-    wrap.innerHTML = roomPageMarkup(pagine, state69.room, states);
+  if (state67.room && !pagine.some((pagina3) => pagina3.id === state67.room)) state67.room = "";
+  const firma2 = signature2(pagine, state67.room, states);
+  if (firma2 !== state67.signature) {
+    state67.signature = firma2;
+    wrap.innerHTML = roomPageMarkup(pagine, state67.room, states);
     dipingiLeCardDelClima(wrap);
     return;
   }
@@ -93554,15 +91425,15 @@ function paint4() {
   aggiornaLaTavola(wrap, states);
 }
 function repaint() {
-  state69.frame = 0;
+  state67.frame = 0;
   ensureRoomsPage();
   teachNavVisibility();
   ensureRoomsTab();
   paint4();
 }
-function schedule25() {
-  if (state69.frame) return;
-  state69.frame = root.requestAnimationFrame?.(repaint) || root.setTimeout?.(repaint, 0) || 0;
+function schedule24() {
+  if (state67.frame) return;
+  state67.frame = root.requestAnimationFrame?.(repaint) || root.setTimeout?.(repaint, 0) || 0;
 }
 function cosaSiSpegne(pagina3, chiave2, states) {
   if (chiave2 === "luci")
@@ -93650,21 +91521,21 @@ function spegnereDaFuori(stato3, ridisegna42) {
     }
   };
 }
-var velo = spegnereDaFuori(state69, () => {
-  state69.signature = "";
-  schedule25();
+var velo = spegnereDaFuori(state67, () => {
+  state67.signature = "";
+  schedule24();
 });
 function runScene(on) {
   const states = allStates();
-  const pagina3 = pickRoomPage(roomPages(), state69.room);
+  const pagina3 = pickRoomPage(roomPages(), state67.room);
   root.navigator?.vibrate?.(15);
   for (const entity2 of roomSceneEntities(pagina3)) {
     const view = lightView(entity2, { state: states[entity2], comandabile: siComanda(entity2) });
     if (view.on === on || !view.available) continue;
     chiamaServizio(lightCommand(view, { power: on }));
   }
-  state69.signature = "";
-  schedule25();
+  state67.signature = "";
+  schedule24();
 }
 function apriLaVoce(entity2) {
   if (!entity2 || !doc) return false;
@@ -93719,11 +91590,11 @@ function apriLaTelecamera2(entity2) {
 function handleClick(event) {
   if (event.target?.closest?.("[data-dm-door]")) return;
   if (event.target?.closest?.("[data-dm-stanze-indice]")) {
-    state69.room = "";
-    state69.signature = "";
+    state67.room = "";
+    state67.signature = "";
     root.navigator?.vibrate?.(8);
     root.scrollTo?.({ top: 0, behavior: "instant" });
-    schedule25();
+    schedule24();
     return;
   }
   const spegni3 = event.target?.closest?.("[data-dm-stanza-spegni]");
@@ -93754,10 +91625,10 @@ function handleClick(event) {
   }
   const pillola2 = event.target?.closest?.("[data-dm-stanza]");
   if (pillola2) {
-    state69.room = pillola2.getAttribute("data-dm-stanza") || "";
-    state69.signature = "";
+    state67.room = pillola2.getAttribute("data-dm-stanza") || "";
+    state67.signature = "";
     root.navigator?.vibrate?.(8);
-    schedule25();
+    schedule24();
     return;
   }
   const scena2 = event.target?.closest?.("[data-dm-stanza-scena]");
@@ -93817,9 +91688,9 @@ function handleClick(event) {
   }
 }
 function installRoomsPageSection() {
-  if (!doc || state69.installed) return;
-  state69.installed = true;
-  installStyles29();
+  if (!doc || state67.installed) return;
+  state67.installed = true;
+  installStyles28();
   ensureRoomsPage();
   teachNavVisibility();
   ensureRoomsTab();
@@ -93829,8 +91700,8 @@ function installRoomsPageSection() {
     if (event.target?.closest?.("[data-dm-stanza-vai],.dm-stanze-tessera")) handleClick(event);
   });
   for (const name of ["render", "cdApplyNavVis"])
-    wrapFunction(name, "__dmRoomsPageSection", schedule25);
-  quandoSiCambiaPagina(schedule25);
+    wrapFunction(name, "__dmRoomsPageSection", schedule24);
+  quandoSiCambiaPagina(schedule24);
   for (const event of [
     "dashboardmodern:legacy-ready",
     "dashboardmodern:runtime-ready",
@@ -93839,12 +91710,12 @@ function installRoomsPageSection() {
     "dashboardmodern:persistence-restored",
     "dashboardmodern:config-reset"
   ])
-    root.addEventListener?.(event, schedule25);
+    root.addEventListener?.(event, schedule24);
   doc.addEventListener("click", alToccoDellaVista, true);
   tieniIlBloccoNellaScheda("__dmStanzeVista", disegnaLaSceltaDellaVista);
-  schedule25();
+  schedule24();
 }
-function installStyles29() {
+function installStyles28() {
   installStyle(
     "dm-stanze-style",
     `
@@ -94151,10 +92022,10 @@ function installStyles29() {
 }
 
 // src/sections/stanze-in-plancia-section.js
-var KEY74 = "__DASHBOARDMODERN_STANZE_IN_PLANCIA__";
+var KEY72 = "__DASHBOARDMODERN_STANZE_IN_PLANCIA__";
 var STYLE_ID14 = "dm-stanze-plancia-style";
 var BLOCCO_ID2 = "dm-stanze-home";
-var state70 = root[KEY74] ||= {
+var state68 = root[KEY72] ||= {
   installed: false,
   frame: 0,
   firma: "",
@@ -94166,7 +92037,7 @@ var state70 = root[KEY74] ||= {
   annulla: null,
   sveglia: 0
 };
-var velo2 = spegnereDaFuori(state70, () => ridisegnaStanzeInPlancia());
+var velo2 = spegnereDaFuori(state68, () => ridisegnaStanzeInPlancia());
 function stanzeScelte() {
   const scritto3 = readJson(CHIAVE_STANZE_IN_PLANCIA, []);
   return Array.isArray(scritto3) ? scritto3 : [];
@@ -94174,7 +92045,7 @@ function stanzeScelte() {
 function disegnoDellaStanza4(icona3) {
   return iconGlyphHtml(icona3, { size: 34, kind: "room", fallback: "🛋️" });
 }
-var numero49 = (entity2, states) => {
+var numero48 = (entity2, states) => {
   const grezzo2 = clean(states?.[clean(entity2)]?.state).replace(",", ".");
   const valore3 = Number.parseFloat(grezzo2);
   return Number.isFinite(valore3) ? valore3 : null;
@@ -94193,8 +92064,8 @@ var OGGETTO_DEL_BLOCCO = Object.freeze({
   altro: "evidenza"
 });
 function riassuntoDellaStanza(pagina3, states = allStates()) {
-  const gradi13 = numero49(pagina3?.temp, states);
-  const umidita = numero49(pagina3?.hum, states);
+  const gradi13 = numero48(pagina3?.temp, states);
+  const umidita = numero48(pagina3?.hum, states);
   let accese = 0;
   const perTipo = [];
   for (const blocco3 of pagina3?.blocchi || []) {
@@ -94252,7 +92123,7 @@ function tastoMarkup4(pagina3, tasto5) {
   )}</span><b>${esc(String(tasto5.quante))}</b></button>`;
 }
 function zonaDeiComandi(pagina3, tasti2) {
-  const chiesta = state70.chiesta;
+  const chiesta = state68.chiesta;
   if (vivo(chiesta) && chiesta.stanza === pagina3.id) {
     const quante3 = tasti2.find((tasto5) => tasto5.chiave === chiesta.chiave)?.quante || 1;
     const domanda2 = `${t("Spegni", "Turn off")} ${cosaSiSpegneAParole(chiesta.chiave, quante3)}?`;
@@ -94260,7 +92131,7 @@ function zonaDeiComandi(pagina3, tasti2) {
       <button type="button" class="dm-stanza-plancia-si" data-dm-stanza-plancia-si="${esc(chiesta.chiave)}">${esc(domanda2)}</button>
     </span>`;
   }
-  const annulla3 = state70.annulla;
+  const annulla3 = state68.annulla;
   if (vivo(annulla3) && annulla3.stanza === pagina3.id)
     return `<span class="dm-stanza-plancia-comandi" data-dm-momento="fatto" style="${tempoCheResta(annulla3, QUANTO_DURA_L_ANNULLA)}">
       <span class="dm-stanza-plancia-fatto">✓ ${esc(parolaDelFatto(annulla3.chiave, annulla3.entita?.length || 0))}</span>
@@ -94347,12 +92218,12 @@ function renderStanzeInPlancia() {
     }),
     /* La domanda e l'annulla nascono e muoiono senza che cambi nessuno stato
      * della casa: senza di loro nella firma, il tocco non si vedrebbe. */
-    [state70.chiesta?.stanza, state70.chiesta?.chiave, state70.annulla?.stanza, state70.annulla?.chiave].map((voce3) => voce3 || "").join("~")
+    [state68.chiesta?.stanza, state68.chiesta?.chiave, state68.annulla?.stanza, state68.annulla?.chiave].map((voce3) => voce3 || "").join("~")
   ].join("§");
   const casa3 = host2(pagina3);
   if (!casa3) return false;
-  if (state70.firma === firma2 && casa3.querySelector("[data-dm-stanza-plancia]")) return true;
-  state70.firma = firma2;
+  if (state68.firma === firma2 && casa3.querySelector("[data-dm-stanza-plancia]")) return true;
+  state68.firma = firma2;
   casa3.innerHTML = `<div class="section-title"><span class="dm-stanze-plancia-titolo-ic" aria-hidden="true">${oggettoWidget("stanze", "", "stanze-titolo")}</span>${esc(t("Stanze", "Rooms"))}</div>
     <div class="dm-stanze-plancia-griglia">${pagine.map((voce3) => cardMarkup5(voce3, states)).join("")}</div>`;
   return true;
@@ -94373,7 +92244,7 @@ function onClick15(evento) {
     return;
   }
   evento.preventDefault();
-  if (vivo(state70.chiesta) && state70.chiesta.stanza === stanza2) {
+  if (vivo(state68.chiesta) && state68.chiesta.stanza === stanza2) {
     velo2.lascia();
     return;
   }
@@ -94386,10 +92257,10 @@ function onKey2(evento) {
   evento.preventDefault();
   apriLaStanza(card2.getAttribute("data-dm-stanza-plancia") || "");
 }
-function schedule26() {
-  if (state70.frame) return;
-  state70.frame = root.requestAnimationFrame?.(() => {
-    state70.frame = 0;
+function schedule25() {
+  if (state68.frame) return;
+  state68.frame = root.requestAnimationFrame?.(() => {
+    state68.frame = 0;
     try {
       renderStanzeInPlancia();
     } catch (errore) {
@@ -94398,11 +92269,11 @@ function schedule26() {
   }) || 0;
 }
 function ridisegnaStanzeInPlancia() {
-  state70.firma = "";
-  schedule26();
+  state68.firma = "";
+  schedule25();
 }
 var AMBRA2 = "#f59e0b";
-function stile5() {
+function stile4() {
   installStyle(
     STYLE_ID14,
     `
@@ -94580,9 +92451,9 @@ function stile5() {
   );
 }
 function installStanzeInPlancia() {
-  if (!doc || state70.installed) return false;
-  state70.installed = true;
-  stile5();
+  if (!doc || state68.installed) return false;
+  state68.installed = true;
+  stile4();
   doc.addEventListener("click", onClick15);
   doc.addEventListener("keydown", onKey2);
   for (const evento of [
@@ -94592,14 +92463,14 @@ function installStanzeInPlancia() {
     "dashboardmodern:state-changed",
     "dashboardmodern:persistence-restored"
   ])
-    root.addEventListener?.(evento, schedule26);
-  schedule26();
+    root.addEventListener?.(evento, schedule25);
+  schedule25();
   return true;
 }
 
 // src/sections/home-blocchi-section.js
-var KEY75 = "__DASHBOARDMODERN_HOME_BLOCCHI__";
-var state71 = root[KEY75] ||= { installed: false, inCoda: false };
+var KEY73 = "__DASHBOARDMODERN_HOME_BLOCCHI__";
+var state69 = root[KEY73] ||= { installed: false, inCoda: false };
 function ordineSalvato() {
   return ordineDeiBlocchi(readJson(CHIAVE_ORDINE_BLOCCHI, null));
 }
@@ -94698,10 +92569,10 @@ function applicaLOrdineDeiBlocchi(pagina3 = laHomeSiGuarda()) {
   return true;
 }
 function inCoda2() {
-  if (state71.inCoda) return;
-  state71.inCoda = true;
+  if (state69.inCoda) return;
+  state69.inCoda = true;
   root.queueMicrotask?.(() => {
-    state71.inCoda = false;
+    state69.inCoda = false;
     try {
       vestiLePastiglie();
       rigaDellaTestata();
@@ -94844,7 +92715,7 @@ function pastiglieMarkup4() {
     <label class="dm-blocco-switch"><input type="checkbox" data-dm-pastiglie${accese ? " checked" : ""}><span></span></label>
   </div>`;
 }
-function stanzeDiCasa3() {
+function stanzeDiCasa2() {
   try {
     const lette = root.getStanze?.();
     if (Array.isArray(lette)) return lette;
@@ -94854,7 +92725,7 @@ function stanzeDiCasa3() {
   return Array.isArray(salvate4) ? salvate4 : [];
 }
 function stanzeMarkup() {
-  const stanze4 = stanzeDiCasa3();
+  const stanze4 = stanzeDiCasa2();
   if (!stanze4.length) return "";
   const scelte5 = stanzeScelte();
   const righe4 = stanze4.map((stanza2) => {
@@ -94933,7 +92804,7 @@ function onClickFreccia(event) {
   const stanza2 = event.target?.closest?.("[data-dm-home-blocchi] [data-dm-stanza-plancia-scelta]");
   if (stanza2) {
     const id = clean(stanza2.getAttribute("data-dm-stanza-plancia-scelta"));
-    const prossime = conLaStanza(stanzeScelte(), { id }, stanza2.checked, stanzeDiCasa3());
+    const prossime = conLaStanza(stanzeScelte(), { id }, stanza2.checked, stanzeDiCasa2());
     writeJsonIfChanged(CHIAVE_STANZE_IN_PLANCIA, prossime);
     if (stanza2.checked && !prossime.includes(id)) stanza2.checked = false;
     ridisegnaStanzeInPlancia();
@@ -94965,7 +92836,7 @@ function onClickFreccia(event) {
   }
   ensurePannelloDeiBlocchi();
 }
-function stile6() {
+function stile5() {
   return `
     #ed-body .dm-home-blocchi{display:block;margin-bottom:14px}
     #ed-body .dm-blocco-list{display:grid;gap:6px;margin-bottom:14px}
@@ -95012,9 +92883,9 @@ function stile6() {
   `;
 }
 function installHomeBlocchiSection() {
-  if (!doc || state71.installed) return;
-  state71.installed = true;
-  installStyle("dm-home-blocchi", stile6());
+  if (!doc || state69.installed) return;
+  state69.installed = true;
+  installStyle("dm-home-blocchi", stile5());
   onEditorRedraw("__dmHomeBlocchiEditor", () => ensurePannelloDeiBlocchi());
   doc.addEventListener("click", onClickFreccia);
   doc.addEventListener("change", onClickFreccia);
@@ -95039,8 +92910,8 @@ function installHomeBlocchiSection() {
 
 // src/sections/energy-guidance-section.js
 globalThis.__DM_20260815C__ = true;
-var KEY76 = "__DASHBOARDMODERN_ENERGY_GUIDANCE_SECTION__";
-var state72 = root[KEY76] ||= { installed: false, listeners: false };
+var KEY74 = "__DASHBOARDMODERN_ENERGY_GUIDANCE_SECTION__";
+var state70 = root[KEY74] ||= { installed: false, listeners: false };
 function entity(group, key) {
   return clean(section("energy", {})?.[group]?.[key]);
 }
@@ -95196,7 +93067,7 @@ function normalizeEnergyGuidance() {
   });
   return true;
 }
-function installStyles30() {
+function installStyles29() {
   installStyle(
     "dm-energy-guidance-section-style",
     `
@@ -95223,11 +93094,11 @@ function installStyles30() {
 }
 function installEnergyGuidanceSection() {
   if (!doc) return;
-  installStyles30();
+  installStyles29();
   onEditorRedraw("__dmEnergyGuidanceSection", normalizeEnergyGuidance);
   normalizeEnergyGuidance();
-  if (!state72.listeners) {
-    state72.listeners = true;
+  if (!state70.listeners) {
+    state70.listeners = true;
     doc.addEventListener(
       "click",
       (event) => {
@@ -95243,11 +93114,2106 @@ function installEnergyGuidanceSection() {
     );
     root.addEventListener?.("dashboardmodern:legacy-ready", normalizeEnergyGuidance);
   }
-  state72.installed = true;
+  state70.installed = true;
 }
 if (doc?.readyState === "loading")
   doc.addEventListener("DOMContentLoaded", installEnergyGuidanceSection, { once: true });
 else senzaCadere(installEnergyGuidanceSection);
+
+// src/sections/il-flusso-che-si-sposta-section.js
+var KEY75 = "__DASHBOARDMODERN_FLUSSO_CHE_SI_SPOSTA__";
+var FOGLIO_ID = "dm-flusso-posizioni";
+var STILE_ID2 = "dm-flusso-che-si-sposta";
+var TELEFONO2 = "(max-width: 768px)";
+var state71 = root[KEY75] ||= { serie: {}, misure: null, alle: 0, ridisegna: null };
+var VISTE_DEL_FLUSSO = Object.freeze([
+  { id: "view-ist", suffisso: "", periodo: "instant" },
+  { id: "view-day", suffisso: "-day", periodo: "day" },
+  { id: "view-month", suffisso: "-month", periodo: "month" }
+]);
+var CERCHIO = Object.freeze({
+  solare: "n-solar",
+  rete: "n-grid",
+  batteria: "n-battery",
+  casa: "n-home"
+});
+var DI_SERIE = Object.freeze({
+  computer: {
+    solare: { x: 50, y: 15 },
+    rete: { x: 25, y: 33 },
+    batteria: { x: 75, y: 33 },
+    casa: { x: 50, y: 50 }
+  },
+  telefono: {
+    solare: { x: 50, y: 15 },
+    rete: { x: 20, y: 28 },
+    batteria: { x: 80, y: 28 },
+    casa: { x: 50, y: 46 }
+  }
+});
+var ARCHI = Object.freeze([
+  { linea: "line-solar-home", da: "solare", a: "casa", piega: 0 },
+  { linea: "line-grid-home", da: "rete", a: "casa" },
+  { linea: "line-battery-home", da: "batteria", a: "casa" },
+  { linea: "line-solar-grid", da: "solare", a: "rete" },
+  { linea: "line-solar-battery", da: "solare", a: "batteria" },
+  { linea: "line-grid-battery", da: "rete", a: "batteria", sopra: true },
+  { linea: "line-battery-grid", da: "batteria", a: "rete", sopra: true }
+]);
+var PIEGA = 0.2;
+function varianteDelFlusso() {
+  return root.matchMedia?.(TELEFONO2)?.matches ? "telefono" : "computer";
+}
+function gliImpianti() {
+  let scelto = "";
+  try {
+    scelto = String(root.localStorage?.getItem(IMPIANTO_SCELTO_KEY) ?? "").trim();
+  } catch (_errore) {
+  }
+  const { list, plant, index } = plantAt(section("energy", {}) || {}, scelto);
+  return { list, plant, index, ids: list.map((voce3) => voce3.id) };
+}
+function disegnoDelFlusso() {
+  const { ids, plant } = gliImpianti();
+  return disegnoDellImpianto(ids, plant?.id);
+}
+var VOCE = {
+  id: DISEGNO_DELL_ENERGIA,
+  pagina: "energy",
+  disegno: disegnoDelFlusso,
+  salvate: (tutta, variante2) => {
+    const { ids, plant } = gliImpianti();
+    return posizioniDellImpianto(tutta, ids, plant?.id, variante2);
+  },
+  primaDiSalvare: (tutta) => separaLeZone(tutta, gliImpianti().ids),
+  nomeDi: (disegno8) => {
+    const { list } = gliImpianti();
+    const id = impiantoDelDisegno(disegno8, list);
+    if (!id) return "";
+    const indice = list.findIndex((voce3) => voce3.id === id);
+    return `${t("Flusso energetico", "Energy flow")} · ${plantLabel(list[indice], indice, t("Impianto", "Plant"))}`;
+  }
+};
+function posizioniDelFlusso() {
+  return {
+    computer: posizioniDellaVoce(VOCE, "computer"),
+    telefono: posizioniDellaVoce(VOCE, "telefono")
+  };
+}
+var nessunaScelta = (P12) => !P12 || !Object.keys(P12).length;
+function vistaInScena() {
+  for (const vista2 of VISTE_DEL_FLUSSO) {
+    const palco = doc?.getElementById(vista2.id)?.querySelector?.(".flow-stage");
+    const r = palco?.getBoundingClientRect?.();
+    if (r && r.width > 10 && r.height > 10) return { ...vista2, palco };
+  }
+  return null;
+}
+function visibile3(el) {
+  const r = el?.getBoundingClientRect?.();
+  return Boolean(r && r.width > 1 && r.height > 1);
+}
+function raggioDi(el) {
+  const r = el.getBoundingClientRect();
+  return Math.max(r.width, r.height) / 2;
+}
+function centroMisurato(el, palco) {
+  const stile9 = doc.defaultView?.getComputedStyle?.(el);
+  const x = Number.parseFloat(stile9?.left);
+  const y = Number.parseFloat(stile9?.top);
+  if (!Number.isFinite(x) || !Number.isFinite(y) || !palco.clientWidth || !palco.clientHeight)
+    return null;
+  return {
+    x: Math.round(x / palco.clientWidth * 1e4) / 100,
+    y: Math.round(y / palco.clientHeight * 1e4) / 100
+  };
+}
+function serieDel(id, variante2, vista2 = vistaInScena()) {
+  const P12 = posizioniDellaVoce(VOCE, variante2);
+  if (!P12[id] && vista2 && variante2 === varianteDelFlusso()) {
+    const el = doc.getElementById(`${CERCHIO[id]}${vista2.suffisso}`);
+    const c = el && visibile3(el) ? centroMisurato(el, vista2.palco) : null;
+    if (c) {
+      state71.serie[variante2] = { ...state71.serie[variante2], [id]: c };
+      return c;
+    }
+  }
+  return state71.serie[variante2]?.[id] || DI_SERIE[variante2][id];
+}
+function misureDelFlusso() {
+  const variante2 = varianteDelFlusso();
+  const P12 = posizioniDellaVoce(VOCE, variante2);
+  if (nessunaScelta(P12)) return {};
+  const adesso2 = Date.now();
+  const casella7 = disegnoDelFlusso();
+  if (state71.misure && adesso2 - state71.alle < 80 && state71.misure.variante === variante2 && state71.misure.casella === casella7)
+    return state71.misure.perIlModello;
+  const vista2 = vistaInScena();
+  if (!vista2) return {};
+  const { palco } = vista2;
+  const principali = {};
+  for (const id of CERCHI_PRINCIPALI) {
+    const el = doc.getElementById(`${CERCHIO[id]}${vista2.suffisso}`);
+    if (!el || !visibile3(el)) continue;
+    principali[id] = { ...P12[id] || serieDel(id, variante2, vista2), r: raggioDi(el) };
+  }
+  const raggi = {};
+  for (const el of palco.querySelectorAll("[data-dm-flow-node]")) {
+    if (visibile3(el)) raggi[nodoDelCarico(el.dataset.dmFlowNode)] = raggioDi(el);
+  }
+  const casa3 = principali.casa || { ...serieDel("casa", variante2, vista2), r: 62 };
+  const chiave2 = variante2 === "telefono" ? "mobile" : "desktop";
+  const perIlModello = {
+    [chiave2]: {
+      larghezza: palco.clientWidth,
+      altezza: palco.clientHeight,
+      casa: { ...serieDel("casa", variante2, vista2), r: casa3.r },
+      raggi,
+      principali
+    }
+  };
+  state71.misure = { variante: variante2, casella: casella7, perIlModello };
+  state71.alle = adesso2;
+  return perIlModello;
+}
+function regoleDeiPrincipali(P12) {
+  return CERCHI_PRINCIPALI.filter((id) => P12?.[id]).map((id) => {
+    const ids = VISTE_DEL_FLUSSO.map((v) => `#${CERCHIO[id]}${v.suffisso}`).join(",");
+    return `html body #page-energy .flow-stage > :is(${ids}){left:${P12[id].x}% !important;top:${P12[id].y}% !important}`;
+  }).join("\n");
+}
+function mettiIPrincipali() {
+  if (!doc?.head) return;
+  const { computer, telefono } = posizioniDelFlusso();
+  const css13 = [
+    [computer, "(min-width: 769px)"],
+    [telefono, TELEFONO2]
+  ].map(([P12, media4]) => {
+    const regole = regoleDeiPrincipali(P12);
+    return regole ? `@media ${media4} {
+${regole}
+}` : "";
+  }).filter(Boolean).join("\n");
+  let foglio6 = doc.getElementById(FOGLIO_ID);
+  if (!css13) {
+    foglio6?.remove();
+    return;
+  }
+  if (!foglio6) {
+    foglio6 = doc.createElement("style");
+    foglio6.id = FOGLIO_ID;
+    doc.head.append(foglio6);
+  }
+  if (foglio6.textContent !== css13) foglio6.textContent = css13;
+}
+function rimettiDiSerie(linea) {
+  const serie2 = linea?.getAttribute?.("data-dm-d-di-serie");
+  if (serie2 === null || serie2 === void 0) return;
+  if (linea.getAttribute("d") !== serie2) linea.setAttribute("d", serie2);
+  linea.removeAttribute("data-dm-d-di-serie");
+}
+function posaLeLinee() {
+  if (!doc) return;
+  const variante2 = varianteDelFlusso();
+  const scelte5 = posizioniDelFlusso();
+  if (nessunaScelta(scelte5.computer) && nessunaScelta(scelte5.telefono) && !state71.lineeToccate)
+    return;
+  state71.lineeToccate = false;
+  const vista2 = scelte5[variante2] && !nessunaScelta(scelte5[variante2]) ? vistaInScena() : null;
+  let misure = null;
+  if (vista2) {
+    const P12 = scelte5[variante2];
+    const { palco } = vista2;
+    const W2 = palco.clientWidth;
+    const H7 = palco.clientHeight;
+    const cerchi = {};
+    for (const id of CERCHI_PRINCIPALI) {
+      const el = doc.getElementById(`${CERCHIO[id]}${vista2.suffisso}`);
+      if (!el || !visibile3(el)) continue;
+      const c = P12[id] || serieDel(id, variante2, vista2);
+      cerchi[id] = { p: [c.x / 100 * W2, c.y / 100 * H7], r: raggioDi(el) };
+    }
+    misure = { W: W2, H: H7, cerchi };
+  }
+  for (const [nome, prefisso, box2] of [
+    ["computer", "", [1e3, 600]],
+    ["telefono", "m-", [1e3, 1e3]]
+  ]) {
+    const P12 = scelte5[nome];
+    for (const { suffisso } of VISTE_DEL_FLUSSO) {
+      for (const arco4 of ARCHI) {
+        const linea = doc.getElementById(`${prefisso}${arco4.linea}${suffisso}`);
+        if (!linea) continue;
+        const tocca2 = !nessunaScelta(P12) && (P12[arco4.da] || P12[arco4.a]);
+        if (!tocca2) {
+          rimettiDiSerie(linea);
+          continue;
+        }
+        state71.lineeToccate = true;
+        if (nome !== variante2 || !misure) continue;
+        const A2 = misure.cerchi[arco4.da];
+        const B = misure.cerchi[arco4.a];
+        if (!A2 || !B) continue;
+        const meta = [(A2.p[0] + B.p[0]) / 2, (A2.p[1] + B.p[1]) / 2];
+        const d = curvaFraCerchi(A2.p, A2.r, B.p, B.r, {
+          piega: arco4.piega ?? PIEGA,
+          verso: arco4.sopra ? [meta[0], meta[1] - 1e3] : [B.p[0], A2.p[1]],
+          scala: [box2[0] / misure.W, box2[1] / misure.H]
+        });
+        if (!d) continue;
+        if (!linea.hasAttribute("data-dm-d-di-serie"))
+          linea.setAttribute("data-dm-d-di-serie", linea.getAttribute("d") || "");
+        if (linea.getAttribute("d") !== d) linea.setAttribute("d", d);
+      }
+    }
+  }
+}
+var NOMI6 = {
+  solare: () => t("Solare", "Solar"),
+  rete: () => t("Rete", "Grid"),
+  batteria: () => t("Batteria", "Battery"),
+  casa: () => t("Casa", "Home")
+};
+function ricordaIlModello(periodo, diSerie, disegnato) {
+  state71.modelli = { ...state71.modelli, [periodo]: { diSerie, disegnato } };
+}
+function nodiDelFlusso() {
+  const vista2 = vistaInScena();
+  if (!vista2) return [];
+  const variante2 = varianteDelFlusso();
+  const chiave2 = variante2 === "telefono" ? "mobile" : "desktop";
+  const nodi2 = [];
+  for (const id of CERCHI_PRINCIPALI) {
+    const el = doc.getElementById(`${CERCHIO[id]}${vista2.suffisso}`);
+    if (!el || !visibile3(el)) continue;
+    nodi2.push({
+      id,
+      nome: NOMI6[id](),
+      centro: serieDel(id, variante2, vista2),
+      pezzi: () => [doc.getElementById(`${CERCHIO[id]}${vista2.suffisso}`)].filter(visibile3)
+    });
+  }
+  const modelli2 = state71.modelli?.[vista2.periodo];
+  for (const node of modelli2?.diSerie?.nodes || []) {
+    const sel2 = `[data-dm-flow-node="${String(node.id).replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"]`;
+    const el = vista2.palco.querySelector(sel2);
+    if (!el || !visibile3(el)) continue;
+    nodi2.push({
+      id: nodoDelCarico(node.id),
+      nome: node.name,
+      carico: true,
+      /* Il modello lo tiene dentro il palco anche quando la sua scelta e' di
+       * un cerchio piu' piccolo: la maniglia sta dove si vede (`adesso`). */
+      dentro: true,
+      centro: { x: node[chiave2].left, y: node[chiave2].top },
+      /* Dove starebbe senza una scelta sua, con le scelte di adesso: un
+       * carico nuovo messo al posto libero sta li', non dove lo vorrebbe la
+       * fila. Si rifa' ogni volta — il modello disegnato per ultimo ha gia'
+       * dentro il posto che gli si sta dando con la mano. */
+      adesso: () => {
+        const diSerie = state71.modelli?.[vista2.periodo]?.diSerie;
+        if (!diSerie) return null;
+        const qui = conLePosizioni2(diSerie, posizioniDelFlusso(), misureDelFlusso()).nodes?.find(
+          (n) => n.id === node.id
+        );
+        return qui ? { x: qui[chiave2].left, y: qui[chiave2].top } : null;
+      },
+      pezzi: () => [vista2.palco.querySelector(sel2)].filter(visibile3)
+    });
+  }
+  return nodi2;
+}
+function fissaICarichi(variante2, posizioni) {
+  if (variante2 !== varianteDelFlusso()) return posizioni;
+  const uscita = { ...posizioni };
+  for (const nodo4 of nodiDelFlusso()) {
+    if (!nodo4.carico || uscita[nodo4.id]) continue;
+    const qui = nodo4.adesso?.() || nodo4.centro;
+    if (qui && Number.isFinite(qui.x) && Number.isFinite(qui.y))
+      uscita[nodo4.id] = { x: qui.x, y: qui.y };
+  }
+  return uscita;
+}
+function stile6() {
+  return `
+  /* In modifica i cerchi non scivolano: seguono la mano. */
+  #page-energy .flow-stage[data-dm-disegno-in-modifica] > .node {
+    transition-property:transform, box-shadow, border-color, background-color, color, opacity !important;
+  }
+  /* Un carico arrivato dopo, messo al posto libero: in modifica si vede. */
+  #page-energy .flow-stage[data-dm-disegno-in-modifica] > .dm-flow-node[data-dm-flow-nuovo="true"] {
+    border-style:dashed !important;
+  }`;
+}
+function registraIlFlusso({ ridisegna: ridisegna42 }) {
+  state71.ridisegna = ridisegna42;
+  if (doc?.head && !doc.getElementById(STILE_ID2)) {
+    const foglio6 = doc.createElement("style");
+    foglio6.id = STILE_ID2;
+    foglio6.textContent = stile6();
+    doc.head.append(foglio6);
+  }
+  Object.assign(VOCE, {
+    nome: () => t("Flusso energetico", "Energy flow"),
+    scatola: () => vistaInScena()?.palco || null,
+    variante: varianteDelFlusso,
+    nodi: nodiDelFlusso,
+    fissa: fissaICarichi,
+    ridisegna: () => {
+      state71.misure = null;
+      mettiIPrincipali();
+      state71.ridisegna?.();
+    }
+  });
+  registraIlDisegno(VOCE);
+  mettiIPrincipali();
+}
+
+// src/core/i-cerchi-delle-stanze.js
+var CERCHI_AL_MASSIMO = 8;
+var PREFISSO_DELLA_STANZA = "stanza-";
+var CERCHIO_ALTRO = "stanza-altro";
+var PREFISSO_DEL_PIANO = "piano-";
+var pulito51 = (valore3) => valore3 == null ? "" : String(valore3).trim();
+var WALLBOX_NOME = /wallbox|colonnina|ev[ _-]?charger|car[ _-]?charger/i;
+function eLaWallbox(carico = {}, entitaDellaWallbox = []) {
+  if (pulito51(carico?.metadata?.flow_kind) === "ev") return true;
+  if (pulito51(carico?.id) === "load-wallbox") return true;
+  const note = new Set((entitaDellaWallbox || []).map(pulito51).filter(Boolean));
+  if (note.size) {
+    for (const campo6 of [
+      "power_entity",
+      "daily_energy_entity",
+      "monthly_energy_entity",
+      "total_energy_entity",
+      "history_entity"
+    ])
+      if (pulito51(carico?.[campo6]) && note.has(pulito51(carico[campo6]))) return true;
+  }
+  return WALLBOX_NOME.test(pulito51(carico?.name));
+}
+var gruppoDi = (voce3) => pulito51(voce3?.metadata?.beta27_subload_group);
+var gruppoDelCerchio = (carico) => pulito51(carico?.metadata?.flow_group) || pulito51(carico?.id);
+function misurabile(voce3) {
+  return Boolean(
+    pulito51(voce3?.power_entity) || pulito51(voce3?.power) || pulito51(voce3?.daily_energy_entity) || pulito51(voce3?.daily) || pulito51(voce3?.monthly_energy_entity) || pulito51(voce3?.monthly) || pulito51(voce3?.total_energy_entity) || pulito51(voce3?.history_entity) || /* La casella dei modelli vecchi: il flusso la sa leggere (vedi
+     * `fonteDiRipiego`), e un apparecchio con lei sola ha la sua stanza. */
+    pulito51(voce3?.energy_entity)
+  );
+}
+var potenzaDi = (voce3) => pulito51(voce3?.power_entity) || pulito51(voce3?.power);
+function stanzaDi(voce3, stanze4) {
+  const scritte = [voce3?.room_id, voce3?.roomId, voce3?.room].map(pulito51).filter(Boolean);
+  if (!scritte.length) return null;
+  for (const scritta of scritte) {
+    const minuscola = scritta.toLowerCase();
+    const trovata2 = stanze4.find(
+      (stanza2) => stanza2.id === scritta || stanza2.nome.toLowerCase() === minuscola
+    );
+    if (trovata2) return trovata2;
+  }
+  return null;
+}
+function elencoDelleStanze(stanze4 = []) {
+  return (Array.isArray(stanze4) ? stanze4 : []).map((stanza2, indice) => ({
+    id: pulito51(stanza2?.id) || pulito51(stanza2?.room_id) || `room-${indice}`,
+    nome: pulito51(stanza2?.name) || pulito51(stanza2?.nome),
+    icona: pulito51(stanza2?.icon),
+    piano: pulito51(stanza2?.floor),
+    indice
+  })).filter((stanza2) => stanza2.nome);
+}
+var conIlGruppo = (voce3, gruppo2, extra = {}) => ({
+  ...voce3,
+  ...extra,
+  metadata: { ...voce3?.metadata || {}, beta27_subload_group: gruppo2 }
+});
+function cerchiDelleStanze({
+  loads = [],
+  appliances: appliances4 = [],
+  rooms: rooms2 = [],
+  entitaDellaWallbox = [],
+  altro = "Altro",
+  perPiano = false,
+  stanzeDelPiano = (quante3) => `${quante3}`
+} = {}) {
+  const carichi = (Array.isArray(loads) ? loads : []).filter(Boolean);
+  const apparecchi2 = (Array.isArray(appliances4) ? appliances4 : []).filter(Boolean);
+  const misurati = apparecchi2.filter(misurabile);
+  if (!misurati.length) return { loads: carichi, appliances: apparecchi2, perStanza: false };
+  const stanze4 = elencoDelleStanze(rooms2);
+  if (!misurati.some((voce3) => stanzaDi(voce3, stanze4)))
+    return { loads: carichi, appliances: apparecchi2, perStanza: false };
+  const cerchi = carichi.filter(
+    (carico) => !gruppoDi(carico) && carico.category !== "manual-report"
+  );
+  const wallbox2 = cerchi.filter((carico) => eLaWallbox(carico, entitaDellaWallbox));
+  const gruppiDellaWallbox = new Set(wallbox2.map(gruppoDelCerchio));
+  const gruppiDiCarichi = new Set(cerchi.map(gruppoDelCerchio));
+  const pieni = new Set(
+    [...carichi, ...apparecchi2].map(gruppoDi).filter((gruppo2) => gruppiDiCarichi.has(gruppo2))
+  );
+  const carichiDaSistemare = [];
+  for (const carico of carichi) {
+    if (carico.category === "manual-report") continue;
+    const suo2 = gruppoDi(carico);
+    if (suo2) {
+      if (gruppiDellaWallbox.has(suo2)) continue;
+      carichiDaSistemare.push(carico);
+      continue;
+    }
+    if (wallbox2.includes(carico)) continue;
+    if (pieni.has(gruppoDelCerchio(carico))) continue;
+    if (misurabile(carico)) carichiDaSistemare.push(carico);
+  }
+  const apparecchiDaSistemare = apparecchi2.filter(
+    (voce3) => !gruppiDellaWallbox.has(gruppoDi(voce3)) && misurabile(voce3)
+  );
+  const potenzeDegliApparecchi = new Set(apparecchiDaSistemare.map(potenzaDi).filter(Boolean));
+  const carichiSenzaDoppi = carichiDaSistemare.filter(
+    (carico) => !potenzaDi(carico) || !potenzeDegliApparecchi.has(potenzaDi(carico))
+  );
+  const perStanza = /* @__PURE__ */ new Map();
+  const metti6 = (voce3, tipo) => {
+    const stanza2 = stanzaDi(voce3, stanze4);
+    const chiave2 = stanza2 ? stanza2.id : "";
+    if (!perStanza.has(chiave2)) perStanza.set(chiave2, { stanza: stanza2, carichi: [], apparecchi: [] });
+    perStanza.get(chiave2)[tipo].push(voce3);
+  };
+  for (const voce3 of apparecchiDaSistemare) metti6(voce3, "apparecchi");
+  for (const voce3 of carichiSenzaDoppi) metti6(voce3, "carichi");
+  let conStanza = [...perStanza.values()].filter((gruppo2) => gruppo2.stanza).sort((a, b2) => a.stanza.indice - b2.stanza.indice);
+  if (perPiano) {
+    const perPianoMappa = /* @__PURE__ */ new Map();
+    const fusi = [];
+    for (const gruppo2 of conStanza) {
+      const piano2 = gruppo2.stanza.piano;
+      if (!piano2) {
+        fusi.push(gruppo2);
+        continue;
+      }
+      const chiave2 = piano2.toLowerCase();
+      let unito3 = perPianoMappa.get(chiave2);
+      if (!unito3) {
+        unito3 = {
+          stanza: {
+            id: chiave2,
+            nome: piano2,
+            icona: "mdi:floor-plan",
+            indice: gruppo2.stanza.indice
+          },
+          piano: true,
+          stanzeDentro: [],
+          carichi: [],
+          apparecchi: []
+        };
+        perPianoMappa.set(chiave2, unito3);
+        fusi.push(unito3);
+      }
+      unito3.stanzeDentro.push({ id: gruppo2.stanza.id, nome: gruppo2.stanza.nome });
+      unito3.carichi.push(...gruppo2.carichi);
+      unito3.apparecchi.push(...gruppo2.apparecchi);
+    }
+    conStanza = fusi;
+  }
+  const posti = Math.max(1, CERCHI_AL_MASSIMO - wallbox2.length);
+  const senzaStanza = perStanza.get("") || { stanza: null, carichi: [], apparecchi: [] };
+  const serveAltro = senzaStanza.carichi.length + senzaStanza.apparecchi.length > 0;
+  const tenute = conStanza.length + (serveAltro ? 1 : 0) > posti ? posti - 1 : conStanza.length;
+  const inAltro = {
+    carichi: [...senzaStanza.carichi],
+    apparecchi: [...senzaStanza.apparecchi]
+  };
+  for (const gruppo2 of conStanza.slice(tenute)) {
+    inAltro.carichi.push(...gruppo2.carichi);
+    inAltro.apparecchi.push(...gruppo2.apparecchi);
+  }
+  const nuoviCarichi = [];
+  const ritaggati = /* @__PURE__ */ new Map();
+  let ordine = 0;
+  for (const carico of wallbox2) nuoviCarichi.push({ ...carico, order: ordine++ });
+  for (const carico of carichi)
+    if (gruppiDellaWallbox.has(gruppoDi(carico))) nuoviCarichi.push(carico);
+  const cerchio2 = (id, nome, icona3, gruppo2) => {
+    const delPiano = gruppo2.piano === true;
+    nuoviCarichi.push({
+      id,
+      name: nome,
+      icon: icona3 || "mdi:home",
+      order: ordine++,
+      show_in_dashboard: true,
+      metadata: delPiano ? {
+        flow_group: id,
+        cerchio_della_stanza: true,
+        cerchio_del_piano: true,
+        stanze: gruppo2.stanzeDentro,
+        sottotitolo: stanzeDelPiano(gruppo2.stanzeDentro.length)
+      } : { flow_group: id, cerchio_della_stanza: true }
+    });
+    for (const carico of gruppo2.carichi)
+      nuoviCarichi.push(conIlGruppo(carico, id, { show_in_dashboard: false }));
+    for (const voce3 of gruppo2.apparecchi) ritaggati.set(voce3, conIlGruppo(voce3, id));
+  };
+  for (const gruppo2 of conStanza.slice(0, tenute))
+    cerchio2(
+      gruppo2.piano ? `${PREFISSO_DEL_PIANO}${gruppo2.stanza.id.replace(/[^a-z0-9]+/g, "-")}` : `${PREFISSO_DELLA_STANZA}${gruppo2.stanza.id}`,
+      gruppo2.stanza.nome,
+      gruppo2.stanza.icona,
+      gruppo2
+    );
+  if (inAltro.carichi.length || inAltro.apparecchi.length)
+    cerchio2(CERCHIO_ALTRO, altro, "mdi:home-outline", inAltro);
+  const nuoviApparecchi = apparecchi2.map((voce3) => ritaggati.get(voce3) || voce3);
+  return { loads: nuoviCarichi, appliances: nuoviApparecchi, perStanza: true };
+}
+
+// src/core/kwh-dalla-potenza.js
+var pulito52 = (valore3) => String(valore3 ?? "").trim();
+var numero49 = (valore3) => {
+  if (valore3 === "" || valore3 == null) return null;
+  const n = Number(String(valore3).replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+};
+function inizioDelPeriodo(periodo, adesso2) {
+  const inizio = new Date(Number(adesso2));
+  inizio.setHours(0, 0, 0, 0);
+  if (periodo === "month") inizio.setDate(1);
+  return inizio;
+}
+function domandaDeiKwhDallaPotenza(entita4, periodo, adesso2) {
+  return {
+    type: "recorder/statistics_during_period",
+    start_time: inizioDelPeriodo(periodo, adesso2).toISOString(),
+    end_time: new Date(Number(adesso2)).toISOString(),
+    statistic_ids: [...new Set((entita4 || []).map(pulito52).filter(Boolean))],
+    period: "hour",
+    types: ["mean"]
+  };
+}
+function wattPerUnita(unita3) {
+  const scritta = pulito52(unita3).toLowerCase();
+  if (scritta === "kw") return 1e3;
+  if (scritta === "mw") return 1e6;
+  return 1;
+}
+function kwhDallaPotenza(risposta, entity2, unita3 = "W") {
+  const elenco18 = risposta?.[pulito52(entity2)];
+  if (!Array.isArray(elenco18) || !elenco18.length) return null;
+  const fattore = wattPerUnita(unita3);
+  let wattora = 0;
+  let ore3 = 0;
+  for (const voce3 of elenco18) {
+    const media4 = numero49(voce3?.mean);
+    if (media4 === null) continue;
+    wattora += Math.max(0, media4) * fattore;
+    ore3 += 1;
+  }
+  return ore3 ? wattora / 1e3 : null;
+}
+function domandaDellaStoria(entita4, periodo, adesso2) {
+  return {
+    type: "history/history_during_period",
+    start_time: inizioDelPeriodo(periodo, adesso2).toISOString(),
+    end_time: new Date(Number(adesso2)).toISOString(),
+    entity_ids: [...new Set((entita4 || []).map(pulito52).filter(Boolean))],
+    include_start_time_state: true,
+    significant_changes_only: false,
+    minimal_response: true,
+    no_attributes: true
+  };
+}
+function istante5(valore3) {
+  if (typeof valore3 === "number") return valore3 < 1e12 ? valore3 * 1e3 : valore3;
+  const letto = Date.parse(pulito52(valore3));
+  return Number.isFinite(letto) ? letto : null;
+}
+function righeDellaStoria2(risposta, entity2) {
+  const elenco18 = risposta?.[pulito52(entity2)];
+  if (!Array.isArray(elenco18)) return [];
+  return elenco18.map((voce3) => ({
+    quando: istante5(voce3?.lc ?? voce3?.lu ?? voce3?.last_changed ?? voce3?.last_updated),
+    valore: numero49(voce3?.s ?? voce3?.state)
+  })).filter((riga5) => riga5.quando !== null).sort((a, b2) => a.quando - b2.quando);
+}
+function kwhDallaStoriaDellaPotenza(risposta, entity2, unita3 = "W", inizio, adesso2) {
+  const righe4 = righeDellaStoria2(risposta, entity2);
+  if (!righe4.some((riga5) => riga5.valore !== null)) return null;
+  const fattore = wattPerUnita(unita3);
+  const da = Number(inizio);
+  const a = Number(adesso2);
+  let wattora = 0;
+  righe4.forEach((riga5, indice) => {
+    if (riga5.valore === null) return;
+    const partenza = Number.isFinite(da) ? Math.max(riga5.quando, da) : riga5.quando;
+    const fine = indice + 1 < righe4.length ? righe4[indice + 1].quando : a;
+    if (!Number.isFinite(fine) || fine <= partenza) return;
+    wattora += Math.max(0, riga5.valore) * fattore * ((fine - partenza) / 36e5);
+  });
+  return wattora / 1e3;
+}
+function kwhPerUnita(unita3) {
+  const scritta = pulito52(unita3).toLowerCase();
+  if (scritta === "wh") return 1e-3;
+  if (scritta === "mwh") return 1e3;
+  return 1;
+}
+function kwhDallaStoriaDelContatore(risposta, entity2, unita3 = "kWh") {
+  const numeri = righeDellaStoria2(risposta, entity2).map((riga5) => riga5.valore).filter((valore3) => valore3 !== null);
+  if (!numeri.length) return null;
+  let crescita = 0;
+  let prima = numeri[0];
+  for (const dopo of numeri.slice(1)) {
+    const ritocco = dopo < prima && dopo > prima * 0.1;
+    if (ritocco) continue;
+    crescita += dopo >= prima ? dopo - prima : Math.max(0, dopo);
+    prima = dopo;
+  }
+  return crescita * kwhPerUnita(unita3);
+}
+
+// src/sections/energy-flow-section.js
+root.__DM_20260817A__ = true;
+var KEY76 = "__DASHBOARDMODERN_ENERGY_FLOW_SECTION__";
+var state72 = root[KEY76] ||= { installed: false, frame: 0, attesaMisura: 0 };
+var COLORS = Object.freeze({
+  solar: "#ff9f0a",
+  grid: "#2563eb",
+  battery: "#14b8a6",
+  home: "#2563eb"
+});
+var FLOW_VIEWS = Object.freeze([
+  { period: "instant", id: "view-ist", suffix: "" },
+  { period: "day", id: "view-day", suffix: "-day" },
+  { period: "month", id: "view-month", suffix: "-month" }
+]);
+var LEGACY_LOAD_SELECTOR = ".node.n-load,[id^='line-home-'],[id^='m-line-home-']";
+var SVG_NS = "http://www.w3.org/2000/svg";
+function stateNumber2(states, entity2) {
+  const value = states?.[entity2]?.state ?? states?.[entity2];
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+function renderBatterySoc(targetDocument, energy = {}, states = {}) {
+  const node = nodoDelSoc(targetDocument);
+  if (!node) return "—";
+  const entity2 = clean(
+    energy?.battery?.soc || energy?.battery?.battery_soc_entity || energy?.battery?.battery_soc
+  );
+  if (!entity2) {
+    node.hidden = true;
+    scriviTestoSeCambia(node, "");
+    node.removeAttribute("data-entity");
+    return "—";
+  }
+  const value = stateNumber2(states, entity2);
+  const text = value === null ? "—" : `${Math.round(value)}%`;
+  node.hidden = false;
+  scriviTestoSeCambia(node, text);
+  if (node.dataset.entity !== entity2) node.dataset.entity = entity2;
+  return text;
+}
+function nodoDelSoc(targetDocument) {
+  const gia = targetDocument?.getElementById?.("v-battery-soc");
+  if (gia) return gia;
+  const bolla = targetDocument?.querySelector?.("#view-ist #n-battery,#n-battery");
+  if (!bolla) return null;
+  const nuovo = targetDocument.createElement("small");
+  nuovo.id = "v-battery-soc";
+  nuovo.className = "dm-battery-soc";
+  bolla.append(nuovo);
+  return nuovo;
+}
+function parseNumber(node) {
+  const source = String(node?.textContent || "").trim();
+  const match = source.match(/-?\d[\d.,]*/);
+  if (!match) return 0;
+  let token = match[0];
+  const comma = token.lastIndexOf(",");
+  const dot = token.lastIndexOf(".");
+  if (comma >= 0 && dot >= 0) {
+    if (comma > dot) token = token.replaceAll(".", "").replace(",", ".");
+    else token = token.replaceAll(",", "");
+  } else if (comma >= 0) token = token.replace(",", ".");
+  const value = Number(token);
+  return Number.isFinite(value) ? value : 0;
+}
+function numberFrom(node) {
+  return Math.abs(parseNumber(node));
+}
+function setStyleProperty(node, name, value, priority = "") {
+  if (!node?.style) return;
+  if (node.style.getPropertyValue(name) === value && node.style.getPropertyPriority(name) === priority)
+    return;
+  node.style.setProperty(name, value, priority);
+}
+function scriviDatoSeCambia(node, chiave2, valore3) {
+  if (!node?.dataset) return;
+  if (node.dataset[chiave2] === valore3) return;
+  node.dataset[chiave2] = valore3;
+}
+var visibility = { token: 0, cache: /* @__PURE__ */ new WeakMap() };
+function beginVisibilityPass() {
+  visibility.token += 1;
+}
+function nodeVisible(node) {
+  if (!node || node.hidden) return false;
+  const cached = visibility.cache.get(node);
+  if (cached && cached.token === visibility.token) return cached.value;
+  const style = root.getComputedStyle?.(node);
+  const value = !(style && (style.display === "none" || style.visibility === "hidden" || Number(style.opacity) === 0));
+  visibility.cache.set(node, { token: visibility.token, value });
+  return value;
+}
+function flowNodeOverrides() {
+  const impianti2 = plantList(section("energy", {}) || {});
+  return specchioDeiCerchi(readJson("cd_flow_nodes", null), impianti2.length);
+}
+function tuttiICarichi() {
+  const value = section("loads", null);
+  if (Array.isArray(value)) return value;
+  const stored = readJson("cd_loads", []);
+  return Array.isArray(stored) ? stored : [];
+}
+function configuredLoads() {
+  const carichi = tuttiICarichi();
+  const scelto = clean(root.localStorage?.getItem(IMPIANTO_SCELTO_KEY));
+  const { plant, index } = plantAt(section("energy", {}) || {}, scelto);
+  return plant ? plantLoads(carichi, plant, index) : carichi;
+}
+function bundleValuesFor(loads, period) {
+  const bundle = period === "day" ? state72.bundle?.deviceDay : state72.bundle?.deviceMonth;
+  const devices3 = bundle?.devices || [];
+  const values = bundle?.values;
+  const resolved = {};
+  if (!values?.get) return resolved;
+  for (const load of loads) {
+    const device = devices3.find(
+      (item) => clean(item.id) === clean(load.id) || clean(item.key) === clean(load.id) || clean(item.name) === clean(load.name)
+    );
+    const source = clean(device?.history || device?.entity) || flowRecorderEntity(load) || flowPeriodEntity(load, period);
+    const value = Number(values.get(source));
+    if (Number.isFinite(value)) resolved[chiaveDellaVoce(load)] = value;
+  }
+  return resolved;
+}
+var chiaveDellaVoce = (voce3) => clean(voce3?.id) || clean(voce3?.name);
+function lettureDelPeriodo(loads, period) {
+  const valori = bundleValuesFor(loads, period);
+  const attese = /* @__PURE__ */ new Set();
+  if (period !== "day" && period !== "month") return { valori, attese };
+  const states = allStates();
+  const richieste = [];
+  const perVoce = [];
+  for (const voce3 of loads) {
+    const chiave2 = chiaveDellaVoce(voce3);
+    if (!chiave2) continue;
+    const potenza4 = soloPotenza(voce3);
+    if (potenza4) {
+      perVoce.push([chiave2, { kind: "potenza", entity: potenza4 }]);
+      continue;
+    }
+    if (Number.isFinite(valori[chiave2])) continue;
+    const diretta = flowPeriodEntity(voce3, period, states);
+    if (diretta && Number.isFinite(Number(states?.[diretta]?.state))) continue;
+    const fonte = fonteDiRipiego(voce3, period, states);
+    if (!fonte) continue;
+    const entity2 = resolvedEntity3(fonte.entity);
+    if (fonte.kind === "contatore" && !state72.bundle && Date.now() - (state72.installatoAlle || 0) < 6e4) {
+      attese.add(chiave2);
+      continue;
+    }
+    perVoce.push([chiave2, { kind: fonte.kind, entity: entity2 }]);
+  }
+  for (const [, richiesta] of perVoce) richieste.push(richiesta);
+  chiediIKwh(period, richieste);
+  const memoria = state72.kwhRicavati?.[period];
+  for (const [chiave2, { kind, entity: entity2 }] of perVoce) {
+    const id = `${kind}:${entity2}`;
+    if (memoria?.valori.has(id)) valori[chiave2] = memoria.valori.get(id);
+    else if (memoria?.inCorso.has(id)) attese.add(chiave2);
+  }
+  return { valori, attese };
+}
+function recorderValuesFor(loads, period) {
+  const { valori } = lettureDelPeriodo(loads, period);
+  return Object.keys(valori).length ? valori : null;
+}
+var ATTESA_DEI_KWH = 10 * 60 * 1e3;
+var CAMPI_DEI_CONTATORI = Object.freeze([
+  "daily_energy_entity",
+  "daily",
+  "monthly_energy_entity",
+  "monthly",
+  "total_energy_entity",
+  "history_entity",
+  "energy_entity"
+]);
+function soloPotenza(voce3) {
+  if (!clean(voce3?.power_entity) && !clean(voce3?.power)) return "";
+  if (CAMPI_DEI_CONTATORI.some((campo6) => clean(voce3?.[campo6]))) return "";
+  return resolvedEntity3(clean(voce3.power_entity) || clean(voce3.power));
+}
+function chiaveDelPeriodo(periodo, adesso2 = Date.now()) {
+  const data = new Date(adesso2);
+  return periodo === "month" ? `${data.getFullYear()}-${data.getMonth() + 1}` : data.toDateString();
+}
+function memoriaDei(periodo) {
+  const memorie = state72.kwhRicavati ||= {};
+  const chiave2 = chiaveDelPeriodo(periodo);
+  if (memorie[periodo]?.chiave !== chiave2)
+    memorie[periodo] = {
+      chiave: chiave2,
+      valori: /* @__PURE__ */ new Map(),
+      quando: /* @__PURE__ */ new Map(),
+      inCorso: /* @__PURE__ */ new Set()
+    };
+  return memorie[periodo];
+}
+function chiediIKwh(periodo, richieste) {
+  const broker3 = root.DashboardModernEnergyService?.broker;
+  if (!broker3?.request || !richieste.length) return;
+  const voce3 = memoriaDei(periodo);
+  const adesso2 = Date.now();
+  const daChiedere = [];
+  const viste2 = /* @__PURE__ */ new Set();
+  for (const richiesta of richieste) {
+    const id = `${richiesta.kind}:${richiesta.entity}`;
+    if (viste2.has(id)) continue;
+    viste2.add(id);
+    if (voce3.inCorso.has(id)) continue;
+    if (adesso2 - (voce3.quando.get(id) ?? -Infinity) < ATTESA_DEI_KWH) continue;
+    daChiedere.push({ ...richiesta, id });
+  }
+  if (!daChiedere.length) return;
+  for (const { id } of daChiedere) voce3.inCorso.add(id);
+  const chiudi9 = () => {
+    for (const { id } of daChiedere) {
+      voce3.inCorso.delete(id);
+      voce3.quando.set(id, Date.now());
+    }
+  };
+  ricavaIKwh(broker3, periodo, daChiedere, adesso2).then((trovati) => {
+    if (memoriaDei(periodo) !== voce3) return;
+    for (const [id, kwh5] of trovati) voce3.valori.set(id, kwh5);
+  }).catch(() => {
+  }).finally(() => {
+    chiudi9();
+    refreshEnergyFlows();
+  });
+}
+async function ricavaIKwh(broker3, periodo, daChiedere, adesso2) {
+  const stati4 = allStates();
+  const unita3 = (entity2) => stati4[entity2]?.attributes?.unit_of_measurement;
+  const trovati = /* @__PURE__ */ new Map();
+  const potenze = daChiedere.filter((richiesta) => richiesta.kind === "potenza");
+  if (potenze.length) {
+    try {
+      const medie = await broker3.request(
+        domandaDeiKwhDallaPotenza(
+          potenze.map((richiesta) => richiesta.entity),
+          periodo,
+          adesso2
+        ),
+        15e3
+      );
+      for (const { id, entity: entity2 } of potenze) {
+        const kwh5 = kwhDallaPotenza(medie, entity2, unita3(entity2) || "W");
+        if (kwh5 !== null) trovati.set(id, kwh5);
+      }
+    } catch (_errore) {
+    }
+  }
+  const dallaStoria = daChiedere.filter((richiesta) => !trovati.has(richiesta.id));
+  if (!dallaStoria.length) return trovati;
+  let storia;
+  try {
+    storia = await broker3.request(
+      domandaDellaStoria(
+        dallaStoria.map((richiesta) => richiesta.entity),
+        periodo,
+        adesso2
+      ),
+      3e4
+    );
+  } catch (_errore) {
+    return trovati;
+  }
+  const inizio = inizioDelPeriodo(periodo, adesso2).getTime();
+  for (const { id, kind, entity: entity2 } of dallaStoria) {
+    const kwh5 = kind === "potenza" ? kwhDallaStoriaDellaPotenza(storia, entity2, unita3(entity2) || "W", inizio, adesso2) : kwhDallaStoriaDelContatore(storia, entity2, unita3(entity2) || "kWh");
+    if (kwh5 !== null) trovati.set(id, kwh5);
+  }
+  return trovati;
+}
+function kwhDelPeriodo(voci4, periodo) {
+  return recorderValuesFor(voci4 || [], periodo) || {};
+}
+var ULTIMI_NUMERI_KEY = "dm_flusso_ultimi_numeri";
+function chiaveDeiRicordati(periodo) {
+  const impianto = clean(root.localStorage?.getItem(IMPIANTO_SCELTO_KEY));
+  return `${chiaveDelPeriodo(periodo)}|${impianto}`;
+}
+function ultimiNumeri(periodo) {
+  const memorie = state72.ultimiNumeri ||= {};
+  const chiave2 = chiaveDeiRicordati(periodo);
+  if (memorie[periodo]?.chiave === chiave2) return memorie[periodo];
+  let salvati = null;
+  try {
+    salvati = JSON.parse(root.localStorage?.getItem(ULTIMI_NUMERI_KEY) || "null")?.[periodo];
+  } catch (_errore) {
+    salvati = null;
+  }
+  memorie[periodo] = {
+    chiave: chiave2,
+    valori: salvati?.chiave === chiave2 && salvati.valori ? { ...salvati.valori } : {}
+  };
+  return memorie[periodo];
+}
+function ricordaINumeri(periodo, model2) {
+  if (periodo !== "day" && periodo !== "month") return;
+  const memoria = ultimiNumeri(periodo);
+  let cambiato = false;
+  for (const nodo4 of model2.nodes) {
+    if (!Number.isFinite(nodo4.value) || memoria.valori[nodo4.id] === nodo4.value) continue;
+    memoria.valori[nodo4.id] = nodo4.value;
+    cambiato = true;
+  }
+  if (!cambiato) return;
+  try {
+    const tutti = JSON.parse(root.localStorage?.getItem(ULTIMI_NUMERI_KEY) || "{}") || {};
+    tutti[periodo] = { chiave: memoria.chiave, valori: memoria.valori };
+    root.localStorage?.setItem(ULTIMI_NUMERI_KEY, JSON.stringify(tutti));
+  } catch (_errore) {
+  }
+}
+function configuredAppliances() {
+  const value = section("appliances", null);
+  if (Array.isArray(value)) return value;
+  const stored = readJson("cd_appliances", []);
+  return Array.isArray(stored) ? stored : [];
+}
+function stanzeDiCasa3() {
+  const stanze4 = section("rooms", null);
+  return Array.isArray(stanze4) ? stanze4 : readJson("cd_stanze", []);
+}
+function appliancesOfThePlant(plant = impiantoScelto2().plant) {
+  const apparecchi2 = configuredAppliances();
+  if (!plant) return apparecchi2;
+  return elettrodomesticiDellImpianto(apparecchi2, plant, {
+    impianti: plantList(section("energy", {}) || {}),
+    carichi: tuttiICarichi(),
+    stanze: stanzeDiCasa3()
+  });
+}
+function impiantoScelto2() {
+  const scelto = clean(root.localStorage?.getItem(IMPIANTO_SCELTO_KEY));
+  return plantAt(section("energy", {}) || {}, scelto);
+}
+function carichiDelFlusso() {
+  const { plant } = impiantoScelto2();
+  const loads = configuredLoads();
+  const appliances4 = appliancesOfThePlant(plant);
+  if (plant && !cerchiDalleStanzeAccesi(plant)) return { loads, appliances: appliances4, perStanza: false };
+  return cerchiDelleStanze({
+    loads,
+    appliances: appliances4,
+    rooms: stanzeDiCasa3(),
+    entitaDellaWallbox: WALLBOX_REFS.map(resolvedEntity3).filter(Boolean),
+    altro: t("Altro", "Other"),
+    perPiano: Boolean(plant && pianiNelFlusso(plant))
+  });
+}
+function resolvedEntity3(reference) {
+  const id = clean(reference);
+  if (!id) return "";
+  try {
+    return clean(root.resolveEntity?.(id)) || id;
+  } catch (_error) {
+    return id;
+  }
+}
+var WALLBOX_REFS = Object.freeze([
+  "dm.ev_potenza_wallbox",
+  "dm.ev_charge_power",
+  "dm.ev_energia_wallbox_oggi",
+  "dm.ev_energia_wallbox_mese"
+]);
+function vehiclePopupTarget() {
+  if (typeof root.apriPopup !== "function") return null;
+  if (!doc?.getElementById?.("ev-popup")) return null;
+  const states = allStates();
+  const battery = resolvedEntity3(vehicleBatteryEntity());
+  if (!battery || !states[battery]) return null;
+  const entities = [];
+  for (const reference of WALLBOX_REFS) {
+    const entity2 = resolvedEntity3(reference);
+    if (entity2 && entity2 !== reference) entities.push(entity2);
+  }
+  return { entities };
+}
+var residuoDi = (period) => `${clean(impiantoScelto2().plant?.id)}|${period}`;
+function stageModel(period) {
+  const { loads, appliances: appliances4, perStanza } = carichiDelFlusso();
+  const model2 = flowStageModel({
+    loads,
+    appliances: appliances4,
+    /* I ritocchi dei cerchi vecchi — nome, icona, colore per posto — valgono
+     * per i carichi scritti a mano: sui cerchi delle stanze il primo posto non
+     * e' piu' il «boiler» di una volta. */
+    flowNodes: perStanza ? null : flowNodeOverrides(),
+    states: allStates(),
+    period,
+    /* Anche gli apparecchi, non solo i carichi: quando il cerchio di gruppo
+     * somma quello che ha dentro, i figli sono apparecchi — e cercarli in un
+     * paniere che contiene i soli carichi vuol dire una somma che non trova
+     * niente. Il paniere del Recorder e' l'unico posto dove un apparecchio
+     * misurato dal solo contatore di vita ha un numero per oggi. */
+    ...letturePerLaScena([...loads, ...appliances4], period),
+    locale: locale(),
+    wallbox: vehiclePopupTarget(),
+    /* Il consumo di Casa dello stesso periodo: il resto che nessun cerchio
+     * misura ha un cerchio suo, «Non monitorati» (`conIlResiduo` nel nucleo). */
+    casa: consumoDiCasa(period),
+    nomeDelResiduo: t("Non monitorati", "Unmonitored"),
+    /* Ricordato per impianto: il cerchio nato in una zona non deve restare
+     * a 0 W nell'altra, dove non e' mai servito. */
+    tieniIlResiduo: Boolean(state72.nonMonitorati?.[residuoDi(period)])
+  });
+  if (model2.nodes.some((nodo4) => nodo4.residuo))
+    state72.nonMonitorati = { ...state72.nonMonitorati, [residuoDi(period)]: true };
+  ricordaINumeri(period, model2);
+  return conLePosizioniDelFlusso(period, model2);
+}
+function conLePosizioniDelFlusso(period, diSerie) {
+  state72.modelliDiSerie = { ...state72.modelliDiSerie, [period]: diSerie };
+  const disegnato = conLePosizioni2(diSerie, posizioniDelFlusso(), misureDelFlusso());
+  ricordaIlModello(period, diSerie, disegnato);
+  return disegnato;
+}
+function ridisegnaIlDisegno() {
+  if (!doc) return;
+  ensureGridBatteryPaths();
+  for (const view of FLOW_VIEWS) {
+    const diSerie = state72.modelliDiSerie?.[view.period];
+    if (diSerie) renderDynamicFlowLoads(view.period, conLePosizioniDelFlusso(view.period, diSerie));
+  }
+  posaLeLinee();
+  for (const view of FLOW_VIEWS) {
+    const period = view.period === "instant" ? "" : view.period;
+    mirrorLegacyMainFlows(scopeFor(period), period);
+  }
+}
+var CASA_DEL_PERIODO = Object.freeze({
+  day: "dm.energy_consumo_casa_oggi",
+  month: "dm.energy_consumo_casa_mese"
+});
+function casaDalPacchetto(bundle, period) {
+  if (!bundle || period !== "day" && period !== "month") return null;
+  if (bundle.letti && bundle.letti[period] === false) return null;
+  const valore3 = bundle[period]?.house;
+  return typeof valore3 === "number" && Number.isFinite(valore3) ? valore3 : null;
+}
+function consumoDiCasa(period) {
+  if (period === "instant") {
+    const viva = potenzaViva(SORGENTI_ISTANTANEE.home);
+    if (viva !== null) return viva;
+    const fonti = [
+      SORGENTI_ISTANTANEE.solar,
+      SORGENTI_ISTANTANEE.grid,
+      SORGENTI_ISTANTANEE.battery
+    ].map((ref2) => ({ configurata: resolvedEntity3(ref2) !== clean(ref2), valore: potenzaViva(ref2) }));
+    if (fonti[1].valore === null) return null;
+    if (fonti.some((fonte) => fonte.configurata && fonte.valore === null)) return null;
+    return Math.max(
+      0,
+      fonti.reduce((somma4, fonte) => somma4 + (fonte.valore ?? 0), 0)
+    );
+  }
+  const ref = CASA_DEL_PERIODO[period];
+  if (!ref) return null;
+  const dalPacchetto = casaDalPacchetto(root.__DASHBOARDMODERN_RUNTIME_0150__?.bundle, period);
+  if (dalPacchetto !== null) return dalPacchetto;
+  return allStates()[resolvedEntity3(ref)] || null;
+}
+function letturePerLaScena(voci4, period) {
+  if (period === "instant") return { recorderValues: null };
+  const { valori, attese } = lettureDelPeriodo(voci4, period);
+  return {
+    recorderValues: Object.keys(valori).length ? valori : null,
+    inAttesa: attese,
+    ricordati: ultimiNumeri(period).valori
+  };
+}
+function rememberConnectorVisibility(node) {
+  if (!node || node.dataset.dmFlowVisibilityCaptured === "true") return;
+  node.dataset.dmFlowVisibilityCaptured = "true";
+  node.dataset.dmFlowWasHidden = node.hidden ? "true" : "false";
+  node.dataset.dmFlowDisplay = node.style.getPropertyValue("display") || "";
+  node.dataset.dmFlowDisplayPriority = node.style.getPropertyPriority("display") || "";
+  node.dataset.dmFlowVisibility = node.style.getPropertyValue("visibility") || "";
+  node.dataset.dmFlowVisibilityPriority = node.style.getPropertyPriority("visibility") || "";
+}
+function restoreConnectorVisibility(node) {
+  if (!node || node.dataset.dmFlowVisibilityCaptured !== "true") return;
+  node.hidden = node.dataset.dmFlowWasHidden === "true";
+  const display2 = node.dataset.dmFlowDisplay || "";
+  const displayPriority = node.dataset.dmFlowDisplayPriority || "";
+  const visibility2 = node.dataset.dmFlowVisibility || "";
+  const visibilityPriority = node.dataset.dmFlowVisibilityPriority || "";
+  if (display2) setStyleProperty(node, "display", display2, displayPriority);
+  else node.style.removeProperty("display");
+  if (visibility2) setStyleProperty(node, "visibility", visibility2, visibilityPriority);
+  else node.style.removeProperty("visibility");
+  for (const key of [
+    "dmFlowVisibilityCaptured",
+    "dmFlowWasHidden",
+    "dmFlowDisplay",
+    "dmFlowDisplayPriority",
+    "dmFlowVisibility",
+    "dmFlowVisibilityPriority"
+  ])
+    delete node.dataset[key];
+}
+function exposeConnector(node, active) {
+  if (!node) return;
+  if (active) {
+    if (node.dataset.dmFlowForcedVisible !== "true") rememberConnectorVisibility(node);
+    if (node.hidden) node.hidden = false;
+    setStyleProperty(node, "display", "inline", "important");
+    setStyleProperty(node, "visibility", "visible", "important");
+    scriviDatoSeCambia(node, "dmFlowForcedVisible", "true");
+  } else if (node.dataset.dmFlowForcedVisible === "true") {
+    restoreConnectorVisibility(node);
+    scriviDatoSeCambia(node, "dmFlowForcedVisible", "false");
+  }
+}
+var FORME2 = ["d", "x1", "y1", "x2", "y2", "points"];
+function binario(node, color, active) {
+  const madre = node.parentNode;
+  if (!madre || !/^(path|line|polyline)$/i.test(node.tagName)) return;
+  let sotto = node.__dmBinario;
+  if (!sotto || sotto.parentNode !== madre) {
+    sotto = doc.createElementNS(SVG_NS, node.tagName.toLowerCase());
+    sotto.classList.add("dm-flow-binario");
+    sotto.setAttribute("aria-hidden", "true");
+    madre.insertBefore(sotto, node);
+    node.__dmBinario = sotto;
+  }
+  sotto.__dmLinea = node;
+  if (node.getAttribute("pathLength") !== "100") node.setAttribute("pathLength", "100");
+  for (const nome of FORME2) {
+    const valore3 = node.getAttribute(nome);
+    if (valore3 === null) continue;
+    if (sotto.getAttribute(nome) !== valore3) sotto.setAttribute(nome, valore3);
+  }
+  setStyleProperty(sotto, "--dm-flow-color", color);
+  const larghezza = node.style?.getPropertyValue?.("--dm-flow-width");
+  if (larghezza) setStyleProperty(sotto, "--dm-flow-width", larghezza);
+  scriviDatoSeCambia(sotto, "acceso", active ? "true" : "false");
+}
+function colorNode(node, color, active) {
+  if (!node) return;
+  exposeConnector(node, active);
+  binario(node, color, active);
+  node.classList.toggle("active", active);
+  node.classList.toggle("dm-energy-flow-active", active);
+  node.classList.toggle("dm-energy-flow-idle", !active);
+  setStyleProperty(node, "--dm-flow-color", color);
+  const animated = active ? "true" : "false";
+  if (node.dataset.dmFlowAnimated !== animated) node.dataset.dmFlowAnimated = animated;
+  if (/^(path|line|polyline|circle)$/i.test(node.tagName)) {
+    const stroke = active ? color : "var(--divider-color,#dbe4ee)";
+    if (node.dataset.dmFlowStroke !== stroke) {
+      node.dataset.dmFlowStroke = stroke;
+      node.style.stroke = stroke;
+    }
+    if (node.getAttribute("fill") && node.getAttribute("fill") !== "none") {
+      const fill = active ? color : "var(--divider-color,#dbe4ee)";
+      if (node.dataset.dmFlowFill !== fill) {
+        node.dataset.dmFlowFill = fill;
+        node.style.fill = fill;
+      }
+    }
+  }
+}
+function scopeFor(period) {
+  if (period === "day") return doc?.getElementById("view-day");
+  if (period === "month") return doc?.getElementById("view-month");
+  return doc?.getElementById("view-ist");
+}
+var cssEscape = (value) => String(value).replaceAll("\\", "\\\\").replaceAll('"', '\\"');
+function regolaDelleBolleVecchie() {
+  return `${FLOW_VIEWS.flatMap(
+    ({ id }) => LEGACY_LOAD_SELECTOR.split(",").map(
+      (pezzo3) => `#${id} ${pezzo3.trim()}:not([data-dm-flow-node]):not([data-dm-flow-arc])`
+    )
+  ).join(",")}{display:none!important}`;
+}
+function hideLegacyLoadTopology(stage) {
+  stage?.querySelectorAll?.(LEGACY_LOAD_SELECTOR).forEach((node) => {
+    if (node.dataset.dmFlowNode || node.dataset.dmFlowArc) return;
+    if (node.dataset.dmLegacyEnergyLoad === "replaced") return;
+    node.hidden = true;
+    setStyleProperty(node, "display", "none", "important");
+    node.dataset.dmLegacyEnergyLoad = "replaced";
+  });
+}
+function writeIcon(target, icon2) {
+  if (!target || target.dataset.dmFlowIcon === icon2) return;
+  target.dataset.dmFlowIcon = icon2;
+  writeIconGlyph(target, icon2, { size: 28, kind: "load" });
+}
+function bindNodeClick(element5, node, period) {
+  const click = node.click;
+  const signature4 = click ? `${click.kind}:${click.target || click.entity || ""}` : "";
+  if (element5.dataset.dmFlowClick === signature4) return;
+  element5.dataset.dmFlowClick = signature4;
+  element5.classList.toggle("hist-clickable", Boolean(click));
+  element5.onclick = click ? (event) => {
+    if (click.kind === "ev") root.apriPopup?.();
+    else if (click.kind === "subloads") root.apriSubLoads?.(click.target);
+    else root.apriStorico?.(event, click.entity, click.title);
+  } : null;
+  if (click) element5.dataset.dmFlowClickPeriod = period;
+}
+function adattaIlNome(cerchio2, nome) {
+  const largo = cerchio2?.clientWidth || 0;
+  if (!nome || !largo) return;
+  const chiave2 = `${nome.textContent}|${largo}`;
+  if (nome.dataset.dmAdattato === chiave2) return;
+  nome.style.removeProperty("font-size");
+  delete nome.dataset.dmNomeLungo;
+  const stile9 = doc.defaultView?.getComputedStyle?.(nome);
+  const misura9 = Number.parseFloat(stile9?.fontSize) || 0;
+  const troppo = nome.scrollWidth > nome.clientWidth + 1 || nome.scrollHeight > misura9 * 1.1 * 2 + 1;
+  if (troppo) nome.dataset.dmNomeLungo = "true";
+  nome.dataset.dmAdattato = chiave2;
+}
+function ensureBubble(stage, node, period, scale) {
+  let element5 = stage.querySelector(`[data-dm-flow-node="${cssEscape(node.id)}"]`);
+  if (!element5) {
+    element5 = doc.createElement("div");
+    element5.className = "node n-load dm-flow-node";
+    element5.dataset.dmFlowNode = node.id;
+    for (const [tag, className] of [
+      ["div", "node-label"],
+      ["div", "node-icon"],
+      ["span", "dm-flow-value"]
+    ]) {
+      const child = doc.createElement(tag);
+      child.className = className;
+      element5.append(child);
+    }
+    stage.append(element5);
+  }
+  setStyleProperty(element5, "left", `${node.desktop.left}%`);
+  setStyleProperty(element5, "top", `${node.desktop.top}%`);
+  setStyleProperty(element5, "--n-color", node.color);
+  setStyleProperty(element5, "--dm-flow-color", node.color);
+  setStyleProperty(element5, "--dm-flow-scale", String(scale));
+  setStyleProperty(element5, "--dm-flow-mobile-left", `${node.mobile.left}%`);
+  setStyleProperty(element5, "--dm-flow-mobile-top", `${node.mobile.top}%`);
+  const label = element5.querySelector(".node-label");
+  scriviTestoSeCambia(label, node.name);
+  adattaIlNome(element5, label);
+  writeIcon(element5.querySelector(".node-icon"), node.icon);
+  const value = element5.querySelector(".dm-flow-value");
+  scriviTestoSeCambia(value, node.text);
+  scriviDatoSeCambia(element5, "dmCanonicalLoad", node.id);
+  scriviDatoSeCambia(element5, "dmFlowPeriod", period);
+  scriviDatoSeCambia(element5, "dmFlowActive", node.active ? "true" : "false");
+  scriviDatoSeCambia(element5, "dmFlowWaiting", node.waiting ? "true" : "false");
+  scriviDatoSeCambia(element5, "dmFlowSensore", node.sensore === false ? "false" : "true");
+  if (node.nuovo) scriviDatoSeCambia(element5, "dmFlowNuovo", "true");
+  else if (element5.dataset && "dmFlowNuovo" in element5.dataset) delete element5.dataset.dmFlowNuovo;
+  const residuo = node.nonMisurato !== void 0;
+  if (residuo) scriviDatoSeCambia(element5, "dmFlowNonMisurato", String(node.nonMisurato));
+  else if (element5.dataset && "dmFlowNonMisurato" in element5.dataset)
+    delete element5.dataset.dmFlowNonMisurato;
+  const suggerimento = node.sensore === false ? t("Nessun sensore collegato.", "No sensor linked.") : node.waiting ? t("Sto leggendo i consumi da Home Assistant…", "Reading consumption from Home Assistant…") : residuo ? t(
+    "Consumo di Casa non misurato dai carichi configurati (Casa meno la somma dei carichi).",
+    "Home consumption not measured by the configured loads (Home minus the sum of the loads)."
+  ) : "";
+  if ((element5.title || "") !== suggerimento) element5.title = suggerimento;
+  bindNodeClick(element5, node, period);
+  return element5;
+}
+function ensureArc(svg3, node, variant) {
+  if (!svg3) return null;
+  let path = svg3.querySelector(`[data-dm-flow-arc="${cssEscape(node.id)}"]`);
+  if (!path) {
+    path = doc.createElementNS(SVG_NS, "path");
+    path.dataset.dmFlowArc = node.id;
+    path.classList.add("flow-line", "dm-flow-arc");
+    svg3.append(path);
+  }
+  const geometry = variant === "mobile" ? node.mobile : node.desktop;
+  if (path.getAttribute("d") !== geometry.path) path.setAttribute("d", geometry.path);
+  setStyleProperty(path, "--line-color", node.color);
+  setStyleProperty(path, "--dm-flow-width", `${node.intensity.width}px`);
+  setStyleProperty(path, "--dm-flow-duration", `${node.intensity.duration}s`);
+  scriviDatoSeCambia(path, "dmFlowValue", String(node.value ?? ""));
+  colorNode(path, node.color, node.active);
+  return path;
+}
+function pruneStale(stage, keep) {
+  stage.querySelectorAll("[data-dm-flow-node],[data-dm-flow-arc]").forEach((node) => {
+    const id = node.dataset.dmFlowNode || node.dataset.dmFlowArc;
+    if (keep.has(id)) return;
+    node.__dmBinario?.remove?.();
+    node.remove();
+  });
+  togliIBinariSenzaLinea(stage);
+}
+function togliIBinariSenzaLinea(radice3) {
+  let tolti = 0;
+  for (const sotto of radice3?.querySelectorAll?.(".dm-flow-binario") || []) {
+    const linea = sotto.__dmLinea;
+    if (linea && linea.__dmBinario === sotto && linea.parentNode === sotto.parentNode) continue;
+    sotto.remove();
+    tolti += 1;
+  }
+  return tolti;
+}
+var ARIA_FRA_BOLLE = 16;
+var QUANTO_STRETTE_AL_MASSIMO = 0.55;
+var SOGLIE = Object.freeze([
+  { quando: "(max-width: 480px)", bolla: 96, stretto: true },
+  { quando: "(max-width: 768px)", bolla: 104, stretto: true }
+]);
+var BOLLA_LARGA = 130;
+function comeSiamoMessi() {
+  for (const soglia3 of SOGLIE) {
+    try {
+      if (root.matchMedia?.(soglia3.quando)?.matches) return soglia3;
+    } catch (_errore) {
+    }
+  }
+  return { bolla: BOLLA_LARGA, stretto: false };
+}
+function misureDelCarico(lato) {
+  const misura9 = Number(lato) > 0 ? Number(lato) : BOLLA_LARGA;
+  const aMezzoPunto = (valore3) => Math.round(valore3 * 2) / 2;
+  const fra = (valore3, minimo, massimo) => Math.min(massimo, Math.max(minimo, valore3));
+  return Object.freeze({
+    numero: fra(aMezzoPunto(misura9 * 0.155), 11, 20),
+    nome: fra(aMezzoPunto(misura9 * 0.099), 8, 11.5),
+    icona: fra(Math.round(misura9 * 0.22), 16, 26),
+    disegno: fra(Math.round(misura9 * 0.22), 18, 28)
+  });
+}
+function regoleDelCarico(lato) {
+  const { numero: numero67, nome, icona: icona3, disegno: disegno8 } = misureDelCarico(lato);
+  return [
+    `#page-energy .n-load{width:${lato}px!important;height:${lato}px!important}`,
+    `#page-energy .n-load .node-label{font-size:${nome}px!important;letter-spacing:0!important}`,
+    `#page-energy :is(#view-ist,#view-day,#view-month) .n-load span:not(.dual-val){font-size:${numero67}px!important}`,
+    `#page-energy .n-load .node-icon{font-size:${icona3}px!important}`,
+    `#page-energy .n-load .node-icon svg{width:${disegno8}px!important;height:${disegno8}px!important}`
+  ].join("\n    ");
+}
+function quanteInFila(nodes, stretto) {
+  const perFila = /* @__PURE__ */ new Map();
+  for (const nodo4 of nodes) {
+    const dove3 = stretto ? nodo4.mobile?.top : nodo4.desktop?.top;
+    perFila.set(dove3, (perFila.get(dove3) || 0) + 1);
+  }
+  return perFila.size ? Math.max(...perFila.values()) : 1;
+}
+function passoPiuStretto(nodes, stretto) {
+  const perFila = /* @__PURE__ */ new Map();
+  for (const nodo4 of nodes) {
+    const dove3 = stretto ? nodo4.mobile : nodo4.desktop;
+    if (!dove3) continue;
+    const fila2 = perFila.get(dove3.top) || [];
+    fila2.push(Number(dove3.left));
+    perFila.set(dove3.top, fila2);
+  }
+  let passo = 0;
+  for (const fila2 of perFila.values()) {
+    fila2.sort((a, b2) => a - b2);
+    for (let i = 1; i < fila2.length; i += 1) {
+      const qui = fila2[i] - fila2[i - 1];
+      if (qui > 0 && (!passo || qui < passo)) passo = qui;
+    }
+  }
+  return passo;
+}
+function quantoCiStaNelPalco(stage, model2, scala2) {
+  const largo = stage?.getBoundingClientRect?.().width || 0;
+  const { bolla, stretto } = comeSiamoMessi();
+  const inFila = quanteInFila(model2.nodes, stretto);
+  if (!largo || inFila <= 1) return scala2;
+  const passo = largo * passoPiuStretto(model2.nodes, stretto) / 100 || largo / (inFila + 1);
+  const ciSta = Math.max(0, passo - ARIA_FRA_BOLLE) / bolla;
+  const tetto = stretto ? 1 : scala2;
+  return Math.max(QUANTO_STRETTE_AL_MASSIMO, Math.min(tetto, Number(ciSta.toFixed(3))));
+}
+function renderDynamicFlowLoads(period, model2 = stageModel(period)) {
+  const view = FLOW_VIEWS.find((entry) => entry.period === period);
+  const scope = view ? doc?.getElementById(view.id) : null;
+  const stage = scope?.querySelector?.(".flow-stage");
+  if (!stage) return 0;
+  hideLegacyLoadTopology(stage);
+  const desktopSvg = stage.querySelector("svg.desktop-svg") || stage.querySelector("svg");
+  const mobileSvg = stage.querySelector("svg.mobile-svg");
+  const keep = /* @__PURE__ */ new Set();
+  const diSerie = state72.modelliDiSerie?.[period];
+  const scala2 = quantoCiStaNelPalco(
+    stage,
+    diSerie?.nodes?.length === model2.nodes.length ? diSerie : model2,
+    model2.scale
+  );
+  for (const node of model2.nodes) {
+    keep.add(node.id);
+    ensureBubble(stage, node, period, scala2);
+    ensureArc(desktopSvg, node, "desktop");
+    ensureArc(mobileSvg, node, "mobile");
+  }
+  pruneStale(stage, keep);
+  scriviDatoSeCambia(stage, "dmFlowLoads", String(model2.count));
+  scriviDatoSeCambia(scope, "dmCanonicalLoadCount", String(model2.count));
+  scriviDatoSeCambia(scope, "dmFlowOwner", "beta30");
+  return model2.count;
+}
+function energiaDellImpianto() {
+  const scelto = clean(root.localStorage?.getItem(IMPIANTO_SCELTO_KEY));
+  return plantModel(section("energy", {}), scelto);
+}
+function potenzaViva(reference) {
+  const entity2 = resolvedEntity3(reference);
+  const states = allStates();
+  const nodo4 = states[entity2] || states[clean(reference)];
+  if (!nodo4 || nodo4.state === void 0) return null;
+  const raw = String(nodo4.state);
+  if (raw === "unknown" || raw === "unavailable") return null;
+  return wattsFromState(nodo4);
+}
+var SORGENTI_ISTANTANEE = Object.freeze({
+  solar: "dm.energy_potenza_fotovoltaico",
+  grid: "dm.energy_potenza_scambio_rete",
+  battery: "dm.energy_potenza_batteria",
+  home: "dm.energy_potenza_consumo_casa"
+});
+function instantSourceFlows() {
+  const fonti = [
+    SORGENTI_ISTANTANEE.solar,
+    SORGENTI_ISTANTANEE.grid,
+    SORGENTI_ISTANTANEE.battery
+  ].map((ref) => ({
+    configurata: resolvedEntity3(ref) !== clean(ref),
+    valore: potenzaViva(ref)
+  }));
+  const [sole, rete, batteria] = fonti;
+  if (fonti.every((fonte) => fonte.valore === null)) return null;
+  if (fonti.some((fonte) => fonte.configurata && fonte.valore === null)) return null;
+  return allocateSourceFlows({
+    solar: sole.valore ?? 0,
+    grid: rete.valore ?? 0,
+    battery: batteria.valore ?? 0
+  });
+}
+function loSbilancioDaDire() {
+  const detto3 = laQuadraturaNonTorna({
+    solar: potenzaViva(SORGENTI_ISTANTANEE.solar),
+    grid: potenzaViva(SORGENTI_ISTANTANEE.grid),
+    battery: potenzaViva(SORGENTI_ISTANTANEE.battery),
+    home: potenzaViva(SORGENTI_ISTANTANEE.home)
+  });
+  const cera = state72.sbilancioDiPrima;
+  state72.sbilancioDiPrima = Boolean(detto3);
+  return cera && detto3 ? detto3 : null;
+}
+var BOLLE_SOSPETTABILI = Object.freeze([
+  ["battery", "n-battery"],
+  ["grid", "n-grid"]
+]);
+function disegnaLoSbilancio() {
+  const scope = scopeFor("");
+  if (!scope) return false;
+  const detto3 = loSbilancioDaDire();
+  for (const [quale, id] of BOLLE_SOSPETTABILI) {
+    const bolla = scope.querySelector(`#${id}`);
+    if (!bolla) continue;
+    const suo2 = Boolean(detto3) && detto3.chi === quale;
+    if (bolla.hasAttribute("data-dm-sbilancio") !== suo2)
+      bolla.toggleAttribute("data-dm-sbilancio", suo2);
+  }
+  let nota2 = scope.querySelector("[data-dm-flow-sbilancio]");
+  if (!detto3) {
+    nota2?.remove();
+    return false;
+  }
+  if (!nota2) {
+    nota2 = doc.createElement("div");
+    nota2.setAttribute("data-dm-flow-sbilancio", "");
+    nota2.className = "dm-flow-sbilancio";
+    scope.append(nota2);
+  }
+  scriviTestoSeCambia(
+    nota2,
+    `⚠️ ${t("I conti non tornano", "The numbers do not add up")} · ${Math.round(
+      detto3.entra
+    )} W → ${Math.round(detto3.esce)} W. ${t(
+      "Esce più corrente di quanta ne entra: di solito è il verso di un sensore al contrario.",
+      "More power is going out than coming in: usually a sensor's direction is reversed."
+    )}`
+  );
+  return true;
+}
+function instantEdgeValue(node, flussi) {
+  const id = String(node?.id || "").toLowerCase();
+  if (id.includes("grid-battery")) return flussi.gridToBattery;
+  if (id.includes("battery-grid")) return flussi.batteryToGrid;
+  if (id.includes("solar-grid")) return flussi.solarToGrid;
+  if (id.includes("solar-battery")) return flussi.solarToBattery;
+  if (id.includes("grid-home")) return flussi.gridToHome;
+  if (id.includes("battery-home")) return flussi.batteryToHome;
+  if (id.includes("solar-home")) return flussi.solarToHome;
+  return null;
+}
+var ARCHI_RETE_BATTERIA = Object.freeze([
+  { anchor: "line-grid-home", id: "line-grid-battery", d: "M 307 185 Q 500 132 693 185" },
+  { anchor: "m-line-grid-home", id: "m-line-grid-battery", d: "M 200 280 Q 500 180 800 280" },
+  /* Lo stesso corridoio, percorso al contrario: la batteria che immette in
+   * rete. Non si accendono mai insieme — prelievo e immissione sono i due
+   * segni dello stesso numero — quindi condividere l'arco non sovrappone
+   * niente. Senza questo, l'immissione della batteria si appoggiava alla
+   * linea del solare: un'esportazione disegnata da un pannello che non sta
+   * producendo. */
+  { anchor: "line-grid-home", id: "line-battery-grid", d: "M 693 185 Q 500 132 307 185" },
+  { anchor: "m-line-grid-home", id: "m-line-battery-grid", d: "M 800 280 Q 500 180 200 280" }
+]);
+function ensureGridBatteryPaths() {
+  for (const arco4 of ARCHI_RETE_BATTERIA) {
+    if (doc.getElementById(arco4.id)) continue;
+    const vicino = doc.getElementById(arco4.anchor);
+    if (!vicino?.parentNode) continue;
+    const path = doc.createElementNS(SVG_NS, "path");
+    path.id = arco4.id;
+    path.setAttribute("class", "flow-line");
+    path.setAttribute("d", arco4.d);
+    vicino.parentNode.insertBefore(path, vicino);
+  }
+}
+function mainLineColor(node) {
+  const id = String(node?.id || "").toLowerCase();
+  if (id.includes("solar")) return COLORS.solar;
+  if (id.includes("battery")) return COLORS.battery;
+  if (id.includes("grid")) return COLORS.grid;
+  if (id.includes("home")) return COLORS.home;
+  return "var(--text-dim,#64748b)";
+}
+function isLoadLine(node) {
+  if (node?.dataset?.dmFlowArc) return true;
+  const id = String(node?.id || "");
+  return /line-home-(?:boiler|wb|clima|lav|cuc)(?:-(?:day|month))?$/i.test(id);
+}
+function mainValueNode(kind, period) {
+  const suffix = period ? `-${period}` : "";
+  return doc?.getElementById(`v-${kind}${suffix}`) || null;
+}
+function mainKinds(node) {
+  const id = String(node?.id || "").toLowerCase();
+  return ["solar", "grid", "battery", "home"].filter((kind) => id.includes(kind));
+}
+function periodDirectionalValue(node, direction) {
+  if (!nodeVisible(node)) return null;
+  const parts = [...node.querySelectorAll?.("span") || []].filter(nodeVisible);
+  const index = direction === "import" || direction === "charge" ? 0 : 1;
+  const part = parts[index];
+  return part ? numberFrom(part) : null;
+}
+function directionalEndpointValue(kind, node, period) {
+  const valueNode = mainValueNode(kind, period);
+  if (!valueNode || !nodeVisible(valueNode)) return null;
+  const id = String(node?.id || "").toLowerCase();
+  if (!period) {
+    const signed = potenzaViva(SORGENTI_ISTANTANEE[kind]);
+    if (signed === null) return null;
+    if (kind === "grid")
+      return id.includes("solar-grid") ? Math.max(0, -signed) : Math.max(0, signed);
+    if (kind === "battery")
+      return id.includes("solar-battery") ? Math.max(0, -signed) : Math.max(0, signed);
+    return Math.abs(signed);
+  }
+  if (kind === "grid")
+    return periodDirectionalValue(valueNode, id.includes("solar-grid") ? "export" : "import");
+  if (kind === "battery")
+    return periodDirectionalValue(valueNode, id.includes("solar-battery") ? "charge" : "discharge");
+  return numberFrom(valueNode);
+}
+function directionalMainFlowValue(node, period) {
+  const id = String(node?.id || "").toLowerCase();
+  if (id.includes("grid-battery") || id.includes("battery-grid")) return null;
+  if (id.includes("solar-grid")) return directionalEndpointValue("grid", node, period);
+  if (id.includes("solar-battery")) return directionalEndpointValue("battery", node, period);
+  if (id.includes("grid-home")) return directionalEndpointValue("grid", node, period);
+  if (id.includes("battery-home")) return directionalEndpointValue("battery", node, period);
+  if (id.includes("solar-home")) return directionalEndpointValue("solar", node, period);
+  const kinds = mainKinds(node);
+  for (const kind of kinds) {
+    if (kind === "home") continue;
+    const value = directionalEndpointValue(kind, node, period);
+    if (value !== null) return value;
+  }
+  return kinds.includes("home") ? directionalEndpointValue("home", node, period) : null;
+}
+function displayedMainFlow(node, period) {
+  const threshold = period ? 5e-4 : 0.5;
+  const value = directionalMainFlowValue(node, period);
+  return value === null ? null : value > threshold;
+}
+function mirrorLegacyMainFlows(scope, period) {
+  if (!scope) return false;
+  let touched = false;
+  const flussi = period ? null : instantSourceFlows();
+  scope.querySelectorAll(".flow-line,path[id*='line-' i],line[id*='line-' i],polyline[id*='line-' i]").forEach((node) => {
+    if (!/^(path|line|polyline)$/i.test(node.tagName) || isLoadLine(node)) return;
+    const legacyActive = node.classList.contains("active");
+    const edge = flussi ? instantEdgeValue(node, flussi) : null;
+    const displayedActive = edge === null ? displayedMainFlow(node, period) : edge > 0.5;
+    const active = displayedActive === null ? legacyActive : displayedActive;
+    colorNode(node, mainLineColor(node), active);
+    const kinds = mainKinds(node);
+    scriviDatoSeCambia(node, "dmMainFlow", kinds.join("-"));
+    scriviDatoSeCambia(node, "dmFlowPeriod", period || "instant");
+    const value = edge === null ? directionalMainFlowValue(node, period) : edge;
+    if (value !== null) scriviDatoSeCambia(node, "dmFlowValue", String(value));
+    touched = true;
+  });
+  return touched;
+}
+function refreshEnergyFlows() {
+  if (!doc) return false;
+  beginVisibilityPass();
+  ensureGridBatteryPaths();
+  mettiIPrincipali();
+  posaLeLinee();
+  let touched = false;
+  for (const view of FLOW_VIEWS) {
+    const period = view.period === "instant" ? "" : view.period;
+    const scope = scopeFor(period);
+    if (!scope) continue;
+    touched = mirrorLegacyMainFlows(scope, period) || touched;
+    touched = renderDynamicFlowLoads(view.period) > 0 || touched;
+    scriviDatoSeCambia(scope, "dmEnergyFlows", "directional-value-bound");
+  }
+  disegnaLoSbilancio();
+  const batteria = potenzaViva(SORGENTI_ISTANTANEE.battery);
+  const testo5 = batteria === null ? "—" : batteryReadout(batteria) ?? "0 W";
+  for (const id of ["v-battery", "m-v-battery"]) {
+    scriviTestoSeCambia(doc.getElementById(id), testo5);
+  }
+  const impianto = energiaDellImpianto();
+  renderBatterySoc(doc, impianto, allStates());
+  mostraBolleDellImpianto(impianto);
+  adattaINumeriDelleBolle(doc);
+  riempiGliAnelli(doc);
+  return touched;
+}
+var SCALE_DEL_NUMERO = { w: 1, kw: 1e3, mw: 1e6, wh: 1, kwh: 1e3, mwh: 1e6 };
+function numeroDellaBolla(testo5) {
+  const scritto3 = String(testo5 ?? "");
+  const trovato = scritto3.match(/(\d[\d.,]*)\s*(mwh|kwh|wh|mw|kw|w)\b/i);
+  if (!trovato) return null;
+  let cifre3 = trovato[1];
+  if (cifre3.includes(",")) cifre3 = cifre3.replace(/\./g, "").replace(",", ".");
+  const valore3 = Number.parseFloat(cifre3);
+  if (!Number.isFinite(valore3)) return null;
+  return valore3 * SCALE_DEL_NUMERO[trovato[2].toLowerCase()];
+}
+function quotaDellAnello(valore3, riferimento2) {
+  if (!(valore3 > 0) || !(riferimento2 > 0)) return 0;
+  return Math.min(1, Math.max(0.04, valore3 / riferimento2));
+}
+function numeroScrittoNellaBolla(bolla) {
+  return bolla?.querySelector?.(".dm-flow-value") || [...bolla?.children || []].find((figlio) => figlio.tagName === "SPAN") || null;
+}
+function riempiGliAnelli(targetDocument = doc) {
+  for (const palco of targetDocument?.querySelectorAll?.("#page-energy .flow-stage") || []) {
+    const bolle = [...palco.querySelectorAll(".node")];
+    const valori = /* @__PURE__ */ new Map();
+    let massimo = 0;
+    for (const bolla of bolle) {
+      const valore3 = numeroDellaBolla(numeroScrittoNellaBolla(bolla)?.textContent);
+      valori.set(bolla, valore3);
+      if (valore3 > massimo) massimo = valore3;
+    }
+    for (const bolla of bolle) {
+      let quota = quotaDellAnello(valori.get(bolla), massimo);
+      const carica2 = /n-battery/.test(bolla.id || "") ? Number.parseFloat(bolla.querySelector("#v-battery-soc,.dm-battery-soc")?.textContent) : Number.NaN;
+      if (Number.isFinite(carica2)) quota = Math.min(1, Math.max(0, carica2 / 100));
+      setStyleProperty(bolla, "--dm-quota", String(Math.round(quota * 1e3) / 1e3));
+    }
+  }
+}
+var QUANTO_AL_PIU_SI_STRINGE = 0.62;
+var FIRMA_DELLA_STRETTA = "__dmStretta";
+var I_NUMERI_DELLE_BOLLE = "#page-energy .node span, #page-energy .dm-flow-value";
+function stringiIlNumero(nodo4, misuraDelCarattere) {
+  if (!nodo4) return false;
+  const testo5 = String(nodo4.textContent ?? "");
+  const firma2 = `${testo5}|${ilPostoDelNumero(nodo4)}`;
+  if (nodo4[FIRMA_DELLA_STRETTA] === firma2) return false;
+  nodo4.style?.removeProperty?.("font-size");
+  const largo = Number(nodo4.scrollWidth) || 0;
+  const scatola2 = Number(nodo4.clientWidth) || 0;
+  if (!scatola2) return false;
+  const spazio = Math.min(scatola2, cordaDelCerchio(nodo4) ?? Infinity);
+  nodo4[FIRMA_DELLA_STRETTA] = firma2;
+  nodo4[MISURA_SUA] = 0;
+  if (!testo5.trim()) return false;
+  const base = Number(misuraDelCarattere?.(nodo4)) || 0;
+  nodo4[MISURA_DEL_FOGLIO] = base;
+  if (!largo || largo <= spazio + 1) {
+    nodo4[MISURA_SUA] = base;
+    return false;
+  }
+  if (!base) return false;
+  const quanto = Math.max(spazio / largo, QUANTO_AL_PIU_SI_STRINGE);
+  const misura9 = Math.floor(base * quanto * 10) / 10;
+  nodo4.style.setProperty("font-size", `${misura9}px`, "important");
+  nodo4[MISURA_SUA] = misura9;
+  return true;
+}
+var MISURA_SUA = "__dmMisuraSua";
+var MISURA_DEL_FOGLIO = "__dmMisuraDelFoglio";
+function stessaMisuraPerFascia(nodi2) {
+  const gruppi2 = /* @__PURE__ */ new Map();
+  for (const nodo4 of nodi2) {
+    const bolla = nodo4?.closest?.(".node");
+    const misura9 = Number(nodo4?.[MISURA_SUA]) || 0;
+    if (!bolla || !misura9) continue;
+    if (!/[\d—–]/.test(String(nodo4.textContent ?? ""))) continue;
+    if (eUnContenitore(nodo4)) continue;
+    const vista2 = bolla.closest?.("[id^='view-']") || bolla.parentElement;
+    const fascia2 = bolla.classList?.contains?.("n-load") ? "carichi" : "cerchioni";
+    if (!gruppi2.has(vista2)) gruppi2.set(vista2, /* @__PURE__ */ new Map());
+    const perFascia = gruppi2.get(vista2);
+    if (!perFascia.has(fascia2)) perFascia.set(fascia2, []);
+    perFascia.get(fascia2).push({ nodo: nodo4, misura: misura9 });
+  }
+  let tocchi = 0;
+  for (const perFascia of gruppi2.values()) {
+    for (const voci4 of perFascia.values()) {
+      const minima = Math.min(...voci4.map((voce3) => voce3.misura));
+      for (const { nodo: nodo4 } of voci4) {
+        const voluta = minima >= (Number(nodo4[MISURA_DEL_FOGLIO]) || 0) ? "" : `${minima}px`;
+        const adesso2 = nodo4.style?.getPropertyValue?.("font-size") || "";
+        if (voluta === adesso2) continue;
+        if (voluta) nodo4.style.setProperty("font-size", voluta, "important");
+        else nodo4.style.removeProperty("font-size");
+        tocchi += 1;
+      }
+    }
+  }
+  return tocchi;
+}
+function eUnContenitore(nodo4) {
+  return Boolean(nodo4?.querySelector?.("span"));
+}
+function ilPostoDelNumero(nodo4) {
+  const bolla = nodo4?.closest?.(".node");
+  if (!bolla) return "";
+  const nome = bolla.querySelector?.(".node-label");
+  return `${bolla.offsetWidth || 0}x${nome?.offsetHeight || 0}`;
+}
+var BORDO_E_ARIA = 8;
+function cordaDelCerchio(nodo4) {
+  const bolla = nodo4?.closest?.(".node");
+  if (!bolla?.getBoundingClientRect || !nodo4.getBoundingClientRect) return null;
+  const b2 = bolla.getBoundingClientRect();
+  const t2 = nodo4.getBoundingClientRect();
+  if (!b2.width || !t2.height) return null;
+  const scala2 = bolla.offsetWidth > 0 ? b2.width / bolla.offsetWidth : 1;
+  const r = b2.width / 2 - BORDO_E_ARIA * scala2;
+  const cy = b2.top + b2.height / 2;
+  const dy = Math.max(Math.abs(t2.top - cy), Math.abs(t2.bottom - cy));
+  if (r <= 0) return null;
+  return dy >= r ? 0 : 2 * Math.sqrt(r * r - dy * dy) / scala2;
+}
+function misuraDalFoglio(nodo4) {
+  const vista2 = root.getComputedStyle?.(nodo4);
+  return vista2 ? Number.parseFloat(vista2.fontSize) : 0;
+}
+function adattaINumeriDelleBolle(targetDocument = doc) {
+  const nodi2 = targetDocument?.querySelectorAll?.(I_NUMERI_DELLE_BOLLE);
+  if (!nodi2) return 0;
+  let tocchi = 0;
+  for (const nodo4 of nodi2) {
+    if (eUnContenitore(nodo4)) continue;
+    if (stringiIlNumero(nodo4, misuraDalFoglio)) tocchi += 1;
+  }
+  tocchi += stessaMisuraPerFascia(nodi2);
+  return tocchi;
+}
+function mostraBolleDellImpianto(impianto) {
+  const risolto = applySignedSources(impianto || {});
+  const assente = {
+    solar: !clean(risolto?.solar?.power),
+    battery: !clean(risolto?.battery?.power)
+  };
+  if (!assente.solar && !assente.battery) {
+    for (const nodo4 of doc?.querySelectorAll?.("[data-dm-impianto-nasconde]") || []) {
+      riportaInScena(nodo4);
+    }
+    return;
+  }
+  const nomina = (id, sorgente) => id.includes(sorgente);
+  for (const nodo4 of doc?.querySelectorAll?.(SELETTORE_DEL_FLUSSO) || []) {
+    const id = String(nodo4.id || "").toLowerCase();
+    const via = assente.solar && nomina(id, "solar") || assente.battery && nomina(id, "battery");
+    if (via) {
+      setStyleProperty(nodo4, "display", "none", "important");
+      scriviDatoSeCambia(nodo4, "dmImpiantoNasconde", "true");
+    } else {
+      riportaInScena(nodo4);
+    }
+  }
+}
+var SELETTORE_DEL_FLUSSO = "#page-energy [id^='n-solar'],#page-energy [id^='n-battery'],#page-energy [id^='m-n-solar'],#page-energy [id^='m-n-battery'],#page-energy [id*='line-']";
+function riportaInScena(nodo4) {
+  if (nodo4?.dataset?.dmImpiantoNasconde !== "true") return;
+  nodo4.style.removeProperty("display");
+  delete nodo4.dataset.dmImpiantoNasconde;
+}
+function laScenaSiVede() {
+  const pagina3 = doc?.getElementById?.("page-energy");
+  return !pagina3 || pagina3.classList.contains("active");
+}
+function schedule26() {
+  if (state72.frame) return;
+  const run2 = () => {
+    state72.frame = 0;
+    if (!laScenaSiVede()) return;
+    refreshEnergyFlows();
+  };
+  state72.frame = root.requestAnimationFrame?.(run2) || root.setTimeout?.(run2, 0);
+}
+function scheduleSettled2() {
+  schedule26();
+  root.setTimeout?.(schedule26, 80);
+}
+function bindStore() {
+  if (state72.storeBound) return;
+  const store = dashboardStore();
+  if (!store?.subscribe) return;
+  state72.storeBound = true;
+  store.subscribe((change) => {
+    if (["loads", "energy"].includes(change?.section)) scheduleSettled2();
+  });
+}
+function installStyles30() {
+  installStyle(
+    "dm-energy-flow-section-style",
+    `
+    ${regolaDelleBolleVecchie()}
+    /* La nota di quando i conti non tornano (#134), e il cerchio sospettato.
+     *
+     * La nota sta sotto la mappa e non sopra: chi apre questa pagina viene
+     * per il disegno, e un cartello in cima glielo copre. L'ambra e non il
+     * rosso perche' non e' un guasto — l'impianto sta funzionando benissimo,
+     * e' un numero che arriva girato — e il rosso qui dentro e' gia' la
+     * tinta di un'altra cosa.
+     *
+     * Il cerchio si segna con un anello tratteggiato dello stesso colore,
+     * cosi' chi legge la nota sa dove guardare senza che la nota debba
+     * nominarlo: tre frasi diverse per dire «la batteria» o «la rete»
+     * sarebbero tre frasi in tredici lingue per quello che un anello dice
+     * meglio. */
+    .dm-flow-sbilancio{margin:10px 12px 2px!important;padding:9px 12px!important;border-radius:12px!important;background:color-mix(in srgb,#f59e0b 12%,transparent)!important;border:1px solid color-mix(in srgb,#f59e0b 42%,transparent)!important;color:var(--primary-text-color,#0f172a)!important;font-size:12px!important;line-height:1.5!important}
+    [data-dm-sbilancio]{outline:2px dashed #f59e0b!important;outline-offset:3px!important;border-radius:50%!important}
+    .dm-energy-flow-active{display:inline!important;visibility:visible!important;opacity:1!important;filter:drop-shadow(0 0 6px color-mix(in srgb,var(--dm-flow-color) 52%,transparent))!important;transition:stroke .18s ease,fill .18s ease,opacity .18s ease!important}
+    /* Un collegamento spento non si disegna affatto.
+     *
+     * «Nello sfondo si vedono le linee tratteggiate che vanno da un cerchio
+     * all'altro: le linee devono comparire solo quando c'e' il flow colorato
+     * che va verso il cerchio.»
+     *
+     * Le rotaie grigie erano la mappa dell'impianto — tutti i collegamenti
+     * possibili, sempre — e sopra ci scorreva il tratteggio colorato di quelli
+     * vivi. Ma la scena dice una cosa sola: dove sta passando l'energia
+     * adesso. Una rotaia spenta e' un collegamento che non porta niente
+     * disegnato accanto a uno che porta, e a colpo d'occhio sono la stessa
+     * cosa: il solare che va in rete sembrava disegnato anche a mezzanotte.
+     *
+     * Adesso si vede quello che scorre, e basta. La riga che il collegamento
+     * occupa resta dov'e' — il tratteggio ricompare nello stesso posto appena
+     * il ramo riparte, e la dissolvenza di mezzo secondo del guscio lo fa
+     * entrare e uscire senza scatti. */
+    .dm-energy-flow-idle{opacity:0!important;filter:none!important;transition:stroke .18s ease,fill .18s ease,opacity .18s ease!important}
+    /* Anche le linee dei carichi disegnate dal guscio, che la scena non
+       colora: la loro accensione e' la classe «active» di sempre.
+       
+       Ma solo dentro una scena che questa pagina ha gia' dipinto almeno una
+       volta — da qui il segno sull'ambito, che la passata scrive a ogni giro.
+       Senza quel vincolo questa riga era capace di svuotare la mappa da sola:
+       una passata che non parte — un guscio fatto in un altro modo, un
+       fotogramma che non arriva mai su un browser che non abbiamo qui — non
+       mette nessuna classe su nessuna linea, e allora la regola le spegneva
+       TUTTE, comprese quelle che il guscio aveva acceso. «Da iPad non si
+       vedono i flussi» (#548) ha questa forma, e comunque vada a finire una
+       nostra riga di stile non deve poter cancellare il disegno di chi c'era
+       prima: se non stiamo guidando noi, si vede quello che dice il guscio. */
+    [data-dm-energy-flows] .flow-line:not(.active):not(.dm-energy-flow-active){opacity:0!important}
+    /* La scia di luce: una cometa per tratto, che corre sul binario tenue
+       della sua strada. Il percorso e' lungo cento (\`pathLength\`, vedi
+       \`binario\`): una scia di quattordici, e il vuoto per il resto. */
+    .flow-line.dm-energy-flow-active,path.dm-energy-flow-active,line.dm-energy-flow-active,polyline.dm-energy-flow-active{stroke:var(--dm-flow-color)!important;stroke-dasharray:14 86!important;stroke-linecap:round!important;animation-name:dmEnergyFlowDash!important;animation-duration:1.6s!important;animation-timing-function:linear!important;animation-iteration-count:infinite!important;animation-play-state:running!important;will-change:stroke-dashoffset!important}
+    @keyframes dmEnergyFlowDash{from{stroke-dashoffset:0}to{stroke-dashoffset:-100}}
+    .dm-flow-binario{fill:none!important;stroke:var(--dm-flow-color)!important;stroke-opacity:.2!important;stroke-width:var(--dm-flow-width,3px)!important;stroke-linecap:round!important;stroke-dasharray:none!important;animation:none!important;filter:none!important;pointer-events:none!important;opacity:1!important}
+    .dm-flow-binario[data-acceso="false"]{display:none!important}
+    #page-energy .flow-line.dm-energy-flow-active,#page-energy path.dm-energy-flow-active{stroke-width:calc(var(--dm-flow-width,3px) + 1.5px)!important;filter:drop-shadow(0 0 5px var(--dm-flow-color))!important}
+    .flow-stage path.dm-flow-arc.dm-energy-flow-active{animation-duration:calc(var(--dm-flow-duration,.8s) * 2)!important}
+    /* I cerchi come le tessere della plancia: la stessa carta, lo stesso
+       bordo sottile, la stessa ombra morbida. Il colore non sta piu' nel
+       bordo pieno ma nell'anello che gira intorno e si riempie quanto pesa
+       il numero (\`riempiGliAnelli\`): la batteria quanto e' carica, gli
+       altri rispetto al piu' grosso della scena. */
+    #page-energy .flow-stage .node{
+      background:var(--card-bg,#fff)!important;
+      border:1px solid var(--card-border,rgba(148,163,184,.25))!important;
+      box-shadow:0 4px 14px rgba(15,23,42,.08)!important}
+    #page-energy .flow-stage .node::before{content:""!important;position:absolute!important;inset:-7px!important;border-radius:50%!important;z-index:-1!important;pointer-events:none!important;
+      background:conic-gradient(var(--n-color,#64748b) calc(var(--dm-quota,0) * 1turn),color-mix(in srgb,var(--n-color,#64748b) 16%,transparent) 0)!important;
+      -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4.5px))!important;
+      mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4.5px))!important;
+      transition:background .4s ease!important}
+    #page-energy .flow-stage .node::after{display:none!important}
+    #page-energy .flow-stage .node.active,#page-energy .flow-stage .node.dm-flow-node[data-dm-flow-active="true"]{
+      box-shadow:0 4px 14px rgba(15,23,42,.08),0 0 22px color-mix(in srgb,var(--n-color,#3b82f6) 30%,transparent)!important}
+    #page-energy .flow-stage .n-home{--n-color:#3b82f6!important}
+    /* Nessuna eccezione per "riduci movimento": il tratteggio che scorre non e'
+       una decorazione ma l'unico segnale che l'energia sta passando, e la
+       plancia deve mostrare le stesse linee su ogni schermo. Quella preferenza
+       e' spesso attiva su un computer e quasi mai su un telefono, quindi
+       rispettarla qui rendeva il desktop immobile mentre il telefono scorreva:
+       stessa plancia, due letture diverse. Le altre sezioni continuano a
+       rispettarla, perche' li' il moto e' effettivamente decorativo. */
+    /* An mdi icon resolved by the engine sits inside .node-icon, which already
+       sizes the emoji of the hand-authored circles at every breakpoint: the
+       glyph inherits it so a configured circle matches its neighbours. */
+    .dm-flow-node .node-icon .dm-icon-engine-glyph{font-size:inherit!important;height:auto!important}
+    /* Computed load bubbles. Width and speed of a connector follow the reading,
+       so a wallbox at 7 kW is visibly heavier than a fridge at 60 W. */
+    .flow-stage .node.dm-flow-node{display:flex!important;visibility:visible!important;transform:translate(-50%,-50%) scale(var(--dm-flow-scale,1))!important;transition:left .28s ease,top .28s ease,transform .28s ease!important}
+    .flow-stage .node.dm-flow-node[data-dm-flow-active="false"]{opacity:.62!important}
+    /* Il nome sta dentro il cerchio: largo quanto la corda in cima, al massimo
+       due righe; la misura la stringe adattaIlNome. */
+    .flow-stage .node.dm-flow-node .node-label{width:78%!important;white-space:normal!important;overflow:hidden!important;text-overflow:clip!important;line-height:1.1!important;max-height:2.25em;flex:0 0 auto!important;overflow-wrap:normal!important;word-break:normal!important}
+    .flow-stage .node.dm-flow-node .node-label[data-dm-nome-lungo]{white-space:nowrap!important;text-overflow:ellipsis!important}
+    .flow-stage path.dm-flow-arc{stroke-width:var(--dm-flow-width,3px)!important;fill:none!important}
+    /* La soglia e' quella del guscio, 768, e non una nostra.
+     *
+     * Qui c'era 820. Sembra un dettaglio e non lo e': il guscio cambia TUTTO a
+     * 768 — l'altezza del palco (da 550 a 750), la misura dei cerchi (la Casa
+     * da 160 a 125, un carico da 115 a 85), l'altezza della Casa (dal 50% al
+     * 46%) e quale dei due disegni si vede — mentre questa riga spostava da
+     * sola le bolle sulla riga stretta. Fra 769 e 820 succedeva che la bolla
+     * salisse al 68% restando grande dentro un palco rimasto alto 550: la
+     * Casa arriva a 360 e la bolla comincia a 317. **Si sovrappongono di
+     * quarantaquattro punti**, misurati, con la linea che spunta di sotto
+     * perche' il disegno mostrato e' ancora quello largo, che porta all'83%.
+     *
+     * «Wallbox sta troppo attaccato a casa»: era questo, e non era attaccato,
+     * era sopra. Il 68% e' giusto dove e' nato — nel palco alto 750 con i
+     * cerchi piccoli lascia cinquantacinque punti di aria — e sbagliato
+     * altrove. Due soglie per una stessa decisione sono due decisioni, e
+     * prima o poi non vanno d'accordo. */
+    @media(max-width:768px){
+      .flow-stage .node.dm-flow-node{left:var(--dm-flow-mobile-left,50%)!important;top:var(--dm-flow-mobile-top,83%)!important}
+    }
+    /* E la Casa un poco piu' piccola: «riesci a fare un po' piu' piccolo
+     * quello della casa». Resta il cerchio piu' grande, ma non schiaccia piu'
+     * la fila di sotto. */
+    #page-energy .n-home{width:145px!important;height:145px!important}
+    /* I cerchi sotto la Casa, che si leggono.
+     *
+     * «I dati dentro entrano a mala pena e sono troppo piccoli, il testo
+     * ancora tagliato.» Le stanze e i carichi erano i cerchi piu' piccoli del
+     * palco — 75 punti sul telefono — e per farci stare il nome il guscio lo
+     * portava a 7 pixel: «LOCALE TECNICO» toccava il bordo. Crescono solo
+     * loro, coi loro nomi e numeri; Solare, Rete, Batteria e Casa restano come
+     * sono. Le misure sono le stesse che legge \`comeSiamoMessi\`, cosi' il
+     * conto di quante bolle stanno in fila resta giusto: sul telefono tre per
+     * fila si prendono tutto lo spazio che c'e', e non di piu'.
+     *
+     * Dentro il cerchio, nome numero e icona vengono dal lato del cerchio
+     * (\`misureDelCarico\`), uguali per tutta la fila: anche nel giorno e nel
+     * mese, «i valori dei carichi sotto casa si leggono per la parte
+     * istantanea, ma sono piu' piccoli per giornaliera e mensile». */
+    ${regoleDelCarico(BOLLA_LARGA)}
+    @media(max-width:768px){
+      #page-energy .flow-stage{height:800px!important}
+      #page-energy .n-home{width:110px!important;height:110px!important}
+      ${regoleDelCarico(SOGLIE[1].bolla)}
+      /* Il guscio scriveva «BATTERIA» a 7 e gli altri tre a 8: i cerchioni
+       * sono una fascia sola, col nome della stessa misura. */
+      #page-energy .node:not(.n-load) .node-label{font-size:8px!important}
+    }
+    @media(max-width:480px){
+      #page-energy .flow-stage{height:720px!important}
+      #page-energy .n-home{width:96px!important;height:96px!important}
+      ${regoleDelCarico(SOGLIE[0].bolla)}
+    }
+  `
+  );
+}
+function installEnergyFlowSection() {
+  if (!doc || state72.installed) return;
+  state72.installed = true;
+  state72.installatoAlle = Date.now();
+  installStyles30();
+  root.dmRefreshEnergyFlows = refreshEnergyFlows;
+  for (const name of [
+    "renderEnergyMonth",
+    "renderEnergyDay",
+    "renderEnergyDashboard",
+    "applyAtomicEnergyBundle",
+    "switchEnergyView",
+    "render"
+  ])
+    wrapFunction(name, `__dmEnergyFlow_${name}`, scheduleSettled2);
+  root.addEventListener?.("dashboardmodern:period-bundle", (event) => {
+    state72.bundle = event?.detail || null;
+    scheduleSettled2();
+  });
+  root.addEventListener?.("dashboardmodern:energy-bundle", scheduleSettled2);
+  root.addEventListener?.("dashboardmodern:energy-stable", scheduleSettled2);
+  root.addEventListener?.("dashboardmodern:state-changed", schedule26);
+  root.addEventListener?.("resize", () => {
+    if (state72.attesaMisura) root.clearTimeout?.(state72.attesaMisura);
+    state72.attesaMisura = root.setTimeout?.(() => {
+      state72.attesaMisura = 0;
+      scheduleSettled2();
+    }, 160);
+  });
+  root.addEventListener?.("dashboardmodern:states-ready", scheduleSettled2);
+  root.addEventListener?.("dashboardmodern:runtime-ready", scheduleSettled2);
+  root.addEventListener?.("dashboardmodern:legacy-ready", scheduleSettled2);
+  doc.addEventListener(
+    "click",
+    (event) => {
+      if (event.target?.closest?.("[data-energy-tab],.energy-tab,.sub-tab-btn,.tab[data-tab]"))
+        scheduleSettled2();
+    },
+    true
+  );
+  bindStore();
+  rivendicaLeBolleDellaBatteria();
+  registraIlFlusso({ ridisegna: ridisegnaIlDisegno });
+  scheduleSettled2();
+}
+function rivendicaLeBolleDellaBatteria() {
+  for (const id of ["v-battery", "m-v-battery", "v-battery-soc"]) {
+    const nodo4 = doc?.getElementById?.(id);
+    if (nodo4?.dataset && nodo4.dataset.dmPadrone !== "moduli") nodo4.dataset.dmPadrone = "moduli";
+  }
+}
+if (doc?.readyState === "loading")
+  doc.addEventListener("DOMContentLoaded", installEnergyFlowSection, { once: true });
+else senzaCadere(installEnergyFlowSection);
 
 // src/core/carichi-travasati.js
 var clean27 = (value) => String(value ?? "").trim();
