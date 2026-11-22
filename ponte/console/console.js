@@ -514,8 +514,13 @@
     return String(codice).replace(/(.{4})(?=.)/g, "$1-");
   }
 
+  /* Le sedici lettere del codice a schermo, per il tasto «Copia il codice». */
+  var codiceACopiare = "";
+
   function disegnaIlCodice(codice, scadeIl) {
+    codiceACopiare = codice;
     trova("codice").textContent = aGruppi(codice);
+    trova("copia-codice").textContent = due("Copia il codice", "Copy the code");
     /* La marca del tempo non e' scaramanzia: senza, il browser rimette il
      * QR code di prima quando se ne fabbrica un altro nello stesso minuto,
      * e chi inquadra si abbina con un codice gia' speso. */
@@ -539,6 +544,7 @@
   }
 
   function nascondiIlCodice() {
+    codiceACopiare = "";
     trova("codice-vivo").hidden = true;
     trova("senza-codice").hidden = false;
     trova("a-mano").hidden = true;
@@ -2707,7 +2713,13 @@
       var parole = vediPagina.createElement("p");
       parole.id = "riabbina-parole";
       avviso.appendChild(parole);
-      var lascia = unTasto(due("Collega un'app nuova", "Connect a new app"), "tenue");
+      /* L'uscita e' una riga piccola, non un tasto: col tasto grande «Collega
+       * un'app nuova» sotto l'avviso, chi voleva riabbinare lo premeva, e il
+       * QR che ne usciva faceva un telefono in piu' invece di quello. */
+      var lascia = unTasto(
+        due("Non è questo telefono? Collega un'app nuova", "Not this phone? Connect a new app"),
+        "come-link",
+      );
       lascia.addEventListener("click", function () {
         riabbinaIl = null;
         disegnaIlRiabbina();
@@ -2719,12 +2731,12 @@
     avviso.hidden = !riabbinaIl;
     if (riabbinaIl) {
       trova("riabbina-parole").textContent = due(
-        "Questo QR riabbina «" +
+        "Il QR qui sotto riabbina «" +
           riabbinaIl.nome +
-          "», per quando l'app è stata cancellata e rimessa: resta lo stesso telefono, con il suo nome, la sua persona e i suoi dati, e non occupa un posto in più.",
-        "This QR re-pairs “" +
+          "», per quando l'app è stata cancellata e rimessa: resta lo stesso telefono, con il suo nome, la sua persona e i suoi dati, e non occupa un posto in più. Inquadralo con GdAHome da quel telefono, o se sei proprio su quel telefono copia il codice qui sotto.",
+        "The QR below re-pairs “" +
           riabbinaIl.nome +
-          "”, for when the app was deleted and reinstalled: it stays the same phone, with its name, its person and its data, and takes no extra slot.",
+          "”, for when the app was deleted and reinstalled: it stays the same phone, with its name, its person and its data, and takes no extra slot. Scan it with GdAHome from that phone or, if you are on that very phone, copy the code below.",
       );
     }
   }
@@ -2907,6 +2919,32 @@
         avvisa(errore.message);
         disegnaLeTappe();
       });
+  });
+
+  /* Le sedici lettere negli appunti, per chi e' sul telefono da collegare:
+   * GdAHome le incolla cosi' come sono, coi trattini. Dove il browser gli
+   * appunti non li da' (Home Assistant senza https) le si seleziona, e le
+   * si copia col dito. */
+  trova("copia-codice").addEventListener("click", function () {
+    var tasto = trova("copia-codice");
+    if (!codiceACopiare) return;
+    var fatto = function () {
+      tasto.textContent = due("Copiato: incollalo in GdAHome", "Copied: paste it in GdAHome");
+    };
+    var aMano = function () {
+      var scelta = vediPagina.defaultView.getSelection();
+      var tratto = vediPagina.createRange();
+      tratto.selectNodeContents(trova("codice"));
+      scelta.removeAllRanges();
+      scelta.addRange(tratto);
+      tasto.textContent = due("Selezionato: copialo", "Selected: copy it");
+    };
+    var appunti = navigator.clipboard;
+    if (!appunti || !appunti.writeText) {
+      aMano();
+      return;
+    }
+    appunti.writeText(aGruppi(codiceACopiare)).then(fatto, aMano);
   });
 
   trova("annulla").addEventListener("click", function () {

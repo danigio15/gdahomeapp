@@ -512,17 +512,24 @@
                       Il QR code comparirà qui.
                     </p>
                   </div>
-                  <details class="apribile" id="a-mano" hidden>
-                    <summary data-en="Can't scan it?">Non riesci a inquadrarlo?</summary>
+                  <!-- Le sedici lettere sempre in vista, col tasto per copiarle.
+                       Chi guarda questa pagina dal telefono da collegare (l'app di
+                       Home Assistant su quel telefono) il QR non lo puo'
+                       inquadrare: le copia e le incolla in GdAHome. Chiuse
+                       dietro un «Non riesci a inquadrarlo?» non le trovava. -->
+                  <div class="a-mano" id="a-mano" hidden>
                     <p
                       class="spiegazione"
-                      data-en="In the app tap &#8220;Enter the code&#8221; and type these letters. There are sixteen: copy them one group at a time."
+                      data-en="On the phone you are pairing? Copy the code and, in GdAHome, open &#8220;Your homes&#8221; &#8250; &#8220;Add&#8221; &#8250; &#8220;Enter the code&#8221; and paste it."
                     >
-                      Nell'app tocca «Inserisci il codice» e digita queste lettere. Sono sedici: si
-                      copiano un gruppo per volta.
+                      Sei sul telefono da collegare? Copia il codice e in GdAHome apri «Le tue case»
+                      › «Aggiungi» › «Inserisci il codice» e incollalo.
                     </p>
                     <p class="codice" id="codice"></p>
-                  </details>
+                    <button type="button" class="tenue" id="copia-codice" data-en="Copy the code">
+                      Copia il codice
+                    </button>
+                  </div>
                 </div>
               </li>
             </ol>
