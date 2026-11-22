@@ -24,6 +24,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import '../casa/ingresso_qui/qui.dart';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show SystemUiOverlayStyle;
 
 import '../casa/archivio_delle_case.dart';
 import '../casa/casa_conosciuta.dart';
@@ -418,108 +419,134 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
   /* ─── Quello che si vede ───────────────────────────────────────────────── *
    *
    * «Rifai più bella questa schermata, che è la prima che vedono le persone
-   * quando scaricano»: era un foglio bianco con un titolo e un bottone, e non
-   * diceva nemmeno cosa fa l'app. Adesso ha due parti:
+   * quando scaricano», e poi «riesci a fare ancora di meglio?». Era un foglio
+   * bianco con un titolo e un bottone, e non diceva nemmeno cosa fa l'app.
+   * Adesso ha due parti:
    *
-   * - la **presentazione** (solo alla prima casa): il marchio che si accende,
-   *   cosa si fa con GdAHome in quattro mattonelle, e il titolo;
-   * - la **scheda per collegarsi**: i tre passi numerati, il bottone, la
-   *   promessa sulla password e le due caselle facoltative.
+   * - la **copertina** (solo alla prima casa): una notte blu col marchio, «La
+   *   tua casa, in tasca.» e quattro vetrine che fanno vedere cosa si fa —
+   *   le luci, il sole, il clima, il navigatore — come le mattonelle vere;
+   * - la **scheda per collegarsi**, che sale sulla copertina: il titolo, i
+   *   tre passi esatti in Home Assistant, il bottone, la promessa sulla
+   *   password e le due caselle facoltative.
    *
-   * Sul telefono stanno una sotto l'altra; su uno schermo largo (il tablet in
-   * orizzontale) una accanto all'altra, invece di una colonna stretta in
-   * mezzo a due mari di vuoto. Le animazioni sono solo d'ingresso, una volta:
-   * niente che giri per sempre su una schermata che si guarda a lungo. */
+   * Sul telefono stanno una sotto l'altra, e il bottone si vede senza
+   * scorrere; su uno schermo largo, o basso e largo (il telefono in
+   * orizzontale), una accanto all'altra. Le animazioni sono solo d'ingresso,
+   * una volta: niente che giri per sempre. */
 
   @override
   Widget build(BuildContext context) {
     final primaCasa = widget.archivio.vuoto;
     final scuro = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      appBar: primaCasa
-          ? null
-          : AppBar(
-              title: Text(inLingua(it: 'Aggiungi una casa', en: 'Add a home')),
-              backgroundColor: Colors.transparent,
-            ),
-      body: Stack(
-        children: [
-          Positioned.fill(child: _Fondo(scuro: scuro)),
-          SafeArea(
-            child: LayoutBuilder(
-              builder: (context, spazio) {
-                /* Affiancate sullo schermo largo, e anche su quello basso e
-                 * largo (il telefono in orizzontale): una sotto l'altra il
-                 * bottone finirebbe sotto il bordo. */
-                final w = spazio.maxWidth, h = spazio.maxHeight;
-                final largo = primaCasa && (w >= 860 || (w >= 700 && w > h));
-                final margine = w >= 1000 ? 48.0 : 24.0;
-                final larghezzaScheda = ((w - margine * 2) * 0.52).clamp(
-                  340.0,
-                  470.0,
-                );
-                final scheda = _laScheda(context);
-                if (largo) {
-                  return Center(
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: margine,
-                        vertical: 24,
-                      ),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 1120),
-                        child: Row(
-                          /* Sullo schermo basso la scheda e' piu' alta della
-                           * finestra: centrata, la presentazione finiva in
-                           * fondo. Li' sta in alto, accanto ai passi. */
-                          crossAxisAlignment: h < 560
-                              ? CrossAxisAlignment.start
-                              : CrossAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: _Presentazione(
-                                aSinistra: true,
-                                compatta: h < 560,
-                              ),
-                            ),
-                            SizedBox(width: w >= 1000 ? 56 : 28),
-                            SizedBox(width: larghezzaScheda, child: scheda),
-                          ],
-                        ),
-                      ),
+    final corpo = Stack(
+      children: [
+        Positioned.fill(child: _Fondo(scuro: scuro)),
+        LayoutBuilder(
+          builder: (context, spazio) {
+            final w = spazio.maxWidth, h = spazio.maxHeight;
+            final largo = primaCasa && (w >= 860 || (w >= 700 && w > h));
+            final scheda = _laScheda(context, primaCasa: primaCasa);
+            if (largo) {
+              final margine = w >= 1000 ? 40.0 : 20.0;
+              final larghezzaScheda = ((w - margine * 2) * 0.48).clamp(
+                340.0,
+                470.0,
+              );
+              final basso = h < 560;
+              return SafeArea(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.all(margine),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: (h - margine * 2 - 48).clamp(0, 2000),
                     ),
-                  );
-                }
-                return Center(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 480),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
+                    child: IntrinsicHeight(
+                      child: Row(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          if (primaCasa) ...[
-                            const _Presentazione(aSinistra: false),
-                            const SizedBox(height: 20),
-                          ],
-                          scheda,
+                          Expanded(
+                            child: _Copertina(largo: true, compatta: basso),
+                          ),
+                          SizedBox(width: w >= 1000 ? 40 : 20),
+                          SizedBox(
+                            width: larghezzaScheda,
+                            child: Align(
+                              alignment: basso
+                                  ? Alignment.topCenter
+                                  : Alignment.center,
+                              child: scheda,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   ),
-                );
-              },
-            ),
-          ),
-        ],
+                ),
+              );
+            }
+            if (!primaCasa) {
+              return SafeArea(
+                child: Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 480),
+                      child: scheda,
+                    ),
+                  ),
+                ),
+              );
+            }
+            /* La copertina va fino in cima, sotto l'ora e la batteria: la
+             * scheda le sale sopra di un pezzo. */
+            return SingleChildScrollView(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 560),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const _Copertina(largo: false, compatta: false),
+                      Transform.translate(
+                        offset: const Offset(0, -34),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          child: SafeArea(top: false, child: scheda),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      /* Sulla copertina notte l'ora e la batteria vanno in bianco. */
+      value: primaCasa || scuro
+          ? SystemUiOverlayStyle.light
+          : SystemUiOverlayStyle.dark,
+      child: Scaffold(
+        appBar: primaCasa
+            ? null
+            : AppBar(
+                title: Text(
+                  inLingua(it: 'Aggiungi una casa', en: 'Add a home'),
+                ),
+                backgroundColor: Colors.transparent,
+              ),
+        body: corpo,
       ),
     );
   }
 
   /// La scheda per collegarsi: i passi, il bottone, le caselle.
-  Widget _laScheda(BuildContext context) {
+  Widget _laScheda(BuildContext context, {required bool primaCasa}) {
     final colori = Theme.of(context).colorScheme;
     final testi = Theme.of(context).textTheme;
     final scuro = Theme.of(context).brightness == Brightness.dark;
@@ -555,12 +582,34 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    inLingua(it: 'Come si collega', en: 'How to connect'),
-                    style: testi.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
+                  if (primaCasa) ...[
+                    Text(
+                      inLingua(
+                        it: 'Colleghiamo la casa',
+                        en: 'Let\'s connect your home',
+                      ),
+                      style: testi.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.4,
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 4),
+                    Text(
+                      inLingua(
+                        it: 'Tre passi, un minuto.',
+                        en: 'Three steps, one minute.',
+                      ),
+                      style: testi.bodyMedium?.copyWith(
+                        color: colori.onSurfaceVariant,
+                      ),
+                    ),
+                  ] else
+                    Text(
+                      inLingua(it: 'Come si collega', en: 'How to connect'),
+                      style: testi.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                   const SizedBox(height: 14),
                   /* Due modi di dirlo, e quale dipende da **dove gira questa
                      copia dell'app**.
@@ -933,200 +982,266 @@ class _Entra extends StatelessWidget {
   }
 }
 
-/// La presentazione: il marchio acceso, il benvenuto, cosa si fa.
-class _Presentazione extends StatelessWidget {
-  const _Presentazione({required this.aSinistra, this.compatta = false});
+/// La copertina: la notte blu col marchio, il saluto e le quattro vetrine.
+///
+/// E' scura anche col tema chiaro: e' la faccia dell'app, e il marchio (un
+/// quadrato nero con le lettere d'oro e d'azzurro) si accende solo sul buio.
+class _Copertina extends StatelessWidget {
+  const _Copertina({required this.largo, required this.compatta});
 
-  /// Sullo schermo largo sta a sinistra della scheda, allineata a sinistra.
-  final bool aSinistra;
+  /// Accanto alla scheda (tablet, orizzontale): una tessera arrotondata
+  /// tutt'intorno invece di una fascia che parte dal bordo in alto.
+  final bool largo;
 
-  /// Su uno schermo basso (il telefono in orizzontale) solo marchio, saluto
-  /// e titolo: il resto non ci starebbe, e il titolo finiva sotto il bordo.
+  /// Su uno schermo basso: senza le vetrine.
   final bool compatta;
 
   @override
   Widget build(BuildContext context) {
-    final colori = Theme.of(context).colorScheme;
     final testi = Theme.of(context).textTheme;
-    final scuro = Theme.of(context).brightness == Brightness.dark;
-    final allinea = aSinistra
-        ? CrossAxisAlignment.start
-        : CrossAxisAlignment.center;
-    final testo = aSinistra ? TextAlign.start : TextAlign.center;
-    final logo = compatta ? 64.0 : (aSinistra ? 120.0 : 88.0);
-    final alone = compatta ? 104.0 : (aSinistra ? 190.0 : 136.0);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: allinea,
-      children: [
-        _Entra(
-          child: SizedBox(
-            width: alone,
-            height: alone,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                /* L'alone: il marchio si accende, non si appoggia. */
-                _Alone(
-                  colore: const Color(0xFF3B82F6),
-                  lato: alone,
-                  forza: scuro ? 0.55 : 0.40,
-                ),
-                Positioned(
-                  bottom: 6,
-                  child: _Alone(
-                    colore: const Color(0xFFF59E0B),
-                    lato: logo,
-                    forza: scuro ? 0.30 : 0.28,
-                  ),
-                ),
-                Marchio(lato: logo),
-              ],
-            ),
+    final sopra = largo ? 0.0 : MediaQuery.paddingOf(context).top;
+    final forma = largo
+        ? BorderRadius.circular(32)
+        : const BorderRadius.vertical(bottom: Radius.circular(36));
+    return ClipRRect(
+      borderRadius: forma,
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF0B1E4D), Color(0xFF0A1128), Color(0xFF21104A)],
           ),
         ),
-        const SizedBox(height: 10),
-        _Entra(
-          ritardo: 0.1,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-            decoration: BoxDecoration(
-              color: colori.primary.withValues(alpha: scuro ? 0.16 : 0.10),
-              borderRadius: BorderRadius.circular(100),
+        child: Stack(
+          /* Accanto alla scheda la copertina e' alta quanto lei: il contenuto
+           * sta in mezzo, non appeso in cima. */
+          fit: largo ? StackFit.expand : StackFit.loose,
+          children: [
+            const Positioned(
+              top: -120,
+              right: -90,
+              child: _Alone(colore: Color(0xFF3B82F6), lato: 340, forza: 0.55),
             ),
-            child: Text(
-              inLingua(it: 'Benvenuto in GdAHome', en: 'Welcome to GdAHome'),
-              style: testi.labelLarge?.copyWith(
-                color: colori.primary,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.3,
+            const Positioned(
+              bottom: -150,
+              left: -110,
+              child: _Alone(colore: Color(0xFFF59E0B), lato: 340, forza: 0.30),
+            ),
+            const Positioned(
+              bottom: -60,
+              right: -40,
+              child: _Alone(colore: Color(0xFF8B5CF6), lato: 260, forza: 0.35),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                24,
+                sopra + (largo ? 28 : 18),
+                24,
+                largo ? 28 : 58,
               ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 14),
-        _Entra(
-          ritardo: 0.15,
-          child: Text(
-            inLingua(it: 'Colleghiamo la casa', en: 'Let\'s connect your home'),
-            textAlign: testo,
-            style:
-                (aSinistra && !compatta
-                        ? testi.displaySmall
-                        : testi.headlineLarge)
-                    ?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.8,
+              child: Column(
+                mainAxisSize: largo ? MainAxisSize.max : MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _Entra(
+                    child: Row(
+                      children: [
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF3B82F6)
+                                    .withValues(alpha: 0.45),
+                                blurRadius: 24,
+                              ),
+                            ],
+                          ),
+                          child: Marchio(lato: largo ? 56 : 46),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'GdAHome',
+                          style: testi.titleLarge?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                      ],
                     ),
-          ),
-        ),
-        if (!compatta) ...[
-          const SizedBox(height: 12),
-          _Entra(
-            ritardo: 0.2,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: Text(
-                inLingua(
-                  it:
-                      'Luci, clima, energia, telecamere e il navigatore per '
-                      "l'auto: tutta la tua casa in un'app sola.",
-                  en:
-                      'Lights, climate, energy, cameras and the car navigator: '
-                      'your whole home in one app.',
-                ),
-                textAlign: testo,
-                style: testi.bodyLarge?.copyWith(
-                  color: colori.onSurfaceVariant,
-                  height: 1.45,
-                ),
+                  ),
+                  SizedBox(height: largo ? 34 : 22),
+                  _Entra(
+                    ritardo: 0.1,
+                    child: Text(
+                      inLingua(
+                        it: 'La tua casa,\nin tasca.',
+                        en: 'Your home,\nin your pocket.',
+                      ),
+                      style:
+                          (largo && !compatta
+                                  ? testi.displayMedium
+                                  : testi.displaySmall)
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                height: 1.05,
+                                letterSpacing: -1.2,
+                              ),
+                    ),
+                  ),
+                  if (!compatta) ...[
+                    const SizedBox(height: 12),
+                    _Entra(
+                      ritardo: 0.15,
+                      child: Text(
+                        inLingua(
+                          it:
+                              'Luci, clima, energia, telecamere e il '
+                              "navigatore per l'auto, in un'app sola.",
+                          en:
+                              'Lights, climate, energy, cameras and the car '
+                              'navigator, in one app.',
+                        ),
+                        style: testi.bodyLarge?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.72),
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: largo ? 30 : 20),
+                    _Entra(
+                      ritardo: 0.22,
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _Vetrina(
+                                  icona: Icons.lightbulb_rounded,
+                                  colore: const Color(0xFFFBBF24),
+                                  valore: inLingua(it: '5 accese', en: '5 on'),
+                                  cosa: inLingua(it: 'Luci', en: 'Lights'),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: _Vetrina(
+                                  icona: Icons.wb_sunny_rounded,
+                                  colore: const Color(0xFF34D399),
+                                  valore: '2,4 kW',
+                                  cosa: inLingua(
+                                    it: 'Dal sole',
+                                    en: 'From the sun',
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _Vetrina(
+                                  icona: Icons.thermostat_rounded,
+                                  colore: const Color(0xFFFB7185),
+                                  valore: '21,5°',
+                                  cosa: inLingua(
+                                    it: 'Soggiorno',
+                                    en: 'Living room',
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: _Vetrina(
+                                  icona: Icons.navigation_rounded,
+                                  colore: const Color(0xFF60A5FA),
+                                  valore: '12 min',
+                                  cosa: inLingua(
+                                    it: 'Verso casa',
+                                    en: 'Heading home',
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
-          ),
-          const SizedBox(height: 18),
-          _Entra(
-            ritardo: 0.25,
-            child: Wrap(
-              alignment: aSinistra ? WrapAlignment.start : WrapAlignment.center,
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                _Vantaggio(
-                  icona: Icons.lightbulb_rounded,
-                  colore: const Color(0xFFF59E0B),
-                  testo: inLingua(
-                    it: 'Luci e dispositivi',
-                    en: 'Lights & devices',
-                  ),
-                ),
-                _Vantaggio(
-                  icona: Icons.bolt_rounded,
-                  colore: const Color(0xFF16A34A),
-                  testo: inLingua(it: 'Energia', en: 'Energy'),
-                ),
-                _Vantaggio(
-                  icona: Icons.thermostat_rounded,
-                  colore: const Color(0xFFE11D48),
-                  testo: inLingua(it: 'Clima', en: 'Climate'),
-                ),
-                _Vantaggio(
-                  icona: Icons.navigation_rounded,
-                  colore: const Color(0xFF2563EB),
-                  testo: inLingua(it: 'Navigatore', en: 'Navigator'),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ],
+          ],
+        ),
+      ),
     );
   }
 }
 
-/// Una mattonella di cosa si fa con l'app.
-class _Vantaggio extends StatelessWidget {
-  const _Vantaggio({
+/// Una vetrina: una mattonella di vetro con quello che l'app fa vedere.
+class _Vetrina extends StatelessWidget {
+  const _Vetrina({
     required this.icona,
     required this.colore,
-    required this.testo,
+    required this.valore,
+    required this.cosa,
   });
 
   final IconData icona;
   final Color colore;
-  final String testo;
+  final String valore;
+  final String cosa;
 
   @override
   Widget build(BuildContext context) {
-    final colori = Theme.of(context).colorScheme;
-    final scuro = Theme.of(context).brightness == Brightness.dark;
+    final testi = Theme.of(context).textTheme;
     return Container(
-      padding: const EdgeInsets.fromLTRB(6, 6, 12, 6),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: colori.surfaceContainerLowest.withValues(
-          alpha: scuro ? 0.7 : 0.85,
-        ),
-        borderRadius: BorderRadius.circular(100),
-        border: Border.all(
-          color: scuro ? Colors.white.withValues(alpha: 0.06) : Colors.white,
-        ),
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 26,
-            height: 26,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
-              color: colore.withValues(alpha: scuro ? 0.22 : 0.14),
+              color: colore.withValues(alpha: 0.18),
               shape: BoxShape.circle,
             ),
-            child: Icon(icona, size: 15, color: colore),
+            child: Icon(icona, size: 20, color: colore),
           ),
-          const SizedBox(width: 8),
-          Text(
-            testo,
-            style: Theme.of(context).textTheme.labelLarge
-                ?.copyWith(fontWeight: FontWeight.w600),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  valore,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: testi.titleMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                Text(
+                  cosa,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: testi.labelMedium?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.65),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
