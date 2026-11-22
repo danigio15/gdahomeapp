@@ -278,6 +278,16 @@ function installaLoStile() {
        fra le linguette e il corpo rubava altezza al modale, e su un telefono
        spingeva fuori dallo schermo le linguette interne delle schede. */
     .${BARRA}{position:sticky!important;top:0!important;z-index:3!important;display:grid!important;gap:8px!important;margin:-8px -4px 8px!important;padding:10px 12px!important;border-bottom:1px solid var(--divider-color,#e2e8f0)!important;background:var(--card-background-color,#fff)!important}
+    /* La colonna delle schede, a sinistra, si appiccica sotto questa barra e
+       non dietro: appiccicata in cima con l'altezza di tutto lo schermo, le
+       sue prime voci restavano coperte dalla barra e le ultime finivano sotto
+       il bordo, e scorrendola non si arrivava in fondo («non scorre tutta la
+       barra laterale, non vedo Prese»). L'altezza della barra la tiene
+       \`--dm-cerca-alto\`, che misura \`ensureBarraDiRicerca\`. Sotto, un po'
+       d'aria in piu' sui telefoni: la barra dei gesti di Android sta sopra la
+       pagina, e l'ultima voce deve poter salire oltre. */
+    #editor-modal.modal-wrapper .ed-shell>.ed-tabs{top:var(--dm-cerca-alto,0px)!important;max-height:calc(100dvh - var(--dm-cerca-alto,0px))!important;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))!important;scroll-padding-top:8px!important}
+    @media (pointer:coarse){#editor-modal.modal-wrapper .ed-shell>.ed-tabs{padding-bottom:calc(56px + env(safe-area-inset-bottom,0px))!important}}
     .${BARRA}-riga{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:8px!important;align-items:center!important}
     .${BARRA}-in{width:100%!important;min-height:42px!important;box-sizing:border-box!important;padding:9px 12px!important;border:1px solid var(--divider-color,#dbe4ee)!important;border-radius:12px!important;background:var(--secondary-background-color,#f8fafc)!important;color:inherit!important;font:inherit!important}
     .${BARRA}-via{min-height:42px!important;padding:0 14px!important;border:0!important;border-radius:12px!important;background:#94a3b8!important;color:#fff!important;font-weight:800!important;cursor:pointer!important}
@@ -545,6 +555,17 @@ function disegnaGliEsiti(contenitore, parola) {
  * larghezza, sopra le famiglie: sta dove sta quello che vale per tutti. E non
  * la si deve piu' rimettere in cima a ogni cambio di scheda, perche' il guscio
  * riscrive il corpo e la barra non e' piu' li' dentro. */
+/* Quanto e' alta la barra, scritto sul guscio: la colonna delle schede ci si
+ * appiccica sotto (vedi lo stile). Cambia quando gli esiti si aprono o la
+ * finestra gira, e la si rimisura da se'. */
+function misuraLaBarra(guscio, barra) {
+  const scrivi = () =>
+    guscio.style.setProperty("--dm-cerca-alto", `${Math.round(barra.offsetHeight || 0)}px`);
+  scrivi();
+  const Osserva = root.ResizeObserver;
+  if (typeof Osserva === "function") new Osserva(scrivi).observe(barra);
+}
+
 export function ensureBarraDiRicerca() {
   const strisce = linguette();
   const guscio = strisce?.parentElement || null;
@@ -580,6 +601,7 @@ export function ensureBarraDiRicerca() {
   barra.append(riga, esiti);
   const famiglie = guscio.querySelector(":scope > #dm-alberatura-famiglie");
   (famiglie || strisce).before(barra);
+  misuraLaBarra(guscio, barra);
 
   const ridisegna = () => {
     state.parola = clean(campo.value);
