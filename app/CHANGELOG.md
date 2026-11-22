@@ -8,6 +8,16 @@ i suoi in `ponte/CHANGELOG.md`, ed è quello che Home Assistant fa vedere. Un
 rilascio dell'app non fa comparire un aggiornamento dell'add-on, e al
 contrario.
 
+## 1.19.23
+
+- **Navigatore, vista «Corsie»**: la fascia verde sta dentro la corsia, più
+  stretta, e non finisce sulle righe né sul marciapiede, anche alla
+  partenza.
+- **Navigatore, svolte strette**: dove si gira stretti a destra la fascia gira
+  all'incrocio, senza andare oltre e tornare indietro col nodo.
+- **Navigatore, raccordi**: agli incroci a triangolo la fascia prende il
+  raccordo come si guida, senza l'uncino «<».
+
 ## 1.19.22
 
 - **Navigatore, sensi unici**: la linea del percorso si rimette sulla
