@@ -297,6 +297,12 @@ export function festePulite(grezza) {
     },
     spegni: { ora: oraPulita(spegni.ora) || ORA_DI_SPEGNIMENTO },
     giorni,
+    /* Il riquadro in Home con le luci e «Spegni tutte»: c'e' tutto l'anno, se
+     * ci sono luci, e lo si spegne dalla scheda. Di serie acceso. */
+    riquadro: s.riquadro !== false,
+    /* L'accensione e lo spegnimento da soli all'orario: anche questi tutto
+     * l'anno, finche' non li si spegne. Di serie accesi. */
+    automatico: s.automatico !== false,
   };
 }
 
@@ -423,9 +429,9 @@ export function tramontoDelGiorno(giorno, prossimoTramonto) {
  *
  * Il giorno e' quello dell'accensione. Lo spegnimento, se l'ora e' prima
  * dell'accensione («all'una di notte»), e' il giorno dopo. Nessun intervallo
- * se quel giorno non e' fra quelli scelti o se l'accensione cade fuori dalle
- * feste; e la fine non va mai oltre la fine delle feste — dopo il 6 gennaio le
- * luci non restano accese per un'altra notte.
+ * se quel giorno non e' fra quelli scelti. Le feste non c'entrano: l'albero
+ * si monta prima e si smonta dopo, e l'orario vale finche' e' acceso
+ * (`automatico`).
  *
  * `inizio` si puo' imporre: e' quello di un intervallo gia' aperto, che non si
  * deve spostare perche' nel frattempo `sun.sun` e' passato al tramonto di
@@ -440,12 +446,8 @@ export function intervalloDelGiorno(config, giorno, prossimoTramonto = null, ini
     const tramonto = c.accendi.tipo === "tramonto" ? tramontoDelGiorno(g, prossimoTramonto) : null;
     partenza = tramonto !== null ? tramonto + c.accendi.scarto * MINUTO : alleOre(g, c.accendi.ora);
   }
-  const finestra = finestraDelleFeste(new Date(partenza));
-  if (!finestra) return null;
   let fine = alleOre(g, c.spegni.ora);
   if (fine <= partenza) fine += GIORNO;
-  fine = Math.min(fine, finestra.fine.getTime());
-  if (fine <= partenza) return null;
   return { giorno: nomeDelGiorno(g), inizio: partenza, fine };
 }
 
@@ -520,13 +522,11 @@ const giornoDaNome = (nome) => {
  * spegne l'orario lo fa una volta: chi le riaccende a mezzanotte per gli
  * ospiti le ritrova accese.
  *
- * ── Solo nelle feste ──────────────────────────────────────────────────────
+ * ── Tutto l'anno, finche' l'orario e' acceso ──────────────────────────────
  *
- * Un intervallo nasce solo se l'accensione cade dentro le feste
- * (`intervalloDelGiorno`). Fuori, senza un intervallo aperto, non si fa
- * niente. L'unica azione che puo' cadere appena dopo il 6 gennaio e' lo
- * spegnimento di un intervallo aperto la sera prima, che finisce proprio con
- * la fine delle feste: e' chiudere quello che si era aperto.
+ * Le feste non c'entrano: l'albero si monta prima. Con l'orario spento
+ * (`automatico`) non nasce nessun intervallo, e uno aperto si chiude
+ * spegnendo, come a fine serata.
  */
 export function decidiLeLuci({
   config,
@@ -548,10 +548,14 @@ export function decidiLeLuci({
     m.giorno && m.stato !== "chiuso"
       ? intervalloDelGiorno(c, giornoDaNome(m.giorno), tramonto, m.inizio)
       : null;
+  /* Con l'orario spento non c'e' un intervallo di adesso: quello aperto si
+   * chiude, spegnendo, come quando finisce la sera. */
   const corrente =
-    aperto && aperto.inizio <= ora && ora < aperto.fine
-      ? aperto
-      : intervalloDiAdesso(c, ora, tramonto);
+    c.automatico === false
+      ? null
+      : aperto && aperto.inizio <= ora && ora < aperto.fine
+        ? aperto
+        : intervalloDiAdesso(c, ora, tramonto);
 
   if (!corrente) {
     if (!m.giorno || m.stato === "chiuso") return nulla("fuori-orario");

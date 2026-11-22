@@ -19681,8 +19681,8 @@ var SCHEDE = Object.freeze({
   /* ── 🛋️ Casa ───────────────────────────────────────────────────────── */
   stanze: { famiglia: "casa", posizione: 10 },
   luci: { famiglia: "casa", posizione: 20 },
-  /* Le luci di Natale: accanto alle luci, perche' lo sono. La linguetta c'e'
-   * solo nelle feste (`luci-di-natale-editor-section.js`). */
+  /* Le luci di Natale: accanto alle luci, perche' lo sono
+   * (`luci-di-natale-editor-section.js`). */
   feste: { famiglia: "casa", posizione: 22 },
   tapp: { famiglia: "casa", posizione: 30 },
   // Finestre e tapparelle
@@ -35680,7 +35680,7 @@ function installSegnalazioniSection() {
 senzaCadere(installSegnalazioniSection);
 
 // legacy/build-info.js
-var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.19.23", "dashboardVersion": "1.19.23", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-11-22T20:33:28+00:00", "commit": "674d347a706f0baa9ac588f0e072619f554e0001", "assetHash": "d978230729d68422" });
+var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.19.23", "dashboardVersion": "1.19.23", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-11-22T20:50:18+00:00", "commit": "7c632a3dc6ab1e8c5e4e79f03494f9200bfd1650", "assetHash": "cdbd2d464cc364f7" });
 
 export {
   faseInParole,

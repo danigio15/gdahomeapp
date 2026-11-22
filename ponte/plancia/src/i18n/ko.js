@@ -8399,4 +8399,8 @@ export default Object.freeze({
   "They switch on": "켜짐",
   "This light is already there.": "이 조명은 이미 있습니다.",
   "To ${anno}": "${anno}년까지",
+  "Panel on Home": "홈 패널",
+  "The lights on Home, with “Turn all off”.": "홈에 표시되는 조명과 '모두 끄기'.",
+  "Automatic switching": "자동 켜기",
+  "They switch on and off by themselves at the times below.": "아래 시간에 저절로 켜지고 꺼집니다.",
 });

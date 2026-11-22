@@ -8376,4 +8376,8 @@ export default Object.freeze({
   "They switch on": "تضيء",
   "This light is already there.": "هذا الضوء موجود بالفعل.",
   "To ${anno}": "حتى ${anno}",
+  "Panel on Home": "لوحة في الرئيسية",
+  "The lights on Home, with “Turn all off”.": "الأضواء في الرئيسية، مع «إطفاء الكل».",
+  "Automatic switching": "تشغيل تلقائي",
+  "They switch on and off by themselves at the times below.": "تضيء وتنطفئ تلقائيًا في الأوقات أدناه.",
 });

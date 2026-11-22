@@ -8429,4 +8429,8 @@ export default Object.freeze({
   "They switch on": "Açılırlar",
   "This light is already there.": "Bu ışık zaten var.",
   "To ${anno}": "${anno} yılına",
+  "Panel on Home": "Ana sayfada kutu",
+  "The lights on Home, with “Turn all off”.": "Ana sayfadaki ışıklar, «Hepsini kapat» ile.",
+  "Automatic switching": "Otomatik açma",
+  "They switch on and off by themselves at the times below.": "Aşağıdaki saatlerde kendi kendilerine açılıp kapanırlar.",
 });

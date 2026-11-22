@@ -8461,4 +8461,8 @@ export default Object.freeze({
   "They switch on": "Ze gaan aan",
   "This light is already there.": "Deze lamp staat er al.",
   "To ${anno}": "Tot ${anno}",
+  "Panel on Home": "Blok op Home",
+  "The lights on Home, with “Turn all off”.": "De lampen op Home, met „Alles uit”.",
+  "Automatic switching": "Automatisch schakelen",
+  "They switch on and off by themselves at the times below.": "Ze gaan vanzelf aan en uit op de tijden hieronder.",
 });

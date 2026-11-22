@@ -19,7 +19,6 @@ import { cercaFraLeCaselle, leCaselleDelConfig } from "../core/le-caselle-del-co
 import { isRetiredEditorSlot } from "../core/editor-slots.js";
 import { SECTION_KEYS } from "../core/migrations.js";
 import { CONFIG_KEYS } from "./config-persistence-section.js";
-import { CHIAVE_FESTE, inFesta } from "../core/feste.js";
 import {
   activeLocale,
   clean,
@@ -167,10 +166,6 @@ function magazzino() {
   for (const chiave of CONFIG_KEYS) {
     if (chiave === "dm_dashboard_state") continue;
     if (canonico && RISPECCHIATE.has(chiave)) continue;
-    /* Le luci di Natale si trovano solo quando la loro scheda c'e': fuori
-     * dalle feste la scheda non si vede, e un risultato che porta a una
-     * linguetta che non c'e' racconterebbe la sorpresa. */
-    if (chiave === CHIAVE_FESTE && !inFesta(new Date())) continue;
     const valore = readJson(chiave, null);
     if (valore !== null && valore !== undefined) fuori[chiave] = valore;
   }

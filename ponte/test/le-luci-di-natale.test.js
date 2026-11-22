@@ -142,36 +142,26 @@ test("nei giorni non scelti non si accendono", async () => {
   assert.equal(chiamate.length, 2);
 });
 
-test("fuori dalle feste il ponte non tocca niente", async () => {
+test("con l'orario spento il ponte non tocca niente, nemmeno nelle feste", async () => {
   for (const [quando, tramonto] of [
-    [alle(2026, 12, 7, 18), "2026-12-07T16:40:00"],
-    [alle(2027, 1, 7, 18), "2027-01-07T16:55:00"],
-    [alle(2026, 11, 22, 18), "2026-11-22T16:45:00"],
-    [alle(2027, 7, 15, 21), "2027-07-15T20:50:00"],
+    [alle(2026, 12, 20, 18), "2026-12-20T16:42:00"],
+    [alle(2026, 11, 28, 18), "2026-11-28T16:45:00"],
   ]) {
-    const { chiamate, a } = casaFinta({ tramonto });
+    const { chiamate, a } = casaFinta({ feste: { ...FESTE, automatico: false }, tramonto });
     assert.equal(await a(quando), null);
     assert.deepEqual(chiamate, [], new Date(quando).toString());
   }
-  const primo = casaFinta({ tramonto: "2026-12-08T16:40:00" });
-  await primo.a(alle(2026, 12, 8, 16, 41));
-  assert.equal(primo.chiamate.length, 2, "l'8 dicembre si comincia");
+  const senza = casaFinta({ feste: { ...FESTE, luci: [] } });
+  assert.equal(await senza.a(alle(2026, 12, 20, 18)), null);
+  assert.deepEqual(senza.chiamate, []);
 });
 
-test("il 6 gennaio si spengono con la fine delle feste e il 7 non si riaccendono", async () => {
-  const { chiamate, a, stati } = casaFinta({
-    feste: { ...FESTE, accendi: { tipo: "ora", ora: "17:00" }, spegni: { ora: "01:00" } },
-  });
-  await a(alle(2027, 1, 6, 17));
-  assert.equal(chiamate.length, 2);
-  await a(alle(2027, 1, 6, 23, 59, 30));
-  assert.equal(chiamate.length, 2);
-  await a(alle(2027, 1, 7, 0, 0, 15));
+test("l'albero montato prima delle feste si accende gia' all'orario", async () => {
+  const { chiamate, a } = casaFinta({ tramonto: "2026-11-28T16:45:00" });
+  await a(alle(2026, 11, 28, 16, 46));
+  assert.deepEqual(servizi(chiamate), ["switch.turn_on", "light.turn_on"]);
+  await a(alle(2026, 11, 28, 23, 31));
   assert.deepEqual(servizi(chiamate).slice(2), ["switch.turn_off", "light.turn_off"]);
-  stati.set("light.presepe", { state: "on", attributes: {} });
-  await a(alle(2027, 1, 7, 17));
-  await a(alle(2027, 1, 7, 23));
-  assert.equal(chiamate.length, 4);
 });
 
 test("una casa che non risponde si riprova dopo un po', senza perdere la sera", async () => {

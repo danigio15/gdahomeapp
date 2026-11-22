@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-7XZSFOUU.js";
+} from "../../chunk-BYT3PP42.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -2498,6 +2498,7 @@ var SOURCE_INDEX = Object.freeze({
   "Accensione": "Ignition",
   "Accensione · Consumi · Stanza per stanza": "On/off · Consumption · Room by room",
   "Accensione · Luminosità · Colore": "On/off · Brightness · Colour",
+  "Accensione automatica": "Automatic switching",
   "accensioni non note": "starts unknown",
   "ACCESA": "ON",
   "Accesa / Attiva / Aperta (on)": "On / Active / Open (on)",
@@ -5574,6 +5575,7 @@ var SOURCE_INDEX = Object.freeze({
   "Le liste delle cose da fare": "The to-do lists",
   "Le liste ToDo di Home Assistant: si spuntano dalla tessera in Home e dalla sezione Agenda, e quelle con una scadenza compaiono nel giorno in cui scadono.": "Home Assistant to-do lists: tick them off from the Home tile and from the Agenda section, and the ones with a due date show up on the day they are due.",
   'Le luci gestite dalla dashboard. Nomina "Stanza - Dettaglio" per il raggruppamento automatico.': 'The lights managed by the dashboard. Name them "Room - Detail" for automatic grouping.',
+  "Le luci in Home, con «Spegni tutte».": "The lights on Home, with “Turn all off”.",
   "Le macchine e la rete. Ogni riga è una macchina — l'entità, il nome che vuoi tu, il disegno, e in quale delle due fasce sta — e la pagina MiniPC mostra queste, accese e spente.": "The machines and the network. Each row is a machine — the entity, the name you want, the drawing, and which of the two bands it sits in — and the MiniPC page shows these, up and down.",
   "Le mette qui come righe, una volta sola: da lì in poi sono tue — le rinomini, gli dai il disegno, e quelle che elimini non tornano più.": "It puts them here as rows, once: from then on they are yours — rename them, give them a drawing, and the ones you remove do not come back.",
   "Le misure": "The readings",
@@ -7466,6 +7468,7 @@ var SOURCE_INDEX = Object.freeze({
   "Riquadri nascosti": "Hidden blocks",
   "Riquadro": "Tile",
   "Riquadro ${i + 1}": "Box ${i + 1}",
+  "Riquadro in Home": "Panel on Home",
   "Riscaldamento": "Heating",
   "Riscaldamento · Raffrescamento · Zone": "Heating · Cooling · Zones",
   "Riscaldamento a pavimento": "Underfloor heating",
@@ -7942,6 +7945,7 @@ var SOURCE_INDEX = Object.freeze({
   "sì": "yes",
   "Sì": "Yes",
   "Si accendono": "They switch on",
+  "Si accendono e si spengono da sole all'orario qui sotto.": "They switch on and off by themselves at the times below.",
   "Si acquista solo dalle app GdAHome su App Store e Google Play. Le app sono in arrivo.": "Only available from the GdAHome apps on the App Store and Google Play. The apps are coming soon.",
   "si aggiorna da solo": "updates by itself",
   "si apre": "opens",
@@ -102040,260 +102044,6 @@ function cercaFraLeCaselle(parola2, caselle2 = [], lingua9 = "it") {
   }).filter(Boolean).sort((uno3, altro) => uno3.peso - altro.peso).map((uno3) => uno3.casella);
 }
 
-// src/core/feste.js
-var CHIAVE_FESTE = "cd_feste";
-var LUCI_AL_MASSIMO = 8;
-var DOMINI_DELLE_LUCI = Object.freeze(["light", "switch", "input_boolean"]);
-var PAROLE_DELLE_LUCI = Object.freeze([
-  "albero",
-  "natal",
-  "presepe",
-  "presepio",
-  "stella cometa",
-  "cometa",
-  "luminarie",
-  "xmas",
-  "christmas"
-]);
-var ORA_DI_ACCENSIONE = "17:00";
-var ORA_DI_SPEGNIMENTO = "23:30";
-var TUTTI_I_GIORNI = Object.freeze([0, 1, 2, 3, 4, 5, 6]);
-var SCARTO_MINIMO = -60;
-var SCARTO_MASSIMO = 120;
-var MINUTO6 = 60 * 1e3;
-var ORA7 = 60 * MINUTO6;
-var GIORNO4 = 24 * ORA7;
-var clean30 = (valore3) => String(valore3 ?? "").trim();
-var comeData = (data) => {
-  const d = data instanceof Date ? data : new Date(data ?? Date.now());
-  return Number.isFinite(d.getTime()) ? d : null;
-};
-function finestraDelleFeste(data = /* @__PURE__ */ new Date()) {
-  const d = comeData(data);
-  if (!d) return null;
-  const anno = d.getFullYear();
-  const mese = d.getMonth();
-  const giorno3 = d.getDate();
-  if (mese === 11 && giorno3 >= 8)
-    return { inizio: new Date(anno, 11, 8), fine: new Date(anno + 1, 0, 7) };
-  if (mese === 0 && giorno3 <= 6)
-    return { inizio: new Date(anno - 1, 11, 8), fine: new Date(anno, 0, 7) };
-  return null;
-}
-function inFesta(data = /* @__PURE__ */ new Date()) {
-  return finestraDelleFeste(data) !== null;
-}
-function annoNuovo(data = /* @__PURE__ */ new Date()) {
-  const d = comeData(data) || /* @__PURE__ */ new Date();
-  return d.getMonth() === 11 ? d.getFullYear() + 1 : d.getFullYear();
-}
-function mezzanotteDellAnnoNuovo(data = /* @__PURE__ */ new Date()) {
-  return new Date(annoNuovo(data), 0, 1);
-}
-function contoAllaRovescia2(data = /* @__PURE__ */ new Date()) {
-  const d = comeData(data);
-  if (!d || d.getMonth() !== 11 || d.getDate() < 26) return null;
-  const mancano = mezzanotteDellAnnoNuovo(d).getTime() - d.getTime();
-  if (mancano <= 0) return null;
-  const secondiInTutto = Math.ceil(mancano / 1e3);
-  return {
-    anno: annoNuovo(d),
-    mancano,
-    giorni: Math.floor(secondiInTutto / 86400),
-    ore: Math.floor(secondiInTutto % 86400 / 3600),
-    minuti: Math.floor(secondiInTutto % 3600 / 60),
-    secondi: secondiInTutto % 60
-  };
-}
-var MINUTI_DEI_FUOCHI = 10;
-function momentoDelMuro(data = /* @__PURE__ */ new Date()) {
-  const d = comeData(data);
-  if (!d || !inFesta(d)) return null;
-  if (d.getMonth() === 11 && d.getDate() === 31 && d.getHours() === 23) return "conto";
-  if (d.getMonth() === 0 && d.getDate() === 1 && d.getHours() === 0 && d.getMinutes() < MINUTI_DEI_FUOCHI)
-    return "fuochi";
-  return "vigilia";
-}
-function eCapodanno(data = /* @__PURE__ */ new Date()) {
-  const d = comeData(data);
-  return Boolean(d && d.getMonth() === 0 && d.getDate() === 1);
-}
-function giornoConUnNome(data = /* @__PURE__ */ new Date()) {
-  const d = comeData(data);
-  if (!d || !inFesta(d)) return "";
-  const chiave2 = `${d.getMonth()}-${d.getDate()}`;
-  return {
-    "11-24": "vigilia",
-    "11-25": "natale",
-    "11-26": "santo-stefano",
-    "11-31": "san-silvestro",
-    "0-1": "capodanno",
-    "0-6": "epifania"
-  }[chiave2] || "";
-}
-function oraPulita(valore3) {
-  const m = /^(\d{1,2}):(\d{1,2})$/.exec(clean30(valore3));
-  if (!m) return "";
-  const ore3 = Number(m[1]);
-  const minuti2 = Number(m[2]);
-  if (ore3 > 23 || minuti2 > 59) return "";
-  return `${String(ore3).padStart(2, "0")}:${String(minuti2).padStart(2, "0")}`;
-}
-var ENTITA6 = /^[a-z_][a-z0-9_]*\.[a-z0-9_]+$/;
-function eUnaLuceDiNatale(entity2) {
-  const id = clean30(entity2).toLowerCase();
-  return ENTITA6.test(id) && DOMINI_DELLE_LUCI.includes(id.split(".")[0]);
-}
-var NOME_AL_MASSIMO = 40;
-var ICONA_AL_MASSIMO = 8;
-function lucePulita(grezza) {
-  const sorgente = typeof grezza === "string" ? { entity: grezza } : grezza;
-  if (!sorgente || typeof sorgente !== "object") return null;
-  const entity2 = clean30(sorgente.entity || sorgente.entity_id).toLowerCase();
-  if (!eUnaLuceDiNatale(entity2)) return null;
-  const luce4 = { entity: entity2 };
-  const nome = clean30(sorgente.nome).slice(0, NOME_AL_MASSIMO);
-  const icona3 = [...clean30(sorgente.icona)].slice(0, ICONA_AL_MASSIMO).join("");
-  if (nome) luce4.nome = nome;
-  if (icona3) luce4.icona = icona3;
-  return luce4;
-}
-function festePulite(grezza) {
-  let sorgente = grezza;
-  if (typeof sorgente === "string") {
-    try {
-      sorgente = JSON.parse(sorgente);
-    } catch (_errore) {
-      sorgente = null;
-    }
-  }
-  const s = sorgente && typeof sorgente === "object" && !Array.isArray(sorgente) ? sorgente : {};
-  const viste2 = /* @__PURE__ */ new Set();
-  const luci = [];
-  for (const grezzaLuce of Array.isArray(s.luci) ? s.luci : []) {
-    const luce4 = lucePulita(grezzaLuce);
-    if (!luce4 || viste2.has(luce4.entity)) continue;
-    viste2.add(luce4.entity);
-    luci.push(luce4);
-    if (luci.length >= LUCI_AL_MASSIMO) break;
-  }
-  const accendi3 = s.accendi && typeof s.accendi === "object" ? s.accendi : {};
-  const scarto = Math.round(Number(accendi3.scarto));
-  const spegni3 = s.spegni && typeof s.spegni === "object" ? s.spegni : {};
-  const giorni = Array.isArray(s.giorni) ? [
-    ...new Set(s.giorni.map(Number).filter((g) => Number.isInteger(g) && g >= 0 && g <= 6))
-  ].sort((a, b2) => a - b2) : [...TUTTI_I_GIORNI];
-  return {
-    luci,
-    accendi: {
-      tipo: accendi3.tipo === "ora" ? "ora" : "tramonto",
-      ora: oraPulita(accendi3.ora) || ORA_DI_ACCENSIONE,
-      scarto: Number.isFinite(scarto) ? Math.min(SCARTO_MASSIMO, Math.max(SCARTO_MINIMO, scarto)) : 0
-    },
-    spegni: { ora: oraPulita(spegni3.ora) || ORA_DI_SPEGNIMENTO },
-    giorni
-  };
-}
-function entitaDelleLuci(config) {
-  return (config?.luci || []).map((luce4) => luce4.entity);
-}
-function appiattita(testo5) {
-  return clean30(testo5).normalize("NFD").replace(/\p{M}+/gu, "").toLowerCase().replace(/[_.]+/g, " ");
-}
-function sembraDiNatale(testo5) {
-  const piatto2 = appiattita(testo5);
-  return Boolean(piatto2) && PAROLE_DELLE_LUCI.some((parola2) => piatto2.includes(parola2));
-}
-function luciDaProporre(states = {}, config = festePulite(null), quante3 = 6) {
-  const gia = new Set(entitaDelleLuci(config));
-  const fuori = [];
-  for (const [entity2, stato3] of Object.entries(states || {})) {
-    if (gia.has(entity2) || !eUnaLuceDiNatale(entity2)) continue;
-    const nome = clean30(stato3?.attributes?.friendly_name);
-    if (!sembraDiNatale(nome) && !sembraDiNatale(entity2)) continue;
-    fuori.push({ entity: entity2, nome: nome || entity2 });
-  }
-  return fuori.sort((a, b2) => a.nome.localeCompare(b2.nome)).slice(0, quante3);
-}
-var ICONE_DAL_NOME = Object.freeze([
-  ["albero", "🎄"],
-  ["tree", "🎄"],
-  ["presep", "⭐"],
-  ["cometa", "🌟"],
-  ["stella", "🌟"],
-  ["star", "🌟"],
-  ["candel", "🕯️"],
-  ["candle", "🕯️"],
-  ["vetrin", "🕯️"],
-  ["ghirland", "🎀"],
-  ["regal", "🎁"],
-  ["pacch", "🎁"],
-  ["renn", "🦌"]
-]);
-var ICONE_DELLE_LUCI = Object.freeze([
-  "🎄",
-  "⭐",
-  "🌟",
-  "✨",
-  "🕯️",
-  "💡",
-  "🎁",
-  "🎀",
-  "🔔",
-  "🦌",
-  "❄️",
-  "🏠"
-]);
-function iconaDellaLuce(luce4, nome = "") {
-  if (clean30(luce4?.icona)) return clean30(luce4.icona);
-  const piatto2 = appiattita(`${clean30(luce4?.nome)} ${clean30(nome)} ${clean30(luce4?.entity)}`);
-  for (const [parola2, icona3] of ICONE_DAL_NOME) if (piatto2.includes(parola2)) return icona3;
-  return "✨";
-}
-var giornoDi4 = (data) => new Date(data.getFullYear(), data.getMonth(), data.getDate());
-var nomeDelGiorno3 = (data) => `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}-${String(data.getDate()).padStart(2, "0")}`;
-var alleOre3 = (giorno3, ora7) => {
-  const [h, m] = ora7.split(":").map(Number);
-  return new Date(giorno3.getFullYear(), giorno3.getMonth(), giorno3.getDate(), h, m).getTime();
-};
-function tramontoDelGiorno(giorno3, prossimoTramonto2) {
-  if (prossimoTramonto2 === null || prossimoTramonto2 === void 0 || prossimoTramonto2 === "")
-    return null;
-  const t2 = new Date(prossimoTramonto2);
-  if (!Number.isFinite(t2.getTime())) return null;
-  return new Date(
-    giorno3.getFullYear(),
-    giorno3.getMonth(),
-    giorno3.getDate(),
-    t2.getHours(),
-    t2.getMinutes()
-  ).getTime();
-}
-function intervalloDelGiorno(config, giorno3, prossimoTramonto2 = null, inizio = null) {
-  const c = config || festePulite(null);
-  const g = giornoDi4(giorno3);
-  if (!c.giorni.includes(g.getDay())) return null;
-  let partenza = inizio;
-  if (!Number.isFinite(partenza)) {
-    const tramonto = c.accendi.tipo === "tramonto" ? tramontoDelGiorno(g, prossimoTramonto2) : null;
-    partenza = tramonto !== null ? tramonto + c.accendi.scarto * MINUTO6 : alleOre3(g, c.accendi.ora);
-  }
-  const finestra6 = finestraDelleFeste(new Date(partenza));
-  if (!finestra6) return null;
-  let fine = alleOre3(g, c.spegni.ora);
-  if (fine <= partenza) fine += GIORNO4;
-  fine = Math.min(fine, finestra6.fine.getTime());
-  if (fine <= partenza) return null;
-  return { giorno: nomeDelGiorno3(g), inizio: partenza, fine };
-}
-function oraDi6(momento) {
-  const d = new Date(momento);
-  if (!Number.isFinite(d.getTime())) return "";
-  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-}
-var PAZIENZA_DOPO_L_ACCENSIONE = 90 * 1e3;
-var CHIUDI_SENZA_SPEGNERE_DOPO = 6 * ORA7;
-
 // src/sections/cerca-nel-config-section.js
 var KEY88 = "__DASHBOARDMODERN_CERCA_CONFIG__";
 var state84 = root[KEY88] ||= { installed: false, parola: "", aperta: false, raccolte: null };
@@ -102403,7 +102153,6 @@ function magazzino() {
   for (const chiave2 of CONFIG_KEYS) {
     if (chiave2 === "dm_dashboard_state") continue;
     if (canonico && RISPECCHIATE.has(chiave2)) continue;
-    if (chiave2 === CHIAVE_FESTE && !inFesta(/* @__PURE__ */ new Date())) continue;
     const valore3 = readJson(chiave2, null);
     if (valore3 !== null && valore3 !== void 0) fuori[chiave2] = valore3;
   }
@@ -107636,10 +107385,10 @@ function installTelecamereSpenteEditorSection() {
 var CHIAVE_TESTI_SICUREZZA = "cd_testi_sicurezza";
 var QUANTI_TESTI = 2;
 var ETICHETTA_AL_MASSIMO = 40;
-var clean31 = (valore3) => String(valore3 ?? "").trim();
+var clean30 = (valore3) => String(valore3 ?? "").trim();
 var MUTI15 = /* @__PURE__ */ new Set(["unavailable", "unknown"]);
 function fraseDaConfrontare(testo5) {
-  return clean31(testo5).normalize("NFD").replace(/\p{M}+/gu, "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+  return clean30(testo5).normalize("NFD").replace(/\p{M}+/gu, "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
 }
 var FRASI_NEUTRE = Object.freeze([
   "",
@@ -107664,12 +107413,12 @@ function normalizzaTestiDellaSicurezza(stored) {
   const viste2 = /* @__PURE__ */ new Set();
   const righe4 = [];
   for (const riga5 of Array.isArray(dato2.righe) ? dato2.righe : []) {
-    const entity2 = clean31(typeof riga5 === "string" ? riga5 : riga5?.entity);
+    const entity2 = clean30(typeof riga5 === "string" ? riga5 : riga5?.entity);
     if (!/^[a-z0-9_]+\.[^\s.]+$/i.test(entity2) || viste2.has(entity2)) continue;
     viste2.add(entity2);
     righe4.push({
       entity: entity2,
-      etichetta: clean31(typeof riga5 === "string" ? "" : riga5?.etichetta).slice(
+      etichetta: clean30(typeof riga5 === "string" ? "" : riga5?.etichetta).slice(
         0,
         ETICHETTA_AL_MASSIMO
       )
@@ -107682,13 +107431,13 @@ function ceQualcheTesto(config) {
   return Boolean(config?.righe?.length);
 }
 function letturaDelTesto(riga5, stato3) {
-  const entity2 = clean31(riga5?.entity);
-  const nome = clean31(stato3?.attributes?.friendly_name);
-  const etichetta3 = clean31(riga5?.etichetta) || nome || entity2;
-  const grezzo2 = stato3 ? clean31(stato3.state) : "";
+  const entity2 = clean30(riga5?.entity);
+  const nome = clean30(stato3?.attributes?.friendly_name);
+  const etichetta3 = clean30(riga5?.etichetta) || nome || entity2;
+  const grezzo2 = stato3 ? clean30(stato3.state) : "";
   const muto2 = !stato3 || MUTI15.has(grezzo2.toLowerCase());
   const testo5 = muto2 ? "" : grezzo2;
-  const quando6 = Date.parse(clean31(stato3?.last_changed || stato3?.last_updated));
+  const quando6 = Date.parse(clean30(stato3?.last_changed || stato3?.last_updated));
   return {
     entity: entity2,
     etichetta: etichetta3,
@@ -113067,8 +112816,8 @@ var TEMPLATE_DELLE_FASCE = `{% set f = ${VARIABILE_DELLE_FASCE}.giorni[now().wee
 
 // src/core/automazioni-proposte.js
 var pulito62 = (v) => String(v ?? "").trim();
-var MINUTO7 = 6e4;
-var GIORNO5 = 24 * 60 * MINUTO7;
+var MINUTO6 = 6e4;
+var GIORNO4 = 24 * 60 * MINUTO6;
 function firmaDelQuando(q) {
   if (!q) return "";
   const ent = (v) => Array.isArray(v) ? [...v].sort().join(",") : pulito62(v);
@@ -113526,6 +113275,262 @@ function azioneDelDispositivoInParole(azione, chi = "") {
   }
   return servizioInParole(`${dominio7}.${servizio4(dominio7)}`, { chi: nome });
 }
+
+// src/core/feste.js
+var CHIAVE_FESTE = "cd_feste";
+var LUCI_AL_MASSIMO = 8;
+var DOMINI_DELLE_LUCI = Object.freeze(["light", "switch", "input_boolean"]);
+var PAROLE_DELLE_LUCI = Object.freeze([
+  "albero",
+  "natal",
+  "presepe",
+  "presepio",
+  "stella cometa",
+  "cometa",
+  "luminarie",
+  "xmas",
+  "christmas"
+]);
+var ORA_DI_ACCENSIONE = "17:00";
+var ORA_DI_SPEGNIMENTO = "23:30";
+var TUTTI_I_GIORNI = Object.freeze([0, 1, 2, 3, 4, 5, 6]);
+var SCARTO_MINIMO = -60;
+var SCARTO_MASSIMO = 120;
+var MINUTO7 = 60 * 1e3;
+var ORA7 = 60 * MINUTO7;
+var GIORNO5 = 24 * ORA7;
+var clean31 = (valore3) => String(valore3 ?? "").trim();
+var comeData = (data) => {
+  const d = data instanceof Date ? data : new Date(data ?? Date.now());
+  return Number.isFinite(d.getTime()) ? d : null;
+};
+function finestraDelleFeste(data = /* @__PURE__ */ new Date()) {
+  const d = comeData(data);
+  if (!d) return null;
+  const anno = d.getFullYear();
+  const mese = d.getMonth();
+  const giorno3 = d.getDate();
+  if (mese === 11 && giorno3 >= 8)
+    return { inizio: new Date(anno, 11, 8), fine: new Date(anno + 1, 0, 7) };
+  if (mese === 0 && giorno3 <= 6)
+    return { inizio: new Date(anno - 1, 11, 8), fine: new Date(anno, 0, 7) };
+  return null;
+}
+function inFesta(data = /* @__PURE__ */ new Date()) {
+  return finestraDelleFeste(data) !== null;
+}
+function annoNuovo(data = /* @__PURE__ */ new Date()) {
+  const d = comeData(data) || /* @__PURE__ */ new Date();
+  return d.getMonth() === 11 ? d.getFullYear() + 1 : d.getFullYear();
+}
+function mezzanotteDellAnnoNuovo(data = /* @__PURE__ */ new Date()) {
+  return new Date(annoNuovo(data), 0, 1);
+}
+function contoAllaRovescia2(data = /* @__PURE__ */ new Date()) {
+  const d = comeData(data);
+  if (!d || d.getMonth() !== 11 || d.getDate() < 26) return null;
+  const mancano = mezzanotteDellAnnoNuovo(d).getTime() - d.getTime();
+  if (mancano <= 0) return null;
+  const secondiInTutto = Math.ceil(mancano / 1e3);
+  return {
+    anno: annoNuovo(d),
+    mancano,
+    giorni: Math.floor(secondiInTutto / 86400),
+    ore: Math.floor(secondiInTutto % 86400 / 3600),
+    minuti: Math.floor(secondiInTutto % 3600 / 60),
+    secondi: secondiInTutto % 60
+  };
+}
+var MINUTI_DEI_FUOCHI = 10;
+function momentoDelMuro(data = /* @__PURE__ */ new Date()) {
+  const d = comeData(data);
+  if (!d || !inFesta(d)) return null;
+  if (d.getMonth() === 11 && d.getDate() === 31 && d.getHours() === 23) return "conto";
+  if (d.getMonth() === 0 && d.getDate() === 1 && d.getHours() === 0 && d.getMinutes() < MINUTI_DEI_FUOCHI)
+    return "fuochi";
+  return "vigilia";
+}
+function eCapodanno(data = /* @__PURE__ */ new Date()) {
+  const d = comeData(data);
+  return Boolean(d && d.getMonth() === 0 && d.getDate() === 1);
+}
+function giornoConUnNome(data = /* @__PURE__ */ new Date()) {
+  const d = comeData(data);
+  if (!d || !inFesta(d)) return "";
+  const chiave2 = `${d.getMonth()}-${d.getDate()}`;
+  return {
+    "11-24": "vigilia",
+    "11-25": "natale",
+    "11-26": "santo-stefano",
+    "11-31": "san-silvestro",
+    "0-1": "capodanno",
+    "0-6": "epifania"
+  }[chiave2] || "";
+}
+function oraPulita(valore3) {
+  const m = /^(\d{1,2}):(\d{1,2})$/.exec(clean31(valore3));
+  if (!m) return "";
+  const ore3 = Number(m[1]);
+  const minuti2 = Number(m[2]);
+  if (ore3 > 23 || minuti2 > 59) return "";
+  return `${String(ore3).padStart(2, "0")}:${String(minuti2).padStart(2, "0")}`;
+}
+var ENTITA6 = /^[a-z_][a-z0-9_]*\.[a-z0-9_]+$/;
+function eUnaLuceDiNatale(entity2) {
+  const id = clean31(entity2).toLowerCase();
+  return ENTITA6.test(id) && DOMINI_DELLE_LUCI.includes(id.split(".")[0]);
+}
+var NOME_AL_MASSIMO = 40;
+var ICONA_AL_MASSIMO = 8;
+function lucePulita(grezza) {
+  const sorgente = typeof grezza === "string" ? { entity: grezza } : grezza;
+  if (!sorgente || typeof sorgente !== "object") return null;
+  const entity2 = clean31(sorgente.entity || sorgente.entity_id).toLowerCase();
+  if (!eUnaLuceDiNatale(entity2)) return null;
+  const luce4 = { entity: entity2 };
+  const nome = clean31(sorgente.nome).slice(0, NOME_AL_MASSIMO);
+  const icona3 = [...clean31(sorgente.icona)].slice(0, ICONA_AL_MASSIMO).join("");
+  if (nome) luce4.nome = nome;
+  if (icona3) luce4.icona = icona3;
+  return luce4;
+}
+function festePulite(grezza) {
+  let sorgente = grezza;
+  if (typeof sorgente === "string") {
+    try {
+      sorgente = JSON.parse(sorgente);
+    } catch (_errore) {
+      sorgente = null;
+    }
+  }
+  const s = sorgente && typeof sorgente === "object" && !Array.isArray(sorgente) ? sorgente : {};
+  const viste2 = /* @__PURE__ */ new Set();
+  const luci = [];
+  for (const grezzaLuce of Array.isArray(s.luci) ? s.luci : []) {
+    const luce4 = lucePulita(grezzaLuce);
+    if (!luce4 || viste2.has(luce4.entity)) continue;
+    viste2.add(luce4.entity);
+    luci.push(luce4);
+    if (luci.length >= LUCI_AL_MASSIMO) break;
+  }
+  const accendi3 = s.accendi && typeof s.accendi === "object" ? s.accendi : {};
+  const scarto = Math.round(Number(accendi3.scarto));
+  const spegni3 = s.spegni && typeof s.spegni === "object" ? s.spegni : {};
+  const giorni = Array.isArray(s.giorni) ? [
+    ...new Set(s.giorni.map(Number).filter((g) => Number.isInteger(g) && g >= 0 && g <= 6))
+  ].sort((a, b2) => a - b2) : [...TUTTI_I_GIORNI];
+  return {
+    luci,
+    accendi: {
+      tipo: accendi3.tipo === "ora" ? "ora" : "tramonto",
+      ora: oraPulita(accendi3.ora) || ORA_DI_ACCENSIONE,
+      scarto: Number.isFinite(scarto) ? Math.min(SCARTO_MASSIMO, Math.max(SCARTO_MINIMO, scarto)) : 0
+    },
+    spegni: { ora: oraPulita(spegni3.ora) || ORA_DI_SPEGNIMENTO },
+    giorni,
+    /* Il riquadro in Home con le luci e «Spegni tutte»: c'e' tutto l'anno, se
+     * ci sono luci, e lo si spegne dalla scheda. Di serie acceso. */
+    riquadro: s.riquadro !== false,
+    /* L'accensione e lo spegnimento da soli all'orario: anche questi tutto
+     * l'anno, finche' non li si spegne. Di serie accesi. */
+    automatico: s.automatico !== false
+  };
+}
+function entitaDelleLuci(config) {
+  return (config?.luci || []).map((luce4) => luce4.entity);
+}
+function appiattita(testo5) {
+  return clean31(testo5).normalize("NFD").replace(/\p{M}+/gu, "").toLowerCase().replace(/[_.]+/g, " ");
+}
+function sembraDiNatale(testo5) {
+  const piatto2 = appiattita(testo5);
+  return Boolean(piatto2) && PAROLE_DELLE_LUCI.some((parola2) => piatto2.includes(parola2));
+}
+function luciDaProporre(states = {}, config = festePulite(null), quante3 = 6) {
+  const gia = new Set(entitaDelleLuci(config));
+  const fuori = [];
+  for (const [entity2, stato3] of Object.entries(states || {})) {
+    if (gia.has(entity2) || !eUnaLuceDiNatale(entity2)) continue;
+    const nome = clean31(stato3?.attributes?.friendly_name);
+    if (!sembraDiNatale(nome) && !sembraDiNatale(entity2)) continue;
+    fuori.push({ entity: entity2, nome: nome || entity2 });
+  }
+  return fuori.sort((a, b2) => a.nome.localeCompare(b2.nome)).slice(0, quante3);
+}
+var ICONE_DAL_NOME = Object.freeze([
+  ["albero", "🎄"],
+  ["tree", "🎄"],
+  ["presep", "⭐"],
+  ["cometa", "🌟"],
+  ["stella", "🌟"],
+  ["star", "🌟"],
+  ["candel", "🕯️"],
+  ["candle", "🕯️"],
+  ["vetrin", "🕯️"],
+  ["ghirland", "🎀"],
+  ["regal", "🎁"],
+  ["pacch", "🎁"],
+  ["renn", "🦌"]
+]);
+var ICONE_DELLE_LUCI = Object.freeze([
+  "🎄",
+  "⭐",
+  "🌟",
+  "✨",
+  "🕯️",
+  "💡",
+  "🎁",
+  "🎀",
+  "🔔",
+  "🦌",
+  "❄️",
+  "🏠"
+]);
+function iconaDellaLuce(luce4, nome = "") {
+  if (clean31(luce4?.icona)) return clean31(luce4.icona);
+  const piatto2 = appiattita(`${clean31(luce4?.nome)} ${clean31(nome)} ${clean31(luce4?.entity)}`);
+  for (const [parola2, icona3] of ICONE_DAL_NOME) if (piatto2.includes(parola2)) return icona3;
+  return "✨";
+}
+var giornoDi4 = (data) => new Date(data.getFullYear(), data.getMonth(), data.getDate());
+var nomeDelGiorno3 = (data) => `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}-${String(data.getDate()).padStart(2, "0")}`;
+var alleOre3 = (giorno3, ora7) => {
+  const [h, m] = ora7.split(":").map(Number);
+  return new Date(giorno3.getFullYear(), giorno3.getMonth(), giorno3.getDate(), h, m).getTime();
+};
+function tramontoDelGiorno(giorno3, prossimoTramonto2) {
+  if (prossimoTramonto2 === null || prossimoTramonto2 === void 0 || prossimoTramonto2 === "")
+    return null;
+  const t2 = new Date(prossimoTramonto2);
+  if (!Number.isFinite(t2.getTime())) return null;
+  return new Date(
+    giorno3.getFullYear(),
+    giorno3.getMonth(),
+    giorno3.getDate(),
+    t2.getHours(),
+    t2.getMinutes()
+  ).getTime();
+}
+function intervalloDelGiorno(config, giorno3, prossimoTramonto2 = null, inizio = null) {
+  const c = config || festePulite(null);
+  const g = giornoDi4(giorno3);
+  if (!c.giorni.includes(g.getDay())) return null;
+  let partenza = inizio;
+  if (!Number.isFinite(partenza)) {
+    const tramonto = c.accendi.tipo === "tramonto" ? tramontoDelGiorno(g, prossimoTramonto2) : null;
+    partenza = tramonto !== null ? tramonto + c.accendi.scarto * MINUTO7 : alleOre3(g, c.accendi.ora);
+  }
+  let fine = alleOre3(g, c.spegni.ora);
+  if (fine <= partenza) fine += GIORNO5;
+  return { giorno: nomeDelGiorno3(g), inizio: partenza, fine };
+}
+function oraDi6(momento) {
+  const d = new Date(momento);
+  if (!Number.isFinite(d.getTime())) return "";
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+var PAZIENZA_DOPO_L_ACCENSIONE = 90 * 1e3;
+var CHIUDI_SENZA_SPEGNERE_DOPO = 6 * ORA7;
 
 // src/sections/disegni-delle-feste.js
 var PIXEL_AL_MASSIMO = 2;
@@ -139102,7 +139107,7 @@ function mettiDopo(sopra, nodo4) {
 }
 function disegnaLeLuciInHome(config, states, adesso2) {
   let riquadro2 = doc.getElementById(ID_LUCI);
-  if (!config.luci.length) {
+  if (!config.luci.length || config.riquadro === false) {
     riquadro2?.remove();
     return false;
   }
@@ -139269,7 +139274,7 @@ function spegniLaNeve() {
 }
 function togliTutto() {
   spegniLaNeve();
-  for (const id of [ID_GHIRLANDA, ID_CONTO, ID_LUCI, ID_AUGURI]) doc.getElementById(id)?.remove();
+  for (const id of [ID_GHIRLANDA, ID_CONTO, ID_AUGURI]) doc.getElementById(id)?.remove();
   doc.documentElement.classList.remove(CLASSE2);
   state138.misuraGhirlanda = "";
   state138.accese = false;
@@ -139277,14 +139282,15 @@ function togliTutto() {
 function disegnaLeFeste(adesso2 = /* @__PURE__ */ new Date()) {
   state138.frame = 0;
   if (!doc?.body) return false;
+  const config = configurazioneDelleFeste();
+  const states = allStates() || {};
   if (!inFesta(adesso2)) {
     if (state138.accese || doc.getElementById(ID_NEVE)) togliTutto();
+    disegnaLeLuciInHome(config, states, adesso2);
     return false;
   }
   state138.accese = true;
   doc.documentElement.classList.add(CLASSE2);
-  const config = configurazioneDelleFeste();
-  const states = allStates() || {};
   disegnaLaGhirlandaInTestata();
   disegnaIlConto(adesso2);
   disegnaGliAuguri(adesso2);
@@ -139569,6 +139575,23 @@ function orariMarkup(config, states) {
     </div>
   </div>`;
 }
+function interruttoriMarkup(config) {
+  const riga5 = (chiave2, acceso6, titolo3, sotto) => `<label class="fe-ed-interruttore"><input type="checkbox" data-fe-interruttore="${chiave2}"${acceso6 ? " checked" : ""}><span><b>${esc(titolo3)}</b><small>${esc(sotto)}</small></span></label>`;
+  return `<div class="fe-ed-interruttori">${riga5(
+    "riquadro",
+    config.riquadro,
+    t("Riquadro in Home", "Panel on Home"),
+    t("Le luci in Home, con «Spegni tutte».", "The lights on Home, with “Turn all off”.")
+  )}${riga5(
+    "automatico",
+    config.automatico,
+    t("Accensione automatica", "Automatic switching"),
+    t(
+      "Si accendono e si spengono da sole all'orario qui sotto.",
+      "They switch on and off by themselves at the times below."
+    )
+  )}</div>`;
+}
 function schedaMarkup10(config, states = {}) {
   const proposte = luciDaProporre(states, config, 4);
   const piene = config.luci.length >= LUCI_AL_MASSIMO;
@@ -139596,7 +139619,8 @@ function schedaMarkup10(config, states = {}) {
   )}` : ""}</p>
       ${righe4.length ? `<div class="fe-ed-righe">${righe4.join("")}</div>` : ""}
       ${aggiungi5 || trovate ? `<div class="fe-ed-aggiungi">${aggiungi5}${trovate}</div>` : ""}
-      ${orariMarkup(config, states)}
+      ${interruttoriMarkup(config)}
+      ${config.automatico ? orariMarkup(config, states) : ""}
     </section>
   </div>`;
 }
@@ -139604,10 +139628,6 @@ function ensureLuciDiNataleTab() {
   const linguette5 = doc?.querySelector(".ed-tab")?.parentElement;
   if (!linguette5) return false;
   const gia = linguette5.querySelector(`.ed-tab[data-tab="${LUCI_DI_NATALE_TAB}"]`);
-  if (!inFesta(/* @__PURE__ */ new Date())) {
-    gia?.remove();
-    return false;
-  }
   if (gia) return false;
   const linguetta4 = doc.createElement("button");
   linguetta4.className = "ed-tab";
@@ -139629,7 +139649,6 @@ function ensureLuciDiNataleEditor() {
     }
     return false;
   }
-  if (!inFesta(/* @__PURE__ */ new Date())) return false;
   const states = allStates() || {};
   const config = salvate2();
   const markup7 = schedaMarkup10(config, states);
@@ -139771,6 +139790,15 @@ function onClick35(event) {
 function onChange10(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva10() !== LUCI_DI_NATALE_TAB || !body.contains(event.target)) return;
+  const interruttore6 = event.target.closest?.("[data-fe-interruttore]");
+  if (interruttore6) {
+    const quale2 = interruttore6.dataset.feInterruttore;
+    if (quale2 === "riquadro" || quale2 === "automatico") {
+      salva24({ ...salvate2(), [quale2]: Boolean(interruttore6.checked) });
+      ridisegna15({ forza: true });
+    }
+    return;
+  }
   const campo6 = event.target.closest?.("[data-fe-orario]");
   if (!campo6) return;
   const config = salvate2();
@@ -139831,6 +139859,11 @@ html[data-theme="dark"] #ed-body .fe-ed-piu{background:#f8fafc;border-color:#f8f
 #ed-body .fe-ed-nota{font-size:11.5px;line-height:1.45;color:var(--text-dim,#64748b)}
 #ed-body .fe-ed-luna{font-size:18px}
 #ed-body .fe-ed-giorni{display:flex;gap:6px;flex-wrap:wrap}
+#ed-body .fe-ed-interruttori{display:grid;gap:8px;margin-top:14px}
+#ed-body .fe-ed-interruttore{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--divider-color,#e2e8f0);border-radius:12px;cursor:pointer}
+#ed-body .fe-ed-interruttore input{width:18px;height:18px;margin:2px 0 0;flex:0 0 auto;accent-color:var(--primary-color,#0ea5e9)}
+#ed-body .fe-ed-interruttore span{display:grid;gap:2px}
+#ed-body .fe-ed-interruttore small{color:var(--secondary-text-color,#64748b);font-size:12.5px}
 #ed-body .fe-ed-giorno{width:36px;height:36px;border-radius:50%;border:1px solid var(--divider-color,#e2e8f0);background:var(--card-background-color,#fff);color:var(--text-dim,#64748b);font-weight:800;font-size:13px;cursor:pointer;text-transform:uppercase}
 #ed-body .fe-ed-giorno.si{background:#0f172a;border-color:#0f172a;color:#fff}
 html[data-theme="dark"] #ed-body .fe-ed-giorno.si{background:#f5d27a;border-color:#f5d27a;color:#1f1300}

@@ -8449,4 +8449,8 @@ export default Object.freeze({
   "They switch on": "Włączają się",
   "This light is already there.": "To światło już jest.",
   "To ${anno}": "Do ${anno}",
+  "Panel on Home": "Kafelek na stronie głównej",
+  "The lights on Home, with “Turn all off”.": "Światła na stronie głównej, z „Wyłącz wszystkie”.",
+  "Automatic switching": "Automatyczne włączanie",
+  "They switch on and off by themselves at the times below.": "Włączają się i wyłączają same o poniższych godzinach.",
 });

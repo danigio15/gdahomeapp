@@ -8460,4 +8460,8 @@ export default Object.freeze({
   "They switch on": "Acendem-se",
   "This light is already there.": "Esta luz já está.",
   "To ${anno}": "Para ${anno}",
+  "Panel on Home": "Quadro no Início",
+  "The lights on Home, with “Turn all off”.": "As luzes no Início, com «Desligar todas».",
+  "Automatic switching": "Ligação automática",
+  "They switch on and off by themselves at the times below.": "Acendem-se e apagam-se sozinhas nos horários abaixo.",
 });

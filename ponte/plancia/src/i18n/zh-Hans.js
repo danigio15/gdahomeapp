@@ -8298,4 +8298,8 @@ export default Object.freeze({
   "They switch on": "打开时间",
   "This light is already there.": "这盏灯已经有了。",
   "To ${anno}": "距 ${anno} 年",
+  "Panel on Home": "主页面板",
+  "The lights on Home, with “Turn all off”.": "主页上的灯光，带「全部关闭」。",
+  "Automatic switching": "自动开关",
+  "They switch on and off by themselves at the times below.": "按下方时间自动开启和关闭。",
 });

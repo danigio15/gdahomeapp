@@ -8430,4 +8430,8 @@ export default Object.freeze({
   "They switch on": "点灯",
   "This light is already there.": "このライトはすでにあります。",
   "To ${anno}": "${anno} 年まで",
+  "Panel on Home": "ホームのパネル",
+  "The lights on Home, with “Turn all off”.": "ホームに表示されるライトと「すべて消す」。",
+  "Automatic switching": "自動点灯",
+  "They switch on and off by themselves at the times below.": "下の時刻に自動で点灯・消灯します。",
 });

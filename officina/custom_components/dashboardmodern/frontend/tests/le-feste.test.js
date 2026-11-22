@@ -148,7 +148,12 @@ test("la configurazione ripulita: valori di serie, entita' buone, otto al massim
     accendi: { tipo: "tramonto", ora: "17:00", scarto: 0 },
     spegni: { ora: "23:30" },
     giorni: [0, 1, 2, 3, 4, 5, 6],
+    riquadro: true,
+    automatico: true,
   });
+  assert.equal(festePulite({ riquadro: false }).riquadro, false);
+  assert.equal(festePulite({ automatico: false }).automatico, false);
+  assert.equal(festePulite({ riquadro: "no" }).riquadro, true, "solo un false lo spegne");
   const luci = Array.from({ length: 12 }, (_, i) => ({ entity: `switch.presa_${i}` }));
   const piena = festePulite(
     JSON.stringify({
@@ -230,15 +235,15 @@ test("l'intervallo: al tramonto con lo scarto, spente all'ora; dopo mezzanotte i
   );
 });
 
-test("l'intervallo solo nei giorni scelti e solo nelle feste, e non oltre il 6 gennaio", () => {
+test("l'intervallo solo nei giorni scelti, anche fuori dalle feste", () => {
   const weekend = festePulite({ ...ALBERO, giorni: [0, 6] });
   assert.equal(intervalloDelGiorno(weekend, d(2026, 12, 18)), null); // venerdi'
   assert.ok(intervalloDelGiorno(weekend, d(2026, 12, 19))); // sabato
-  assert.equal(intervalloDelGiorno(ALBERO, d(2026, 12, 7)), null);
-  assert.ok(intervalloDelGiorno(ALBERO, d(2026, 12, 8)));
-  assert.equal(intervalloDelGiorno(ALBERO, d(2027, 1, 7)), null);
+  /* L'albero si monta prima: l'orario vale tutto l'anno. */
+  assert.ok(intervalloDelGiorno(ALBERO, d(2026, 11, 28)));
+  assert.ok(intervalloDelGiorno(ALBERO, d(2027, 1, 7)));
   const tardi = festePulite({ ...ALBERO, spegni: { ora: "02:00" } });
-  assert.equal(intervalloDelGiorno(tardi, d(2027, 1, 6)).fine, d(2027, 1, 7).getTime());
+  assert.equal(intervalloDelGiorno(tardi, d(2027, 1, 6)).fine, d(2027, 1, 7, 2).getTime());
 });
 
 /* ── cosa fare ──────────────────────────────────────────────────────────── */
@@ -333,32 +338,38 @@ test("non combatte chi le spegne a mano: restano spente fino all'intervallo dopo
   assert.ok(PAZIENZA_DOPO_L_ACCENSIONE > 30_000);
 });
 
-test("niente fuori dalle feste: nessuna accensione dal 7 gennaio al 7 dicembre", () => {
-  for (const giorno of [
-    d(2026, 12, 7, 17, 30),
-    d(2027, 1, 7, 18),
-    d(2027, 3, 3, 18),
-    d(2026, 11, 22, 20),
-  ]) {
-    const r = decidiLeLuci({ config: ALBERO, adesso: giorno.getTime(), accese: false });
+test("l'orario vale anche prima delle feste, finche' e' acceso", () => {
+  assert.deepEqual(giornata(ALBERO, [[d(2026, 11, 28, 17)]]), ["accendi"]);
+  const spento = festePulite({ ...ALBERO, automatico: false });
+  for (const giorno of [d(2026, 11, 28, 17), d(2026, 12, 20, 18), d(2027, 3, 3, 18)]) {
+    const r = decidiLeLuci({ config: spento, adesso: giorno.getTime(), accese: false });
     assert.equal(r.azione, null, String(giorno));
     assert.deepEqual(r.memoria, {});
   }
-  assert.deepEqual(giornata(ALBERO, [[d(2026, 12, 8, 17)]]), ["accendi"]);
 });
 
-test("il 6 gennaio si spengono con la fine delle feste, e il 7 non si riaccendono", () => {
-  const tardi = festePulite({ ...ALBERO, spegni: { ora: "01:00" } });
-  assert.deepEqual(
-    giornata(tardi, [
-      [d(2027, 1, 6, 17), false],
-      [d(2027, 1, 6, 23, 59, 30), true],
-      [d(2027, 1, 7, 0, 0, 10), true],
-      [d(2027, 1, 7, 0, 30), true],
-      [d(2027, 1, 7, 17), false],
-    ]),
-    ["accendi", null, "spegni", null, null],
-  );
+test("spento l'orario a luci accese dall'orario, si spengono e basta", () => {
+  const prima = decidiLeLuci({
+    config: ALBERO,
+    adesso: d(2026, 12, 20, 18).getTime(),
+    accese: false,
+  });
+  assert.equal(prima.azione, "accendi");
+  const spento = festePulite({ ...ALBERO, automatico: false });
+  const dopo = decidiLeLuci({
+    config: spento,
+    adesso: d(2026, 12, 20, 18, 5).getTime(),
+    accese: true,
+    memoria: prima.memoria,
+  });
+  assert.equal(dopo.azione, "spegni");
+  const ancora = decidiLeLuci({
+    config: spento,
+    adesso: d(2026, 12, 21, 18).getTime(),
+    accese: false,
+    memoria: dopo.memoria,
+  });
+  assert.equal(ancora.azione, null);
 });
 
 test("un intervallo dimenticato da giorni si chiude senza spegnere", () => {

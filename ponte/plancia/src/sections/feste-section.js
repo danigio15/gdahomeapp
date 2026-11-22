@@ -7,7 +7,7 @@
  * `core/feste.js` (`inFesta`); qui si guarda l'orologio una volta al minuto,
  * si mette o si toglie, e si disegna.
  *
- * Cinque cose, tutte solo dentro le feste:
+ * Quattro cose solo dentro le feste, e una tutto l'anno:
  *
  *  - la GHIRLANDA dorata lungo il bordo alto della testata, con le lampadine
  *    calde a bokeh: una tela ferma, ridisegnata solo quando la testata cambia
@@ -19,7 +19,9 @@
  *    del 31: una pillola scura con «AL 2027 · 4g 05:17» in oro;
  *  - il riquadro LUCI DI NATALE in Home, sotto la barra dei conteggi, solo se
  *    in configurazione ci sono delle luci: quante sono accese, quando si
- *    spengono, una tessera per luce e «Spegni tutte»;
+ *    spengono, una tessera per luce e «Spegni tutte». Questo NON aspetta le
+ *    feste: l'albero si monta prima, e il riquadro c'e' tutto l'anno finche'
+ *    non lo si spegne dalla scheda «Luci di Natale» (`riquadro`);
  *  - il primo gennaio, nello stesso posto, gli AUGURI.
  *
  * ── Non deve rallentare la plancia ────────────────────────────────────────
@@ -194,7 +196,7 @@ function mettiDopo(sopra, nodo) {
 
 function disegnaLeLuciInHome(config, states, adesso) {
   let riquadro = doc.getElementById(ID_LUCI);
-  if (!config.luci.length) {
+  if (!config.luci.length || config.riquadro === false) {
     riquadro?.remove();
     return false;
   }
@@ -390,9 +392,11 @@ function spegniLaNeve() {
 
 /* ── il giro ────────────────────────────────────────────────────────────── */
 
+/* Via la festa: ghirlanda, neve, conto e auguri. Il riquadro delle luci no,
+ * che c'e' tutto l'anno. */
 function togliTutto() {
   spegniLaNeve();
-  for (const id of [ID_GHIRLANDA, ID_CONTO, ID_LUCI, ID_AUGURI]) doc.getElementById(id)?.remove();
+  for (const id of [ID_GHIRLANDA, ID_CONTO, ID_AUGURI]) doc.getElementById(id)?.remove();
   doc.documentElement.classList.remove(CLASSE);
   state.misuraGhirlanda = "";
   state.accese = false;
@@ -401,14 +405,15 @@ function togliTutto() {
 export function disegnaLeFeste(adesso = new Date()) {
   state.frame = 0;
   if (!doc?.body) return false;
+  const config = configurazioneDelleFeste();
+  const states = allStates() || {};
   if (!inFesta(adesso)) {
     if (state.accese || doc.getElementById(ID_NEVE)) togliTutto();
+    disegnaLeLuciInHome(config, states, adesso);
     return false;
   }
   state.accese = true;
   doc.documentElement.classList.add(CLASSE);
-  const config = configurazioneDelleFeste();
-  const states = allStates() || {};
   disegnaLaGhirlandaInTestata();
   disegnaIlConto(adesso);
   disegnaGliAuguri(adesso);

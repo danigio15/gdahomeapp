@@ -8410,4 +8410,8 @@ export default Object.freeze({
   "They switch on": "ये चालू होती हैं",
   "This light is already there.": "यह लाइट पहले से है।",
   "To ${anno}": "${anno} तक",
+  "Panel on Home": "होम पर पैनल",
+  "The lights on Home, with “Turn all off”.": "होम पर लाइटें, «सभी बंद करें» के साथ।",
+  "Automatic switching": "स्वचालित चालू/बंद",
+  "They switch on and off by themselves at the times below.": "ये नीचे दिए समय पर अपने आप जलती और बुझती हैं।",
 });

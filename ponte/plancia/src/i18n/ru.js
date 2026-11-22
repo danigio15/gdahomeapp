@@ -8447,4 +8447,8 @@ export default Object.freeze({
   "They switch on": "Включаются",
   "This light is already there.": "Этот свет уже есть.",
   "To ${anno}": "До ${anno}",
+  "Panel on Home": "Блок на главной",
+  "The lights on Home, with “Turn all off”.": "Огни на главной, с кнопкой «Выключить все».",
+  "Automatic switching": "Автоматическое включение",
+  "They switch on and off by themselves at the times below.": "Включаются и выключаются сами в указанное ниже время.",
 });
