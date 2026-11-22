@@ -4,10 +4,11 @@ import {
   posaDelModello,
   puntoDelFile,
   puntoNelMondo
-} from "./chunk-F3VEVFFR.js";
+} from "./chunk-2XNRX3SX.js";
 import {
+  creaLeScritte,
   installaLoStile
-} from "./chunk-36X7S2TS.js";
+} from "./chunk-DCLZLWM3.js";
 import {
   DISPOSITIVI_3D,
   azioneDelTocco,
@@ -15,7 +16,7 @@ import {
   entitaCandidate,
   entitaProposta,
   statoDelDispositivo
-} from "./chunk-EXLHWZMG.js";
+} from "./chunk-PPQ7CSPW.js";
 
 // src/sections/casa-3d/scena-modello.js
 var LUCI_ACCESE_AL_MASSIMO = 6;
@@ -128,6 +129,8 @@ function creaScenaDelModello(THREE, opzioni = {}) {
   const stratoChip = palco.querySelector(".c3-chip-strato");
   const sugg = palco.querySelector(".c3-sugg");
   const lama = palco.querySelector("[data-c3m-taglio]");
+  const scritte = creaLeScritte({ strato: stratoChip, perLeProve: Boolean(opzioni.perLeProve), richiedi: () => richiedi() });
+  scritte.modo(opzioni.nomi);
   let pannello = opzioni.pannello || null;
   if (!pannello && admin) {
     pannello = document.createElement("div");
@@ -248,6 +251,7 @@ function creaScenaDelModello(THREE, opzioni = {}) {
   }
   function etichette() {
     const cima = S.taglio < 1 ? ALTO * S.taglio + 0.01 : Infinity;
+    const visti = [];
     for (const Dv of DISP) {
       const el = chipDi(Dv);
       vettore.copy(Dv.m.position).project(cam);
@@ -256,10 +260,23 @@ function creaScenaDelModello(THREE, opzioni = {}) {
       Dv.m.visible = Dv.m.position.y <= cima;
       el.style.display = fuori ? "none" : "";
       if (fuori) continue;
-      el.style.transform = `translate(${x.toFixed(1)}px,${(y - 6).toFixed(1)}px) translate(-50%,-100%)`;
       el.classList.toggle("c3m-dietro", nascosti.has(Dv));
       vestiChip(Dv, el);
+      const st = Dv.stato;
+      visti.push({
+        Dv,
+        el,
+        x,
+        y: y - 6,
+        distanza: Dv.m.position.distanceTo(cam.position),
+        acceso: Boolean(st?.attivo),
+        primo: S.scelto === Dv,
+        /* chi sta dietro un muro cede il posto a chi si vede; chi grida no */
+        priorita: st?.attivo && ["movimento", "allarme"].includes(st.tono) ? 1 : nascosti.has(Dv) ? -1 : 0
+      });
     }
+    const { az, al, d, tx, ty, tz } = S.cam;
+    scritte.disponi(visti, [largo, alto, az, al, d, tx, ty, tz, S.taglio].map((v) => v.toFixed(3)).join("|"));
   }
   function disegna() {
     if (S.morto) return;
@@ -318,6 +335,7 @@ function creaScenaDelModello(THREE, opzioni = {}) {
     el.className = "c3-chip";
     el.addEventListener("click", (ev) => {
       ev.stopPropagation();
+      scritte.toccato(Dv, el, `${nomeDi(Dv)} · ${Dv.stato?.testo || L("da collegare", "not linked")}`);
       tocca(Dv);
     });
     stratoChip.appendChild(el);
@@ -332,6 +350,7 @@ function creaScenaDelModello(THREE, opzioni = {}) {
     const scollegato = !Dv.dati.entity;
     const testo = scollegato ? `${Dv.D.icona} ?` : st.testo;
     if (el.textContent !== testo) el.textContent = testo;
+    if (el.dataset.ic !== Dv.D.icona) el.dataset.ic = Dv.D.icona;
     const c = TONI[st.tono] || TONI.neutro;
     if (el.dataset.c !== c) {
       el.dataset.c = c;
@@ -348,6 +367,7 @@ function creaScenaDelModello(THREE, opzioni = {}) {
       const st = Dv.dati.entity ? S.stati[Dv.dati.entity] : null;
       Dv.stato = st ? statoDelDispositivo(Dv.k, st, italiano) : null;
     }
+    scritte.rifai();
     const accese = DISP.filter((Dv) => Dv.k === "luce" && Dv.stato?.attivo);
     MUCCHIO.forEach((Mu, i) => {
       const Dv = accese[i];
@@ -610,6 +630,7 @@ function creaScenaDelModello(THREE, opzioni = {}) {
     S.morto = true;
     if (S.raf) cancelAnimationFrame(S.raf);
     clearTimeout(timerSalva);
+    scritte.distruggi();
     osservatore?.disconnect();
     if (pannello) {
       pannello.removeEventListener("click", alClicDelPannello);
@@ -641,6 +662,8 @@ function creaScenaDelModello(THREE, opzioni = {}) {
     arreda,
     distruggi,
     ridimensiona,
+    /** Le scritte dei dispositivi: «tutti», «accesi» o «nessuno» (vedi le-scritte.js). */
+    nomi: (modo) => scritte.modo(modo),
     fotogramma(dt = 1 / 60) {
       avanza(dt);
       disegna();

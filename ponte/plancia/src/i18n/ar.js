@@ -8418,4 +8418,11 @@ export default Object.freeze({
   "Your home photos full screen, fading into each other, with a small clock and the weather at the bottom":
     "صور البيت على كامل الشاشة، تتلاشى إحداها في الأخرى، مع ساعة صغيرة والطقس في الأسفل",
   "A small preview, with the current time and sky": "معاينة صغيرة بالوقت والسماء الحاليين",
+  "Names: all": "الأسماء: الكل",
+  "Names: only on": "الأسماء: المشغّلة فقط",
+  "Names: none": "الأسماء: لا شيء",
+  "Device labels: tap to change": "تسميات الأجهزة: انقر للتغيير",
+  "All labels: the overlapping ones become dots": "كل التسميات: المتداخلة تصبح نقاطًا",
+  "Labels only for devices that are on": "تسميات للأجهزة المشغّلة فقط",
+  "Dots only: tap one for its name": "نقاط فقط: انقر على واحدة لترى اسمها",
 });

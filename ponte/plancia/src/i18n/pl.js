@@ -8491,4 +8491,11 @@ export default Object.freeze({
   "Your home photos full screen, fading into each other, with a small clock and the weather at the bottom":
     "Zdjęcia z domu na pełnym ekranie, przenikające się, z małym zegarem i pogodą na dole",
   "A small preview, with the current time and sky": "Mały podgląd, z aktualną godziną i niebem",
+  "Names: all": "Nazwy: wszystkie",
+  "Names: only on": "Nazwy: tylko włączone",
+  "Names: none": "Nazwy: żadne",
+  "Device labels: tap to change": "Etykiety urządzeń: dotknij, aby zmienić",
+  "All labels: the overlapping ones become dots": "Wszystkie etykiety: nakładające się stają się kropkami",
+  "Labels only for devices that are on": "Etykiety tylko dla włączonych urządzeń",
+  "Dots only: tap one for its name": "Tylko kropki: dotknij jednej, aby zobaczyć nazwę",
 });

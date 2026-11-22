@@ -8471,4 +8471,11 @@ export default Object.freeze({
   "Your home photos full screen, fading into each other, with a small clock and the weather at the bottom":
     "Evin fotoğrafları tam ekran, birbirine geçerek, küçük bir saat ve altta hava durumuyla",
   "A small preview, with the current time and sky": "Şu anki saat ve gökyüzüyle küçük bir önizleme",
+  "Names: all": "Adlar: tümü",
+  "Names: only on": "Adlar: yalnızca açık olanlar",
+  "Names: none": "Adlar: hiçbiri",
+  "Device labels: tap to change": "Cihaz etiketleri: değiştirmek için dokunun",
+  "All labels: the overlapping ones become dots": "Tüm etiketler: üst üste binenler noktaya dönüşür",
+  "Labels only for devices that are on": "Yalnızca açık cihazlar için etiketler",
+  "Dots only: tap one for its name": "Yalnızca noktalar: adını görmek için birine dokunun",
 });

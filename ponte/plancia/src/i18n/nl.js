@@ -8504,4 +8504,11 @@ export default Object.freeze({
     "Je foto's van thuis op volledig scherm, in elkaar overvloeiend, met een kleine klok en het weer onderaan",
   "A small preview, with the current time and sky":
     "Een klein voorbeeld, met de tijd en de lucht van nu",
+  "Names: all": "Namen: alle",
+  "Names: only on": "Namen: alleen aan",
+  "Names: none": "Namen: geen",
+  "Device labels: tap to change": "Labels van apparaten: tik om te wijzigen",
+  "All labels: the overlapping ones become dots": "Alle labels: overlappende worden stippen",
+  "Labels only for devices that are on": "Labels alleen voor apparaten die aan staan",
+  "Dots only: tap one for its name": "Alleen stippen: tik op een stip voor de naam",
 });

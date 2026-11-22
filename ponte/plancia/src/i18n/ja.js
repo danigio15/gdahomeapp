@@ -8471,4 +8471,11 @@ export default Object.freeze({
   "Your home photos full screen, fading into each other, with a small clock and the weather at the bottom":
     "家の写真を全画面で、フェードでつなぎ、下に小さな時計と天気を表示",
   "A small preview, with the current time and sky": "今の時刻と空を使った小さなプレビュー",
+  "Names: all": "名前：すべて",
+  "Names: only on": "名前：オンのみ",
+  "Names: none": "名前：なし",
+  "Device labels: tap to change": "デバイスのラベル：タップで切り替え",
+  "All labels: the overlapping ones become dots": "すべてのラベル：重なるものは点になります",
+  "Labels only for devices that are on": "オンのデバイスだけにラベル",
+  "Dots only: tap one for its name": "点のみ：タップすると名前を表示",
 });

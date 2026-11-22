@@ -8440,4 +8440,11 @@ export default Object.freeze({
   "Your home photos full screen, fading into each other, with a small clock and the weather at the bottom":
     "집 사진을 전체 화면으로, 서로 겹치며 바뀌고, 아래에 작은 시계와 날씨",
   "A small preview, with the current time and sky": "지금 시간과 하늘로 보여 주는 작은 미리 보기",
+  "Names: all": "이름: 모두",
+  "Names: only on": "이름: 켜진 것만",
+  "Names: none": "이름: 없음",
+  "Device labels: tap to change": "기기 라벨: 탭하여 변경",
+  "All labels: the overlapping ones become dots": "모든 라벨: 겹치는 라벨은 점이 됩니다",
+  "Labels only for devices that are on": "켜진 기기만 라벨 표시",
+  "Dots only: tap one for its name": "점만 표시: 점을 탭하면 이름이 보입니다",
 });

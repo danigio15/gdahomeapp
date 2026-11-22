@@ -8519,4 +8519,11 @@ export default Object.freeze({
     "Las fotos de casa a pantalla completa, con fundido, con un reloj pequeño y el tiempo abajo",
   "A small preview, with the current time and sky":
     "Una pequeña vista previa, con la hora y el cielo de ahora",
+  "Names: all": "Nombres: todos",
+  "Names: only on": "Nombres: solo encendidos",
+  "Names: none": "Nombres: ninguno",
+  "Device labels: tap to change": "Etiquetas de los dispositivos: toca para cambiar",
+  "All labels: the overlapping ones become dots": "Todas las etiquetas: las que se solapan se vuelven puntos",
+  "Labels only for devices that are on": "Etiquetas solo para los dispositivos encendidos",
+  "Dots only: tap one for its name": "Solo puntos: toca uno para ver su nombre",
 });

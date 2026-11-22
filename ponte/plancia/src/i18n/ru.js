@@ -8490,4 +8490,11 @@ export default Object.freeze({
     "Фото из дома на весь экран, плавно сменяющие друг друга, с маленькими часами и погодой внизу",
   "A small preview, with the current time and sky":
     "Небольшой предпросмотр с текущим временем и небом",
+  "Names: all": "Названия: все",
+  "Names: only on": "Названия: только включённые",
+  "Names: none": "Названия: нет",
+  "Device labels: tap to change": "Подписи устройств: нажмите, чтобы изменить",
+  "All labels: the overlapping ones become dots": "Все подписи: перекрывающиеся становятся точками",
+  "Labels only for devices that are on": "Подписи только для включённых устройств",
+  "Dots only: tap one for its name": "Только точки: нажмите на точку, чтобы увидеть название",
 });

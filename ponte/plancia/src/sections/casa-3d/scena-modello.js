@@ -22,6 +22,7 @@
 import { DISPOSITIVI_3D, azioneDelTocco, entita, entitaCandidate, entitaProposta, statoDelDispositivo } from "../../core/casa-3d.js";
 import { aByte, controllaIlModello, posaDelModello, puntoDelFile, puntoNelMondo } from "../../core/modello-3d.js";
 import { installaLoStile as stileDellaScena } from "./scena.js";
+import { creaLeScritte } from "./le-scritte.js";
 
 const LUCI_ACCESE_AL_MASSIMO = 6;
 const TONI = {
@@ -162,6 +163,9 @@ export function creaScenaDelModello(THREE, opzioni = {}) {
   const stratoChip = palco.querySelector(".c3-chip-strato");
   const sugg = palco.querySelector(".c3-sugg");
   const lama = palco.querySelector("[data-c3m-taglio]");
+  /* Le scritte dei dispositivi, come nella casa generata (vedi `le-scritte.js`). */
+  const scritte = creaLeScritte({ strato: stratoChip, perLeProve: Boolean(opzioni.perLeProve), richiedi: () => richiedi() });
+  scritte.modo(opzioni.nomi);
   let pannello = opzioni.pannello || null;
   if (!pannello && admin) {
     pannello = document.createElement("div");
@@ -296,6 +300,7 @@ export function creaScenaDelModello(THREE, opzioni = {}) {
   }
   function etichette() {
     const cima = S.taglio < 1 ? ALTO * S.taglio + 0.01 : Infinity;
+    const visti = [];
     for (const Dv of DISP) {
       const el = chipDi(Dv);
       vettore.copy(Dv.m.position).project(cam);
@@ -305,10 +310,23 @@ export function creaScenaDelModello(THREE, opzioni = {}) {
       Dv.m.visible = Dv.m.position.y <= cima;
       el.style.display = fuori ? "none" : "";
       if (fuori) continue;
-      el.style.transform = `translate(${x.toFixed(1)}px,${(y - 6).toFixed(1)}px) translate(-50%,-100%)`;
       el.classList.toggle("c3m-dietro", nascosti.has(Dv));
       vestiChip(Dv, el);
+      const st = Dv.stato;
+      visti.push({
+        Dv,
+        el,
+        x,
+        y: y - 6,
+        distanza: Dv.m.position.distanceTo(cam.position),
+        acceso: Boolean(st?.attivo),
+        primo: S.scelto === Dv,
+        /* chi sta dietro un muro cede il posto a chi si vede; chi grida no */
+        priorita: st?.attivo && ["movimento", "allarme"].includes(st.tono) ? 1 : nascosti.has(Dv) ? -1 : 0,
+      });
     }
+    const { az, al, d, tx, ty, tz } = S.cam;
+    scritte.disponi(visti, [largo, alto, az, al, d, tx, ty, tz, S.taglio].map((v) => v.toFixed(3)).join("|"));
   }
   function disegna() {
     if (S.morto) return;
@@ -370,6 +388,8 @@ export function creaScenaDelModello(THREE, opzioni = {}) {
     el.className = "c3-chip";
     el.addEventListener("click", (ev) => {
       ev.stopPropagation();
+      /* un pallino dice anche chi e': poi fa quello che fa il suo tasto */
+      scritte.toccato(Dv, el, `${nomeDi(Dv)} · ${Dv.stato?.testo || L("da collegare", "not linked")}`);
       tocca(Dv);
     });
     stratoChip.appendChild(el);
@@ -384,6 +404,7 @@ export function creaScenaDelModello(THREE, opzioni = {}) {
     const scollegato = !Dv.dati.entity;
     const testo = scollegato ? `${Dv.D.icona} ?` : st.testo;
     if (el.textContent !== testo) el.textContent = testo;
+    if (el.dataset.ic !== Dv.D.icona) el.dataset.ic = Dv.D.icona;
     const c = TONI[st.tono] || TONI.neutro;
     if (el.dataset.c !== c) {
       el.dataset.c = c;
@@ -402,6 +423,7 @@ export function creaScenaDelModello(THREE, opzioni = {}) {
       const st = Dv.dati.entity ? S.stati[Dv.dati.entity] : null;
       Dv.stato = st ? statoDelDispositivo(Dv.k, st, italiano) : null;
     }
+    scritte.rifai();
     const accese = DISP.filter((Dv) => Dv.k === "luce" && Dv.stato?.attivo);
     MUCCHIO.forEach((Mu, i) => {
       const Dv = accese[i];
@@ -683,6 +705,7 @@ export function creaScenaDelModello(THREE, opzioni = {}) {
     S.morto = true;
     if (S.raf) cancelAnimationFrame(S.raf);
     clearTimeout(timerSalva);
+    scritte.distruggi();
     osservatore?.disconnect();
     if (pannello) {
       pannello.removeEventListener("click", alClicDelPannello);
@@ -716,6 +739,8 @@ export function creaScenaDelModello(THREE, opzioni = {}) {
     arreda,
     distruggi,
     ridimensiona,
+    /** Le scritte dei dispositivi: «tutti», «accesi» o «nessuno» (vedi le-scritte.js). */
+    nomi: (modo) => scritte.modo(modo),
     fotogramma(dt = 1 / 60) {
       avanza(dt);
       disegna();

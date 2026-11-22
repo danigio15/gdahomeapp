@@ -8532,4 +8532,11 @@ export default Object.freeze({
     "Deine Fotos von zu Hause im Vollbild, ineinander überblendet, mit kleiner Uhr und dem Wetter unten",
   "A small preview, with the current time and sky":
     "Eine kleine Vorschau, mit der Uhrzeit und dem Himmel von jetzt",
+  "Names: all": "Namen: alle",
+  "Names: only on": "Namen: nur eingeschaltete",
+  "Names: none": "Namen: keine",
+  "Device labels: tap to change": "Gerätebeschriftungen: tippen zum Ändern",
+  "All labels: the overlapping ones become dots": "Alle Beschriftungen: überlappende werden zu Punkten",
+  "Labels only for devices that are on": "Beschriftungen nur für eingeschaltete Geräte",
+  "Dots only: tap one for its name": "Nur Punkte: tippe auf einen für den Namen",
 });

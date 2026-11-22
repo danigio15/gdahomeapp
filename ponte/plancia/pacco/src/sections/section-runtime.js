@@ -411,17 +411,18 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-F4WGIDWQ.js";
+} from "../../chunk-YUEAECTK.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
   controllaIlModello,
   troppoPerQuestoDispositivo,
   unitaProbabili
-} from "../../chunk-F3VEVFFR.js";
+} from "../../chunk-2XNRX3SX.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
+  CHIAVE_NOMI_CASA3D,
   CHIAVE_OCCHIO,
   DISPOSITIVI_3D,
   MODI_AL_MASSIMO,
@@ -446,6 +447,8 @@ import {
   ilCodiceCombacia,
   ilCodiceServe,
   mettiInPausaIlFlusso,
+  modoDeiNomi,
+  modoDopo,
   modoInserito,
   normalizzaIlCodice,
   nuovoRiquadro,
@@ -460,7 +463,7 @@ import {
   stessoFlusso,
   usaIlModello,
   vuoleIlVivo
-} from "../../chunk-EXLHWZMG.js";
+} from "../../chunk-PPQ7CSPW.js";
 import {
   ACCENTO,
   APPLIANCE_BINDING_FIELDS,
@@ -5622,6 +5625,7 @@ var SOURCE_INDEX = Object.freeze({
   "Le ritiro?": "Retract them?",
   "Le routine fanno delle cose a degli orari, nei giorni e nel periodo che scegli: «alle 6:30 caldaia, alle 7 tapparelle su». I calendari a fasce tengono accesa una cosa nelle fasce che disegni.": "Routines do things at set times, on the days and in the period you choose: «boiler at 6:30, shutters up at 7». Time-slot calendars keep something on in the slots you draw.",
   "Le routine fanno delle cose a degli orari; i calendari tengono accesa una cosa nelle fasce che disegni. Le esegue Home Assistant.": "Routines do things at set times; calendars keep something on in the slots you draw. Home Assistant runs them.",
+  "Le scritte dei dispositivi: tocca per cambiare": "Device labels: tap to change",
   "Le segnalazioni partono a tuo nome: la prima volta serve un passaggio su GitHub.": "Reports go out under your name: the first time takes one step on GitHub.",
   "Le settimane si vedono quando Home Assistant ne ha le statistiche.": "The weeks show once Home Assistant has statistics for them.",
   "Le sezioni della plancia": "The dashboard sections",
@@ -6366,6 +6370,9 @@ var SOURCE_INDEX = Object.freeze({
   "Nome visualizzato facoltativo": "Optional display name",
   "Nome, es. Cucina": "Name, e.g. Kitchen",
   "Nome, icona, colore, visibilità, gruppo e potenza diretta sono indipendenti per ogni nodo del flow.": "Name, icon, color, visibility, group and direct power are independent for every flow node.",
+  "Nomi: nessuno": "Names: none",
+  "Nomi: solo accesi": "Names: only on",
+  "Nomi: tutti": "Names: all",
   "Non adesso": "Not now",
   "Non ancora collegato": "Not linked yet",
   "Non ancora segnata": "Not logged yet",
@@ -7762,6 +7769,7 @@ var SOURCE_INDEX = Object.freeze({
   "Scritta come Home Assistant la elenca, lettera per lettera.": "Spelled the way Home Assistant lists it, letter for letter.",
   "Scritta da GdAHome con le entità che hai scelto.": "Written by GdAHome with the entities you picked.",
   "Scritte e quote non danno fastidio.": "Text and dimensions are fine.",
+  "Scritte solo per i dispositivi accesi": "Labels only for devices that are on",
   "Scritto, il tasto apre il tastierino e parte solo col codice giusto — lo stesso tastierino della centrale. Vuoto, parte al tocco.": "When set, the button opens the keypad and only fires with the right code — the same keypad as the panel. Empty, it fires on tap.",
   "Scrivi": "Write",
   "Scrivi a chi mantiene la plancia: conversazione privata, non passa da GitHub": "Write to whoever maintains the dashboard: a private conversation, not through GitHub",
@@ -8072,6 +8080,7 @@ var SOURCE_INDEX = Object.freeze({
   "Solo l'importante": "Only what matters",
   "Solo lettura": "Read only",
   "Solo nell'app GdAHome su Android.": "Only in the GdAHome app on Android.",
+  "Solo pallini: toccane uno per il nome": "Dots only: tap one for its name",
   "Solo per chi amministra": "Admins only",
   "Solo per gli Echo": "For the Echos only",
   "Solo per il campanello: non cambia il volume del tablet.": "Only for the doorbell: it does not change the tablet's volume.",
@@ -8676,6 +8685,7 @@ var SOURCE_INDEX = Object.freeze({
   "Tutte le luci": "All lights",
   "Tutte le luci di casa": "Every light in the house",
   "Tutte le luci giorno": "All day lights",
+  "Tutte le scritte: quelle che si coprono diventano pallini": "All labels: the overlapping ones become dots",
   "Tutte le stanze": "All rooms",
   "Tutte le tapparelle": "All blinds",
   "Tutte le tapparelle di casa": "Every blind in the house",
@@ -81090,7 +81100,7 @@ function friendlyName(states, entity2) {
 function batteriesModel(states) {
   const fuoriDaiWidget = widgetExcludedEntities("batterie");
   const dichiarate = batterieDichiarate(readJson(CHIAVE_BATTERIE, {}));
-  const nomiScelti = new Map((dichiarate || []).map((riga5) => [riga5.entity, riga5.name]));
+  const nomiScelti2 = new Map((dichiarate || []).map((riga5) => [riga5.entity, riga5.name]));
   const entities = (dichiarate ? dichiarate.map((riga5) => riga5.entity) : batterieDiCasa({
     configurate: gruppoEntita("batt", "batterie"),
     stati: states,
@@ -81101,7 +81111,7 @@ function batteriesModel(states) {
     const level = Number(stateOf(states, entity2)?.state);
     return {
       entity: entity2,
-      name: clean(nomiScelti.get(entity2)) || friendlyName(states, entity2),
+      name: clean(nomiScelti2.get(entity2)) || friendlyName(states, entity2),
       level: Number.isFinite(level) ? level : null
     };
   }).filter((row) => row.level != null).sort((a, b2) => a.level - b2.level);
@@ -173516,7 +173526,7 @@ async function caricaIlMotore() {
   const [THREE, caricatori, scena2] = await Promise.all([
     import(MOTORE.tre),
     import(MOTORE.caricatori),
-    import("../../scena-modello-RFXNEZUI.js")
+    import("../../scena-modello-6LKREKUM.js")
   ]);
   return { THREE, caricatori, scena: scena2 };
 }
@@ -174096,7 +174106,9 @@ var state199 = root[KEY202] ||= {
   attesaDelModello: "",
   /* Le fasce ai lati chiuse su questo dispositivo: si leggono la prima volta
    * che servono (vedi latiChiusi). */
-  lati: null
+  lati: null,
+  /* Le scritte dei dispositivi su questo dispositivo (vedi nomiScelti). */
+  nomi: null
 };
 function casa3dDiQui() {
   return casa3dPulita(readJson(CHIAVE_CASA3D, null));
@@ -174311,7 +174323,44 @@ function mettiILati(nodo4, casa3, vuota2) {
   const chiusi = latiChiusi();
   nodo4.dataset.sinistra = chiusi.sinistra ? "chiusa" : "aperta";
   nodo4.dataset.destra = chiusi.destra ? "chiusa" : "aperta";
-  scriviSeCambia(nodo4.querySelector(".c3-lati"), vuota2 ? "" : latiMarkup(casa3));
+  scriviSeCambia(nodo4.querySelector(".c3-lati"), vuota2 ? "" : latiMarkup(casa3) + nomiMarkup2());
+}
+function nomiScelti() {
+  if (state199.nomi) return state199.nomi;
+  let letto = "";
+  try {
+    letto = root.localStorage?.getItem?.(CHIAVE_NOMI_CASA3D) || "";
+  } catch (_errore) {
+    letto = "";
+  }
+  state199.nomi = modoDeiNomi(letto);
+  return state199.nomi;
+}
+function cambiaINomi() {
+  state199.nomi = modoDopo(nomiScelti());
+  try {
+    root.localStorage?.setItem?.(CHIAVE_NOMI_CASA3D, state199.nomi);
+  } catch (_errore) {
+  }
+  state199.scena?.nomi?.(state199.nomi);
+  return state199.nomi;
+}
+var PAROLE_DEI_NOMI = () => ({
+  tutti: t("Nomi: tutti", "Names: all"),
+  accesi: t("Nomi: solo accesi", "Names: only on"),
+  nessuno: t("Nomi: nessuno", "Names: none")
+});
+var SPIEGA_I_NOMI = () => ({
+  tutti: t("Tutte le scritte: quelle che si coprono diventano pallini", "All labels: the overlapping ones become dots"),
+  accesi: t("Scritte solo per i dispositivi accesi", "Labels only for devices that are on"),
+  nessuno: t("Solo pallini: toccane uno per il nome", "Dots only: tap one for its name")
+});
+function nomiMarkup2() {
+  const modo = nomiScelti();
+  const spiega = t("Le scritte dei dispositivi: tocca per cambiare", "Device labels: tap to change");
+  return `<button type="button" class="c3-nomi-tasto" data-c3s="nomi" data-modo="${esc(modo)}" aria-label="${esc(
+    `${PAROLE_DEI_NOMI()[modo]}. ${spiega}`
+  )}" title="${esc(spiega)}"><span aria-hidden="true">🏷️</span><span>${esc(PAROLE_DEI_NOMI()[modo])}</span></button>`;
 }
 function latiMarkup(casa3) {
   const chiusi = latiChiusi();
@@ -174534,7 +174583,8 @@ async function avviaIlModello(admin) {
       pannello: nodo4.querySelector(".c3-arreda-posto"),
       quandoTocchi: alToccoDellaScena,
       quandoSalvi: salvaLaCasa,
-      quandoCade: () => cadeIlModello(m.id)
+      quandoCade: () => cadeIlModello(m.id),
+      nomi: nomiScelti()
     });
     state199.firma = firmaDi3(ora7);
     state199.vista = "modello";
@@ -174569,7 +174619,7 @@ async function avviaLaScena(admin) {
   state199.caricando = true;
   state199.guasto = "";
   try {
-    const [THREE, { creaScena }] = await Promise.all([import(TRE), import("../../scena-PJO76BIX.js")]);
+    const [THREE, { creaScena }] = await Promise.all([import(TRE), import("../../scena-B6DI66VP.js")]);
     const nodo4 = doc.getElementById(ID5);
     const posto = nodo4?.querySelector(".c3-posto");
     if (!posto) return;
@@ -174587,6 +174637,7 @@ async function avviaLaScena(admin) {
       pannello: nodo4.querySelector(".c3-arreda-posto"),
       quandoTocchi: alToccoDellaScena,
       quandoSalvi: salvaLaCasa,
+      nomi: nomiScelti(),
       quandoCambiVista: (vista2) => {
         if (state199.vista === vista2) return;
         state199.vista = vista2;
@@ -174840,6 +174891,14 @@ function alClic6(evento) {
     if (state199.scena && !state199.scena.apri(k)) state199.vista = "esterno";
     return ridisegna35();
   }
+  if (cosa === "nomi") {
+    const modo = cambiaINomi();
+    vibra2(6);
+    avviso3(SPIEGA_I_NOMI()[modo]);
+    const nodo4 = doc.getElementById(ID5);
+    if (nodo4) mettiILati(nodo4, casaDaElencare(casa3dDiQui()), false);
+    return;
+  }
   if (cosa === "lato") {
     alternaIlLato(clean(el.dataset.c3sLato));
     vibra2(6);
@@ -174967,6 +175026,13 @@ function installaLoStile11() {
     ${C3} .c3-lato-tasto[data-c3s-lato="destra"]{right:0;border-right:0;border-radius:14px 0 0 14px}
     ${C3} .c3-lato-nome{display:none}
     ${C3}[data-arreda="true"] .c3-lato-tasto[data-c3s-lato="destra"]{display:none}
+    /* Il tasto «Nomi»: in alto a sinistra sulla casa, vestito come i tasti
+     * dello zoom. */
+    ${C3} .c3-nomi-tasto{position:absolute;left:14px;top:14px;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;
+      pointer-events:auto;cursor:pointer;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap;color:#e6edf7;
+      background:rgba(15,23,42,.74);border:1px solid rgba(148,163,184,.32);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+    ${C3} .c3-nomi-tasto[data-modo="accesi"],${C3} .c3-nomi-tasto[data-modo="nessuno"]{background:rgba(14,165,233,.85);border-color:transparent}
+    @media(hover:hover){${C3} .c3-nomi-tasto:hover{border-color:#38bdf8}}
     ${C3} .c3-sinistra,${C3} .c3-destra{display:flex;flex-direction:column;gap:14px;min-height:0;overflow-y:auto;scrollbar-width:thin}
     ${C3} .c3-scheda{padding:16px;border-radius:22px;background:var(--c3-card);border:1px solid var(--c3-bordo);box-shadow:var(--c3-ombra)}
     ${C3} .c3-scheda h2{display:flex;align-items:center;gap:8px;margin:0 0 12px;font-family:'Oswald',system-ui,sans-serif;font-size:15px;font-weight:500;
@@ -175082,6 +175148,8 @@ function installaLoStile11() {
       ${C3} .c3-lato-tasto[aria-expanded="true"]{background:rgba(14,165,233,.85);border-color:transparent}
       ${C3} .c3-lato-freccia{display:none}
       ${C3} .c3-lato-nome{display:inline}
+      /* sotto le due pillole delle fasce */
+      ${C3} .c3-nomi-tasto{top:52px;left:10px}
       ${C3}[data-sinistra="chiusa"][data-destra="chiusa"]:not([data-arreda="true"]) .c3-pagina{height:100%}
       ${C3}[data-sinistra="chiusa"][data-destra="chiusa"]:not([data-arreda="true"]) .c3-palco{flex:1 1 auto;height:auto}
     }

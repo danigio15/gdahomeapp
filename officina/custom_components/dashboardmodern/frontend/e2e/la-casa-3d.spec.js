@@ -650,6 +650,52 @@ test("tre luci nella stessa stanza: i tasti non si coprono", async ({ page }, te
   expect(coperti).toEqual([]);
 });
 
+/* «Le scritte dei dispositivi sono troppe e si sovrappongono.» Il tasto
+ * «Nomi» gira fra Tutti, Solo accesi e Nessuno; con Nessuno restano i
+ * pallini, e un pallino toccato dice il suo nome e fa il suo tocco. La scelta
+ * resta a questo dispositivo, anche ricaricando. */
+test("il tasto «Nomi»: tutti, solo accesi, nessuno — e la scelta resta", async ({
+  page,
+}, testInfo) => {
+  await boot(page, testInfo, { orologio: false });
+  await senzaMovimento(page);
+  const casa = page.locator("#dm-casa3d");
+  await vai(page, "terra");
+  const tasto = casa.locator('[data-c3s="nomi"]');
+  await expect(tasto).toHaveAttribute("data-modo", "tutti");
+  await tasto.click();
+  await expect(tasto).toHaveAttribute("data-modo", "accesi");
+  await tasto.click();
+  await expect(tasto).toHaveAttribute("data-modo", "nessuno");
+  await page.mouse.move(2, 2);
+  /* tutti pallini */
+  await expect
+    .poll(() =>
+      casa
+        .locator(".c3-chip")
+        .evaluateAll((nodi) =>
+          nodi
+            .filter((n) => n.style.display !== "none")
+            .every((n) => n.classList.contains("c3-pallino")),
+        ),
+    )
+    .toBe(true);
+  /* il pallino della luce della cucina: il nome, e la luce che si accende */
+  const luce = casa.locator(".c3-chip.c3-pallino[title='Luce cucina']");
+  await luce.click();
+  await expect(casa.locator(".c3-nome-vola")).toContainText("Luce cucina");
+  await expect
+    .poll(() => page.evaluate(() => window.__CHIAMATE.map((c) => c.join(" "))), { timeout: 20_000 })
+    .toContain("light toggle light.cucina");
+  expect(await page.evaluate(() => localStorage.getItem("dm_casa3d_nomi"))).toBe("nessuno");
+  await page.reload();
+  await expect(page.locator('#dm-casa3d [data-c3s="nomi"]')).toHaveAttribute(
+    "data-modo",
+    "nessuno",
+    { timeout: 120_000 },
+  );
+});
+
 /* «Il termostato piuttosto che la tapparella non riesco a spostarli»: sono
  * piccoli, sul muro, e sopra c'e' il loro tasto. Arredando, il tasto si
  * trascina e il dispositivo va dove lo si porta. */

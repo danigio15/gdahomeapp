@@ -8338,4 +8338,11 @@ export default Object.freeze({
   "Your home photos full screen, fading into each other, with a small clock and the weather at the bottom":
     "家里的照片全屏显示，淡入淡出切换，下方有小时钟和天气",
   "A small preview, with the current time and sky": "用现在的时间和天空做的小预览",
+  "Names: all": "名称：全部",
+  "Names: only on": "名称：仅开启的",
+  "Names: none": "名称：无",
+  "Device labels: tap to change": "设备标签：点按切换",
+  "All labels: the overlapping ones become dots": "全部标签：重叠的变成圆点",
+  "Labels only for devices that are on": "仅为开启的设备显示标签",
+  "Dots only: tap one for its name": "仅圆点：点按一个查看名称",
 });

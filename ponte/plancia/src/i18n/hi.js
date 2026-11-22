@@ -8453,4 +8453,11 @@ export default Object.freeze({
     "घर की फ़ोटो पूरी स्क्रीन पर, एक-दूसरे में घुलती हुई, नीचे छोटी घड़ी और मौसम के साथ",
   "A small preview, with the current time and sky":
     "अभी के समय और आसमान के साथ एक छोटा पूर्वावलोकन",
+  "Names: all": "नाम: सभी",
+  "Names: only on": "नाम: केवल चालू",
+  "Names: none": "नाम: कोई नहीं",
+  "Device labels: tap to change": "डिवाइस लेबल: बदलने के लिए टैप करें",
+  "All labels: the overlapping ones become dots": "सभी लेबल: एक-दूसरे पर आने वाले बिंदु बन जाते हैं",
+  "Labels only for devices that are on": "केवल चालू डिवाइस के लेबल",
+  "Dots only: tap one for its name": "केवल बिंदु: नाम देखने के लिए किसी एक पर टैप करें",
 });
