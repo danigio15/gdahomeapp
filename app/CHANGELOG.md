@@ -8,6 +8,13 @@ i suoi in `ponte/CHANGELOG.md`, ed è quello che Home Assistant fa vedere. Un
 rilascio dell'app non fa comparire un aggiornamento dell'add-on, e al
 contrario.
 
+## 1.19.24
+
+- **Il benvenuto nuovo**: la prima schermata dopo il download ha una
+  copertina con le schede che scorrono (la casa, l'energia, il navigatore, la
+  sicurezza) e i passi esatti per collegare la casa da Home Assistant.
+- **Premium**: la pagina degli abbonamenti ha una veste nuova.
+
 ## 1.19.23
 
 - **Navigatore, vista «Corsie»**: la fascia verde sta dentro la corsia, più
