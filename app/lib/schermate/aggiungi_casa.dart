@@ -18,6 +18,7 @@
 library;
 
 import 'dart:async';
+import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 
@@ -37,6 +38,7 @@ import '../ponte/invito.dart';
 import '../versione.dart';
 import '../vestito/marchio.dart';
 import '../vestito/pezzi.dart';
+import '../vestito/tema.dart' show temaScuro;
 import 'di_chi_e.dart';
 import 'firma.dart';
 import 'lettore.dart';
@@ -442,12 +444,24 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
 
     final corpo = Stack(
       children: [
-        Positioned.fill(child: _Fondo(scuro: scuro)),
+        Positioned.fill(
+          child: _Fondo(scuro: scuro, notte: primaCasa),
+        ),
         LayoutBuilder(
           builder: (context, spazio) {
             final w = spazio.maxWidth, h = spazio.maxHeight;
             final largo = primaCasa && (w >= 860 || (w >= 700 && w > h));
-            final scheda = _laScheda(context, primaCasa: primaCasa);
+            /* Al primo avvio la scheda sta sullo stesso cielo della
+             * copertina: scura e di vetro anche col tema chiaro, perche'
+             * la pagina e' una sola. */
+            final scheda = primaCasa
+                ? Theme(
+                    data: temaScuro(),
+                    child: Builder(
+                      builder: (c) => _laScheda(c, primaCasa: true),
+                    ),
+                  )
+                : _laScheda(context, primaCasa: false);
             if (largo) {
               final margine = w >= 1000 ? 40.0 : 20.0;
               final larghezzaScheda = ((w - margine * 2) * 0.48).clamp(
@@ -467,7 +481,11 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Expanded(
-                            child: _Copertina(largo: true, compatta: basso),
+                            child: _Copertina(
+                              largo: true,
+                              compatta: basso,
+                              basso: false,
+                            ),
                           ),
                           SizedBox(width: w >= 1000 ? 40 : 20),
                           SizedBox(
@@ -499,24 +517,45 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
                 ),
               );
             }
-            /* La copertina va fino in cima, sotto l'ora e la batteria: la
-             * scheda le sale sopra di un pezzo. */
+            /* Una pagina sola, sullo stesso cielo: in alto il marchio e le
+             * vetrine, in basso la scheda di vetro, col bottone sempre in
+             * vista. «Sembrano due parti sciolte»: la copertina aveva un
+             * fondo suo, arrotondato, e la scheda ci saliva sopra da un
+             * altro mondo. Su uno schermo basso le vetrine si accorciano
+             * invece di spingere il bottone fuori. */
+            final fondo = MediaQuery.paddingOf(context).bottom;
             return SingleChildScrollView(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 560),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const _Copertina(largo: false, compatta: false),
-                      Transform.translate(
-                        offset: const Offset(0, -34),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 14),
-                          child: SafeArea(top: false, child: scheda),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: h),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 560),
+                    child: IntrinsicHeight(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(minHeight: h),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _Copertina(
+                              largo: false,
+                              compatta: false,
+                              basso: h < 840,
+                            ),
+                            Padding(
+                              padding: EdgeInsets.fromLTRB(
+                                14,
+                                0,
+                                14,
+                                12 + fondo,
+                              ),
+                              child: scheda,
+                            ),
+                          ],
                         ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -556,8 +595,9 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
       children: [
         _Entra(
           ritardo: 0.25,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
+          child: _Vetro(
+            vetro: primaCasa,
+            decorazione: BoxDecoration(
               color: colori.surfaceContainerLowest.withValues(
                 alpha: scuro ? 0.92 : 0.96,
               ),
@@ -827,43 +867,37 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
               ),
             ),
           ),
-          /* Qui la casella dell'indirizzo si vede sempre.
-           *
-           * Non e' una contraddizione con quello che c'e' scritto in cima:
-           * quello che non deve spaventare nessuno e' la **prima** schermata,
-           * e quella adesso e' un bottone solo. Chi e' arrivato fin qui sta
-           * gia' battendo sedici lettere a mano, e una casella in piu' —
-           * facoltativa, e detto — non lo spaventa: gli serve. */
-          const SizedBox(height: 14),
-          TextField(
-            controller: _dentro,
-            enabled: !_sto,
-            autocorrect: false,
-            keyboardType: TextInputType.url,
-            textInputAction: TextInputAction.done,
-            onSubmitted: (_) => _sto ? null : _abbinaAMano(),
-            decoration: InputDecoration(
-              labelText: _serveLIndirizzo
-                  ? inLingua(
-                      it: 'Indirizzo di Home Assistant in casa',
-                      en: 'Home Assistant address at home',
-                    )
-                  : inLingua(
-                      it: 'Indirizzo di casa (facoltativo)',
-                      en: 'Home address (optional)',
-                    ),
-              hintText: '192.168.1.50',
-              helperText: inLingua(
-                it:
-                    'Stando sul Wi-Fi di casa. Il resto lo dice la casa da '
-                    'sola.',
-                en:
-                    'While on your home Wi-Fi. Your home tells the app the '
-                    'rest by itself.',
+          /* La casella dell'indirizzo solo quando e' l'unica strada: senza
+           * un centralino a cui chiedere, la casa non si trova da sola. Con
+           * il centralino il codice basta, e una casella «facoltativa» in
+           * piu' era solo una domanda in piu' («non serve»). */
+          if (_serveLIndirizzo) ...[
+            const SizedBox(height: 14),
+            TextField(
+              controller: _dentro,
+              enabled: !_sto,
+              autocorrect: false,
+              keyboardType: TextInputType.url,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _sto ? null : _abbinaAMano(),
+              decoration: InputDecoration(
+                labelText: inLingua(
+                  it: 'Indirizzo di Home Assistant in casa',
+                  en: 'Home Assistant address at home',
+                ),
+                hintText: '192.168.1.50',
+                helperText: inLingua(
+                  it:
+                      'Stando sul Wi-Fi di casa. Il resto lo dice la casa da '
+                      'sola.',
+                  en:
+                      'While on your home Wi-Fi. Your home tells the app the '
+                      'rest by itself.',
+                ),
+                helperMaxLines: 2,
               ),
-              helperMaxLines: 2,
             ),
-          ),
+          ],
           const SizedBox(height: 16),
           FilledButton(
             onPressed: _sto ? null : _abbinaAMano,
@@ -886,12 +920,46 @@ class _AggiungiCasaState extends State<AggiungiCasa> {
 /// Il fondo: un cielo appena colorato, con due aloni — blu in alto, ambra in
 /// basso, i colori del marchio — al posto del bianco piatto.
 class _Fondo extends StatelessWidget {
-  const _Fondo({required this.scuro});
+  const _Fondo({required this.scuro, this.notte = false});
 
   final bool scuro;
 
+  /// Il cielo della copertina su tutta la pagina (il primo avvio).
+  final bool notte;
+
   @override
   Widget build(BuildContext context) {
+    if (notte) {
+      return const DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF0B1E4D), Color(0xFF0A1128), Color(0xFF140B33)],
+            stops: [0, 0.55, 1],
+          ),
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -140,
+              right: -110,
+              child: _Alone(colore: Color(0xFF3B82F6), lato: 420, forza: 0.5),
+            ),
+            Positioned(
+              top: 260,
+              left: -160,
+              child: _Alone(colore: Color(0xFFF59E0B), lato: 380, forza: 0.2),
+            ),
+            Positioned(
+              bottom: -120,
+              right: -120,
+              child: _Alone(colore: Color(0xFF8B5CF6), lato: 460, forza: 0.32),
+            ),
+          ],
+        ),
+      );
+    }
     final alone1 = scuro ? const Color(0xFF1D4ED8) : const Color(0xFF93C5FD);
     final alone2 = scuro ? const Color(0xFFB45309) : const Color(0xFFFCD34D);
     return DecoratedBox(
@@ -987,7 +1055,15 @@ class _Entra extends StatelessWidget {
 /// E' scura anche col tema chiaro: e' la faccia dell'app, e il marchio (un
 /// quadrato nero con le lettere d'oro e d'azzurro) si accende solo sul buio.
 class _Copertina extends StatelessWidget {
-  const _Copertina({required this.largo, required this.compatta});
+  const _Copertina({
+    required this.largo,
+    required this.compatta,
+    required this.basso,
+  });
+
+  /// Su un telefono non alto: vetrine piu' corte, cosi' la scheda e il
+  /// bottone restano in vista.
+  final bool basso;
 
   /// Accanto alla scheda (tablet, orizzontale): una tessera arrotondata
   /// tutt'intorno invece di una fascia che parte dal bordo in alto.
@@ -1000,104 +1076,77 @@ class _Copertina extends StatelessWidget {
   Widget build(BuildContext context) {
     final testi = Theme.of(context).textTheme;
     final sopra = largo ? 0.0 : MediaQuery.paddingOf(context).top;
-    final forma = largo
-        ? BorderRadius.circular(32)
-        : const BorderRadius.vertical(bottom: Radius.circular(36));
-    return ClipRRect(
-      borderRadius: forma,
-      child: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF0B1E4D), Color(0xFF0A1128), Color(0xFF21104A)],
+    /* Niente fondo suo: il cielo e' quello della pagina (`_Fondo`), cosi'
+     * copertina e scheda stanno nello stesso posto. */
+    return Stack(
+      fit: largo ? StackFit.expand : StackFit.loose,
+      children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(
+            24,
+            sopra + (largo ? 28 : (basso ? 10 : 18)),
+            24,
+            largo ? 28 : (basso ? 14 : 22),
           ),
-        ),
-        child: Stack(
-          /* Accanto alla scheda la copertina e' alta quanto lei: il contenuto
-           * sta in mezzo, non appeso in cima. */
-          fit: largo ? StackFit.expand : StackFit.loose,
-          children: [
-            const Positioned(
-              top: -120,
-              right: -90,
-              child: _Alone(colore: Color(0xFF3B82F6), lato: 340, forza: 0.55),
-            ),
-            const Positioned(
-              bottom: -150,
-              left: -110,
-              child: _Alone(colore: Color(0xFFF59E0B), lato: 340, forza: 0.30),
-            ),
-            const Positioned(
-              bottom: -60,
-              right: -40,
-              child: _Alone(colore: Color(0xFF8B5CF6), lato: 260, forza: 0.35),
-            ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                24,
-                sopra + (largo ? 28 : 18),
-                24,
-                largo ? 28 : 58,
+          child: Column(
+            mainAxisSize: largo ? MainAxisSize.max : MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _Entra(
+                child: Row(
+                  children: [
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF3B82F6)
+                                .withValues(alpha: 0.45),
+                            blurRadius: 24,
+                          ),
+                        ],
+                      ),
+                      child: Marchio(lato: largo ? 56 : 46),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'GdAHome',
+                      style: testi.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              child: Column(
-                mainAxisSize: largo ? MainAxisSize.max : MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _Entra(
-                    child: Row(
-                      children: [
-                        DecoratedBox(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(14),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF3B82F6)
-                                    .withValues(alpha: 0.45),
-                                blurRadius: 24,
-                              ),
-                            ],
-                          ),
-                          child: Marchio(lato: largo ? 56 : 46),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'GdAHome',
-                          style: testi.titleLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.3,
-                          ),
-                        ),
-                      ],
+              SizedBox(height: largo ? 30 : (basso ? 12 : 18)),
+              if (compatta)
+                _Entra(
+                  ritardo: 0.1,
+                  child: Text(
+                    inLingua(
+                      it: 'La tua casa,\nin tasca.',
+                      en: 'Your home,\nin your pocket.',
+                    ),
+                    style: testi.displaySmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      height: 1.05,
+                      letterSpacing: -1.2,
                     ),
                   ),
-                  SizedBox(height: largo ? 30 : 18),
-                  if (compatta)
-                    _Entra(
-                      ritardo: 0.1,
-                      child: Text(
-                        inLingua(
-                          it: 'La tua casa,\nin tasca.',
-                          en: 'Your home,\nin your pocket.',
-                        ),
-                        style: testi.displaySmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          height: 1.05,
-                          letterSpacing: -1.2,
-                        ),
-                      ),
-                    )
-                  else
-                    _Entra(ritardo: 0.1, child: _Carosello(largo: largo)),
-                ],
-              ),
-            ),
-          ],
+                )
+              else
+                _Entra(
+                  ritardo: 0.1,
+                  child: _Carosello(largo: largo, basso: basso),
+                ),
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -1109,9 +1158,10 @@ class _Copertina extends StatelessWidget {
 /// Scorre da solo ogni pochi secondi, ma non con «riduci animazioni»: li' si
 /// scorre solo col dito. Il timer muore con la schermata.
 class _Carosello extends StatefulWidget {
-  const _Carosello({required this.largo});
+  const _Carosello({required this.largo, this.basso = false});
 
   final bool largo;
+  final bool basso;
 
   @override
   State<_Carosello> createState() => _CaroselloState();
@@ -1201,7 +1251,7 @@ class _CaroselloState extends State<_Carosello> {
         ),
       ),
     ];
-    final altezza = widget.largo ? 420.0 : 314.0;
+    final altezza = widget.largo ? 420.0 : (widget.basso ? 236.0 : 300.0);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -1224,15 +1274,19 @@ class _CaroselloState extends State<_Carosello> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(
-                      height: widget.largo ? 170 : 154,
+                      height: widget.largo ? 170 : (widget.basso ? 104 : 146),
                       child: scheda.scena,
                     ),
-                    SizedBox(height: widget.largo ? 28 : 18),
+                    SizedBox(
+                      height: widget.largo ? 28 : (widget.basso ? 12 : 18),
+                    ),
                     Text(
                       scheda.titolo,
                       style:
                           (widget.largo
                                   ? testi.displaySmall
+                                  : widget.basso
+                                  ? testi.headlineMedium
                                   : testi.headlineLarge)
                               ?.copyWith(
                                 color: Colors.white,
@@ -1257,7 +1311,7 @@ class _CaroselloState extends State<_Carosello> {
             ),
           ),
         ),
-        const SizedBox(height: 14),
+        SizedBox(height: widget.basso ? 8 : 14),
         Row(
           children: [
             for (var i = 0; i < _quante; i++)
@@ -1827,6 +1881,59 @@ class _BottoneGrande extends StatelessWidget {
               )
             : const Icon(Icons.qr_code_scanner_rounded),
         label: Text(testo),
+      ),
+    );
+  }
+}
+
+/// La scheda: di vetro sul cielo del primo avvio (lo stesso colore sotto,
+/// appena piu' chiaro e sfocato), altrimenti la scheda di sempre.
+class _Vetro extends StatelessWidget {
+  const _Vetro({
+    required this.vetro,
+    required this.decorazione,
+    required this.child,
+  });
+
+  final bool vetro;
+  final BoxDecoration decorazione;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!vetro) return DecoratedBox(decoration: decorazione, child: child);
+    final forma = BorderRadius.circular(28);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: forma,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.28),
+            blurRadius: 40,
+            offset: const Offset(0, 16),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: forma,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: forma,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withValues(alpha: 0.10),
+                  Colors.white.withValues(alpha: 0.04),
+                ],
+              ),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+            ),
+            child: child,
+          ),
+        ),
       ),
     );
   }
