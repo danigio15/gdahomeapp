@@ -33,6 +33,7 @@ import {
   statoDelDispositivo,
 } from "../../core/casa-3d.js";
 import { ARREDI_SOTTO, CATALOGO_ARREDI, CON_TESSUTO, VOCI_ARREDI, arredo3D } from "./arredi-3d.js";
+import { STILE_DELLE_SCRITTE, creaLeScritte } from "./le-scritte.js";
 import {
   PARETE_DI_PARTENZA,
   PARETI,
@@ -188,6 +189,10 @@ export function creaScena(THREE, opzioni = {}) {
     pannello.className = "c3-pannello-sopra";
     palco.appendChild(pannello);
   }
+  /* Le scritte dei dispositivi: piene finche' c'e' posto, pallini dove si
+   * coprirebbero, e come le vuole il tasto «Nomi» (vedi `le-scritte.js`). */
+  const scritte = creaLeScritte({ strato: stratoChip, perLeProve: Boolean(opzioni.perLeProve), richiedi: () => richiedi() });
+  scritte.modo(opzioni.nomi);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: Boolean(opzioni.perLeProve) });
   renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
@@ -1345,6 +1350,8 @@ export function creaScena(THREE, opzioni = {}) {
     el.addEventListener("pointerdown", (ev) => prendiDalTasto(ev, Dv));
     el.addEventListener("click", (ev) => {
       ev.stopPropagation();
+      /* un pallino dice anche chi e': poi fa quello che fa il suo tasto */
+      scritte.toccato(Dv, el, `${nomeDi(Dv)} · ${Dv.stato?.testo || L("da collegare", "not linked")}`);
       tocca(Dv);
     });
     stratoChip.appendChild(el);
@@ -1353,6 +1360,8 @@ export function creaScena(THREE, opzioni = {}) {
   }
   function etichette() {
     const fermo = Math.abs(S.taglio - S.taglioVoluto) < 0.3;
+    const visti = [];
+    const ostacoli = [];
     for (const p of PIANI_MIEI) {
       const aperto = S.vista === p.k && fermo;
       for (const s of p.stanze) {
@@ -1369,12 +1378,14 @@ export function creaScena(THREE, opzioni = {}) {
         s.el.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) translate(-50%,-100%)`;
         s.el.classList.toggle("c3-si", S.sel?.s === s);
         const testo = testoDellaStanza(p, s);
-        if (s.el.dataset.testo !== testo) {
+        if (s.el.dataset.testo !== testo || !s.misura?.w) {
           s.el.dataset.testo = testo;
           s.el.innerHTML = testo;
+          s.misura = { w: s.el.offsetWidth, h: s.el.offsetHeight };
         }
+        /* il nome della stanza resta dov'e': le scritte dei dispositivi gli girano intorno */
+        ostacoli.push({ x0: x - s.misura.w / 2, x1: x + s.misura.w / 2, y0: y - s.misura.h, y1: y });
       }
-      const visti = [];
       for (const Dv of p.disp) {
         const el = chipDi(Dv);
         if (!aperto) {
@@ -1390,10 +1401,8 @@ export function creaScena(THREE, opzioni = {}) {
         }
         el.style.display = "";
         vestiChip(Dv, el);
-        if (Dv.misura?.testo !== el.textContent || !Dv.misura.w) Dv.misura = { testo: el.textContent, w: el.offsetWidth, h: el.offsetHeight };
-        visti.push({ el, x, y, w: Dv.misura.w, h: Dv.misura.h });
+        visti.push(vistoDi(Dv, el, x, y, p.base + yChip));
       }
-      scostaChip(visti);
     }
     const fuori = S.vista === "esterno" && S.taglio > 40;
     for (const Dv of ESTERNE) {
@@ -1403,10 +1412,22 @@ export function creaScena(THREE, opzioni = {}) {
         continue;
       }
       const [x, y, z] = proietta(Dv.m.position.x, Dv.m.position.y + 0.35, Dv.m.position.z);
-      el.style.display = fuoriDalPalco(x, y, z) ? "none" : "";
-      el.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) translate(-50%,-100%)`;
+      if (fuoriDalPalco(x, y, z)) {
+        el.style.display = "none";
+        continue;
+      }
+      el.style.display = "";
       vestiChip(Dv, el, Dv.dati.nome || L("Telecamera", "Camera"));
+      visti.push(vistoDi(Dv, el, x, y, Dv.m.position.y + 0.35));
     }
+    const { az, al, d, tx, ty, tz } = S.cam;
+    scritte.disponi(
+      visti,
+      /* i nomi delle stanze compaiono quando il taglio si ferma: anche loro cambiano il conto */
+      [S.vista, largo, alto, az, al, d, tx, ty, tz, ostacoli.length].map((v) => (typeof v === "number" ? v.toFixed(3) : v)).join("|") +
+        (S.presa ? `|${performance.now()}` : ""),
+      ostacoli,
+    );
     for (const { p, el } of cartellini) {
       if (!fuori) {
         el.style.display = "none";
@@ -1435,28 +1456,34 @@ export function creaScena(THREE, opzioni = {}) {
       maniglie.style.transform = `translate(${x.toFixed(1)}px,${(y - sopraIlTasto).toFixed(1)}px) translate(-50%,-130%)`;
     } else maniglie.style.display = "none";
   }
-  /* Due tasti che sullo schermo cadono uno sull'altro — dispositivi vicini, o
-   * la camera che li guarda di taglio — non si coprono: quello piu' in alto
-   * sale sopra l'altro. Si parte da quelli piu' in basso, che restano dove
-   * sono. */
-  function scostaChip(visti, stacco = 3) {
-    visti.sort((a, b) => b.y - a.y);
-    const messi = [];
-    for (const c of visti) {
-      for (let giri = 0; giri <= messi.length; giri++) {
-        const sotto = messi.find((m) => Math.abs(m.x - c.x) < (m.w + c.w) / 2 + stacco && c.y > m.y - m.h - stacco && c.y - c.h < m.y + stacco);
-        if (!sotto) break;
-        c.y = sotto.y - sotto.h - stacco;
-      }
-      messi.push(c);
-      c.el.style.transform = `translate(${c.x.toFixed(1)}px,${c.y.toFixed(1)}px) translate(-50%,-100%)`;
-    }
+  /* Il tasto di un dispositivo per chi decide le scritte: dove si appoggia,
+   * quanto e' lontano dalla telecamera, se e' acceso, se e' quello scelto. */
+  const doveSta = new THREE.Vector3();
+  function vistoDi(Dv, el, x, y, altezza) {
+    doveSta.set(Dv.m.position.x, altezza, Dv.m.position.z);
+    const st = Dv.stato;
+    return {
+      Dv,
+      el,
+      x,
+      y,
+      distanza: doveSta.distanceTo(cam.position),
+      acceso: Boolean(st?.attivo),
+      primo: S.pezzo === Dv,
+      priorita: st?.attivo && ["movimento", "allarme"].includes(st.tono) ? 1 : 0,
+    };
+  }
+  function nomeDi(Dv) {
+    return Dv.dati.nome || S.stati[Dv.dati.entity]?.attributes?.friendly_name || L(Dv.D.nome[0], Dv.D.nome[1]);
   }
   function vestiChip(Dv, el, nome = "") {
     const st = Dv.stato || { testo: Dv.D.icona, tono: "neutro" };
     const scollegato = !Dv.dati.entity;
     const testo = `${scollegato ? `${Dv.D.icona} ?` : st.testo}${nome ? ` · ${nome}` : ""}`;
     if (el.textContent !== testo) el.textContent = testo;
+    if (el.dataset.ic !== Dv.D.icona) el.dataset.ic = Dv.D.icona;
+    const titolo = nomeDi(Dv);
+    if (el.title !== titolo) el.title = titolo;
     const c = TONI[st.tono] || TONI.neutro;
     if (el.dataset.c !== c) {
       el.dataset.c = c;
@@ -1520,6 +1547,7 @@ export function creaScena(THREE, opzioni = {}) {
     }
     for (const Dv of ESTERNE) Dv.stato = Dv.dati.entity && S.stati[Dv.dati.entity] ? statoDelDispositivo("telecamera", S.stati[Dv.dati.entity], italiano) : null;
     assegnaLuci();
+    scritte.rifai();
     /* il pannello si ridisegna, ma non sotto le dita di chi sta scrivendo */
     if (S.arreda && !pannello?.contains(document.activeElement)) disegnaPannello();
     richiedi();
@@ -2211,6 +2239,7 @@ export function creaScena(THREE, opzioni = {}) {
     S.morto = true;
     if (S.raf) cancelAnimationFrame(S.raf);
     clearTimeout(timerSalva);
+    scritte.distruggi();
     osservatore?.disconnect();
     window.removeEventListener("keydown", tasti);
     if (pannello) {
@@ -2261,6 +2290,8 @@ export function creaScena(THREE, opzioni = {}) {
     arreda,
     distruggi,
     ridimensiona,
+    /** Le scritte dei dispositivi: «tutti», «accesi» o «nessuno» (vedi le-scritte.js). */
+    nomi: (modo) => scritte.modo(modo),
     /** Un fotogramma subito, senza aspettare il giro: per le prove. */
     fotogramma(dt = 1 / 60) {
       avanza(dt);
@@ -2347,6 +2378,7 @@ export function installaLoStile() {
   .c3-chip.c3-scelto{box-shadow:0 0 0 3px #38bdf8}
   .c3-arreda .c3-chip{cursor:grab;touch-action:none}
   .c3-chip.c3-vivo{animation:c3-pulsa 1.2s infinite}
+  ${STILE_DELLE_SCRITTE}
   @keyframes c3-pulsa{0%,100%{box-shadow:0 0 0 3px rgba(var(--c),.35)}50%{box-shadow:0 0 0 7px rgba(var(--c),.1)}}
   .c3-cartellino{position:absolute;left:0;top:0;pointer-events:auto;cursor:pointer;background:rgba(15,23,42,.84);border:1px solid rgba(148,163,184,.3);border-radius:12px;
     padding:6px 10px;font-size:11px;color:#92a4c2;white-space:nowrap;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}

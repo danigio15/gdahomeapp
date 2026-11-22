@@ -19,13 +19,13 @@
  *    riavvio dell'add-on alle nove di sera non deve riaccendere un albero che
  *    uno aveva spento apposta.
  *
- * ── Solo nelle feste ──────────────────────────────────────────────────────
+ * ── Quando lavora ─────────────────────────────────────────────────────────
  *
- * Fuori dalla finestra delle feste (dall'8 dicembre al 6 gennaio, `inFesta`)
- * questo modulo non fa niente: nessuna accensione, nessuno spegnimento,
- * nemmeno la lettura degli stati. L'unica eccezione e' lo spegnimento di un
- * intervallo che lui stesso ha aperto e che finisce proprio con la fine delle
- * feste: e' chiudere la porta che si era aperta.
+ * Tutto l'anno, finche' ci sono luci e l'orario e' acceso (`automatico`
+ * nella scheda): l'albero si monta prima delle feste, e si accende da solo
+ * da quando lo si sceglie. Con l'orario spento non fa niente — nessuna
+ * accensione, nemmeno la lettura degli stati — tranne chiudere un intervallo
+ * che aveva aperto lui: e' chiudere la porta che si era aperta.
  *
  * Le impostazioni le legge dalla configurazione della plancia principale
  * (`cd_feste`), che viaggia gia' fra i dispositivi; gli stati dallo specchio
@@ -43,7 +43,6 @@ import {
   chiamateDelleLuci,
   decidiLeLuci,
   festePulite,
-  inFesta,
   luciAccese,
   memoriaPulita,
 } from "../plancia/src/core/feste.js";
@@ -133,13 +132,13 @@ export class LuciDiNatale {
     const ora = this.adesso();
     if (ora < this._riprovaDopo) return null;
     const prima = this.memoria;
-    /* Fuori dalle feste, e senza un intervallo aperto da chiudere, non si
-     * guarda nemmeno la configurazione. */
+    /* Con l'orario spento (o senza luci), e senza un intervallo aperto da
+     * chiudere, non si guardano nemmeno gli stati. */
     const aperto = Boolean(prima.giorno) && prima.stato !== "chiuso";
-    if (!inFesta(new Date(ora)) && !aperto) return null;
+    const config = this._impostazioni();
+    if ((!config.automatico || !config.luci.length) && !aperto) return null;
     this._inCorso = true;
     try {
-      const config = this._impostazioni();
       const tramonto = this.stati("sun.sun")?.attributes?.next_setting ?? null;
       const conto = luciAccese(config, (id) => this.stati(id));
       const accese = conto.accese > 0 ? true : conto.note === conto.totale ? false : null;

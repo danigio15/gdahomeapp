@@ -17,6 +17,38 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.1"
+  app_links:
+    dependency: "direct main"
+    description:
+      name: app_links
+      sha256: "08ba88bf19d9edea33130cb71c8ced2cb982b4e00b82efef4a434d1357bc69c3"
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.2.2"
+  app_links_linux:
+    dependency: transitive
+    description:
+      name: app_links_linux
+      sha256: "734aa57a2f65d1b35c3643384ccfbe668730157a08479bfa488e10a9da847853"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.5"
+  app_links_platform_interface:
+    dependency: transitive
+    description:
+      name: app_links_platform_interface
+      sha256: "7546f09a6e93f4a2df2fe2bd40a5c6c64310ac461b036d82b43033be7a59f809"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.4"
+  app_links_web:
+    dependency: transitive
+    description:
+      name: app_links_web
+      sha256: "382d32c6f486f15b1d7f5d6a37a70a481a4fc08382eef419d373169921a3e765"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.5"
   archive:
     dependency: transitive
     description:
@@ -546,7 +578,7 @@ packages:
     description:
       path: "packages/gdanav_app"
       ref: main
-      resolved-ref: 4bf7e73dadcbdfe7b68b98f353825db5f5d9b5f3
+      resolved-ref: d58f22eb16b2ffde9fe3a2699737730a4adaed8a
       url: "https://github.com/danigio15/gdanav.git"
     source: git
     version: "0.1.0"
@@ -554,8 +586,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/gdanav_core"
-      ref: 4bf7e73dadcbdfe7b68b98f353825db5f5d9b5f3
-      resolved-ref: 4bf7e73dadcbdfe7b68b98f353825db5f5d9b5f3
+      ref: d58f22eb16b2ffde9fe3a2699737730a4adaed8a
+      resolved-ref: d58f22eb16b2ffde9fe3a2699737730a4adaed8a
       url: "https://github.com/danigio15/gdanav.git"
     source: git
     version: "0.1.0"

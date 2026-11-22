@@ -33,6 +33,7 @@ import { genereDelComando, partiDelComando } from "./comandi-accanto.js";
 import { immaginePulita } from "./immagine-del-riquadro.js";
 import { immagineDellaStanza } from "./disegno-automatico-della-stanza.js";
 import { lettoriConfigurati } from "./media-player.js";
+import { STILI_DEL_RIPOSO, secondiPerFoto } from "./il-riposo-vivo.js";
 import { isDerivedEntity, powerPairSource, signedSource } from "./signed-energy.js";
 import { isCharging, nomeDellaPersona, personViewModel } from "./person-model.js";
 import { stanzaAllAperto, temperatureEntries } from "./room-overview.js";
@@ -1529,7 +1530,16 @@ export const MURO_VUOTO = Object.freeze({
   meteo: "",
   temperatura: "meteo",
   menuDiLato: false,
-  riposo: { attivo: true, minuti: 2, torna: true, sensore: "", dove: "casa" },
+  riposo: {
+    attivo: true,
+    minuti: 2,
+    torna: true,
+    sensore: "",
+    dove: "casa",
+    stile: "orologio",
+    ogni: 60,
+    notteAlMinimo: false,
+  },
   notte: { attiva: false, da: "23:00", a: "06:30" },
   avvisi: true,
   avvisiGrandi: true,
@@ -1598,6 +1608,15 @@ export function muroPulito(input) {
       /* Dove sta quel sensore: lo dice chi configura, «In casa» o «Fuori».
        * Di serie in casa, come e' sempre stato. */
       dove: scelta(riposo.dove, DOVE_STA_IL_SENSORE, "casa"),
+      /* Lo stile del riposo (`core/il-riposo-vivo.js`): l'orologio di sempre,
+       * il cielo di casa o la cornice delle foto. Di serie l'orologio: chi
+       * aveva gia' il tablet non vede cambiare niente. */
+      stile: scelta(riposo.stile, STILI_DEL_RIPOSO, "orologio"),
+      /* Ogni quanti secondi cambia la foto della cornice. */
+      ogni: secondiPerFoto(riposo.ogni),
+      /* «Anche di notte, al minimo»: nella fascia della notte il riposo resta
+       * acceso, appena visibile, invece dello schermo nero. */
+      notteAlMinimo: vero(riposo.notteAlMinimo, false),
     },
     notte: {
       attiva: vero(notte.attiva, false),

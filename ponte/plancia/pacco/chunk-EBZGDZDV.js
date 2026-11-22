@@ -14583,7 +14583,7 @@ function persistSignedSource(store2, group, signed, plantId = "") {
 }
 
 // src/core/chiavi-di-configurazione.js
-var CONFIG_KEYS_REVISION = 79;
+var CONFIG_KEYS_REVISION = 80;
 var CONFIG_KEYS = Object.freeze([
   "dm_dashboard_state",
   "dm_schema_version",
@@ -14625,6 +14625,9 @@ var CONFIG_KEYS = Object.freeze([
   // una preferenza della casa, non del dispositivo — chi le spegne le vuole
   // spente sul telefono come sul tablet appeso al muro.
   "cd_home_pastiglie",
+  // Il flusso dell'energia grande in Home (#460): la ragione per cui sta qui
+  // e' scritta accanto alla revisione 80.
+  "cd_home_flusso",
   // Quali stanze si vedono in plancia (#493): «it should also be possible to
   // choose which rooms or areas appear on the home screen». Quali stanze uno
   // vuole davanti e' una scelta della casa, non del dispositivo.
@@ -19681,8 +19684,8 @@ var SCHEDE = Object.freeze({
   /* ── 🛋️ Casa ───────────────────────────────────────────────────────── */
   stanze: { famiglia: "casa", posizione: 10 },
   luci: { famiglia: "casa", posizione: 20 },
-  /* Le luci di Natale: accanto alle luci, perche' lo sono. La linguetta c'e'
-   * solo nelle feste (`luci-di-natale-editor-section.js`). */
+  /* Le luci di Natale: accanto alle luci, perche' lo sono
+   * (`luci-di-natale-editor-section.js`). */
   feste: { famiglia: "casa", posizione: 22 },
   tapp: { famiglia: "casa", posizione: 30 },
   // Finestre e tapparelle
@@ -35680,7 +35683,7 @@ function installSegnalazioniSection() {
 senzaCadere(installSegnalazioniSection);
 
 // legacy/build-info.js
-var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.19.23", "dashboardVersion": "1.19.23", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-11-22T17:59:13+00:00", "commit": "b37b1d0145c853e68fd3f48f4e92b68ac52c2bfe", "assetHash": "857b6ae71bf1956c" });
+var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.19.24", "dashboardVersion": "1.19.24", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-11-22T21:37:15+00:00", "commit": "62a1894034d39608c0b87fc7b0e7ab14d5380df0", "assetHash": "6442c229a8d4785d" });
 
 export {
   faseInParole,

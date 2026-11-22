@@ -24,9 +24,12 @@ import 'casa/il_lucchetto.dart';
 import 'casa/impostazioni.dart';
 import 'casa/la_finestra.dart';
 import 'casa/la_guardia.dart';
+import 'notifiche/dietro_il_velo.dart';
 import 'notifiche/postino.dart';
 import 'parole.dart';
 import 'ponte/centralino.dart';
+import 'ponte/il_link.dart';
+import 'ponte/invito.dart';
 import 'schermate/aggiungi_casa.dart';
 import 'schermate/caricamento.dart';
 import 'schermate/di_chi_e.dart';
@@ -34,6 +37,7 @@ import 'schermate/home.dart';
 import 'schermate/le_case.dart';
 import 'schermate/misure.dart';
 import 'schermate/navigatore_qui/qui.dart' as navigatore;
+import 'schermate/novita.dart' show LeNovitaDellApp;
 import 'licenza/negozio.dart';
 import 'casa/lo_schermo.dart' show loSchermoRimetti;
 import 'schermate/plancia_vera.dart';
@@ -243,6 +247,7 @@ class AppDiCasa extends StatefulWidget {
     this.collegamento,
     this.plancia,
     this.impostazioni,
+    this.link,
   });
 
   /// Sostituibili nelle prove, dove il portachiavi, la rete e il WebView non
@@ -253,6 +258,9 @@ class AppDiCasa extends StatefulWidget {
 
   /// Le impostazioni gia' lette: le legge `main`, prima del primo disegno.
   final Impostazioni? impostazioni;
+
+  /// I link che aprono l'app (vedi [Portone.link]).
+  final Stream<Uri>? link;
 
   @override
   State<AppDiCasa> createState() => _AppDiCasaState();
@@ -330,6 +338,7 @@ class _AppDiCasaState extends State<AppDiCasa> with WidgetsBindingObserver {
         collegamento: widget.collegamento,
         plancia: widget.plancia,
         impostazioni: widget.impostazioni,
+        link: widget.link,
       ),
     );
   }
@@ -385,6 +394,7 @@ class Portone extends StatefulWidget {
     this.plancia,
     this.impostazioni,
     this.guardia,
+    this.link,
   });
 
   final Cassaforte? cassaforte;
@@ -394,6 +404,11 @@ class Portone extends StatefulWidget {
 
   /// Chi chiede il volto e l'impronta. Nelle prove se ne mette una finta.
   final LaGuardia? guardia;
+
+  /// I link che aprono l'app: `gdahome://collega?invito=…` (`ponte/il_link.dart`).
+  /// Di serie quelli del telefono; nelle prove che passano la cassaforte da
+  /// fuori nessuno, se non se ne mettono di finti.
+  final Stream<Uri>? link;
 
   @override
   State<Portone> createState() => _PortoneState();
@@ -578,6 +593,27 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
   /// La domanda dell'apertura, rimandata perche' l'app era partita senza
   /// nessuno davanti (vedi [_chiedi]): si fa al primo ritorno.
   bool _domandaRimandata = false;
+
+  /* ─── I link (`ponte/il_link.dart`) ──────────────────────────────────── */
+
+  StreamSubscription<Uri>? _ascoltoDeiLink;
+
+  /// I link arrivati prima che si sapesse se c'e' il lucchetto: aspettano
+  /// [_pronto], e poi il velo come tutti.
+  final _linkPrimaDelPronto = <LinkLetto>[];
+
+  /// Un link col velo su aspetta che chi tiene il telefono si faccia
+  /// riconoscere, come i tasti delle notifiche: chi trova il telefono
+  /// bloccato non collega una casa da un link.
+  late final DietroIlVelo<LinkLetto> _linkDietroIlVelo = DietroIlVelo(
+    _veloSu,
+    (letto) => WidgetsBinding.instance
+      ..addPostFrameCallback((_) => unawaited(_apriIlLink(letto)))
+      ..scheduleFrame(),
+  );
+
+  /// La pagina aperta dall'ultimo link: un secondo link la sostituisce.
+  Route<void>? _paginaDelLink;
   /* Se l'app non torna davanti entro questo tempo, il filo si chiude. */
   Timer? _seNonTorna;
 
@@ -622,7 +658,85 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
         }
         ..segui(() => _collegamento.filo, _collegamento.cambiamenti);
     }
+    /* I link si ascoltano subito, perche' quello con cui l'app si e' aperta
+     * arriva adesso; li si apre quando l'app e' pronta. */
+    final link =
+        widget.link ??
+        (widget.cassaforte == null && widget.collegamento == null
+            ? linkDelTelefono()
+            : null);
+    _ascoltoDeiLink = link?.listen(_arrivaUnLink, onError: (Object _) {});
     _accendi();
+  }
+
+  void _arrivaUnLink(Uri link) {
+    final letto = leggiIlLink(link);
+    if (letto == null) return;
+    if (!_pronto) {
+      _linkPrimaDelPronto.add(letto);
+      return;
+    }
+    _linkDietroIlVelo.arriva(letto);
+  }
+
+  /// Apre quello che un link ha portato, a velo giu'.
+  ///
+  /// Un invito apre «Aggiungi una casa» col foglio «Collegare questa
+  /// casa?»: senza case e' il benvenuto, con le case e' la stessa pagina di
+  /// «Le tue case › Aggiungi». Il lucchetto Premium di quella non vale qui
+  /// per la casa che c'e' gia' (vedi `AggiungiCasa.soloCaseGiaNote`).
+  Future<void> _apriIlLink(LinkLetto letto) async {
+    if (!mounted) return;
+    switch (letto) {
+      case LinkIllegibile(:final spiegazione):
+        /* Un link nostro che non si legge: lo si dice, e basta. */
+        ScaffoldMessenger.maybeOf(context)
+            ?.showSnackBar(SnackBar(content: Text(spiegazione)));
+      case InvitoDalLink(:final invito):
+        await _collegaDalLink(invito);
+    }
+  }
+
+  Future<void> _collegaDalLink(Invito invito) async {
+    final pagine = Navigator.of(context);
+    /* Un link nuovo vuol dire un codice nuovo: quello di prima, se la sua
+     * pagina e' ancora aperta (col suo foglio sopra), non vale piu'. */
+    final prima = _paginaDelLink;
+    if (prima != null && prima.isActive) {
+      pagine.popUntil((una) => identical(una, prima));
+      pagine.pop();
+    }
+    final archivio = _collegamento.archivio;
+    late final MaterialPageRoute<void> pagina;
+    /* Si chiude questa pagina, e solo lei: se un link nuovo l'ha gia' tolta,
+     * il suo «no» o il suo abbinamento finito non chiudono quella dopo. */
+    void chiudi() {
+      if (!pagina.isActive) return;
+      if (pagina.isCurrent) {
+        pagine.pop();
+      } else {
+        pagine.removeRoute(pagina);
+      }
+    }
+
+    pagina = MaterialPageRoute<void>(
+      builder: (_) => AggiungiCasa(
+        centralino: centralinoDiDifetto,
+        archivio: archivio,
+        invitoDaUnLink: invito,
+        soloCaseGiaNote:
+            !archivio.vuoto && !_collegamento.licenza.siPuoAggiungereUnaCasa,
+        quandoRinuncia: chiudi,
+        quandoFatto: (_) async {
+          chiudi();
+          await _collegamento.apri();
+        },
+      ),
+    );
+    _paginaDelLink = pagina;
+    await pagine.push(pagina);
+    if (identical(_paginaDelLink, pagina)) _paginaDelLink = null;
+    if (mounted) setState(() {});
   }
 
   /* Quando l'app torna in primo piano il filo si controlla subito: un
@@ -917,6 +1031,23 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
      * schermo. E se in macchina l'ha gia' aperto il servizio dell'auto, qui
      * non si rifa' niente. */
     await apriIlFiloConLaCasa(_collegamento);
+    /* L'installazione nuova: nessuna casa, e nessuna versione delle novita'
+     * scritta. Si segna questa e basta — chi ha appena scaricato l'app non
+     * deve trovarsi davanti «Novità della versione…» di un'app che non ha mai
+     * visto (`schermate/novita.dart`). Chi una casa ce l'ha e la versione no
+     * arriva da prima della scheda, e le novita' le vede. Si guarda adesso,
+     * prima del benvenuto: dopo l'abbinamento una casa c'e', e sembrerebbe un
+     * aggiornamento. */
+    final primaVolta = _collegamento.archivio.vuoto;
+    void segnaLaPrimaVolta() => unawaited(
+      LeNovitaDellApp(impostazioni: _impostazioni)
+          .seEAppenaArrivata(primaVolta: primaVolta),
+    );
+    if (_impostazioni.caricate) {
+      segnaLaPrimaVolta();
+    } else {
+      unawaited(_caricate.then((_) => segnaLaPrimaVolta()));
+    }
     /* Il lucchetto si decide su quello che c'e' scritto nelle impostazioni,
      * che `main` ha gia' letto dal disco. E si decide **insieme** a «pronto»,
      * nello stesso giro: la home non si disegna nemmeno una volta prima di
@@ -932,6 +1063,10 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
       }
     });
     if (conCosa != null) unawaited(_chiedi());
+    /* I link arrivati intanto: adesso il velo si sa, e aspettano lui. */
+    final arrivati = [..._linkPrimaDelPronto];
+    _linkPrimaDelPronto.clear();
+    arrivati.forEach(_linkDietroIlVelo.arriva);
     /* Le impostazioni non c'erano ancora — le legge `main`, e qui si arriva
      * senza solo dove l'app la monta qualcun altro, come le prove: si e'
      * aperto con quello che c'era, e quando arrivano si decide di nuovo. */
@@ -988,6 +1123,8 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
     _seNonTorna?.cancel();
     _ascolto?.cancel();
     _ascoltoDelleImpostazioni?.cancel();
+    _ascoltoDeiLink?.cancel();
+    _linkDietroIlVelo.chiudi();
     navigatore.inMacchina.removeListener(_inMacchinaECambiato);
     _veloSu.dispose();
     /* Il velo e' di questo portone: andandosene, non resta a coprire. */
@@ -1071,6 +1208,7 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
       impostazioni: _impostazioni,
       guardia: _guardia,
       veloSu: _veloSu,
+      davanti: appDavanti,
       vaiAlleCase: () async {
         await Navigator.of(context).push<void>(
           MaterialPageRoute(

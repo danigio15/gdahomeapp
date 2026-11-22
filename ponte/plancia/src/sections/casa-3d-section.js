@@ -31,6 +31,7 @@ import {
   usaIlModello,
 } from "../core/casa-3d.js";
 import { troppoPerQuestoDispositivo } from "../core/modello-3d.js";
+import { CHIAVE_NOMI_CASA3D, modoDeiNomi, modoDopo } from "../core/le-scritte-della-casa-3d.js";
 import { caricaIlMotore } from "./casa-3d-modello-section.js";
 import { apriIlMenu, premiumDellaCasa, premiumRicordato } from "./plancia-a-muro-section.js";
 import { CHIAVE_RISERVATE, telecamereVisibili } from "../core/telecamere-riservate.js";
@@ -96,6 +97,8 @@ const state = (root[KEY] ||= {
   /* Le fasce ai lati chiuse su questo dispositivo: si leggono la prima volta
    * che servono (vedi latiChiusi). */
   lati: null,
+  /* Le scritte dei dispositivi su questo dispositivo (vedi nomiScelti). */
+  nomi: null,
 });
 
 /** La casa del config, pulita. */
@@ -419,12 +422,65 @@ function alternaIlLato(lato) {
 }
 
 /* Le fasce chiuse su questo dispositivo, sulla tela, e i loro tasti (senza
- * casa non c'e' niente da chiudere, e i tasti non ci sono). */
+ * casa non c'e' niente da chiudere, e i tasti non ci sono). Sullo stesso
+ * strato c'e' il tasto «Nomi». */
 function mettiILati(nodo, casa, vuota) {
   const chiusi = latiChiusi();
   nodo.dataset.sinistra = chiusi.sinistra ? "chiusa" : "aperta";
   nodo.dataset.destra = chiusi.destra ? "chiusa" : "aperta";
-  scriviSeCambia(nodo.querySelector(".c3-lati"), vuota ? "" : latiMarkup(casa));
+  scriviSeCambia(nodo.querySelector(".c3-lati"), vuota ? "" : latiMarkup(casa) + nomiMarkup());
+}
+
+/* ── le scritte dei dispositivi ───────────────────────────────────────────
+ *
+ * «Le scritte dei dispositivi nella Casa 3D sono troppe e si sovrappongono.»
+ * Quelle che si coprono diventano pallini da sole (`core/le-scritte-della-
+ * casa-3d.js`), e il tasto «Nomi» in cima alla casa sceglie quante se ne
+ * vogliono: tutte, solo quelle dei dispositivi accesi, nessuna. Un pallino
+ * toccato dice il suo nome e fa quello che fa il tasto.
+ *
+ * Come le fasce, e' una scelta di questo dispositivo: sta nel browser, e se il
+ * browser non la tiene si torna a «Tutti». */
+function nomiScelti() {
+  if (state.nomi) return state.nomi;
+  let letto = "";
+  try {
+    letto = root.localStorage?.getItem?.(CHIAVE_NOMI_CASA3D) || "";
+  } catch (_errore) {
+    letto = "";
+  }
+  state.nomi = modoDeiNomi(letto);
+  return state.nomi;
+}
+
+function cambiaINomi() {
+  state.nomi = modoDopo(nomiScelti());
+  try {
+    root.localStorage?.setItem?.(CHIAVE_NOMI_CASA3D, state.nomi);
+  } catch (_errore) {}
+  state.scena?.nomi?.(state.nomi);
+  return state.nomi;
+}
+
+const PAROLE_DEI_NOMI = () => ({
+  tutti: t("Nomi: tutti", "Names: all"),
+  accesi: t("Nomi: solo accesi", "Names: only on"),
+  nessuno: t("Nomi: nessuno", "Names: none"),
+});
+
+/* Cosa vuol dire la scelta appena fatta, detto una volta nell'avviso. */
+const SPIEGA_I_NOMI = () => ({
+  tutti: t("Tutte le scritte: quelle che si coprono diventano pallini", "All labels: the overlapping ones become dots"),
+  accesi: t("Scritte solo per i dispositivi accesi", "Labels only for devices that are on"),
+  nessuno: t("Solo pallini: toccane uno per il nome", "Dots only: tap one for its name"),
+});
+
+function nomiMarkup() {
+  const modo = nomiScelti();
+  const spiega = t("Le scritte dei dispositivi: tocca per cambiare", "Device labels: tap to change");
+  return `<button type="button" class="c3-nomi-tasto" data-c3s="nomi" data-modo="${esc(modo)}" aria-label="${esc(
+    `${PAROLE_DEI_NOMI()[modo]}. ${spiega}`,
+  )}" title="${esc(spiega)}"><span aria-hidden="true">🏷️</span><span>${esc(PAROLE_DEI_NOMI()[modo])}</span></button>`;
 }
 
 /* Sul bordo della casa una linguetta con la freccia verso dove la fascia se ne
@@ -740,6 +796,7 @@ async function avviaIlModello(admin) {
       quandoTocchi: alToccoDellaScena,
       quandoSalvi: salvaLaCasa,
       quandoCade: () => cadeIlModello(m.id),
+      nomi: nomiScelti(),
     });
     state.firma = firmaDi(ora);
     state.vista = "modello";
@@ -796,6 +853,7 @@ async function avviaLaScena(admin) {
       pannello: nodo.querySelector(".c3-arreda-posto"),
       quandoTocchi: alToccoDellaScena,
       quandoSalvi: salvaLaCasa,
+      nomi: nomiScelti(),
       quandoCambiVista: (vista) => {
         if (state.vista === vista) return;
         state.vista = vista;
@@ -1099,6 +1157,14 @@ function alClic(evento) {
     if (state.scena && !state.scena.apri(k)) state.vista = "esterno";
     return ridisegna();
   }
+  if (cosa === "nomi") {
+    const modo = cambiaINomi();
+    vibra(6);
+    avviso(SPIEGA_I_NOMI()[modo]);
+    const nodo = doc.getElementById(ID);
+    if (nodo) mettiILati(nodo, casaDaElencare(casa3dDiQui()), false);
+    return;
+  }
   if (cosa === "lato") {
     alternaIlLato(clean(el.dataset.c3sLato));
     vibra(6);
@@ -1240,6 +1306,13 @@ function installaLoStile() {
     ${C3} .c3-lato-tasto[data-c3s-lato="destra"]{right:0;border-right:0;border-radius:14px 0 0 14px}
     ${C3} .c3-lato-nome{display:none}
     ${C3}[data-arreda="true"] .c3-lato-tasto[data-c3s-lato="destra"]{display:none}
+    /* Il tasto «Nomi»: in alto a sinistra sulla casa, vestito come i tasti
+     * dello zoom. */
+    ${C3} .c3-nomi-tasto{position:absolute;left:14px;top:14px;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;
+      pointer-events:auto;cursor:pointer;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap;color:#e6edf7;
+      background:rgba(15,23,42,.74);border:1px solid rgba(148,163,184,.32);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+    ${C3} .c3-nomi-tasto[data-modo="accesi"],${C3} .c3-nomi-tasto[data-modo="nessuno"]{background:rgba(14,165,233,.85);border-color:transparent}
+    @media(hover:hover){${C3} .c3-nomi-tasto:hover{border-color:#38bdf8}}
     ${C3} .c3-sinistra,${C3} .c3-destra{display:flex;flex-direction:column;gap:14px;min-height:0;overflow-y:auto;scrollbar-width:thin}
     ${C3} .c3-scheda{padding:16px;border-radius:22px;background:var(--c3-card);border:1px solid var(--c3-bordo);box-shadow:var(--c3-ombra)}
     ${C3} .c3-scheda h2{display:flex;align-items:center;gap:8px;margin:0 0 12px;font-family:'Oswald',system-ui,sans-serif;font-size:15px;font-weight:500;
@@ -1355,6 +1428,8 @@ function installaLoStile() {
       ${C3} .c3-lato-tasto[aria-expanded="true"]{background:rgba(14,165,233,.85);border-color:transparent}
       ${C3} .c3-lato-freccia{display:none}
       ${C3} .c3-lato-nome{display:inline}
+      /* sotto le due pillole delle fasce */
+      ${C3} .c3-nomi-tasto{top:52px;left:10px}
       ${C3}[data-sinistra="chiusa"][data-destra="chiusa"]:not([data-arreda="true"]) .c3-pagina{height:100%}
       ${C3}[data-sinistra="chiusa"][data-destra="chiusa"]:not([data-arreda="true"]) .c3-palco{flex:1 1 auto;height:auto}
     }

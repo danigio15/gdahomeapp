@@ -35,6 +35,7 @@ class Impostazioni {
    * un telefono che magari il volto non ce l'ha nemmeno registrato. */
   IlLucchetto _lucchetto = IlLucchetto.spento;
   bool _allegatiPubbliciCapiti = false;
+  String? _novitaViste;
 
   /* Il tema, la tavolozza e la barra della plancia qui non ci sono, e ci
    * sono stati.
@@ -71,6 +72,16 @@ class Impostazioni {
   /// resta l'avviso accanto ai bottoni.
   bool get allegatiPubbliciCapiti => _allegatiPubbliciCapiti;
 
+  /// L'ultima versione dell'app di cui si sono viste le novita': la scheda
+  /// «Novità» compare quando l'app e' piu' nuova di questa
+  /// (`casa/novita.dart`).
+  ///
+  /// `null` vuol dire mai scritta: un'app che arriva da una versione di prima
+  /// della scheda, o un'installazione nuova — e quella la scrive subito chi
+  /// apre l'app (`main.dart`), cosi' chi ha appena scaricato non si trova
+  /// davanti le novita' di un'app che non ha mai visto.
+  String? get novitaViste => _novitaViste;
+
   bool get sulTelefono => _sulTelefono;
   bool get android => _android;
   bool get caricate => _caricate;
@@ -97,6 +108,8 @@ class Impostazioni {
           if (letto['allegati_pubblici_capiti'] is bool) {
             _allegatiPubbliciCapiti = letto['allegati_pubblici_capiti'] as bool;
           }
+          final viste = letto['novita_viste'];
+          if (viste is String && viste.isNotEmpty) _novitaViste = viste;
         }
       }
     } catch (_) {
@@ -111,6 +124,7 @@ class Impostazioni {
     bool? composizioneIbrida,
     IlLucchetto? lucchetto,
     bool? allegatiPubbliciCapiti,
+    String? novitaViste,
   }) async {
     var cambiato = false;
     if (lucchetto != null) {
@@ -131,6 +145,12 @@ class Impostazioni {
       _allegatiPubbliciCapiti = allegatiPubbliciCapiti;
       cambiato = true;
     }
+    if (novitaViste != null &&
+        novitaViste.isNotEmpty &&
+        novitaViste != _novitaViste) {
+      _novitaViste = novitaViste;
+      cambiato = true;
+    }
     if (!cambiato) return;
     _avvisa();
     await _dispensa.scrivi(
@@ -139,6 +159,7 @@ class Impostazioni {
         'composizione_ibrida': _composizioneIbrida,
         'lucchetto': _lucchetto.comeSiScrive,
         'allegati_pubblici_capiti': _allegatiPubbliciCapiti,
+        if (_novitaViste != null) 'novita_viste': _novitaViste,
       }),
     );
   }

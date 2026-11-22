@@ -116,6 +116,26 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- I link `gdahome://collega?invito=…`: il bottone «Apri GdAHome
+                 su questo telefono» della console, per chi la guarda
+                 dall'app di Home Assistant sullo stesso telefono che vuole
+                 collegare, e il QR non lo puo' inquadrare. BROWSABLE perche'
+                 arriva da una pagina. Con `singleTop` un link ad app aperta
+                 arriva a questa stessa activity (`onNewIntent`), e lo passa
+                 `app_links` a `lib/ponte/il_link.dart`. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="gdahome" android:host="collega" />
+            </intent-filter>
+            <!-- Il link lo legge l'app, non il navigatore di Flutter: acceso,
+                 Flutter lo spingerebbe come una pagina («/collega?…») che non
+                 esiste. -->
+            <meta-data
+                android:name="flutter_deeplinking_enabled"
+                android:value="false" />
+
             <!-- Health Connect chiede «perche' vuoi questi dati?» aprendo
                  l'app: si apre GdAHome, che lo dice nella pagina Salute. -->
             <intent-filter>

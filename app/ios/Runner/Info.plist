@@ -29,6 +29,28 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<!-- I link `gdahome://collega?invito=…`: il bottone «Apri GdAHome su
+	     questo telefono» della console, per chi la guarda dallo stesso
+	     iPhone che vuole collegare e il QR non lo puo' inquadrare. Li riceve
+	     `app_links` dalla scena (`FlutterSceneDelegate` li passa ai plugin
+	     del motore), e li legge `lib/ponte/il_link.dart`. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>CFBundleURLName</key>
+			<string>com.gdahome.gdahome.collega</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>gdahome</string>
+			</array>
+		</dict>
+	</array>
+	<!-- Il link lo legge l'app, non il navigatore di Flutter: acceso, Flutter
+	     lo spingerebbe come una pagina («/collega?…») che non esiste. -->
+	<key>FlutterDeepLinkingEnabled</key>
+	<false/>
 	<!-- Quello che l'iPhone scrive nel riquadro del permesso. E' l'unica
 	     riga che l'utente legge prima di dire di si', e va detta per intero:
 	     a cosa serve, e per quanto. -->

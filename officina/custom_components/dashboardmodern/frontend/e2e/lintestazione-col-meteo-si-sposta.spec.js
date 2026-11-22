@@ -153,8 +153,10 @@ test("il riquadro col meteo scende in pagina, e resta piccolo", async ({ page },
   const altezzaPrima = prima.altezzaMeteo;
   const temperaturaPrima = prima.temperatura;
 
-  /* Il gesto: la scheda Home dell'editor, e la freccia su «Persone» — che nella
-   * fila sta subito sotto il meteo, quindi un colpo solo li scambia. */
+  /* Il gesto: la scheda Home dell'editor, e la freccia su «Persone». Nella
+   * fila fra il meteo e le persone c'e' il flusso dell'energia grande (#460),
+   * che di serie e' spento e in pagina non c'e': due colpi, e le persone
+   * scavalcano lui e poi il meteo. */
   await page.evaluate(() => {
     if (!document.getElementById("editor-modal")?.classList.contains("show")) apriConfigEntita();
   });
@@ -163,13 +165,23 @@ test("il riquadro col meteo scende in pagina, e resta piccolo", async ({ page },
   await expect(rigaMeteo).toBeVisible({ timeout: 20_000 });
   await expect(rigaMeteo).toContainText(/Intestazione col meteo|Weather header/);
   await page.locator('#ed-body [data-blocco="persone"] [data-blocco-su]').click();
+  await page.locator('#ed-body [data-blocco="persone"] [data-blocco-su]').click();
 
   await expect
     .poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("cd_home_blocchi") || "null")))
     /* L'intestazione e' il primo blocco della fila, e resta dov'e': qui si
        muove «persone», e quello che si controlla e' che salga sopra il meteo
        senza che nessun altro blocco cambi posto. */
-    .toEqual(["intestazione", "persone", "meteo", "widget", "azioni", "stanze", "dispositivi"]);
+    .toEqual([
+      "intestazione",
+      "persone",
+      "meteo",
+      "flusso",
+      "widget",
+      "azioni",
+      "stanze",
+      "dispositivi",
+    ]);
 
   /* E la Home lo mostra: sceso in pagina, sotto le persone, ancora uno solo. */
   await page.evaluate(() => document.getElementById("editor-modal")?.classList.remove("show"));

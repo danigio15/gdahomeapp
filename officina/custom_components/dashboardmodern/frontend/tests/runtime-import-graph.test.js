@@ -1712,8 +1712,20 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // ghirlanda, la neve e il riquadro delle luci in Home),
   // `sections/feste-al-muro.js` (le scene del tablet al riposo) e
   // `sections/luci-di-natale-editor-section.js` (la scheda nel config).
+  // 568 col riposo vivo del tablet a muro: `core/il-riposo-vivo.js` (i colori
+  // del cielo per l'ora e il meteo, la fase della luna, la foto che viene
+  // dopo), `sections/il-riposo-vivo-al-muro.js` (il cielo e la cornice su
+  // tela, e il giro che li muove) e `sections/le-foto-del-riposo.js` (le foto
+  // della cornice chieste al ponte, e caricate dal config).
+  // 570 con le scritte della Casa 3D che non si coprono:
+  // `core/le-scritte-della-casa-3d.js` (chi resta scritto e chi diventa un
+  // pallino) e `sections/casa-3d/le-scritte.js` (la mano che lo applica nelle
+  // due scene, e il nome al tocco di un pallino).
+  // 572 col flusso dell'energia grande in Home (#460): `core/il-flusso-in-home.js`
+  // (quali nodi, quali frecce e in che verso) e
+  // `sections/il-flusso-grande-section.js` (il blocco che le disegna).
   assert.ok(
-    relative.length <= 565,
+    relative.length <= 572,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

@@ -1,13 +1,16 @@
 import {
   CELLA,
   DISPOSITIVI_3D,
+  LATO_DEL_PALLINO,
   azioneDelTocco,
+  chiPrendeLaScritta,
   dispositivoPulito,
   entita,
   entitaCandidate,
   espandiGriglia,
+  modoDeiNomi,
   statoDelDispositivo
-} from "./chunk-EXLHWZMG.js";
+} from "./chunk-PPQ7CSPW.js";
 
 // src/sections/casa-3d/arredi-3d.js
 var CATALOGO_ARREDI = Object.freeze([
@@ -568,6 +571,121 @@ function arredo3D(THREE, k, tinta = "#64748b") {
   return g;
 }
 
+// src/sections/casa-3d/le-scritte.js
+var RITMO_MS = 140;
+var NOME_PER_MS = 2600;
+function creaLeScritte({ strato, perLeProve = false, richiedi = () => {
+} } = {}) {
+  const S = {
+    modo: "tutti",
+    firma: "",
+    alle: -Infinity,
+    daRifare: true,
+    timer: 0,
+    decise: /* @__PURE__ */ new WeakMap(),
+    nome: null,
+    nomeTimer: 0
+  };
+  const nuvola = document.createElement("div");
+  nuvola.className = "c3-nome-vola";
+  nuvola.setAttribute("role", "status");
+  nuvola.style.display = "none";
+  strato?.appendChild(nuvola);
+  const adesso = () => typeof performance !== "undefined" ? performance.now() : Date.now();
+  function misura(Dv, el) {
+    if (Dv.misura?.testo === el.textContent && Dv.misura.w) return Dv.misura;
+    const era = el.classList.contains("c3-pallino");
+    if (era) el.classList.remove("c3-pallino");
+    Dv.misura = { testo: el.textContent, w: el.offsetWidth, h: el.offsetHeight };
+    if (era) el.classList.add("c3-pallino");
+    return Dv.misura;
+  }
+  function disponi(visti, firma, ostacoli = []) {
+    for (const v of visti) {
+      const m = misura(v.Dv, v.el);
+      v.w = m.w;
+      v.h = m.h;
+    }
+    const ora = adesso();
+    if (firma !== S.firma) S.daRifare = true;
+    const manca = perLeProve ? 0 : RITMO_MS - (ora - S.alle);
+    if (S.daRifare && manca > 0 && !S.timer) {
+      S.timer = setTimeout(() => {
+        S.timer = 0;
+        richiedi();
+      }, manca);
+    }
+    if (S.daRifare && manca <= 0) {
+      const esiti = chiPrendeLaScritta(visti, { modo: S.modo, ostacoli });
+      visti.forEach((v, i) => S.decise.set(v.Dv, esiti[i]));
+      S.firma = firma;
+      S.alle = ora;
+      S.daRifare = false;
+    }
+    for (const v of visti) {
+      const d = S.decise.get(v.Dv) || {
+        piena: S.modo === "tutti" || S.modo === "accesi" && v.acceso || Boolean(v.primo),
+        dx: 0,
+        dy: 0
+      };
+      v.el.classList.toggle("c3-pallino", !d.piena);
+      v.el.style.transform = `translate(${(v.x + d.dx).toFixed(1)}px,${(v.y + d.dy).toFixed(1)}px) translate(-50%,-100%)`;
+      if (S.nome?.Dv === v.Dv) {
+        const alto = d.piena ? v.h : LATO_DEL_PALLINO;
+        nuvola.style.transform = `translate(${(v.x + d.dx).toFixed(1)}px,${(v.y + d.dy - alto - 6).toFixed(1)}px) translate(-50%,-100%)`;
+      }
+    }
+    if (S.nome && !visti.some((v) => v.Dv === S.nome.Dv)) nuvola.style.display = "none";
+    else if (S.nome) nuvola.style.display = "";
+  }
+  function toccato(Dv, el, testo) {
+    if (!el?.classList.contains("c3-pallino") || !testo) return false;
+    S.nome = { Dv };
+    nuvola.textContent = testo;
+    nuvola.style.display = "";
+    clearTimeout(S.nomeTimer);
+    S.nomeTimer = setTimeout(() => {
+      S.nome = null;
+      nuvola.style.display = "none";
+    }, NOME_PER_MS);
+    richiedi();
+    return true;
+  }
+  return {
+    /** La scelta del tasto «Nomi»: si rifa' il conto subito. */
+    modo(m) {
+      if (m === void 0) return S.modo;
+      const nuovo = modoDeiNomi(m);
+      if (nuovo !== S.modo) {
+        S.modo = nuovo;
+        S.daRifare = true;
+        S.alle = -Infinity;
+        richiedi();
+      }
+      return S.modo;
+    },
+    /** Qualcosa e' cambiato senza che la vista si muova (uno stato, un testo). */
+    rifai() {
+      S.daRifare = true;
+    },
+    disponi,
+    toccato,
+    distruggi() {
+      clearTimeout(S.timer);
+      clearTimeout(S.nomeTimer);
+      nuvola.remove();
+    }
+  };
+}
+var STILE_DELLE_SCRITTE = `
+  .c3-chip.c3-pallino{width:${LATO_DEL_PALLINO}px;height:${LATO_DEL_PALLINO}px;padding:0;overflow:hidden;color:transparent;font-size:0;
+    display:grid;place-items:center;border-width:2px;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+  .c3-chip.c3-pallino::before{content:attr(data-ic);font-size:11px;line-height:1;color:#fff}
+  .c3-nome-vola{position:absolute;left:0;top:0;z-index:5;pointer-events:none;white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis;
+    padding:6px 10px;border-radius:10px;background:rgba(15,23,42,.92);border:1px solid rgba(148,163,184,.35);color:#e6edf7;
+    font:700 11.5px 'Inter',system-ui,sans-serif;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+`;
+
 // src/sections/casa-3d/finiture.js
 var PAVIMENTI = Object.freeze([
   { k: "listoni", nome: ["Parquet a listoni", "Plank parquet"], colori: ["#d8b68a", "#c19a6b", "#9c7048", "#6b4a32", "#e7dccb", "#a39e93"], legno: true },
@@ -1008,6 +1126,8 @@ function creaScena(THREE, opzioni = {}) {
     pannello.className = "c3-pannello-sopra";
     palco.appendChild(pannello);
   }
+  const scritte = creaLeScritte({ strato: stratoChip, perLeProve: Boolean(opzioni.perLeProve), richiedi: () => richiedi() });
+  scritte.modo(opzioni.nomi);
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: Boolean(opzioni.perLeProve) });
   renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
   renderer.shadowMap.enabled = true;
@@ -2077,6 +2197,7 @@ function creaScena(THREE, opzioni = {}) {
     el.addEventListener("pointerdown", (ev) => prendiDalTasto(ev, Dv));
     el.addEventListener("click", (ev) => {
       ev.stopPropagation();
+      scritte.toccato(Dv, el, `${nomeDi(Dv)} · ${Dv.stato?.testo || L("da collegare", "not linked")}`);
       tocca(Dv);
     });
     stratoChip.appendChild(el);
@@ -2085,6 +2206,8 @@ function creaScena(THREE, opzioni = {}) {
   }
   function etichette() {
     const fermo = Math.abs(S.taglio - S.taglioVoluto) < 0.3;
+    const visti = [];
+    const ostacoli = [];
     for (const p of PIANI_MIEI) {
       const aperto = S.vista === p.k && fermo;
       for (const s of p.stanze) {
@@ -2101,12 +2224,13 @@ function creaScena(THREE, opzioni = {}) {
         s.el.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) translate(-50%,-100%)`;
         s.el.classList.toggle("c3-si", S.sel?.s === s);
         const testo = testoDellaStanza(p, s);
-        if (s.el.dataset.testo !== testo) {
+        if (s.el.dataset.testo !== testo || !s.misura?.w) {
           s.el.dataset.testo = testo;
           s.el.innerHTML = testo;
+          s.misura = { w: s.el.offsetWidth, h: s.el.offsetHeight };
         }
+        ostacoli.push({ x0: x - s.misura.w / 2, x1: x + s.misura.w / 2, y0: y - s.misura.h, y1: y });
       }
-      const visti = [];
       for (const Dv of p.disp) {
         const el = chipDi(Dv);
         if (!aperto) {
@@ -2121,10 +2245,8 @@ function creaScena(THREE, opzioni = {}) {
         }
         el.style.display = "";
         vestiChip(Dv, el);
-        if (Dv.misura?.testo !== el.textContent || !Dv.misura.w) Dv.misura = { testo: el.textContent, w: el.offsetWidth, h: el.offsetHeight };
-        visti.push({ el, x, y, w: Dv.misura.w, h: Dv.misura.h });
+        visti.push(vistoDi(Dv, el, x, y, p.base + yChip));
       }
-      scostaChip(visti);
     }
     const fuori = S.vista === "esterno" && S.taglio > 40;
     for (const Dv of ESTERNE) {
@@ -2134,10 +2256,21 @@ function creaScena(THREE, opzioni = {}) {
         continue;
       }
       const [x, y, z] = proietta(Dv.m.position.x, Dv.m.position.y + 0.35, Dv.m.position.z);
-      el.style.display = fuoriDalPalco(x, y, z) ? "none" : "";
-      el.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) translate(-50%,-100%)`;
+      if (fuoriDalPalco(x, y, z)) {
+        el.style.display = "none";
+        continue;
+      }
+      el.style.display = "";
       vestiChip(Dv, el, Dv.dati.nome || L("Telecamera", "Camera"));
+      visti.push(vistoDi(Dv, el, x, y, Dv.m.position.y + 0.35));
     }
+    const { az, al, d, tx, ty, tz } = S.cam;
+    scritte.disponi(
+      visti,
+      /* i nomi delle stanze compaiono quando il taglio si ferma: anche loro cambiano il conto */
+      [S.vista, largo, alto, az, al, d, tx, ty, tz, ostacoli.length].map((v) => typeof v === "number" ? v.toFixed(3) : v).join("|") + (S.presa ? `|${performance.now()}` : ""),
+      ostacoli
+    );
     for (const { p, el } of cartellini) {
       if (!fuori) {
         el.style.display = "none";
@@ -2162,24 +2295,32 @@ function creaScena(THREE, opzioni = {}) {
       maniglie.style.transform = `translate(${x.toFixed(1)}px,${(y - sopraIlTasto).toFixed(1)}px) translate(-50%,-130%)`;
     } else maniglie.style.display = "none";
   }
-  function scostaChip(visti, stacco = 3) {
-    visti.sort((a, b) => b.y - a.y);
-    const messi = [];
-    for (const c of visti) {
-      for (let giri = 0; giri <= messi.length; giri++) {
-        const sotto = messi.find((m) => Math.abs(m.x - c.x) < (m.w + c.w) / 2 + stacco && c.y > m.y - m.h - stacco && c.y - c.h < m.y + stacco);
-        if (!sotto) break;
-        c.y = sotto.y - sotto.h - stacco;
-      }
-      messi.push(c);
-      c.el.style.transform = `translate(${c.x.toFixed(1)}px,${c.y.toFixed(1)}px) translate(-50%,-100%)`;
-    }
+  const doveSta = new THREE.Vector3();
+  function vistoDi(Dv, el, x, y, altezza) {
+    doveSta.set(Dv.m.position.x, altezza, Dv.m.position.z);
+    const st = Dv.stato;
+    return {
+      Dv,
+      el,
+      x,
+      y,
+      distanza: doveSta.distanceTo(cam.position),
+      acceso: Boolean(st?.attivo),
+      primo: S.pezzo === Dv,
+      priorita: st?.attivo && ["movimento", "allarme"].includes(st.tono) ? 1 : 0
+    };
+  }
+  function nomeDi(Dv) {
+    return Dv.dati.nome || S.stati[Dv.dati.entity]?.attributes?.friendly_name || L(Dv.D.nome[0], Dv.D.nome[1]);
   }
   function vestiChip(Dv, el, nome = "") {
     const st = Dv.stato || { testo: Dv.D.icona, tono: "neutro" };
     const scollegato = !Dv.dati.entity;
     const testo = `${scollegato ? `${Dv.D.icona} ?` : st.testo}${nome ? ` · ${nome}` : ""}`;
     if (el.textContent !== testo) el.textContent = testo;
+    if (el.dataset.ic !== Dv.D.icona) el.dataset.ic = Dv.D.icona;
+    const titolo = nomeDi(Dv);
+    if (el.title !== titolo) el.title = titolo;
     const c = TONI[st.tono] || TONI.neutro;
     if (el.dataset.c !== c) {
       el.dataset.c = c;
@@ -2241,6 +2382,7 @@ function creaScena(THREE, opzioni = {}) {
     }
     for (const Dv of ESTERNE) Dv.stato = Dv.dati.entity && S.stati[Dv.dati.entity] ? statoDelDispositivo("telecamera", S.stati[Dv.dati.entity], italiano) : null;
     assegnaLuci();
+    scritte.rifai();
     if (S.arreda && !pannello?.contains(document.activeElement)) disegnaPannello();
     richiedi();
   }
@@ -2890,6 +3032,7 @@ function creaScena(THREE, opzioni = {}) {
     S.morto = true;
     if (S.raf) cancelAnimationFrame(S.raf);
     clearTimeout(timerSalva);
+    scritte.distruggi();
     osservatore?.disconnect();
     window.removeEventListener("keydown", tasti);
     if (pannello) {
@@ -2937,6 +3080,8 @@ function creaScena(THREE, opzioni = {}) {
     arreda,
     distruggi,
     ridimensiona,
+    /** Le scritte dei dispositivi: «tutti», «accesi» o «nessuno» (vedi le-scritte.js). */
+    nomi: (modo) => scritte.modo(modo),
     /** Un fotogramma subito, senza aspettare il giro: per le prove. */
     fotogramma(dt = 1 / 60) {
       avanza(dt);
@@ -3016,6 +3161,7 @@ function installaLoStile() {
   .c3-chip.c3-scelto{box-shadow:0 0 0 3px #38bdf8}
   .c3-arreda .c3-chip{cursor:grab;touch-action:none}
   .c3-chip.c3-vivo{animation:c3-pulsa 1.2s infinite}
+  ${STILE_DELLE_SCRITTE}
   @keyframes c3-pulsa{0%,100%{box-shadow:0 0 0 3px rgba(var(--c),.35)}50%{box-shadow:0 0 0 7px rgba(var(--c),.1)}}
   .c3-cartellino{position:absolute;left:0;top:0;pointer-events:auto;cursor:pointer;background:rgba(15,23,42,.84);border:1px solid rgba(148,163,184,.3);border-radius:12px;
     padding:6px 10px;font-size:11px;color:#92a4c2;white-space:nowrap;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
@@ -3080,6 +3226,7 @@ function installaLoStile() {
 }
 
 export {
+  creaLeScritte,
   creaScena,
   installaLoStile
 };

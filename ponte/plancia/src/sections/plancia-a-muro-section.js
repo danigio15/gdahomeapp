@@ -84,6 +84,16 @@ import {
   stileDelleFesteAlMuro,
   teleDaTenere,
 } from "./feste-al-muro.js";
+import {
+  animaIlRiposoVivo,
+  fermaIlRiposoVivo,
+  riposoDelCielo,
+  riposoDellaCornice,
+  stileDelRiposoVivo,
+  teleDelRiposoVivo,
+} from "./il-riposo-vivo-al-muro.js";
+import { EVENTO_FOTO_DEL_RIPOSO, elencoDelleFoto, fotoConosciute } from "./le-foto-del-riposo.js";
+import { scenaDelCielo, stileDelRiposo } from "../core/il-riposo-vivo.js";
 import { EVENTO_DEL_MURO, IN_VISTA_KEY } from "../core/state-event-gate.js";
 import {
   comandoDelLettore,
@@ -4098,7 +4108,10 @@ function riposo(muro) {
   /* Di notte il riposo e' nero: lo schermo si spegne. Con un campanello che
    * tiene lo schermo acceso (al minimo) il riposo resta quello di giorno,
    * fioco: un nero acceso tutta la notte sembra un tablet rotto. */
-  if (notte && !schermoSempreAcceso(muro))
+  /* «Anche di notte, al minimo» (`riposo.notteAlMinimo`): lo stesso riposo
+   * di giorno, appena visibile sul nero, invece dello schermo spento. */
+  const alMinimo = notte && !schermoSempreAcceso(muro) && muro.riposo.notteAlMinimo === true;
+  if (notte && !schermoSempreAcceso(muro) && !alMinimo)
     return `<div class="mu-riposo notte" data-mu-fa="sveglia">${chip ? `<div class="mu-deriva" ${deriva}><div class="mu-avvisi">${chip}</div></div>` : ""}</div>`;
   const m = meteo();
   const centrale = centraleDelMuro(pagina);
@@ -4154,26 +4167,72 @@ function riposo(muro) {
       deriva: d,
       fioco: notte && !muro.luce?.attiva,
     });
-  return `<div class="mu-riposo${notte && !muro.luce?.attiva ? " fioco" : ""}" data-mu-fa="sveglia"><div class="mu-deriva" ${deriva}>
-    ${chip ? `<div class="mu-avvisi">${chip}</div>` : ""}
-    <div class="mu-osw mu-orologione">${esc(o.ora)}</div>
-    <div class="mu-et mu-data">${esc(o.lungo)}${pilaDelRiposo(muro)}</div>
-    <div class="mu-riposo-riga">
-      ${
-        m && soloCasa && PAROLE_DEL_METEO()[m.condizione]
-          ? `<span data-mu-riposo="meteo">${disegno("meteo", 34, "rip-meteo")}${esc(PAROLE_DEL_METEO()[m.condizione])}</span>`
-          : m && !soloCasa && numero(m.temperatura) !== null
-            ? `<span data-mu-riposo="meteo">${disegno("meteo", 34, "rip-meteo")}${decimale(m.temperatura, 0)}° ${esc(PAROLE_DEL_METEO()[m.condizione] || "")}</span>`
-            : ""
-      }
+  const meteoDetto =
+    m && soloCasa && PAROLE_DEL_METEO()[m.condizione]
+      ? esc(PAROLE_DEL_METEO()[m.condizione])
+      : m && !soloCasa && numero(m.temperatura) !== null
+        ? `${decimale(m.temperatura, 0)}° ${esc(PAROLE_DEL_METEO()[m.condizione] || "")}`
+        : "";
+  const riga = `<div class="mu-riposo-riga">
+      ${meteoDetto ? `<span data-mu-riposo="meteo">${disegno("meteo", 34, "rip-meteo")}${meteoDetto}</span>` : ""}
       ${dentro ? `<span data-mu-riposo="temperatura">${disegno("temperatura", 30, "rip-temp")}${dentro} ${esc(doveDellaTemperatura(fuori))}</span>` : ""}
       ${persone.tutte ? `<span data-mu-riposo="persone">${disegno("persone", 30, "rip-persone")}${esc(chi)}</span>` : ""}
       ${aperte ? `<span data-mu-riposo="aperte" class="mu-attenzione">${disegno("aperture", 30, "rip-aperture")}${aperte} ${esc(aperte === 1 ? t("finestra aperta", "window open") : t("finestre aperte", "windows open"))}</span>` : ""}
       ${allarme ? `<span>${disegno("sicurezza", 30, "rip-allarme")}${esc(t("Antifurto", "Alarm"))} · ${esc(allarme)}</span>` : ""}
-    </div>
+    </div>`;
+  const tocca = `<div class="mu-et mu-tocca">${esc(t("Tocca per i comandi", "Tap for controls"))}</div>`;
+  /* Lo stile del riposo (`core/il-riposo-vivo.js`): il cielo di casa, o la
+   * cornice con le foto del ponte — che senza foto e' il cielo. */
+  const stile = stileDelRiposo(muro.riposo, fotoDelRiposo(muro).length);
+  if (stile === "foto")
+    return riposoDellaCornice({
+      ora: o.ora,
+      lungo: o.lungo,
+      meteo: meteoDetto
+        ? `<span data-mu-riposo="meteo">${disegno("meteo", 26, "rip-meteo")}${meteoDetto}</span>`
+        : "",
+      foto: fotoDelRiposo(muro).map((f) => f.id),
+      ogni: muro.riposo.ogni,
+      avvisi: chip,
+      pila: pilaDelRiposo(muro),
+      deriva: d,
+      minimo: alMinimo,
+    });
+  if (stile === "cielo") {
+    /* Il cielo legge il sole di casa (`sun.sun`) e, per stimarlo quando
+     * non c'e', dove sta la casa (`zone.home`). */
+    segna("sun.sun");
+    segna("zone.home");
+    return riposoDelCielo({
+      ora: o.ora,
+      lungo: o.lungo,
+      scena: scenaDelCielo({ stati: allStates() || {}, condizione: m?.condizione || "" }),
+      riga,
+      sotto: `${rigaDelleAree}${consiglioSulRiposo()}${tocca}`,
+      avvisi: chip,
+      pila: pilaDelRiposo(muro),
+      deriva: d,
+      minimo: alMinimo,
+    });
+  }
+  return `<div class="mu-riposo${alMinimo ? " minimo" : notte && !muro.luce?.attiva ? " fioco" : ""}" data-mu-fa="sveglia"><div class="mu-deriva" ${deriva}>
+    ${chip ? `<div class="mu-avvisi">${chip}</div>` : ""}
+    <div class="mu-osw mu-orologione">${esc(o.ora)}</div>
+    <div class="mu-et mu-data">${esc(o.lungo)}${pilaDelRiposo(muro)}</div>
+    ${riga}
     ${rigaDelleAree}
     ${consiglioSulRiposo()}
-    <div class="mu-et mu-tocca">${esc(t("Tocca per i comandi", "Tap for controls"))}</div></div></div>`;
+    ${tocca}</div></div>`;
+}
+
+/* Le foto della cornice che il ponte ha, per il riposo: quelle che si sanno
+ * gia', e si richiedono quando sono vecchie. Si chiedono solo se la cornice
+ * e' lo stile scelto; quando arrivano (o cambiano) il pannello si ridisegna
+ * da se' (`EVENTO_FOTO_DEL_RIPOSO`). */
+function fotoDelRiposo(muro) {
+  if (muro?.riposo?.stile !== "foto") return [];
+  elencoDelleFoto().catch(() => {});
+  return fotoConosciute() || [];
 }
 
 /* ── l'assistente di casa, sul riposo ───────────────────────────────────── */
@@ -4992,6 +5051,7 @@ function restituisciLoSchermo() {
 
 function togliLaTela() {
   fermaLeFeste();
+  fermaIlRiposoVivo();
   smettiDiSquillare();
   restituisciLoSchermo();
   diciAlloSchermo("acceso", false);
@@ -5166,6 +5226,7 @@ export function disegna() {
   rimettiLaVoce(nodo);
   if (state.riposo) posizionaIlRiposo(nodo);
   animaLeFeste(nodo, { ridisegna: () => disegna() });
+  animaIlRiposoVivo(nodo);
   /* «Tieni lo schermo acceso»: con un campanello che puo' suonare, lo schermo
    * non si spegne da solo — di notte resta al minimo. */
   diciAlloSchermo("acceso", schermoSempreAcceso(muro));
@@ -5177,6 +5238,7 @@ export function disegna() {
       !muro.luce?.attiva &&
         state.riposo &&
         eNotte(muro) &&
+        muro.riposo.notteAlMinimo !== true &&
         !passaSopraLaNotte(scenaDelleFeste(new Date())),
     ),
   );
@@ -5207,6 +5269,8 @@ function posizionaIlRiposo(nodo) {
 function siTiene(vecchio, nuovo) {
   /* E le tele delle feste, col loro disegno. */
   if (teleDaTenere(vecchio, nuovo)) return true;
+  /* E quelle del riposo vivo: il cielo dipinto e la cornice con la sua foto. */
+  if (teleDelRiposoVivo(vecchio, nuovo)) return true;
   if (vecchio.nodeName !== "IMG") return false;
   const telecamera = vecchio.dataset?.muTelecamera;
   if (telecamera) return telecamera === nuovo.dataset?.muTelecamera;
@@ -7910,6 +7974,7 @@ ${MURO}[data-verso="verticale"] .mu-reg-coppie{grid-template-columns:repeat(auto
 #${ID}[data-leggero="1"] .mu-velo{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(5,8,15,.8)}
 #${ID}[data-leggero="1"] *,#${ID}[data-leggero="1"] *::before,#${ID}[data-leggero="1"] *::after{transition:none!important}
 ${stileDelleFesteAlMuro(MURO)}
+${stileDelRiposoVivo(MURO)}
 `,
   );
 }
@@ -8035,6 +8100,11 @@ export function installPlanciaAMuro() {
   });
   root.addEventListener?.("storage", (event) => {
     if (String(event?.key || "").endsWith(CHIAVE_MURO)) ancora();
+  });
+  /* Le foto della cornice sono arrivate, o sono cambiate dal config: il
+   * riposo sceglie di nuovo fra la cornice e il cielo. */
+  root.addEventListener?.(EVENTO_FOTO_DEL_RIPOSO, () => {
+    if (state.riposo) disegna();
   });
   root.dmMuro = {
     rileggi: (opzioni) => rileggi(opzioni),

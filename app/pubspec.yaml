@@ -13,7 +13,7 @@ publish_to: "none"
 # sempre**. Si ricava dalla versione invece di batterlo a mano:
 # 1.4.24 → 1 × 10000 + 4 × 100 + 24 = 10424. Finche' il minore e la patch
 # stanno sotto cento, cresce insieme alla versione e non si sbaglia.
-version: 1.19.25+1192500
+version: 1.19.26+1192600
 
 environment:
   sdk: ^3.13.0
@@ -143,6 +143,12 @@ dependencies:
   flutter_local_notifications: ^22.3.3
   health: ^13.3.2
 
+  # I link che aprono l'app: `gdahome://collega?invito=…`, dal bottone «Apri
+  # GdAHome su questo telefono» della console (`ponte/il_link.dart`). Chi
+  # guarda la console dallo stesso telefono che vuole collegare il QR non lo
+  # puo' inquadrare: il link porta l'invito al posto della fotocamera.
+  app_links: ^7.2.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -166,6 +172,11 @@ flutter:
     # Gli elettrodomestici, uno per tipo: i disegni della plancia
     # (`appliance-artwork.js`), per «Chi ha consumato di più».
     - assets/elettrodomestici/
+    # Le novità dell'app: il suo CHANGELOG, com'e', per la scheda «Novità»
+    # dopo un aggiornamento e la pagina in Impostazioni app
+    # (`schermate/novita.dart`). Il file e' quello della release, non una
+    # copia: le note si scrivono una volta sola, e l'app legge le stesse.
+    - CHANGELOG.md
 
   # I caratteri sono quelli della plancia, e non per pigrizia: chi passa dal
   # telefono alla dashboard non deve avere l'impressione di due prodotti.

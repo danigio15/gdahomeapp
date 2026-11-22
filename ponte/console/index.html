@@ -512,17 +512,51 @@
                       Il QR code comparirà qui.
                     </p>
                   </div>
-                  <details class="apribile" id="a-mano" hidden>
-                    <summary data-en="Can't scan it?">Non riesci a inquadrarlo?</summary>
+                  <!-- Il bottone per chi guarda questa pagina dal telefono da
+                       collegare (l'app di Home Assistant su quel telefono):
+                       apre GdAHome con l'invito del QR dentro un link,
+                       `gdahome://collega?invito=…` (su Android `intent://`,
+                       che senza l'app porta al Play Store). Sempre in vista: il
+                       telefono non si indovina, e chi e' al computer lo salta.
+
+                       `target="_blank"` e non `_top`: dentro l'app di Home
+                       Assistant per iPhone una pagina nuova va al sistema, che
+                       apre GdAHome, mentre un `gdahome://` caricato al posto
+                       della pagina diventa «indirizzo non valido». Su Android
+                       l'app di Home Assistant manda al sistema ogni indirizzo
+                       che non e' suo. -->
+                  <div class="apri-qui" id="apri-qui" hidden>
+                    <a
+                      class="bottone"
+                      id="apri-gdahome"
+                      href="#"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-en="Open GdAHome on this phone"
+                      >Apri GdAHome su questo telefono</a
+                    >
+                    <p class="minuta" data-en="If GdAHome doesn't open, copy the code below.">
+                      Se GdAHome non si apre, copia il codice qui sotto.
+                    </p>
+                  </div>
+                  <!-- Le sedici lettere sempre in vista, col tasto per copiarle.
+                       Chi guarda questa pagina dal telefono da collegare (l'app di
+                       Home Assistant su quel telefono) il QR non lo puo'
+                       inquadrare: le copia e le incolla in GdAHome. Chiuse
+                       dietro un «Non riesci a inquadrarlo?» non le trovava. -->
+                  <div class="a-mano" id="a-mano" hidden>
                     <p
                       class="spiegazione"
-                      data-en="In the app tap &#8220;Enter the code&#8221; and type these letters. There are sixteen: copy them one group at a time."
+                      data-en="On the phone you are pairing? Copy the code and, in GdAHome, open &#8220;Your homes&#8221; &#8250; &#8220;Add&#8221; &#8250; &#8220;Enter the code&#8221; and paste it."
                     >
-                      Nell'app tocca «Inserisci il codice» e digita queste lettere. Sono sedici: si
-                      copiano un gruppo per volta.
+                      Sei sul telefono da collegare? Copia il codice e in GdAHome apri «Le tue case»
+                      › «Aggiungi» › «Inserisci il codice» e incollalo.
                     </p>
                     <p class="codice" id="codice"></p>
-                  </details>
+                    <button type="button" class="tenue" id="copia-codice" data-en="Copy the code">
+                      Copia il codice
+                    </button>
+                  </div>
                 </div>
               </li>
             </ol>

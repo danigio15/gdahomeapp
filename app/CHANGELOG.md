@@ -8,6 +8,19 @@ i suoi in `ponte/CHANGELOG.md`, ed è quello che Home Assistant fa vedere. Un
 rilascio dell'app non fa comparire un aggiornamento dell'add-on, e al
 contrario.
 
+## 1.19.26
+
+- **Novità**: dopo ogni aggiornamento l'app mostra una volta cosa è
+  cambiato, e le note di tutte le versioni si ritrovano in Impostazioni app
+  › «Novità».
+- **Collegare la casa dallo stesso telefono**: nella pagina «Collega l'app»
+  di Home Assistant, aperta dal telefono da collegare, «Apri GdAHome su
+  questo telefono» apre l'app che chiede «Collegare questa casa?»; vale anche
+  per riabbinare un telefono con l'app rimessa.
+- **Navigatore, il riquadro della manovra**: lontano dalla svolta diventa una
+  riga sola su un fondo di vetro, e torna grande avvicinandosi; dal menu
+  «Dimensione indicazioni» si può tenere sempre grande.
+
 ## 1.19.25
 
 - **Il benvenuto**: una pagina sola, con la scheda per collegarsi sullo

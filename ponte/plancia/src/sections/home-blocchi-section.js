@@ -25,9 +25,20 @@ import {
   BLOCCO_INTESTAZIONE,
   lIntestazioneStaInCima,
   CHIAVE_ORDINE_BLOCCHI,
+  conIlBloccoInPrimoPiano,
   ordineDeiBlocchi,
   ordinePossibile,
 } from "../core/ordine-dei-blocchi.js";
+import {
+  BLOCCO_DEL_FLUSSO,
+  CHIAVE_FLUSSO_IN_HOME,
+  ilFlussoSiVede,
+  sceltaDelFlusso,
+} from "../core/il-flusso-in-home.js";
+import {
+  BLOCCO_ID as BLOCCO_FLUSSO,
+  ridisegnaIlFlussoInHome,
+} from "./il-flusso-grande-section.js";
 import { CHIAVE_PASTIGLIE, lePastiglieSiVedono } from "../core/pastiglie-di-stato.js";
 import {
   CHIAVE_STANZE_IN_PLANCIA,
@@ -105,6 +116,9 @@ function pezziDelBlocco(nome, pagina) {
   /* Le stanze (#493) sono un nodo solo: il titolo se lo porta dentro, come le
    * persone e i widget. */
   if (nome === "stanze") return [dentro(doc.getElementById(BLOCCO_STANZE))].filter(Boolean);
+  /* Il flusso dell'energia grande (#460): un nodo solo, col suo titolo dentro. */
+  if (nome === BLOCCO_DEL_FLUSSO)
+    return [dentro(doc.getElementById(BLOCCO_FLUSSO))].filter(Boolean);
   if (nome === "dispositivi")
     return [dentro(doc.getElementById("dev-title")), dentro(doc.getElementById("dev-grid"))].filter(
       Boolean,
@@ -295,6 +309,7 @@ const SCHEDA_HOME = "sez0";
 const NOMI_DEI_BLOCCHI = () => ({
   intestazione: t("Intestazione e menù", "Header and menu"),
   meteo: t("Intestazione col meteo", "Weather header"),
+  flusso: t("Flusso energia", "Energy flow"),
   persone: t("Persone", "People"),
   widget: t("Widget", "Widgets"),
   azioni: t("Azioni rapide", "Quick actions"),
@@ -315,6 +330,8 @@ const OGGETTO_DEL_BLOCCO = Object.freeze({
    * un'icona fuori catalogo per una riga di configurazione sarebbe l'unica
    * icona non nostra in tutta la scheda. */
   intestazione: "home",
+  /* Il flusso dell'energia: il sole, che e' la ragione per cui lo si vuole. */
+  flusso: "solare",
 });
 
 /* Il posto e' il blocco: uno per nome, quindi il disegno si porta dietro le
@@ -332,6 +349,7 @@ const disegnoDelBlocco = (nome) =>
 const ALTEZZA_DEL_BLOCCO = Object.freeze({
   intestazione: 1,
   meteo: 2,
+  flusso: 3,
   persone: 2,
   widget: 3,
   azioni: 2,
@@ -414,8 +432,33 @@ function pannelloMarkup() {
     )}</div>
     ${anteprimaMarkup("home-blocchi")}
     <div class="dm-blocco-list">${righe}</div>
+    ${flussoMarkup()}
     ${pastiglieMarkup()}
     ${stanzeMarkup()}`;
+}
+
+/* L'interruttore del flusso dell'energia grande (#460).
+ *
+ * Spento di serie: chi non lo accende ha la Home di sempre. Acceso, il blocco
+ * compare in primo piano — subito sotto l'intestazione — e da li' si sposta
+ * con le frecce come gli altri. Senza fotovoltaico, rete o batteria
+ * configurati non c'e' niente da disegnare, e il blocco non compare. */
+function flussoMarkup() {
+  const acceso = ilFlussoSiVede(readJson(CHIAVE_FLUSSO_IN_HOME, null));
+  return `<div class="ed-row dm-blocco-pastiglie dm-blocco-flusso">
+    <span class="dm-blocco-icona" aria-hidden="true">${disegnoDelBlocco(BLOCCO_DEL_FLUSSO)}</span>
+    <span class="ed-row-main"><strong class="ed-row-new">${esc(
+      t("Flusso energia in Home", "Energy flow on Home"),
+    )}</strong><small class="ed-row-old">${esc(
+      t(
+        "Un blocco grande col sole, la rete, la batteria e la casa, e le frecce che dicono dove va l'energia adesso. Stessi numeri della pagina Energia; un tocco la apre.",
+        "A large block with the sun, the grid, the battery and the home, and arrows showing where the energy is going right now. Same numbers as the Energy page; one tap opens it.",
+      ),
+    )}</small></span>
+    <label class="dm-blocco-switch"><input type="checkbox" data-dm-flusso-home-acceso${
+      acceso ? " checked" : ""
+    }><span></span></label>
+  </div>`;
 }
 
 /* L'interruttore delle pastiglie di stato (#491).
@@ -530,6 +573,26 @@ function onClickFreccia(event) {
   /* La casella delle pastiglie: si scrive il «no», e il «si'» si scrive
    * vuoto. Cosi' chi non l'ha mai toccata non ha niente in memoria, e la
    * casella che non c'e' vale «come e' sempre stato». */
+  /* Il flusso dell'energia (#460): si scrive «si» o niente. Accendendolo
+   * il blocco va in primo piano, se l'ordine salvato non lo mette altrove. */
+  const flusso = event.target?.closest?.("[data-dm-home-blocchi] [data-dm-flusso-home-acceso]");
+  if (flusso) {
+    if (event.type !== "change") return;
+    writeJsonIfChanged(CHIAVE_FLUSSO_IN_HOME, sceltaDelFlusso(flusso.checked));
+    if (flusso.checked) {
+      const fila = conIlBloccoInPrimoPiano(
+        readJson(CHIAVE_ORDINE_BLOCCHI, null),
+        BLOCCO_DEL_FLUSSO,
+      );
+      if (fila) {
+        dimenticaLaBozza("home-blocchi");
+        writeJsonIfChanged(CHIAVE_ORDINE_BLOCCHI, ordinePossibile(fila));
+      }
+    }
+    ridisegnaIlFlussoInHome();
+    ensurePannelloDeiBlocchi();
+    return;
+  }
   const casella = event.target?.closest?.("[data-dm-home-blocchi] [data-dm-pastiglie]");
   if (casella) {
     writeJsonIfChanged(CHIAVE_PASTIGLIE, casella.checked ? null : "no");

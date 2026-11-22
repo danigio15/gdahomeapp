@@ -712,6 +712,11 @@ test("meteo e riposo si scelgono, e di serie il riposo torna alla prima pagina",
     torna: false,
     sensore: "sensor.salotto_t",
     dove: "casa",
+    /* Lo stile del riposo: di serie l'orologio di sempre, la foto che cambia
+     * ogni minuto, e la notte nera. */
+    stile: "orologio",
+    ogni: 60,
+    notteAlMinimo: false,
   });
 });
 

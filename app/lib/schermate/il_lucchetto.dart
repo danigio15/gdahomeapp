@@ -194,7 +194,7 @@ class _SchermataDelLucchettoState extends State<SchermataDelLucchetto> {
     final colori = Theme.of(context).colorScheme;
     final testi = Theme.of(context).textTheme;
     if (!_telefono.ceUnaGuardiaDelSistema) {
-      return StatoVuoto(
+      final vuoto = StatoVuoto(
         icona: Icons.lock_open_rounded,
         titolo: inLingua(
           it: 'Questo telefono non ha una guardia',
@@ -214,6 +214,19 @@ class _SchermataDelLucchettoState extends State<SchermataDelLucchetto> {
           onPressed: _cosaSaFare,
           icon: const Icon(Icons.refresh_rounded),
           label: Text(inLingua(it: 'Riguarda', en: 'Look again')),
+        ),
+        dentroUnaLista: widget.inTesta != null,
+      );
+      /* Quello che chi ospita mette in testa resta anche qui: la plancia e
+       * le novita' non dipendono dalla guardia del telefono, e senza
+       * guardia sparivano con lei. */
+      final sopra = widget.inTesta;
+      if (sopra == null) return vuoto;
+      return QuantoCiSta(
+        quanto: _quantoLarga,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+          children: [sopra, vuoto],
         ),
       );
     }

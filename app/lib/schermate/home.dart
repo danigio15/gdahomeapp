@@ -58,6 +58,7 @@ import '../notifiche/dietro_il_velo.dart';
 import '../notifiche/dove_apre.dart';
 import '../notifiche/postino.dart';
 import 'impostazioni_app.dart';
+import 'novita.dart';
 import 'navigatore_qui/qui.dart';
 import 'zigbee.dart';
 import 'misure.dart';
@@ -78,6 +79,8 @@ class Home extends StatefulWidget {
     required this.impostazioni,
     required this.guardia,
     this.veloSu,
+    this.davanti,
+    this.novita,
   });
 
   final Collegamento collegamento;
@@ -96,6 +99,14 @@ class Home extends StatefulWidget {
   /// Se il velo del lucchetto e' su (`main.dart`): i tasti delle notifiche
   /// aspettano che scenda ([DietroIlVelo]). Senza, partono subito.
   final ValueListenable<bool>? veloSu;
+
+  /// Se l'app sta davanti a qualcuno (`appDavanti` in `main.dart`): la
+  /// scheda delle novita' si apre solo allora. Senza, si da' per davanti.
+  final Future<bool> Function()? davanti;
+
+  /// Le novita' di questa app (`novita.dart`). Senza, quelle del suo
+  /// `CHANGELOG.md`.
+  final LeNovitaDellApp? novita;
 
   @override
   State<Home> createState() => _HomeState();
@@ -259,9 +270,100 @@ class _HomeState extends State<Home> {
     });
   }
 
+  /* ─── La scheda «Novità» ──────────────────────────────────────────────────
+   *
+   * La prima volta che si apre l'app dopo un aggiornamento, una scheda breve
+   * dice cosa e' cambiato (`novita.dart`). Cosa dire lo decide
+   * `casa/novita.dart`; **quando** dirlo lo sa solo la home, ed e' qui.
+   *
+   * Si apre solo con qualcuno davanti alla home: non sopra il benvenuto o
+   * l'abbinamento (li' la home non c'e' ancora), non sotto il lucchetto
+   * (il velo e' su: si aspetta che scenda), non con una pagina aperta sopra
+   * (un tocco su una notifica, il foglio «di chi e' questo telefono?»), non
+   * in macchina, e non con l'app svegliata senza schermo davanti — CarPlay,
+   * Android Auto, Salute, una notifica in background: li' si aspetta che
+   * torni davanti. Una volta per apertura, e poco dopo che la home si e'
+   * vista: una scheda che salta su nel primo fotogramma copre la casa prima
+   * che la si sia guardata. */
+  late final LeNovitaDellApp _novita =
+      widget.novita ?? LeNovitaDellApp(impostazioni: widget.impostazioni);
+  static const _novitaFraPoco = Duration(milliseconds: 1200);
+  bool _novitaFatte = false;
+  bool _novitaInCorso = false;
+  Timer? _novitaTimer;
+  AppLifecycleListener? _novitaAlRitorno;
+
+  void _forseLeNovita([Duration fra = _novitaFraPoco]) {
+    if (_novitaFatte || !mounted || !widget.impostazioni.sulTelefono) return;
+    _novitaTimer ??= Timer(fra, () {
+      _novitaTimer = null;
+      unawaited(_leNovita());
+    });
+  }
+
+  /// Se adesso la scheda si puo' aprire senza coprire niente di suo.
+  bool get _laHomeSiVede =>
+      mounted &&
+      widget.veloSu?.value != true &&
+      !inMacchina.value &&
+      (ModalRoute.of(context)?.isCurrent ?? true);
+
+  Future<void> _leNovita() async {
+    if (_novitaFatte || _novitaInCorso || !mounted) return;
+    /* Le impostazioni non ancora lette: non si sa cosa si e' visto. */
+    if (!widget.impostazioni.caricate) {
+      _forseLeNovita(const Duration(seconds: 1));
+      return;
+    }
+    if (!_laHomeSiVede) {
+      /* Il lucchetto e la macchina lo dicono da se' quando cambiano; una
+       * pagina sopra no, e allora si riguarda fra un po'. */
+      if (widget.veloSu?.value != true && !inMacchina.value) {
+        _forseLeNovita(const Duration(seconds: 3));
+      }
+      return;
+    }
+    _novitaInCorso = true;
+    try {
+      /* Nessuno davanti: si riprova quando l'app torna davanti. */
+      if (!await (widget.davanti?.call() ?? Future.value(true))) return;
+      final cosa = await _novita.daMostrare();
+      if (!mounted) return;
+      if (cosa == null) {
+        _novitaFatte = true;
+        await _novita.viste();
+        return;
+      }
+      if (!_laHomeSiVede) {
+        _forseLeNovita(const Duration(seconds: 3));
+        return;
+      }
+      _novitaFatte = true;
+      await apriLaSchedaDelleNovita(
+        context,
+        cosa: cosa,
+        versioniPrecedenti: () {
+          if (mounted) unawaited(apriLaPaginaDelleNovita(context, _novita));
+        },
+      );
+      /* Chiusa comunque — «Ho capito», il dito che la tira giu', un tocco
+       * fuori — e' vista: non ricompare fino alla prossima versione. */
+      await _novita.viste();
+    } finally {
+      _novitaInCorso = false;
+    }
+  }
+
+  void _veloCambiato() {
+    if (widget.veloSu?.value != true) _forseLeNovita();
+  }
+
   @override
   void initState() {
     super.initState();
+    widget.veloSu?.addListener(_veloCambiato);
+    _novitaAlRitorno = AppLifecycleListener(onResume: _forseLeNovita);
+    _forseLeNovita();
     inMacchina.addListener(_inMacchinaECambiato);
     /* Il postino puo' arrivare dopo la home (l'app aperta da una notifica):
      * appena c'e', ci si mette in ascolto e si prendono i tocchi in attesa. */
@@ -278,6 +380,9 @@ class _HomeState extends State<Home> {
 
   @override
   void dispose() {
+    widget.veloSu?.removeListener(_veloCambiato);
+    _novitaAlRitorno?.dispose();
+    _novitaTimer?.cancel();
     Postino.pronto.removeListener(_ascoltaLeNotifiche);
     Postino.istanza?.inSospeso.removeListener(_ascoltaLeNotifiche);
     _tocchi?.cancel();
@@ -458,7 +563,10 @@ class _HomeState extends State<Home> {
    * aperto sul telefono, si torna alla plancia; e finche' si e' in macchina
    * la sua voce del menu lo dice invece di aprirlo. */
   void _inMacchinaECambiato() {
-    if (!mounted || !inMacchina.value) return;
+    if (!mounted) return;
+    /* Scesi dalla macchina: se le novita' aspettavano, e' il momento. */
+    if (!inMacchina.value) _forseLeNovita();
+    if (!inMacchina.value) return;
     if (_sezione == Sezione.navigatore) {
       setState(() => _sezione = Sezione.plancia);
     }
@@ -934,6 +1042,7 @@ class _HomeState extends State<Home> {
                                   SchermataDelleImpostazioniDellApp(
                                     impostazioni: widget.impostazioni,
                                     guardia: widget.guardia,
+                                    novita: _novita,
                                     nuda: true,
                                     visibile:
                                         _sezione == Sezione.impostazioniDellApp,

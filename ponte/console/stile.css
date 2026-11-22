@@ -2259,6 +2259,70 @@ code {
   color: var(--testo);
 }
 
+/* L'uscita dal riabbinare: una riga piccola, che non si scambia per il tasto
+ * da premere. */
+.riabbina-avviso .come-link {
+  flex: 1 1 100%;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--acceso);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+/* «Apri GdAHome su questo telefono»: il tasto pieno, largo quanto il QR, e
+ * la riga piccola sotto che manda al codice. */
+.apri-qui {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+  max-width: 360px;
+}
+
+.apri-qui[hidden] {
+  display: none;
+}
+
+.apri-qui a.bottone {
+  width: 100%;
+  white-space: normal;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.apri-qui .minuta {
+  margin: 0;
+}
+
+/* Il codice da copiare, sotto il QR: sempre in vista. */
+.a-mano {
+  margin-top: 16px;
+}
+
+.a-mano[hidden] {
+  display: none;
+}
+
+.a-mano .spiegazione {
+  margin: 0;
+}
+
+.a-mano .codice {
+  user-select: all;
+  -webkit-user-select: all;
+}
+
+.a-mano button {
+  margin-top: 10px;
+  width: 100%;
+}
+
 .riabbina-avviso[hidden] {
   display: none;
 }

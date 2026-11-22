@@ -7,17 +7,13 @@
  * esegue il ponte (`ponte/src/le-luci-di-natale.js`), che gira anche quando
  * nessuno ha la plancia aperta.
  *
- * ── Una scheda che c'e' solo quando serve ─────────────────────────────────
+ * ── Una scheda che c'e' tutto l'anno ──────────────────────────────────────
  *
- * Le feste sono una sorpresa: per tutto l'anno questa linguetta non c'e', e
- * nemmeno la ricerca della configurazione trova la sua casella
- * (`cerca-nel-config-section.js`). Compare da sola quando comincia la festa
- * (`inFesta` in `core/feste.js`) e se ne va da sola quando finisce. Quello che
- * c'era scritto resta, e l'anno dopo l'albero e' ancora li'.
- *
- * Per lo stesso motivo nei testi qui dentro non c'e' una data, ne' una parola
- * su quello che la plancia fa da sola in quei giorni: la scheda parla delle
- * luci e basta.
+ * L'albero si monta prima delle feste: la scheda c'e' sempre, e con lei il
+ * riquadro in Home e l'orario, che qui si possono spegnere. Quello che la
+ * plancia fa da sola nei giorni di festa non la riguarda: per questo nei
+ * testi qui dentro non c'e' una data, ne' una parola su quello. La scheda
+ * parla delle luci e basta.
  *
  * ── Si salva a ogni scelta ────────────────────────────────────────────────
  *
@@ -35,7 +31,6 @@ import {
   eUnaLuceDiNatale,
   festePulite,
   iconaDellaLuce,
-  inFesta,
   intervalloDelGiorno,
   luciDaProporre,
   oraDi,
@@ -210,6 +205,29 @@ function orariMarkup(config, states) {
   </div>`;
 }
 
+/* ── i due interruttori ─────────────────────────────────────────────────── */
+
+/* Il riquadro in Home e l'orario: tutt'e due di serie accesi, e si spengono
+ * qui (a fine stagione, o per chi le luci le comanda solo a mano). */
+function interruttoriMarkup(config) {
+  const riga = (chiave, acceso, titolo, sotto) =>
+    `<label class="fe-ed-interruttore"><input type="checkbox" data-fe-interruttore="${chiave}"${acceso ? " checked" : ""}><span><b>${esc(titolo)}</b><small>${esc(sotto)}</small></span></label>`;
+  return `<div class="fe-ed-interruttori">${riga(
+    "riquadro",
+    config.riquadro,
+    t("Riquadro in Home", "Panel on Home"),
+    t("Le luci in Home, con «Spegni tutte».", "The lights on Home, with “Turn all off”."),
+  )}${riga(
+    "automatico",
+    config.automatico,
+    t("Accensione automatica", "Automatic switching"),
+    t(
+      "Si accendono e si spengono da sole all'orario qui sotto.",
+      "They switch on and off by themselves at the times below.",
+    ),
+  )}</div>`;
+}
+
 /* ── la scheda ──────────────────────────────────────────────────────────── */
 
 export function schedaMarkup(config, states = {}) {
@@ -252,7 +270,8 @@ export function schedaMarkup(config, states = {}) {
       }</p>
       ${righe.length ? `<div class="fe-ed-righe">${righe.join("")}</div>` : ""}
       ${aggiungi || trovate ? `<div class="fe-ed-aggiungi">${aggiungi}${trovate}</div>` : ""}
-      ${orariMarkup(config, states)}
+      ${interruttoriMarkup(config)}
+      ${config.automatico ? orariMarkup(config, states) : ""}
     </section>
   </div>`;
 }
@@ -261,12 +280,6 @@ export function ensureLuciDiNataleTab() {
   const linguette = doc?.querySelector(".ed-tab")?.parentElement;
   if (!linguette) return false;
   const gia = linguette.querySelector(`.ed-tab[data-tab="${LUCI_DI_NATALE_TAB}"]`);
-  /* Fuori dalle feste la linguetta non c'e'. Se c'era (il config aperto a
-   * cavallo della mezzanotte del 7 gennaio) se ne va. */
-  if (!inFesta(new Date())) {
-    gia?.remove();
-    return false;
-  }
   if (gia) return false;
   const linguetta = doc.createElement("button");
   linguetta.className = "ed-tab";
@@ -289,7 +302,6 @@ export function ensureLuciDiNataleEditor() {
     }
     return false;
   }
-  if (!inFesta(new Date())) return false;
   const states = allStates() || {};
   const config = salvate();
   const markup = schedaMarkup(config, states);
@@ -443,6 +455,15 @@ function onClick(event) {
 function onChange(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva() !== LUCI_DI_NATALE_TAB || !body.contains(event.target)) return;
+  const interruttore = event.target.closest?.("[data-fe-interruttore]");
+  if (interruttore) {
+    const quale = interruttore.dataset.feInterruttore;
+    if (quale === "riquadro" || quale === "automatico") {
+      salva({ ...salvate(), [quale]: Boolean(interruttore.checked) });
+      ridisegna({ forza: true });
+    }
+    return;
+  }
   const campo = event.target.closest?.("[data-fe-orario]");
   if (!campo) return;
   const config = salvate();
@@ -504,6 +525,11 @@ html[data-theme="dark"] #ed-body .fe-ed-piu{background:#f8fafc;border-color:#f8f
 #ed-body .fe-ed-nota{font-size:11.5px;line-height:1.45;color:var(--text-dim,#64748b)}
 #ed-body .fe-ed-luna{font-size:18px}
 #ed-body .fe-ed-giorni{display:flex;gap:6px;flex-wrap:wrap}
+#ed-body .fe-ed-interruttori{display:grid;gap:8px;margin-top:14px}
+#ed-body .fe-ed-interruttore{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--divider-color,#e2e8f0);border-radius:12px;cursor:pointer}
+#ed-body .fe-ed-interruttore input{width:18px;height:18px;margin:2px 0 0;flex:0 0 auto;accent-color:var(--primary-color,#0ea5e9)}
+#ed-body .fe-ed-interruttore span{display:grid;gap:2px}
+#ed-body .fe-ed-interruttore small{color:var(--secondary-text-color,#64748b);font-size:12.5px}
 #ed-body .fe-ed-giorno{width:36px;height:36px;border-radius:50%;border:1px solid var(--divider-color,#e2e8f0);background:var(--card-background-color,#fff);color:var(--text-dim,#64748b);font-weight:800;font-size:13px;cursor:pointer;text-transform:uppercase}
 #ed-body .fe-ed-giorno.si{background:#0f172a;border-color:#0f172a;color:#fff}
 html[data-theme="dark"] #ed-body .fe-ed-giorno.si{background:#f5d27a;border-color:#f5d27a;color:#1f1300}
