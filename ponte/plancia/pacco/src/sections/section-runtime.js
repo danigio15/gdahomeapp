@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-OKRHXQNU.js";
+} from "../../chunk-V2S33LNI.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -134109,6 +134109,12 @@ function stile6() {
     righe4.push(
       `${voce3.nastro}{padding-top:${voce3.sopra}px!important;padding-bottom:${voce3.sotto}px!important}`
     );
+    if (voce3.fila) {
+      righe4.push(`${voce3.nastro}{justify-content:flex-start!important}`);
+      righe4.push(
+        `${voce3.nastro} ${voce3.fila}{margin-left:auto!important;margin-right:auto!important}`
+      );
+    }
   }
   const conMouse = [];
   for (const voce3 of NASTRI) {
