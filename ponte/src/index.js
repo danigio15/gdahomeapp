@@ -58,6 +58,7 @@ import { Viaggi } from "./viaggi.js";
 import { Fornitori } from "./fornitori.js";
 import { IlCorpoDalTelefono } from "./il-corpo-dal-telefono.js";
 import { RicaricaDiNotte } from "./ricarica-di-notte.js";
+import { LuciDiNatale } from "./le-luci-di-natale.js";
 import { StoricoDelClima } from "./storico-del-clima.js";
 import { TelefoniAlTramite } from "./telefoni-al-tramite.js";
 import { Automazioni } from "./automazioni.js";
@@ -584,6 +585,17 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     registro,
   });
   commissioni.ricaricaDiNotte = ricaricaDiNotte;
+  /* Le luci di Natale: al tramonto (o all'ora scelta) si accendono, all'ora
+   * di spegnimento si spengono, anche a plancia chiusa — e solo nelle feste.
+   * Come la ricarica di notte: le impostazioni dalla plancia principale, gli
+   * stati dallo specchio della casa (`le-luci-di-natale.js`). */
+  const luciDiNatale = new LuciDiNatale({
+    cartella: opzioni.cartella,
+    casa,
+    configurazione,
+    stati: (id) => notifiche.sentinella?.stati?.get(id) ?? null,
+    registro,
+  });
   /* Lo storico del clima: ogni ora il ponte riassume i giorni chiusi che la
    * storia di Home Assistant ha ancora, e li tiene per il report del clima
    * anche quando la storia li ha dimenticati (`storico-del-clima.js`). */
@@ -796,6 +808,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
   void notifiche.parti();
   viaggi.parti();
   ricaricaDiNotte.parti();
+  luciDiNatale.parti();
   storicoDelClima.parti();
   automazioni.parti();
   postino.parti();
@@ -929,6 +942,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     fornitori.ferma();
     ilCorpo.ferma();
     ricaricaDiNotte.ferma();
+    luciDiNatale.ferma();
     storicoDelClima.ferma();
     automazioni.ferma();
     postino.ferma();
@@ -954,6 +968,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     notifiche,
     viaggi,
     ricaricaDiNotte,
+    luciDiNatale,
     storicoDelClima,
     automazioni,
     ritorno,

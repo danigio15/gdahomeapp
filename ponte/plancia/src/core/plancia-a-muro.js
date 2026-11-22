@@ -1752,6 +1752,7 @@ export function fonteDaiValori(valori = {}) {
     invertiti: json(valori.cd_stati_invertiti, []),
     rapidoGlobale: json(valori.cd_clima_rapido, null),
     rapidoPerUnita: json(valori.cd_clima_rapido_unita, {}),
+    feste: json(valori.cd_feste, null),
   });
 }
 
@@ -1813,6 +1814,10 @@ export function fonteDalleSezioni(sezioni = {}, altro = {}) {
   const versi = versiDellaPlancia(sezioni.energy);
   const conVersi = Object.values(versi).some((v) => typeof v === "string" && v);
   return {
+    /* Le luci di Natale della plancia di origine (`cd_feste`): la scena delle
+     * feste sul riposo dice fino a quando restano accese. Come sono scritte:
+     * le ripulisce chi le legge (`festePulite`). */
+    feste: altro.feste && typeof altro.feste === "object" ? altro.feste : null,
     /* Le misure dell'energia che la plancia di origine ha gia' scelto: rete
      * e batteria col verso della sua scheda Energia. Una plancia senza il
      * modello (le piu' vecchie) dice solo gli alias. */

@@ -374,7 +374,12 @@
  * anomalie — con la loro etichetta, e se si vedono anche in Home. Sono
  * sensori della casa: scelti dal computer, il tablet in cucina deve dire le
  * stesse anomalie. */
-export const CONFIG_KEYS_REVISION = 78;
+/* La revisione 79 aggiunge le luci di Natale (`cd_feste`): quali entita' sono
+ * l'albero, il presepe, il balcone, e quando si accendono e si spengono. Sono
+ * luci della casa, e l'orario lo esegue il ponte anche a plancia chiusa:
+ * scelte dal computer, devono valere dal tablet e dal telefono, e il ponte le
+ * legge dalla plancia principale come tutte le altre. */
+export const CONFIG_KEYS_REVISION = 79;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -710,4 +715,7 @@ export const CONFIG_KEYS = Object.freeze([
   /* I testi della sicurezza: la ragione per cui stanno qui è scritta accanto
    * alla revisione 78. */
   "cd_testi_sicurezza",
+  /* Le luci di Natale: la ragione per cui stanno qui è scritta accanto alla
+   * revisione 79. */
+  "cd_feste",
 ]);

@@ -72,6 +72,18 @@ import {
   vistaDelMeteo,
 } from "./meteo-section.js";
 import { oggettoWidget } from "../core/oggetti-widget.js";
+import { CHIAVE_FESTE } from "../core/feste.js";
+import {
+  animaLeFeste,
+  fermaLeFeste,
+  passaSopraLaNotte,
+  riposoDeiFuochi,
+  riposoDelConto,
+  riposoDellaVigilia,
+  scenaDelleFeste,
+  stileDelleFesteAlMuro,
+  teleDaTenere,
+} from "./feste-al-muro.js";
 import { EVENTO_DEL_MURO, IN_VISTA_KEY } from "../core/state-event-gate.js";
 import {
   comandoDelLettore,
@@ -408,6 +420,7 @@ function fonteDiQui() {
       invertiti: readJson("cd_stati_invertiti", []),
       rapidoGlobale: readJson("cd_clima_rapido", null),
       rapidoPerUnita: readJson("cd_clima_rapido_unita", {}),
+      feste: readJson("cd_feste", null),
     },
   );
 }
@@ -4057,6 +4070,12 @@ function chiudiFinestra() {
 
 function riposo(muro) {
   const o = orologio();
+  /* Le feste (`feste-al-muro.js`): l'ultima ora dell'anno e i primi dieci
+   * minuti del nuovo passano sopra tutto, anche sopra il nero della notte —
+   * a mezzanotte si guarda il tablet apposta. */
+  const festa = scenaDelleFeste(new Date());
+  if (festa === "conto") return riposoDelConto(new Date());
+  if (festa === "fuochi") return riposoDeiFuochi(new Date());
   /* Con la luminosita' accesa la notte la dice lei, e il nero e' il suo 0%:
    * al 3% l'orologio resta, e il buio lo fa la retroilluminazione. */
   const notte = muro.luce?.attiva ? Boolean(luce.notte && muro.luce.notte === 0) : eNotte(muro);
@@ -4107,6 +4126,34 @@ function riposo(muro) {
         ? persone.nomi.join(" · ")
         : `${persone.inCasa} ${t("in casa", "at home")}`;
   const aperte = finestreAperte().length;
+  /* Nelle feste, il resto del riposo e' la Vigilia: le stesse cose — l'ora,
+   * il tempo, i gradi in casa, le finestre aperte, gli avvisi — sopra la
+   * scena col bosco e la baita. Il nero della notte, qui sopra, resta nero. */
+  if (festa === "vigilia")
+    return riposoDellaVigilia({
+      ora: o.ora,
+      lungo: o.lungo,
+      meteo: m
+        ? {
+            condizione: m.condizione,
+            gradi: !soloCasa && numero(m.temperatura) !== null ? `${decimale(m.temperatura, 0)}°` : "",
+            parola: PAROLE_DEL_METEO()[m.condizione] || "",
+          }
+        : null,
+      casa: dentro ? { testo: dentro, dove: doveDellaTemperatura(fuori) } : null,
+      aperte: aperte
+        ? {
+            quante: aperte,
+            parola: aperte === 1 ? t("finestra aperta", "window open") : t("finestre aperte", "windows open"),
+          }
+        : null,
+      avvisi: chip,
+      pila: pilaDelRiposo(muro),
+      feste: state.fonte?.feste ?? readJson(CHIAVE_FESTE, null),
+      states: allStates() || {},
+      deriva: d,
+      fioco: notte && !muro.luce?.attiva,
+    });
   return `<div class="mu-riposo${notte && !muro.luce?.attiva ? " fioco" : ""}" data-mu-fa="sveglia"><div class="mu-deriva" ${deriva}>
     ${chip ? `<div class="mu-avvisi">${chip}</div>` : ""}
     <div class="mu-osw mu-orologione">${esc(o.ora)}</div>
@@ -4878,7 +4925,10 @@ function regolaLaLuce() {
     vaARiposo();
     if (muro.riposo.torna !== false) state.pagina = 0;
   }
-  const livello = livelloDellaLuce(muro, { vicino: Boolean(fonte), notte: luce.notte });
+  /* L'ultima ora dell'anno e i fuochi si guardano: lo schermo resta alla
+   * luce di chi e' vicino, anche se di notte sarebbe al minimo. */
+  const festa = passaSopraLaNotte(scenaDelleFeste(new Date(adesso)));
+  const livello = livelloDellaLuce(muro, { vicino: Boolean(fonte) || festa, notte: luce.notte });
   const detta = livello === null ? null : String(livello);
   if (detta !== luce.detta) {
     mandaAlloSchermo(`luce:${detta ?? "no"}`);
@@ -4941,6 +4991,7 @@ function restituisciLoSchermo() {
 }
 
 function togliLaTela() {
+  fermaLeFeste();
   smettiDiSquillare();
   restituisciLoSchermo();
   diciAlloSchermo("acceso", false);
@@ -5114,12 +5165,21 @@ export function disegna() {
   battitoDellaMusica();
   rimettiLaVoce(nodo);
   if (state.riposo) posizionaIlRiposo(nodo);
+  animaLeFeste(nodo, { ridisegna: () => disegna() });
   /* «Tieni lo schermo acceso»: con un campanello che puo' suonare, lo schermo
    * non si spegne da solo — di notte resta al minimo. */
   diciAlloSchermo("acceso", schermoSempreAcceso(muro));
   /* Con la luminosita' accesa la notte la fa `luce:`: due voci che comandano
    * la stessa luce si darebbero torto a vicenda. */
-  diciAlloSchermo("spento", Boolean(!muro.luce?.attiva && state.riposo && eNotte(muro)));
+  diciAlloSchermo(
+    "spento",
+    Boolean(
+      !muro.luce?.attiva &&
+        state.riposo &&
+        eNotte(muro) &&
+        !passaSopraLaNotte(scenaDelleFeste(new Date())),
+    ),
+  );
 }
 
 /* Il blocco del riposo va dove dice derivaDelRiposo, ma dentro lo spazio che
@@ -5145,6 +5205,8 @@ function posizionaIlRiposo(nodo) {
 /* Nel ridisegno, la telecamera e la copertina che ci sono gia' restano
  * quelle: col loro fotogramma, senza ricaricarsi. */
 function siTiene(vecchio, nuovo) {
+  /* E le tele delle feste, col loro disegno. */
+  if (teleDaTenere(vecchio, nuovo)) return true;
   if (vecchio.nodeName !== "IMG") return false;
   const telecamera = vecchio.dataset?.muTelecamera;
   if (telecamera) return telecamera === nuovo.dataset?.muTelecamera;
@@ -7847,6 +7909,7 @@ ${MURO}[data-verso="verticale"] .mu-reg-coppie{grid-template-columns:repeat(auto
 #${ID}[data-leggero="1"] .mu-mp-arte{box-shadow:none}
 #${ID}[data-leggero="1"] .mu-velo{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(5,8,15,.8)}
 #${ID}[data-leggero="1"] *,#${ID}[data-leggero="1"] *::before,#${ID}[data-leggero="1"] *::after{transition:none!important}
+${stileDelleFesteAlMuro(MURO)}
 `,
   );
 }
