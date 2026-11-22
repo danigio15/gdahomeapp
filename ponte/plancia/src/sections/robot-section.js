@@ -135,6 +135,10 @@ function teachNavVisibility() {
     const map = previous.apply(this, args) || {};
     return { ...map, [ROBOT_TAB]: ROBOT_TAB };
   };
+  /* I segni di chi ha avvolto prima si portano avanti (vedi `wrapFunction` in
+   * shared.js): senza, ognuno riavvolgeva la funzione degli altri a ogni
+   * giro, e la catena cresceva finche' la pila non bastava piu'. */
+  Object.assign(wrapped, previous);
   wrapped.__dmRobot = true;
   wrapped.__dmPrevious = previous;
   root.cdNavVisMap = wrapped;

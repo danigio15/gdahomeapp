@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-23EOT7LH.js";
+} from "../../chunk-GIIIIUO4.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -12635,8 +12635,10 @@ function registry() {
 }
 function sourceView(states, model2) {
   const view = {};
-  for (const id of signedSourceEntities(model2))
+  for (const id of signedSourceEntities(model2)) {
+    if (isDerivedEntity(id)) continue;
     view[id] = states?.[id] || root.__HASS__?.states?.[id] || root.hass?.states?.[id];
+  }
   return view;
 }
 function refreshDerivedStates() {
@@ -46493,6 +46495,7 @@ function insegnaLaVisibilita() {
     const mappa2 = precedente.apply(this, args) || {};
     return { ...mappa2, [ANIMALI_TAB]: ANIMALI_TAB };
   };
+  Object.assign(avvolta, precedente);
   avvolta.__dmAnimali = true;
   avvolta.__dmPrevious = precedente;
   root.cdNavVisMap = avvolta;
@@ -89370,6 +89373,7 @@ function teachNavVisibility() {
     const map = previous.apply(this, args) || {};
     return { ...map, [ROOMS_TAB]: ROOMS_TAB };
   };
+  Object.assign(wrapped, previous);
   wrapped.__dmStanze = true;
   wrapped.__dmPrevious = previous;
   root.cdNavVisMap = wrapped;
@@ -139499,6 +139503,7 @@ function teachNavVisibility2() {
     const map = previous.apply(this, args) || {};
     return { ...map, [ROBOT_TAB]: ROBOT_TAB };
   };
+  Object.assign(wrapped, previous);
   wrapped.__dmRobot = true;
   wrapped.__dmPrevious = previous;
   root.cdNavVisMap = wrapped;
@@ -140514,7 +140519,9 @@ function teachNavVisibility3() {
     const map = previous.apply(this, args) || {};
     return { ...map, [GDANAV_TAB]: GDANAV_TAB };
   };
+  Object.assign(wrapped, previous);
   wrapped.__dmGdanav = true;
+  wrapped.__dmPrevious = previous;
   root.cdNavVisMap = wrapped;
 }
 var ICONE2 = { una: "📅", settimana: "🔁", tappe: "🗺️" };
@@ -149083,6 +149090,7 @@ function insegnaLaVisibilita2() {
     const mappa2 = prima.apply(this, args) || {};
     return { ...mappa2, [AUTOMAZIONI_CASA_TAB]: AUTOMAZIONI_CASA_TAB };
   };
+  Object.assign(avvolta, prima);
   avvolta.__dmAutomazioni = true;
   avvolta.__dmPrevious = prima;
   root.cdNavVisMap = avvolta;

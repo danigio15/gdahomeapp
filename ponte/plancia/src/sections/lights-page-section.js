@@ -403,6 +403,10 @@ function teachNavVisibility() {
     const map = previous.apply(this, args) || {};
     return { ...map, [LIGHTS_TAB]: LIGHTS_TAB };
   };
+  /* I segni di chi ha avvolto prima si portano avanti (vedi `wrapFunction` in
+   * shared.js): senza, ognuno riavvolgeva la funzione degli altri a ogni
+   * giro, e la catena cresceva finche' la pila non bastava piu'. */
+  Object.assign(wrapped, previous);
   wrapped.__dmLightsPage = true;
   wrapped.__dmPrevious = previous;
   root.cdNavVisMap = wrapped;

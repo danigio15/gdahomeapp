@@ -2091,6 +2091,10 @@ function insegnaLaVisibilitaDelCruscotto() {
     const mappa = precedente.apply(this, args) || {};
     return { ...mappa, [CRUSCOTTO_TAB]: CRUSCOTTO_TAB };
   };
+  /* I segni di chi ha avvolto prima si portano avanti (vedi `wrapFunction` in
+   * shared.js): senza, ognuno riavvolgeva la funzione degli altri a ogni
+   * giro, e la catena cresceva finche' la pila non bastava piu'. */
+  Object.assign(avvolta, precedente);
   avvolta.__dmCruscotto = true;
   avvolta.__dmPrevious = precedente;
   root.cdNavVisMap = avvolta;
