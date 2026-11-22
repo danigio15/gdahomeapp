@@ -74,6 +74,8 @@ const SCHEDA_DELLA_CASELLA = Object.freeze({
   cd_antifurto_modi: "sez4",
   cd_testi_sicurezza: "sez4",
   cd_feste: "feste",
+  /* La plancia a muro, riposo compreso (lo stile, le foto, la notte). */
+  cd_muro: "muro",
   cd_security_doors: "doors",
   cd_clima_units: "sez9",
   cd_termico_caldo: "sez9",

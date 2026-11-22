@@ -63,6 +63,18 @@ import {
   tipoDelCampanello,
 } from "../core/il-campanello-a-muro.js";
 import { suonaIlCampanello } from "./il-suono-del-campanello.js";
+import { disegnaIlFondoDelCielo } from "./il-riposo-vivo-al-muro.js";
+import {
+  EVENTO_FOTO_DEL_RIPOSO,
+  FOTO_AL_MASSIMO,
+  caricaUnaFoto,
+  elencoDelleFoto,
+  fotoConosciute,
+  indirizzoDellaFoto,
+  miniaturaInMemoria,
+  togliUnaFoto,
+} from "./le-foto-del-riposo.js";
+import { scenaDelCielo } from "../core/il-riposo-vivo.js";
 import { EVENTO_IMMAGINE, bloccoImmagineMarkup } from "./riquadri-con-immagine-section.js";
 import {
   allStates,
@@ -70,6 +82,7 @@ import {
   doc,
   esc,
   installStyle,
+  locale,
   onEditorRedraw,
   readJson,
   root,
@@ -92,6 +105,11 @@ const state = (root[KEY] ||= {
   aperta: 0,
   /* «Altre impostazioni» aperte o chiuse. */
   altro: false,
+  /* Le foto della cornice: cosa si sta facendo (una riga per chi carica) e
+   * quale foto aspetta il secondo tocco per essere tolta. */
+  fotoStato: "",
+  fotoDaTogliere: "",
+  fotoChieste: false,
 });
 
 export const MURO_EDITOR_TAB = "muro";
@@ -126,6 +144,212 @@ async function chiediAlPonte() {
     state.chiedendo = false;
     ridisegna();
   }
+}
+
+/* ── lo stile del riposo ─────────────────────────────────────────────────
+ *
+ * «Orologio», «Cielo di casa» o «Cornice foto» (`core/il-riposo-vivo.js`),
+ * con una prova piccola di come viene, e per la cornice le sue foto: si
+ * caricano da qui — anche dal telefono, che apre la sua galleria — e le
+ * tiene il ponte, in casa. */
+const STILI_DEL_RIPOSO = () => [
+  ["orologio", t("Orologio", "Clock")],
+  ["cielo", t("Cielo di casa", "Home sky")],
+  ["foto", t("Cornice foto", "Photo frame")],
+];
+const COSA_FA_LO_STILE = () => ({
+  orologio: t(
+    "L'ora grande che si sposta piano, su un fondo scuro",
+    "The big clock that moves slowly, on a dark background",
+  ),
+  cielo: t(
+    "Un cielo vivo che segue l'ora e il meteo di casa: l'alba, il tramonto, le nuvole, la pioggia, la neve, e di notte le stelle con la luna nella sua fase",
+    "A living sky that follows the time and the weather at home: sunrise, sunset, clouds, rain, snow, and at night the stars with the moon in its phase",
+  ),
+  foto: t(
+    "Le foto di casa a tutto schermo, in dissolvenza, con l'ora piccola e il meteo in basso",
+    "Your home photos full screen, fading into each other, with a small clock and the weather at the bottom",
+  ),
+});
+
+function righeDelloStile(m) {
+  const stile = m.riposo.stile;
+  const righe = [
+    riga(
+      t("Stile del riposo", "Rest screen style"),
+      COSA_FA_LO_STILE()[stile],
+      scelte("riposo.stile", stile, STILI_DEL_RIPOSO()),
+    ),
+    provaDelRiposo(m),
+  ];
+  if (stile === "foto") {
+    righe.push(
+      riga(
+        t("Cambia foto ogni", "Change photo every"),
+        t("Con una dissolvenza e un avvicinamento lentissimo", "With a fade and a very slow zoom"),
+        scelte("riposo.ogni", m.riposo.ogni, [
+          [30, "30 s"],
+          [60, "1 min"],
+          [300, "5 min"],
+        ]),
+      ),
+      fotoDellaCornice(),
+    );
+  }
+  return righe.join("");
+}
+
+/* La prova: un tablet piccolo con lo stile scelto, l'ora e la data. Il cielo
+ * e' quello vero di adesso; la cornice mostra la prima foto, e senza foto il
+ * cielo su cui ripiega. */
+function provaDelRiposo(m) {
+  const stile = m.riposo.stile;
+  const foto = fotoConosciute() || [];
+  const conFoto = stile === "foto" && foto.length > 0;
+  const adesso = new Date();
+  const ora = adesso.toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" });
+  const data = adesso.toLocaleDateString(locale(), {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+  const fondo = conFoto
+    ? `<img class="mu-ed-prova-foto" data-mu-ed-mini="${esc(foto[0].id)}" src="${esc(miniaturaInMemoria(foto[0].id))}" alt="">`
+    : stile === "orologio"
+      ? ""
+      : `<canvas class="mu-ed-prova-cielo" data-mu-ed-cielo></canvas>`;
+  return riga(
+    t("Come si vede", "How it looks"),
+    t(
+      "Una prova piccola, con l'ora e il cielo di adesso",
+      "A small preview, with the current time and sky",
+    ),
+    `<div class="mu-ed-prova-riposo" data-stile="${esc(conFoto ? "foto" : stile)}" aria-hidden="true">${fondo}
+    <div class="mu-ed-prova-testo"><b>${esc(ora)}</b><span>${esc(data)}</span></div></div>`,
+  );
+}
+
+function fotoDellaCornice() {
+  const foto = fotoConosciute();
+  const quante = foto?.length || 0;
+  const voci = (foto || [])
+    .map((f) => {
+      const togli = state.fotoDaTogliere === f.id;
+      return `<div class="mu-ed-foto-voce${togli ? " togli" : ""}"><img data-mu-ed-mini="${esc(f.id)}" src="${esc(miniaturaInMemoria(f.id))}" alt="" loading="lazy"><button type="button" data-mu-ed-foto-togli="${esc(f.id)}" aria-label="${esc(t("Togli questa foto", "Remove this photo"))}">${togli ? esc(t("Togli?", "Remove?")) : "✕"}</button></div>`;
+    })
+    .join("");
+  const pieno = quante >= FOTO_AL_MASSIMO;
+  return `<div class="mu-ed-foto" data-mu-ed-foto>
+    <div class="mu-ed-testo"><b>${esc(t("Le foto della cornice", "The frame's photos"))}</b><small>${esc(
+      foto === null
+        ? t("Chiedo al ponte…", "Asking the bridge…")
+        : `${quante} / ${FOTO_AL_MASSIMO} · ${t(
+            "restano in casa: le tiene il ponte, non vanno su internet",
+            "they stay at home: the bridge keeps them, they do not go on the internet",
+          )}`,
+    )}</small></div>
+    ${
+      quante
+        ? `<div class="mu-ed-foto-griglia">${voci}</div>`
+        : foto === null
+          ? ""
+          : `<div class="mu-ed-nota mu-ed-foto-invito">${esc(
+              t(
+                "Nessuna foto ancora. Finché non ne carichi almeno una, il riposo mostra il Cielo di casa.",
+                "No photos yet. Until you upload at least one, the rest screen shows the Home sky.",
+              ),
+            )}</div>`
+    }
+    <div class="mu-ed-foto-azioni">${
+      pieno
+        ? ""
+        : `<label class="ed-btn-add mu-ed-foto-aggiungi">＋ ${esc(t("Aggiungi foto", "Add photos"))}<input type="file" accept="image/jpeg,image/png,image/webp" multiple data-mu-ed-foto-file hidden></label>`
+    }<span class="mu-ed-foto-stato" role="status" data-mu-ed-foto-stato>${esc(state.fotoStato)}</span></div>
+  </div>`;
+}
+
+/* Dopo il disegno della scheda: le miniature che non erano in memoria si
+ * chiedono al ponte, e la prova del cielo si dipinge. */
+function riempiIlRiposo() {
+  const body = doc?.getElementById?.("ed-body");
+  if (!body) return;
+  for (const img of body.querySelectorAll("img[data-mu-ed-mini]")) {
+    if (img.getAttribute("src")) continue;
+    const id = img.dataset.muEdMini;
+    indirizzoDellaFoto(id, { mini: true }).then((url) => {
+      if (url && img.isConnected) img.src = url;
+    });
+  }
+  const tela = body.querySelector("canvas[data-mu-ed-cielo]");
+  if (tela) {
+    const w = Math.round(tela.clientWidth) || 320;
+    const h = Math.round(tela.clientHeight) || 200;
+    const d = Math.min(2, Number(root.devicePixelRatio) || 1);
+    tela.width = Math.round(w * d);
+    tela.height = Math.round(h * d);
+    const x = tela.getContext("2d");
+    if (x) {
+      x.setTransform(d, 0, 0, d, 0, 0);
+      const stati = allStates() || {};
+      const meteo = entitaDelMeteoDelMuro(bozza(), state.fonte || {}, stati);
+      disegnaIlFondoDelCielo(
+        x,
+        w,
+        h,
+        scenaDelCielo({ stati, condizione: meteo ? stati[meteo]?.state : "" }),
+      );
+    }
+  }
+  /* L'elenco delle foto si chiede una volta per apertura della scheda. */
+  if (bozza().riposo.stile === "foto" && !state.fotoChieste) {
+    state.fotoChieste = true;
+    elencoDelleFoto({ forza: true }).catch(() => {});
+  }
+}
+
+const diciDelleFoto = (testo) => {
+  state.fotoStato = testo;
+  const posto = doc?.querySelector?.("#ed-body [data-mu-ed-foto-stato]");
+  if (posto) posto.textContent = testo;
+};
+
+const perCheNo = (errore) =>
+  errore?.code === "unauthorized"
+    ? t(
+        "Le foto della cornice le carica e le toglie solo chi amministra la casa.",
+        "Only whoever administers the home can add or remove the frame's photos.",
+      )
+    : errore?.code === "storage_full"
+      ? t(
+          "Ci sono già 60 foto: togline qualcuna prima di caricarne altre.",
+          "There are already 60 photos: remove some before adding more.",
+        )
+      : clean(errore?.message) || t("Non ha funzionato.", "It did not work.");
+
+async function caricaLeFoto(file) {
+  const posto = Math.max(0, FOTO_AL_MASSIMO - (fotoConosciute()?.length || 0));
+  const scelte = [...(file || [])].slice(0, posto);
+  if (!scelte.length) return;
+  let fatte = 0;
+  try {
+    const tutte = scelte.length;
+    for (const [n, uno] of scelte.entries()) {
+      const numero = n + 1;
+      diciDelleFoto(
+        t(`Carico la foto ${numero} di ${tutte}…`, `Uploading photo ${numero} of ${tutte}…`),
+      );
+      await caricaUnaFoto(uno);
+      fatte += 1;
+    }
+    diciDelleFoto(
+      fatte === 1
+        ? t("Foto caricata.", "Photo uploaded.")
+        : t(`${fatte} foto caricate.`, `${fatte} photos uploaded.`),
+    );
+  } catch (errore) {
+    diciDelleFoto(perCheNo(errore));
+  }
+  ridisegna();
 }
 
 const interruttore = (via, acceso, etichetta) =>
@@ -1478,9 +1702,18 @@ function corpoMarkup() {
         null,
       )}${interruttore("riposo.attivo", m.riposo.attivo, "riposo")}`,
     )}
+    ${righeDelloStile(m)}
     ${riga(t("Al riposo torna alla prima pagina", "On rest go back to the first page"), t("Spento, il tablet resta sulla pagina dov'era", "Off, the tablet stays on the page it was on"), interruttore("riposo.torna", m.riposo.torna, "torna"))}
     ${m.temperatura === "casa" ? "" : riga(t("Temperatura sul riposo", "Temperature on the rest screen"), t("Vuoto: quella della stanza della prima pagina", "Empty: the one of the first page's room"), cerca("riposo.sensore", m.riposo.sensore, { domini: "sensor", segnaposto: t("Sensore della temperatura", "Temperature sensor") }))}${m.temperatura === "casa" ? "" : dovesta(m)}
     ${riga(t("Di notte schermo nero", "Black screen at night"), t("Nella fascia scelta il riposo spegne anche l'orologio", "In the chosen hours rest turns off the clock too"), `${campo("notte.da", m.notte.da, "23:00", "time")}${campo("notte.a", m.notte.a, "06:30", "time")}${interruttore("notte.attiva", m.notte.attiva, "notte")}`)}
+    ${riga(
+      t("Anche di notte, al minimo", "At night too, at the minimum"),
+      t(
+        "Di notte il riposo resta acceso, appena visibile, invece dello schermo nero",
+        "At night the rest screen stays on, barely visible, instead of going black",
+      ),
+      interruttore("riposo.notteAlMinimo", m.riposo.notteAlMinimo, "notte-al-minimo"),
+    )}
     ${luceMarkup(m)}
     ${riga(t("Avvisi sul riposo", "Alerts while resting"), t("Gli avvisi personalizzati accesi e l'antifurto che suona compaiono anche a schermo spento", "Active custom alerts and a triggered alarm show even on the rest screen"), interruttore("avvisi", m.avvisi, "avvisi"))}
     ${riga(t("Avvisi a tutto schermo", "Full-screen alerts"), t("Quando un avviso si accende o l'antifurto suona, il pannello si sveglia e lo mostra grande finché qualcuno tocca «Ho visto»", "When an alert turns on or the alarm goes off, the panel wakes up and shows it big until someone taps “Got it”"), interruttore("avvisiGrandi", m.avvisiGrandi, "avvisi-grandi"))}
@@ -1542,6 +1775,9 @@ export function ensureMuroEditor() {
       if (!bozzaSporca() || !doc?.getElementById("editor-modal")) state.bozza = null;
       state.fonte = null;
       state.premium = null;
+      state.fotoChieste = false;
+      state.fotoDaTogliere = "";
+      state.fotoStato = "";
     }
     return false;
   }
@@ -1555,6 +1791,9 @@ export function ensureMuroEditor() {
     state.aperta,
     state.altro,
     state.dueTasti || {},
+    (fotoConosciute() || []).map((f) => f.id).join(","),
+    fotoConosciute() === null,
+    state.fotoDaTogliere,
   ]);
   if (body.dataset.dmMuroEditor === firma && body.querySelector(".mu-ed")) {
     rinfrescaLAnteprima();
@@ -1564,6 +1803,7 @@ export function ensureMuroEditor() {
   body.innerHTML = corpoMarkup();
   body.dataset.renderer = MURO_EDITOR_TAB;
   rinfrescaLAnteprima();
+  riempiIlRiposo();
   /* Il titolo della scheda lo mette l'alberatura quando il guscio ridisegna;
    * questa scheda si riscrive anche da sola (la risposta del ponte, un tasto
    * premuto), e il titolo si rimette qui. */
@@ -1882,6 +2122,24 @@ function onClick(event) {
     ridisegna();
     return;
   }
+  /* Togliere una foto della cornice: il primo tocco chiede, il secondo toglie. */
+  const togli = event.target.closest("[data-mu-ed-foto-togli]");
+  if (togli) {
+    event.preventDefault();
+    const id = togli.dataset.muEdFotoTogli;
+    if (state.fotoDaTogliere !== id) {
+      state.fotoDaTogliere = id;
+      ridisegna();
+      return;
+    }
+    state.fotoDaTogliere = "";
+    diciDelleFoto(t("Tolgo la foto…", "Removing the photo…"));
+    togliUnaFoto(id)
+      .then(() => diciDelleFoto(t("Foto tolta.", "Photo removed.")))
+      .catch((errore) => diciDelleFoto(perCheNo(errore)))
+      .finally(() => ridisegna());
+    return;
+  }
   const prova = event.target.closest("[data-mu-ed-prova]");
   if (prova) {
     event.preventDefault();
@@ -2003,6 +2261,12 @@ function onClick(event) {
 function onChange(event) {
   const body = doc?.getElementById("ed-body");
   if (!body || schedaAttiva() !== MURO_EDITOR_TAB || !body.contains(event.target)) return;
+  if (event.type === "change" && event.target?.matches?.("[data-mu-ed-foto-file]")) {
+    const scelte = [...(event.target.files || [])];
+    event.target.value = "";
+    caricaLeFoto(scelte);
+    return;
+  }
   const via = event.target?.dataset?.muEdCampo;
   if (!via) return;
   metti(via, event.target.value);
@@ -2232,6 +2496,29 @@ html[data-theme="dark"] #ed-body .mu-ed-chip{color:#bfdbfe}
 #ed-body .mu-ed-leg i.luce{background:#f59e0b}
 #ed-body .mu-ed-leg i.vicino{background:#22c55e}
 #ed-body .mu-ed-leg i.notte{background:color-mix(in srgb,#64748b 45%,transparent)}
+#ed-body .mu-ed-prova-riposo{position:relative;width:320px;max-width:100%;aspect-ratio:16/10;margin:0;border-radius:14px;overflow:hidden;
+  background:#05080f;border:1px solid var(--divider-color,#dbe4ee);box-shadow:0 6px 18px rgba(15,23,42,.18)}
+#ed-body .mu-ed-prova-cielo,#ed-body .mu-ed-prova-foto{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover}
+#ed-body .mu-ed-prova-testo{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#fff;
+  text-shadow:0 2px 10px rgba(4,12,32,.45);font-family:"Inter Display",Inter,sans-serif}
+#ed-body .mu-ed-prova-testo b{font-weight:200;font-size:54px;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+#ed-body .mu-ed-prova-testo span{font-size:12px;opacity:.9}
+#ed-body .mu-ed-prova-riposo[data-stile="orologio"] .mu-ed-prova-testo b{font-family:Oswald,Inter,sans-serif;font-weight:500;color:#dbe4f3}
+#ed-body .mu-ed-prova-riposo[data-stile="foto"] .mu-ed-prova-testo{align-items:flex-start;justify-content:flex-end;padding:0 0 14px 16px;
+  background:linear-gradient(0deg,rgba(0,0,0,.5),rgba(0,0,0,0) 55%)}
+#ed-body .mu-ed-prova-riposo[data-stile="foto"] .mu-ed-prova-testo b{font-size:30px;font-weight:300}
+#ed-body .mu-ed-foto{margin-top:8px;padding:10px 12px;border-radius:12px;background:var(--card-background-color,var(--card-bg,#fff));border:1px solid var(--divider-color,#dbe4ee)}
+#ed-body .mu-ed-foto-griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:10px}
+#ed-body .mu-ed-foto-voce{position:relative;aspect-ratio:4/3;border-radius:10px;overflow:hidden;background:color-mix(in srgb,var(--text,#0f172a) 8%,transparent)}
+#ed-body .mu-ed-foto-voce img{width:100%;height:100%;object-fit:cover;display:block}
+#ed-body .mu-ed-foto-voce button{position:absolute;top:5px;right:5px;min-width:26px;height:26px;padding:0 7px;border:0;border-radius:999px;
+  background:rgba(15,23,42,.62);color:#fff;font-weight:900;font-size:11px;cursor:pointer}
+#ed-body .mu-ed-foto-voce.togli{box-shadow:inset 0 0 0 2px #ef4444}
+#ed-body .mu-ed-foto-voce.togli button{background:#dc2626}
+#ed-body .mu-ed-foto-azioni{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:10px}
+#ed-body .mu-ed-foto-aggiungi{width:auto;margin:0;padding:10px 16px;cursor:pointer}
+#ed-body .mu-ed-foto-stato{font-size:12px;font-weight:700;color:var(--text-dim,#64748b)}
+#ed-body .mu-ed-foto-invito{margin-top:10px}
 #ed-body .mu-ed-lucchetto{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px}
 #ed-body .mu-ed-lucchetto b{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:26px;text-transform:uppercase}
 #ed-body .mu-ed-lucchetto p{max-width:520px;font-size:14px;line-height:1.55;color:var(--text-dim,#64748b)}
@@ -2286,6 +2573,10 @@ export function installPlanciaAMuroEditor() {
     });
   root.addEventListener?.("resize", () => {
     if (schedaAttiva() === MURO_EDITOR_TAB) rinfrescaLAnteprima();
+  });
+  /* Le foto della cornice sono arrivate dal ponte, o sono cambiate. */
+  root.addEventListener?.(EVENTO_FOTO_DEL_RIPOSO, () => {
+    if (schedaAttiva() === MURO_EDITOR_TAB && state.altro) ridisegna();
   });
   /* L'app ha detto cosa ha il tablet: le righe dei sensori si riscrivono. */
   root.addEventListener?.("gdahome:schermo", (event) => {

@@ -8433,4 +8433,42 @@ export default Object.freeze({
   "The lights on Home, with “Turn all off”.": "Ana sayfadaki ışıklar, «Hepsini kapat» ile.",
   "Automatic switching": "Otomatik açma",
   "They switch on and off by themselves at the times below.": "Aşağıdaki saatlerde kendi kendilerine açılıp kapanırlar.",
+  "${fatte} photos uploaded.": "${fatte} fotoğraf yüklendi.",
+  "A living sky that follows the time and the weather at home: sunrise, sunset, clouds, rain, snow, and at night the stars with the moon in its phase":
+    "Evdeki saati ve havayı izleyen canlı bir gökyüzü: gün doğumu, gün batımı, bulutlar, yağmur, kar ve gece evresindeki ayla birlikte yıldızlar",
+  "Asking the bridge…": "Köprüye soruyorum…",
+  "At night the rest screen stays on, barely visible, instead of going black":
+    "Gece dinlenme ekranı kararmak yerine açık kalır, zar zor görünür",
+  "At night too, at the minimum": "Gece de, en düşükte",
+  "Change photo every": "Fotoğrafı şu sürede değiştir:",
+  Clock: "Saat",
+  "Home sky": "Evin gökyüzü",
+  "No photos yet. Until you upload at least one, the rest screen shows the Home sky.":
+    "Henüz fotoğraf yok. En az birini yükleyene kadar dinlenme ekranında Evin gökyüzü görünür.",
+  "Only JPEG, PNG or WebP photos.": "Yalnızca JPEG, PNG veya WebP fotoğraflar.",
+  "Only whoever administers the home can add or remove the frame's photos.":
+    "Çerçevenin fotoğraflarını yalnızca evi yöneten kişi ekleyip kaldırabilir.",
+  "Photo frame": "Fotoğraf çerçevesi",
+  "Photo removed.": "Fotoğraf kaldırıldı.",
+  "Photo uploaded.": "Fotoğraf yüklendi.",
+  "Remove this photo": "Bu fotoğrafı kaldır",
+  "Remove?": "Kaldırılsın mı?",
+  "Removing the photo…": "Fotoğraf kaldırılıyor…",
+  "Rest screen style": "Dinlenme ekranı stili",
+  "The big clock that moves slowly, on a dark background":
+    "Koyu bir arka planda yavaşça yer değiştiren büyük saat",
+  "The bridge did not take the photo.": "Köprü fotoğrafı almadı.",
+  "The frame's photos": "Çerçevenin fotoğrafları",
+  "The photo is too large (over 40 MB).": "Fotoğraf çok büyük (40 MB'den fazla).",
+  "There are already 60 photos: remove some before adding more.":
+    "Zaten 60 fotoğraf var: daha fazla eklemeden önce birkaçını kaldır.",
+  "they stay at home: the bridge keeps them, they do not go on the internet":
+    "evde kalırlar: onları köprü saklar, internete gitmezler",
+  "This photo cannot be shrunk.": "Bu fotoğraf küçültülemiyor.",
+  "This photo does not open.": "Bu fotoğraf açılmıyor.",
+  "Uploading photo ${numero} of ${tutte}…": "Fotoğraf ${numero}/${tutte} yükleniyor…",
+  "With a fade and a very slow zoom": "Geçişli ve çok yavaş bir yakınlaştırmayla",
+  "Your home photos full screen, fading into each other, with a small clock and the weather at the bottom":
+    "Evin fotoğrafları tam ekran, birbirine geçerek, küçük bir saat ve altta hava durumuyla",
+  "A small preview, with the current time and sky": "Şu anki saat ve gökyüzüyle küçük bir önizleme",
 });

@@ -8414,4 +8414,43 @@ export default Object.freeze({
   "The lights on Home, with “Turn all off”.": "होम पर लाइटें, «सभी बंद करें» के साथ।",
   "Automatic switching": "स्वचालित चालू/बंद",
   "They switch on and off by themselves at the times below.": "ये नीचे दिए समय पर अपने आप जलती और बुझती हैं।",
+  "${fatte} photos uploaded.": "${fatte} फ़ोटो अपलोड हुईं।",
+  "A living sky that follows the time and the weather at home: sunrise, sunset, clouds, rain, snow, and at night the stars with the moon in its phase":
+    "घर के समय और मौसम के साथ बदलता जीवंत आसमान: सूर्योदय, सूर्यास्त, बादल, बारिश, बर्फ़, और रात में तारे और अपनी कला में चाँद",
+  "Asking the bridge…": "ब्रिज से पूछ रहा हूँ…",
+  "At night the rest screen stays on, barely visible, instead of going black":
+    "रात में विश्राम स्क्रीन काली होने के बजाय चालू रहती है, मुश्किल से दिखती हुई",
+  "At night too, at the minimum": "रात में भी, न्यूनतम पर",
+  "Change photo every": "फ़ोटो बदलें हर",
+  Clock: "घड़ी",
+  "Home sky": "घर का आसमान",
+  "No photos yet. Until you upload at least one, the rest screen shows the Home sky.":
+    "अभी कोई फ़ोटो नहीं। जब तक आप कम से कम एक अपलोड नहीं करते, विश्राम स्क्रीन पर घर का आसमान दिखेगा।",
+  "Only JPEG, PNG or WebP photos.": "केवल JPEG, PNG या WebP फ़ोटो।",
+  "Only whoever administers the home can add or remove the frame's photos.":
+    "फ़्रेम की फ़ोटो सिर्फ़ वही जोड़ या हटा सकता है जो घर का प्रबंधन करता है।",
+  "Photo frame": "फ़ोटो फ़्रेम",
+  "Photo removed.": "फ़ोटो हटा दी गई।",
+  "Photo uploaded.": "फ़ोटो अपलोड हो गई।",
+  "Remove this photo": "यह फ़ोटो हटाएँ",
+  "Remove?": "हटाएँ?",
+  "Removing the photo…": "फ़ोटो हटा रहा हूँ…",
+  "Rest screen style": "विश्राम स्क्रीन की शैली",
+  "The big clock that moves slowly, on a dark background":
+    "गहरी पृष्ठभूमि पर धीरे-धीरे खिसकती बड़ी घड़ी",
+  "The bridge did not take the photo.": "ब्रिज ने फ़ोटो नहीं ली।",
+  "The frame's photos": "फ़्रेम की फ़ोटो",
+  "The photo is too large (over 40 MB).": "फ़ोटो बहुत बड़ी है (40 MB से ज़्यादा)।",
+  "There are already 60 photos: remove some before adding more.":
+    "पहले से 60 फ़ोटो हैं: और जोड़ने से पहले कुछ हटाएँ।",
+  "they stay at home: the bridge keeps them, they do not go on the internet":
+    "ये घर में ही रहती हैं: इन्हें ब्रिज रखता है, ये इंटरनेट पर नहीं जातीं",
+  "This photo cannot be shrunk.": "इस फ़ोटो को छोटा नहीं किया जा सकता।",
+  "This photo does not open.": "यह फ़ोटो नहीं खुलती।",
+  "Uploading photo ${numero} of ${tutte}…": "फ़ोटो ${numero} में से ${tutte} अपलोड हो रही है…",
+  "With a fade and a very slow zoom": "फ़ेड और बहुत धीमे ज़ूम के साथ",
+  "Your home photos full screen, fading into each other, with a small clock and the weather at the bottom":
+    "घर की फ़ोटो पूरी स्क्रीन पर, एक-दूसरे में घुलती हुई, नीचे छोटी घड़ी और मौसम के साथ",
+  "A small preview, with the current time and sky":
+    "अभी के समय और आसमान के साथ एक छोटा पूर्वावलोकन",
 });

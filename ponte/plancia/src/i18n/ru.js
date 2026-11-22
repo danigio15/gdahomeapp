@@ -8451,4 +8451,43 @@ export default Object.freeze({
   "The lights on Home, with “Turn all off”.": "Огни на главной, с кнопкой «Выключить все».",
   "Automatic switching": "Автоматическое включение",
   "They switch on and off by themselves at the times below.": "Включаются и выключаются сами в указанное ниже время.",
+  "${fatte} photos uploaded.": "Загружено фото: ${fatte}.",
+  "A living sky that follows the time and the weather at home: sunrise, sunset, clouds, rain, snow, and at night the stars with the moon in its phase":
+    "Живое небо, которое следует за временем и погодой дома: восход, закат, облака, дождь, снег, а ночью звёзды и луна в своей фазе",
+  "Asking the bridge…": "Спрашиваю мост…",
+  "At night the rest screen stays on, barely visible, instead of going black":
+    "Ночью экран покоя остаётся включённым, едва заметным, вместо того чтобы стать чёрным",
+  "At night too, at the minimum": "И ночью, на минимуме",
+  "Change photo every": "Менять фото каждые",
+  Clock: "Часы",
+  "Home sky": "Небо над домом",
+  "No photos yet. Until you upload at least one, the rest screen shows the Home sky.":
+    "Фото пока нет. Пока вы не загрузите хотя бы одно, на экране покоя будет Небо над домом.",
+  "Only JPEG, PNG or WebP photos.": "Только фото JPEG, PNG или WebP.",
+  "Only whoever administers the home can add or remove the frame's photos.":
+    "Добавлять и удалять фото рамки может только тот, кто управляет домом.",
+  "Photo frame": "Фоторамка",
+  "Photo removed.": "Фото удалено.",
+  "Photo uploaded.": "Фото загружено.",
+  "Remove this photo": "Удалить это фото",
+  "Remove?": "Удалить?",
+  "Removing the photo…": "Удаляю фото…",
+  "Rest screen style": "Стиль экрана покоя",
+  "The big clock that moves slowly, on a dark background":
+    "Большие часы, которые медленно перемещаются, на тёмном фоне",
+  "The bridge did not take the photo.": "Мост не принял фото.",
+  "The frame's photos": "Фото рамки",
+  "The photo is too large (over 40 MB).": "Фото слишком большое (больше 40 МБ).",
+  "There are already 60 photos: remove some before adding more.":
+    "Уже есть 60 фото: удалите несколько, прежде чем добавлять новые.",
+  "they stay at home: the bridge keeps them, they do not go on the internet":
+    "они остаются дома: их хранит мост, в интернет они не попадают",
+  "This photo cannot be shrunk.": "Это фото не удаётся уменьшить.",
+  "This photo does not open.": "Это фото не открывается.",
+  "Uploading photo ${numero} of ${tutte}…": "Загружаю фото ${numero} из ${tutte}…",
+  "With a fade and a very slow zoom": "С плавной сменой и очень медленным приближением",
+  "Your home photos full screen, fading into each other, with a small clock and the weather at the bottom":
+    "Фото из дома на весь экран, плавно сменяющие друг друга, с маленькими часами и погодой внизу",
+  "A small preview, with the current time and sky":
+    "Небольшой предпросмотр с текущим временем и небом",
 });

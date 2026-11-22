@@ -8465,4 +8465,43 @@ export default Object.freeze({
   "The lights on Home, with “Turn all off”.": "De lampen op Home, met „Alles uit”.",
   "Automatic switching": "Automatisch schakelen",
   "They switch on and off by themselves at the times below.": "Ze gaan vanzelf aan en uit op de tijden hieronder.",
+  "${fatte} photos uploaded.": "${fatte} foto's geüpload.",
+  "A living sky that follows the time and the weather at home: sunrise, sunset, clouds, rain, snow, and at night the stars with the moon in its phase":
+    "Een levende lucht die de tijd en het weer thuis volgt: zonsopgang, zonsondergang, wolken, regen, sneeuw, en 's nachts de sterren met de maan in haar fase",
+  "Asking the bridge…": "Ik vraag het aan de brug…",
+  "At night the rest screen stays on, barely visible, instead of going black":
+    "'s Nachts blijft het rustscherm aan, nauwelijks zichtbaar, in plaats van zwart te worden",
+  "At night too, at the minimum": "Ook 's nachts, op het minimum",
+  "Change photo every": "Foto wisselen elke",
+  Clock: "Klok",
+  "Home sky": "Lucht boven huis",
+  "No photos yet. Until you upload at least one, the rest screen shows the Home sky.":
+    "Nog geen foto's. Zolang je er niet minstens één uploadt, toont het rustscherm de Lucht boven huis.",
+  "Only JPEG, PNG or WebP photos.": "Alleen JPEG-, PNG- of WebP-foto's.",
+  "Only whoever administers the home can add or remove the frame's photos.":
+    "Alleen wie het huis beheert, kan de foto's van de lijst toevoegen of verwijderen.",
+  "Photo frame": "Fotolijst",
+  "Photo removed.": "Foto verwijderd.",
+  "Photo uploaded.": "Foto geüpload.",
+  "Remove this photo": "Deze foto verwijderen",
+  "Remove?": "Verwijderen?",
+  "Removing the photo…": "Foto wordt verwijderd…",
+  "Rest screen style": "Stijl van het rustscherm",
+  "The big clock that moves slowly, on a dark background":
+    "De grote klok die langzaam verschuift, op een donkere achtergrond",
+  "The bridge did not take the photo.": "De brug heeft de foto niet aangenomen.",
+  "The frame's photos": "De foto's van de lijst",
+  "The photo is too large (over 40 MB).": "De foto is te groot (meer dan 40 MB).",
+  "There are already 60 photos: remove some before adding more.":
+    "Er zijn al 60 foto's: verwijder er een paar voordat je meer toevoegt.",
+  "they stay at home: the bridge keeps them, they do not go on the internet":
+    "ze blijven thuis: de brug bewaart ze, ze gaan niet het internet op",
+  "This photo cannot be shrunk.": "Deze foto kan niet worden verkleind.",
+  "This photo does not open.": "Deze foto gaat niet open.",
+  "Uploading photo ${numero} of ${tutte}…": "Foto ${numero} van ${tutte} uploaden…",
+  "With a fade and a very slow zoom": "Met een overvloeier en een heel langzame zoom",
+  "Your home photos full screen, fading into each other, with a small clock and the weather at the bottom":
+    "Je foto's van thuis op volledig scherm, in elkaar overvloeiend, met een kleine klok en het weer onderaan",
+  "A small preview, with the current time and sky":
+    "Een klein voorbeeld, met de tijd en de lucht van nu",
 });

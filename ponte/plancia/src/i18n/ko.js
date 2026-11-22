@@ -8403,4 +8403,41 @@ export default Object.freeze({
   "The lights on Home, with “Turn all off”.": "홈에 표시되는 조명과 '모두 끄기'.",
   "Automatic switching": "자동 켜기",
   "They switch on and off by themselves at the times below.": "아래 시간에 저절로 켜지고 꺼집니다.",
+  "${fatte} photos uploaded.": "사진 ${fatte}장을 올렸어요.",
+  "A living sky that follows the time and the weather at home: sunrise, sunset, clouds, rain, snow, and at night the stars with the moon in its phase":
+    "집의 시간과 날씨를 따라가는 살아 있는 하늘: 일출, 일몰, 구름, 비, 눈, 그리고 밤에는 위상에 맞춘 달과 별",
+  "Asking the bridge…": "브리지에 묻는 중…",
+  "At night the rest screen stays on, barely visible, instead of going black":
+    "밤에도 휴식 화면이 검게 꺼지지 않고, 거의 안 보일 만큼 켜져 있어요",
+  "At night too, at the minimum": "밤에도 최소 밝기로",
+  "Change photo every": "사진 바꾸는 간격",
+  Clock: "시계",
+  "Home sky": "우리 집 하늘",
+  "No photos yet. Until you upload at least one, the rest screen shows the Home sky.":
+    "아직 사진이 없어요. 한 장 이상 올리기 전까지 휴식 화면에는 우리 집 하늘이 나와요.",
+  "Only JPEG, PNG or WebP photos.": "JPEG, PNG, WebP 사진만 가능해요.",
+  "Only whoever administers the home can add or remove the frame's photos.":
+    "액자의 사진은 집을 관리하는 사람만 추가하거나 뺄 수 있어요.",
+  "Photo frame": "사진 액자",
+  "Photo removed.": "사진을 뺐어요.",
+  "Photo uploaded.": "사진을 올렸어요.",
+  "Remove this photo": "이 사진 빼기",
+  "Remove?": "뺄까요?",
+  "Removing the photo…": "사진을 빼는 중…",
+  "Rest screen style": "휴식 화면 스타일",
+  "The big clock that moves slowly, on a dark background": "어두운 배경 위에서 천천히 움직이는 큰 시계",
+  "The bridge did not take the photo.": "브리지가 사진을 받지 않았어요.",
+  "The frame's photos": "액자의 사진",
+  "The photo is too large (over 40 MB).": "사진이 너무 커요(40MB 초과).",
+  "There are already 60 photos: remove some before adding more.":
+    "사진이 이미 60장이에요: 더 추가하기 전에 몇 장을 빼 주세요.",
+  "they stay at home: the bridge keeps them, they do not go on the internet":
+    "집 안에 남아요: 브리지가 보관하고, 인터넷으로 가지 않아요",
+  "This photo cannot be shrunk.": "이 사진은 줄일 수 없어요.",
+  "This photo does not open.": "이 사진은 열리지 않아요.",
+  "Uploading photo ${numero} of ${tutte}…": "사진 올리는 중 ${numero}/${tutte}…",
+  "With a fade and a very slow zoom": "페이드와 아주 느린 확대로",
+  "Your home photos full screen, fading into each other, with a small clock and the weather at the bottom":
+    "집 사진을 전체 화면으로, 서로 겹치며 바뀌고, 아래에 작은 시계와 날씨",
+  "A small preview, with the current time and sky": "지금 시간과 하늘로 보여 주는 작은 미리 보기",
 });

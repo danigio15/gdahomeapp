@@ -13,7 +13,13 @@ for (const [file, locale] of [
 ]) {
   test(`${file} remains a lightweight modular shell`, () => {
     const html = fs.readFileSync(path.join(legacy, file), "utf8");
-    assert.ok(Buffer.byteLength(html) < 150_000, `${file} grew back into a monolith`);
+    /* Il guscio si misura senza l'elenco dei moduli chiesti in anticipo
+     * (`porta-avanti-i-moduli.mjs`): quelle righe le scrive l'attrezzo, una
+     * per modulo del grafo, e crescono con la plancia senza che la pagina
+     * torni un monolite. Il monolite e' quello che ci si scrive dentro: il
+     * tetto era 150 kB con l'elenco dentro, che ne pesava una quarantina. */
+    const guscio = html.replace(/^<link rel="modulepreload" href="[^"]+">\n/gm, "");
+    assert.ok(Buffer.byteLength(guscio) < 120_000, `${file} grew back into a monolith`);
     /* Un solo <style> e' ammesso, ed e' quello critico del velo d'avvio: i
      * fogli grandi si caricano senza bloccare, quindi il velo deve potersi
      * dipingere PRIMA che arrivino — e uno stile che deve dipingersi prima

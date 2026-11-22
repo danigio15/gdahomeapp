@@ -8453,4 +8453,42 @@ export default Object.freeze({
   "The lights on Home, with “Turn all off”.": "Światła na stronie głównej, z „Wyłącz wszystkie”.",
   "Automatic switching": "Automatyczne włączanie",
   "They switch on and off by themselves at the times below.": "Włączają się i wyłączają same o poniższych godzinach.",
+  "${fatte} photos uploaded.": "Przesłano zdjęcia: ${fatte}.",
+  "A living sky that follows the time and the weather at home: sunrise, sunset, clouds, rain, snow, and at night the stars with the moon in its phase":
+    "Żywe niebo, które podąża za godziną i pogodą w domu: wschód i zachód słońca, chmury, deszcz, śnieg, a nocą gwiazdy i księżyc w swojej fazie",
+  "Asking the bridge…": "Pytam most…",
+  "At night the rest screen stays on, barely visible, instead of going black":
+    "W nocy ekran spoczynku zostaje włączony, ledwo widoczny, zamiast zrobić się czarny",
+  "At night too, at the minimum": "Także w nocy, na minimum",
+  "Change photo every": "Zmieniaj zdjęcie co",
+  Clock: "Zegar",
+  "Home sky": "Niebo nad domem",
+  "No photos yet. Until you upload at least one, the rest screen shows the Home sky.":
+    "Nie ma jeszcze zdjęć. Dopóki nie prześlesz przynajmniej jednego, ekran spoczynku pokazuje Niebo nad domem.",
+  "Only JPEG, PNG or WebP photos.": "Tylko zdjęcia JPEG, PNG lub WebP.",
+  "Only whoever administers the home can add or remove the frame's photos.":
+    "Zdjęcia ramki może dodawać i usuwać tylko osoba, która zarządza domem.",
+  "Photo frame": "Ramka na zdjęcia",
+  "Photo removed.": "Zdjęcie usunięte.",
+  "Photo uploaded.": "Zdjęcie przesłane.",
+  "Remove this photo": "Usuń to zdjęcie",
+  "Remove?": "Usunąć?",
+  "Removing the photo…": "Usuwam zdjęcie…",
+  "Rest screen style": "Styl ekranu spoczynku",
+  "The big clock that moves slowly, on a dark background":
+    "Duży zegar, który powoli się przesuwa, na ciemnym tle",
+  "The bridge did not take the photo.": "Most nie przyjął zdjęcia.",
+  "The frame's photos": "Zdjęcia ramki",
+  "The photo is too large (over 40 MB).": "Zdjęcie jest za duże (ponad 40 MB).",
+  "There are already 60 photos: remove some before adding more.":
+    "Jest już 60 zdjęć: usuń kilka, zanim dodasz kolejne.",
+  "they stay at home: the bridge keeps them, they do not go on the internet":
+    "zostają w domu: przechowuje je most, nie trafiają do internetu",
+  "This photo cannot be shrunk.": "Nie da się zmniejszyć tego zdjęcia.",
+  "This photo does not open.": "Tego zdjęcia nie da się otworzyć.",
+  "Uploading photo ${numero} of ${tutte}…": "Przesyłam zdjęcie ${numero} z ${tutte}…",
+  "With a fade and a very slow zoom": "Z przenikaniem i bardzo powolnym przybliżeniem",
+  "Your home photos full screen, fading into each other, with a small clock and the weather at the bottom":
+    "Zdjęcia z domu na pełnym ekranie, przenikające się, z małym zegarem i pogodą na dole",
+  "A small preview, with the current time and sky": "Mały podgląd, z aktualną godziną i niebem",
 });

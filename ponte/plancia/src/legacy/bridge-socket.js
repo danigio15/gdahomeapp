@@ -140,6 +140,13 @@ export const ALLOWED_MESSAGE_TYPES = Object.freeze([
    * lo decide il ponte (`commissioni.js`). */
   "ponte/muro/fonte",
   "ponte/muro/codice",
+  /* Le foto della cornice del tablet a muro: stanno nel ponte e non escono
+   * di casa. Guardarle lo puo' chi e' entrato, caricarle e toglierle chi
+   * amministra; lo decide il ponte (`le-foto-del-riposo.js`). */
+  "ponte/riposo/foto/elenco",
+  "ponte/riposo/foto/leggi",
+  "ponte/riposo/foto/carica",
+  "ponte/riposo/foto/togli",
   /* Lo storico del clima: i giorni che il ponte ha messo da parte per il
    * report del clima. Sola lettura, solo chi e' entrato, lo decide il ponte
    * (`storico-del-clima.js`). */

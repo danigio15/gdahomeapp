@@ -8434,4 +8434,41 @@ export default Object.freeze({
   "The lights on Home, with “Turn all off”.": "ホームに表示されるライトと「すべて消す」。",
   "Automatic switching": "自動点灯",
   "They switch on and off by themselves at the times below.": "下の時刻に自動で点灯・消灯します。",
+  "${fatte} photos uploaded.": "${fatte}枚の写真をアップロードしました。",
+  "A living sky that follows the time and the weather at home: sunrise, sunset, clouds, rain, snow, and at night the stars with the moon in its phase":
+    "家の時刻と天気に合わせて変わる生きた空：日の出、夕焼け、雲、雨、雪、そして夜には満ち欠けに合わせた月と星",
+  "Asking the bridge…": "ブリッジに問い合わせています…",
+  "At night the rest screen stays on, barely visible, instead of going black":
+    "夜も休止画面は黒くならず、かすかに見える明るさで点いたままになります",
+  "At night too, at the minimum": "夜も最小の明るさで",
+  "Change photo every": "写真を切り替える間隔",
+  Clock: "時計",
+  "Home sky": "わが家の空",
+  "No photos yet. Until you upload at least one, the rest screen shows the Home sky.":
+    "まだ写真がありません。1枚以上アップロードするまで、休止画面には「わが家の空」が表示されます。",
+  "Only JPEG, PNG or WebP photos.": "JPEG、PNG、WebP の写真のみです。",
+  "Only whoever administers the home can add or remove the frame's photos.":
+    "フォトフレームの写真を追加・削除できるのは、家を管理している人だけです。",
+  "Photo frame": "フォトフレーム",
+  "Photo removed.": "写真を削除しました。",
+  "Photo uploaded.": "写真をアップロードしました。",
+  "Remove this photo": "この写真を削除",
+  "Remove?": "削除しますか？",
+  "Removing the photo…": "写真を削除しています…",
+  "Rest screen style": "休止画面のスタイル",
+  "The big clock that moves slowly, on a dark background": "暗い背景の上でゆっくり移動する大きな時計",
+  "The bridge did not take the photo.": "ブリッジが写真を受け取りませんでした。",
+  "The frame's photos": "フォトフレームの写真",
+  "The photo is too large (over 40 MB).": "写真が大きすぎます（40 MB超）。",
+  "There are already 60 photos: remove some before adding more.":
+    "写真はすでに60枚あります。追加する前にいくつか削除してください。",
+  "they stay at home: the bridge keeps them, they do not go on the internet":
+    "写真は家の中に残ります：ブリッジが保管し、インターネットには送られません",
+  "This photo cannot be shrunk.": "この写真は縮小できません。",
+  "This photo does not open.": "この写真は開けません。",
+  "Uploading photo ${numero} of ${tutte}…": "写真をアップロード中 ${numero}/${tutte}…",
+  "With a fade and a very slow zoom": "フェードととてもゆっくりしたズームで",
+  "Your home photos full screen, fading into each other, with a small clock and the weather at the bottom":
+    "家の写真を全画面で、フェードでつなぎ、下に小さな時計と天気を表示",
+  "A small preview, with the current time and sky": "今の時刻と空を使った小さなプレビュー",
 });
