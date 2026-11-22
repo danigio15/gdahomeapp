@@ -17,6 +17,9 @@ contrario.
   all'incrocio, senza andare oltre e tornare indietro col nodo.
 - **Navigatore, raccordi**: agli incroci a triangolo la fascia prende il
   raccordo come si guida, senza l'uncino «<».
+- **Navigatore, sensi unici**: il controllo delle strade davanti lascia
+  sempre disegnare lo schermo, e si ferma da solo dopo un numero fisso di
+  pezzi.
 
 ## 1.19.22
 
