@@ -6211,6 +6211,17 @@ function paginaVisibile(pageId, documento = doc) {
   const pagina = documento?.getElementById?.(pageId);
   return !pagina || pagina.classList.contains("active");
 }
+function ilCambioTocca(event, ids) {
+  const elenco = ids instanceof Set ? ids : new Set((Array.isArray(ids) ? ids : [ids]).map(clean6).filter(Boolean));
+  if (!elenco.size) return true;
+  const detail = event?.detail;
+  const cambiate = detail?.entity_ids || (detail?.entity_id ? [detail.entity_id] : null);
+  if (!Array.isArray(cambiate) && !cambiate) return true;
+  for (const id of Array.isArray(cambiate) ? cambiate : [cambiate]) {
+    if (elenco.has(clean6(id))) return true;
+  }
+  return false;
+}
 var CHIAVE_SOLO_LETTURA = "cd_solo_lettura";
 function entitaSoloLettura() {
   const mappa = readJson(CHIAVE_SOLO_LETTURA, {});
@@ -6781,6 +6792,7 @@ export {
   quandoSiCambiaPagina,
   planciaVisibile,
   paginaVisibile,
+  ilCambioTocca,
   entitaSoloLettura,
   siComanda,
   segnaSoloLettura,

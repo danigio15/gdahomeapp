@@ -405,6 +405,7 @@ const DICHIARATI = Object.freeze([
   ["robot", ".dm-robot-meta", "stato", "Stato", "State"],
   ["robot", ".dm-robot-actions", "comandi", "Comandi", "Controls"],
   ["security", "#alarm-stage", "antifurto", "Antifurto", "Alarm"],
+  ["security", ".dm-sec-testi", "testi", "Testi della sicurezza", "Security texts"],
   ["security", ".dm-sec-smoke", "fumo", "Rilevatori di fumo", "Smoke detectors"],
   ["security", ".dm-sec-cctv", "telecamere", "Telecamere", "Cameras"],
   ["server", ".dm-srvx-shell", "server", "Server", "Servers"],
