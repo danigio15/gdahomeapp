@@ -48,14 +48,14 @@ export const BLOCCHI_DELLA_HOME = Object.freeze([
    * sempre stato; appena qualcuno lo scavalca, il riquadro scende in pagina e
    * si mette in fila con gli altri. */
   BLOCCO_DEL_METEO,
+  /* Il flusso dell'energia grande (#460): «una card da esporre in primo piano
+   * del fotovoltaico e non il semplice widget». Di serie e' spento, e allora
+   * nella pagina non c'e' niente da mettere in fila; acceso, il suo posto e'
+   * in primo piano, subito sotto l'intestazione. (Il flusso piccolo di una
+   * volta, #415, stava accanto alle persone e se n'e' andato con la 1.4.20:
+   * questo e' un blocco suo, grande.) */
+  "flusso",
   "persone",
-  /* Il flusso dell'energia (#415) qui c'e' stato, e non c'e' piu'. La
-   * segnalazione lo voleva «accanto alle card delle persone», e adesso lo e'
-   * davvero: e' una card DENTRO la griglia delle persone, non un blocco suo.
-   * Spostarlo per conto proprio quindi non vuol dire piu' niente — si muove
-   * con le persone, che e' la cosa a cui e' accanto. Chi l'aveva messo in fila
-   * non perde nulla: `ordineDeiBlocchi` butta via i nomi che non esistono
-   * piu', ed e' proprio per questo che sa farlo. */
   "widget",
   "azioni",
   /* Le stanze (#493): «una fila di stanze in plancia, e poter scegliere quali».
@@ -194,4 +194,25 @@ export function lIntestazioneStaInCima(salvato) {
 export function eLOrdineDiSerie(ordine) {
   const fila = ordineDeiBlocchi(ordine);
   return fila.every((nome, indice) => nome === BLOCCHI_DELLA_HOME[indice]);
+}
+
+/**
+ * L'ordine da salvare quando si accende un blocco che nasce «in primo piano».
+ *
+ * Il flusso dell'energia (#460) e' spento di serie, e chi aveva gia' un ordine
+ * salvato non lo ha dentro: `ordineDeiBlocchi` lo metterebbe in coda, cioe' in
+ * fondo alla Home — il contrario di «in primo piano». Accendendolo, se l'ordine
+ * salvato non lo nomina, lo si mette subito dopo i blocchi che stanno sopra la
+ * pagina. Se lo nomina gia', resta dove qualcuno l'ha messo; senza un ordine
+ * salvato vale quello di serie, che lo ha gia' li': non c'e' niente da
+ * scrivere, e torna `null`.
+ */
+export function conIlBloccoInPrimoPiano(salvato, nome) {
+  if (!NOTI.has(nome) || !Array.isArray(salvato)) return null;
+  if (salvato.some((voce) => String(voce ?? "").trim() === nome)) return null;
+  const fila = ordineDeiBlocchi(salvato).filter((voce) => voce !== nome);
+  let dove = 0;
+  while (dove < fila.length && SOPRA_LA_PAGINA.includes(fila[dove])) dove += 1;
+  fila.splice(dove, 0, nome);
+  return fila;
 }

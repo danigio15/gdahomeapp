@@ -14583,7 +14583,7 @@ function persistSignedSource(store2, group, signed, plantId = "") {
 }
 
 // src/core/chiavi-di-configurazione.js
-var CONFIG_KEYS_REVISION = 79;
+var CONFIG_KEYS_REVISION = 80;
 var CONFIG_KEYS = Object.freeze([
   "dm_dashboard_state",
   "dm_schema_version",
@@ -14625,6 +14625,9 @@ var CONFIG_KEYS = Object.freeze([
   // una preferenza della casa, non del dispositivo — chi le spegne le vuole
   // spente sul telefono come sul tablet appeso al muro.
   "cd_home_pastiglie",
+  // Il flusso dell'energia grande in Home (#460): la ragione per cui sta qui
+  // e' scritta accanto alla revisione 80.
+  "cd_home_flusso",
   // Quali stanze si vedono in plancia (#493): «it should also be possible to
   // choose which rooms or areas appear on the home screen». Quali stanze uno
   // vuole davanti e' una scelta della casa, non del dispositivo.
@@ -35680,7 +35683,7 @@ function installSegnalazioniSection() {
 senzaCadere(installSegnalazioniSection);
 
 // legacy/build-info.js
-var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.19.23", "dashboardVersion": "1.19.23", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-11-22T21:05:32+00:00", "commit": "4a611f6c46dc7fc699f7f712ef1a7688356fc118", "assetHash": "d02181a11777c8fe" });
+var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.19.23", "dashboardVersion": "1.19.23", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-11-22T21:05:43+00:00", "commit": "eca526c0205faa40078cf453fb30e2c4713ce423", "assetHash": "c94103662a6105e9" });
 
 export {
   faseInParole,

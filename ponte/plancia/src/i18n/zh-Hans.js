@@ -8345,4 +8345,10 @@ export default Object.freeze({
   "All labels: the overlapping ones become dots": "全部标签：重叠的变成圆点",
   "Labels only for devices that are on": "仅为开启的设备显示标签",
   "Dots only: tap one for its name": "仅圆点：点按一个查看名称",
+  "Energy flow on Home": "首页能量流",
+  "A large block with the sun, the grid, the battery and the home, and arrows showing where the energy is going right now. Same numbers as the Energy page; one tap opens it.": "一个大区块，包含太阳、电网、电池和家，箭头显示能量此刻流向哪里。与能源页面相同的数字；点按即可打开。",
+  "Energy flow: open the Energy page": "能量流：打开能源页面",
+  "producing": "发电中",
+  "importing": "从电网取电",
+  "exporting": "向电网送电",
 });

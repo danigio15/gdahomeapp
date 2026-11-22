@@ -115,6 +115,7 @@ const SCHEDA_DELLA_CASELLA = Object.freeze({
   cd_entita_mie: "entita",
   cd_widgets: "sez0",
   cd_home_blocchi: "sez0",
+  cd_home_flusso: "sez0",
   cd_barra_casa: "sez0",
   cd_evidenza: "sez0",
   cd_meteo_entita_proprie: "sez0",

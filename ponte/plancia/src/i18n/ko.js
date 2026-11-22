@@ -8447,4 +8447,10 @@ export default Object.freeze({
   "All labels: the overlapping ones become dots": "모든 라벨: 겹치는 라벨은 점이 됩니다",
   "Labels only for devices that are on": "켜진 기기만 라벨 표시",
   "Dots only: tap one for its name": "점만 표시: 점을 탭하면 이름이 보입니다",
+  "Energy flow on Home": "홈에 에너지 흐름",
+  "A large block with the sun, the grid, the battery and the home, and arrows showing where the energy is going right now. Same numbers as the Energy page; one tap opens it.": "태양, 전력망, 배터리, 집이 있는 큰 블록과 지금 에너지가 어디로 가는지 보여 주는 화살표. 에너지 페이지와 같은 숫자이며, 탭하면 열립니다.",
+  "Energy flow: open the Energy page": "에너지 흐름: 에너지 페이지 열기",
+  "producing": "생산 중",
+  "importing": "수전",
+  "exporting": "송전",
 });

@@ -8497,4 +8497,10 @@ export default Object.freeze({
   "All labels: the overlapping ones become dots": "Все подписи: перекрывающиеся становятся точками",
   "Labels only for devices that are on": "Подписи только для включённых устройств",
   "Dots only: tap one for its name": "Только точки: нажмите на точку, чтобы увидеть название",
+  "Energy flow on Home": "Поток энергии на главной",
+  "A large block with the sun, the grid, the battery and the home, and arrows showing where the energy is going right now. Same numbers as the Energy page; one tap opens it.": "Большой блок с солнцем, сетью, батареей и домом и стрелками, показывающими, куда сейчас идёт энергия. Те же числа, что на странице «Энергия»; одно касание открывает её.",
+  "Energy flow: open the Energy page": "Поток энергии: открыть страницу «Энергия»",
+  "producing": "производит",
+  "importing": "из сети",
+  "exporting": "в сеть",
 });

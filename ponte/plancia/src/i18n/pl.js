@@ -8498,4 +8498,10 @@ export default Object.freeze({
   "All labels: the overlapping ones become dots": "Wszystkie etykiety: nakładające się stają się kropkami",
   "Labels only for devices that are on": "Etykiety tylko dla włączonych urządzeń",
   "Dots only: tap one for its name": "Tylko kropki: dotknij jednej, aby zobaczyć nazwę",
+  "Energy flow on Home": "Przepływ energii na stronie głównej",
+  "A large block with the sun, the grid, the battery and the home, and arrows showing where the energy is going right now. Same numbers as the Energy page; one tap opens it.": "Duży blok ze słońcem, siecią, baterią i domem oraz strzałkami pokazującymi, dokąd teraz płynie energia. Te same liczby co na stronie Energia; jedno dotknięcie ją otwiera.",
+  "Energy flow: open the Energy page": "Przepływ energii: otwórz stronę Energia",
+  "producing": "produkuje",
+  "importing": "pobór",
+  "exporting": "oddawanie",
 });

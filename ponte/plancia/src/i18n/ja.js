@@ -8478,4 +8478,10 @@ export default Object.freeze({
   "All labels: the overlapping ones become dots": "すべてのラベル：重なるものは点になります",
   "Labels only for devices that are on": "オンのデバイスだけにラベル",
   "Dots only: tap one for its name": "点のみ：タップすると名前を表示",
+  "Energy flow on Home": "ホームにエネルギーの流れ",
+  "A large block with the sun, the grid, the battery and the home, and arrows showing where the energy is going right now. Same numbers as the Energy page; one tap opens it.": "太陽、系統、バッテリー、家の大きなブロック。矢印がいまエネルギーがどこへ流れているかを示します。エネルギーページと同じ数値で、タップすると開きます。",
+  "Energy flow: open the Energy page": "エネルギーの流れ：エネルギーページを開く",
+  "producing": "発電中",
+  "importing": "買電",
+  "exporting": "売電",
 });

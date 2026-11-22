@@ -11,6 +11,7 @@ import test from "node:test";
 import {
   BLOCCHI_DELLA_HOME,
   BLOCCO_DEL_METEO,
+  conIlBloccoInPrimoPiano,
   BLOCCO_INTESTAZIONE,
   eLOrdineDiSerie,
   ilMeteoStaInTestata,
@@ -36,6 +37,11 @@ test("l'ordine scelto si rispetta, e quello che non c'e' va in coda al suo posto
     "intestazione",
     "meteo",
     "azioni",
+    /* Il flusso dell'energia grande (#460) e' nato dopo anche lui: in coda,
+     * al posto che ha di serie fra quelli che mancano. Spento di serie, in
+     * pagina non c'e'; acceso dalla scheda Home va in primo piano
+     * (`conIlBloccoInPrimoPiano`). */
+    "flusso",
     "persone",
     "widget",
     /* Le stanze (#493) sono nate dopo, e in coda al loro posto di serie: chi
@@ -49,6 +55,7 @@ test("l'ordine scelto si rispetta, e quello che non c'e' va in coda al suo posto
     "meteo",
     "dispositivi",
     "azioni",
+    "flusso",
     "persone",
     "widget",
     "stanze",
@@ -63,6 +70,7 @@ test("un ordine sporco non rompe la Home", () => {
     "meteo",
     "azioni",
     "persone",
+    "flusso",
     "widget",
     "stanze",
     "dispositivi",
@@ -73,6 +81,7 @@ test("un ordine sporco non rompe la Home", () => {
     "intestazione",
     "meteo",
     "widget",
+    "flusso",
     "persone",
     "azioni",
     "stanze",
@@ -83,6 +92,7 @@ test("un ordine sporco non rompe la Home", () => {
     "intestazione",
     "meteo",
     "persone",
+    "flusso",
     "widget",
     "azioni",
     "stanze",
@@ -173,4 +183,35 @@ test("finche' l'intestazione sta su, il meteo resta dentro di lei", () => {
   assert.equal(ilMeteoStaInTestata([BLOCCO_INTESTAZIONE, BLOCCO_DEL_METEO, "persone"]), true);
   /* E di serie, che e' il caso di chi non ha mai toccato niente. */
   assert.equal(ilMeteoStaInTestata(null), true);
+});
+
+/* ── il flusso dell'energia grande (#460) ─────────────────────────────────
+ *
+ * «Una card da esporre in primo piano del fotovoltaico.» Spento di serie;
+ * accendendolo va in primo piano anche per chi aveva gia' un ordine salvato,
+ * dove altrimenti finirebbe in coda. */
+test("il flusso acceso va in primo piano, sotto quello che sta sopra la pagina", () => {
+  /* Di serie e' gia' li': subito dopo intestazione e meteo. */
+  assert.deepEqual(BLOCCHI_DELLA_HOME.slice(0, 3), ["intestazione", "meteo", "flusso"]);
+  assert.equal(conIlBloccoInPrimoPiano(null, "flusso"), null);
+  /* Un ordine salvato senza di lui: va davanti, non in coda. */
+  assert.deepEqual(conIlBloccoInPrimoPiano(["azioni", "persone"], "flusso"), [
+    "intestazione",
+    "meteo",
+    "flusso",
+    "azioni",
+    "persone",
+    "widget",
+    "stanze",
+    "dispositivi",
+  ]);
+  /* Con l'intestazione scesa in pagina, va subito sotto il meteo rimasto su. */
+  assert.deepEqual(
+    conIlBloccoInPrimoPiano(["meteo", "persone", "intestazione"], "flusso").slice(0, 2),
+    ["meteo", "flusso"],
+  );
+  /* Chi l'ha gia' messo da qualche parte lo ritrova li'. */
+  assert.equal(conIlBloccoInPrimoPiano(["dispositivi", "flusso"], "flusso"), null);
+  /* Un nome che non e' un blocco non si scrive. */
+  assert.equal(conIlBloccoInPrimoPiano(["azioni"], "fantasma"), null);
 });

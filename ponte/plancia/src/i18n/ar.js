@@ -8425,4 +8425,10 @@ export default Object.freeze({
   "All labels: the overlapping ones become dots": "كل التسميات: المتداخلة تصبح نقاطًا",
   "Labels only for devices that are on": "تسميات للأجهزة المشغّلة فقط",
   "Dots only: tap one for its name": "نقاط فقط: انقر على واحدة لترى اسمها",
+  "Energy flow on Home": "تدفق الطاقة في الصفحة الرئيسية",
+  "A large block with the sun, the grid, the battery and the home, and arrows showing where the energy is going right now. Same numbers as the Energy page; one tap opens it.": "كتلة كبيرة فيها الشمس والشبكة والبطارية والمنزل، وأسهم تُظهر إلى أين تذهب الطاقة الآن. الأرقام نفسها في صفحة الطاقة؛ نقرة واحدة تفتحها.",
+  "Energy flow: open the Energy page": "تدفق الطاقة: افتح صفحة الطاقة",
+  "producing": "ينتج",
+  "importing": "سحب من الشبكة",
+  "exporting": "تصدير إلى الشبكة",
 });

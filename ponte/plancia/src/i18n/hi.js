@@ -8460,4 +8460,10 @@ export default Object.freeze({
   "All labels: the overlapping ones become dots": "सभी लेबल: एक-दूसरे पर आने वाले बिंदु बन जाते हैं",
   "Labels only for devices that are on": "केवल चालू डिवाइस के लेबल",
   "Dots only: tap one for its name": "केवल बिंदु: नाम देखने के लिए किसी एक पर टैप करें",
+  "Energy flow on Home": "होम पर ऊर्जा प्रवाह",
+  "A large block with the sun, the grid, the battery and the home, and arrows showing where the energy is going right now. Same numbers as the Energy page; one tap opens it.": "सूरज, ग्रिड, बैटरी और घर वाला एक बड़ा ब्लॉक, और तीर जो दिखाते हैं कि अभी ऊर्जा कहाँ जा रही है। ऊर्जा पेज वाले ही आँकड़े; एक टैप उसे खोलता है।",
+  "Energy flow: open the Energy page": "ऊर्जा प्रवाह: ऊर्जा पेज खोलें",
+  "producing": "उत्पादन",
+  "importing": "ग्रिड से लेना",
+  "exporting": "ग्रिड को देना",
 });

@@ -674,6 +674,42 @@ function vehiclePopupTarget() {
   return { entities };
 }
 
+/**
+ * L'auto come la vede il flusso dell'Energia, per il flusso grande in Home
+ * (#460): il cerchio della Wallbox dell'istantanea, coi suoi watt, e la carica
+ * dell'auto che la sezione Auto legge. Senza un cerchio Wallbox nel flusso non
+ * c'e' auto: il flusso in Home non ne inventa una.
+ *
+ * @returns {{watt:number|null, soc:number|null, nome:string}|null}
+ */
+export function lAutoNelFlusso() {
+  const { loads, appliances } = carichiDelFlusso();
+  if (!loads.length && !appliances.length) return null;
+  const entities = [];
+  for (const reference of WALLBOX_REFS) {
+    const entity = resolvedEntity(reference);
+    if (entity && entity !== reference) entities.push(entity);
+  }
+  const states = allStates();
+  const model = flowStageModel({
+    loads,
+    appliances,
+    states,
+    period: "instant",
+    locale: locale(),
+    wallbox: { entities },
+  });
+  const nodo = model.nodes.find((voce) => voce.click?.kind === "ev" && voce.sensore);
+  if (!nodo) return null;
+  const batteria = resolvedEntity(vehicleBatteryEntity());
+  const carica = Number(states?.[batteria]?.state);
+  return {
+    watt: Number.isFinite(nodo.value) ? nodo.value : null,
+    soc: batteria && states?.[batteria] && Number.isFinite(carica) ? carica : null,
+    nome: clean(nodo.name),
+  };
+}
+
 const residuoDi = (period) => `${clean(impiantoScelto().plant?.id)}|${period}`;
 
 function stageModel(period) {

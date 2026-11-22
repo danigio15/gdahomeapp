@@ -132,6 +132,7 @@ import { installLaSogliaDellaPotenza } from "./la-soglia-della-potenza-section.j
 import { installRoomAssignSection } from "./room-assign-section.js";
 import { installRoomsPageSection } from "./rooms-page-section.js";
 import { installStanzeInPlancia } from "./stanze-in-plancia-section.js";
+import { installIlFlussoInHome } from "./il-flusso-grande-section.js";
 import { installRoomsOrderEditor } from "./rooms-order-editor-section.js";
 import { installAutoIntegrazione } from "./auto-integrazione-section.js";
 import { installEnergiaCerchiStorico } from "./energia-cerchi-storico-section.js";
@@ -1163,6 +1164,9 @@ export function installSectionRuntime() {
     /* Il blocco delle stanze in plancia (#493) chiede alla pagina Stanze chi
      * c'e' e dove portare col tocco: si installa dopo di lei. */
     senzaCadere(installStanzeInPlancia);
+    /* Il flusso dell'energia grande in Home (#460): legge le letture di casa
+     * della tessera Energia e l'auto del flusso dell'Energia. */
+    senzaCadere(installIlFlussoInHome);
     /* L'ordine delle stanze si cambia in configurazione: le frecce si
      * appoggiano alle righe che disegna il documento vendorizzato. */
     senzaCadere(installRoomsOrderEditor);

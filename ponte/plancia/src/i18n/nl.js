@@ -8511,4 +8511,10 @@ export default Object.freeze({
   "All labels: the overlapping ones become dots": "Alle labels: overlappende worden stippen",
   "Labels only for devices that are on": "Labels alleen voor apparaten die aan staan",
   "Dots only: tap one for its name": "Alleen stippen: tik op een stip voor de naam",
+  "Energy flow on Home": "Energiestroom op Home",
+  "A large block with the sun, the grid, the battery and the home, and arrows showing where the energy is going right now. Same numbers as the Energy page; one tap opens it.": "Een groot blok met de zon, het net, de batterij en het huis, en pijlen die laten zien waar de energie nu heen gaat. Dezelfde cijfers als de pagina Energie; één tik opent die.",
+  "Energy flow: open the Energy page": "Energiestroom: open de pagina Energie",
+  "producing": "produceert",
+  "importing": "afname",
+  "exporting": "teruglevering",
 });

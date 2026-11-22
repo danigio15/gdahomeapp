@@ -290,7 +290,10 @@ test("togliere una chiave non alza la revisione", async () => {
    * anomalie scelte dal computer devono comparire anche sul tablet. */
   /* La 79 con le luci di Natale (`cd_feste`): l'albero scelto dal computer
    * e il suo orario valgono anche dal tablet, e il ponte le legge da li'. */
-  assert.equal(CONFIG_KEYS_REVISION, 79);
+  /* La 80 col flusso dell'energia grande in Home (`cd_home_flusso`, #460):
+   * acceso dal computer, si vede anche sul tablet a muro. */
+  assert.equal(CONFIG_KEYS_REVISION, 80);
+  assert.ok(CONFIG_KEYS.includes("cd_home_flusso"));
   assert.ok(CONFIG_KEYS.includes("cd_feste"));
   assert.ok(CONFIG_KEYS.includes("cd_testi_sicurezza"));
   assert.ok(CONFIG_KEYS.includes("cd_disegni"));

@@ -379,7 +379,11 @@
  * luci della casa, e l'orario lo esegue il ponte anche a plancia chiusa:
  * scelte dal computer, devono valere dal tablet e dal telefono, e il ponte le
  * legge dalla plancia principale come tutte le altre. */
-export const CONFIG_KEYS_REVISION = 79;
+/* La revisione 80 aggiunge il flusso dell'energia grande in Home
+ * (`cd_home_flusso`, #460): se il blocco «Flusso energia» si vede. E' una
+ * scelta della casa come l'ordine dei blocchi: acceso dal computer, il tablet a
+ * muro lo deve mostrare. */
+export const CONFIG_KEYS_REVISION = 80;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -425,6 +429,9 @@ export const CONFIG_KEYS = Object.freeze([
   // una preferenza della casa, non del dispositivo — chi le spegne le vuole
   // spente sul telefono come sul tablet appeso al muro.
   "cd_home_pastiglie",
+  // Il flusso dell'energia grande in Home (#460): la ragione per cui sta qui
+  // e' scritta accanto alla revisione 80.
+  "cd_home_flusso",
   // Quali stanze si vedono in plancia (#493): «it should also be possible to
   // choose which rooms or areas appear on the home screen». Quali stanze uno
   // vuole davanti e' una scelta della casa, non del dispositivo.

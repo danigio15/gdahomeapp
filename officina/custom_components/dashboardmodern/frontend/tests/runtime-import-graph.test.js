@@ -1721,8 +1721,11 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // `core/le-scritte-della-casa-3d.js` (chi resta scritto e chi diventa un
   // pallino) e `sections/casa-3d/le-scritte.js` (la mano che lo applica nelle
   // due scene, e il nome al tocco di un pallino).
+  // 572 col flusso dell'energia grande in Home (#460): `core/il-flusso-in-home.js`
+  // (quali nodi, quali frecce e in che verso) e
+  // `sections/il-flusso-grande-section.js` (il blocco che le disegna).
   assert.ok(
-    relative.length <= 570,
+    relative.length <= 572,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

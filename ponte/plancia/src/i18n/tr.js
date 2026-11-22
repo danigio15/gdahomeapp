@@ -8478,4 +8478,10 @@ export default Object.freeze({
   "All labels: the overlapping ones become dots": "Tüm etiketler: üst üste binenler noktaya dönüşür",
   "Labels only for devices that are on": "Yalnızca açık cihazlar için etiketler",
   "Dots only: tap one for its name": "Yalnızca noktalar: adını görmek için birine dokunun",
+  "Energy flow on Home": "Ana sayfada enerji akışı",
+  "A large block with the sun, the grid, the battery and the home, and arrows showing where the energy is going right now. Same numbers as the Energy page; one tap opens it.": "Güneş, şebeke, batarya ve evle büyük bir blok; oklar enerjinin şu anda nereye gittiğini gösterir. Enerji sayfasıyla aynı sayılar; bir dokunuş onu açar.",
+  "Energy flow: open the Energy page": "Enerji akışı: Enerji sayfasını aç",
+  "producing": "üretiyor",
+  "importing": "şebekeden çekiş",
+  "exporting": "şebekeye veriş",
 });
