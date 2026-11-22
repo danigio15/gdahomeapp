@@ -14,6 +14,10 @@ contrario.
   copertina con le schede che scorrono (la casa, l'energia, il navigatore, la
   sicurezza) e i passi esatti per collegare la casa da Home Assistant.
 - **Premium**: la pagina degli abbonamenti ha una veste nuova.
+- **Navigatore, vista «Corsie»**: agli svincoli con rampe affiancate la
+  fascia verde resta sulla sua rampa, senza saltare sopra il parapetto su
+  quella accanto; prima dei sottopassi segue la bretella invece di tagliare
+  sul prato.
 
 ## 1.19.23
 
