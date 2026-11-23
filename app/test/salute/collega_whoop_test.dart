@@ -175,6 +175,18 @@ void main() {
       expect(prova.whoop.collegato, isFalse);
     });
 
+    test(
+      'lo sportello che frena o non e\' configurato: non risponde',
+      () async {
+        for (final stato in [429, 503]) {
+          final prova = _Prova();
+          prova.server.sportelloFerma = stato;
+          expect(await prova.collegati(), EsitoWhoop.nonRisponde);
+          expect(prova.whoop.collegato, isFalse);
+        }
+      },
+    );
+
     test('col PKCE, lo scambio va diretto a WHOOP, senza secret', () async {
       final prova = _Prova(
         configurazione: const ConfigurazioneWhoop(

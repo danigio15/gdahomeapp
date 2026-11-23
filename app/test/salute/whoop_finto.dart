@@ -164,6 +164,10 @@ class ServerWhoopFinto {
   /// Nessuna risposta: la rete giu'.
   bool giu = false;
 
+  /// Lo sportello che risponde da se', senza chiedere a WHOOP: 429 (troppe
+  /// richieste), 503 (non configurato), come `centralino/src/whoop.js`.
+  int? sportelloFerma;
+
   /// L'API risponde 401 una volta, anche col token buono (scaduto prima).
   bool scadutoUnaVolta = false;
 
@@ -213,6 +217,9 @@ class ServerWhoopFinto {
     if (giu) throw http.ClientException('la rete e\' giu\'');
     final via = r.url.path;
     if (r.url.host == 'sportello.esempio.it' && via == '/whoop/token') {
+      if (sportelloFerma case final stato?) {
+        return _json(stato, {'errore': 'fermato'});
+      }
       final campi = (jsonDecode(r.body) as Map).cast<String, Object?>();
       return _token(campi);
     }

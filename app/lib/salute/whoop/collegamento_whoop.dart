@@ -60,9 +60,10 @@ import 'whoop.dart';
 const whoopClientId = '';
 
 /// Lo sportello che custodisce il client secret e fa lo scambio dei token:
-/// `https://…/whoop`, a cui l'app aggiunge `/token`. **Da compilare.**
-/// Vuoto, e senza PKCE, «Collega WHOOP» non si mostra.
-const sportelloWhoop = '';
+/// il centralino (`centralino/src/whoop.js`), sullo stesso indirizzo del
+/// relay (`ponte/centralino.dart`). L'app aggiunge `/token`. Vuoto, e senza
+/// PKCE, «Collega WHOOP» non si mostra.
+const sportelloWhoop = 'https://tramite.gdahome.org/whoop';
 
 /// Dove WHOOP rimanda dopo il si': va scritto uguale nel portale WHOOP
 /// («Redirect URIs»). Lo schema `gdahome` e' gia' dell'app
@@ -439,7 +440,11 @@ class CollegamentoWhoop {
     } on WhoopNonRisponde {
       return EsitoWhoop.nonRisponde;
     }
-    if (risposta.stato >= 500) return EsitoWhoop.nonRisponde;
+    /* 429: lo sportello ha detto «troppe richieste», non che il codice e'
+     * sbagliato. */
+    if (risposta.stato >= 500 || risposta.stato == 429) {
+      return EsitoWhoop.nonRisponde;
+    }
     final token = risposta.stato == 200
         ? TokenWhoop.daRisposta(risposta.corpo, _adesso())
         : null;

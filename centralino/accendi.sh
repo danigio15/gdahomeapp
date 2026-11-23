@@ -339,6 +339,14 @@ VERSIONE_MINIMA_APP="${VERSIONE_MINIMA_APP:-$(gia_scritto "$CONFIGURAZIONE/ambie
 # rilanciare lo script non li porta via.
 MODO_LICENZE="${MODO_LICENZE:-$(gia_scritto "$CONFIGURAZIONE/ambiente" MODO_LICENZE)}"
 QUADRO_REVOCHE="${QUADRO_REVOCHE:-$(gia_scritto "$CONFIGURAZIONE/ambiente" QUADRO_REVOCHE)}"
+# Il client di GdAHome sul portale di WHOOP, per «Collega WHOOP»: lo scambio
+# dei token passa da qui (centralino/src/whoop.js), perche' il secret non sta
+# nell'app. Non si chiedono: si scrivono a mano in `ambiente` — il secret a
+# tastiera spenta — e un riavvio. Si rileggono come gli altri, cosi'
+# rilanciare lo script non li porta via. Vuoti, lo sportello dice che non e'
+# configurato.
+WHOOP_CLIENT_ID="${WHOOP_CLIENT_ID:-$(gia_scritto "$CONFIGURAZIONE/ambiente" WHOOP_CLIENT_ID)}"
+WHOOP_CLIENT_SECRET="${WHOOP_CLIENT_SECRET:-$(gia_scritto "$CONFIGURAZIONE/ambiente" WHOOP_CLIENT_SECRET)}"
 if [[ -n "$POSTA_SERVER" ]]; then
   bene "il modulo dei contatti spedisce da $POSTA_SERVER a ${POSTA_A:-?}"
 else
@@ -911,6 +919,8 @@ passo "Accendo il servizio"
   printf 'VERSIONE_MINIMA_APP=%s\n' "${VERSIONE_MINIMA_APP:-0}"
   printf 'MODO_LICENZE=%s\n' "$MODO_LICENZE"
   printf 'QUADRO_REVOCHE=%s\n' "$QUADRO_REVOCHE"
+  printf 'WHOOP_CLIENT_ID=%s\n' "$WHOOP_CLIENT_ID"
+  printf 'WHOOP_CLIENT_SECRET=%s\n' "$WHOOP_CLIENT_SECRET"
   printf 'NODE_OPTIONS=--disable-warning=ExperimentalWarning\n'
 } >"$CONFIGURAZIONE/ambiente"
 chmod 600 "$CONFIGURAZIONE/ambiente"
