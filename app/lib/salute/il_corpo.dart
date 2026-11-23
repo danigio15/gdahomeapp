@@ -33,11 +33,31 @@ enum MisuraDelCorpo {
   sistolica,
   diastolica,
   ossigeno,
+
+  /// La variabilita' del battito, in millisecondi. Apple Salute la tiene
+  /// come SDNN, Health Connect e WHOOP come RMSSD: numeri vicini ma non
+  /// uguali, e accanto si scrive da dove viene.
+  hrv,
+
+  /// La frequenza respiratoria, in atti al minuto: quella della notte.
+  respiro,
+
+  /// La temperatura della pelle, in gradi: quella del polso nel sonno
+  /// (Apple Watch) o quella che WHOOP mette nel recupero.
+  temperaturaPelle,
   sonno,
   calorie,
   calorieRiposo,
   esercizio,
-  inPiedi;
+  inPiedi,
+
+  /// Il recupero di WHOOP, in percentuale: solo dall'account WHOOP
+  /// collegato (`whoop/`), Salute e Health Connect non lo hanno.
+  recupero,
+
+  /// Lo sforzo della giornata di WHOOP, da 0 a 21: anche questo solo
+  /// dall'account collegato.
+  sforzo;
 
   String get titolo => switch (this) {
     MisuraDelCorpo.passi => inLingua(it: 'Passi', en: 'Steps'),
@@ -62,6 +82,20 @@ enum MisuraDelCorpo {
       en: 'Diastolic pressure',
     ),
     MisuraDelCorpo.ossigeno => inLingua(it: 'Ossigeno', en: 'Blood oxygen'),
+    MisuraDelCorpo.hrv => inLingua(
+      it: 'Variabilità del battito (HRV)',
+      en: 'Heart rate variability (HRV)',
+    ),
+    MisuraDelCorpo.respiro => inLingua(
+      it: 'Frequenza respiratoria',
+      en: 'Respiratory rate',
+    ),
+    MisuraDelCorpo.temperaturaPelle => inLingua(
+      it: 'Temperatura della pelle',
+      en: 'Skin temperature',
+    ),
+    MisuraDelCorpo.recupero => inLingua(it: 'Recupero', en: 'Recovery'),
+    MisuraDelCorpo.sforzo => inLingua(it: 'Sforzo', en: 'Strain'),
     MisuraDelCorpo.sonno => inLingua(it: 'Sonno', en: 'Sleep'),
     MisuraDelCorpo.calorie => inLingua(
       it: 'Calorie attive',
@@ -97,6 +131,14 @@ enum MisuraDelCorpo {
       en: 'the latest reading',
     ),
     MisuraDelCorpo.ossigeno => inLingua(it: "l'ultimo", en: 'the latest'),
+    MisuraDelCorpo.hrv => inLingua(it: "l'ultima", en: 'the latest'),
+    MisuraDelCorpo.respiro => inLingua(it: "l'ultima notte", en: 'last night'),
+    MisuraDelCorpo.temperaturaPelle => inLingua(
+      it: "l'ultima notte",
+      en: 'last night',
+    ),
+    MisuraDelCorpo.recupero => inLingua(it: "l'ultimo", en: 'the latest'),
+    MisuraDelCorpo.sforzo => inLingua(it: 'di oggi', en: "today's"),
     MisuraDelCorpo.sonno => inLingua(it: "l'ultima notte", en: 'last night'),
     MisuraDelCorpo.calorie => inLingua(it: 'quelle di oggi', en: "today's"),
   };
@@ -120,7 +162,12 @@ const limiteDelPonte = Duration(days: 45);
 Duration? finestraDellUltimo(MisuraDelCorpo misura) => switch (misura) {
   MisuraDelCorpo.battito ||
   MisuraDelCorpo.battitoRiposo ||
-  MisuraDelCorpo.ossigeno => const Duration(days: 30),
+  MisuraDelCorpo.ossigeno ||
+  MisuraDelCorpo.hrv ||
+  MisuraDelCorpo.respiro ||
+  MisuraDelCorpo.temperaturaPelle ||
+  MisuraDelCorpo.recupero ||
+  MisuraDelCorpo.sforzo => const Duration(days: 30),
   MisuraDelCorpo.peso ||
   MisuraDelCorpo.grasso ||
   MisuraDelCorpo.sistolica ||
@@ -148,12 +195,27 @@ bool eDiOggi(MisuraDelCorpo misura) => switch (misura) {
   _ => false,
 };
 
+/// Le misure che vengono solo dall'account WHOOP collegato: Salute e Health
+/// Connect non le hanno.
+bool soloDaWhoop(MisuraDelCorpo misura) =>
+    misura == MisuraDelCorpo.recupero || misura == MisuraDelCorpo.sforzo;
+
 /// Se il telefono la sa dare. I minuti di esercizio e le ore in piedi sono
 /// gli anelli dell'Apple Watch: Health Connect non li ha, e su Android non
-/// si mostrano nemmeno.
-bool siPuoLeggere(MisuraDelCorpo misura, {required bool iPhone}) =>
-    iPhone ||
-    (misura != MisuraDelCorpo.esercizio && misura != MisuraDelCorpo.inPiedi);
+/// si mostrano nemmeno. Recupero e sforzo solo con WHOOP collegato; la
+/// temperatura della pelle sull'iPhone (il polso dell'Apple Watch) o da
+/// WHOOP: Health Connect la da' solo come scarto dal solito, che non e' una
+/// temperatura.
+bool siPuoLeggere(
+  MisuraDelCorpo misura, {
+  required bool iPhone,
+  bool whoop = false,
+}) => switch (misura) {
+  MisuraDelCorpo.recupero || MisuraDelCorpo.sforzo => whoop,
+  MisuraDelCorpo.temperaturaPelle => iPhone || whoop,
+  MisuraDelCorpo.esercizio || MisuraDelCorpo.inPiedi => iPhone,
+  _ => true,
+};
 
 /// Gli scalini con cui si cerca: prima l'ultimo giorno, poi la settimana,
 /// poi tutta la finestra. Un Apple Watch scrive un battito ogni pochi minuti:
@@ -191,6 +253,14 @@ const misureDiSerie = {
   MisuraDelCorpo.calorieRiposo,
   MisuraDelCorpo.esercizio,
   MisuraDelCorpo.inPiedi,
+  /* Quelle del WHOOP (dicembre 2026): l'HRV e il respiro li scrive anche
+   * l'Apple Watch; recupero e sforzo arrivano solo con l'account collegato,
+   * e senza non si chiedono e non si vedono. */
+  MisuraDelCorpo.hrv,
+  MisuraDelCorpo.respiro,
+  MisuraDelCorpo.temperaturaPelle,
+  MisuraDelCorpo.recupero,
+  MisuraDelCorpo.sforzo,
 };
 
 /// Le misure che c'erano prima di «Attività» (novembre 2026): chi le ha
@@ -390,24 +460,32 @@ class ScelteDellaSalute {
 /// l'iPhone scrive tutto il giorno — e quelli che arrivano di rado ma
 /// contano subito: la notte, la pesata, la pressione.
 Set<String> daOsservareSuIPhone(Set<MisuraDelCorpo> misure) => {
-  for (final m in misure)
-    switch (m) {
-      MisuraDelCorpo.passi ||
-      MisuraDelCorpo.distanza ||
-      MisuraDelCorpo.piani => 'HKQuantityTypeIdentifierStepCount',
-      MisuraDelCorpo.calorie ||
-      MisuraDelCorpo.calorieRiposo ||
-      MisuraDelCorpo.esercizio ||
-      MisuraDelCorpo.inPiedi => 'HKQuantityTypeIdentifierActiveEnergyBurned',
-      MisuraDelCorpo.battito ||
-      MisuraDelCorpo.battitoRiposo ||
-      MisuraDelCorpo.ossigeno => 'HKQuantityTypeIdentifierHeartRate',
-      MisuraDelCorpo.sonno => 'HKCategoryTypeIdentifierSleepAnalysis',
-      MisuraDelCorpo.peso ||
-      MisuraDelCorpo.grasso => 'HKQuantityTypeIdentifierBodyMass',
-      MisuraDelCorpo.sistolica || MisuraDelCorpo.diastolica =>
-        'HKQuantityTypeIdentifierBloodPressureSystolic',
-    },
+  for (final m in misure) ?_daOsservare(m),
+};
+
+/* Recupero e sforzo non stanno in Salute: li porta il giro del WHOOP, che
+ * parte con tutte le altre. */
+String? _daOsservare(MisuraDelCorpo misura) => switch (misura) {
+  MisuraDelCorpo.passi ||
+  MisuraDelCorpo.distanza ||
+  MisuraDelCorpo.piani => 'HKQuantityTypeIdentifierStepCount',
+  MisuraDelCorpo.calorie ||
+  MisuraDelCorpo.calorieRiposo ||
+  MisuraDelCorpo.esercizio ||
+  MisuraDelCorpo.inPiedi => 'HKQuantityTypeIdentifierActiveEnergyBurned',
+  MisuraDelCorpo.battito ||
+  MisuraDelCorpo.battitoRiposo ||
+  MisuraDelCorpo.ossigeno ||
+  MisuraDelCorpo.hrv => 'HKQuantityTypeIdentifierHeartRate',
+  /* Respiro e polso si scrivono con la notte: basta lei. */
+  MisuraDelCorpo.sonno ||
+  MisuraDelCorpo.respiro ||
+  MisuraDelCorpo.temperaturaPelle => 'HKCategoryTypeIdentifierSleepAnalysis',
+  MisuraDelCorpo.peso ||
+  MisuraDelCorpo.grasso => 'HKQuantityTypeIdentifierBodyMass',
+  MisuraDelCorpo.sistolica ||
+  MisuraDelCorpo.diastolica => 'HKQuantityTypeIdentifierBloodPressureSystolic',
+  MisuraDelCorpo.recupero || MisuraDelCorpo.sforzo => null,
 };
 
 /// Un nome di persona: parole corte, niente segni strani, al piu' 30.
@@ -419,11 +497,38 @@ String personaPulita(String testo) {
   return pulito.length > 30 ? pulito.substring(0, 30).trim() : pulito;
 }
 
-/// Una lettura: il valore e quando e' stata presa.
+/// Da dove viene una misura, quando si sa e vale la pena dirlo: «da WHOOP»
+/// accanto al valore. Di serie non si dice niente — e' l'orologio di sempre.
+enum Fonte {
+  /// Il WHOOP: dall'app WHOOP, che scrive in Salute e in Health Connect, o
+  /// dall'account WHOOP collegato (`whoop/`).
+  whoop;
+
+  /// Come si scrive: un marchio di testo, non il logo.
+  String get marchio => switch (this) {
+    Fonte.whoop => 'WHOOP',
+  };
+
+  /// Dall'origine di un campione di Salute o di Health Connect: il nome
+  /// dell'app che l'ha scritto (su iPhone «WHOOP», su Android il pacchetto)
+  /// e il suo identificativo. Si guarda il nome, non un identificativo
+  /// preciso: quello dell'app WHOOP sull'iPhone non e' documentato, e su
+  /// Android il pacchetto ha «whoop» dentro (`com.whoop.android`, da
+  /// verificare su un telefono vero).
+  static Fonte? daOrigine(String? nome, [String? id]) {
+    bool whoop(String? testo) =>
+        testo != null && testo.toLowerCase().contains('whoop');
+    if (whoop(nome) || whoop(id)) return Fonte.whoop;
+    return null;
+  }
+}
+
+/// Una lettura: il valore e quando e' stata presa. La [fonte], se si sa.
 class Lettura {
-  const Lettura(this.valore, this.quando);
+  const Lettura(this.valore, this.quando, {this.fonte});
   final double valore;
   final DateTime quando;
+  final Fonte? fonte;
 
   /* Due decimali: 0,19 km di distanza con uno solo sarebbero 0,2. */
   Map<String, Object> inJson() => {
@@ -434,19 +539,22 @@ class Lettura {
 
 /// Un campione grezzo, com'e' uscito da Salute o da Health Connect.
 class Campione {
-  const Campione(this.valore, this.da, this.a);
+  const Campione(this.valore, this.da, this.a, {this.fonte});
   final double valore;
   final DateTime da;
   final DateTime a;
+  final Fonte? fonte;
 }
 
-/// L'ultimo campione: il piu' recente per fine.
+/// L'ultimo campione: il piu' recente per fine, con la sua fonte.
 Lettura? lUltimo(Iterable<Campione> campioni) {
   Campione? ultimo;
   for (final c in campioni) {
     if (ultimo == null || c.a.isAfter(ultimo.a)) ultimo = c;
   }
-  return ultimo == null ? null : Lettura(ultimo.valore, ultimo.a);
+  return ultimo == null
+      ? null
+      : Lettura(ultimo.valore, ultimo.a, fonte: ultimo.fonte);
 }
 
 /// Una percentuale: Apple la da' come frazione (0,97), Health Connect come
@@ -496,8 +604,9 @@ Lettura? ilSonnoDiStanotte(Iterable<Campione> tratti, DateTime adesso) {
         t,
   ]..sort((x, y) => x.da.compareTo(y.da));
   if (buoni.isEmpty) return null;
-  final sonni = <({double minuti, DateTime fine})>[];
+  final sonni = <({double minuti, DateTime fine, Set<Fonte?> fonti})>[];
   var minuti = 0.0;
+  var fonti = <Fonte?>{};
   DateTime? finoA;
   DateTime? notteDelSonno;
   for (final t in buoni) {
@@ -511,17 +620,19 @@ Lettura? ilSonnoDiStanotte(Iterable<Campione> tratti, DateTime adesso) {
     if (finoA != null &&
         t.da.difference(finoA) > risveglioFinoA &&
         !stessaNotte) {
-      sonni.add((minuti: minuti, fine: finoA));
+      sonni.add((minuti: minuti, fine: finoA, fonti: fonti));
       minuti = 0;
+      fonti = <Fonte?>{};
       finoA = null;
       notteDelSonno = null;
     }
     notteDelSonno ??= notteDelTratto;
     final da = finoA != null && t.da.isBefore(finoA) ? finoA : t.da;
     if (t.a.isAfter(da)) minuti += t.a.difference(da).inSeconds / 60;
+    fonti.add(t.fonte);
     if (finoA == null || t.a.isAfter(finoA)) finoA = t.a;
   }
-  sonni.add((minuti: minuti, fine: finoA!));
+  sonni.add((minuti: minuti, fine: finoA!, fonti: fonti));
   final lunghi = [
     for (final s in sonni)
       if (s.minuti >= notteAlmeno.inMinutes) s,
@@ -530,7 +641,13 @@ Lettura? ilSonnoDiStanotte(Iterable<Campione> tratti, DateTime adesso) {
     (x, y) => y.fine.isAfter(x.fine) ? y : x,
   );
   if (notte.minuti < 1) return null;
-  return Lettura(notte.minuti.roundToDouble(), notte.fine);
+  /* La fonte si dice solo se la notte l'ha scritta tutta lei: un iPhone e
+   * un WHOOP sulla stessa notte non sono «da WHOOP». */
+  return Lettura(
+    notte.minuti.roundToDouble(),
+    notte.fine,
+    fonte: notte.fonti.length == 1 ? notte.fonti.single : null,
+  );
 }
 
 /// La notte in cui comincia un tratto di sonno: dalle 18 alle 12 del giorno
@@ -555,6 +672,26 @@ Map<String, Object> perIlPonte(
   for (final MapEntry(key: misura, value: lettura) in lette.entries)
     if (scelte.contains(misura)) misura.name: lettura.inJson(),
 };
+
+/// I numeri come li scrive chi legge: «7.842» e «78,4» in italiano,
+/// «7,842» e «78.4» in inglese.
+String numeroScritto(double v, {int cifre = 0}) {
+  final italiano = inLingua(it: 'it', en: 'en') == 'it';
+  final testo = v.toStringAsFixed(cifre);
+  final parti = testo.split('.');
+  final intera = parti[0].replaceAllMapped(
+    RegExp(r'(\d)(?=(\d{3})+$)'),
+    (m) => '${m[1]}${italiano ? '.' : ','}',
+  );
+  if (parti.length == 1) return intera;
+  return '$intera${italiano ? ',' : '.'}${parti[1]}';
+}
+
+/// Una durata in minuti come la scrive la Salute: «7 h 32».
+String oreEMinuti(double minuti) {
+  final m = minuti.round();
+  return '${m ~/ 60} h ${(m % 60).toString().padLeft(2, '0')}';
+}
 
 /// Quando, se non e' oggi: «1 nov» in italiano, «Nov 1» in inglese; ieri e'
 /// «ieri». Oggi niente: «l'ultimo · 73 bpm» basta. Come la plancia, che
@@ -641,6 +778,16 @@ enum GuastoDellaSalute {
 /// Apple non dice mai se il permesso di leggere c'e': una misura negata e
 /// una che non c'e' sembrano uguali, e allora si dicono tutte e due.
 String nessunValore(MisuraDelCorpo misura, {required bool iPhone}) {
+  if (soloDaWhoop(misura)) {
+    return inLingua(
+      it:
+          'WHOOP non ne ha ancora: arriva dopo una notte col WHOOP al polso '
+          'e la sincronizzazione dell\'app WHOOP.',
+      en:
+          'WHOOP has none yet: it comes after a night wearing WHOOP and a '
+          'sync of the WHOOP app.',
+    );
+  }
   final finestra = finestraDellUltimo(misura);
   final quando = switch (misura) {
     _ when eDiOggi(misura) => inLingua(it: 'oggi', en: 'today'),

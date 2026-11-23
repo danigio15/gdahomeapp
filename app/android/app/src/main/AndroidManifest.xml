@@ -69,6 +69,11 @@
     <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED" />
     <uses-permission android:name="android.permission.health.READ_DISTANCE" />
     <uses-permission android:name="android.permission.health.READ_FLOORS_CLIMBED" />
+    <!-- L'HRV e il respiro della notte: li scrivono il WHOOP e molti orologi.
+         Nuovi: vanno aggiunti alla dichiarazione dei dati salute del Play
+         Console prima di pubblicare. -->
+    <uses-permission android:name="android.permission.health.READ_HEART_RATE_VARIABILITY" />
+    <uses-permission android:name="android.permission.health.READ_RESPIRATORY_RATE" />
     <!-- Leggere anche ad app chiusa, per mandare le misure alla casa senza
          aprire GdAHome (`salute/LaSaluteAdAppChiusa.kt`). Si chiede a parte,
          con l'app davanti, e solo se Health Connect lo conosce; negato, le
@@ -128,6 +133,16 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="gdahome" android:host="collega" />
+            </intent-filter>
+            <!-- Il ritorno dal collegamento all'account WHOOP,
+                 `gdahome://whoop?code=…&state=…`: lo legge
+                 `lib/salute/whoop/collegamento_whoop.dart`, e vale solo se
+                 lo `state` e' quello che l'app ha appena mandato. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="gdahome" android:host="whoop" />
             </intent-filter>
             <!-- Il link lo legge l'app, non il navigatore di Flutter: acceso,
                  Flutter lo spingerebbe come una pagina («/collega?…») che non

@@ -33,7 +33,9 @@
 	     questo telefono» della console, per chi la guarda dallo stesso
 	     iPhone che vuole collegare e il QR non lo puo' inquadrare. Li riceve
 	     `app_links` dalla scena (`FlutterSceneDelegate` li passa ai plugin
-	     del motore), e li legge `lib/ponte/il_link.dart`. -->
+	     del motore), e li legge `lib/ponte/il_link.dart`. Lo stesso schema
+	     riporta all'app chi ha collegato l'account WHOOP
+	     (`gdahome://whoop?code=…`, `lib/salute/whoop/`). -->
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -89,7 +91,7 @@
 	     alla casa. GdAHome legge e basta; la seconda riga Apple la vuole
 	     comunque per un'app con HealthKit, e dice la stessa cosa. -->
 	<key>NSHealthShareUsageDescription</key>
-	<string>Serve a leggere passi, attività, battito, pressione, peso e sonno che scegli tu, e a mandarli solo alla tua casa, anche quando l'app è chiusa, dove li vedi nella pagina Salute. Non vanno da nessun'altra parte.</string>
+	<string>Serve a leggere passi, attività, battito, HRV, respiro, pressione, peso e sonno che scegli tu, e a mandarli solo alla tua casa, anche quando l'app è chiusa, dove li vedi nella pagina Salute. Non vanno da nessun'altra parte.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>GdAHome non scrive nulla in Salute: legge soltanto le misure che scegli tu, per mostrarle nella pagina Salute della tua casa.</string>
 	<key>NSLocalNetworkUsageDescription</key>

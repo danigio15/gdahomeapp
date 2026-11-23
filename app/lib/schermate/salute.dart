@@ -4,6 +4,10 @@
 /// legge — Apple Salute sull'iPhone, Health Connect su Android — e sotto,
 /// sempre in vista, dove vanno: nella casa, e da nessun'altra parte. Nella
 /// plancia compaiono nella pagina Salute, col nome scritto qui.
+///
+/// Col WHOOP (`salute/whoop/`) la pagina ha in piu' le sue schede —
+/// recupero, sforzo, sonno, cuore — e la riga per collegare l'account
+/// (`salute_whoop.dart`).
 library;
 
 import 'dart:async';
@@ -15,8 +19,11 @@ import '../parole.dart';
 import '../salute/il_corpo.dart';
 import '../salute/lettore.dart';
 import '../salute/postino_della_salute.dart';
+import '../salute/whoop/collegamento_whoop.dart';
+import '../salute/whoop/whoop.dart';
 import '../vestito/oggetti.dart';
 import '../vestito/pezzi.dart';
+import 'salute_whoop.dart';
 
 class SchermataDellaSalute extends StatefulWidget {
   const SchermataDellaSalute({
@@ -25,11 +32,16 @@ class SchermataDellaSalute extends StatefulWidget {
     required this.postino,
     this.nuda = false,
     this.doveIniziale,
+    this.whoop,
   });
 
   final Collegamento collegamento;
   final PostinoDellaSalute postino;
   final bool nuda;
+
+  /// L'account WHOOP: le sue schede e la riga «Collega». `null`, la pagina
+  /// di prima.
+  final CollegamentoWhoop? whoop;
 
   /// Per le prove e i disegni: dove si legge, senza chiederlo al telefono.
   final DoveSiLegge? doveIniziale;
@@ -43,6 +55,8 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
   DoveSiLegge? _dove;
   bool _lavorando = false;
   StreamSubscription<void>? _ascolto;
+  StreamSubscription<void>? _ascoltoWhoop;
+  bool _whoopCollegato = false;
 
   PostinoDellaSalute get _postino => widget.postino;
 
@@ -53,7 +67,21 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
     _ascolto = _postino.cambiamenti.listen((_) {
       if (mounted) setState(() {});
     });
+    _ascoltoWhoop = widget.whoop?.cambiamenti.listen((_) => _cambiaWhoop());
     unawaited(_prepara());
+  }
+
+  /* WHOOP appena collegato (il link di ritorno arriva mentre la pagina e'
+   * aperta): le misure nuove vanno subito a casa, senza aspettare il quarto
+   * d'ora. */
+  void _cambiaWhoop() {
+    final ora = widget.whoop?.collegato ?? false;
+    final appena = ora && !_whoopCollegato;
+    _whoopCollegato = ora;
+    if (appena && _postino.scelte.acceso) {
+      unawaited(_postino.manda(widget.collegamento.filo, subito: true));
+    }
+    if (mounted) setState(() {});
   }
 
   Future<void> _prepara() async {
@@ -64,11 +92,88 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
       _nome.text = scelte.persona;
     }
     _dove ??= await _postino.lettore.dove();
+    final whoop = widget.whoop;
+    if (whoop != null) {
+      await whoop.carica();
+      _whoopCollegato = whoop.collegato;
+      unawaited(whoop.aggiorna().catchError((_) => null));
+    }
     if (mounted) setState(() {});
+  }
+
+  Future<void> _collegaWhoop() => _lavora(() async {
+    final aperta = await widget.whoop!.collega();
+    if (!aperta) {
+      _avviso(
+        inLingua(
+          it: 'La pagina di WHOOP non si è aperta. Riprova.',
+          en: "WHOOP's page didn't open. Try again.",
+        ),
+      );
+    }
+  });
+
+  Future<void> _scollegaWhoop() async {
+    final si = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(inLingua(it: 'Scollegare WHOOP?', en: 'Disconnect WHOOP?')),
+        content: Text(
+          inLingua(
+            it:
+                'Recupero e sforzo non arriveranno più. Quello che l\'app '
+                'WHOOP scrive in Salute continua ad arrivare.',
+            en:
+                'Recovery and strain will stop coming. What the WHOOP app '
+                'writes to Health keeps coming.',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(inLingua(it: 'Annulla', en: 'Cancel')),
+          ),
+          TextButton(
+            key: const Key('whoop-scollega-si'),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(inLingua(it: 'Scollega', en: 'Disconnect')),
+          ),
+        ],
+      ),
+    );
+    if (si != true) return;
+    await _lavora(() async {
+      await widget.whoop!.scollega();
+      _whoopCollegato = false;
+      /* La casa toglie recupero e sforzo al primo invio senza. */
+      if (_postino.scelte.acceso) {
+        await _postino.manda(widget.collegamento.filo, subito: true);
+      }
+      _avviso(
+        inLingua(
+          it: 'WHOOP scollegato: i token sono stati cancellati dal telefono.',
+          en: 'WHOOP disconnected: the tokens were deleted from the phone.',
+        ),
+      );
+    });
+  }
+
+  void _apriIlRecupero() {
+    final dati = widget.whoop?.ultimi;
+    if (dati?.recupero == null) return;
+    unawaited(
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) =>
+              SchermataDelRecupero(dati: dati!, adesso: _postino.adesso),
+        ),
+      ),
+    );
   }
 
   @override
   void dispose() {
+    _ascoltoWhoop?.cancel();
     _ascolto?.cancel();
     _nome.dispose();
     super.dispose();
@@ -210,6 +315,9 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
     final scelte = _postino.scelte;
     final lette = _postino.ultimeLette;
     final daInstallare = dove == DoveSiLegge.healthConnectDaInstallare;
+    final whoop = widget.whoop;
+    final quadro = QuadroWhoop.da(whoop?.ultimi, lette);
+    final iPhone = dove == DoveSiLegge.appleSalute;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
       children: [
@@ -238,16 +346,20 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
                         Text(
                           dove == DoveSiLegge.appleSalute
                               ? inLingua(
-                                  it: 'Da Apple Salute: iPhone e Apple Watch.',
-                                  en: 'From Apple Health: iPhone and Apple Watch.',
+                                  it:
+                                      'Da Apple Salute: iPhone, Apple Watch, WHOOP '
+                                      'e le app che ci scrivono.',
+                                  en:
+                                      'From Apple Health: iPhone, Apple Watch, WHOOP '
+                                      'and the apps that write to it.',
                                 )
                               : inLingua(
                                   it:
                                       'Da Health Connect: Galaxy Watch, Pixel Watch, Fitbit, '
-                                      'Amazfit e gli altri che ci scrivono.',
+                                      'Amazfit, WHOOP e gli altri che ci scrivono.',
                                   en:
                                       'From Health Connect: Galaxy Watch, Pixel Watch, Fitbit, '
-                                      'Amazfit and others that write to it.',
+                                      'Amazfit, WHOOP and others that write to it.',
                                 ),
                           style: testi.bodyMedium?.copyWith(
                             color: colori.onSurfaceVariant,
@@ -346,6 +458,28 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
             ],
           ),
         ),
+        if (quadro.daMostrare) ...[
+          const SizedBox(height: 16),
+          Insegna(inLingua(it: 'Da WHOOP', en: 'From WHOOP')),
+          SchedeWhoop(
+            quadro: quadro,
+            adesso: _postino.adesso,
+            apriIlRecupero: _apriIlRecupero,
+          ),
+        ],
+        if (whoop != null &&
+            (whoop.siMostra || whoop.stato == StatoWhoop.daRicollegare)) ...[
+          const SizedBox(height: 16),
+          Insegna(inLingua(it: 'Altre fonti', en: 'Other sources')),
+          RigaWhoop(
+            stato: whoop.stato,
+            aggiornato: whoop.ultimi?.preso,
+            iPhone: iPhone,
+            lavorando: _lavorando,
+            collega: _collegaWhoop,
+            scollega: _scollegaWhoop,
+          ),
+        ],
         const SizedBox(height: 16),
         Insegna(
           inLingua(
@@ -391,6 +525,7 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
                   iPhone:
                       dove != DoveSiLegge.healthConnect &&
                       dove != DoveSiLegge.healthConnectDaInstallare,
+                  whoop: whoop?.collegato ?? false,
                 ))
                   CheckboxListTile.adaptive(
                     key: Key('salute-misura-${misura.name}'),
@@ -593,19 +728,7 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
           );
   }
 
-  /* I numeri come li scrive chi legge: «7.842» e «78,4» in italiano,
-   * «7,842» e «78.4» in inglese. */
-  String _numero(double v, {int cifre = 0}) {
-    final italiano = inLingua(it: 'it', en: 'en') == 'it';
-    final testo = v.toStringAsFixed(cifre);
-    final parti = testo.split('.');
-    final intera = parti[0].replaceAllMapped(
-      RegExp(r'(\d)(?=(\d{3})+$)'),
-      (m) => '${m[1]}${italiano ? '.' : ','}',
-    );
-    if (parti.length == 1) return intera;
-    return '$intera${italiano ? ',' : '.'}${parti[1]}';
-  }
+  String _numero(double v, {int cifre = 0}) => numeroScritto(v, cifre: cifre);
 
   String _riga(MisuraDelCorpo misura, Lettura? lettura) {
     if (lettura == null) return misura.comeSiLegge;
@@ -617,6 +740,14 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
       MisuraDelCorpo.peso => '${_numero(v, cifre: 1)} kg',
       MisuraDelCorpo.grasso => '${_numero(v, cifre: 1)}%',
       MisuraDelCorpo.ossigeno => '${_numero(v)}%',
+      MisuraDelCorpo.hrv => '${_numero(v)} ms',
+      MisuraDelCorpo.respiro => inLingua(
+        it: '${_numero(v, cifre: 1)} atti/min',
+        en: '${_numero(v, cifre: 1)} breaths/min',
+      ),
+      MisuraDelCorpo.temperaturaPelle => '${_numero(v, cifre: 1)} °C',
+      MisuraDelCorpo.recupero => '${_numero(v)}%',
+      MisuraDelCorpo.sforzo => _numero(v, cifre: 1),
       MisuraDelCorpo.sistolica ||
       MisuraDelCorpo.diastolica => '${_numero(v)} mmHg',
       MisuraDelCorpo.sonno =>
@@ -632,7 +763,15 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
       MisuraDelCorpo.inPiedi => '${_numero(v)} h',
     };
     final giorno = quandoSeNonOggi(lettura.quando, _postino.adesso);
-    return '${misura.comeSiLegge} · $valore${giorno == null ? '' : ' · $giorno'}';
+    /* «da WHOOP»: l'app WHOOP che scrive in Salute, o l'account collegato. */
+    final da = switch (lettura.fonte) {
+      final f? => inLingua(
+        it: ' · da ${f.marchio}',
+        en: ' · from ${f.marchio}',
+      ),
+      null => '',
+    };
+    return '${misura.comeSiLegge} · $valore${giorno == null ? '' : ' · $giorno'}$da';
   }
 
   /* Un'icona colorata per misura: le emoji ogni telefono le disegna a modo
@@ -661,6 +800,17 @@ class _StatoDellaSalute extends State<SchermataDellaSalute> {
         const Color(0xFF9333EA),
       ),
       MisuraDelCorpo.ossigeno => (Icons.air_rounded, const Color(0xFF0891B2)),
+      MisuraDelCorpo.hrv => (Icons.show_chart_rounded, const Color(0xFFE11D48)),
+      MisuraDelCorpo.respiro => (Icons.waves_rounded, const Color(0xFF0D9488)),
+      MisuraDelCorpo.temperaturaPelle => (
+        Icons.thermostat_rounded,
+        const Color(0xFFEA580C),
+      ),
+      MisuraDelCorpo.recupero => (
+        Icons.battery_charging_full_rounded,
+        const Color(0xFF16A34A),
+      ),
+      MisuraDelCorpo.sforzo => (Icons.bolt_rounded, coloreDelloSforzo),
       MisuraDelCorpo.sonno => (Icons.bedtime_rounded, const Color(0xFF4F46E5)),
       MisuraDelCorpo.calorie => (
         Icons.local_fire_department_rounded,

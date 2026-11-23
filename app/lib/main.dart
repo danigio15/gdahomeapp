@@ -44,6 +44,8 @@ import 'schermate/plancia_vera.dart';
 import 'salute/ad_app_chiusa.dart';
 import 'salute/lettore.dart';
 import 'salute/postino_della_salute.dart';
+import 'salute/whoop/collegamento_whoop.dart';
+import 'salute/whoop/lettore_con_whoop.dart';
 import 'schermate/premium.dart';
 import 'schermate/riconoscimento.dart';
 import 'vestito/sfondo.dart';
@@ -100,13 +102,16 @@ Future<void> saluteAdAppChiusa() async {
     ),
   );
   SvegliaDellaSalute(
-    postino: PostinoDellaSalute(lettore: lettoreDiQuestoSistema())
-      ..sbloccata = () {
-        final licenza = collegamento.licenza;
-        return !licenza.controlliAccesi || licenza.premium;
-      }
-      /* Nessuno schermo: nessun permesso da chiedere. */
-      ..siPuoChiedere = (() => false),
+    postino:
+        PostinoDellaSalute(
+            lettore: LettoreConWhoop(lettoreDiQuestoSistema(), whoopDellApp()),
+          )
+          ..sbloccata = () {
+            final licenza = collegamento.licenza;
+            return !licenza.controlliAccesi || licenza.premium;
+          }
+          /* Nessuno schermo: nessun permesso da chiedere. */
+          ..siPuoChiedere = (() => false),
     laCasa: () => collegamento,
     condiviso: false,
   ).accendi();
@@ -117,7 +122,9 @@ Future<void> saluteAdAppChiusa() async {
 /// stessi per tutti. Di GdAHome Premium: la licenza della casa in uso, come
 /// per le altre voci col lucchetto (`home.dart`, `_bloccate`).
 PostinoDellaSalute postinoDellaSaluteDellApp() => PostinoDellaSalute.istanza ??=
-    PostinoDellaSalute(lettore: lettoreDiQuestoSistema())
+    PostinoDellaSalute(
+        lettore: LettoreConWhoop(lettoreDiQuestoSistema(), whoopDellApp()),
+      )
       ..sbloccata = () {
         final licenza = ilFiloConLaCasa().licenza;
         return !licenza.controlliAccesi || licenza.premium;
@@ -125,6 +132,11 @@ PostinoDellaSalute postinoDellaSaluteDellApp() => PostinoDellaSalute.istanza ??=
       ..davanti = appDavanti
       ..siPuoChiedere = () =>
           WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+
+/// L'account WHOOP collegato, se c'e': uno solo, per la pagina, il lettore
+/// della Salute e il link di ritorno dal consenso.
+CollegamentoWhoop whoopDellApp() =>
+    CollegamentoWhoop.istanza ??= CollegamentoWhoop();
 
 /// Se l'app sta davanti a qualcuno.
 ///
@@ -694,6 +706,13 @@ class _PortoneState extends State<Portone> with WidgetsBindingObserver {
             ?.showSnackBar(SnackBar(content: Text(spiegazione)));
       case InvitoDalLink(:final invito):
         await _collegaDalLink(invito);
+      case RitornoDaWhoop(:final link):
+        /* Il collegamento WHOOP controlla lo `state`: un ritorno che non
+         * ha chiesto lui non collega niente. */
+        final esito = await whoopDellApp().ritorno(link);
+        if (!mounted) return;
+        ScaffoldMessenger.maybeOf(context)
+            ?.showSnackBar(SnackBar(content: Text(esito.spiegazione)));
     }
   }
 
