@@ -14,6 +14,16 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.26
+
+- **Home, il riquadro delle luci**: diventa una scena disegnata in cui ogni
+  luce è la cosa vera (l'albero, il presepe, la casa con le luci esterne, la
+  finestra, la stella, le ghirlande). Ci sono solo le luci configurate, il
+  cielo segue l'ora del giorno, e toccando una cosa si accendono le sue luci.
+- **La scheda delle luci**: in cima l'anteprima dal vivo, e per ogni luce il
+  tipo da scegliere fra albero, presepe, balcone, finestra, stella e
+  ghirlanda.
+
 ## 1.19.25
 
 - **Home, il riquadro delle luci**: dopo un tocco, o quando la luce si accende

@@ -12,4 +12,4 @@ import "../src/sections/beta25-real-device-fixes-section.js";
 import "../src/sections/beta25-compatibility-section.js";
 import "../src/sections/beta26-real-device-stability-section.js";
 import "../src/sections/segnalazioni-section.js";
-export const BUILD_INFO = Object.freeze({"generated":true,"integrationVersion":"1.19.25","dashboardVersion":"1.19.25","moduleVersion":14,"schemaVersion":4,"date":"2026-11-23T09:20:46+00:00","commit":"bbb58ac7dedb927da2dc054e5355b1b9733ce0e4","assetHash":"5ef643193f30d718"});
+export const BUILD_INFO = Object.freeze({"generated":true,"integrationVersion":"1.19.26","dashboardVersion":"1.19.26","moduleVersion":14,"schemaVersion":4,"date":"2026-11-23T09:32:24+00:00","commit":"cedc215620bfe53173b5ae37beb8b10ef7fa7613","assetHash":"5ef643193f30d718"});
