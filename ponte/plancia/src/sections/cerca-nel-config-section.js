@@ -97,6 +97,7 @@ const SCHEDA_DELLA_CASELLA = Object.freeze({
   cd_avvisi_icone: "avvisi",
   cd_avvisi_names_extra: "avvisi",
   cd_stati_invertiti: "avvisi",
+  cd_valvola_acqua: "avvisi",
   cd_allerte: "allerte",
   cd_animali: "animali",
   cd_robot: "robot",

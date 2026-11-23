@@ -383,7 +383,11 @@
  * (`cd_home_flusso`, #460): se il blocco «Flusso energia» si vede. E' una
  * scelta della casa come l'ordine dei blocchi: acceso dal computer, il tablet a
  * muro lo deve mostrare. */
-export const CONFIG_KEYS_REVISION = 80;
+/* La revisione 81 aggiunge la valvola dell'acqua (`cd_valvola_acqua`, #495):
+ * quale valvola — o quale rele' — chiude l'acqua di casa, col suo nome e col
+ * verso del rele'. E' la valvola della casa: scelta dal computer, il tasto
+ * «Chiudi l'acqua» deve esserci anche sul telefono e sul tablet. */
+export const CONFIG_KEYS_REVISION = 81;
 
 // Complete shared dashboard configuration snapshot. Runtime counters/timers and
 // true per-device preferences (connection credentials, theme/navbar mode) stay
@@ -725,4 +729,7 @@ export const CONFIG_KEYS = Object.freeze([
   /* Le luci di Natale: la ragione per cui stanno qui è scritta accanto alla
    * revisione 79. */
   "cd_feste",
+  /* La valvola dell'acqua: la ragione per cui sta qui è scritta accanto alla
+   * revisione 81. */
+  "cd_valvola_acqua",
 ]);
