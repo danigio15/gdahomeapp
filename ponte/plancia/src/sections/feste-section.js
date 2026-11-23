@@ -87,6 +87,9 @@ const state = (root[KEY] ||= {
   giro: null,
   misuraGhirlanda: "",
   attese: new Map(),
+  /* Le entita' delle luci dell'ultimo disegno: quelle i cui cambi di stato
+   * rifanno il riquadro. */
+  luci: [],
 });
 
 export const configurazioneDelleFeste = () => festePulite(readJson(CHIAVE_FESTE, null));
@@ -406,6 +409,7 @@ export function disegnaLeFeste(adesso = new Date()) {
   state.frame = 0;
   if (!doc?.body) return false;
   const config = configurazioneDelleFeste();
+  state.luci = config.riquadro === false ? [] : entitaDelleLuci(config);
   const states = allStates() || {};
   if (!inFesta(adesso)) {
     if (state.accese || doc.getElementById(ID_NEVE)) togliTutto();
@@ -498,12 +502,16 @@ export function installFeste() {
       agganciaIlTema();
       schedule();
     });
-  /* Un cambio di stato conta solo se tocca le luci di Natale o il sole, e
-   * solo nelle feste: fuori, questa sezione non legge nemmeno il deposito. */
+  /* Un cambio di stato conta solo se tocca le luci di Natale o il sole.
+   * Anche fuori dalle feste: il riquadro delle luci c'e' tutto l'anno, e
+   * «premo l'albero, si accende, ma la card non cambia stato, e' lentissima»
+   * era questo — fuori dalle feste il cambio si ignorava, e il riquadro si
+   * rifaceva solo al giro del minuto. Le luci si tengono da parte a ogni
+   * disegno (`state.luci`), cosi' qui non si legge il deposito a ogni cambio
+   * di stato della casa. */
   root.addEventListener?.("dashboardmodern:state-changed", (event) => {
-    if (!state.accese) return;
-    if (ilCambioTocca(event, [...entitaDelleLuci(configurazioneDelleFeste()), "sun.sun"]))
-      schedule();
+    if (!state.luci?.length) return;
+    if (ilCambioTocca(event, [...state.luci, "sun.sun"])) schedule();
   });
   root.addEventListener?.("resize", schedule, { passive: true });
   doc.addEventListener("visibilitychange", () => {
