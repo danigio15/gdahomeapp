@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-R5HBW64I.js";
+} from "../../chunk-EHC7UVTH.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -48071,6 +48071,28 @@ header.dm-testata-col-meteo .header-left-wrap{flex:0 0 auto;min-width:0}
    l'ingranaggio pure, qualunque conto faccia Safari tornando alla Home (#228). */
 body>header>.header-left-wrap{min-width:96px!important}
 body>header>.dm-editor-entry{min-width:34px!important;flex-shrink:0!important}
+/* La testata si dipinge nel suo strato, sopra il fondale.
+ *
+ * «Restano solo il meteo e il pallino verde» (iPhone, nell'app, dopo qualche
+ * giro fra le sezioni e il ritorno alla Home dalle Batterie). Nella Home la
+ * testata era l'unica cosa dipinta «in flusso»: lei, il tasto del menu, il
+ * nome, il riquadro e l'ora non hanno posizione ne' strato proprio, mentre
+ * tutte le card sotto ce l'hanno — e ce l'hanno anche il meteo («relative»)
+ * e il pallino (che pulsa). Sotto c'e' il fondale fisso con le sue macchie
+ * che si muovono («.animated-mesh-bg», z-index -1, in uno strato suo). WebKit
+ * su iPhone, quando il corpo smette di scorrere e ricomincia — la pagina delle
+ * Batterie e' corta, la Home no — rimette quello strato SOPRA il flusso della
+ * radice: sparisce tutto quello che sta in flusso, cioe' la prima fila, il
+ * fondo della testata e l'ora, e restano proprio il meteo e il pallino. La
+ * macchia verde del fondale, nel video, passa sopra il posto della testata.
+ * Le misure intanto sono giuste (larga, alta, al suo posto): per questo ogni
+ * controllo delle misure diceva che andava tutto bene.
+ *
+ * Con una posizione e uno strato suo la testata si dipinge con le card, non
+ * con il flusso, e il fondale le resta sotto. Uno e non zero: la pillola che
+ * sporge sotto la testata resta sopra la card che viene dopo. Il peso e' basso
+ * apposta: la testa ferma (testa-fissa-section.js, sticky e 30) vince. */
+body>header:not(.dm-page-mast),#page-home>header:not(.dm-page-mast){position:relative;z-index:1}
 /* Larga quanto le serve, non quanto avanza: una fascia tirata fino allo stato
    del ponte sarebbe mezzo schermo di vuoto attorno a quattro numeri.
    E staccata dal nome della casa: appiccicata sembrava una parte del nome,
@@ -48437,7 +48459,7 @@ function rifaiLaFila(header2, { sempre = false } = {}) {
   const peso = header2.style.getPropertyPriority("display");
   header2.style.setProperty("display", "none", "important");
   void header2.offsetWidth;
-  if (valore3) header2.style.setProperty("display", valore3, peso);
+  if (valore3 && valore3 !== "none") header2.style.setProperty("display", valore3, peso);
   else header2.style.removeProperty("display");
   void header2.offsetWidth;
   rimettiDovEra(prima);

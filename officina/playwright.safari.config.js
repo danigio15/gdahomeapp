@@ -3,14 +3,18 @@
  * «Se vado su Luci e Porte sparisce la parte sopra», solo su iPhone e iPad:
  * Chromium non lo fa, e le prove di tutti i giorni girano li'. Questo giro
  * prende solo le prove della testata e le fa girare su WebKit, coi due
- * apparecchi su cui e' stato visto. Lo lancia «La testata su Safari». */
+ * apparecchi su cui e' stato visto. Lo lancia «La testata su Safari».
+ *
+ * Con loro la strada del video dell'iPhone — Energia, Sport, Salute, Batterie
+ * e ritorno, con l'ingranaggio spento come nell'app — che guarda anche se la
+ * testata si dipinge sopra il fondale, non solo se ha le sue misure. */
 import { defineConfig, devices } from "@playwright/test";
 import base from "./playwright.config.js";
 
 export default defineConfig({
   ...base,
   retries: 0,
-  testMatch: /la-testata-torna-da-luci-e-porte\.spec\.js/,
+  testMatch: /la-testata-(torna-da-luci-e-porte|resta-dipinta-sulliphone)\.spec\.js/,
   projects: [
     { name: "webkit-iphone", timeout: 180_000, use: { ...devices["iPhone 14"] } },
     { name: "webkit-ipad", timeout: 180_000, use: { ...devices["iPad Pro 11"], browserName: "webkit" } },
