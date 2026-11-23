@@ -48,14 +48,14 @@ AppSideService(
      * pagina delle impostazioni la legge in `stato`. */
     onSettingsChange({ key, newValue }) {
       if (key === CHIAVI.codice && newValue) {
-        abbina(newValue).then((r) => {
-          scriviLoStato(r.ok, r.testo);
-          /* Il codice vale una volta sola: non resta scritto. */
-          settingsLib.removeItem(CHIAVI.codice);
-        });
-      } else if (key === "stacca" && newValue) {
+        /* Il codice vale una volta sola: non resta scritto nemmeno mentre si
+         * prova. */
+        settingsLib.removeItem(CHIAVI.codice);
+        scriviLoStato(false, "Mi collego alla casa…");
+        abbina(newValue).then((r) => scriviLoStato(r.ok, r.testo, { caso: r.daDove }));
+      } else if (key === CHIAVI.stacca && newValue) {
         dimentica();
-        settingsLib.removeItem("stacca");
+        settingsLib.removeItem(CHIAVI.stacca);
       }
     },
 

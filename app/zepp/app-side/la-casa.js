@@ -1,38 +1,24 @@
-/* La strada vera verso la casa: NON C'E' ANCORA. Qui c'e' dove andra'.
+/* La strada verso la casa, dentro l'app Zepp.
  *
  * Gli altri orologi la casa non la toccano: passano dall'app GdAHome sul
- * telefono, che ha le chiavi (`IlTramiteDellOrologio.kt`, `LOrologio.swift`).
- * Un Amazfit non puo': il servizio di fianco gira dentro l'app Zepp, e
- * dall'app Zepp all'app GdAHome non c'e' nessuna porta — su iPhone nemmeno a
- * cercarla, perche' GdAHome in sottofondo e' ferma.
+ * telefono (`IlTramiteDellOrologio.kt`, `LOrologio.swift`). Un Amazfit non
+ * puo': il servizio di fianco gira dentro l'app Zepp, e dall'app Zepp
+ * all'app GdAHome non c'e' nessuna porta. Allora l'Amazfit si abbina alla
+ * casa **come un telefono in piu'**, con lo stesso codice del riquadro
+ * «Abbina un telefono» nella scheda GdAHome di Home Assistant: compare nella
+ * console fra i telefoni, e da li' si stacca. Con la sua chiave chiede solo
+ * la fotografia e un comando (`ponte/src/il-polso.js`).
  *
- * Quindi l'Amazfit si abbina alla casa **come un telefono in piu'**, con le
- * sue chiavi e con lo stesso codice dello stesso riquadro, «Abbina un
- * telefono» nella scheda GdAHome di Home Assistant. Compare nella console fra
- * i telefoni, e da li' si stacca quando si vuole, senza toccare il telefono
- * vero. Come andra', in breve (la proposta intera sta col lavoro):
- *
- *  1. abbinamento: il codice scritto nelle impostazioni dell'app Zepp. Si fa
- *     la stessa stretta di `ponte/src/cifra.js` (`abbina: 2`: X25519, HKDF
- *     col codice dentro, AES-256-GCM), e la casa consegna segno e chiave del
- *     filo solo se la conferma si apre. Il codice non resta da nessuna parte;
- *  2. il filo: il servizio di fianco ha `fetch` e niente WebSocket, quindi
- *     non si tiene un filo aperto. Ogni domanda e' una busta chiusa con la
- *     chiave del filo, mandata al centralino per HTTPS; il centralino la
- *     passa alla casa sul filo che la casa tiene gia' aperto, e riporta la
- *     risposta. Instrada e non legge, come oggi;
- *  3. le domande sono due, «la fotografia» e «un comando», e la risposta e'
- *     la stessa fotografia degli altri orologi (`docs` della proposta). La
- *     prepara la casa, non il telefono: serrature e antifurto restano fuori,
- *     come nelle ricette dell'orologio.
- *
- * Mancano: la porta HTTP del centralino, le due domande nel ponte, e la
- * cifratura qui in JavaScript (senza `crypto` del sistema: una libreria
- * piccola, da scegliere). Finche' non ci sono, l'orologio dice la verita':
- * non si collega, e la casa d'esempio si accende dalle impostazioni.
+ * Il filo lo tiene il centralino (`il-filo.js`): qui si tiene il legame
+ * nella memoria delle impostazioni dell'app Zepp, e si traduce `fetch` di
+ * Zepp in quello che il filo si aspetta.
  */
 
 import { settingsLib } from "@zeppos/zml/base-side";
+
+import { daEsadecimale, inByte } from "./cifra.js";
+import { ilCaso } from "./caso.js";
+import { abbina as abbinaAlCentralino, FiloRotto, IlFilo } from "./il-filo.js";
 
 /* Dove si tengono le cose, nella memoria delle impostazioni dell'app Zepp. */
 export const CHIAVI = Object.freeze({
@@ -40,40 +26,134 @@ export const CHIAVI = Object.freeze({
   vetrina: "vetrina",
   stato: "stato",
   legame: "legame",
+  stacca: "stacca",
 });
 
-const NON_ANCORA =
-  "Questa versione non sa ancora collegarsi alla casa. Per provarla, accendi la casa d'esempio.";
+/* La posta: `fetch` dell'app Zepp vuole un oggetto e torna `{status, body}`,
+ * con `body` gia' letto o ancora testo a seconda del telefono. */
+async function posta(url, corpo) {
+  const risposta = await fetch({
+    url,
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(corpo),
+  });
+  let letto = risposta?.body;
+  if (typeof letto === "string") {
+    try {
+      letto = JSON.parse(letto);
+    } catch (_errore) {
+      letto = null;
+    }
+  }
+  return { stato: Number(risposta?.status) || 0, corpo: letto };
+}
+
+function ilLegame() {
+  try {
+    const legame = JSON.parse(settingsLib.getItem(CHIAVI.legame) || "null");
+    return legame && typeof legame.chiave === "string" && legame.chiave.length === 64
+      ? legame
+      : null;
+  } catch (_errore) {
+    return null;
+  }
+}
 
 export function abbinato() {
-  return Boolean(settingsLib.getItem(CHIAVI.legame));
+  return Boolean(ilLegame());
 }
 
-export function scriviLoStato(collegato, testo) {
-  settingsLib.setItem(CHIAVI.stato, JSON.stringify({ collegato, testo, quando: Date.now() }));
+export function scriviLoStato(collegato, testo, altro = {}) {
+  settingsLib.setItem(
+    CHIAVI.stato,
+    JSON.stringify({ collegato, testo, quando: Date.now(), ...altro }),
+  );
 }
 
-/** Il codice scritto nelle impostazioni: qui partira' la stretta di mano. */
-export async function abbina(codice) {
-  const pulito = String(codice || "")
-    .toUpperCase()
-    .replace(/[^0-9A-Z]/g, "");
-  if (pulito.length !== 16) {
-    return { ok: false, testo: "Il codice ha sedici lettere e numeri: ricontrollalo." };
+/* Il filo di adesso: uno per il servizio di fianco, finche' il legame e'
+ * quello. */
+let filo = null;
+let diQualeChiave = "";
+
+function ilFilo() {
+  const legame = ilLegame();
+  if (!legame) return null;
+  if (!filo || diQualeChiave !== legame.chiave) {
+    const { caso } = ilCaso({ segreto: daEsadecimale(legame.chiave) });
+    filo = new IlFilo({ legame, posta, caso });
+    diQualeChiave = legame.chiave;
   }
-  return { ok: false, testo: NON_ANCORA };
+  return filo;
+}
+
+/** Il codice scritto nelle impostazioni: la stretta di mano col centralino. */
+export async function abbina(codice) {
+  const { caso, daDove } = ilCaso({ segreto: inByte(String(codice || "")) });
+  try {
+    const legame = await abbinaAlCentralino({ codice, posta, caso });
+    settingsLib.setItem(CHIAVI.legame, JSON.stringify(legame));
+    filo = null;
+    return { ok: true, testo: "Collegato alla casa", daDove };
+  } catch (errore) {
+    return {
+      ok: false,
+      testo: errore instanceof FiloRotto ? errore.message : "Non ha funzionato: riprova",
+      daDove,
+    };
+  }
+}
+
+/* Uno staccato dalla console: le chiavi non valgono piu', e si dice di
+ * ricollegarlo. */
+function seStaccato(errore) {
+  if (errore instanceof FiloRotto && errore.staccato) {
+    settingsLib.removeItem(CHIAVI.legame);
+    filo = null;
+    scriviLoStato(false, errore.message);
+  }
 }
 
 export async function laFoto() {
-  return { abbinato: false, testo: NON_ANCORA };
+  const ilMio = ilFilo();
+  if (!ilMio) return { abbinato: false };
+  try {
+    const risposta = await ilMio.chiedi({ t: "foto" });
+    if (risposta.ok !== true) return { abbinato: true, testo: String(risposta.testo || "") };
+    return { abbinato: true, foto: risposta.foto };
+  } catch (errore) {
+    seStaccato(errore);
+    return {
+      abbinato: !(errore instanceof FiloRotto && errore.staccato),
+      testo: errore?.message || "",
+    };
+  }
 }
 
-export async function comando() {
-  return { ok: false, testo: NON_ANCORA };
+export async function comando({ id, cosa, valore }) {
+  const ilMio = ilFilo();
+  if (!ilMio) return { ok: false, testo: "L'orologio non è collegato alla casa" };
+  try {
+    const risposta = await ilMio.chiedi({
+      t: "comando",
+      id,
+      cosa,
+      ...(valore != null ? { valore } : {}),
+    });
+    return {
+      ok: risposta.ok === true,
+      testo: String(risposta.testo || (risposta.ok ? "Fatto" : "Non è partito")),
+      ...(risposta.foto ? { foto: risposta.foto } : {}),
+    };
+  } catch (errore) {
+    seStaccato(errore);
+    return { ok: false, testo: errore?.message || "Non è partito" };
+  }
 }
 
 /** Stacca l'orologio da qui: le chiavi si buttano. Dalla casa si stacca in console. */
 export function dimentica() {
   settingsLib.removeItem(CHIAVI.legame);
+  filo = null;
   scriviLoStato(false, "");
 }

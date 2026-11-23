@@ -60,8 +60,20 @@ function frase(testo, piccola = false) {
 AppSettingsPage({
   build({ settingsStorage: memoria }) {
     const stato = leggiLoStato(memoria);
-    const collegato = stato.collegato === true;
+    /* Collegato e' chi ha il legame: lo scrive il servizio di fianco, e
+     * qui non si legge che c'e'. */
+    const collegato = Boolean(memoria.getItem("legame"));
     const vetrina = memoria.getItem("vetrina") === "si";
+    /* Il telefono non ha dato numeri a caso al servizio di fianco, e la
+     * chiave si e' fatta col ripiego (`app-side/caso.js`): funziona, e va
+     * detto. */
+    const ripiego =
+      stato.caso === "ripiego"
+        ? frase(
+            "Questo telefono non dà numeri a caso all'app Zepp: GdAHome usa il suo ripiego, sicuro ma un po' meno.",
+            true,
+          )
+        : null;
 
     const laCasa = collegato
       ? sezione("La casa", [
@@ -73,6 +85,7 @@ AppSettingsPage({
             style: { marginTop: "14px", borderRadius: "24px", border: "1px solid #e2e8f0" },
             onClick: () => memoria.setItem("stacca", String(Date.now())),
           }),
+          ripiego,
         ])
       : sezione("Collega la casa", [
           frase("1. In Home Assistant apri la scheda GdAHome, riquadro «Abbina un telefono»."),
@@ -94,6 +107,7 @@ AppSettingsPage({
             onChange: (scritto) => memoria.setItem("codice", scritto),
           }),
           stato.testo ? frase(stato.testo) : null,
+          ripiego,
           frase(
             "Il codice non resta da nessuna parte: l'orologio riceve una chiave sua, che vale solo per lui.",
             true,
