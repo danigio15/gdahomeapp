@@ -2,17 +2,18 @@
  * alla volta, e il tasto per spegnerla o accenderla.
  *
  * Sul tondo l'arco corre lungo il bordo; sul quadrato e' un anello al
- * centro. I tocchi su meno e piu' non partono uno per uno: si aspetta che il
- * dito si fermi un attimo, e parte l'ultimo valore. Dieci colpetti di fila
- * sarebbero dieci giri della casa, e una lampadina che sfarfalla.
+ * centro (`disposizione.js`, `laLuce`). I tocchi su meno e piu' non partono
+ * uno per uno: si aspetta che il dito si fermi un attimo, e parte l'ultimo
+ * valore. Dieci colpetti di fila sarebbero dieci giri della casa, e una
+ * lampadina che sfarfalla.
  */
 
 import { back } from "@zos/router";
-import { px } from "@zos/utils";
 import { widget, prop } from "@zos/ui";
 import { BasePage } from "@zeppos/zml/base-page";
 
-import { COLORE, LARGO, TONDO } from "../utils/stile";
+import { COLORE, SCHERMO } from "../utils/stile";
+import { laLuce } from "../utils/disposizione";
 import { Tela } from "../utils/tela";
 import { colpetto, laFotoDiPrima, manda } from "../utils/il-telefono";
 
@@ -26,7 +27,7 @@ let arco = null;
 let cifra = null;
 let inAttesa = null;
 
-function laLuce() {
+function laLuceDellaFoto() {
   return (laFotoDiPrima()?.dispositivi || []).find((d) => d.id === id);
 }
 
@@ -41,7 +42,7 @@ Page(
     },
 
     build() {
-      const luce = laLuce();
+      const luce = laLuceDellaFoto();
       if (!luce) return back();
       livello = luce.acceso ? luce.luminosita || 100 : 0;
       this.disegna(luce);
@@ -49,80 +50,23 @@ Page(
 
     disegna(luce) {
       tela.svuota();
-      const cx = LARGO / 2;
-      const cy = TONDO ? LARGO / 2 : px(218);
-      const raggio = TONDO ? LARGO / 2 - px(18) : px(146);
-      const spessore = TONDO ? px(16) : px(18);
+      const d = laLuce(SCHERMO);
       const comune = {
-        center_x: cx,
-        center_y: cy,
-        radius: raggio,
-        start_angle: -135,
-        end_angle: 135,
-        line_width: spessore,
+        center_x: d.arco.cx,
+        center_y: d.arco.cy,
+        radius: d.arco.r,
+        start_angle: d.arco.da,
+        end_angle: d.arco.a,
+        line_width: d.arco.spessore,
       };
       tela.metti(widget.ARC_PROGRESS, { ...comune, color: COLORE.cartaSu, level: 100 });
       arco = tela.metti(widget.ARC_PROGRESS, { ...comune, color: COLORE.ambra, level: livello });
-      tela.scritta({
-        x: 0,
-        y: TONDO ? px(70) : px(22),
-        w: LARGO,
-        h: px(30),
-        testo: luce.nome,
-        grande: 21,
-        centro: true,
-      });
-      cifra = tela.scritta({
-        x: 0,
-        y: TONDO ? px(140) : px(116),
-        w: LARGO,
-        h: px(100),
-        testo: `${livello}%`,
-        grande: 80,
-        centro: true,
-      });
-      tela.scritta({
-        x: 0,
-        y: TONDO ? px(240) : px(214),
-        w: LARGO,
-        h: px(26),
-        testo: "LUMINOSITÀ",
-        grande: 18,
-        colore: COLORE.tenue,
-        centro: true,
-      });
-      const lato = TONDO ? px(72) : px(64);
-      const yTondi = TONDO ? px(268) : px(262);
-      const dentro = TONDO ? px(70) : px(118);
-      tela.metti(widget.BUTTON, {
-        x: dentro,
-        y: yTondi,
-        w: lato,
-        h: lato,
-        radius: lato / 2,
-        normal_color: COLORE.cartaSu,
-        press_color: COLORE.carta,
-        text: "−",
-        text_size: px(40),
-        click_func: () => this.cambia(-PASSO),
-      });
-      tela.metti(widget.BUTTON, {
-        x: LARGO - dentro - lato,
-        y: yTondi,
-        w: lato,
-        h: lato,
-        radius: lato / 2,
-        normal_color: COLORE.cartaSu,
-        press_color: COLORE.carta,
-        text: "+",
-        text_size: px(40),
-        click_func: () => this.cambia(PASSO),
-      });
-      tela.tasto({
-        y: TONDO ? px(480 - 44 - 66) : px(450 - 18 - 76),
-        w: TONDO ? px(200) : px(270),
-        h: TONDO ? px(66) : px(76),
-        testo: livello > 0 ? "Spegni" : "Accendi",
+      tela.scritta(d.nome, luce.nome);
+      cifra = tela.scritta(d.cifra, `${livello}%`);
+      tela.scritta(d.etichetta, "LUMINOSITÀ");
+      tela.tasto(d.meno, "−", { quando: () => this.cambia(-PASSO) });
+      tela.tasto(d.piu, "+", { quando: () => this.cambia(PASSO) });
+      tela.tasto(d.tasto, livello > 0 ? "Spegni" : "Accendi", {
         quando: () => this.interruttore(),
       });
     },
@@ -148,15 +92,13 @@ Page(
 
     /* Com'e' andata: se la casa ha mandato la fotografia, vale quella. */
     dopo(r) {
-      const luce = laLuce();
+      const luce = laLuceDellaFoto();
       if (r.ok && luce) {
         livello = luce.acceso ? luce.luminosita || 100 : 0;
         this.disegna(luce);
         return;
       }
-      if (!r.ok) {
-        cifra.setProperty(prop.TEXT, "—");
-      }
+      if (!r.ok) cifra?.setProperty(prop.TEXT, "—");
     },
 
     onDestroy() {

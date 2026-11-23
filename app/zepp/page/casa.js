@@ -3,26 +3,29 @@
  *
  * Se l'orologio non e' ancora abbinato si spiega come si fa, e basta: il
  * codice si scrive sul telefono, nell'app Zepp, non con la tastiera al polso.
+ *
+ * Mentre la pagina e' davanti si guarda la casa ogni venti secondi
+ * (`guardaOgniTanto`); con lo schermo spento no.
  */
 
 import { push } from "@zos/router";
-import { px } from "@zos/utils";
-import { widget, align, text_style } from "@zos/ui";
 import { BasePage } from "@zeppos/zml/base-page";
 
-import { COLORE, LARGO, TONDO } from "../utils/stile";
+import { COLORE, SCHERMO } from "../utils/stile";
+import { lAbbinamento, laCasa } from "../utils/disposizione";
 import { Tela } from "../utils/tela";
 import { diGenere, diQuando } from "../utils/la-foto";
-import { chiediLaFoto, laFotoDiPrima } from "../utils/il-telefono";
+import { chiediLaFoto, guardaOgniTanto, laFotoDiPrima } from "../utils/il-telefono";
 
 const tela = new Tela();
+let smetti = null;
 
 function apri(url, params) {
   push({ url, params: JSON.stringify(params || {}) });
 }
 
-function riquadri(foto) {
-  const luci = diGenere(foto, ["luce"]);
+function iRiquadri(foto) {
+  const luci = diGenere(foto, ["luce", "presa"]);
   const accese = luci.filter((l) => l.acceso).length;
   const varchi = diGenere(foto, ["varco", "porta"]);
   const aperti = varchi.filter((v) => v.acceso).length;
@@ -55,7 +58,9 @@ function riquadri(foto) {
     },
     {
       nome: "La casa",
-      det: misura ? `${misura.nome} ${misura.valore}` : diQuando(foto.quando),
+      /* Il numero, e basta: «Produzione» non ci sta su un tondo piccolo, e
+       * il nome lo dice la pagina che si apre. */
+      det: misura ? misura.valore : diQuando(foto.quando),
       segno: "sole",
       quando: () => apri("page/luci", { titolo: "La casa", generi: [], misure: true }),
     },
@@ -64,120 +69,51 @@ function riquadri(foto) {
 
 function disegnaLaCasa(foto) {
   tela.svuota();
-  tela.testata(foto.casa || "Casa");
-  const spazio = px(12);
-  const margine = TONDO ? px(72) : px(18);
-  const w = (LARGO - margine * 2 - spazio) / 2;
-  const h = TONDO ? px(135) : px(139);
-  const cima = TONDO ? px(110) : px(96);
-  riquadri(foto).forEach((r, i) => {
-    const x = margine + (i % 2) * (w + spazio);
-    const y = cima + Math.floor(i / 2) * (h + spazio);
-    tela.fondo({
-      x,
-      y,
-      w,
-      h,
-      raggio: px(30),
+  const d = laCasa(SCHERMO);
+  tela.scritta(d.titolo, (foto.casa || "Casa").toUpperCase());
+  iRiquadri(foto).forEach((r, i) => {
+    const posto = d.riquadri[i];
+    tela.fondo(posto.fondo, {
       colore: r.acceso ? COLORE.ambra : COLORE.carta,
-      premuto: r.acceso ? 0xd97706 : COLORE.cartaSu,
+      premuto: r.acceso ? COLORE.ambraPremuta : COLORE.cartaSu,
       quando: r.quando,
     });
-    tela.segno({
-      cx: x + w / 2,
-      cy: y + px(38),
-      raggio: px(25),
-      nome: r.segno,
-      acceso: r.acceso,
-      quando: r.quando,
-    });
-    const colore = r.acceso ? COLORE.nero : COLORE.testo;
-    tela.scritta({
-      x,
-      y: y + px(68),
-      w,
-      h: px(30),
-      testo: r.nome,
-      colore,
-      centro: true,
-      quando: r.quando,
-    });
-    tela.scritta({
-      x: x + px(6),
-      y: y + px(98),
-      w: w - px(12),
-      h: px(24),
-      testo: r.det,
-      grande: 16,
-      colore: r.acceso ? 0x3d2a05 : COLORE.tenue,
-      centro: true,
+    tela.segno(posto.segno, r.segno, { acceso: r.acceso, quando: r.quando });
+    tela.scritta(posto.nome, r.nome, { colore: r.acceso ? COLORE.nero : null, quando: r.quando });
+    tela.scritta(posto.det, r.det, {
+      colore: r.acceso ? COLORE.scuroSullAmbra : null,
       quando: r.quando,
     });
   });
-  tela.scritta({
-    x: 0,
-    y: cima + 2 * h + spazio + px(14),
-    w: LARGO,
-    h: px(24),
-    testo: diQuando(foto.quando),
-    grande: 16,
-    colore: COLORE.tenue,
-    centro: true,
-  });
+  tela.scritta(d.piede, diQuando(foto.quando));
 }
 
 function disegnaLAbbinamento(testo) {
   tela.svuota();
-  const cx = LARGO / 2;
-  const cy = TONDO ? px(150) : px(120);
-  tela.metti(widget.CIRCLE, { center_x: cx, center_y: cy, radius: px(48), color: COLORE.ambra });
-  tela.metti(widget.IMG, {
-    x: cx - px(26),
-    y: cy - px(26),
-    w: px(52),
-    h: px(52),
-    src: "segni/lega-grande.png",
-  });
-  tela.scritta({
-    x: 0,
-    y: cy + px(62),
-    w: LARGO,
-    h: px(44),
-    testo: "Collega la casa",
-    grande: 32,
-    colore: COLORE.ambra,
-    centro: true,
-  });
-  tela.metti(widget.TEXT, {
-    x: px(TONDO ? 60 : 30),
-    y: cy + px(112),
-    w: LARGO - px(TONDO ? 120 : 60),
-    h: px(110),
-    text:
-      testo ||
+  const d = lAbbinamento(SCHERMO);
+  tela.bollo(d.bollo, "lega-grande");
+  tela.scritta(d.titolo, "Collega la casa");
+  tela.scritta(
+    d.spiega,
+    testo ||
       "Sul telefono apri Zepp › GdAHome e scrivi il codice della scheda GdAHome in Home Assistant.",
-    text_size: px(19),
-    color: COLORE.testo,
-    align_h: align.CENTER_H,
-    text_style: text_style.WRAP,
-  });
+    { colore: COLORE.testo },
+  );
 }
 
 function disegnaLAttesa() {
   tela.svuota();
-  tela.scritta({
-    x: 0,
-    y: 0,
-    w: LARGO,
-    h: px(TONDO ? 480 : 450),
-    testo: "Cerco la casa…",
-    colore: COLORE.tenue,
-    centro: true,
-  });
+  const d = laCasa(SCHERMO);
+  tela.scritta({ ...d.piede, y: Math.round(SCHERMO.H / 2 - d.piede.h / 2) }, "Cerco la casa…");
 }
 
 Page(
   BasePage({
+    onInit() {
+      this.aggiorna();
+      smetti = guardaOgniTanto(this, disegnaLaCasa);
+    },
+
     build() {
       const prima = laFotoDiPrima();
       if (prima) disegnaLaCasa(prima);
@@ -186,10 +122,13 @@ Page(
 
     onResume() {
       this.aggiorna();
+      smetti?.();
+      smetti = guardaOgniTanto(this, disegnaLaCasa);
     },
 
-    onInit() {
-      this.aggiorna();
+    onPause() {
+      smetti?.();
+      smetti = null;
     },
 
     aggiorna() {
@@ -197,16 +136,20 @@ Page(
         .then((r) => {
           if (!r.abbinato) disegnaLAbbinamento(r.testo);
           else if (r.foto) disegnaLaCasa(r.foto);
+          else if (!laFotoDiPrima()) disegnaLAbbinamento(r.testo);
         })
         .catch(() => {
-          if (!laFotoDiPrima())
+          if (!laFotoDiPrima()) {
             disegnaLAbbinamento(
               "Il telefono non risponde. Apri l'app Zepp e tieni il telefono vicino.",
             );
+          }
         });
     },
 
     onDestroy() {
+      smetti?.();
+      smetti = null;
       tela.svuota();
     },
   }),

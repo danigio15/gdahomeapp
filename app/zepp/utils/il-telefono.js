@@ -43,7 +43,7 @@ export function chiediLaFoto(pagina) {
     if (!r || r.abbinato !== true) return { abbinato: false, testo: r?.testo || "" };
     const foto = leggiLaFoto(r.foto);
     if (foto) getApp()._options.globalData.foto = foto;
-    return { abbinato: true, foto };
+    return { abbinato: true, foto, testo: r.testo || "" };
   });
 }
 
@@ -59,6 +59,32 @@ export function manda(pagina, params) {
       ok: false,
       testo: "Il telefono non risponde. È vicino, col Bluetooth acceso?",
     }));
+}
+
+/* Ogni quanto si guarda la casa mentre una pagina e' davanti, come Wear OS
+ * (`OGNI_QUANTO_SI_GUARDA_MS` in `IlTelefono.kt`): una luce accesa dal muro
+ * si vede senza toccare niente. Con lo schermo spento o l'app chiusa non si
+ * guarda: la pagina ferma il giro in `onPause` e in `onDestroy`. */
+export const OGNI_QUANTO_SI_GUARDA_MS = 20000;
+
+/** Guarda la casa ogni tanto, finche' non si chiama la funzione che torna. */
+export function guardaOgniTanto(pagina, quandoArriva) {
+  let fermo = false;
+  let giro = null;
+  const guarda = () => {
+    if (fermo) return;
+    chiediLaFoto(pagina)
+      .then((r) => !fermo && r.foto && quandoArriva(r.foto))
+      .catch(() => {})
+      .then(() => {
+        if (!fermo) giro = setTimeout(guarda, OGNI_QUANTO_SI_GUARDA_MS);
+      });
+  };
+  giro = setTimeout(guarda, OGNI_QUANTO_SI_GUARDA_MS);
+  return () => {
+    fermo = true;
+    if (giro) clearTimeout(giro);
+  };
 }
 
 /** L'ultima fotografia vista, se c'e'. */

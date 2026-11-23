@@ -6,11 +6,10 @@
  */
 
 import { back } from "@zos/router";
-import { px } from "@zos/utils";
-import { widget } from "@zos/ui";
 import { BasePage } from "@zeppos/zml/base-page";
 
-import { COLORE, LARGO, TONDO, frase } from "../utils/stile";
+import { COLORE, SCHERMO } from "../utils/stile";
+import { lEsito } from "../utils/disposizione";
 import { Tela } from "../utils/tela";
 
 const tela = new Tela();
@@ -28,64 +27,15 @@ Page(
     },
 
     build() {
-      const cx = LARGO / 2;
-      const cy = TONDO ? px(150) : px(130);
-      if (esito.ok) {
-        tela.metti(widget.CIRCLE, {
-          center_x: cx,
-          center_y: cy,
-          radius: px(66),
-          color: COLORE.ambra,
-        });
-        tela.metti(widget.IMG, {
-          x: cx - px(36),
-          y: cy - px(36),
-          w: px(72),
-          h: px(72),
-          src: "segni/si-grande.png",
-        });
-      } else {
-        tela.metti(widget.CIRCLE, {
-          center_x: cx,
-          center_y: cy,
-          radius: px(66),
-          color: COLORE.rosso,
-        });
-        tela.metti(widget.CIRCLE, {
-          center_x: cx,
-          center_y: cy,
-          radius: px(60),
-          color: COLORE.nero,
-        });
-        tela.metti(widget.IMG, {
-          x: cx - px(36),
-          y: cy - px(36),
-          w: px(72),
-          h: px(72),
-          src: "segni/no-grande.png",
-        });
-      }
-      tela.scritta({
-        x: 0,
-        y: cy + px(82),
-        w: LARGO,
-        h: px(56),
-        testo: esito.titolo,
-        grande: esito.ok ? 46 : 34,
-        colore: esito.ok ? COLORE.testo : COLORE.rosso,
-        centro: true,
-      });
-      if (esito.testo) frase(esito.testo, cy + px(140), { margine: TONDO ? 56 : 34, alto: 70 });
+      const d = lEsito(SCHERMO);
+      if (esito.ok) tela.bollo(d.bollo, "si-grande");
+      else tela.bollo(d.bollo, "no-grande", { pieno: false, colore: COLORE.rosso });
+      tela.scritta(d.titolo, esito.titolo, { colore: esito.ok ? COLORE.testo : COLORE.rosso });
+      if (esito.testo) tela.scritta(d.perche, esito.testo);
       if (esito.ok) {
         via = setTimeout(() => back(), 1800);
       } else {
-        tela.tasto({
-          y: TONDO ? px(350) : px(340),
-          w: px(230),
-          testo: "Riprova",
-          pieno: true,
-          quando: () => back(),
-        });
+        tela.tasto(d.tasto, "Riprova", { pieno: true, quando: () => back() });
       }
     },
 

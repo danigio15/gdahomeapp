@@ -1,14 +1,16 @@
-/* La tela: i pezzi disegnati da una pagina, da buttare giu' tutti insieme
- * quando arriva una fotografia nuova e si ridisegna.
+/* La tela: disegna i pezzi di `disposizione.js` coi widget di Zepp OS, e li
+ * butta giu' tutti insieme quando arriva una fotografia nuova.
  *
  * Su Zepp OS un widget resta finche' non lo si cancella: ridisegnare sopra
  * senza cancellare vuol dire due righe una sull'altra, e la memoria al polso
  * e' poca.
  */
 
-import { createWidget, deleteWidget, widget, align, event } from "@zos/ui";
-import { px } from "@zos/utils";
-import { COLORE, LARGO, MISURE } from "./stile";
+import { createWidget, deleteWidget, widget, align, event, text_style } from "@zos/ui";
+
+import { COLORE, SCHERMO } from "./stile";
+
+const COLORI_DEL_TESTO = { testo: COLORE.testo, tenue: COLORE.tenue, ambra: COLORE.ambra };
 
 export class Tela {
   constructor() {
@@ -26,40 +28,34 @@ export class Tela {
     this.pezzi = [];
   }
 
-  /** Il titolo in ambra in cima, e sotto la riga piccola (se c'e'). */
-  testata(titolo, sotto = "") {
-    this.scritta({
-      x: 0,
-      y: px(MISURE.titolo),
-      w: LARGO,
-      h: px(44),
-      testo: titolo.toUpperCase(),
-      grande: 32,
-      colore: COLORE.ambra,
-      centro: true,
+  /** Un testo dove la disposizione lo mette. Una riga sola finisce coi
+   * puntini; piu' righe vanno a capo. Se c'e' `quando`, anche il testo si
+   * tocca: sta sopra il tasto, e il dito non deve cercare il bordo. */
+  scritta(pezzo, parola, { colore = null, quando = null } = {}) {
+    const t = this.metti(widget.TEXT, {
+      x: pezzo.x,
+      y: pezzo.y,
+      w: pezzo.w,
+      h: pezzo.h,
+      text: String(parola ?? ""),
+      text_size: pezzo.grande,
+      color: colore ?? COLORI_DEL_TESTO[pezzo.colore] ?? COLORE.testo,
+      align_h: pezzo.allinea === "sinistra" ? align.LEFT : align.CENTER_H,
+      align_v: align.CENTER_V,
+      text_style: pezzo.righe > 1 ? text_style.WRAP : text_style.ELLIPSIS,
     });
-    if (sotto) {
-      this.scritta({
-        x: 0,
-        y: px(MISURE.sotto),
-        w: LARGO,
-        h: px(28),
-        testo: sotto,
-        grande: 20,
-        colore: COLORE.tenue,
-        centro: true,
-      });
-    }
+    if (quando) t.addEventListener(event.CLICK_UP, () => quando());
+    return t;
   }
 
-  /** Un tasto grande, tutto tondo: il fondo di un riquadro o di una riga. */
-  fondo({ x, y, w, h, raggio, colore = COLORE.carta, premuto = COLORE.cartaSu, quando }) {
+  /** Il fondo di un riquadro o di una riga: un tasto tutto tondo. */
+  fondo(pezzo, { colore = COLORE.carta, premuto = COLORE.cartaSu, quando = null } = {}) {
     return this.metti(widget.BUTTON, {
-      x,
-      y,
-      w,
-      h,
-      radius: raggio,
+      x: pezzo.x,
+      y: pezzo.y,
+      w: pezzo.w,
+      h: pezzo.h,
+      radius: pezzo.r,
       normal_color: colore,
       press_color: premuto,
       text: "",
@@ -67,57 +63,69 @@ export class Tela {
     });
   }
 
-  /** Un testo su una riga. Se c'e' `quando`, anche il testo si tocca: sta
-   * sopra il tasto, e il dito non deve dover cercare il bordo. */
-  scritta({ x, y, w, h, testo, grande = 22, colore = COLORE.testo, centro = false, quando }) {
-    const t = this.metti(widget.TEXT, {
-      x,
-      y,
-      w,
-      h,
-      text: testo,
-      text_size: px(grande),
-      color: colore,
-      align_h: centro ? align.CENTER_H : align.LEFT,
-      align_v: align.CENTER_V,
+  /** Un tasto con la scritta dentro. */
+  tasto(pezzo, parola, { pieno = false, quando = null } = {}) {
+    return this.metti(widget.BUTTON, {
+      x: pezzo.x,
+      y: pezzo.y,
+      w: pezzo.w,
+      h: pezzo.h,
+      radius: pezzo.r,
+      normal_color: pieno ? COLORE.ambra : COLORE.cartaSu,
+      press_color: pieno ? COLORE.ambraPremuta : COLORE.carta,
+      color: pieno ? COLORE.nero : COLORE.testo,
+      text_size: Math.round(Math.min(pezzo.h * 0.42, SCHERMO.px(24))),
+      text: String(parola),
+      click_func: () => quando && quando(),
     });
-    if (quando) t.addEventListener(event.CLICK_UP, () => quando());
-    return t;
   }
 
-  /** Il segno in un tondo: ambra tenue, o ambra pieno se e' acceso. */
-  segno({ cx, cy, raggio, nome, acceso = false, quando }) {
+  /** Il segno in un tondo: ambra tenue, o ambra pieno se e' acceso. Le
+   * icone sono PNG da 30 a 480 di larghezza (`strumenti/disegna-le-icone.mjs`),
+   * e zeus le porta alla misura di ogni schermo. */
+  segno(cerchio, nome, { acceso = false, quando = null } = {}) {
     this.metti(widget.CIRCLE, {
-      center_x: cx,
-      center_y: cy,
-      radius: raggio,
+      center_x: cerchio.cx,
+      center_y: cerchio.cy,
+      radius: cerchio.r,
       color: acceso ? COLORE.ambra : COLORE.ambraTenue,
     });
-    const lato = px(30);
+    const lato = SCHERMO.px(30);
     const i = this.metti(widget.IMG, {
-      x: cx - lato / 2,
-      y: cy - lato / 2,
+      x: cerchio.cx - Math.round(lato / 2),
+      y: cerchio.cy - Math.round(lato / 2),
       w: lato,
       h: lato,
+      auto_scale: true,
       src: `segni/${nome}${acceso ? "-nero" : ""}.png`,
     });
     if (quando) i.addEventListener(event.CLICK_UP, () => quando());
   }
 
-  /** Un tasto con la scritta dentro, largo quanto si chiede, centrato. */
-  tasto({ y, w, h = px(76), testo, pieno = false, quando }) {
-    return this.metti(widget.BUTTON, {
-      x: (LARGO - w) / 2,
-      y,
-      w,
-      h,
-      radius: h / 2,
-      normal_color: pieno ? COLORE.ambra : COLORE.cartaSu,
-      press_color: pieno ? 0xd97706 : COLORE.carta,
-      color: pieno ? COLORE.nero : COLORE.testo,
-      text_size: px(22),
-      text: testo,
-      click_func: () => quando && quando(),
+  /** Il bollo grande di «Fatto», del no e del collegamento. */
+  bollo(cerchio, nome, { pieno = true, colore = COLORE.ambra } = {}) {
+    this.metti(widget.CIRCLE, {
+      center_x: cerchio.cx,
+      center_y: cerchio.cy,
+      radius: cerchio.r,
+      color: colore,
+    });
+    if (!pieno) {
+      this.metti(widget.CIRCLE, {
+        center_x: cerchio.cx,
+        center_y: cerchio.cy,
+        radius: cerchio.r - SCHERMO.px(6),
+        color: COLORE.nero,
+      });
+    }
+    const lato = Math.round(cerchio.r * 1.1);
+    this.metti(widget.IMG, {
+      x: cerchio.cx - Math.round(lato / 2),
+      y: cerchio.cy - Math.round(lato / 2),
+      w: lato,
+      h: lato,
+      auto_scale: true,
+      src: `segni/${nome}.png`,
     });
   }
 }

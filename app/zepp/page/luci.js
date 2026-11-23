@@ -7,24 +7,31 @@
  * (`IlTelefono.kt`, `gira`): «premo e non cambia stato» non deve tornare.
  *
  * Toccando il nome di una luce che sa dire la luminosita' si apre il dimmer.
+ * Mentre la pagina e' davanti si guarda la casa ogni venti secondi.
  */
 
 import { push } from "@zos/router";
-import { px } from "@zos/utils";
 import { widget } from "@zos/ui";
 import { BasePage } from "@zeppos/zml/base-page";
 
-import { COLORE, LARGO, MISURE, segnoDelGenere } from "../utils/stile";
+import { COLORE, SCHERMO, segnoDelGenere } from "../utils/stile";
+import { laLista } from "../utils/disposizione";
 import { Tela } from "../utils/tela";
 import { diGenere, diQuando, girato } from "../utils/la-foto";
-import { chiediLaFoto, colpetto, laFotoDiPrima, manda } from "../utils/il-telefono";
+import {
+  chiediLaFoto,
+  colpetto,
+  guardaOgniTanto,
+  laFotoDiPrima,
+  manda,
+} from "../utils/il-telefono";
 
 const tela = new Tela();
 let chiesto = { titolo: "Luci", generi: ["luce"], misure: false };
+let smetti = null;
 
-function dettaglio(d) {
-  if (d.luminosita != null)
-    return d.acceso ? `${d.stato || "Accesa"} · ${d.luminosita}%` : d.stato || "Spenta";
+function ilDettaglio(d) {
+  if (d.luminosita != null && d.acceso) return `${d.stato || "Accesa"} · ${d.luminosita}%`;
   return d.stato;
 }
 
@@ -39,6 +46,7 @@ Page(
       chiediLaFoto(this)
         .then((r) => r.foto && this.disegna(r.foto))
         .catch(() => {});
+      smetti = guardaOgniTanto(this, (foto) => this.disegna(foto));
     },
 
     build() {
@@ -46,103 +54,77 @@ Page(
       if (foto) this.disegna(foto);
     },
 
+    onResume() {
+      smetti?.();
+      smetti = guardaOgniTanto(this, (foto) => this.disegna(foto));
+    },
+
+    onPause() {
+      smetti?.();
+      smetti = null;
+    },
+
     disegna(foto) {
       tela.svuota();
       if (chiesto.misure) return this.disegnaLeMisure(foto);
       const righe = diGenere(foto, chiesto.generi);
       const accese = righe.filter((d) => d.acceso).length;
-      tela.testata(
-        chiesto.titolo,
-        righe.length
-          ? `${accese} di ${righe.length} ${chiesto.generi.includes("luce") ? "accese" : "aperti"}`
-          : "",
-      );
+      const d = laLista(SCHERMO, Math.max(righe.length, 1));
+      tela.scritta(d.titolo, chiesto.titolo.toUpperCase());
       if (!righe.length) {
-        tela.scritta({
-          x: 0,
-          y: px(MISURE.lista),
-          w: LARGO,
-          h: px(60),
-          testo: "Niente da comandare qui.",
-          colore: COLORE.tenue,
-          centro: true,
-        });
+        tela.scritta(d.sotto, "Niente da comandare qui");
         return;
       }
-      const x = px(MISURE.margine);
-      const w = LARGO - x * 2;
-      const h = px(MISURE.riga);
-      righe.forEach((d, i) => {
-        const y = px(MISURE.lista) + i * (h + px(MISURE.spazio));
+      tela.scritta(
+        d.sotto,
+        `${accese} di ${righe.length} ${chiesto.generi.includes("luce") ? "accese" : "aperti"}`,
+      );
+      righe.forEach((dispositivo, i) => {
+        const posto = d.righe[i];
         const apri =
-          d.luminosita != null
-            ? () => push({ url: "page/luce", params: JSON.stringify({ id: d.id }) })
-            : () => this.gira(d);
-        tela.fondo({ x, y, w, h, raggio: h / 2, quando: apri });
-        tela.segno({
-          cx: x + px(41),
-          cy: y + h / 2,
-          raggio: px(27),
-          nome: segnoDelGenere(d.genere),
-          acceso: d.acceso,
+          dispositivo.luminosita != null
+            ? () => push({ url: "page/luce", params: JSON.stringify({ id: dispositivo.id }) })
+            : () => this.gira(dispositivo);
+        tela.fondo(posto.fondo, { quando: apri });
+        tela.segno(posto.segno, segnoDelGenere(dispositivo.genere), {
+          acceso: dispositivo.acceso,
           quando: apri,
         });
-        tela.scritta({
-          x: x + px(80),
-          y: y + px(14),
-          w: w - px(170),
-          h: px(32),
-          testo: d.nome,
+        tela.scritta(posto.nome, dispositivo.nome, { quando: apri });
+        tela.scritta(posto.det, ilDettaglio(dispositivo), {
+          colore: dispositivo.acceso ? COLORE.ambra : COLORE.tenue,
           quando: apri,
         });
-        tela.scritta({
-          x: x + px(80),
-          y: y + px(46),
-          w: w - px(170),
-          h: px(24),
-          testo: dettaglio(d),
-          grande: 16,
-          colore: d.acceso ? COLORE.ambra : COLORE.tenue,
-          quando: apri,
-        });
+        const i_ = posto.interruttore;
         tela.metti(widget.SLIDE_SWITCH, {
-          x: x + w - px(80),
-          y: y + (h - px(36)) / 2,
-          w: px(64),
-          h: px(36),
+          x: i_.x,
+          y: i_.y,
+          w: i_.w,
+          h: i_.h,
           select_bg: "interruttore-si.png",
           unselect_bg: "interruttore-no.png",
           slide_src: "interruttore-pallino.png",
-          slide_select_x: px(32),
-          slide_un_select_x: px(4),
-          slide_y: px(4),
-          checked: d.acceso,
+          slide_select_x: i_.w - Math.round(i_.h * 0.89),
+          slide_un_select_x: Math.round(i_.h * 0.11),
+          slide_y: Math.round(i_.h * 0.11),
+          checked: dispositivo.acceso,
           checked_change_func: (_w, acceso) => {
-            if (acceso !== d.acceso) this.gira(d);
+            if (acceso !== dispositivo.acceso) this.gira(dispositivo);
           },
         });
       });
     },
 
     disegnaLeMisure(foto) {
-      tela.testata("La casa", diQuando(foto.quando));
-      const x = px(MISURE.margine);
-      const w = LARGO - x * 2;
-      const h = px(MISURE.riga);
+      const d = laLista(SCHERMO, Math.max(foto.misure.length, 1), { conInterruttore: false });
+      tela.scritta(d.titolo, "LA CASA");
+      tela.scritta(d.sotto, diQuando(foto.quando));
       foto.misure.forEach((m, i) => {
-        const y = px(MISURE.lista) + i * (h + px(MISURE.spazio));
-        tela.fondo({ x, y, w, h, raggio: h / 2 });
-        tela.segno({ cx: x + px(41), cy: y + h / 2, raggio: px(27), nome: "sole" });
-        tela.scritta({ x: x + px(80), y: y + px(14), w: w - px(100), h: px(32), testo: m.valore });
-        tela.scritta({
-          x: x + px(80),
-          y: y + px(46),
-          w: w - px(100),
-          h: px(24),
-          testo: m.nome,
-          grande: 16,
-          colore: COLORE.tenue,
-        });
+        const posto = d.righe[i];
+        tela.fondo(posto.fondo);
+        tela.segno(posto.segno, "sole");
+        tela.scritta(posto.nome, m.valore);
+        tela.scritta(posto.det, m.nome);
       });
     },
 
@@ -169,6 +151,8 @@ Page(
     },
 
     onDestroy() {
+      smetti?.();
+      smetti = null;
       tela.svuota();
     },
   }),
