@@ -343,3 +343,22 @@ test("la luna nella sua fase", () => {
   );
   assert.match(pathDellaLuna(10, 0.1), /A8 10 0 0 0 0 -10Z$/, "falce: il terminatore va a destra");
 });
+
+test("la mattina d'inverno, appena sorto il sole, e' gia' giorno: chiaro anche col cielo coperto", () => {
+  const coperta = cieloDellaScena({
+    stati: sole(3),
+    condizione: "snowy",
+    adesso: d(2026, 11, 28, 8, 30),
+  });
+  assert.equal(coperta.fase, "giorno");
+  assert.ok(chiarezza(coperta.cielo.alto) > 0.45, "grigio-azzurro luminoso, non da crepuscolo");
+  assert.equal(coperta.colori.neve1, "#ffffff");
+  /* La sera, alla stessa altezza, il crepuscolo resta: e' l'ora delle lucine. */
+  const sera = cieloDellaScena({
+    stati: sole(3),
+    condizione: "snowy",
+    adesso: d(2026, 11, 28, 16, 20),
+  });
+  assert.equal(sera.fase, "tramonto");
+  assert.ok(chiarezza(sera.cielo.alto) < chiarezza(coperta.cielo.alto));
+});

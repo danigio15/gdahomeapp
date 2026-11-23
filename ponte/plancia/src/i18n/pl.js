@@ -8511,4 +8511,5 @@ export default Object.freeze({
   "String lights": "Girlanda świetlna",
   "Switched on and off by hand": "Włączane i wyłączane ręcznie",
   "The lights": "Światła",
+  "The lights are coming on": "Zapalają się światła",
 });

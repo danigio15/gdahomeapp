@@ -8473,4 +8473,5 @@ export default Object.freeze({
   "String lights": "रोशनी की लड़ी",
   "Switched on and off by hand": "हाथ से जलाई और बुझाई जाती हैं",
   "The lights": "लाइटें",
+  "The lights are coming on": "रोशनी जल रही है",
 });

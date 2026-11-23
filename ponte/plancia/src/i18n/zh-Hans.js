@@ -8358,4 +8358,5 @@ export default Object.freeze({
   "String lights": "彩灯串",
   "Switched on and off by hand": "手动开关",
   "The lights": "灯光",
+  "The lights are coming on": "灯光亮起来了",
 });

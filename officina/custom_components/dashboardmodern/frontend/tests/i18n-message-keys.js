@@ -6272,6 +6272,7 @@ export const MESSAGE_KEYS = Object.freeze([
   "the light is off",
   "the light is on",
   "The lights",
+  "The lights are coming on",
   "The lights managed by the dashboard. Name them \"Room - Detail\" for automatic grouping.",
   "The lights on Home, with “Turn all off”.",
   "The list and saving go through the GdAHome add-on: it is not here.",

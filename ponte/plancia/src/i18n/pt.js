@@ -8523,4 +8523,5 @@ export default Object.freeze({
   "String lights": "Grinalda de luzes",
   "Switched on and off by hand": "Acendem-se e apagam-se à mão",
   "The lights": "As luzes",
+  "The lights are coming on": "As luzes estão a acender-se",
 });

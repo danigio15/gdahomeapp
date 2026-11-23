@@ -8524,4 +8524,5 @@ export default Object.freeze({
   "String lights": "Lichtsnoer",
   "Switched on and off by hand": "Worden met de hand aan- en uitgezet",
   "The lights": "De lampen",
+  "The lights are coming on": "De lichtjes gaan aan",
 });

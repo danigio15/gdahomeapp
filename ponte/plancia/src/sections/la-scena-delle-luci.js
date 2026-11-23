@@ -976,8 +976,15 @@ function seguiLeLuci(contenitore, accese) {
  * un cambio di variabili e di classi sul disegno che c'e'.
  *
  * `da` e `riserva` sono in pixel: lo spazio a sinistra occupato dai comandi
- * e quello a destra lasciato al sole e alla luna. Torna `false` se il
- * contenitore non ha misura (e' nascosto): si riprova al giro dopo.
+ * e quello a destra lasciato al sole e alla luna. `terra` e `cima` sono in
+ * unita' della scena (alta 300): dove poggiano le cose e fin dove possono
+ * salire — a tutto schermo le cose stanno basse, e sopra resta il cielo per
+ * l'orologio. Torna `false` se il contenitore non ha misura (e' nascosto): si
+ * riprova al giro dopo.
+ *
+ * Il disegno si scrive senza gli spazi fra un pezzo e l'altro: non sono
+ * testo che si legge, e chi confronta il testo della pagina per sapere se e'
+ * cambiata (`rattoppaSeCambia`) non li deve trovare.
  */
 export function mettiLaScena(
   contenitore,
@@ -990,6 +997,8 @@ export function mettiLaScena(
     da = 0,
     riserva = 0,
     astro = null,
+    terra = 252,
+    cima = 14,
   },
 ) {
   const w = contenitore?.clientWidth || 0;
@@ -1004,22 +1013,31 @@ export function mettiLaScena(
     sinistra,
     destra,
     cielo.firma,
+    terra,
+    cima,
     JSON.stringify(cose.map((c) => [c.tipo, c.entita, c.balcone, c.finestra, c.stella])),
     JSON.stringify(etichette),
   ].join("~");
   const svg = contenitore.querySelector(":scope > svg.dm-sc");
   if (!svg || contenitore.dataset.firmaScena !== firma) {
-    const disposte = disposizioneDellaScena(cose, { larghezza: W, da: sinistra, a: destra });
+    const disposte = disposizioneDellaScena(cose, {
+      larghezza: W,
+      da: sinistra,
+      a: destra,
+      terra,
+      cima,
+    });
     const { svg: disegno, sopra } = scenaDelleLuci({
       cose: disposte,
       cielo,
       larghezza: W,
+      terra,
       astro: astro || { x: W - Math.max(40, Math.min(64, riserva * k * 0.55)), y: 50 },
       accese,
       etichette,
       prefisso,
     });
-    contenitore.innerHTML = disegno + sopra;
+    contenitore.innerHTML = (disegno + sopra).replace(/>\s+</g, "><");
     contenitore.dataset.firmaScena = firma;
     seguiLeLuci(contenitore, accese);
     return true;

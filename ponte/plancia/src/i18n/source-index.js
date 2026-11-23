@@ -6244,6 +6244,7 @@ export const SOURCE_INDEX = Object.freeze({
   "Si accendono alle ${da}": "On at ${da}",
   "Si accendono e si spengono a mano": "Switched on and off by hand",
   "Si accendono e si spengono da sole all'orario qui sotto.": "They switch on and off by themselves at the times below.",
+  "Si accendono le luci": "The lights are coming on",
   "Si acquista solo dalle app GdAHome su App Store e Google Play. Le app sono in arrivo.": "Only available from the GdAHome apps on the App Store and Google Play. The apps are coming soon.",
   "si aggiorna da solo": "updates by itself",
   "si apre": "opens",

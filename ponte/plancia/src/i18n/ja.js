@@ -8491,4 +8491,5 @@ export default Object.freeze({
   "String lights": "ライトのガーランド",
   "Switched on and off by hand": "手動で点灯・消灯",
   "The lights": "ライト",
+  "The lights are coming on": "ライトが灯ります",
 });

@@ -29,7 +29,13 @@
  * i due. Toccare una cosa nella scena accende o spegne tutte le sue luci.
  */
 import { TIPI_DELLE_LUCI, tipoDellaLuce } from "./feste.js";
-import { chiarezza, mescola, scenaDelCielo } from "./il-riposo-vivo.js";
+import {
+  chiarezza,
+  coloriDelCielo,
+  mescola,
+  scenaDelCielo,
+  tempoDelCielo,
+} from "./il-riposo-vivo.js";
 
 const clamp = (valore, minimo, massimo) => Math.max(minimo, Math.min(massimo, valore));
 const tondo = (valore, cifre = 1) => Math.round(valore * 10 ** cifre) / 10 ** cifre;
@@ -115,7 +121,7 @@ const COLORI = Object.freeze({
     sagoma: "#1f120c",
     filo: "#2b2838",
     spenta: "#5d5878",
-    nuvola: "#e9b3a8",
+    nuvola: "#d2c6e2",
     ombra: "#6f679a",
     pannello: "#231f42",
   },
@@ -145,7 +151,7 @@ const COLORI = Object.freeze({
     sagoma: "#22140d",
     filo: "#2e2b3b",
     spenta: "#6c6886",
-    nuvola: "#f6c9c4",
+    nuvola: "#efe2ee",
     ombra: "#8580b0",
     pannello: "#2a2a52",
   },
@@ -175,7 +181,7 @@ const COLORI = Object.freeze({
     sagoma: "#120a07",
     filo: "#1c2133",
     spenta: "#3a4362",
-    nuvola: "#33406e",
+    nuvola: "#56658f",
     ombra: "#4e6094",
     pannello: "#0d1838",
   },
@@ -226,14 +232,34 @@ export function coloriDellaScena(altezza = 30, mattina = true) {
  */
 export function cieloDellaScena({ stati = {}, condizione = "", adesso = new Date() } = {}) {
   const s = scenaDelCielo({ stati, condizione, adesso });
-  const fase = faseDelCielo(s.altezza, s.mattina);
+  /* La mattina d'inverno, appena sorto il sole, e' gia' giorno: il sole sta
+   * basso fino a meta' mattina, e un cielo da crepuscolo alle otto e mezza
+   * sembra la sera. Le cose e il cielo prendono la luce del giorno presto,
+   * da quando il sole spunta; la sera invece il crepuscolo resta lungo,
+   * che e' l'ora delle lucine. */
+  const luce = s.mattina && s.altezza > -1 ? Math.max(s.altezza, s.altezza * 2.5 + 4) : s.altezza;
+  const fase = faseDelCielo(luce, s.mattina);
   const notte = clamp((-s.altezza - 2) / 10, 0, 0.62);
+  let base = s.colori;
+  if (luce !== s.altezza) {
+    const giorno = coloriDelCielo({ altezza: Math.min(25, luce), mattina: true, condizione });
+    const f = clamp((s.altezza + 1) / 4, 0, 1);
+    base = {
+      alto: mescola(s.colori.alto, giorno.alto, f),
+      medio: mescola(s.colori.medio, giorno.medio, f),
+      basso: mescola(s.colori.basso, giorno.basso, f),
+    };
+  }
+  /* Di giorno col cielo coperto il grigio e' luminoso, grigio-azzurro: un
+   * grigio scuro a mezzogiorno sembrerebbe un temporale. */
+  const copre = tempoDelCielo(condizione).copre;
+  const schiarita = copre * clamp(luce / 10, 0, 1) * 0.5;
   const cielo = {
-    alto: mescola(s.colori.alto, BLU_DELLA_NOTTE[0], notte),
-    medio: mescola(s.colori.medio, BLU_DELLA_NOTTE[1], notte),
-    basso: mescola(s.colori.basso, BLU_DELLA_NOTTE[2], notte),
+    alto: mescola(mescola(base.alto, BLU_DELLA_NOTTE[0], notte), "#c3d1e3", schiarita),
+    medio: mescola(mescola(base.medio, BLU_DELLA_NOTTE[1], notte), "#d9e2ee", schiarita),
+    basso: mescola(mescola(base.basso, BLU_DELLA_NOTTE[2], notte), "#edf1f7", schiarita),
   };
-  const colori = coloriDellaScena(s.altezza, s.mattina);
+  const colori = coloriDellaScena(luce, s.mattina);
   /* Il testo sta in alto a sinistra: conta la parte alta del cielo. */
   const chiaro = chiarezza(mescola(cielo.alto, cielo.medio, 0.55)) > 0.42;
   const scena = {

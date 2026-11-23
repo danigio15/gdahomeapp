@@ -8438,4 +8438,5 @@ export default Object.freeze({
   "String lights": "سلسلة أضواء",
   "Switched on and off by hand": "تُشغَّل وتُطفأ يدويًا",
   "The lights": "الأضواء",
+  "The lights are coming on": "الأضواء تضيء",
 });

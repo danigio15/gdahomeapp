@@ -8460,4 +8460,5 @@ export default Object.freeze({
   "String lights": "줄조명",
   "Switched on and off by hand": "손으로 켜고 끔",
   "The lights": "조명",
+  "The lights are coming on": "불빛이 켜집니다",
 });

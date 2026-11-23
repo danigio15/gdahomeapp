@@ -8491,4 +8491,5 @@ export default Object.freeze({
   "String lights": "Işık zinciri",
   "Switched on and off by hand": "Elle açılıp kapatılır",
   "The lights": "Işıklar",
+  "The lights are coming on": "Işıklar yanıyor",
 });

@@ -8510,4 +8510,5 @@ export default Object.freeze({
   "String lights": "Гирлянда",
   "Switched on and off by hand": "Включаются и выключаются вручную",
   "The lights": "Огни",
+  "The lights are coming on": "Зажигаются огни",
 });
