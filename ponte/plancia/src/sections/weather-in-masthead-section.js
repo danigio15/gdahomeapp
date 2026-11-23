@@ -476,13 +476,23 @@ function ripara() {
 }
 
 /* La prima fila (menu e nome, ingranaggio) messa in fila male: larga o alta
- * zero, o fuori dal riquadro dell'intestazione. */
+ * zero, o fuori dal riquadro dell'intestazione.
+ *
+ * Un pezzo che non si disegna affatto non e' messo male: e' tolto apposta. E'
+ * l'ingranaggio dentro l'app, che lo spegne col suo foglio perche' la Config
+ * li' si apre dal menu (`app/lib/plancia/premesse.dart`). Contato come un
+ * pezzo largo zero, la fila risultava storta per sempre, e ogni stato che
+ * arrivava spegneva e riaccendeva la testata: una Home che scorre di poco
+ * (il tablet in orizzontale, col riquadro delle luci e il flusso) tornava in
+ * cima sotto il dito. La differenza la dice `getClientRects`: il blocco largo
+ * zero di Safari un riquadro ce l'ha (largo zero, appunto), quello spento no. */
 export function primaFilaStorta(header) {
   const riquadro = header?.getBoundingClientRect?.();
   if (!riquadro || riquadro.width < 1) return false;
   for (const pezzo of header.querySelectorAll?.(
     ":scope > .header-left-wrap, :scope > .header-left-wrap .brand-text, :scope > .dm-editor-entry",
   ) || []) {
+    if (pezzo.getClientRects && !pezzo.getClientRects().length) continue;
     const r = pezzo.getBoundingClientRect?.();
     if (!r) continue;
     if (r.width < 1 || r.height < 1) return true;
@@ -515,6 +525,29 @@ export function primaFilaStorta(header) {
  * peso giusto (`important` anche in linea), e al ritorno sulla Home lo si fa
  * comunque una volta, senza aspettare di vedere la fila storta: i conti
  * sbagliati di WebKit non sempre si vedono da qui. */
+/* Lo spegni-e-riaccendi, pero', non deve muovere la pagina. Per il tempo di
+ * una misura la testata non c'e', e la pagina e' piu' corta di tutta la sua
+ * altezza: su una pagina che scorre di poco il browser riporta su lo
+ * scorrimento, e riaccesa la testata non lo rimette giu'. Chi stava scorrendo
+ * la Home se la vedeva tornare in cima. Si guarda dov'era prima — la
+ * finestra e, sul telefono, il corpo che scorre al suo posto — e lo si
+ * rimette. */
+function dovEra() {
+  return {
+    x: root.scrollX || 0,
+    y: root.scrollY || 0,
+    corpi: [doc?.scrollingElement, doc?.body]
+      .filter((nodo, i, tutti) => nodo && tutti.indexOf(nodo) === i)
+      .map((nodo) => [nodo, nodo.scrollTop || 0]),
+  };
+}
+
+function rimettiDovEra({ x, y, corpi }) {
+  for (const [nodo, alto] of corpi) if (nodo.scrollTop !== alto) nodo.scrollTop = alto;
+  if ((root.scrollX || 0) !== x || (root.scrollY || 0) !== y)
+    root.scrollTo?.({ left: x, top: y, behavior: "instant" });
+}
+
 export function rifaiLaFila(header, { sempre = false } = {}) {
   if (!header || doc?.querySelector?.(".page.active")?.id !== "page-home") return false;
   const sinistra = header.querySelector?.(":scope > .header-left-wrap");
@@ -522,6 +555,7 @@ export function rifaiLaFila(header, { sempre = false } = {}) {
   const larga = header.getBoundingClientRect?.().width || 0;
   if (larga < 1) return false;
   if (!sempre && !primaFilaStorta(header)) return false;
+  const prima = dovEra();
   const valore = header.style.getPropertyValue("display");
   const peso = header.style.getPropertyPriority("display");
   header.style.setProperty("display", "none", "important");
@@ -529,6 +563,7 @@ export function rifaiLaFila(header, { sempre = false } = {}) {
   if (valore) header.style.setProperty("display", valore, peso);
   else header.style.removeProperty("display");
   void header.offsetWidth;
+  rimettiDovEra(prima);
   return true;
 }
 
