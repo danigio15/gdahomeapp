@@ -380,6 +380,51 @@ test("il telefono riabbinato stacca se stesso di prima, e il suo vecchio filo si
   }
 });
 
+test("sostituito il vecchio, il nuovo ne prende la persona e la Salute passa a lui", async () => {
+  const b = await banco();
+  try {
+    const utente = "0a1b2c3d4e5f60718293a4b5c6d7e8f9";
+    const prima = b.dispositivi.abbina({ nome: "iPhone", utente });
+    /* Un codice di prima, senza «per chi». */
+    const dopo = b.dispositivi.abbina({ nome: "iPhone" });
+    const passati = [];
+    const visti = [];
+    b.ponte.ilCorpo = {
+      riconosce: (tipo) => String(tipo).startsWith("ponte/salute/"),
+      async rispondi(detto, { dispositivo }) {
+        visti.push(dispositivo?.utente || "");
+        return { id: detto.id, type: "result", success: true, result: {} };
+      },
+      async passaIlTelefono(vecchio, nuovo, { utente: diChi }) {
+        passati.push({ vecchio, nuovo, diChi });
+        return true;
+      },
+    };
+    const nuovo = telefono(b.indirizzo);
+    await nuovo.aperta;
+    await nuovo.aspetta("auth_required");
+    nuovo.manda({ type: "auth", access_token: dopo.segno });
+    await nuovo.aspetta("auth_ok");
+    nuovo.manda({
+      id: 8,
+      type: "ponte/telefono/sostituisci",
+      vecchio: prima.dispositivo.id,
+      segno: prima.segno,
+    });
+    await attendi(() => nuovo.detti.some((uno) => uno.id === 8));
+    assert.deepEqual(passati, [
+      { vecchio: prima.dispositivo.id, nuovo: dopo.dispositivo.id, diChi: utente },
+    ]);
+    /* Il filo lo sa da subito, senza ricollegarsi. */
+    nuovo.manda({ id: 9, type: "ponte/salute/stato" });
+    await attendi(() => nuovo.detti.some((uno) => uno.id === 9));
+    assert.deepEqual(visti, [utente]);
+    nuovo.chiudi();
+  } finally {
+    await b.spegni();
+  }
+});
+
 test("il telefono dice chi e': cambia solo la sua riga, e il nome segue il modello", async () => {
   const b = await banco();
   try {

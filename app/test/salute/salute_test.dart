@@ -185,6 +185,35 @@ void main() {
     });
 
     test(
+      'riabbinata la casa con un codice nuovo, il primo invio parte subito',
+      () async {
+        /* «Quando ho riassociato il telefono ho perso i dati salute»: per la
+         * casa il telefono e' un altro, e senza un invio non sa di chi e'
+         * la serie. Si manda subito, non fra un quarto d'ora. */
+        await postino.accendi(filo, const ScelteDellaSalute(persona: 'Marco'));
+        expect(postino.scelte.telefono, 'dm_telefono_di_prova');
+        adesso = adesso.add(const Duration(minutes: 2));
+        await postino.forseManda(filo);
+        expect(filo.mandati, hasLength(1), reason: 'stesso telefono: aspetta');
+        final riabbinato = FiloFinto(chi: 'dm_telefono_nuovo');
+        await postino.forseManda(riabbinato);
+        expect(riabbinato.mandati, hasLength(1));
+        expect(riabbinato.mandati.single['persona'], 'Marco');
+        expect(postino.scelte.telefono, 'dm_telefono_nuovo');
+        /* E poi torna il quarto d'ora. */
+        adesso = adesso.add(const Duration(minutes: 2));
+        await postino.forseManda(riabbinato);
+        expect(riabbinato.mandati, hasLength(1));
+        /* Il telefono si ricorda fra un avvio e l'altro. */
+        expect(
+          ScelteDellaSalute.daQuelloCheCEra(postino.scelte.comeSiScrive)
+              .telefono,
+          'dm_telefono_nuovo',
+        );
+      },
+    );
+
+    test(
       'una misura in piu\' chiede il permesso per quella, e manda',
       () async {
         await postino.accendi(filo, const ScelteDellaSalute());

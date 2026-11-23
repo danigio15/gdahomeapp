@@ -607,6 +607,13 @@ export class Dispositivi {
     if (!this.lista.some((uno) => uno.id === nuovo)) return false;
     const quello = this.lista.find((uno) => uno.id === vecchio);
     if (!quello || !stessoSegreto(quello.impronta, impronta(segno))) return false;
+    /* Il nuovo che non e' di nessuno (un codice di prima, senza «per chi»)
+     * prende la persona del vecchio: ha appena dimostrato di essere lo stesso
+     * telefono, col segno che ha solo lui. Senza, perdeva la Salute — che
+     * vuole un telefono intestato — e vedeva tutte le plance. Uno gia'
+     * intestato resta di chi e': la scelta fatta nella console vale di piu'. */
+    const lui = this.lista.find((uno) => uno.id === nuovo);
+    if (!utentePulito(lui.utente) && utentePulito(quello.utente)) lui.utente = quello.utente;
     return this.stacca(vecchio);
   }
 

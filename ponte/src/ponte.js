@@ -403,13 +403,30 @@ class Collegamento {
      * stacca e i suoi fili si chiudono. Solo per se stesso: il nuovo e' il
      * telefono di questo filo, nessun altro. */
     if (detto.type === SOSTITUISCI) {
+      const dispositivi = this.ponte.dispositivi;
+      const vecchio = String(detto.vecchio ?? "");
+      /* Di chi era il vecchio, finche' c'e': staccato non lo si sa piu'. */
+      const diChiEra = dispositivi?.utenteDi?.(vecchio) || "";
       const staccato =
-        this.ponte.dispositivi?.sostituisci?.({
+        dispositivi?.sostituisci?.({
           nuovo: this.dispositivo?.id,
           vecchio: detto.vecchio,
           segno: detto.segno,
         }) === true;
-      if (staccato) this.ponte.scollega(String(detto.vecchio));
+      if (staccato) {
+        this.ponte.scollega(vecchio);
+        /* Se il nuovo ha preso la persona del vecchio, il filo lo sa da
+         * subito: la Salute la manda solo un telefono intestato. */
+        const utente = dispositivi?.utenteDi?.(this.dispositivo?.id) || "";
+        if (utente && this.dispositivo && !this.dispositivo.utente) {
+          this.dispositivo = { ...this.dispositivo, utente };
+        }
+        /* E la serie della Salute passa al nuovo, senza buchi
+         * (`il-corpo-dal-telefono.js`, «Dopo un riabbinamento»). */
+        this.ponte.ilCorpo
+          ?.passaIlTelefono?.(vecchio, this.dispositivo?.id, { utente: diChiEra })
+          ?.catch?.(() => {});
+      }
       this.presa.manda(
         JSON.stringify({
           id: detto.id ?? null,

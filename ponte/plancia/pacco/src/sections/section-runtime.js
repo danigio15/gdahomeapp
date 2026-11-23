@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-3E3V7SCV.js";
+} from "../../chunk-RV6TNFA5.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -71693,8 +71693,11 @@ function personeDellaSalute(states = {}, config = {}) {
     const chi = clean26(stato3?.attributes?.gdahome_persona) || chiDalNome(lettura4.nome);
     const persona = persone4.get(chi) || { chi, misure: {} };
     const gia = persona.misure[chiave2];
-    if (!gia || (Date.parse(lettura4.quando) || 0) > (Date.parse(gia.quando) || 0))
-      persona.misure[chiave2] = lettura4;
+    if (!gia) persona.misure[chiave2] = lettura4;
+    else if ((Date.parse(lettura4.quando) || 0) > (Date.parse(gia.quando) || 0)) {
+      const { altre = [], ...battuto } = gia;
+      persona.misure[chiave2] = { ...lettura4, altre: [battuto, ...altre] };
+    } else gia.altre = [...gia.altre || [], lettura4];
     persone4.set(chi, persona);
   };
   for (const [entity2, stato3] of Object.entries(states || {})) {
@@ -71737,8 +71740,9 @@ function unisciITelefoni(persone4, states) {
     if (!sua) continue;
     for (const [chiave2, lettura4] of Object.entries(altra.misure)) {
       const gia = sua.misure[chiave2];
+      const { altre = [], ...sola } = lettura4;
       if (!gia) sua.misure[chiave2] = lettura4;
-      else gia.altre = [...gia.altre || [], lettura4];
+      else gia.altre = [...gia.altre || [], sola, ...altre];
     }
     persone4.delete(chi);
   }

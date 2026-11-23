@@ -91,9 +91,19 @@ class LettoreFinto implements LettoreDellaSalute {
 
 /// Il filo con la casa: ricorda quello che gli si manda.
 class FiloFinto implements Filo {
-  FiloFinto({this.aperto = true, this.rifiuta, this.cade = false});
+  FiloFinto({
+    this.aperto = true,
+    this.rifiuta,
+    this.cade = false,
+    this.chi = 'dm_telefono_di_prova',
+  });
 
   bool aperto;
+
+  /// L'identificativo del telefono per la casa: un altro, dopo un
+  /// riabbinamento con un codice nuovo.
+  @override
+  String chi;
 
   /// Il codice con cui la casa dice di no (`premium-richiesto`,
   /// `unauthorized`), o `null` se dice di si'.
