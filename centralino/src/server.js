@@ -155,6 +155,9 @@ export function costruisciIlServer({
   /* Le foto delle notifiche elaborate (`foto.js`): `GET /foto/<id>`. Senza,
    * la via non c'e'. */
   foto = null,
+  /* Lo sportello degli orologi che non sanno tenere un filo (`polso.js`):
+   * `POST /polso/…`. Senza, la via non c'e'. */
+  polso = null,
   registro = null,
   acceso = Date.now(),
   /* Come si chiamano il sito e l'app di questo centralino, per la soglia.
@@ -239,6 +242,9 @@ export function costruisciIlServer({
         segnalazioni: Boolean(sportello?.pronto),
         chat: chat ? { linee: chat.archivio.quanteLinee(), console: chat.consoleAperta } : false,
         posta: Boolean(contatti?.pronto),
+        /* Gli orologi dallo sportello del polso: quante sessioni adesso, e
+         * le richieste dall'accensione. Solo numeri. */
+        polso: polso ? { sessioni: polso.quanteSessioni(), ...polso.conti } : null,
       });
       return;
     }
@@ -275,6 +281,7 @@ export function costruisciIlServer({
       if (contatti && (await contatti.forseServe(richiesta, risposta, via))) return;
       if (ricevute && (await ricevute.forseServe(richiesta, risposta, via))) return;
       if (foto && (await foto.forseServe(richiesta, risposta, via))) return;
+      if (polso && (await polso.forseServe(richiesta, risposta, via))) return;
       json(risposta, { errore: "qui non c'e' niente" }, 404);
     })().catch((errore) => {
       registro?.errore?.(`una porta e' inciampata: ${errore?.stack || errore}`);

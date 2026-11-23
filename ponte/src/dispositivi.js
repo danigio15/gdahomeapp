@@ -250,13 +250,17 @@ export class Dispositivi {
     return { ...chiE(uno), rinominato: uno.rinominato === true };
   }
 
-  _vistoInElenco({ id, nome, sistema, natoIl, vistoIl, utente, finoA }) {
+  _vistoInElenco({ id, nome, sistema, natoIl, vistoIl, utente, finoA, polso }) {
     return {
       id,
       nome,
       sistema,
       natoIl,
       vistoIl,
+      /* Un orologio che si e' abbinato da se' (`il-polso.js`): la console lo
+       * scrive accanto al nome, perche' quella riga non e' un telefono e puo'
+       * chiedere solo la fotografia e un comando. */
+      ...(polso === POLSO_ZEPP ? { polso } : {}),
       /* Di chi e'. Va detto a schermo: un telefono senza padrone vede tutte
        * le plance, ed e' esattamente quello di cui bisogna accorgersi. */
       utente: utentePulito(utente),
@@ -370,12 +374,13 @@ export class Dispositivi {
     finoA = null,
     lega = false,
     sostituisce = "",
+    polso = "",
     ...detto
   } = {}) {
     /* Il QR per riabbinare un telefono gia' abbinato (l'app cancellata e
      * rimessa): quel telefono riprende il suo posto. */
     const diPrima = sostituisce ? this.lista.find((uno) => uno.id === sostituisce) : null;
-    if (diPrima) return this._riabbina(diPrima, { nome, sistema, utente, lega, ...detto });
+    if (diPrima) return this._riabbina(diPrima, { nome, sistema, utente, lega, polso, ...detto });
     const massimi = this.massimi;
     const diProva = Number.isFinite(finoA);
     if ((!diProva || this._provaNeiMassimi) && this.postiPresi() >= massimi) {
@@ -415,6 +420,10 @@ export class Dispositivi {
        * la conferma si e' aperta: da subito una stretta senza legame di
        * questo telefono non passa (vedi «Il legame» qui sotto). */
       ...(lega === true ? { lega: true } : {}),
+      /* Un orologio Zepp (`il-polso.js`): con la sua chiave si chiede solo la
+       * fotografia e un comando, mai il filo di Home Assistant. Lo decide
+       * quello che sta scritto qui, non quello che l'orologio dira' dopo. */
+      ...(polso === POLSO_ZEPP ? { polso: POLSO_ZEPP } : {}),
     };
     this.lista.push(dispositivo);
     this.archivio.salva();
@@ -438,7 +447,7 @@ export class Dispositivi {
    * era rinominato), stessa persona; cambiano solo il segno e la chiave del
    * filo, che il telefono di prima non ha piu'. Non occupa un posto: lo aveva
    * gia'. */
-  _riabbina(quello, { nome, sistema, utente = "", lega = false, ...detto } = {}) {
+  _riabbina(quello, { nome, sistema, utente = "", lega = false, polso = "", ...detto } = {}) {
     const segno = segnoNuovo();
     const chiave = chiaveDelFiloNuova();
     const chi = chiE(detto);
@@ -454,6 +463,11 @@ export class Dispositivi {
     });
     delete quello.lega;
     if (lega === true) quello.lega = true;
+    /* Chi riprende il posto con questo codice e' quello che si abbina adesso:
+     * un orologio che prende il posto di un telefono diventa un orologio, e
+     * un telefono che riprende il suo smette di esserlo. */
+    delete quello.polso;
+    if (polso === POLSO_ZEPP) quello.polso = POLSO_ZEPP;
     this.archivio.salva();
     try {
       this.dopoLAbbinamento?.();
@@ -473,9 +487,10 @@ export class Dispositivi {
    * cifrato, e col perche' (`limite-telefoni-base`), che l'app legge per
    * portare alla pagina Premium. Contano tutti i telefoni abbinati, anche
    * quelli della casa di prova e il tablet a muro con l'app: ognuno e' un
-   * telefono abbinato. Gli orologi no: non si abbinano, passano dal
-   * telefono. Torna gli identificativi staccati, cosi' chi chiama chiude i
-   * loro fili. */
+   * telefono abbinato. L'Apple Watch e Wear OS no: non si abbinano, passano
+   * dal telefono. Un Amazfit invece si abbina da se' (`il-polso.js`), e
+   * conta come gli altri. Torna gli identificativi staccati, cosi' chi
+   * chiama chiude i loro fili. */
   tieniIPiuRecenti(massimi, { perche = PERCHE_LIMITE_DI_BASE } = {}) {
     if (typeof massimi !== "number" || !Number.isFinite(massimi) || massimi < 0) return [];
     const vivi = this._vivi;
@@ -528,6 +543,27 @@ export class Dispositivi {
 
   legaSempre(id) {
     return this._vivi.find((uno) => uno.id === id)?.lega === true;
+  }
+
+  /* ─── Gli orologi ────────────────────────────────────────────────────
+   *
+   * Un Amazfit non passa dall'app del telefono come l'Apple Watch e Wear OS:
+   * si abbina da se', con lo stesso codice, e prende un posto fra i telefoni
+   * (`il-polso.js`). `polsoDi` dice se questo e' uno di quelli: `"zepp"`, o
+   * `""` per un telefono. */
+  polsoDi(id) {
+    const uno = this._vivi.find((dispositivo) => dispositivo.id === id);
+    return uno?.polso === POLSO_ZEPP ? POLSO_ZEPP : "";
+  }
+
+  /* L'orologio non bussa col segno, e `riconosci` non lo vede mai: si fa
+   * vedere a ogni domanda, e la console lo scrive «visto adesso». */
+  visto(id) {
+    const uno = this._vivi.find((dispositivo) => dispositivo.id === id);
+    if (!uno) return false;
+    uno.vistoIl = this.adesso();
+    this._forseSalva();
+    return true;
   }
 
   /* Chi bussa con un segno: `null` se non e' nessuno. */
@@ -660,6 +696,9 @@ export class Dispositivi {
 }
 
 export class TroppiDispositivi extends Error {}
+
+/* Il solo orologio che si abbina da se', per ora: Zepp OS, cioe' gli Amazfit. */
+export const POLSO_ZEPP = "zepp";
 
 /** Il perche' di un telefono staccato perche' con Base i telefoni sono due. */
 export const PERCHE_LIMITE_DI_BASE = "limite-telefoni-base";
