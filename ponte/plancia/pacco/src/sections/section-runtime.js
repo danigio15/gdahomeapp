@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-OUOQOH7S.js";
+} from "../../chunk-GI3BGVDE.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -117314,8 +117314,7 @@ function fasciaDelleLuci({
     <div class="mu-luci-scena" data-mu-luci-scena="fascia"></div>
     <div class="mu-luci-testo">
       ${compatto ? "" : `<div class="mu-luci-cap">${esc(nome)}</div>`}
-      <div class="mu-luci-titolo" aria-live="polite">${esc(titolo3)}</div>
-      ${compatto ? "" : `<div class="mu-luci-orario">${orario3}</div>`}
+      <div class="mu-luci-riga"><span class="mu-luci-titolo" aria-live="polite">${esc(titolo3)}</span>${compatto ? "" : `<span class="mu-luci-orario">${orario3}</span>`}</div>
     </div>
     <button type="button" class="mu-luci-tutte${accese ? " spegni" : ""}" data-mu-fa="luci-tutte" data-mu-verso="${verso3}">${esc(parola2)}</button>
   </section>`;
@@ -117438,7 +117437,9 @@ ${muro} .mu-luci-quiete{position:absolute;z-index:3;right:3.2%;bottom:4.5%;displ
 ${muro} .mu-luci-quiete i{position:relative;width:18px;height:18px;border-radius:50%;border:2px solid currentColor;border-top-color:transparent}
 ${muro} .mu-luci-quiete i::after{content:"";position:absolute;left:50%;top:-5px;width:2px;height:9px;margin-left:-1px;border-radius:2px;background:currentColor}
 ${muro} .mu-luci-quiete.in-attesa{opacity:.5}
-${muro} .mu-luci-annuncio{position:absolute;z-index:2;left:0;right:0;top:12%;display:flex;justify-content:center;
+/* La riga sta nel cielo libero fra le nuvole, che stanno in alto, e le cose,
+   che stanno in basso. */
+${muro} .mu-luci-annuncio{position:absolute;z-index:2;left:0;right:0;top:38%;display:flex;justify-content:center;
   opacity:0;transition:opacity 1.2s ease;pointer-events:none}
 ${muro} .mu-luci-annuncio .mu-feste-cap{font-size:18px;letter-spacing:9px;filter:drop-shadow(0 2px 14px rgba(0,0,0,.55))}
 /* Il momento dell'accensione: l'orologio si fa da parte, si guardano le luci. */
@@ -117457,28 +117458,35 @@ ${muro}[data-compatto="1"] .mu-riposo.mu-feste-luci .mu-feste-pastiglia{font-siz
 ${muro}[data-compatto="1"] .mu-luci-quiete{min-height:40px;font-size:13px;padding:0 12px 0 10px}
 ${muro}[data-compatto="1"] .mu-luci-annuncio .mu-feste-cap{font-size:13px;letter-spacing:5px}
 
-/* La fascia in fondo alla prima pagina: dopo le righe della pagina, alta
-   quanto basta per toccare l'albero col dito. */
+/* La fascia in fondo alla prima pagina: dopo le righe della pagina, bassa,
+   e la pagina le fa posto stringendo i suoi margini — non le card, che sotto
+   una certa altezza perderebbero il cursore della luce. */
 ${muro} .mu-pagina.mu-con-luci>.mu-luci-fascia{grid-row-start:-1}
 ${muro} .mu-con-lato.mu-con-luci>.mu-luci-fascia{grid-column:2}
-${muro} .mu-luci-fascia{height:104px;display:flex;align-items:center;gap:16px;padding:0 18px 0 26px;
+${muro}:not([data-compatto="1"]) .mu-pagina.mu-con-luci{padding-top:12px;padding-bottom:12px;row-gap:10px}
+${muro}:not([data-compatto="1"]) .mu-con-luci>.mu-testa{padding-top:12px;padding-bottom:12px}
+${muro}:not([data-compatto="1"]) .mu-con-luci>.mu-pillole{padding-top:9px;padding-bottom:9px}
+${muro}:not([data-compatto="1"]) .mu-con-luci .mu-g6{--mu-gap:10px}
+${muro}:not([data-compatto="1"]) .mu-con-luci .mu-g6>.mu-card{padding-top:18px;padding-bottom:18px}
+${muro} .mu-luci-fascia{height:66px;display:flex;align-items:center;gap:16px;padding:0 10px 0 22px;border-radius:18px;
   color:#fff;background:#0d1838;isolation:isolate;-webkit-tap-highlight-color:transparent}
 ${muro} .mu-luci-fascia::before{content:none}
 ${muro} .mu-luci-fascia>.mu-luci-scena{position:absolute;inset:0;z-index:0}
 ${muro} .mu-luci-fascia>.mu-luci-scena::after{content:"";position:absolute;inset:0;pointer-events:none;
-  background:linear-gradient(90deg,rgba(5,11,32,.78) 0,rgba(5,11,32,.5) 200px,rgba(5,11,32,0) 340px)}
+  background:linear-gradient(90deg,rgba(5,11,32,.78) 0,rgba(5,11,32,.5) 300px,rgba(5,11,32,0) 450px)}
 ${muro} .mu-luci-fascia.testo-scuro>.mu-luci-scena::after{
-  background:linear-gradient(90deg,rgba(247,250,255,.88) 0,rgba(247,250,255,.55) 200px,rgba(247,250,255,0) 340px)}
+  background:linear-gradient(90deg,rgba(247,250,255,.88) 0,rgba(247,250,255,.55) 300px,rgba(247,250,255,0) 450px)}
 ${muro} .mu-luci-fascia .sc-cosa{transition:transform .2s ease;transform-box:fill-box;transform-origin:50% 100%}
 ${muro} .mu-luci-fascia .sc-cosa.toccata{transform:scale(.96)}
-${muro} .mu-luci-testo{position:relative;z-index:1;width:236px;flex:none;pointer-events:none}
-${muro} .mu-luci-cap{width:max-content;font:700 11px Inter,system-ui,sans-serif;letter-spacing:.32em;text-transform:uppercase;
+${muro} .mu-luci-testo{position:relative;z-index:1;width:380px;flex:none;pointer-events:none}
+${muro} .mu-luci-riga{display:flex;align-items:baseline;gap:12px;min-width:0;margin-top:3px}
+${muro} .mu-luci-cap{width:max-content;font:700 10px Inter,system-ui,sans-serif;letter-spacing:.32em;text-transform:uppercase;
   background:linear-gradient(180deg,#fff7d6 0%,#f5d27a 45%,#c9952e 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
-${muro} .mu-luci-titolo{margin-top:4px;font:700 26px/1.1 Inter,system-ui,sans-serif;letter-spacing:-.4px;
+${muro} .mu-luci-titolo{flex:none;font:700 20px/1.1 Inter,system-ui,sans-serif;letter-spacing:-.3px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 14px rgba(0,0,0,.35)}
-${muro} .mu-luci-orario{margin-top:4px;font:500 13px/1.35 Inter,system-ui,sans-serif;color:#d3def2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${muro} .mu-luci-orario{min-width:0;font:500 12.5px/1.3 Inter,system-ui,sans-serif;color:#d3def2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 ${muro} .mu-luci-orario b{color:#ffdf9e}
-${muro} .mu-luci-tutte{position:relative;z-index:1;margin-left:auto;flex:none;height:48px;padding:0 20px;border-radius:15px;
+${muro} .mu-luci-tutte{position:relative;z-index:1;margin-left:auto;flex:none;height:40px;padding:0 18px;border-radius:13px;
   border:1px solid transparent;font:700 15px Inter,system-ui,sans-serif;cursor:pointer;
   background:linear-gradient(180deg,#ffe6ae,#eeb054);color:#3a2408;
   box-shadow:0 10px 24px rgba(240,182,90,.3),inset 0 1px 0 rgba(255,255,255,.65)}
@@ -117494,6 +117502,7 @@ ${muro} .mu-luci-fascia.testo-scuro .mu-luci-orario b{color:#875400}
 ${muro} .mu-luci-fascia.testo-scuro .mu-luci-tutte.spegni{background:rgba(255,255,255,.84);color:#14233f;border-color:rgba(20,40,80,.16)}
 ${muro}[data-compatto="1"] .mu-luci-fascia{height:72px;gap:8px;padding:0 8px 0 12px;border-radius:16px}
 ${muro}[data-compatto="1"] .mu-luci-testo{width:78px}
+${muro}[data-compatto="1"] .mu-luci-riga{margin-top:0}
 ${muro}[data-compatto="1"] .mu-luci-titolo{font-size:15px;white-space:normal;line-height:1.1}
 ${muro}[data-compatto="1"] .mu-luci-tutte{height:40px;padding:0 10px;border-radius:12px;font-size:12.5px;max-width:96px;white-space:normal;line-height:1.1}
 ${muro}[data-compatto="1"] .mu-luci-fascia>.mu-luci-scena::after{background:linear-gradient(90deg,rgba(5,11,32,.7) 0,rgba(5,11,32,0) 110px)}
