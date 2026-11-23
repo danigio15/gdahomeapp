@@ -44,6 +44,7 @@
 /// di suo: se lo fa, e' un errore da correggere qui e non li'.
 library;
 
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 
 /// I colori del marchio.
@@ -352,5 +353,128 @@ ThemeData _tema(Brightness luce) {
       linearTrackColor: colori.surfaceContainerHigh,
     ),
     splashFactory: InkSparkle.splashFactory,
+    pageTransitionsTheme: chiaro ? _passaggiChiari : _passaggiScuri,
+  );
+}
+
+/* Ogni pagina che si apre porta **il suo fondo**, mentre arriva.
+ *
+ * «La pagina Premium si disegna in modo strano», con una fotografia
+ * dall'iPhone: in alto «‹ …sistenza» e «Premium» uno sopra l'altro, dietro le
+ * mattonelle del menu tagliate a sinistra, e sopra, sfalsate, la scheda scura
+ * e l'elenco di «Cosa comprende». Non era la pagina Premium, ne' un `Hero`, ne'
+ * le schede che entrano da un posto sbagliato: era il **mezzo del passaggio**
+ * tra due pagine.
+ *
+ * Le schermate sono trasparenti (`scaffoldBackgroundColor`), e il fondo lo
+ * dipinge una volta sola `SfondoVivo`, sotto il navigatore. A pagina ferma va
+ * bene: quella sotto non si disegna piu'. Mentre arriva, pero', si disegnano
+ * tutte e due — sull'iPhone la nuova entra da destra e la vecchia scivola di
+ * un terzo a sinistra, su Android una sfuma dentro e l'altra fuori — e con
+ * due pagine senza fondo si leggevano una attraverso l'altra: il titolo di
+ * prima sotto quello nuovo, il menu sotto le schede. Su Android durava un
+ * attimo; sull'iPhone mezzo secondo, abbastanza per una fotografia.
+ *
+ * Il fondo allora lo mette il passaggio, dentro la pagina che si muove: lo
+ * stesso colore di `SfondoVivo`, cosi' a pagina ferma non cambia niente. I
+ * passaggi restano quelli del sistema — sull'iPhone la pagina che entra da
+ * destra e il dito dal bordo che torna indietro, su Android quello che sfuma
+ * in avanti col gesto «indietro» che sbircia — e si aggiunge solo il fondo.
+ * Vale per tutte le pagine che l'app apre con `MaterialPageRoute`, non solo
+ * per Premium: avevano tutte lo stesso difetto.
+ *
+ * Costanti, e non rifatti a ogni tema: due temi uguali devono essere uguali
+ * anche qui, se no `MaterialApp` a ogni ricostruzione crederebbe cambiato il
+ * tema e lo farebbe sfumare in se stesso. */
+const _passaggiChiari = PageTransitionsTheme(
+  builders: {
+    TargetPlatform.android: _ColSuoFondo(
+      PredictiveBackPageTransitionsBuilder(),
+      Colori.fondo,
+    ),
+    TargetPlatform.iOS: _ColSuoFondo(
+      CupertinoPageTransitionsBuilder(),
+      Colori.fondo,
+    ),
+    TargetPlatform.macOS: _ColSuoFondo(
+      CupertinoPageTransitionsBuilder(),
+      Colori.fondo,
+    ),
+    TargetPlatform.windows: _ColSuoFondo(
+      ZoomPageTransitionsBuilder(),
+      Colori.fondo,
+    ),
+    TargetPlatform.linux: _ColSuoFondo(
+      ZoomPageTransitionsBuilder(),
+      Colori.fondo,
+    ),
+    TargetPlatform.fuchsia: _ColSuoFondo(
+      ZoomPageTransitionsBuilder(),
+      Colori.fondo,
+    ),
+  },
+);
+
+const _passaggiScuri = PageTransitionsTheme(
+  builders: {
+    TargetPlatform.android: _ColSuoFondo(
+      PredictiveBackPageTransitionsBuilder(),
+      Colori.fondoScuro,
+    ),
+    TargetPlatform.iOS: _ColSuoFondo(
+      CupertinoPageTransitionsBuilder(),
+      Colori.fondoScuro,
+    ),
+    TargetPlatform.macOS: _ColSuoFondo(
+      CupertinoPageTransitionsBuilder(),
+      Colori.fondoScuro,
+    ),
+    TargetPlatform.windows: _ColSuoFondo(
+      ZoomPageTransitionsBuilder(),
+      Colori.fondoScuro,
+    ),
+    TargetPlatform.linux: _ColSuoFondo(
+      ZoomPageTransitionsBuilder(),
+      Colori.fondoScuro,
+    ),
+    TargetPlatform.fuchsia: _ColSuoFondo(
+      ZoomPageTransitionsBuilder(),
+      Colori.fondoScuro,
+    ),
+  },
+);
+
+/// Il passaggio del sistema ([passaggio]), con la pagina che arriva posata su
+/// un fondo pieno ([fondo]) invece che sul vuoto. Durate e passaggio «di
+/// riflesso» della pagina sotto restano quelli del sistema.
+class _ColSuoFondo extends PageTransitionsBuilder {
+  const _ColSuoFondo(this.passaggio, this.fondo);
+
+  final PageTransitionsBuilder passaggio;
+  final Color fondo;
+
+  @override
+  Duration get transitionDuration => passaggio.transitionDuration;
+
+  @override
+  Duration get reverseTransitionDuration => passaggio.reverseTransitionDuration;
+
+  @override
+  DelegatedTransitionBuilder? get delegatedTransition =>
+      passaggio.delegatedTransition;
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) => passaggio.buildTransitions(
+    route,
+    context,
+    animation,
+    secondaryAnimation,
+    ColoredBox(color: fondo, child: child),
   );
 }
