@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-CSD7ZDNX.js";
+} from "../../chunk-R5HBW64I.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -48405,12 +48405,25 @@ function primaFilaStorta(header2) {
   for (const pezzo3 of header2.querySelectorAll?.(
     ":scope > .header-left-wrap, :scope > .header-left-wrap .brand-text, :scope > .dm-editor-entry"
   ) || []) {
+    if (pezzo3.getClientRects && !pezzo3.getClientRects().length) continue;
     const r = pezzo3.getBoundingClientRect?.();
     if (!r) continue;
     if (r.width < 1 || r.height < 1) return true;
     if (r.bottom <= riquadro2.top + 1 || r.top >= riquadro2.bottom - 1) return true;
   }
   return false;
+}
+function dovEra() {
+  return {
+    x: root.scrollX || 0,
+    y: root.scrollY || 0,
+    corpi: [doc?.scrollingElement, doc?.body].filter((nodo4, i, tutti) => nodo4 && tutti.indexOf(nodo4) === i).map((nodo4) => [nodo4, nodo4.scrollTop || 0])
+  };
+}
+function rimettiDovEra({ x, y, corpi }) {
+  for (const [nodo4, alto] of corpi) if (nodo4.scrollTop !== alto) nodo4.scrollTop = alto;
+  if ((root.scrollX || 0) !== x || (root.scrollY || 0) !== y)
+    root.scrollTo?.({ left: x, top: y, behavior: "instant" });
 }
 function rifaiLaFila(header2, { sempre = false } = {}) {
   if (!header2 || doc?.querySelector?.(".page.active")?.id !== "page-home") return false;
@@ -48419,6 +48432,7 @@ function rifaiLaFila(header2, { sempre = false } = {}) {
   const larga = header2.getBoundingClientRect?.().width || 0;
   if (larga < 1) return false;
   if (!sempre && !primaFilaStorta(header2)) return false;
+  const prima = dovEra();
   const valore3 = header2.style.getPropertyValue("display");
   const peso = header2.style.getPropertyPriority("display");
   header2.style.setProperty("display", "none", "important");
@@ -48426,6 +48440,7 @@ function rifaiLaFila(header2, { sempre = false } = {}) {
   if (valore3) header2.style.setProperty("display", valore3, peso);
   else header2.style.removeProperty("display");
   void header2.offsetWidth;
+  rimettiDovEra(prima);
   return true;
 }
 function inCima() {
