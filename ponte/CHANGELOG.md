@@ -23,6 +23,8 @@ aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 - **La scheda delle luci**: in cima l'anteprima dal vivo, e per ogni luce il
   tipo da scegliere fra albero, presepe, balcone, finestra, stella e
   ghirlanda.
+- **Home, «Flusso energia»**: le frecce corrono con la stessa scia di luce
+  della pagina Energia, anche dove il sistema chiede meno animazioni.
 
 ## 1.19.25
 

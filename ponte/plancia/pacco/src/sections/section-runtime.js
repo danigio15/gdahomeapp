@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-SXU6TX2A.js";
+} from "../../chunk-B7YKFSXU.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -85742,7 +85742,7 @@ function nodoMarkup2(nodo4, posto) {
 function strutturaMarkup(modello2) {
   const archi = modello2.archi.map(
     (arco4) => `<path class="dm-fh-binario" data-fh-arco="${arco4.id}"/>
-      <path class="dm-fh-puntini" data-fh-puntini="${arco4.id}"/>`
+      <path class="dm-fh-puntini" data-fh-puntini="${arco4.id}" pathLength="100"/>`
   ).join("");
   const { posti, file } = postiDelFlusso(modello2.nodi);
   return `<div class="section-title"><span class="dm-fh-titolo-ic" aria-hidden="true">${oggettoWidget(
@@ -85963,18 +85963,24 @@ function stile3() {
   ${B} .dm-fh-fili{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
   ${B} .dm-fh-binario{fill:none;stroke:color-mix(in srgb,var(--text-dim,#94a3b8) 30%,transparent);stroke-width:2;stroke-linecap:round;display:none}
   ${B} .dm-fh-binario[data-si="true"]{display:inline}
-  ${B} .dm-fh-puntini{fill:none;stroke:var(--fh-c);stroke-width:var(--w,4);stroke-linecap:round;stroke-dasharray:0 16;
-    display:none;animation:dm-fh-corre var(--t,1.6s) linear infinite;filter:drop-shadow(0 0 4px color-mix(in srgb,var(--fh-c) 55%,transparent))}
+  /* La scia di luce della pagina Energia: una cometa per tratto, che corre sul
+     binario tenue della sua strada (il percorso e' lungo cento, \`pathLength\`:
+     una scia di quattordici e il vuoto per il resto). «Qua vedo
+     l'animazione, nella nuova no»: i puntini si fermavano con «riduci
+     animazioni», la pagina Energia no. Adesso sono la stessa cosa, e si
+     comportano allo stesso modo. */
+  ${B} .dm-fh-puntini{fill:none;stroke:var(--fh-c);stroke-width:calc(var(--w,4) * 1px + 1.5px);stroke-linecap:round;stroke-dasharray:14 86;
+    display:none;animation:dm-fh-corre var(--t,1.6s) linear infinite!important;animation-play-state:running!important;
+    will-change:stroke-dashoffset;filter:drop-shadow(0 0 5px var(--fh-c))}
   ${B} .dm-fh-puntini[data-si="true"]{display:inline}
   ${B} [data-da="solare"]{--fh-c:var(--fh-solare)}
   ${B} [data-da="rete"]{--fh-c:var(--fh-rete)}
   ${B} [data-da="batteria"]{--fh-c:var(--fh-batteria)}
   ${B} [data-da="casa"]{--fh-c:var(--fh-auto)}
   ${B} .dm-fh-binario[data-si="true"]{stroke:color-mix(in srgb,var(--fh-c) 22%,color-mix(in srgb,var(--text-dim,#94a3b8) 25%,transparent))}
-  @keyframes dm-fh-corre{to{stroke-dashoffset:-16}}
-  ${B}[data-fermo="true"] .dm-fh-puntini{animation-play-state:paused}
+  @keyframes dm-fh-corre{from{stroke-dashoffset:0}to{stroke-dashoffset:-100}}
+  ${B}[data-fermo="true"] .dm-fh-puntini{animation-play-state:paused!important}
   @media(prefers-reduced-motion:reduce){
-    ${B} .dm-fh-puntini{animation:none;stroke-dasharray:none;opacity:.85}
     ${B} .dm-fh-carta{transition:none}
   }
 
