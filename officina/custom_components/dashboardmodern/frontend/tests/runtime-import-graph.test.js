@@ -1736,8 +1736,11 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // (cosa si puo' scegliere, com'e' adesso, quale servizio la apre e la
   // chiude) e `sections/la-valvola-dell-acqua-section.js` (la scheda negli
   // Avvisi, la carta nella finestra degli Allagamenti e la sua conferma).
+  // 579 con `core/la-qualita-della-casa-3d.js`: quanti pixel, l'antialias e
+  // l'ombra che la Casa 3D chiede a uno schermo, e cosa fare quando il suo
+  // disegno cade, invece di restare nera su un tablet con poca memoria.
   assert.ok(
-    relative.length <= 578,
+    relative.length <= 579,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

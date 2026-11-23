@@ -8,9 +8,11 @@ import {
   entita,
   entitaCandidate,
   espandiGriglia,
+  memoriaDelDispositivo,
   modoDeiNomi,
+  qualitaDellaCasa3D,
   statoDelDispositivo
-} from "./chunk-PPQ7CSPW.js";
+} from "./chunk-AENZDKD4.js";
 
 // src/sections/casa-3d/arredi-3d.js
 var CATALOGO_ARREDI = Object.freeze([
@@ -1006,6 +1008,7 @@ var TAGLIO = 1.55;
 var PASSO_DEI_PIANI = 3.2;
 var AGGANCIO = 0.05;
 var LUCI_ACCESE_AL_MASSIMO = 6;
+var PASSO_DEL_PULSARE_MS = 66;
 var TINTE_DI_PARTENZA = ["#64748b", "#7c8b6f", "#9b7b63", "#4b5f7a"];
 var TESSUTI = ["#64748b", "#7c8b6f", "#9b7b63", "#4b5f7a", "#b8a99a", "#8b3a3a", "#d6c7a8", "#2f3f57"];
 var ORDINALI = [
@@ -1128,8 +1131,11 @@ function creaScena(THREE, opzioni = {}) {
   }
   const scritte = creaLeScritte({ strato: stratoChip, perLeProve: Boolean(opzioni.perLeProve), richiedi: () => richiedi() });
   scritte.modo(opzioni.nomi);
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: Boolean(opzioni.perLeProve) });
-  renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  const memoria = memoriaDelDispositivo(window.navigator);
+  const qualita = (w = 0, h = 0) => qualitaDellaCasa3D({ dpr: window.devicePixelRatio || 1, larghezza: w, altezza: h, memoria, cadute: opzioni.cadute || 0 });
+  const Q = qualita(contenitore?.clientWidth || 0, contenitore?.clientHeight || 0);
+  const renderer = new THREE.WebGLRenderer({ antialias: Q.antialias, alpha: true, preserveDrawingBuffer: Boolean(opzioni.perLeProve) });
+  renderer.setPixelRatio(Q.pixel);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -1138,6 +1144,25 @@ function creaScena(THREE, opzioni = {}) {
   const taglio = new THREE.Plane(new THREE.Vector3(0, -1, 0), 200);
   renderer.clippingPlanes = [taglio];
   palco.prepend(renderer.domElement);
+  palco.dataset.qualita = Q.leggera ? "leggera" : "piena";
+  const alPerso = () => {
+    if (S.morto) return;
+    S.perso = true;
+    if (S.raf) cancelAnimationFrame(S.raf);
+    S.raf = 0;
+    clearTimeout(S.timerPulsa);
+    S.timerPulsa = 0;
+    opzioni.quandoCade?.();
+  };
+  const alRitorno = () => {
+    if (S.morto) return;
+    S.perso = false;
+    largo = alto = 0;
+    opzioni.quandoTorna?.();
+    richiedi();
+  };
+  renderer.domElement.addEventListener("webglcontextlost", alPerso);
+  renderer.domElement.addEventListener("webglcontextrestored", alRitorno);
   const scena = new THREE.Scene();
   const cam = new THREE.PerspectiveCamera(30, 1, 0.1, 600);
   const mat = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.8, metalness: 0, ...o });
@@ -1979,7 +2004,7 @@ function creaScena(THREE, opzioni = {}) {
   const sole = new THREE.DirectionalLight("#cdd8ff", 0.6);
   sole.position.set(CX - 16, 30 + CIMA, 18);
   sole.castShadow = true;
-  sole.shadow.mapSize.set(2048, 2048);
+  sole.shadow.mapSize.set(Q.ombra, Q.ombra);
   const ombra = MISURA + 12;
   Object.assign(sole.shadow.camera, { left: -ombra, right: ombra, top: ombra, bottom: -ombra, far: 120 + CIMA * 2 });
   sole.shadow.bias = -6e-4;
@@ -2012,27 +2037,43 @@ function creaScena(THREE, opzioni = {}) {
     salvato: false,
     avviso: "",
     presa: null,
-    stati: {}
+    stati: {},
+    /* il disegno e' caduto e non e' ancora tornato */
+    perso: false,
+    /* solo un sensore che pulsa tiene vivo il giro (vedi `giro`) */
+    pulsa: false,
+    timerPulsa: 0
   };
   function richiedi() {
-    if (S.morto || S.raf || opzioni.perLeProve) return;
+    if (S.morto || S.perso || S.raf || opzioni.perLeProve) return;
     S.ultimo = performance.now();
     S.raf = requestAnimationFrame(giro);
   }
   function giro(t) {
     S.raf = 0;
-    if (S.morto) return;
+    if (S.morto || S.perso) return;
     const dt = Math.min(0.1, Math.max(0, (t - S.ultimo) / 1e3));
     S.ultimo = t;
     const ancora = avanza(dt);
     disegna();
     const fermo = String(!S.vola);
     if (palco.dataset.fermo !== fermo) palco.dataset.fermo = fermo;
-    if (ancora || S.presa) S.raf = requestAnimationFrame(giro);
+    if (!ancora && !S.presa) return;
+    if (S.pulsa && !S.presa) {
+      if (!S.timerPulsa)
+        S.timerPulsa = setTimeout(() => {
+          S.timerPulsa = 0;
+          if (!S.morto && !S.perso && !S.raf) S.raf = requestAnimationFrame(giro);
+        }, PASSO_DEL_PULSARE_MS);
+      return;
+    }
+    S.raf = requestAnimationFrame(giro);
   }
   function avanza(dt) {
     S.tempo += dt;
     let muove = false;
+    let pulsa = false;
+    const quieta = fermiTutti?.matches === true;
     let vola = false;
     const verso = (a, b, v) => {
       if (Math.abs(b - a) > 1e-3) muove = true;
@@ -2091,8 +2132,8 @@ function creaScena(THREE, opzioni = {}) {
         if (!Dv.zona) continue;
         Dv.zona.visible = attivo;
         const vivo = Dv.stato?.attivo && Dv.k !== "acqua";
-        if (vivo && attivo) muove = true;
-        Dv.zona.material.opacity = vivo ? 0.1 + 0.14 * (0.5 + 0.5 * Math.sin(S.tempo * 5)) : 0.06;
+        if (vivo && attivo && !quieta) pulsa = true;
+        Dv.zona.material.opacity = vivo ? quieta ? 0.2 : 0.1 + 0.14 * (0.5 + 0.5 * Math.sin(S.tempo * 5)) : 0.06;
         Dv.zona.material.color.set(vivo ? "#8b5cf6" : Dv.k === "acqua" ? "#38bdf8" : "#a78bfa");
         if (Dv.k === "acqua") Dv.zona.material.color.set(Dv.stato?.attivo ? "#ef4444" : "#38bdf8");
       }
@@ -2109,8 +2150,9 @@ function creaScena(THREE, opzioni = {}) {
     cielo.intensity = 0.4 + g * 1.1;
     cielo.color.set(g > 0.5 ? "#dbe7ff" : "#9fb4ff");
     sole.intensity = 0.6 + g * 2.6;
-    sole.color.lerpColors(new THREE.Color("#cdd8ff"), new THREE.Color("#fff1d6"), g);
-    palco.style.background = `linear-gradient(180deg, ${mescola("#0b1530", "#7fb2ea", g)}, ${mescola("#1b2b4f", "#d7e8fb", g)} 70%)`;
+    sole.color.lerpColors(SOLE_DI_NOTTE, SOLE_DI_GIORNO, g);
+    const fondo = `linear-gradient(180deg, ${mescola("#0b1530", "#7fb2ea", g)}, ${mescola("#1b2b4f", "#d7e8fb", g)} 70%)`;
+    if (fondo !== S.fondo) palco.style.background = S.fondo = fondo;
     const km = 1 - Math.pow(5e-4, dt);
     const p = PIANI_MIEI.find((x) => x.k === S.vista);
     for (const A of p?.arredi || []) {
@@ -2137,9 +2179,15 @@ function creaScena(THREE, opzioni = {}) {
       Dv.m.position.z += dz * km;
       Dv.m.rotation.y += dr * km;
     }
-    return muove;
+    S.pulsa = pulsa && !muove;
+    return muove || pulsa;
   }
-  const mescola = (a, b, k) => "#" + new THREE.Color(a).lerp(new THREE.Color(b), k).getHexString();
+  const SOLE_DI_NOTTE = new THREE.Color("#cdd8ff");
+  const SOLE_DI_GIORNO = new THREE.Color("#fff1d6");
+  const fermiTutti = window.matchMedia?.("(prefers-reduced-motion: reduce)") || null;
+  const mescolaDa = new THREE.Color();
+  const mescolaA = new THREE.Color();
+  const mescola = (a, b, k) => "#" + mescolaDa.set(a).lerp(mescolaA.set(b), k).getHexString();
   function livelloDellaStanza(p, id) {
     let lv = 0;
     for (const Dv of p.luci) if (Dv.dati.stanza === id) lv = Math.max(lv, Dv.luce.livello);
@@ -2151,6 +2199,8 @@ function creaScena(THREE, opzioni = {}) {
     if (w !== largo || h !== alto) {
       largo = w;
       alto = h;
+      const pixel = qualita(w, h).pixel;
+      if (renderer.getPixelRatio() !== pixel) renderer.setPixelRatio(pixel);
       renderer.setSize(w, h, false);
       cam.aspect = w / h;
       cam.updateProjectionMatrix();
@@ -3031,6 +3081,7 @@ function creaScena(THREE, opzioni = {}) {
     if (S.morto) return;
     S.morto = true;
     if (S.raf) cancelAnimationFrame(S.raf);
+    clearTimeout(S.timerPulsa);
     clearTimeout(timerSalva);
     scritte.distruggi();
     osservatore?.disconnect();
@@ -3053,7 +3104,13 @@ function creaScena(THREE, opzioni = {}) {
     }
     for (const t of trame) t.dispose();
     sole.shadow.map?.dispose?.();
+    renderer.domElement.removeEventListener("webglcontextlost", alPerso);
+    renderer.domElement.removeEventListener("webglcontextrestored", alRitorno);
     renderer.dispose();
+    try {
+      renderer.forceContextLoss();
+    } catch (_errore) {
+    }
     palco.remove();
   }
   function ridimensiona() {
@@ -3161,6 +3218,7 @@ function installaLoStile() {
   .c3-chip.c3-scelto{box-shadow:0 0 0 3px #38bdf8}
   .c3-arreda .c3-chip{cursor:grab;touch-action:none}
   .c3-chip.c3-vivo{animation:c3-pulsa 1.2s infinite}
+  @media (prefers-reduced-motion: reduce){.c3-chip.c3-vivo{animation:none;box-shadow:0 0 0 4px rgba(var(--c),.3)}}
   ${STILE_DELLE_SCRITTE}
   @keyframes c3-pulsa{0%,100%{box-shadow:0 0 0 3px rgba(var(--c),.35)}50%{box-shadow:0 0 0 7px rgba(var(--c),.1)}}
   .c3-cartellino{position:absolute;left:0;top:0;pointer-events:auto;cursor:pointer;background:rgba(15,23,42,.84);border:1px solid rgba(148,163,184,.3);border-radius:12px;

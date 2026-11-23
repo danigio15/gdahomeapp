@@ -34,6 +34,7 @@ import {
 } from "../../core/casa-3d.js";
 import { ARREDI_SOTTO, CATALOGO_ARREDI, CON_TESSUTO, VOCI_ARREDI, arredo3D } from "./arredi-3d.js";
 import { STILE_DELLE_SCRITTE, creaLeScritte } from "./le-scritte.js";
+import { memoriaDelDispositivo, qualitaDellaCasa3D } from "../../core/la-qualita-della-casa-3d.js";
 import {
   PARETE_DI_PARTENZA,
   PARETI,
@@ -50,6 +51,8 @@ const TAGLIO = 1.55;
 const PASSO_DEI_PIANI = 3.2;
 const AGGANCIO = 0.05;
 const LUCI_ACCESE_AL_MASSIMO = 6;
+/* Il respiro della zona di un sensore acceso: un fotogramma ogni tanto basta. */
+const PASSO_DEL_PULSARE_MS = 66;
 const TINTE_DI_PARTENZA = ["#64748b", "#7c8b6f", "#9b7b63", "#4b5f7a"];
 const TESSUTI = ["#64748b", "#7c8b6f", "#9b7b63", "#4b5f7a", "#b8a99a", "#8b3a3a", "#d6c7a8", "#2f3f57"];
 const ORDINALI = [
@@ -194,8 +197,17 @@ export function creaScena(THREE, opzioni = {}) {
   const scritte = creaLeScritte({ strato: stratoChip, perLeProve: Boolean(opzioni.perLeProve), richiedi: () => richiedi() });
   scritte.modo(opzioni.nomi);
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: Boolean(opzioni.perLeProve) });
-  renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  /* Quanto chiedere a questo schermo (`core/la-qualita-della-casa-3d.js`):
+   * i pixel per punto si rifanno quando la tela cambia misura, l'antialias e
+   * l'ombra si decidono qui. `cadute` sono le volte che il disegno e' gia'
+   * caduto su questa pagina: chi rifa' la scena dopo una caduta la vuole piu'
+   * leggera. */
+  const memoria = memoriaDelDispositivo(window.navigator);
+  const qualita = (w = 0, h = 0) =>
+    qualitaDellaCasa3D({ dpr: window.devicePixelRatio || 1, larghezza: w, altezza: h, memoria, cadute: opzioni.cadute || 0 });
+  const Q = qualita(contenitore?.clientWidth || 0, contenitore?.clientHeight || 0);
+  const renderer = new THREE.WebGLRenderer({ antialias: Q.antialias, alpha: true, preserveDrawingBuffer: Boolean(opzioni.perLeProve) });
+  renderer.setPixelRatio(Q.pixel);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -204,6 +216,32 @@ export function creaScena(THREE, opzioni = {}) {
   const taglio = new THREE.Plane(new THREE.Vector3(0, -1, 0), 200);
   renderer.clippingPlanes = [taglio];
   palco.prepend(renderer.domElement);
+  palco.dataset.qualita = Q.leggera ? "leggera" : "piena";
+  /* Il disegno che cade: il browser si riprende la memoria grafica (un tablet
+   * che non ne ha abbastanza, l'app che va dietro) e la tela resta nera.
+   * three si ferma da se' e, se il browser lo restituisce, si rifa' da se':
+   * qui si smette di chiedere fotogrammi, e si avvisa chi tiene la scena —
+   * che aspetta il ritorno, o la rifa' piu' leggera (`casa-3d-section.js`).
+   * Le cadute volute (`distruggi`) non contano. */
+  const alPerso = () => {
+    if (S.morto) return;
+    S.perso = true;
+    if (S.raf) cancelAnimationFrame(S.raf);
+    S.raf = 0;
+    clearTimeout(S.timerPulsa);
+    S.timerPulsa = 0;
+    opzioni.quandoCade?.();
+  };
+  const alRitorno = () => {
+    if (S.morto) return;
+    S.perso = false;
+    /* le misure si rifanno, e con loro la tela */
+    largo = alto = 0;
+    opzioni.quandoTorna?.();
+    richiedi();
+  };
+  renderer.domElement.addEventListener("webglcontextlost", alPerso);
+  renderer.domElement.addEventListener("webglcontextrestored", alRitorno);
   const scena = new THREE.Scene();
   const cam = new THREE.PerspectiveCamera(30, 1, 0.1, 600);
 
@@ -1111,7 +1149,7 @@ export function creaScena(THREE, opzioni = {}) {
   const sole = new THREE.DirectionalLight("#cdd8ff", 0.6);
   sole.position.set(CX - 16, 30 + CIMA, 18);
   sole.castShadow = true;
-  sole.shadow.mapSize.set(2048, 2048);
+  sole.shadow.mapSize.set(Q.ombra, Q.ombra);
   const ombra = MISURA + 12;
   Object.assign(sole.shadow.camera, { left: -ombra, right: ombra, top: ombra, bottom: -ombra, far: 120 + CIMA * 2 });
   sole.shadow.bias = -0.0006;
@@ -1152,18 +1190,23 @@ export function creaScena(THREE, opzioni = {}) {
     avviso: "",
     presa: null,
     stati: {},
+    /* il disegno e' caduto e non e' ancora tornato */
+    perso: false,
+    /* solo un sensore che pulsa tiene vivo il giro (vedi `giro`) */
+    pulsa: false,
+    timerPulsa: 0,
   };
 
   /* ── il giro dei fotogrammi ───────────────────────────────────────── */
   function richiedi() {
     /* nelle prove i fotogrammi li chiede chi prova, uno alla volta */
-    if (S.morto || S.raf || opzioni.perLeProve) return;
+    if (S.morto || S.perso || S.raf || opzioni.perLeProve) return;
     S.ultimo = performance.now();
     S.raf = requestAnimationFrame(giro);
   }
   function giro(t) {
     S.raf = 0;
-    if (S.morto) return;
+    if (S.morto || S.perso) return;
     const dt = Math.min(0.1, Math.max(0, (t - S.ultimo) / 1000));
     S.ultimo = t;
     const ancora = avanza(dt);
@@ -1172,12 +1215,27 @@ export function creaScena(THREE, opzioni = {}) {
      * una foto — sa quando la casa e' ferma). */
     const fermo = String(!S.vola);
     if (palco.dataset.fermo !== fermo) palco.dataset.fermo = fermo;
-    if (ancora || S.presa) S.raf = requestAnimationFrame(giro);
+    if (!ancora && !S.presa) return;
+    /* Quando a muoversi e' solo la zona di un sensore che pulsa, la casa e'
+     * ferma: non serve ridisegnarla sessanta volte al secondo, e su un
+     * tablet a muro acceso tutto il giorno ogni fotogramma e' calore e
+     * memoria. Un fotogramma ogni `PASSO_DEL_PULSARE_MS` basta al respiro. */
+    if (S.pulsa && !S.presa) {
+      if (!S.timerPulsa)
+        S.timerPulsa = setTimeout(() => {
+          S.timerPulsa = 0;
+          if (!S.morto && !S.perso && !S.raf) S.raf = requestAnimationFrame(giro);
+        }, PASSO_DEL_PULSARE_MS);
+      return;
+    }
+    S.raf = requestAnimationFrame(giro);
   }
   /* Un passo dell'animazione; torna vero se qualcosa si sta ancora muovendo. */
   function avanza(dt) {
     S.tempo += dt;
     let muove = false;
+    let pulsa = false;
+    const quieta = fermiTutti?.matches === true;
     /* La vista in viaggio (camera e taglio), distinta da cio' che pulsa sempre
      * — la zona di un sensore di movimento acceso. */
     let vola = false;
@@ -1238,8 +1296,9 @@ export function creaScena(THREE, opzioni = {}) {
         if (!Dv.zona) continue;
         Dv.zona.visible = attivo;
         const vivo = Dv.stato?.attivo && Dv.k !== "acqua";
-        if (vivo && attivo) muove = true;
-        Dv.zona.material.opacity = vivo ? 0.1 + 0.14 * (0.5 + 0.5 * Math.sin(S.tempo * 5)) : 0.06;
+        /* con «riduci animazioni» la zona accesa resta accesa, senza respiro */
+        if (vivo && attivo && !quieta) pulsa = true;
+        Dv.zona.material.opacity = vivo ? (quieta ? 0.2 : 0.1 + 0.14 * (0.5 + 0.5 * Math.sin(S.tempo * 5))) : 0.06;
         Dv.zona.material.color.set(vivo ? "#8b5cf6" : Dv.k === "acqua" ? "#38bdf8" : "#a78bfa");
         if (Dv.k === "acqua") Dv.zona.material.color.set(Dv.stato?.attivo ? "#ef4444" : "#38bdf8");
       }
@@ -1256,8 +1315,10 @@ export function creaScena(THREE, opzioni = {}) {
     cielo.intensity = 0.4 + g * 1.1;
     cielo.color.set(g > 0.5 ? "#dbe7ff" : "#9fb4ff");
     sole.intensity = 0.6 + g * 2.6;
-    sole.color.lerpColors(new THREE.Color("#cdd8ff"), new THREE.Color("#fff1d6"), g);
-    palco.style.background = `linear-gradient(180deg, ${mescola("#0b1530", "#7fb2ea", g)}, ${mescola("#1b2b4f", "#d7e8fb", g)} 70%)`;
+    sole.color.lerpColors(SOLE_DI_NOTTE, SOLE_DI_GIORNO, g);
+    /* il cielo dietro la casa: riscritto solo quando cambia, non a ogni fotogramma */
+    const fondo = `linear-gradient(180deg, ${mescola("#0b1530", "#7fb2ea", g)}, ${mescola("#1b2b4f", "#d7e8fb", g)} 70%)`;
+    if (fondo !== S.fondo) palco.style.background = S.fondo = fondo;
     /* gli arredi seguono la loro posizione con un passo morbido */
     const km = 1 - Math.pow(0.0005, dt);
     const p = PIANI_MIEI.find((x) => x.k === S.vista);
@@ -1285,9 +1346,15 @@ export function creaScena(THREE, opzioni = {}) {
       Dv.m.position.z += dz * km;
       Dv.m.rotation.y += dr * km;
     }
-    return muove;
+    S.pulsa = pulsa && !muove;
+    return muove || pulsa;
   }
-  const mescola = (a, b, k) => "#" + new THREE.Color(a).lerp(new THREE.Color(b), k).getHexString();
+  const SOLE_DI_NOTTE = new THREE.Color("#cdd8ff");
+  const SOLE_DI_GIORNO = new THREE.Color("#fff1d6");
+  const fermiTutti = window.matchMedia?.("(prefers-reduced-motion: reduce)") || null;
+  const mescolaDa = new THREE.Color();
+  const mescolaA = new THREE.Color();
+  const mescola = (a, b, k) => "#" + mescolaDa.set(a).lerp(mescolaA.set(b), k).getHexString();
   function livelloDellaStanza(p, id) {
     let lv = 0;
     for (const Dv of p.luci) if (Dv.dati.stanza === id) lv = Math.max(lv, Dv.luce.livello);
@@ -1301,6 +1368,10 @@ export function creaScena(THREE, opzioni = {}) {
     if (w !== largo || h !== alto) {
       largo = w;
       alto = h;
+      /* i pixel per punto seguono la misura della tela: piu' e' grande,
+       * meno ne servono (`qualitaDellaCasa3D`) */
+      const pixel = qualita(w, h).pixel;
+      if (renderer.getPixelRatio() !== pixel) renderer.setPixelRatio(pixel);
       renderer.setSize(w, h, false);
       cam.aspect = w / h;
       cam.updateProjectionMatrix();
@@ -2238,6 +2309,7 @@ export function creaScena(THREE, opzioni = {}) {
     if (S.morto) return;
     S.morto = true;
     if (S.raf) cancelAnimationFrame(S.raf);
+    clearTimeout(S.timerPulsa);
     clearTimeout(timerSalva);
     scritte.distruggi();
     osservatore?.disconnect();
@@ -2260,7 +2332,16 @@ export function creaScena(THREE, opzioni = {}) {
     }
     for (const t of trame) t.dispose();
     sole.shadow.map?.dispose?.();
+    renderer.domElement.removeEventListener("webglcontextlost", alPerso);
+    renderer.domElement.removeEventListener("webglcontextrestored", alRitorno);
     renderer.dispose();
+    /* Il disegno si restituisce subito, senza aspettare che il browser
+     * raccolga la tela: aprendo e chiudendo la casa, o rifacendola dopo il
+     * «Crea», i contesti WebGL non si accumulano (il browser ne tiene pochi,
+     * e su un tablet ognuno e' memoria grafica). */
+    try {
+      renderer.forceContextLoss();
+    } catch (_errore) {}
     palco.remove();
   }
   function ridimensiona() {
@@ -2378,6 +2459,7 @@ export function installaLoStile() {
   .c3-chip.c3-scelto{box-shadow:0 0 0 3px #38bdf8}
   .c3-arreda .c3-chip{cursor:grab;touch-action:none}
   .c3-chip.c3-vivo{animation:c3-pulsa 1.2s infinite}
+  @media (prefers-reduced-motion: reduce){.c3-chip.c3-vivo{animation:none;box-shadow:0 0 0 4px rgba(var(--c),.3)}}
   ${STILE_DELLE_SCRITTE}
   @keyframes c3-pulsa{0%,100%{box-shadow:0 0 0 3px rgba(var(--c),.35)}50%{box-shadow:0 0 0 7px rgba(var(--c),.1)}}
   .c3-cartellino{position:absolute;left:0;top:0;pointer-events:auto;cursor:pointer;background:rgba(15,23,42,.84);border:1px solid rgba(148,163,184,.3);border-radius:12px;

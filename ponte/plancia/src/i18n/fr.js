@@ -8038,6 +8038,8 @@ export default Object.freeze({
   "tap «Outside» to step back out": "touchez « Extérieur » pour ressortir",
   "Tap a floor to see its devices.": "Touchez un étage pour voir ses appareils.",
   "The 3D house cannot open on this device.": "La maison 3D ne peut pas s’ouvrir sur cet appareil.",
+  "The 3D house is recovering…": "La maison 3D se rétablit…",
+  "The 3D house stopped several times: this device does not have enough graphics memory to keep it open.": "La maison 3D s’est arrêtée plusieurs fois : cet appareil n’a pas assez de mémoire graphique pour la garder ouverte.",
   "The house": "La maison",
   "The house wizard is not available yet": "L’assistant de la maison n’est pas encore disponible",
   "View only": "Lecture seule",

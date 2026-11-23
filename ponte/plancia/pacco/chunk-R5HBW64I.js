@@ -22075,7 +22075,7 @@ function sharedPayload(extra = {}) {
   return payload;
 }
 function sharedGet() {
-  return bridgeRequest(SHARED_GET, sharedPayload());
+  return bridgeRequest(SHARED_GET, sharedPayload(), { rimanda: true });
 }
 function sharedSet(value, { expectedRevision = null, reset = false } = {}) {
   return bridgeRequest(
@@ -35690,7 +35690,7 @@ function installSegnalazioniSection() {
 senzaCadere(installSegnalazioniSection);
 
 // legacy/build-info.js
-var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.19.27", "dashboardVersion": "1.19.27", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-11-23T16:30:42+00:00", "commit": "649baf3fd8099232b4364a5b7af5723ccf8127b6", "assetHash": "44f656ae2b8284b5" });
+var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.19.28", "dashboardVersion": "1.19.28", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-11-23T20:21:51+00:00", "commit": "53e96779ad2f381edef34cdcffbf0cdf7f503c95", "assetHash": "2040efffa9154c54" });
 
 export {
   faseInParole,

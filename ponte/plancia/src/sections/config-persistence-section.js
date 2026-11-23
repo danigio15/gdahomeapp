@@ -655,8 +655,12 @@ function sharedPayload(extra = {}) {
   return payload;
 }
 
+/* Una lettura: dentro l'app, partita prima dell'`auth_ok`, si rimanda
+ * all'`auth_ok` invece di perdersi (vedi `bridgeRequest`). Persa, la
+ * configurazione condivisa arrivava solo al giro dopo, dieci secondi piu'
+ * tardi, e su un tablet lento quasi mai al primo. */
 function sharedGet() {
-  return bridgeRequest(SHARED_GET, sharedPayload());
+  return bridgeRequest(SHARED_GET, sharedPayload(), { rimanda: true });
 }
 
 function sharedSet(value, { expectedRevision = null, reset = false } = {}) {

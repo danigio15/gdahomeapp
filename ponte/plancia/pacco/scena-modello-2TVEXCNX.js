@@ -4,19 +4,21 @@ import {
   posaDelModello,
   puntoDelFile,
   puntoNelMondo
-} from "./chunk-2XNRX3SX.js";
+} from "./chunk-AT7RGUJI.js";
 import {
   creaLeScritte,
   installaLoStile
-} from "./chunk-DCLZLWM3.js";
+} from "./chunk-ZXGLBE2Y.js";
 import {
   DISPOSITIVI_3D,
   azioneDelTocco,
   entita,
   entitaCandidate,
   entitaProposta,
+  memoriaDelDispositivo,
+  qualitaDellaCasa3D,
   statoDelDispositivo
-} from "./chunk-PPQ7CSPW.js";
+} from "./chunk-AENZDKD4.js";
 
 // src/sections/casa-3d/scena-modello.js
 var LUCI_ACCESE_AL_MASSIMO = 6;
@@ -137,8 +139,11 @@ function creaScenaDelModello(THREE, opzioni = {}) {
     pannello.className = "c3-pannello-sopra";
     palco.appendChild(pannello);
   }
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: Boolean(opzioni.perLeProve) });
-  renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  const memoria = memoriaDelDispositivo(window.navigator);
+  const qualita = (w = 0, h = 0) => qualitaDellaCasa3D({ dpr: window.devicePixelRatio || 1, larghezza: w, altezza: h, memoria, cadute: opzioni.cadute || 0 });
+  const Q = qualita(contenitore?.clientWidth || 0, contenitore?.clientHeight || 0);
+  const renderer = new THREE.WebGLRenderer({ antialias: Q.antialias, alpha: true, preserveDrawingBuffer: Boolean(opzioni.perLeProve) });
+  renderer.setPixelRatio(Q.pixel);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -147,10 +152,12 @@ function creaScenaDelModello(THREE, opzioni = {}) {
   const taglio = new THREE.Plane(new THREE.Vector3(0, -1, 0), 1e6);
   renderer.clippingPlanes = [taglio];
   palco.prepend(renderer.domElement);
-  renderer.domElement.addEventListener("webglcontextlost", (ev) => {
+  const alPerso = (ev) => {
     ev.preventDefault();
+    if (S.morto) return;
     quandoCade(new Error("webgl"));
-  });
+  };
+  renderer.domElement.addEventListener("webglcontextlost", alPerso);
   const scena = new THREE.Scene();
   const cam = new THREE.PerspectiveCamera(35, 1, 0.05, 2e3);
   const gruppo = new THREE.Group();
@@ -172,7 +179,7 @@ function creaScenaDelModello(THREE, opzioni = {}) {
   const sole = new THREE.DirectionalLight("#fff1d6", 2.4);
   sole.position.set(-MISURA, MISURA * 1.8 + 10, MISURA * 0.9);
   sole.castShadow = true;
-  sole.shadow.mapSize.set(2048, 2048);
+  sole.shadow.mapSize.set(Q.ombra, Q.ombra);
   const ombra = MISURA + 4;
   Object.assign(sole.shadow.camera, { left: -ombra, right: ombra, top: ombra, bottom: -ombra, far: MISURA * 6 + 60 });
   sole.shadow.bias = -6e-4;
@@ -225,6 +232,8 @@ function creaScenaDelModello(THREE, opzioni = {}) {
     if (w !== largo || h !== alto) {
       largo = w;
       alto = h;
+      const pixel = qualita(w, h).pixel;
+      if (renderer.getPixelRatio() !== pixel) renderer.setPixelRatio(pixel);
       renderer.setSize(w, h, false);
       cam.aspect = w / h;
       cam.updateProjectionMatrix();
@@ -642,6 +651,11 @@ function creaScenaDelModello(THREE, opzioni = {}) {
     sfera.dispose();
     sole.shadow.map?.dispose?.();
     renderer.dispose();
+    try {
+      renderer.forceContextLoss();
+    } catch (_errore) {
+    }
+    renderer.domElement.removeEventListener("webglcontextlost", alPerso);
     palco.remove();
   }
   function ridimensiona() {

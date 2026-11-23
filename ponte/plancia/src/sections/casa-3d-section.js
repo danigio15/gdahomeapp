@@ -32,6 +32,7 @@ import {
 } from "../core/casa-3d.js";
 import { troppoPerQuestoDispositivo } from "../core/modello-3d.js";
 import { CHIAVE_NOMI_CASA3D, modoDeiNomi, modoDopo } from "../core/le-scritte-della-casa-3d.js";
+import { ATTESA_DEL_RITORNO_MS, cosaFareDopoLaCaduta } from "../core/la-qualita-della-casa-3d.js";
 import { caricaIlMotore } from "./casa-3d-modello-section.js";
 import { apriIlMenu, premiumDellaCasa, premiumRicordato } from "./plancia-a-muro-section.js";
 import { CHIAVE_RISERVATE, telecamereVisibili } from "../core/telecamere-riservate.js";
@@ -99,6 +100,11 @@ const state = (root[KEY] ||= {
   lati: null,
   /* Le scritte dei dispositivi su questo dispositivo (vedi nomiScelti). */
   nomi: null,
+  /* Il disegno caduto (vedi `scenaCaduta`): quando e' caduto le ultime
+   * volte, se lo si sta aspettando, e chi aspetta. */
+  cadute: [],
+  persa: false,
+  timerDelRitorno: 0,
 });
 
 /** La casa del config, pulita. */
@@ -795,8 +801,14 @@ async function avviaIlModello(admin) {
       pannello: nodo.querySelector(".c3-arreda-posto"),
       quandoTocchi: alToccoDellaScena,
       quandoSalvi: salvaLaCasa,
-      quandoCade: () => cadeIlModello(m.id),
+      /* il modello cade solo col disegno (`webglcontextlost`): la casa
+       * generata che prende il suo posto si fa piu' leggera */
+      quandoCade: () => {
+        state.cadute = cosaFareDopoLaCaduta(state.cadute, Date.now()).cadute;
+        cadeIlModello(m.id);
+      },
       nomi: nomiScelti(),
+      cadute: state.cadute.length,
     });
     state.firma = firmaDi(ora);
     state.vista = "modello";
@@ -854,6 +866,10 @@ async function avviaLaScena(admin) {
       quandoTocchi: alToccoDellaScena,
       quandoSalvi: salvaLaCasa,
       nomi: nomiScelti(),
+      /* le volte che il disegno e' gia' caduto: la scena rifatta e' piu' leggera */
+      cadute: state.cadute.length,
+      quandoCade: scenaCaduta,
+      quandoTorna: scenaTornata,
       quandoCambiVista: (vista) => {
         if (state.vista === vista) return;
         state.vista = vista;
@@ -873,11 +889,61 @@ async function avviaLaScena(admin) {
 }
 
 function spegniLaScena() {
+  root.clearTimeout?.(state.timerDelRitorno);
+  state.timerDelRitorno = 0;
+  state.persa = false;
   try {
     state.scena?.distruggi();
   } catch (_errore) {}
   state.scena = null;
   state.firma = "";
+}
+
+/* ── il disegno che cade ──────────────────────────────────────────────────
+ *
+ * «Per un attimo si vede la foto del palazzo e poi diventa tutto nero.» Su un
+ * tablet con poca memoria grafica il browser si riprende il disegno della
+ * scena (`webglcontextlost`), e la tela resta nera: la pagina c'e' ancora, la
+ * casa no. Adesso, quando cade:
+ *
+ *   · si dice, sopra la casa, che si sta riprendendo;
+ *   · si aspetta un poco che il browser lo restituisca: se lo fa, three rifa'
+ *     il disegno da se' e la scena riparte dov'era;
+ *   · se non lo fa, si rifa' la scena, piu' leggera
+ *     (`core/la-qualita-della-casa-3d.js`: meno pixel, niente antialias,
+ *     l'ombra piu' piccola);
+ *   · dopo qualche caduta di fila si smette, e la casa lo dice con un tasto
+ *     per riprovare, invece di restare nera o di rifarsi per sempre.
+ *
+ * Niente ricarica della pagina: si rifa' solo la scena. */
+function scenaCaduta() {
+  const esito = cosaFareDopoLaCaduta(state.cadute, Date.now());
+  state.cadute = esito.cadute;
+  state.persa = true;
+  root.console?.warn?.("[DashboardModern] casa 3d: il disegno e' caduto", state.cadute.length);
+  root.clearTimeout?.(state.timerDelRitorno);
+  if (esito.azione === "basta") {
+    spegniLaScena();
+    state.guasto = "disegno";
+    ridisegna();
+    return;
+  }
+  state.timerDelRitorno =
+    root.setTimeout?.(() => {
+      state.timerDelRitorno = 0;
+      if (!state.persa) return;
+      /* non e' tornato: si rifa' la scena, piu' leggera */
+      spegniLaScena();
+      ridisegna();
+    }, ATTESA_DEL_RITORNO_MS) || 0;
+  ridisegna();
+}
+
+function scenaTornata() {
+  root.clearTimeout?.(state.timerDelRitorno);
+  state.timerDelRitorno = 0;
+  state.persa = false;
+  ridisegna();
 }
 
 /* Quello che la scena ha cambiato torna nel config. La firma si aggiorna
@@ -973,6 +1039,42 @@ function togliLaTela() {
   doc?.documentElement?.classList?.remove("dm-casa3d-acceso");
 }
 
+/* La casa che non si apre, detta: al posto della tela nera, cosa e' successo
+ * e un tasto per riprovare. */
+function guastoMarkup() {
+  const testo =
+    state.guasto === "disegno"
+      ? t(
+          "La casa in 3D si è fermata più volte: questo dispositivo non ha abbastanza memoria grafica per tenerla aperta.",
+          "The 3D house stopped several times: this device does not have enough graphics memory to keep it open.",
+        )
+      : t(
+          "La casa in 3D non si apre su questo dispositivo.",
+          "The 3D house cannot open on this device.",
+        );
+  const riprova = esc(t("Riprova", "Try again"));
+  return `<div class="c3-da-creare"><span aria-hidden="true">🏢</span><p>${esc(testo)}</p>
+    <button type="button" class="c3-tasto c3-tasto-grande" data-c3s="riprova">↻ ${riprova}</button></div>`;
+}
+
+/* Quello che sta sopra la tela: niente mentre la casa si vede; mentre il
+ * disegno si riprende, che si sta riprendendo; la casa che non si apre, con
+ * un tasto per riprovare; e prima della scena l'attesa o l'invito a crearla. */
+function attesaMarkup(casa, vuota, admin) {
+  if (state.scena && state.persa)
+    return `<p class="c3-riprende">${esc(t("La casa 3D si sta riprendendo…", "The 3D house is recovering…"))}</p>`;
+  if (state.scena) return "";
+  if (state.guasto && !vuota) return guastoMarkup();
+  if (vuota && usaIlModello(casa))
+    return `<div class="c3-da-creare"><p>${esc(t("La casa in 3D non si apre su questo dispositivo.", "The 3D house cannot open on this device."))}</p>${
+      admin
+        ? `<button type="button" class="c3-tasto" data-c3s="modello">🧊 ${esc(t("Il tuo modello 3D", "Your 3D model"))}</button>`
+        : ""
+    }</div>`;
+  if (vuota) return casaDaCreareMarkup(admin);
+  return `<p>${esc(state.attesaDelModello || t("Arriva la casa…", "Loading the house…"))}</p>`;
+}
+
 function disegna() {
   if (!doc?.body) return;
   const casa = casa3dDiQui();
@@ -1002,6 +1104,8 @@ function disegna() {
   doc.documentElement.classList.add("dm-casa3d-acceso");
   nodo.dataset.tema = doc.documentElement.getAttribute("data-theme") || "light";
   nodo.dataset.arreda = String(state.arreda);
+  /* il disegno caduto: le scritte non hanno piu' una casa sotto */
+  nodo.dataset.persa = String(Boolean(state.scena && state.persa));
   scriviSeCambia(nodo.querySelector(".c3-testa-posto"), testataMarkup(elencata, admin, modello));
   /* Una plancia Casa 3D appena nata non ha ancora la casa: niente scena,
    * niente schede, e al posto della casa l'invito a crearla. */
@@ -1022,20 +1126,7 @@ function disegna() {
   if (state.scena && state.firma !== firma) spegniLaScena();
   if (state.scena) state.scena.aggiornaStati(states);
   else if (!vuota && !state.caricando && !state.guasto) avviaLaScena(admin);
-  scriviSeCambia(
-    nodo.querySelector(".c3-attesa"),
-    state.scena
-      ? ""
-      : vuota && usaIlModello(casa)
-        ? `<div class="c3-da-creare"><p>${esc(t("La casa in 3D non si apre su questo dispositivo.", "The 3D house cannot open on this device."))}</p>${
-            admin
-              ? `<button type="button" class="c3-tasto" data-c3s="modello">🧊 ${esc(t("Il tuo modello 3D", "Your 3D model"))}</button>`
-              : ""
-          }</div>`
-        : vuota
-        ? casaDaCreareMarkup(admin)
-        : `<p>${esc(state.guasto ? t("La casa in 3D non si apre su questo dispositivo.", "The 3D house cannot open on this device.") : state.attesaDelModello || t("Arriva la casa…", "Loading the house…"))}</p>`,
-  );
+  scriviSeCambia(nodo.querySelector(".c3-attesa"), attesaMarkup(casa, vuota, admin));
   /* Il video vivo non si ridisegna finche' resta aperto; una telecamera che
    * smette di potersi guardare si chiude subito. */
   const sopra = nodo.querySelector(".c3-sopra");
@@ -1208,6 +1299,14 @@ function alClic(evento) {
       );
     return;
   }
+  if (cosa === "riprova") {
+    /* da capo: le cadute di prima non contano piu', e la scena si rifa' */
+    state.cadute = [];
+    state.guasto = "";
+    state.modelloGuasto = "";
+    vibra(6);
+    return ridisegna();
+  }
   if (cosa === "modello") {
     const apri = root.__DM_CASA3D_MODELLO__;
     if (typeof apri === "function") apri();
@@ -1335,6 +1434,11 @@ function installaLoStile() {
     ${C3} .c3-posto{position:absolute;inset:0;border-radius:inherit}
     ${C3} .c3-attesa{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;color:#cbd5e1;font-size:13px;font-weight:700}
     ${C3} .c3-attesa:empty{display:none}
+    /* il disegno che si riprende: detto sopra la casa, leggibile sul cielo chiaro come sul buio */
+    ${C3} .c3-attesa{z-index:6}
+    ${C3}[data-persa="true"] .c3-strato,${C3}[data-persa="true"] .c3-chip-strato{visibility:hidden}
+    ${C3} .c3-riprende{margin:0;padding:10px 16px;border-radius:999px;background:rgba(15,23,42,.84);color:#e6edf7;
+      border:1px solid rgba(148,163,184,.32);box-shadow:0 6px 18px rgba(0,0,0,.25)}
     ${C3} .c3-da-creare{pointer-events:auto;display:grid;justify-items:center;gap:10px;max-width:420px;padding:24px;text-align:center}
     ${C3} .c3-da-creare>span{font-size:44px}
     ${C3} .c3-da-creare h2{margin:0;font-size:20px;color:inherit}

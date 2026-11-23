@@ -7962,6 +7962,8 @@ export default Object.freeze({
   "tap «Outside» to step back out": "geri çıkmak için «Dışarı»ya dokun",
   "Tap a floor to see its devices.": "Cihazlarını görmek için bir kata dokun.",
   "The 3D house cannot open on this device.": "3D ev bu cihazda açılamıyor.",
+  "The 3D house is recovering…": "3D ev yeniden hazırlanıyor…",
+  "The 3D house stopped several times: this device does not have enough graphics memory to keep it open.": "3D ev birkaç kez durdu: bu cihazda onu açık tutacak kadar grafik belleği yok.",
   "The house": "Ev",
   "The house wizard is not available yet": "Ev sihirbazı henüz kullanılamıyor",
   "View only": "Yalnızca görüntüleme",
