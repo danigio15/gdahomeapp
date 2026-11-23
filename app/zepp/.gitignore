@@ -1,0 +1,3 @@
+# Quello che zeus si scrive costruendo: si rifa' con `npx zeus build`.
+dist/
+.zeus/
