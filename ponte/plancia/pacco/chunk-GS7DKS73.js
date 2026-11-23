@@ -1021,6 +1021,13 @@ function contaCollegati(casa) {
   }
   return { tutti, collegati, mancano: tutti - collegati };
 }
+function cosaFareDelVideo(finestra, inPagina, guardabili) {
+  const entity = String(inPagina || "");
+  if (!entity) return "niente";
+  const sua = finestra?.tipo === "telecamera" && finestra.entity === entity;
+  if (!sua) return "togli";
+  return guardabili?.has?.(entity) ? "resta" : "spegni";
+}
 
 // src/core/la-qualita-della-casa-3d.js
 var PIXEL_AL_MASSIMO = 26e5;
@@ -1028,6 +1035,8 @@ var PIXEL_AL_MASSIMO_CON_MEMORIA = 42e5;
 var SCHERMO_GRANDE = 5e5;
 var POCA_MEMORIA = 2;
 var MEMORIA_MEDIA = 4;
+var POCHI_NUCLEI = 4;
+var GRADINI_PER_LA_LENTEZZA = 4;
 var numero2 = (v) => typeof v === "number" && Number.isFinite(v) ? v : null;
 function memoriaDelDispositivo(nav) {
   try {
@@ -1037,17 +1046,28 @@ function memoriaDelDispositivo(nav) {
     return null;
   }
 }
+function nucleiDelDispositivo(nav) {
+  try {
+    const n = numero2(nav?.hardwareConcurrency);
+    return n && n > 0 ? n : null;
+  } catch (_errore) {
+    return null;
+  }
+}
 function qualitaDellaCasa3D({
   dpr = 1,
   larghezza = 0,
   altezza = 0,
   memoria = null,
-  cadute = 0
+  cadute = 0,
+  nuclei = null,
+  lenta = 0
 } = {}) {
   const base = numero2(dpr) && dpr > 0 ? dpr : 1;
   let pixel = Math.min(2, base);
   const mem = numero2(memoria);
-  const poca = mem !== null && mem <= POCA_MEMORIA;
+  const cpu = numero2(nuclei);
+  const poca = mem !== null && (mem <= POCA_MEMORIA || mem <= MEMORIA_MEDIA && cpu !== null && cpu <= POCHI_NUCLEI);
   const media = mem === null || mem <= MEMORIA_MEDIA;
   const giu = Math.max(0, Math.floor(numero2(cadute) || 0));
   const area = Math.max(0, numero2(larghezza) || 0) * Math.max(0, numero2(altezza) || 0);
@@ -1056,9 +1076,16 @@ function qualitaDellaCasa3D({
   const tetto = media ? PIXEL_AL_MASSIMO : PIXEL_AL_MASSIMO_CON_MEMORIA;
   if (area > 0 && area * pixel * pixel > tetto)
     pixel = Math.max(Math.min(1, pixel), Math.sqrt(tetto / area));
-  pixel = Math.round(pixel * 100) / 100;
   const antialias = !poca && giu === 0;
-  const ombra = giu >= 2 ? 512 : poca || giu === 1 ? 1024 : 2048;
+  let ombra = giu >= 2 ? 512 : poca || giu === 1 ? 1024 : 2048;
+  const passi = Math.min(GRADINI_PER_LA_LENTEZZA, Math.max(0, Math.floor(numero2(lenta) || 0)));
+  for (let i = 0; i < passi; i++) {
+    if (pixel > 1.5) pixel = 1.5;
+    else if (pixel > 1) pixel = 1;
+    else if (ombra > 0) ombra = 0;
+    else pixel = Math.min(pixel, 0.75);
+  }
+  pixel = Math.round(pixel * 100) / 100;
   return {
     pixel,
     antialias,
@@ -1074,6 +1101,30 @@ function cosaFareDopoLaCaduta(prima = [], adesso = Date.now()) {
   const cadute = (Array.isArray(prima) ? prima : []).map(numero2).filter((t) => t !== null && ora - t < FINESTRA_DELLE_CADUTE_MS && t <= ora);
   cadute.push(ora);
   return { azione: cadute.length > CADUTE_AL_MASSIMO ? "basta" : "riprova", cadute };
+}
+var GRAZIA_DEL_RITORNO_MS = 5e3;
+function laCadutaConta({ nascosta = false, tornataIl = 0, adesso = Date.now() } = {}) {
+  if (nascosta === true) return false;
+  const ora = numero2(adesso) ?? 0;
+  const tornata = numero2(tornataIl) || 0;
+  return !(tornata > 0 && ora >= tornata && ora - tornata < GRAZIA_DEL_RITORNO_MS);
+}
+function senzaLeCaduteDiAdesso(cadute = [], adesso = Date.now()) {
+  const ora = numero2(adesso) ?? 0;
+  return (Array.isArray(cadute) ? cadute : []).map(numero2).filter((t) => t !== null && !(t <= ora && ora - t < GRAZIA_DEL_RITORNO_MS));
+}
+var FOTOGRAMMI_DA_MISURARE = 8;
+var TEMPO_DA_MISURARE_MS = 1200;
+var FOTOGRAMMI_AL_SECONDO_MINIMI = 20;
+var FOTOGRAMMI_AL_SECONDO_DA_FERMI = 5;
+function fotogrammiLenti(intervalli = []) {
+  const validi = (Array.isArray(intervalli) ? intervalli : []).map(numero2).filter((t) => t !== null && t > 0);
+  const tempo = validi.reduce((a, b) => a + b, 0);
+  if (validi.length < FOTOGRAMMI_DA_MISURARE || tempo < TEMPO_DA_MISURARE_MS) return null;
+  const ordinati = validi.slice().sort((a, b) => a - b);
+  const mediana = ordinati[Math.floor(ordinati.length / 2)];
+  if (mediana > 1e3 / FOTOGRAMMI_AL_SECONDO_DA_FERMI) return 2;
+  return mediana > 1e3 / FOTOGRAMMI_AL_SECONDO_MINIMI ? 1 : 0;
 }
 
 // src/core/le-scritte-della-casa-3d.js
@@ -1231,13 +1282,19 @@ export {
   statoDelDispositivo,
   azioneDelTocco,
   contaCollegati,
+  cosaFareDelVideo,
   CHIAVE_NOMI_CASA3D,
   LATO_DEL_PALLINO,
   modoDeiNomi,
   modoDopo,
   chiPrendeLaScritta,
+  GRADINI_PER_LA_LENTEZZA,
   memoriaDelDispositivo,
+  nucleiDelDispositivo,
   qualitaDellaCasa3D,
   ATTESA_DEL_RITORNO_MS,
-  cosaFareDopoLaCaduta
+  cosaFareDopoLaCaduta,
+  laCadutaConta,
+  senzaLeCaduteDiAdesso,
+  fotogrammiLenti
 };

@@ -4,11 +4,11 @@ import {
   posaDelModello,
   puntoDelFile,
   puntoNelMondo
-} from "./chunk-AT7RGUJI.js";
+} from "./chunk-ZV2CIQQZ.js";
 import {
   creaLeScritte,
   installaLoStile
-} from "./chunk-ZXGLBE2Y.js";
+} from "./chunk-U7PLBHMN.js";
 import {
   DISPOSITIVI_3D,
   azioneDelTocco,
@@ -16,9 +16,10 @@ import {
   entitaCandidate,
   entitaProposta,
   memoriaDelDispositivo,
+  nucleiDelDispositivo,
   qualitaDellaCasa3D,
   statoDelDispositivo
-} from "./chunk-AENZDKD4.js";
+} from "./chunk-GS7DKS73.js";
 
 // src/sections/casa-3d/scena-modello.js
 var LUCI_ACCESE_AL_MASSIMO = 6;
@@ -140,12 +141,13 @@ function creaScenaDelModello(THREE, opzioni = {}) {
     palco.appendChild(pannello);
   }
   const memoria = memoriaDelDispositivo(window.navigator);
-  const qualita = (w = 0, h = 0) => qualitaDellaCasa3D({ dpr: window.devicePixelRatio || 1, larghezza: w, altezza: h, memoria, cadute: opzioni.cadute || 0 });
+  const nuclei = nucleiDelDispositivo(window.navigator);
+  const qualita = (w = 0, h = 0) => qualitaDellaCasa3D({ dpr: window.devicePixelRatio || 1, larghezza: w, altezza: h, memoria, nuclei, cadute: opzioni.cadute || 0, lenta: opzioni.lenta || 0 });
   const Q = qualita(contenitore?.clientWidth || 0, contenitore?.clientHeight || 0);
   const renderer = new THREE.WebGLRenderer({ antialias: Q.antialias, alpha: true, preserveDrawingBuffer: Boolean(opzioni.perLeProve) });
   renderer.setPixelRatio(Q.pixel);
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = Q.ombra >= 2048 ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -178,8 +180,8 @@ function creaScenaDelModello(THREE, opzioni = {}) {
   scena.add(cielo);
   const sole = new THREE.DirectionalLight("#fff1d6", 2.4);
   sole.position.set(-MISURA, MISURA * 1.8 + 10, MISURA * 0.9);
-  sole.castShadow = true;
-  sole.shadow.mapSize.set(Q.ombra, Q.ombra);
+  sole.castShadow = Q.ombra > 0;
+  if (Q.ombra > 0) sole.shadow.mapSize.set(Q.ombra, Q.ombra);
   const ombra = MISURA + 4;
   Object.assign(sole.shadow.camera, { left: -ombra, right: ombra, top: ombra, bottom: -ombra, far: MISURA * 6 + 60 });
   sole.shadow.bias = -6e-4;
@@ -320,7 +322,7 @@ function creaScenaDelModello(THREE, opzioni = {}) {
   let ultimo = 0;
   function giro(t) {
     S.raf = 0;
-    if (S.morto) return;
+    if (S.morto || S.sospesa) return;
     const dt = Math.min(0.1, Math.max(0, (t - ultimo) / 1e3));
     ultimo = t;
     const ancora = avanza(dt);
@@ -333,7 +335,7 @@ function creaScenaDelModello(THREE, opzioni = {}) {
     if (ancora || dita.size) S.raf = requestAnimationFrame(giro);
   }
   function richiedi() {
-    if (S.morto || S.raf || opzioni.perLeProve) return;
+    if (S.morto || S.sospesa || S.raf || opzioni.perLeProve) return;
     ultimo = performance.now();
     S.raf = requestAnimationFrame(giro);
   }
@@ -662,6 +664,14 @@ function creaScenaDelModello(THREE, opzioni = {}) {
     largo = alto = 0;
     richiedi();
   }
+  function sospendi(si) {
+    const ferma = Boolean(si);
+    if (Boolean(S.sospesa) === ferma || S.morto) return;
+    S.sospesa = ferma;
+    if (!ferma) return richiedi();
+    if (S.raf) cancelAnimationFrame(S.raf);
+    S.raf = 0;
+  }
   const osservatore = typeof ResizeObserver === "function" ? new ResizeObserver(() => ridimensiona()) : null;
   osservatore?.observe(palco);
   aggiornaStati(leggiStati());
@@ -676,6 +686,7 @@ function creaScenaDelModello(THREE, opzioni = {}) {
     arreda,
     distruggi,
     ridimensiona,
+    sospendi,
     /** Le scritte dei dispositivi: «tutti», «accesi» o «nessuno» (vedi le-scritte.js). */
     nomi: (modo) => scritte.modo(modo),
     fotogramma(dt = 1 / 60) {

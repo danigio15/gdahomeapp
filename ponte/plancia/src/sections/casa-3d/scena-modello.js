@@ -23,7 +23,11 @@ import { DISPOSITIVI_3D, azioneDelTocco, entita, entitaCandidate, entitaProposta
 import { aByte, controllaIlModello, posaDelModello, puntoDelFile, puntoNelMondo } from "../../core/modello-3d.js";
 import { installaLoStile as stileDellaScena } from "./scena.js";
 import { creaLeScritte } from "./le-scritte.js";
-import { memoriaDelDispositivo, qualitaDellaCasa3D } from "../../core/la-qualita-della-casa-3d.js";
+import {
+  memoriaDelDispositivo,
+  nucleiDelDispositivo,
+  qualitaDellaCasa3D,
+} from "../../core/la-qualita-della-casa-3d.js";
 
 const LUCI_ACCESE_AL_MASSIMO = 6;
 const TONI = {
@@ -176,13 +180,15 @@ export function creaScenaDelModello(THREE, opzioni = {}) {
 
   /* Quanto chiedere a questo schermo: come la casa generata (`scena.js`). */
   const memoria = memoriaDelDispositivo(window.navigator);
+  const nuclei = nucleiDelDispositivo(window.navigator);
   const qualita = (w = 0, h = 0) =>
-    qualitaDellaCasa3D({ dpr: window.devicePixelRatio || 1, larghezza: w, altezza: h, memoria, cadute: opzioni.cadute || 0 });
+    qualitaDellaCasa3D({ dpr: window.devicePixelRatio || 1, larghezza: w, altezza: h, memoria, nuclei, cadute: opzioni.cadute || 0, lenta: opzioni.lenta || 0 });
   const Q = qualita(contenitore?.clientWidth || 0, contenitore?.clientHeight || 0);
   const renderer = new THREE.WebGLRenderer({ antialias: Q.antialias, alpha: true, preserveDrawingBuffer: Boolean(opzioni.perLeProve) });
   renderer.setPixelRatio(Q.pixel);
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  /* l'ombra sfumata (piu' letture per ogni punto) solo a qualita' piena */
+  renderer.shadowMap.type = Q.ombra >= 2048 ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -219,8 +225,8 @@ export function creaScenaDelModello(THREE, opzioni = {}) {
   scena.add(cielo);
   const sole = new THREE.DirectionalLight("#fff1d6", 2.4);
   sole.position.set(-MISURA, MISURA * 1.8 + 10, MISURA * 0.9);
-  sole.castShadow = true;
-  sole.shadow.mapSize.set(Q.ombra, Q.ombra);
+  sole.castShadow = Q.ombra > 0;
+  if (Q.ombra > 0) sole.shadow.mapSize.set(Q.ombra, Q.ombra);
   const ombra = MISURA + 4;
   Object.assign(sole.shadow.camera, { left: -ombra, right: ombra, top: ombra, bottom: -ombra, far: MISURA * 6 + 60 });
   sole.shadow.bias = -0.0006;
@@ -373,7 +379,7 @@ export function creaScenaDelModello(THREE, opzioni = {}) {
   let ultimo = 0;
   function giro(t) {
     S.raf = 0;
-    if (S.morto) return;
+    if (S.morto || S.sospesa) return;
     const dt = Math.min(0.1, Math.max(0, (t - ultimo) / 1000));
     ultimo = t;
     const ancora = avanza(dt);
@@ -386,7 +392,7 @@ export function creaScenaDelModello(THREE, opzioni = {}) {
     if (ancora || dita.size) S.raf = requestAnimationFrame(giro);
   }
   function richiedi() {
-    if (S.morto || S.raf || opzioni.perLeProve) return;
+    if (S.morto || S.sospesa || S.raf || opzioni.perLeProve) return;
     ultimo = performance.now();
     S.raf = requestAnimationFrame(giro);
   }
@@ -739,6 +745,15 @@ export function creaScenaDelModello(THREE, opzioni = {}) {
     largo = alto = 0;
     richiedi();
   }
+  /* Con una finestra sopra la casa non si disegna: vedi `sospendi` in scena.js. */
+  function sospendi(si) {
+    const ferma = Boolean(si);
+    if (Boolean(S.sospesa) === ferma || S.morto) return;
+    S.sospesa = ferma;
+    if (!ferma) return richiedi();
+    if (S.raf) cancelAnimationFrame(S.raf);
+    S.raf = 0;
+  }
   const osservatore = typeof ResizeObserver === "function" ? new ResizeObserver(() => ridimensiona()) : null;
   osservatore?.observe(palco);
 
@@ -755,6 +770,7 @@ export function creaScenaDelModello(THREE, opzioni = {}) {
     arreda,
     distruggi,
     ridimensiona,
+    sospendi,
     /** Le scritte dei dispositivi: «tutti», «accesi» o «nessuno» (vedi le-scritte.js). */
     nomi: (modo) => scritte.modo(modo),
     fotogramma(dt = 1 / 60) {

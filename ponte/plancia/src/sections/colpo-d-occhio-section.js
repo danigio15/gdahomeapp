@@ -728,7 +728,15 @@ export function disegna() {
    * qualcuno — invece si chiude subito. */
   const sopra = nodo.querySelector(".oc-sopra");
   const video = sopra.querySelector("[data-oc-video]");
-  if (video && occhio.telecamere.some((c) => c.entity === video.dataset.ocVideo)) return;
+  /* «Aperta» lo dice la finestra, non il video ancora in pagina: qui bastava
+   * che la telecamera fosse ancora fra quelle del colpo d'occhio, cioe'
+   * sempre, e la finestra del video non si chiudeva piu' — ne' con la ✕, ne'
+   * col tocco fuori, ne' con Esc. Lo stesso difetto della Casa 3D
+   * (`cosaFareDelVideo` in `core/casa-3d.js`). */
+  const ancoraLei =
+    state.finestra?.tipo === "telecamera" && state.finestra.cam === video?.dataset.ocVideo;
+  if (video && ancoraLei && occhio.telecamere.some((c) => c.entity === video.dataset.ocVideo))
+    return;
   if (video) chiudiIlVideo();
   if (scriviSeCambia(sopra, finestraDiAdesso(occhio, states))) {
     if (!sopra.querySelector("img[data-oc-foto]")) lasciaLeTelecamere();

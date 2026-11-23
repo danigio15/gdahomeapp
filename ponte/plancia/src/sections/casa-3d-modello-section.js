@@ -28,7 +28,11 @@ import {
   unitaProbabili,
 } from "../core/modello-3d.js";
 import { daiVendor } from "../core/cartella-della-plancia.js";
-import { memoriaDelDispositivo, qualitaDellaCasa3D } from "../core/la-qualita-della-casa-3d.js";
+import {
+  memoriaDelDispositivo,
+  nucleiDelDispositivo,
+  qualitaDellaCasa3D,
+} from "../core/la-qualita-della-casa-3d.js";
 import { puoConfigurare } from "./la-config-e-di-chi-la-amministra-section.js";
 import { currentProfile } from "./config-persistence-section.js";
 import {
@@ -542,6 +546,7 @@ function avviaLAnteprima(tela) {
     larghezza: tela.clientWidth || 0,
     altezza: tela.clientHeight || 0,
     memoria: memoriaDelDispositivo(root.navigator),
+    nuclei: nucleiDelDispositivo(root.navigator),
   });
   let renderer;
   try {
