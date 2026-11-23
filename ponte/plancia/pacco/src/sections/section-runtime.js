@@ -411,14 +411,14 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-EHC7UVTH.js";
+} from "../../chunk-T2IWCTGZ.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
   controllaIlModello,
   troppoPerQuestoDispositivo,
   unitaProbabili
-} from "../../chunk-AT7RGUJI.js";
+} from "../../chunk-ZV2CIQQZ.js";
 import {
   ATTESA_DEL_RITORNO_MS,
   CELLA,
@@ -438,6 +438,7 @@ import {
   casaDelModello,
   comprimiGriglia,
   contaCollegati,
+  cosaFareDelVideo,
   cosaFareDopoLaCaduta,
   entita,
   entitaCandidate,
@@ -448,12 +449,14 @@ import {
   flussoInPausa,
   ilCodiceCombacia,
   ilCodiceServe,
+  laCadutaConta,
   memoriaDelDispositivo,
   mettiInPausaIlFlusso,
   modoDeiNomi,
   modoDopo,
   modoInserito,
   normalizzaIlCodice,
+  nucleiDelDispositivo,
   nuovoRiquadro,
   occhioPulito,
   percorsoDelFlusso,
@@ -461,13 +464,14 @@ import {
   periodiDellEnergia,
   qualitaDellaCasa3D,
   ricampiona,
+  senzaLeCaduteDiAdesso,
   servizioDelModo,
   servizioPerAprire,
   statoDelDispositivo,
   stessoFlusso,
   usaIlModello,
   vuoleIlVivo
-} from "../../chunk-AENZDKD4.js";
+} from "../../chunk-GS7DKS73.js";
 import {
   ACCENTO,
   APPLIANCE_BINDING_FIELDS,
@@ -3506,6 +3510,7 @@ var SOURCE_INDEX = Object.freeze({
   "chiede il PIN": "asks for the PIN",
   "Chiedi": "Ask",
   "Chiedi a casa, scrivendo o parlando": "Ask the house, by typing or speaking",
+  "Chiedi a chi amministra la casa di ricollegarla.": "Ask whoever manages the home to link it again.",
   "Chiedi alla casa…": "Ask the house…",
   "Chiedi conferma prima di «Esco» e «Rientro»": "Confirm before «Leaving» and «I'm home»",
   "Chiedi conferma prima di aprire": "Ask to confirm before opening",
@@ -3857,6 +3862,7 @@ var SOURCE_INDEX = Object.freeze({
   "Cosa esce questo giorno": "What goes out this day",
   "Cosa fa il tasto di questa unità nel popup Clima della Home. Vuoto = non toccare.": "What this unit's button does in the Home climate popup. Empty = leave alone.",
   "Cosa fa il tocco": "What the tap does",
+  "Cosa fare: controlla che la telecamera sia accesa e che in Home Assistant si veda, poi riprova.": "What to do: check that the camera is on and that it shows in Home Assistant, then try again.",
   "Cosa guardare": "What to look at",
   "Cosa hai fatto, cosa ti aspettavi, cosa e' successo invece.": "What you did, what you expected, what happened instead.",
   "Cosa misura": "What it measures",
@@ -4794,6 +4800,7 @@ var SOURCE_INDEX = Object.freeze({
   "Home Assistant ha rifiutato": "Home Assistant refused",
   "Home Assistant ha rifiutato il target": "Home Assistant refused the target",
   "Home Assistant lo toglie, e le automazioni che lo usano smettono di funzionare. Non si torna indietro.": "Home Assistant removes it, and automations using it stop working. This can't be undone.",
+  "Home Assistant non conosce questa telecamera: è stata tolta o rinominata.": "Home Assistant does not know this camera: it was removed or renamed.",
   "Home Assistant non dichiara nessuna macchina né pezzo di rete.": "Home Assistant declares no machine and no network piece.",
   "Home Assistant non è collegata": "Home Assistant is not connected",
   "Home Assistant non ha mandato la storia di questi termostati. Riprova fra poco.": "Home Assistant did not send the history of these thermostats. Try again shortly.",
@@ -5518,6 +5525,7 @@ var SOURCE_INDEX = Object.freeze({
   "La strada": "The route",
   "La stufa scalda la stanza in cui sta: la pagina disegna la fiamma, la potenza, il ventilatore, la canna fumaria e il serbatoio, e dà i tasti per accenderla, l'obiettivo, la potenza e il ventilatore. Nessuna casella è obbligatoria: col solo termostato la pagina ha già quasi tutto. Se ne hai più d'una aggiungile qui, e in pagina compare la fila per passare dall'una all'altra.": "The stove heats the room it stands in: the page draws the flame, the power, the fan, the flue and the hopper, and gives you the buttons for on and off, the target, the power and the fan. No field is required: with just the thermostat the page already has almost everything. With more than one, add them here and the page grows a row to switch between them.",
   "La sua configurazione": "Its settings",
+  "La telecamera non si apre.": "The camera cannot open.",
   "La tessera del muro mostra il flusso continuo invece di un'istantanea ogni quattro secondi — è quello che fa «camera_view: live». Tiene aperta una connessione mentre guardi la sezione Sicurezza: accendilo sulle telecamere che vuoi vedere muoversi.": "The wall tile shows the continuous stream instead of a still every four seconds — this is what “camera_view: live” does. It holds a connection open while you are looking at the Security section: turn it on for the cameras you want to see moving.",
   "La trovi lì e la esegue Home Assistant.": "You'll find it there and Home Assistant runs it.",
   "La tua auto": "Your car",
@@ -7455,6 +7463,7 @@ var SOURCE_INDEX = Object.freeze({
   "Ricircolo": "Recirculation",
   "Ricircolo attivo": "Recirculation running",
   "Ricollega": "Reconnect",
+  "Ricollegala da «Arreda» → Dispositivi.": "Link it again from «Furnish» → Devices.",
   "ricomincia da capo": "start over",
   "Riconnessione...": "Reconnecting…",
   "Riconnessione…": "Reconnecting…",
@@ -175619,7 +175628,9 @@ function disegna16() {
   );
   const sopra = nodo4.querySelector(".oc-sopra");
   const video = sopra.querySelector("[data-oc-video]");
-  if (video && occhio2.telecamere.some((c) => c.entity === video.dataset.ocVideo)) return;
+  const ancoraLei = state198.finestra?.tipo === "telecamera" && state198.finestra.cam === video?.dataset.ocVideo;
+  if (video && ancoraLei && occhio2.telecamere.some((c) => c.entity === video.dataset.ocVideo))
+    return;
   if (video) chiudiIlVideo();
   if (scriviSeCambia(sopra, finestraDiAdesso(occhio2, states))) {
     if (!sopra.querySelector("img[data-oc-foto]")) lasciaLeTelecamere();
@@ -176732,7 +176743,7 @@ async function caricaIlMotore() {
   const [THREE, caricatori, scena2] = await Promise.all([
     import(MOTORE.tre),
     import(MOTORE.caricatori),
-    import("../../scena-modello-2TVEXCNX.js")
+    import("../../scena-modello-GHBEQ3UB.js")
   ]);
   return { THREE, caricatori, scena: scena2 };
 }
@@ -177147,7 +177158,8 @@ function avviaLAnteprima(tela4) {
     dpr: root.devicePixelRatio || 1,
     larghezza: tela4.clientWidth || 0,
     altezza: tela4.clientHeight || 0,
-    memoria: memoriaDelDispositivo(root.navigator)
+    memoria: memoriaDelDispositivo(root.navigator),
+    nuclei: nucleiDelDispositivo(root.navigator)
   });
   let renderer;
   try {
@@ -177329,7 +177341,18 @@ var state201 = root[KEY204] ||= {
    * volte, se lo si sta aspettando, e chi aspetta. */
   cadute: [],
   persa: false,
-  timerDelRitorno: 0
+  timerDelRitorno: 0,
+  /* Quando la pagina e' tornata in vista l'ultima volta (vedi
+   * `laCadutaConta`), e quando il modello e' caduto col disegno. */
+  tornataIl: 0,
+  modelloCadutoIl: 0,
+  /* I gradini scesi perche' la casa andava a scatti (vedi `scenaLenta`). */
+  lenta: 0,
+  /* Quando si e' aperta la finestra (vedi il velo in `alClic`), e chi aveva
+   * il fuoco prima che si aprisse. */
+  finestraDal: 0,
+  fuocoDaDare: false,
+  fuocoPrima: null
 };
 function casa3dDiQui() {
   return casa3dPulita(readJson(CHIAVE_CASA3D, null));
@@ -177692,12 +177715,27 @@ function finestraMarkup2(casa4, states) {
   );
   const nome = d ? nomeDelDispositivo3(d, states) : clean(states?.[f.entity]?.attributes?.friendly_name) || t("Telecamera", "Camera");
   return `<div class="c3-velo" data-c3s="velo">
-      <section class="c3-finestra" role="dialog" aria-modal="true">
+      <section class="c3-finestra" role="dialog" aria-modal="true" aria-label="${esc(nome)}">
         <div class="c3-finestra-testa"><h3>📹 ${esc(nome)}</h3>
           <button type="button" class="c3-chiudi" data-c3s="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
         <div class="c3-video" data-c3-video="${esc(f.entity)}"></div>
+        <div class="c3-video-aiuto">
+          <p>${esc(
+    t(
+      "Cosa fare: controlla che la telecamera sia accesa e che in Home Assistant si veda, poi riprova.",
+      "What to do: check that the camera is on and that it shows in Home Assistant, then try again."
+    )
+  )}</p>
+          <div class="c3-video-tasti">
+            <button type="button" class="c3-tasto" data-c3s="rivedi">↻ ${esc(t("Riprova", "Try again"))}</button>
+            <button type="button" class="c3-tasto" data-c3s="chiudi">${esc(t("Chiudi", "Close"))}</button>
+          </div>
+        </div>
       </section>
     </div>`;
+}
+function erroreDelVideo(titolo3, sotto, daSistemare = false) {
+  return `<div class="cam-popup-error${daSistemare ? " c3-da-sistemare" : ""}">⚠️ ${esc(titolo3)}<br><span class="c3-video-perche">${esc(sotto)}</span></div>`;
 }
 function accendiIlVideo2(sopra, casa4, states) {
   const posto = sopra.querySelector("[data-c3-video]");
@@ -177708,16 +177746,59 @@ function accendiIlVideo2(sopra, casa4, states) {
     return;
   }
   const entity2 = posto.dataset.c3Video;
+  if (!states?.[entity2]) {
+    let admin = false;
+    try {
+      admin = puoConfigurare();
+    } catch (_errore) {
+    }
+    posto.innerHTML = erroreDelVideo(
+      t(
+        "Home Assistant non conosce questa telecamera: è stata tolta o rinominata.",
+        "Home Assistant does not know this camera: it was removed or renamed."
+      ),
+      admin ? t(
+        "Ricollegala da «Arreda» → Dispositivi.",
+        "Link it again from «Furnish» → Devices."
+      ) : t(
+        "Chiedi a chi amministra la casa di ricollegarla.",
+        "Ask whoever manages the home to link it again."
+      ),
+      true
+    );
+    return;
+  }
   const d = [...casa4.piani.flatMap((p) => p.dispositivi), ...casa4.esterno.telecamere].find(
     (x) => x.entity === entity2
   );
   const nome = d ? nomeDelDispositivo3(d, states) : entity2;
   try {
-    apri9({ entity: entity2, name: nome }, nome, posto);
+    const corsa = apri9({ entity: entity2, name: nome }, nome, posto);
     state201.videoAperto = true;
+    corsa?.catch?.((errore) => {
+      root.console?.warn?.("[DashboardModern] casa 3d, video", errore);
+      if (posto.isConnected && !posto.querySelector("video,img,.cam-popup-error"))
+        posto.innerHTML = erroreDelVideo(
+          t("La telecamera non si apre.", "The camera cannot open."),
+          String(errore?.message || errore || "")
+        );
+    });
   } catch (errore) {
     root.console?.warn?.("[DashboardModern] casa 3d, video", errore);
+    posto.innerHTML = erroreDelVideo(
+      t("La telecamera non si apre.", "The camera cannot open."),
+      String(errore?.message || errore || "")
+    );
   }
+}
+function rivediIlVideo() {
+  const nodo4 = doc.getElementById(ID5);
+  const sopra = nodo4?.querySelector(".c3-sopra");
+  const posto = sopra?.querySelector("[data-c3-video]");
+  if (!posto || state201.finestra?.tipo !== "telecamera") return;
+  chiudiIlVideo2();
+  posto.innerHTML = "";
+  accendiIlVideo2(sopra, casaDaElencare(casa3dDiQui()), allStates() || {});
 }
 function chiudiIlVideo2() {
   if (!state201.videoAperto) return;
@@ -177728,9 +177809,11 @@ function chiudiIlVideo2() {
   }
 }
 var MEZZ_ORA4 = 30 * 60 * 1e3;
+var UN_MINUTO5 = 60 * 1e3;
 function eCasaPremium2() {
   if (state201.premium === null && premiumRicordato() === true) state201.premium = true;
-  if (state201.premium === null || Date.now() - (state201.chiestaIl || 0) > MEZZ_ORA4) chiediLaLicenza3();
+  const vale = state201.premium === false ? UN_MINUTO5 : MEZZ_ORA4;
+  if (state201.premium === null || Date.now() - (state201.chiestaIl || 0) > vale) chiediLaLicenza3();
   return state201.premium === true;
 }
 function chiediLaLicenza3() {
@@ -177805,13 +177888,23 @@ async function avviaIlModello(admin) {
       quandoTocchi: alToccoDellaScena,
       quandoSalvi: salvaLaCasa,
       /* il modello cade solo col disegno (`webglcontextlost`): la casa
-       * generata che prende il suo posto si fa piu' leggera */
+       * generata che prende il suo posto si fa piu' leggera. Ma non se e'
+       * caduto perche' la pagina stava dietro (`laCadutaConta`): allora il
+       * modello non ha colpe, e si rifa' com'era. */
       quandoCade: () => {
-        state201.cadute = cosaFareDopoLaCaduta(state201.cadute, Date.now()).cadute;
+        const adesso2 = Date.now();
+        if (!cadutaDelDispositivo(adesso2)) {
+          spegniLaScena();
+          ridisegna35();
+          return;
+        }
+        state201.cadute = cosaFareDopoLaCaduta(state201.cadute, adesso2).cadute;
+        state201.modelloCadutoIl = adesso2;
         cadeIlModello(m.id);
       },
       nomi: nomiScelti(),
-      cadute: state201.cadute.length
+      cadute: state201.cadute.length,
+      lenta: state201.lenta || 0
     });
     state201.firma = firmaDi3(ora7);
     state201.vista = "modello";
@@ -177828,6 +177921,7 @@ async function avviaIlModello(admin) {
 function cadeIlModello(id) {
   state201.modelloGuasto = id || "";
   spegniLaScena();
+  sgombraIlPosto();
   const casa4 = casa3dDiQui();
   if (casa4.piani.length)
     avviso3(
@@ -177846,7 +177940,7 @@ async function avviaLaScena(admin) {
   state201.caricando = true;
   state201.guasto = "";
   try {
-    const [THREE, { creaScena }] = await Promise.all([import(TRE), import("../../scena-S73BNYPA.js")]);
+    const [THREE, { creaScena }] = await Promise.all([import(TRE), import("../../scena-5B33ELWG.js")]);
     const nodo4 = doc.getElementById(ID5);
     const posto = nodo4?.querySelector(".c3-posto");
     if (!posto) return;
@@ -177869,6 +177963,9 @@ async function avviaLaScena(admin) {
       cadute: state201.cadute.length,
       quandoCade: scenaCaduta,
       quandoTorna: scenaTornata,
+      /* i gradini gia' scesi perche' la casa andava a scatti, e quelli nuovi */
+      lenta: state201.lenta || 0,
+      quandoRallenta: scenaLenta,
       quandoCambiVista: (vista2) => {
         if (state201.vista === vista2) return;
         state201.vista = vista2;
@@ -177881,10 +177978,27 @@ async function avviaLaScena(admin) {
   } catch (errore) {
     state201.guasto = String(errore?.message || errore);
     root.console?.warn?.("[DashboardModern] casa 3d", errore);
+    sgombraIlPosto();
   } finally {
     state201.caricando = false;
     ridisegna35();
   }
+}
+function sgombraIlPosto() {
+  if (state201.scena) return;
+  const posto = doc.getElementById(ID5)?.querySelector(".c3-posto");
+  if (!posto) return;
+  for (const tela4 of posto.querySelectorAll("canvas")) {
+    try {
+      const gl = tela4.getContext("webgl2") || tela4.getContext("webgl");
+      gl?.getExtension("WEBGL_lose_context")?.loseContext();
+    } catch (_errore) {
+    }
+  }
+  posto.textContent = "";
+}
+function scenaLenta(gradini) {
+  state201.lenta = Math.max(state201.lenta || 0, Number(gradini) || 0);
 }
 function spegniLaScena() {
   root.clearTimeout?.(state201.timerDelRitorno);
@@ -177898,23 +178012,63 @@ function spegniLaScena() {
   state201.firma = "";
 }
 function scenaCaduta() {
-  const esito2 = cosaFareDopoLaCaduta(state201.cadute, Date.now());
-  state201.cadute = esito2.cadute;
+  const adesso2 = Date.now();
   state201.persa = true;
-  root.console?.warn?.("[DashboardModern] casa 3d: il disegno e' caduto", state201.cadute.length);
   root.clearTimeout?.(state201.timerDelRitorno);
+  state201.timerDelRitorno = 0;
+  if (!cadutaDelDispositivo(adesso2)) {
+    root.console?.info?.("[DashboardModern] casa 3d: il disegno e' caduto con la pagina dietro");
+    if (!paginaNascosta()) aspettaIlRitorno();
+    ridisegna35();
+    return;
+  }
+  const esito2 = cosaFareDopoLaCaduta(state201.cadute, adesso2);
+  state201.cadute = esito2.cadute;
+  root.console?.warn?.("[DashboardModern] casa 3d: il disegno e' caduto", state201.cadute.length);
   if (esito2.azione === "basta") {
     spegniLaScena();
     state201.guasto = "disegno";
     ridisegna35();
     return;
   }
+  aspettaIlRitorno();
+  ridisegna35();
+}
+var paginaNascosta = () => doc?.hidden === true;
+function cadutaDelDispositivo(adesso2) {
+  return laCadutaConta({ nascosta: paginaNascosta(), tornataIl: state201.tornataIl || 0, adesso: adesso2 });
+}
+function aspettaIlRitorno() {
+  root.clearTimeout?.(state201.timerDelRitorno);
   state201.timerDelRitorno = root.setTimeout?.(() => {
     state201.timerDelRitorno = 0;
     if (!state201.persa) return;
     spegniLaScena();
     ridisegna35();
   }, ATTESA_DEL_RITORNO_MS) || 0;
+}
+function alCambioDiVista() {
+  const adesso2 = Date.now();
+  if (paginaNascosta()) {
+    const prima = (state201.cadute || []).length;
+    state201.cadute = senzaLeCaduteDiAdesso(state201.cadute, adesso2);
+    if (state201.cadute.length !== prima) {
+      if (state201.guasto === "disegno") state201.guasto = "";
+      if (adesso2 - (state201.modelloCadutoIl || 0) < ATTESA_DEL_RITORNO_MS * 2) {
+        state201.modelloGuasto = "";
+        if (state201.guasto === "modello") state201.guasto = "";
+      }
+    }
+    root.clearTimeout?.(state201.timerDelRitorno);
+    state201.timerDelRitorno = 0;
+    return;
+  }
+  state201.tornataIl = adesso2;
+  if (state201.guasto === "disegno") {
+    state201.cadute = [];
+    state201.guasto = "";
+  }
+  if (state201.scena && state201.persa) aspettaIlRitorno();
   ridisegna35();
 }
 function scenaTornata() {
@@ -177998,6 +178152,7 @@ function togliLaTela3() {
   chiudiIlVideo2();
   spegniLaScena();
   state201.finestra = null;
+  state201.guasto = "";
   if (state201.timer) root.clearInterval?.(state201.timer);
   state201.timer = 0;
   doc?.getElementById(ID5)?.remove();
@@ -178021,7 +178176,8 @@ function attesaMarkup(casa4, vuota2, admin) {
   if (state201.scena) return "";
   if (state201.guasto && !vuota2) return guastoMarkup();
   if (vuota2 && usaIlModello(casa4))
-    return `<div class="c3-da-creare"><p>${esc(t("La casa in 3D non si apre su questo dispositivo.", "The 3D house cannot open on this device."))}</p>${admin ? `<button type="button" class="c3-tasto" data-c3s="modello">🧊 ${esc(t("Il tuo modello 3D", "Your 3D model"))}</button>` : ""}</div>`;
+    return `<div class="c3-da-creare"><p>${esc(t("La casa in 3D non si apre su questo dispositivo.", "The 3D house cannot open on this device."))}</p>
+      <button type="button" class="c3-tasto c3-tasto-grande" data-c3s="riprova">↻ ${esc(t("Riprova", "Try again"))}</button>${admin ? `<button type="button" class="c3-tasto" data-c3s="modello">🧊 ${esc(t("Il tuo modello 3D", "Your 3D model"))}</button>` : ""}</div>`;
   if (vuota2) return casaDaCreareMarkup(admin);
   return `<p>${esc(state201.attesaDelModello || t("Arriva la casa…", "Loading the house…"))}</p>`;
 }
@@ -178070,17 +178226,36 @@ function disegna18() {
   scriviSeCambia(nodo4.querySelector(".c3-attesa"), attesaMarkup(casa4, vuota2, admin));
   const sopra = nodo4.querySelector(".c3-sopra");
   const video = sopra.querySelector("[data-c3-video]");
-  if (video && guardabili.has(video.dataset.c3Video)) {
+  const delVideo = cosaFareDelVideo(state201.finestra, video?.dataset.c3Video, guardabili);
+  if (delVideo !== "niente" && delVideo !== "resta") chiudiIlVideo2();
+  if (delVideo === "spegni") state201.finestra = null;
+  state201.scena?.sospendi?.(Boolean(state201.finestra));
+  if (delVideo === "resta") {
     avviaIlBattito3();
     return;
   }
-  if (video) {
-    chiudiIlVideo2();
-    state201.finestra = null;
-  }
-  if (scriviSeCambia(sopra, finestraMarkup2(elencata, states)))
+  if (scriviSeCambia(sopra, finestraMarkup2(elencata, states))) {
     accendiIlVideo2(sopra, elencata, states);
+    fuocoAllaFinestra(sopra);
+  }
   avviaIlBattito3();
+}
+function fuocoAllaFinestra(sopra) {
+  const chiudi9 = sopra.querySelector(".c3-finestra .c3-chiudi");
+  try {
+    if (chiudi9) {
+      if (!state201.fuocoDaDare) return;
+      state201.fuocoDaDare = false;
+      const prima = doc.activeElement;
+      if (prima && prima !== doc.body && !sopra.contains(prima)) state201.fuocoPrima = prima;
+      chiudi9.focus({ preventScroll: true });
+    } else if (state201.fuocoPrima) {
+      const prima = state201.fuocoPrima;
+      state201.fuocoPrima = null;
+      if (prima.isConnected) prima.focus({ preventScroll: true });
+    }
+  } catch (_errore) {
+  }
 }
 function ridisegna35() {
   if (state201.frame) return;
@@ -178132,22 +178307,35 @@ function disegnaOra() {
 function apriFinestra3(finestra7) {
   if (state201.finestra?.tipo === "telecamera") chiudiIlVideo2();
   state201.finestra = finestra7;
+  state201.finestraDal = Date.now();
+  state201.fuocoDaDare = true;
   disegnaOra();
 }
 function chiudi5() {
-  if (state201.finestra?.tipo === "telecamera") chiudiIlVideo2();
+  chiudiIlVideo2();
   state201.finestra = null;
   disegnaOra();
+  const sopra = doc.getElementById(ID5)?.querySelector(".c3-sopra");
+  if (sopra?.firstChild) {
+    sopra.textContent = "";
+    fuocoAllaFinestra(sopra);
+  }
 }
+var TOCCO_CHE_APRE_MS = 350;
 function alClic6(evento) {
   const el = evento.target?.closest?.("[data-c3s]");
   if (!el) return;
   const cosa = el.dataset.c3s;
   if (cosa === "velo") {
-    if (evento.target === el) chiudi5();
+    if (evento.target === el && Date.now() - (state201.finestraDal || 0) > TOCCO_CHE_APRE_MS)
+      chiudi5();
     return;
   }
   if (cosa === "chiudi") return chiudi5();
+  if (cosa === "rivedi") {
+    vibra2(6);
+    return rivediIlVideo();
+  }
   if (cosa === "config") {
     try {
       root.apriConfigEntita?.();
@@ -178241,6 +178429,8 @@ function alClic6(evento) {
 }
 function apriCasa3D() {
   state201.nascosta = false;
+  if (state201.guasto === "disegno") state201.cadute = [];
+  state201.guasto = "";
   ridisegna35();
 }
 function installaLoStile11() {
@@ -178384,7 +178574,19 @@ function installaLoStile11() {
     ${C3} .c3-finestra-testa h3{margin:0;font-family:'Oswald',system-ui,sans-serif;font-size:18px;font-weight:700;letter-spacing:.8px;text-transform:uppercase}
     ${C3} .c3-chiudi{display:grid;place-items:center;width:36px;height:36px;border:0;border-radius:50%;cursor:pointer;font-weight:800;
       color:var(--c3-fioco);background:var(--c3-morbido)}
-    ${C3} .c3-video{min-height:220px;padding:12px}
+    ${C3} .c3-video{min-height:220px;padding:12px;overflow-y:auto}
+    /* L'aiuto sotto il video si vede solo quando il motore ha scritto un
+     * errore: cosa fare, e i due tasti per riprovare o uscire. */
+    ${C3} .c3-video-aiuto{display:none;flex-direction:column;gap:12px;padding:0 16px 16px}
+    ${C3} .c3-finestra:has(.cam-popup-error) .c3-video-aiuto{display:flex}
+    ${C3} .c3-finestra:has(.cam-popup-error) .c3-video{min-height:0}
+    ${C3} .c3-finestra:has(.c3-da-sistemare) .c3-video-aiuto p,
+    ${C3} .c3-finestra:has(.c3-da-sistemare) .c3-video-aiuto [data-c3s="rivedi"]{display:none}
+    ${C3} .c3-video-aiuto p{margin:0;font-size:13px;line-height:1.45;color:var(--c3-fioco);text-align:center}
+    ${C3} .c3-video-tasti{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+    ${C3} .c3-video-tasti .c3-tasto{min-height:44px;padding:10px 20px}
+    ${C3} .c3-video-tasti .c3-tasto[data-c3s="rivedi"]{background:var(--c3-accento);border-color:transparent;color:#fff}
+    ${C3} .c3-video-perche{font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0}
     ${C3} .c3-finestra-clima{max-width:460px}
     ${C3} .c3-clima{display:flex;flex-direction:column;gap:12px;padding:16px 20px 20px;overflow-y:auto}
     ${C3} .c3-clima-ora{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin:0;font-size:14px;font-weight:700;color:var(--c3-fioco)}
@@ -178476,6 +178678,7 @@ function installCasa3D() {
   doc.addEventListener?.("keydown", (evento) => {
     if (evento.key === "Escape" && state201.finestra) chiudi5();
   });
+  doc.addEventListener?.("visibilitychange", alCambioDiVista);
   ridisegna35();
   return true;
 }
