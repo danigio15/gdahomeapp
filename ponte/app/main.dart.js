@@ -132727,7 +132727,7 @@ o=a6.w
 k=A.r(A.c("This app","Questa app"),a4,a4,a4,a4,a4,o,a4,a4,a4)
 j=p.$2(A.c("Version","Versione"),"1.19.28 (1192800)")
 i=A.c("Package","Pacchetto")
-i=p.$2(i,"118-3b0c01b")
+i=p.$2(i,"119-5691cf1")
 h=A.c("Relay","Centralino")
 g=t.p
 h=A.a8(A.a([k,B.aX,j,i,p.$2(h,$.WW()==null?A.c("none","nessuno"):"GdAHome")],g),B.q,a4,B.h,B.i,0,B.j)
@@ -133026,7 +133026,7 @@ else s=!0
 return s},
 auV(){var s,r,q=null,p=this.a.c,o=t.N
 o=A.y(o,o)
-o.m(0,"app","118-3b0c01b")
+o.m(0,"app","119-5691cf1")
 o.m(0,"sistema","web")
 s=p.k1
 s=s==null?q:s.b
