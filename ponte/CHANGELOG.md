@@ -14,6 +14,17 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.28
+
+- **Casa 3D sui tablet**: non si chiude più da sola dopo un attimo lasciando la
+  plancia vuota. Il controllo del Premium partiva troppo presto dentro l'app e
+  si perdeva; ora aspetta il collegamento, e se il ponte non risponde vale
+  quello che il tablet sapeva già.
+- **Casa 3D più leggera**: sui tablet usa meno memoria grafica (circa la metà,
+  molto meno con poca memoria). Se il disegno si interrompe si riprende da
+  sola, e se il dispositivo proprio non regge compare un messaggio con
+  «Riprova» invece dello schermo nero.
+
 ## 1.19.27
 
 - **Allagamenti, la valvola dell'acqua**: negli Avvisi si sceglie la valvola
