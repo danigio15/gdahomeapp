@@ -43,6 +43,7 @@ import { Dispositivi, telefoniOltreBase } from "./dispositivi.js";
 import { leggiLeOpzioni } from "./opzioni.js";
 import { Ponte } from "./ponte.js";
 import { Portiere } from "./portiere.js";
+import { IlPolso } from "./il-polso.js";
 import { Ritorno } from "./ritorno.js";
 import { Segnalazioni } from "./segnalazioni.js";
 import { impronta } from "./segreti.js";
@@ -308,6 +309,16 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     musica: new MusicaDellaCasa({ casa, registro }),
   });
   const ponte = new Ponte({ casa, dispositivi, registro, commissioni, utenti });
+  /* Gli Amazfit, che si abbinano da se' e chiedono solo la fotografia e i
+   * comandi (`il-polso.js`): il portiere li consegna qui. */
+  ponte.polso = new IlPolso({
+    casa,
+    configurazione,
+    dispositivi,
+    plance,
+    registro,
+    soloInCasa: () => licenze.soloDaCasa,
+  });
   /* L'elenco degli utenti si rinfresca da se', ogni minuto: un amministratore
    * tolto, o un utente cancellato, non resta dentro sui fili gia' aperti
    * (`utenti.js`, `ponte.js`). */
