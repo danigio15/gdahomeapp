@@ -37,6 +37,7 @@ import {
 } from "../../core/rilevamenti-telecamera.js";
 import { getLocale } from "../../core/i18n.js";
 import { attributiPerLeUltime } from "../ultime-rilevazioni-section.js";
+import { cartaDellaValvola } from "../la-valvola-dell-acqua-section.js";
 
 export const FINESTRE_SICUREZZA = Object.freeze([
   "sicurezza",
@@ -759,6 +760,16 @@ function nomePulitoDellaSonda(nome) {
   return pulito ? pulito.charAt(0).toLocaleUpperCase() + pulito.slice(1) : clean(nome);
 }
 
+/* Chi passa una valvola con lo stato detto da Home Assistant («open»,
+ * «closing») e non con quello di qui: un modello di prima, o una prova. */
+function statoDaValve(parola) {
+  return (
+    { open: "aperta", closed: "chiusa", opening: "in-apertura", closing: "in-chiusura" }[
+      clean(parola).toLowerCase()
+    ] || "muta"
+  );
+}
+
 function disegnaAllagamenti(widget, states) {
   const k = "allagamenti";
   const righe = (Array.isArray(widget.rows) ? widget.rows : []).map((riga) => ({
@@ -778,45 +789,17 @@ function disegnaAllagamenti(widget, states) {
           : t("Tutto asciutto", "All dry"),
       )}</b><span class="dm-f-${k}-sotto">${esc(sotto)}</span></div>
     </div>`;
+  /* La valvola dell'acqua (#495): la carta la disegna chi la comanda, perche'
+   * la conferma e il «In chiusura» subito dopo il tocco stanno nella sua
+   * memoria, e la finestra si ridisegna di continuo. Con una perdita il suo
+   * tasto diventa «Chiudi l'acqua», rosso e largo, subito sotto l'eroe. */
   const valvole = (Array.isArray(widget.valvole) ? widget.valvole : [])
-    .map((valvola) => {
-      const aperta = valvola.state === "open" || valvola.state === "opening";
-      const chiusa = valvola.state === "closed" || valvola.state === "closing";
-      const parola =
-        valvola.state === "open"
-          ? t("Aperta", "Open")
-          : valvola.state === "closed"
-            ? t("Chiusa", "Closed")
-            : valvola.state === "opening"
-              ? t("In apertura", "Opening")
-              : valvola.state === "closing"
-                ? t("In chiusura", "Closing")
-                : t("Non risponde", "Not answering");
-      const tasto = aperta
-        ? tastoServizio(
-            { domain: "valve", service: "close_valve", data: { entity_id: valvola.entity } },
-            {
-              classe: `dm-f-${k}-tasto`,
-              testo: esc(t("Chiudi", "Close")),
-              conferma: t("Tocca ancora per chiudere", "Tap again to close"),
-            },
-          )
-        : chiusa
-          ? tastoServizio(
-              { domain: "valve", service: "open_valve", data: { entity_id: valvola.entity } },
-              {
-                classe: `dm-f-${k}-tasto`,
-                testo: esc(t("Apri", "Open")),
-                conferma: t("Tocca ancora per aprire", "Tap again to open"),
-              },
-            )
-          : "";
-      return `<div class="dm-f-${k}-valvola" data-aperta="${aperta ? "true" : "false"}">
-          <span class="dm-f-${k}-ic" aria-hidden="true">🚰</span>
-          <div class="dm-f-${k}-nome"><b>${esc(valvola.name)}</b><span>${esc(parola)}</span></div>
-          ${tasto}
-        </div>`;
-    })
+    .map((valvola) =>
+      cartaDellaValvola(
+        { ...valvola, stato: valvola.stato || statoDaValve(valvola.state) },
+        { perdita: bagnate.length > 0 },
+      ),
+    )
     .join("");
   const sonda = (riga) => {
     const come = riga.on
@@ -847,17 +830,6 @@ function disegnaAllagamenti(widget, states) {
 const STILE_ALLAGAMENTI = `${stileComune("allagamenti")}
 ${P} .dm-f-allagamenti-eroe:not([data-tono]),${P} .dm-f-allagamenti-eroe[data-tono=""]{--tono:#0284c7}
 ${P} .dm-f-allagamenti-eroe b{font-size:20px;overflow-wrap:anywhere}
-${P} .dm-f-allagamenti-valvola{display:flex;align-items:center;gap:12px;padding:13px;border-radius:20px;min-width:0;
-  background:var(--card-bg,#fff);border:1px solid color-mix(in srgb,#0284c7 35%,transparent);box-shadow:0 12px 24px -22px rgba(2,132,199,.9)}
-${P} .dm-f-allagamenti-valvola .dm-f-allagamenti-ic{flex:none;width:46px;height:46px;border-radius:15px;display:grid;place-items:center;font-size:22px;
-  background:color-mix(in srgb,#0284c7 12%,var(--card-bg,#fff))}
-${P} .dm-f-allagamenti-nome{flex:1;min-width:0}
-${P} .dm-f-allagamenti-nome b{display:block;font-size:14.5px;font-weight:850;overflow-wrap:anywhere}
-${P} .dm-f-allagamenti-nome span{display:block;margin-top:1px;font-size:12px;font-weight:750;color:#0369a1}
-${P} .dm-f-allagamenti-tasto{flex:none;font:inherit;cursor:pointer;padding:10px 16px;border-radius:14px;border:0;
-  background:#0f172a;color:#fff;font-size:13px;font-weight:850}
-${P} .dm-f-allagamenti-tasto[data-dm-w-armato="true"]{background:${ROSSO}}
-html[data-theme="dark"] ${P} .dm-f-allagamenti-tasto{background:#f8fafc;color:#0f172a}
 ${P} .dm-f-allagamenti-sonde{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
 ${P} .dm-f-allagamenti-sd{min-width:0;padding:13px;border-radius:20px;background:var(--card-bg,#fff);
   border:1px solid var(--card-border,#eef2f7);box-shadow:0 10px 22px -22px rgba(15,23,42,.6)}

@@ -175,20 +175,45 @@ test("il fumo: una lista per tipo, la pila solo se si sa", () => {
   assert.doesNotMatch(markup, /a rete/);
 });
 
-test("gli allagamenti: la valvola c'e' solo se Home Assistant la dichiara", () => {
+test("gli allagamenti: la valvola c'e' solo se c'e' nel modello, col suo tasto", () => {
   const widget = {
     key: "allagamenti",
     rows: [{ entity: "binary_sensor.perdita_lavatrice", name: "Perdita lavatrice", on: false }],
   };
   const senza = disegna("allagamenti", { ...widget, valvole: [] });
-  assert.doesNotMatch(senza, /Acqua di casa|data-dm-w-servizio/);
+  assert.doesNotMatch(senza, /Acqua di casa|data-dm-valvola/);
   assert.match(senza, />Lavatrice</);
+  /* Il tasto non chiama il servizio: chiede la conferma (#495). */
   const con = disegna("allagamenti", {
     ...widget,
-    valvole: [{ entity: "valve.generale", name: "Valvola generale", state: "open" }],
+    valvole: [{ entity: "valve.generale", name: "Valvola generale", stato: "aperta" }],
   });
-  assert.match(con, /close_valve/);
-  assert.match(con, /data-dm-w-conferma=/);
+  assert.match(
+    con,
+    /data-dm-valvola-card="valve\.generale" data-stato="aperta" data-perdita="false"/,
+  );
+  assert.match(con, /data-dm-valvola-fa="chiudi" data-dm-valvola="valve\.generale">Chiudi</);
+  /* Un modello che lo stato lo dice con le parole di Home Assistant si legge
+   * lo stesso. */
+  const vecchio = disegna("allagamenti", {
+    ...widget,
+    valvole: [{ entity: "valve.generale", name: "Valvola generale", state: "closed" }],
+  });
+  assert.match(vecchio, /data-stato="chiusa"/);
+  assert.match(vecchio, /data-dm-valvola-fa="apri"/);
+  /* Con una sonda bagnata il tasto e' «Chiudi l'acqua», rosso e largo, e
+   * la valvola sta prima delle sonde. */
+  const bagnato = disegna("allagamenti", {
+    ...widget,
+    rows: [{ ...widget.rows[0], on: true }],
+    valvole: [{ entity: "valve.generale", name: "Valvola generale", stato: "aperta" }],
+  });
+  assert.match(bagnato, /data-perdita="true"/);
+  assert.match(
+    bagnato,
+    /class="dm-valv-tasto dm-valv-rosso dm-valv-largo"[^>]*>Chiudi l&#39;acqua</,
+  );
+  assert.ok(prima(bagnato, "data-dm-valvola-card", "Le sonde"));
 });
 
 test("chi non risponde: dal piu' lungo, e il tasto riprova le entita' vere", () => {

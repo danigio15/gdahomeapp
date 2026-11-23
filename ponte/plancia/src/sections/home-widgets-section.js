@@ -41,6 +41,21 @@ import { createApplianceViewModel, onRunHoldExpiry } from "../core/appliance-vie
 import { applianceVisualKey, canonicalClimateType, climaScalda } from "../core/device-model.js";
 import { climaInFunzione } from "../core/il-termostato.js";
 import { letturaValvola } from "../core/valvola-trv.js";
+import {
+  CHIAVE_TESTI_SICUREZZA,
+  didascaliaDeiTesti,
+  normalizzaTestiDellaSicurezza,
+} from "../core/testi-della-sicurezza.js";
+import {
+  comandoDellaValvola,
+  statoComeValve,
+  valvoleDellAcqua,
+} from "../core/la-valvola-dell-acqua.js";
+import {
+  attesePerLeValvole,
+  rigaDellaTessera,
+  valvolaScelta,
+} from "./la-valvola-dell-acqua-section.js";
 import { applianceArtwork, applianceGlyph } from "../core/appliance-artwork.js";
 import { applianceCardModel } from "../core/appliance-card-view-model.js";
 import { applianceModelById, buildCardMarkup, cardLabels } from "./appliance-showcase-section.js";
@@ -1736,6 +1751,18 @@ function securityModel(states) {
   // La didascalia parla di quello che questa tessera comanda — l'antifurto —
   // non delle telecamere ne' delle porte: quelle hanno la loro tessera, e
   // dirle due volte era dire due volte la stessa cosa.
+  /* E di quello che l'impianto dice di se' (#472): «vorrei vedere nella
+   * schermata dei widget le scritte piccole che scorrono» dei due sensori di
+   * testo, lo stato e le anomalie. La didascalia e' gia' una scritta piccola
+   * che scorre quando non ci sta: e' il posto. Lo scattato la scavalca, perche'
+   * con l'allarme che suona la cosa da dire e' dove. */
+  let testi = "";
+  try {
+    testi = didascaliaDeiTesti(
+      normalizzaTestiDellaSicurezza(readJson(CHIAVE_TESTI_SICUREZZA, {})),
+      states,
+    );
+  } catch (_errore) {}
   return {
     key: "sicurezza",
     accent: triggered ? "#e11d48" : "#10b981",
@@ -1743,7 +1770,7 @@ function securityModel(states) {
     alert: triggered,
     label: t("Sicurezza", "Security"),
     value,
-    caption: suona ? didascaliaDelloScattato(scattato, states) : "",
+    caption: suona ? didascaliaDelloScattato(scattato, states) : testi,
     ring: armed || triggered ? 100 : 0,
     /* «C'e' un antifurto da comandare»: la centrale, oppure i tasti scritti a
      * mano. Chi legge questo campo apre la fila dei tasti, e quella fila i
@@ -5560,6 +5587,7 @@ function floodModel(states) {
     }));
   if (!rows.length) return null;
   const wet = rows.filter((row) => row.on);
+  const valvole = valvoleDellaFinestra(states, fuori);
   /* Come il fumo (#328): la tessera resta anche a casa asciutta, e dice
    * quanti sensori sta guardando. Prima spariva quando andava tutto bene,
    * e una sentinella che si vede solo a disastro avvenuto non permette di
@@ -5578,22 +5606,38 @@ function floodModel(states) {
     ring: wet.length ? 100 : 0,
     attiva: wet.length > 0,
     rows: wet.length ? [...wet, ...rows.filter((row) => !row.on)] : rows,
-    /* Le valvole dell'acqua che Home Assistant dichiara (`valve.*` di classe
-     * `water`): la finestra le mette a portata di mano, perche' con una
-     * perdita la cosa da fare e' chiudere l'acqua. Senza, non compaiono. */
-    valvole: Object.entries(states || {})
-      .filter(
-        ([entity, stato]) =>
-          entity.startsWith("valve.") &&
-          clean(stato?.attributes?.device_class) === "water" &&
-          widgetIncludes(entity, fuori),
-      )
-      .map(([entity, stato]) => ({
-        entity,
-        name: friendlyName(states, entity),
-        state: clean(stato?.state).toLowerCase(),
-      })),
+    /* La riga sotto il numero dice com'e' l'acqua (#495): «Acqua aperta»,
+     * «Acqua chiusa». E' la prima valvola dell'elenco, cioe' quella scelta
+     * nella configurazione quando c'e'. */
+    sottotitolo: rigaDellaTessera(valvole[0]),
+    valvole,
   };
+}
+
+/* Le valvole dell'acqua della finestra degli Allagamenti (#495): quella scelta
+ * negli Avvisi — un `valve.*`, oppure il rele' che la comanda — e quelle che
+ * Home Assistant dichiara dell'acqua (`valve.*` di classe `water`), che la
+ * finestra mostrava gia' prima che si potesse scegliere. Con una perdita la
+ * cosa da fare e' chiudere l'acqua, e il tasto deve stare li'.
+ *
+ * Ognuna porta il suo stato con il comando appena mandato dentro — «In
+ * chiusura» subito dopo il tocco, non quando Home Assistant risponde — e
+ * `state` con le parole di un `valve.*`, che e' come la legge l'assistente di
+ * casa anche quando la valvola e' un rele'. */
+function valvoleDellaFinestra(states, fuori) {
+  let elenco = [];
+  try {
+    elenco = valvoleDellAcqua(valvolaScelta(), states, { attese: attesePerLeValvole() });
+  } catch (_errore) {
+    return [];
+  }
+  return elenco
+    .filter((valvola) => valvola.scelta || widgetIncludes(valvola.entity, fuori))
+    .map((valvola) => ({
+      ...valvola,
+      state: statoComeValve(valvola.stato),
+      chiudi: comandoDellaValvola(valvola.entity, "chiudi", { inverti: valvola.inverti }),
+    }));
 }
 
 /* Le stesse condizioni del runtime, riga per riga: un avviso personalizzato

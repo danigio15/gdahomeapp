@@ -661,10 +661,14 @@ function prossimoCambioDelDaQuando(righe = [], adesso = 0) {
 }
 function quantoTempoInParole(minuti) {
   if (!Number.isFinite(minuti) || minuti < 1) return pick("appena adesso", "just now");
-  if (minuti < 60) return `${Math.round(minuti)} ${pick("minuti", "minutes")}`;
+  if (minuti < 60) {
+    const tondi = Math.round(minuti);
+    return tondi === 1 ? pick("1 minuto", "1 minute") : `${tondi} ${pick("minuti", "minutes")}`;
+  }
   const ore = Math.floor(minuti / 60);
-  if (ore < 24) return `${ore} ${pick("ore", "hours")}`;
-  return `${Math.floor(ore / 24)} ${pick("giorni", "days")}`;
+  if (ore < 24) return ore === 1 ? pick("1 ora", "1 hour") : `${ore} ${pick("ore", "hours")}`;
+  const giorni = Math.floor(ore / 24);
+  return giorni === 1 ? pick("1 giorno", "1 day") : `${giorni} ${pick("giorni", "days")}`;
 }
 
 // src/core/racconto-tessera.js
@@ -14583,7 +14587,7 @@ function persistSignedSource(store2, group, signed, plantId = "") {
 }
 
 // src/core/chiavi-di-configurazione.js
-var CONFIG_KEYS_REVISION = 80;
+var CONFIG_KEYS_REVISION = 81;
 var CONFIG_KEYS = Object.freeze([
   "dm_dashboard_state",
   "dm_schema_version",
@@ -14920,7 +14924,10 @@ var CONFIG_KEYS = Object.freeze([
   "cd_testi_sicurezza",
   /* Le luci di Natale: la ragione per cui stanno qui è scritta accanto alla
    * revisione 79. */
-  "cd_feste"
+  "cd_feste",
+  /* La valvola dell'acqua: la ragione per cui sta qui è scritta accanto alla
+   * revisione 81. */
+  "cd_valvola_acqua"
 ]);
 
 // src/sections/ricordati-di-salvare-section.js
@@ -35683,7 +35690,7 @@ function installSegnalazioniSection() {
 senzaCadere(installSegnalazioniSection);
 
 // legacy/build-info.js
-var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.19.26", "dashboardVersion": "1.19.26", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-11-23T11:06:38+00:00", "commit": "a60ae56b481da89addb5b27162ceab7094f04274", "assetHash": "4ed30ddd42190bf9" });
+var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.19.26", "dashboardVersion": "1.19.26", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-11-23T12:34:27+00:00", "commit": "25fcbafdd54e0d58927ebac22b5b4cfdb362c761", "assetHash": "bf29380f80f92db9" });
 
 export {
   faseInParole,

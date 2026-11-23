@@ -71,8 +71,14 @@ export function prossimoCambioDelDaQuando(righe = [], adesso = 0) {
  */
 export function quantoTempoInParole(minuti) {
   if (!Number.isFinite(minuti) || minuti < 1) return pick("appena adesso", "just now");
-  if (minuti < 60) return `${Math.round(minuti)} ${pick("minuti", "minutes")}`;
+  /* Uno si dice al singolare: «cambiato 1 ore fa» si leggeva sotto ogni
+   * frase cambiata da un'ora e mezza. */
+  if (minuti < 60) {
+    const tondi = Math.round(minuti);
+    return tondi === 1 ? pick("1 minuto", "1 minute") : `${tondi} ${pick("minuti", "minutes")}`;
+  }
   const ore = Math.floor(minuti / 60);
-  if (ore < 24) return `${ore} ${pick("ore", "hours")}`;
-  return `${Math.floor(ore / 24)} ${pick("giorni", "days")}`;
+  if (ore < 24) return ore === 1 ? pick("1 ora", "1 hour") : `${ore} ${pick("ore", "hours")}`;
+  const giorni = Math.floor(ore / 24);
+  return giorni === 1 ? pick("1 giorno", "1 day") : `${giorni} ${pick("giorni", "days")}`;
 }

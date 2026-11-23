@@ -49,6 +49,7 @@ import { installLightsSceneSection } from "./lights-scene-section.js";
 import { installLightsPageSection } from "./lights-page-section.js";
 import { installAlertsSection } from "./alerts-section.js";
 import { installFloodAlertsSection } from "./flood-alerts-section.js";
+import { installValvolaDellAcqua } from "./la-valvola-dell-acqua-section.js";
 import { installSmokeAlertsSection } from "./smoke-alerts-section.js";
 import { installEnglishRuntimeStrings } from "./english-runtime-strings-section.js";
 import { installLiveUiSection } from "./live-ui-section.js";
@@ -987,6 +988,10 @@ export function installSectionRuntime() {
     /* L'allagamento e' una lista sorvegliata come le altre: si installa dove si
      * installano gli avvisi, subito dopo chi possiede il loro editor. */
     senzaCadere(installFloodAlertsSection);
+    /* La valvola dell'acqua (#495): la sua scheda va sotto le sonde degli
+     * allagamenti, che devono gia' esserci, e i suoi tasti stanno nella loro
+     * finestra. */
+    senzaCadere(installValvolaDellAcqua);
     /* Il fumo segue l'allagamento — stessa famiglia, stesso posto — e in piu'
      * porta il suo blocco nella pagina Sicurezza e il rilevamento continuo
      * delle aperture nuove. */

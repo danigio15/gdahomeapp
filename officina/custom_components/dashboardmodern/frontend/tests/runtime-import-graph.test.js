@@ -1732,8 +1732,12 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // (quando la scena prende il riposo, quando il tablet si sveglia per
   // guardarle, quale tocco non sveglia) e `sections/le-luci-al-muro.js` (la
   // scena a tutto schermo, la fascia coi tocchi e il loro stile).
+  // 578 con la valvola dell'acqua (#495): `core/la-valvola-dell-acqua.js`
+  // (cosa si puo' scegliere, com'e' adesso, quale servizio la apre e la
+  // chiude) e `sections/la-valvola-dell-acqua-section.js` (la scheda negli
+  // Avvisi, la carta nella finestra degli Allagamenti e la sua conferma).
   assert.ok(
-    relative.length <= 576,
+    relative.length <= 578,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

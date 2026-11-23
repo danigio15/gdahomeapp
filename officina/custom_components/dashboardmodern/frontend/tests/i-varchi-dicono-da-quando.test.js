@@ -68,7 +68,9 @@ test("la pagina scrive da quando, e torna all'identificativo solo senza istante"
   assert.match(sezione, /quantoTempoInParole\(minuti\)/);
   const quanto = await leggi("../src/core/da-quanto.js");
   assert.match(quanto, /export function quantoTempoInParole\(minuti\)/);
-  assert.match(quanto, /\$\{Math\.round\(minuti\)\} \$\{pick\("minuti", "minutes"\)\}/);
+  assert.match(quanto, /\$\{tondi\} \$\{pick\("minuti", "minutes"\)\}/);
+  /* E uno si dice al singolare: «cambiato 1 ore fa» non si legge. */
+  assert.match(quanto, /pick\("1 ora", "1 hour"\)/);
   /* Senza istante resta l'identificativo: è comunque meglio di una riga
    * vuota. */
   assert.match(sezione, /if \(riga\.da === null \|\| riga\.da === undefined\)/);

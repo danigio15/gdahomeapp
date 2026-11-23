@@ -1,4 +1,4 @@
-/* I testi della sicurezza: due sensori che parlano, e quando dicono qualcosa.
+/* I testi della sicurezza: i sensori che parlano, e quando dicono qualcosa.
  *
  * «Ho in Home Assistant due sensori che restituiscono una stringa di testo:
  * uno con lo stato del sistema di sicurezza, uno con le anomalie. Vorrei
@@ -41,11 +41,24 @@
 /** Dove si scrive la configurazione dei testi. */
 export const CHIAVE_TESTI_SICUREZZA = "cd_testi_sicurezza";
 
-/* Due, come i sensori di chi l'ha chiesto: lo stato e le anomalie. Non e' un
- * limite tecnico, e' un limite di spazio — in Home ogni testo e' una riga in
- * cima alla pagina, e la terza riga di avvisi sopra il meteo comincia a
- * spingere giu' la casa. */
-export const QUANTI_TESTI = 2;
+/* Quattro al massimo. Ne erano stati chiesti due — lo stato e le anomalie — ma
+ * c'e' chi ha una centrale per piano, o le anomalie divise fra la centrale e
+ * la linea telefonica. Il tetto resta, ed e' un limite di spazio: lo stato va
+ * nella didascalia della tessera Sicurezza, e in cima alla Home finiscono solo
+ * le anomalie che dicono qualcosa, che di solito sono nessuna. */
+export const QUANTI_TESTI = 4;
+
+/* Che cosa racconta una riga.
+ *
+ *  - `"stato"`: com'e' l'impianto — «Inserito parziale», «Disinserito». E' una
+ *    notizia sempre, e non e' mai un allarme: non si colora d'ambra, e la sua
+ *    frase sta nella tessera Sicurezza della Home;
+ *  - `"anomalie"`: quello che non va. Si colora quando dice qualcosa, e in Home
+ *    c'e' solo allora.
+ *
+ * Una riga salvata prima che il tipo esistesse e' «anomalie»: e' come si
+ * comportava, e chi l'aveva configurata non deve vederla cambiare da sola. */
+export const TIPI_DI_TESTO = Object.freeze(["stato", "anomalie"]);
 
 /* Un'etichetta e' un nome, non una frase: «Stato allarme», «Anomalie». Il
  * tetto c'e' perche' in Home sta davanti al testo, e un'etichetta lunga quanto
@@ -105,8 +118,8 @@ export function eNeutro(testo) {
 /**
  * La configurazione, ripulita.
  *
- * `righe` sono al massimo due, ognuna con l'entita' e un'etichetta che puo'
- * mancare; `home` dice se i testi si vedono anche in Home. Acceso di serie:
+ * `righe` sono al massimo `QUANTI_TESTI`, ognuna con l'entita', un'etichetta
+ * che puo' mancare e il suo tipo (`TIPI_DI_TESTO`); `home` dice se i testi si vedono anche in Home. Acceso di serie:
  * chi scrive un'entita' qui lo fa per vederla, e la Home e' la meta' della
  * richiesta. Si spegne solo con un `false` scritto.
  *
@@ -131,6 +144,7 @@ export function normalizzaTestiDellaSicurezza(stored) {
         0,
         ETICHETTA_AL_MASSIMO,
       ),
+      tipo: typeof riga === "object" && riga?.tipo === "stato" ? "stato" : "anomalie",
     });
     if (righe.length >= QUANTI_TESTI) break;
   }
@@ -147,9 +161,12 @@ export function ceQualcheTesto(config) {
  *
  * Torna l'entita', l'etichetta da mostrare (quella scritta, poi il nome che
  * Home Assistant da' all'entita', poi l'entita'), il testo per intero, da
- * quando e' cosi' (millisecondi, o `null`) e uno di tre stati:
+ * quando e' cosi' (millisecondi, o `null`), il tipo della riga e uno di
+ * quattro stati:
  *
- *  - `"avviso"`: dice qualcosa, e va evidenziato;
+ *  - `"avviso"`: un'anomalia che dice qualcosa, e va evidenziata;
+ *  - `"info"`: lo stato dell'impianto, detto con le sue parole — una notizia
+ *    da far vedere, ma non da colorare;
  *  - `"neutro"`: dice che va tutto bene, o non dice niente;
  *  - `"muto"`: l'entita' non c'e' o non risponde.
  *
@@ -165,11 +182,25 @@ export function letturaDelTesto(riga, stato) {
   const muto = !stato || MUTI.has(grezzo.toLowerCase());
   const testo = muto ? "" : grezzo;
   const quando = Date.parse(clean(stato?.last_changed || stato?.last_updated));
+  const tipo = riga?.tipo === "stato" ? "stato" : "anomalie";
+  /* Lo stato dell'impianto non passa dall'elenco dei neutri: «Normale» detto
+   * dalla centrale e' la risposta alla domanda «com'e' la casa», e va detta.
+   * Vuoto resta vuoto, perche' una riga senza frase non risponde a niente. */
+  const comeSta = muto
+    ? "muto"
+    : tipo === "stato"
+      ? testo && !["none", "null"].includes(fraseDaConfrontare(testo))
+        ? "info"
+        : "neutro"
+      : eNeutro(testo)
+        ? "neutro"
+        : "avviso";
   return {
     entity,
     etichetta,
     testo,
-    stato: muto ? "muto" : eNeutro(testo) ? "neutro" : "avviso",
+    tipo,
+    stato: comeSta,
     da: Number.isFinite(quando) ? quando : null,
   };
 }
@@ -180,16 +211,44 @@ export function letturaDeiTesti(config, states = {}) {
 }
 
 /**
- * I testi che vanno in Home: solo quelli che dicono qualcosa, e solo se la
- * Home li vuole.
+ * Le righe che vanno in cima alla Home: le anomalie che dicono qualcosa, e
+ * solo se la Home le vuole.
  *
  * Un neutro non ci va, un muto nemmeno: in cima alla Home una riga che dice
  * «non disponibile» sarebbe un avviso su un sensore, non sulla casa — quello
  * lo dice gia' la pagina Sicurezza, a chi ci entra.
+ *
+ * Lo stato dell'impianto ci va solo quando la tessera Sicurezza non c'e'
+ * (`conLaTessera` falso): con la tessera, la sua frase sta nella didascalia
+ * della tessera, che e' il posto dove si guarda com'e' l'antifurto. Senza —
+ * nessuna centrale configurata, o la tessera nascosta — sarebbe sparito dalla
+ * Home, e la Home era meta' della richiesta.
  */
-export function testiPerLaHome(config, states = {}) {
+export function testiPerLaHome(config, states = {}, { conLaTessera = false } = {}) {
   if (!config?.home) return [];
-  return letturaDeiTesti(config, states).filter((lettura) => lettura.stato === "avviso");
+  return letturaDeiTesti(config, states).filter(
+    (lettura) => lettura.stato === "avviso" || (!conLaTessera && lettura.stato === "info"),
+  );
+}
+
+/**
+ * La didascalia della tessera Sicurezza: lo stato dell'impianto e le
+ * anomalie che dicono qualcosa, su una riga sola. «Inserito parziale ·
+ * Anomalie: batteria scarica sirena».
+ *
+ * L'anomalia porta davanti la sua etichetta, lo stato no: «Inserito» sotto
+ * la parola «Sicurezza» si capisce da solo, una frase sul guasto della sirena
+ * senza dire da dove viene no. Vuota quando non c'e' niente da dire: la
+ * tessera torna a dire quello che diceva prima.
+ */
+export function didascaliaDeiTesti(config, states = {}) {
+  if (!config?.home) return "";
+  return letturaDeiTesti(config, states)
+    .filter((lettura) => lettura.stato === "info" || lettura.stato === "avviso")
+    .map((lettura) =>
+      lettura.stato === "avviso" ? `${lettura.etichetta}: ${lettura.testo}` : lettura.testo,
+    )
+    .join(" · ");
 }
 
 /** Le entita' che i testi leggono: servono a chi decide se un cambio lo tocca. */
