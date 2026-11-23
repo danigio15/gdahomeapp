@@ -411,15 +411,16 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-6RSR6OZL.js";
+} from "../../chunk-R7L6ZCRG.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
   controllaIlModello,
   troppoPerQuestoDispositivo,
   unitaProbabili
-} from "../../chunk-2XNRX3SX.js";
+} from "../../chunk-AT7RGUJI.js";
 import {
+  ATTESA_DEL_RITORNO_MS,
   CELLA,
   CHIAVE_CASA3D,
   CHIAVE_NOMI_CASA3D,
@@ -437,6 +438,7 @@ import {
   casaDelModello,
   comprimiGriglia,
   contaCollegati,
+  cosaFareDopoLaCaduta,
   entita,
   entitaCandidate,
   entitaProposta,
@@ -446,6 +448,7 @@ import {
   flussoInPausa,
   ilCodiceCombacia,
   ilCodiceServe,
+  memoriaDelDispositivo,
   mettiInPausaIlFlusso,
   modoDeiNomi,
   modoDopo,
@@ -456,6 +459,7 @@ import {
   percorsoDelFlusso,
   percorsoDellIstantanea,
   periodiDellEnergia,
+  qualitaDellaCasa3D,
   ricampiona,
   servizioDelModo,
   servizioPerAprire,
@@ -463,7 +467,7 @@ import {
   stessoFlusso,
   usaIlModello,
   vuoleIlVivo
-} from "../../chunk-PPQ7CSPW.js";
+} from "../../chunk-AENZDKD4.js";
 import {
   ACCENTO,
   APPLIANCE_BINDING_FIELDS,
@@ -5389,12 +5393,14 @@ var SOURCE_INDEX = Object.freeze({
   "La card resta In funzione per questi minuti dopo l'ultima potenza sopra soglia: copre l'asciugatura a 0 W della lavastoviglie e le pause del ciclo.": "The card stays Running for these minutes after the last power reading above the threshold: it covers the dishwasher's 0 W drying phase and mid-cycle pauses.",
   "La cartella config/www non esiste ancora: creala e mettici dentro le foto.": "The config/www folder does not exist yet: create it and put the photos in there.",
   "La cartella ha troppi file: ne sono elencati solo i primi.": "The folder has too many files: only the first ones are listed.",
+  "La casa 3D si sta riprendendo…": "The 3D house is recovering…",
   "La casa adesso": "The house now",
   "La casa che fa da sola: luci, clima, tapparelle e avvisi che partono quando serve.": "The home that does it by itself: lights, climate, shutters and alerts that start when needed.",
   "La casa in 3D · il palazzo": "Home in 3D · the building",
   "La casa in 3D · il tuo modello": "Home in 3D · your model",
   "La casa in 3D · la villa": "Home in 3D · the house",
   "La casa in 3D non si apre su questo dispositivo.": "The 3D house cannot open on this device.",
+  "La casa in 3D si è fermata più volte: questo dispositivo non ha abbastanza memoria grafica per tenerla aperta.": "The 3D house stopped several times: this device does not have enough graphics memory to keep it open.",
   "La casa in tre dimensioni è una funzione Premium. La configurazione resta salvata.": "The 3D home is a Premium feature. Its configuration stays saved.",
   "La casa in tre dimensioni è una funzione Premium. Quello che hai già salvato resta salvato.": "The 3D home is a Premium feature. What you've already saved stays saved.",
   "la casa non ha risposto": "the home did not answer",
@@ -120400,6 +120406,10 @@ var MURO_VUOTO = Object.freeze({
   batteria: { attiva: false, livello: "", carica: "" },
   pagine: []
 });
+function premiumSenzaRisposta(saputo, ricordato) {
+  if (saputo === true || saputo === false) return saputo;
+  return ricordato === true;
+}
 function muroPulito(input) {
   let dentro3 = input;
   if (typeof dentro3 === "string") {
@@ -121968,10 +121978,10 @@ async function premiumDellaCasa({ forza = false } = {}) {
 async function chiediIlPremium() {
   let premium3 = false;
   try {
-    const stato3 = await bridgeRequest("ponte/licenza/stato", {});
+    const stato3 = await bridgeRequest("ponte/licenza/stato", {}, { rimanda: true });
     premium3 = stato3?.gdahome?.attiva === true;
   } catch (_errore) {
-    return state121.premium === true;
+    return premiumSenzaRisposta(state121.premium, ricordo().premium);
   }
   state121.premium = premium3;
   state121.premiumLetto = Date.now();
@@ -122003,7 +122013,11 @@ async function fonteDelMuro(muro, { forza = false } = {}) {
 }
 async function fonteDaLontano(di) {
   try {
-    const letto = await bridgeRequest("dashboardmodern/config/get", { profile: di });
+    const letto = await bridgeRequest(
+      "dashboardmodern/config/get",
+      { profile: di },
+      { rimanda: true }
+    );
     return fonteDaiValori(letto?.snapshot?.values || {});
   } catch (_errore) {
     return fonteDalPonte();
@@ -122011,7 +122025,7 @@ async function fonteDaLontano(di) {
 }
 async function fonteDalPonte() {
   try {
-    const detto3 = await bridgeRequest(MURO_FONTE, { profile: currentProfile() });
+    const detto3 = await bridgeRequest(MURO_FONTE, { profile: currentProfile() }, { rimanda: true });
     if (detto3?.fonte && typeof detto3.fonte === "object") return detto3.fonte;
   } catch (_errore) {
   }
@@ -176681,7 +176695,7 @@ async function caricaIlMotore() {
   const [THREE, caricatori, scena2] = await Promise.all([
     import(MOTORE.tre),
     import(MOTORE.caricatori),
-    import("../../scena-modello-6LKREKUM.js")
+    import("../../scena-modello-2TVEXCNX.js")
   ]);
   return { THREE, caricatori, scena: scena2 };
 }
@@ -177092,14 +177106,20 @@ function avviaLAnteprima(tela4) {
   const S = state200.S;
   if (!S?.motore || !S.forma) return;
   const { THREE } = S.motore;
+  const Q = qualitaDellaCasa3D({
+    dpr: root.devicePixelRatio || 1,
+    larghezza: tela4.clientWidth || 0,
+    altezza: tela4.clientHeight || 0,
+    memoria: memoriaDelDispositivo(root.navigator)
+  });
   let renderer;
   try {
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer = new THREE.WebGLRenderer({ antialias: Q.antialias, alpha: true });
   } catch (_errore) {
     S.errore = perche5("non-si-apre");
     return;
   }
-  renderer.setPixelRatio(Math.min(2, root.devicePixelRatio || 1));
+  renderer.setPixelRatio(Q.pixel);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   tela4.appendChild(renderer.domElement);
@@ -177179,6 +177199,10 @@ function fermaLAnteprima() {
   if (!V) return;
   V.gruppo.remove(state200.S.forma?.radice);
   V.renderer.dispose();
+  try {
+    V.renderer.forceContextLoss();
+  } catch (_errore) {
+  }
   V.renderer.domElement.remove();
   state200.S.vista = null;
 }
@@ -177263,7 +177287,12 @@ var state201 = root[KEY204] ||= {
    * che servono (vedi latiChiusi). */
   lati: null,
   /* Le scritte dei dispositivi su questo dispositivo (vedi nomiScelti). */
-  nomi: null
+  nomi: null,
+  /* Il disegno caduto (vedi `scenaCaduta`): quando e' caduto le ultime
+   * volte, se lo si sta aspettando, e chi aspetta. */
+  cadute: [],
+  persa: false,
+  timerDelRitorno: 0
 };
 function casa3dDiQui() {
   return casa3dPulita(readJson(CHIAVE_CASA3D, null));
@@ -177738,8 +177767,14 @@ async function avviaIlModello(admin) {
       pannello: nodo4.querySelector(".c3-arreda-posto"),
       quandoTocchi: alToccoDellaScena,
       quandoSalvi: salvaLaCasa,
-      quandoCade: () => cadeIlModello(m.id),
-      nomi: nomiScelti()
+      /* il modello cade solo col disegno (`webglcontextlost`): la casa
+       * generata che prende il suo posto si fa piu' leggera */
+      quandoCade: () => {
+        state201.cadute = cosaFareDopoLaCaduta(state201.cadute, Date.now()).cadute;
+        cadeIlModello(m.id);
+      },
+      nomi: nomiScelti(),
+      cadute: state201.cadute.length
     });
     state201.firma = firmaDi3(ora7);
     state201.vista = "modello";
@@ -177774,7 +177809,7 @@ async function avviaLaScena(admin) {
   state201.caricando = true;
   state201.guasto = "";
   try {
-    const [THREE, { creaScena }] = await Promise.all([import(TRE), import("../../scena-B6DI66VP.js")]);
+    const [THREE, { creaScena }] = await Promise.all([import(TRE), import("../../scena-S73BNYPA.js")]);
     const nodo4 = doc.getElementById(ID5);
     const posto = nodo4?.querySelector(".c3-posto");
     if (!posto) return;
@@ -177793,6 +177828,10 @@ async function avviaLaScena(admin) {
       quandoTocchi: alToccoDellaScena,
       quandoSalvi: salvaLaCasa,
       nomi: nomiScelti(),
+      /* le volte che il disegno e' gia' caduto: la scena rifatta e' piu' leggera */
+      cadute: state201.cadute.length,
+      quandoCade: scenaCaduta,
+      quandoTorna: scenaTornata,
       quandoCambiVista: (vista2) => {
         if (state201.vista === vista2) return;
         state201.vista = vista2;
@@ -177811,12 +177850,41 @@ async function avviaLaScena(admin) {
   }
 }
 function spegniLaScena() {
+  root.clearTimeout?.(state201.timerDelRitorno);
+  state201.timerDelRitorno = 0;
+  state201.persa = false;
   try {
     state201.scena?.distruggi();
   } catch (_errore) {
   }
   state201.scena = null;
   state201.firma = "";
+}
+function scenaCaduta() {
+  const esito2 = cosaFareDopoLaCaduta(state201.cadute, Date.now());
+  state201.cadute = esito2.cadute;
+  state201.persa = true;
+  root.console?.warn?.("[DashboardModern] casa 3d: il disegno e' caduto", state201.cadute.length);
+  root.clearTimeout?.(state201.timerDelRitorno);
+  if (esito2.azione === "basta") {
+    spegniLaScena();
+    state201.guasto = "disegno";
+    ridisegna35();
+    return;
+  }
+  state201.timerDelRitorno = root.setTimeout?.(() => {
+    state201.timerDelRitorno = 0;
+    if (!state201.persa) return;
+    spegniLaScena();
+    ridisegna35();
+  }, ATTESA_DEL_RITORNO_MS) || 0;
+  ridisegna35();
+}
+function scenaTornata() {
+  root.clearTimeout?.(state201.timerDelRitorno);
+  state201.timerDelRitorno = 0;
+  state201.persa = false;
+  ridisegna35();
 }
 function salvaLaCasa(nuova) {
   const pulita3 = casa3dPulita(nuova);
@@ -177898,6 +177966,28 @@ function togliLaTela3() {
   doc?.getElementById(ID5)?.remove();
   doc?.documentElement?.classList?.remove("dm-casa3d-acceso");
 }
+function guastoMarkup() {
+  const testo5 = state201.guasto === "disegno" ? t(
+    "La casa in 3D si è fermata più volte: questo dispositivo non ha abbastanza memoria grafica per tenerla aperta.",
+    "The 3D house stopped several times: this device does not have enough graphics memory to keep it open."
+  ) : t(
+    "La casa in 3D non si apre su questo dispositivo.",
+    "The 3D house cannot open on this device."
+  );
+  const riprova2 = esc(t("Riprova", "Try again"));
+  return `<div class="c3-da-creare"><span aria-hidden="true">🏢</span><p>${esc(testo5)}</p>
+    <button type="button" class="c3-tasto c3-tasto-grande" data-c3s="riprova">↻ ${riprova2}</button></div>`;
+}
+function attesaMarkup(casa4, vuota2, admin) {
+  if (state201.scena && state201.persa)
+    return `<p class="c3-riprende">${esc(t("La casa 3D si sta riprendendo…", "The 3D house is recovering…"))}</p>`;
+  if (state201.scena) return "";
+  if (state201.guasto && !vuota2) return guastoMarkup();
+  if (vuota2 && usaIlModello(casa4))
+    return `<div class="c3-da-creare"><p>${esc(t("La casa in 3D non si apre su questo dispositivo.", "The 3D house cannot open on this device."))}</p>${admin ? `<button type="button" class="c3-tasto" data-c3s="modello">🧊 ${esc(t("Il tuo modello 3D", "Your 3D model"))}</button>` : ""}</div>`;
+  if (vuota2) return casaDaCreareMarkup(admin);
+  return `<p>${esc(state201.attesaDelModello || t("Arriva la casa…", "Loading the house…"))}</p>`;
+}
 function disegna18() {
   if (!doc?.body) return;
   const casa4 = casa3dDiQui();
@@ -177923,6 +178013,7 @@ function disegna18() {
   doc.documentElement.classList.add("dm-casa3d-acceso");
   nodo4.dataset.tema = doc.documentElement.getAttribute("data-theme") || "light";
   nodo4.dataset.arreda = String(state201.arreda);
+  nodo4.dataset.persa = String(Boolean(state201.scena && state201.persa));
   scriviSeCambia(nodo4.querySelector(".c3-testa-posto"), testataMarkup3(elencata, admin, modello2));
   const vuota2 = !elencata.piani.length;
   mettiILati(nodo4, elencata, vuota2);
@@ -177939,10 +178030,7 @@ function disegna18() {
   if (state201.scena && state201.firma !== firma2) spegniLaScena();
   if (state201.scena) state201.scena.aggiornaStati(states);
   else if (!vuota2 && !state201.caricando && !state201.guasto) avviaLaScena(admin);
-  scriviSeCambia(
-    nodo4.querySelector(".c3-attesa"),
-    state201.scena ? "" : vuota2 && usaIlModello(casa4) ? `<div class="c3-da-creare"><p>${esc(t("La casa in 3D non si apre su questo dispositivo.", "The 3D house cannot open on this device."))}</p>${admin ? `<button type="button" class="c3-tasto" data-c3s="modello">🧊 ${esc(t("Il tuo modello 3D", "Your 3D model"))}</button>` : ""}</div>` : vuota2 ? casaDaCreareMarkup(admin) : `<p>${esc(state201.guasto ? t("La casa in 3D non si apre su questo dispositivo.", "The 3D house cannot open on this device.") : state201.attesaDelModello || t("Arriva la casa…", "Loading the house…"))}</p>`
-  );
+  scriviSeCambia(nodo4.querySelector(".c3-attesa"), attesaMarkup(casa4, vuota2, admin));
   const sopra = nodo4.querySelector(".c3-sopra");
   const video = sopra.querySelector("[data-c3-video]");
   if (video && guardabili.has(video.dataset.c3Video)) {
@@ -178094,6 +178182,13 @@ function alClic6(evento) {
       );
     return;
   }
+  if (cosa === "riprova") {
+    state201.cadute = [];
+    state201.guasto = "";
+    state201.modelloGuasto = "";
+    vibra2(6);
+    return ridisegna35();
+  }
   if (cosa === "modello") {
     const apri9 = root.__DM_CASA3D_MODELLO__;
     if (typeof apri9 === "function") apri9();
@@ -178210,6 +178305,11 @@ function installaLoStile11() {
     ${C3} .c3-posto{position:absolute;inset:0;border-radius:inherit}
     ${C3} .c3-attesa{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;color:#cbd5e1;font-size:13px;font-weight:700}
     ${C3} .c3-attesa:empty{display:none}
+    /* il disegno che si riprende: detto sopra la casa, leggibile sul cielo chiaro come sul buio */
+    ${C3} .c3-attesa{z-index:6}
+    ${C3}[data-persa="true"] .c3-strato,${C3}[data-persa="true"] .c3-chip-strato{visibility:hidden}
+    ${C3} .c3-riprende{margin:0;padding:10px 16px;border-radius:999px;background:rgba(15,23,42,.84);color:#e6edf7;
+      border:1px solid rgba(148,163,184,.32);box-shadow:0 6px 18px rgba(0,0,0,.25)}
     ${C3} .c3-da-creare{pointer-events:auto;display:grid;justify-items:center;gap:10px;max-width:420px;padding:24px;text-align:center}
     ${C3} .c3-da-creare>span{font-size:44px}
     ${C3} .c3-da-creare h2{margin:0;font-size:20px;color:inherit}

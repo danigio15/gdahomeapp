@@ -7932,6 +7932,8 @@ export default Object.freeze({
   "tap «Outside» to step back out": "밖으로 나가려면 «실외»를 탭하세요",
   "Tap a floor to see its devices.": "층을 탭하면 기기를 볼 수 있습니다.",
   "The 3D house cannot open on this device.": "이 기기에서는 3D 홈을 열 수 없습니다.",
+  "The 3D house is recovering…": "3D 홈을 복구하는 중…",
+  "The 3D house stopped several times: this device does not have enough graphics memory to keep it open.": "3D 홈이 여러 번 멈췄습니다. 이 기기에는 계속 열어 둘 그래픽 메모리가 부족합니다.",
   "The house": "집",
   "The house wizard is not available yet": "집 마법사는 아직 사용할 수 없습니다",
   "View only": "보기 전용",

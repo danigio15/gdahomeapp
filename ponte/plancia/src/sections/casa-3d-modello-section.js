@@ -28,6 +28,7 @@ import {
   unitaProbabili,
 } from "../core/modello-3d.js";
 import { daiVendor } from "../core/cartella-della-plancia.js";
+import { memoriaDelDispositivo, qualitaDellaCasa3D } from "../core/la-qualita-della-casa-3d.js";
 import { puoConfigurare } from "./la-config-e-di-chi-la-amministra-section.js";
 import { currentProfile } from "./config-persistence-section.js";
 import {
@@ -534,14 +535,22 @@ function avviaLAnteprima(tela) {
   const S = state.S;
   if (!S?.motore || !S.forma) return;
   const { THREE } = S.motore;
+  /* L'anteprima sta sopra la Casa 3D, che ha gia' il suo disegno: chiede
+   * quanto chiede lei (`core/la-qualita-della-casa-3d.js`), non di piu'. */
+  const Q = qualitaDellaCasa3D({
+    dpr: root.devicePixelRatio || 1,
+    larghezza: tela.clientWidth || 0,
+    altezza: tela.clientHeight || 0,
+    memoria: memoriaDelDispositivo(root.navigator),
+  });
   let renderer;
   try {
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer = new THREE.WebGLRenderer({ antialias: Q.antialias, alpha: true });
   } catch (_errore) {
     S.errore = perche("non-si-apre");
     return;
   }
-  renderer.setPixelRatio(Math.min(2, root.devicePixelRatio || 1));
+  renderer.setPixelRatio(Q.pixel);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   tela.appendChild(renderer.domElement);
@@ -627,6 +636,10 @@ function fermaLAnteprima() {
   if (!V) return;
   V.gruppo.remove(state.S.forma?.radice);
   V.renderer.dispose();
+  /* il contesto si restituisce subito, senza aspettare il browser */
+  try {
+    V.renderer.forceContextLoss();
+  } catch (_errore) {}
   V.renderer.domElement.remove();
   state.S.vista = null;
 }

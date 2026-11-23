@@ -172,6 +172,7 @@ import {
   telecamereDellaFonte,
   fonteDalleSezioni,
   muroPulito,
+  premiumSenzaRisposta,
   nomeDellaPersonaDelMuro,
   personeDelMuro,
   pinGiusto,
@@ -344,15 +345,26 @@ export async function premiumDellaCasa({ forza = false } = {}) {
 async function chiediIlPremium() {
   let premium = false;
   try {
-    const stato = await bridgeRequest("ponte/licenza/stato", {});
+    /* `rimanda`: e' una lettura, e dentro l'app la domanda partita prima
+     * dell'`auth_ok` la cucitura la butta (vedi `bridgeRequest`). Su un
+     * tablet lento l'`auth_ok` arriva quasi sempre dopo i 25 ms: la domanda
+     * andava persa, si aspettavano otto secondi e la risposta era «Base». */
+    const stato = await bridgeRequest("ponte/licenza/stato", {}, { rimanda: true });
     premium = stato?.gdahome?.attiva === true;
   } catch (_errore) {
     /* Il ponte non risponde (una casa lenta, la presa che non arriva in
      * tempo): si tiene quello che si sapeva, e non si scrive niente. Prima
      * un «non lo so» diventava «Base» anche nel ricordo del tablet, e il
      * pannello restava spento anche alle aperture dopo; adesso si richiede al
-     * prossimo giro. */
-    return state.premium === true;
+     * prossimo giro.
+     *
+     * «Quello che si sapeva», appena aperta la pagina, e' il ricordo del
+     * tablet: qui si leggeva solo la risposta di questa pagina, che non c'era
+     * ancora, e un «non lo so» diventava «Base» lo stesso. La Casa 3D
+     * («per un attimo si vede la foto del palazzo e poi diventa tutto nero»)
+     * si apriva col ricordo e si chiudeva otto secondi dopo la domanda,
+     * lasciando sotto la sua plancia vuota. */
+    return premiumSenzaRisposta(state.premium, ricordo().premium);
   }
   state.premium = premium;
   state.premiumLetto = Date.now();
@@ -399,7 +411,11 @@ export async function fonteDelMuro(muro, { forza = false } = {}) {
 
 async function fonteDaLontano(di) {
   try {
-    const letto = await bridgeRequest("dashboardmodern/config/get", { profile: di });
+    const letto = await bridgeRequest(
+      "dashboardmodern/config/get",
+      { profile: di },
+      { rimanda: true },
+    );
     return fonteDaiValori(letto?.snapshot?.values || {});
   } catch (_errore) {
     return fonteDalPonte();
@@ -412,7 +428,7 @@ async function fonteDaLontano(di) {
  * (`MURO_FONTE`). Se non risponde nemmeno lui, si tiene quello che si sapeva. */
 async function fonteDalPonte() {
   try {
-    const detto = await bridgeRequest(MURO_FONTE, { profile: currentProfile() });
+    const detto = await bridgeRequest(MURO_FONTE, { profile: currentProfile() }, { rimanda: true });
     if (detto?.fonte && typeof detto.fonte === "object") return detto.fonte;
   } catch (_errore) {}
   return state.fonte;

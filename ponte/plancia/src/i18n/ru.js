@@ -7980,6 +7980,8 @@ export default Object.freeze({
   "tap «Outside» to step back out": "нажмите «Снаружи», чтобы выйти обратно",
   "Tap a floor to see its devices.": "Нажмите на этаж, чтобы увидеть его устройства.",
   "The 3D house cannot open on this device.": "3D-дом не может открыться на этом устройстве.",
+  "The 3D house is recovering…": "3D-дом восстанавливается…",
+  "The 3D house stopped several times: this device does not have enough graphics memory to keep it open.": "3D-дом несколько раз останавливался: на этом устройстве недостаточно графической памяти, чтобы держать его открытым.",
   "The house": "Дом",
   "The house wizard is not available yet": "Мастер создания дома пока недоступен",
   "View only": "Только просмотр",

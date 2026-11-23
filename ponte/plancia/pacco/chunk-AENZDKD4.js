@@ -1022,6 +1022,60 @@ function contaCollegati(casa) {
   return { tutti, collegati, mancano: tutti - collegati };
 }
 
+// src/core/la-qualita-della-casa-3d.js
+var PIXEL_AL_MASSIMO = 26e5;
+var PIXEL_AL_MASSIMO_CON_MEMORIA = 42e5;
+var SCHERMO_GRANDE = 5e5;
+var POCA_MEMORIA = 2;
+var MEMORIA_MEDIA = 4;
+var numero2 = (v) => typeof v === "number" && Number.isFinite(v) ? v : null;
+function memoriaDelDispositivo(nav) {
+  try {
+    const m = numero2(nav?.deviceMemory);
+    return m && m > 0 ? m : null;
+  } catch (_errore) {
+    return null;
+  }
+}
+function qualitaDellaCasa3D({
+  dpr = 1,
+  larghezza = 0,
+  altezza = 0,
+  memoria = null,
+  cadute = 0
+} = {}) {
+  const base = numero2(dpr) && dpr > 0 ? dpr : 1;
+  let pixel = Math.min(2, base);
+  const mem = numero2(memoria);
+  const poca = mem !== null && mem <= POCA_MEMORIA;
+  const media = mem === null || mem <= MEMORIA_MEDIA;
+  const giu = Math.max(0, Math.floor(numero2(cadute) || 0));
+  const area = Math.max(0, numero2(larghezza) || 0) * Math.max(0, numero2(altezza) || 0);
+  if (poca || giu > 0) pixel = Math.min(pixel, 1);
+  else if (area >= SCHERMO_GRANDE) pixel = Math.min(pixel, 1.5);
+  const tetto = media ? PIXEL_AL_MASSIMO : PIXEL_AL_MASSIMO_CON_MEMORIA;
+  if (area > 0 && area * pixel * pixel > tetto)
+    pixel = Math.max(Math.min(1, pixel), Math.sqrt(tetto / area));
+  pixel = Math.round(pixel * 100) / 100;
+  const antialias = !poca && giu === 0;
+  const ombra = giu >= 2 ? 512 : poca || giu === 1 ? 1024 : 2048;
+  return {
+    pixel,
+    antialias,
+    ombra,
+    leggera: pixel < Math.min(2, base) || !antialias || ombra < 2048
+  };
+}
+var ATTESA_DEL_RITORNO_MS = 2500;
+var CADUTE_AL_MASSIMO = 3;
+var FINESTRA_DELLE_CADUTE_MS = 5 * 60 * 1e3;
+function cosaFareDopoLaCaduta(prima = [], adesso = Date.now()) {
+  const ora = numero2(adesso) ?? 0;
+  const cadute = (Array.isArray(prima) ? prima : []).map(numero2).filter((t) => t !== null && ora - t < FINESTRA_DELLE_CADUTE_MS && t <= ora);
+  cadute.push(ora);
+  return { azione: cadute.length > CADUTE_AL_MASSIMO ? "basta" : "riprova", cadute };
+}
+
 // src/core/le-scritte-della-casa-3d.js
 var MODI_DEI_NOMI = Object.freeze(["tutti", "accesi", "nessuno"]);
 var NOMI_DI_SERIE = "tutti";
@@ -1075,36 +1129,36 @@ function creaGriglia() {
     }
   };
 }
-var numero2 = (v, altrimenti = 0) => Number.isFinite(Number(v)) ? Number(v) : altrimenti;
+var numero3 = (v, altrimenti = 0) => Number.isFinite(Number(v)) ? Number(v) : altrimenti;
 function chiPrendeLaScritta(voci, opzioni = {}) {
   const elenco3 = Array.isArray(voci) ? voci : [];
   const modo = modoDeiNomi(opzioni.modo);
-  const lato = numero2(opzioni.lato, LATO_DEL_PALLINO);
-  const stacco = numero2(opzioni.stacco, STACCO);
+  const lato = numero3(opzioni.lato, LATO_DEL_PALLINO);
+  const stacco = numero3(opzioni.stacco, STACCO);
   const vuolePiena = (v) => Boolean(v?.primo) || modo === "tutti" || modo === "accesi" && Boolean(v?.acceso);
   const ordine = elenco3.map((v, i) => ({
     i,
     primo: v?.primo ? 1 : 0,
     piena: vuolePiena(v) ? 1 : 0,
-    priorita: numero2(v?.priorita),
-    distanza: numero2(v?.distanza, Infinity)
+    priorita: numero3(v?.priorita),
+    distanza: numero3(v?.distanza, Infinity)
   })).sort(
     (a, b) => b.primo - a.primo || b.piena - a.piena || b.priorita - a.priorita || a.distanza - b.distanza || a.i - b.i
   );
   const griglia = creaGriglia();
   for (const o of Array.isArray(opzioni.ostacoli) ? opzioni.ostacoli : []) {
-    const r = { x0: numero2(o?.x0), y0: numero2(o?.y0), x1: numero2(o?.x1), y1: numero2(o?.y1) };
+    const r = { x0: numero3(o?.x0), y0: numero3(o?.y0), x1: numero3(o?.x1), y1: numero3(o?.y1) };
     if (r.x1 > r.x0 && r.y1 > r.y0) griglia.metti(r);
   }
   const posti = postiDelPallino(lato, stacco);
   const esito = new Array(elenco3.length);
   for (const o of ordine) {
     const v = elenco3[o.i] || {};
-    const x = numero2(v.x);
-    const y = numero2(v.y);
+    const x = numero3(v.x);
+    const y = numero3(v.y);
     if (o.piena) {
-      const w = Math.max(0, numero2(v.w));
-      const h = Math.max(0, numero2(v.h));
+      const w = Math.max(0, numero3(v.w));
+      const h = Math.max(0, numero3(v.h));
       const r2 = { x0: x - w / 2, x1: x + w / 2, y0: y - h, y1: y };
       if (o.primo || !griglia.tocca(r2, stacco)) {
         griglia.metti(r2);
@@ -1181,5 +1235,9 @@ export {
   LATO_DEL_PALLINO,
   modoDeiNomi,
   modoDopo,
-  chiPrendeLaScritta
+  chiPrendeLaScritta,
+  memoriaDelDispositivo,
+  qualitaDellaCasa3D,
+  ATTESA_DEL_RITORNO_MS,
+  cosaFareDopoLaCaduta
 };

@@ -7831,6 +7831,8 @@ export default Object.freeze({
   "tap «Outside» to step back out": "点按«室外»返回外面",
   "Tap a floor to see its devices.": "点按楼层查看其设备。",
   "The 3D house cannot open on this device.": "此设备无法打开 3D 家。",
+  "The 3D house is recovering…": "3D 家正在恢复…",
+  "The 3D house stopped several times: this device does not have enough graphics memory to keep it open.": "3D 家已多次停止：此设备的图形内存不足，无法保持打开。",
   "The house": "房屋",
   "The house wizard is not available yet": "房屋向导暂不可用",
   "View only": "仅查看",
