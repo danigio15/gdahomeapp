@@ -14,6 +14,12 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.25
+
+- **Home, il riquadro delle luci**: dopo un tocco, o quando la luce si accende
+  o si spegne da sola, la tessera cambia stato subito invece di aspettare
+  fino a un minuto.
+
 ## 1.19.24
 
 - **Collega l'app**: sotto il QR c'è sempre il codice con «Copia il codice»,

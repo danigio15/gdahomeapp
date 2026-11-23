@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-EBZGDZDV.js";
+} from "../../chunk-NCDBQB3J.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -141111,7 +141111,10 @@ var state141 = root[KEY145] ||= {
   neve: null,
   giro: null,
   misuraGhirlanda: "",
-  attese: /* @__PURE__ */ new Map()
+  attese: /* @__PURE__ */ new Map(),
+  /* Le entita' delle luci dell'ultimo disegno: quelle i cui cambi di stato
+   * rifanno il riquadro. */
+  luci: []
 };
 var configurazioneDelleFeste = () => festePulite(readJson(CHIAVE_FESTE, null));
 var menoMovimento4 = () => Boolean(root.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
@@ -141363,6 +141366,7 @@ function disegnaLeFeste(adesso2 = /* @__PURE__ */ new Date()) {
   state141.frame = 0;
   if (!doc?.body) return false;
   const config = configurazioneDelleFeste();
+  state141.luci = config.riquadro === false ? [] : entitaDelleLuci(config);
   const states = allStates() || {};
   if (!inFesta(adesso2)) {
     if (state141.accese || doc.getElementById(ID_NEVE)) togliTutto();
@@ -141443,9 +141447,8 @@ function installFeste() {
       schedule31();
     });
   root.addEventListener?.("dashboardmodern:state-changed", (event) => {
-    if (!state141.accese) return;
-    if (ilCambioTocca(event, [...entitaDelleLuci(configurazioneDelleFeste()), "sun.sun"]))
-      schedule31();
+    if (!state141.luci?.length) return;
+    if (ilCambioTocca(event, [...state141.luci, "sun.sun"])) schedule31();
   });
   root.addEventListener?.("resize", schedule31, { passive: true });
   doc.addEventListener("visibilitychange", () => {
