@@ -24,6 +24,8 @@ aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
   molto meno con poca memoria). Se il disegno si interrompe si riprende da
   sola, e se il dispositivo proprio non regge compare un messaggio con
   «Riprova» invece dello schermo nero.
+- **Home, lo scorrimento**: sui tablet dentro l'app la pagina non torna più in
+  cima da sola mentre si scorre.
 
 ## 1.19.27
 
