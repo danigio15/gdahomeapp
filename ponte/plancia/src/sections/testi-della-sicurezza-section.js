@@ -1,4 +1,4 @@
-/* I testi della sicurezza: dove si scrivono, e i due posti dove si leggono (#472).
+/* I testi della sicurezza: dove si scrivono, e i posti dove si leggono (#472).
  *
  * «Ho in Home Assistant due sensori che restituiscono una stringa di testo:
  * uno con lo stato del sistema di sicurezza, uno con le anomalie. Vorrei
@@ -14,6 +14,11 @@
  *    per intero, sempre, colorato quando dice qualcosa;
  *  - la RIGA in Home, sotto la corsia degli avvisi: piccola, solo quando dice
  *    qualcosa, e scorre se non ci sta.
+ *
+ * Il quarto posto e' la tessera Sicurezza della Home, che dice nella sua
+ * didascalia lo stato dell'impianto e le anomalie: quella frase la scrive il
+ * modello della tessera (`didascaliaDeiTesti`, nel nucleo), e qui si sa solo
+ * che c'e', per non ripetere sotto il meteo lo stato che la tessera dice gia'.
  *
  * Cosa vuol dire «dice qualcosa» lo decide `core/testi-della-sicurezza.js`,
  * che e' puro e si prova da solo. Qui si legge il deposito, si disegna, e ci
@@ -65,7 +70,7 @@ const KEY = "__DASHBOARDMODERN_TESTI_SICUREZZA__";
 const STYLE_ID = "dm-testi-sicurezza-style";
 const BLOCK_ID = "dm-testi-sicurezza";
 const HOME_ID = "dm-sic-testi";
-const state = (root[KEY] ||= { installed: false, frame: 0, sveglia: 0 });
+const state = (root[KEY] ||= { installed: false, frame: 0, sveglia: 0, ripassato: false });
 
 function configurazione() {
   return normalizzaTestiDellaSicurezza(readJson(CHIAVE_TESTI_SICUREZZA, {}));
@@ -86,7 +91,7 @@ export function daQuantoECambiato(da, adesso = Date.now()) {
 }
 
 /* Il disegno davanti al testo: l'avviso quando dice qualcosa, lo scudo quando
- * e' tranquillo. Sono due nomi del catalogo di casa, non due emoji: un'emoji
+ * e' tranquillo o quando e' lo stato dell'impianto. Sono due nomi del catalogo di casa, non due emoji: un'emoji
  * cambia faccia da un telefono all'altro (#74). */
 function disegnoDelTesto(lettura, misura) {
   return disegnoDelCatalogo(lettura.stato === "avviso" ? "warning" : "security", misura);
@@ -196,7 +201,7 @@ function svegliamiQuandoCambia(letture) {
  * vede tagliato dai puntini.
  */
 export function rigaDelTestoInHome(lettura) {
-  return `<button type="button" class="dm-sic-testo" data-entity="${esc(lettura.entity)}"
+  return `<button type="button" class="dm-sic-testo" data-entity="${esc(lettura.entity)}" data-stato="${esc(lettura.stato)}"
     title="${esc(`${lettura.etichetta}: ${lettura.testo}`)}">
     <span class="dm-sic-testo-ic" aria-hidden="true">${disegnoDelTesto(lettura, 15)}</span>
     <b class="dm-sic-testo-cap">${esc(lettura.etichetta)}</b>
@@ -250,13 +255,34 @@ function tieniIlTestoInMovimento(finestra) {
   return true;
 }
 
+/* La tessera Sicurezza c'e' nella Home, e la sua didascalia si vede: allora
+ * lo stato dell'impianto sta li', e qui sotto il meteo restano solo le
+ * anomalie. Si guarda la didascalia disegnata, non la configurazione: una
+ * tessera nascosta da chi ha riordinato la Home non mostra niente, e sul
+ * telefono le tessere compatte le didascalie le nascondono — in tutti e due i
+ * casi lo stato deve tornare qui. */
+function cEAncheLaTessera() {
+  const didascalia = doc?.querySelector?.(
+    '#dm-widgets [data-dm-widget="sicurezza"] [data-dm-tile-caption]',
+  );
+  return Boolean(didascalia?.getClientRects?.().length);
+}
+
 /** Disegna le righe in Home: solo quelle che dicono qualcosa. */
 export function disegnaITestiInHome(config = configurazione(), states = allStates()) {
   const gia = doc?.getElementById?.(HOME_ID);
   /* La Home che nessuno guarda non si tocca: le misure del nastro, su una
    * pagina nascosta, sarebbero tutte zero. Ci si ripassa al cambio di pagina. */
   if (!paginaVisibile("page-home")) return false;
-  const letture = testiPerLaHome(config, states);
+  const conLaTessera = cEAncheLaTessera();
+  const letture = testiPerLaHome(config, states, { conLaTessera });
+  /* La tessera la disegna un altro modulo, negli stessi giri ma non per forza
+   * prima di questo: la prima volta che lo stato finirebbe qui perche' la
+   * tessera non si vede ancora, si ripassa fra poco a guardare di nuovo. */
+  if (!conLaTessera && !state.ripassato && letture.some((lettura) => lettura.stato === "info")) {
+    state.ripassato = true;
+    root.setTimeout?.(schedule, 1500);
+  }
   if (!letture.length) {
     gia?.remove();
     return false;
@@ -265,7 +291,7 @@ export function disegnaITestiInHome(config = configurazione(), states = allState
   if (!contenitore) return false;
   const markup = letture.map(rigaDelTestoInHome).join("");
   const firma = letture
-    .map((lettura) => `${lettura.entity}~${lettura.etichetta}~${lettura.testo}`)
+    .map((lettura) => `${lettura.entity}~${lettura.etichetta}~${lettura.stato}~${lettura.testo}`)
     .join("|");
   if (contenitore.dataset.firma !== firma) {
     contenitore.dataset.firma = firma;
@@ -294,13 +320,13 @@ function apriLaSicurezza() {
  * giusta senza uscire dalla configurazione. Si legge quello che c'e' scritto
  * nella casella, non quello salvato — chi ha appena scelto un'entita' vuole
  * vedere che cosa dice lei, prima di salvarla. */
-function rigaDiAdesso(entity, states = allStates()) {
+function rigaDiAdesso(entity, states = allStates(), tipo = "anomalie") {
   const id = clean(entity);
   if (!id) return "";
   const stato = states?.[id];
   if (!stato)
     return t("Questa entità non c'è in Home Assistant.", "This entity is not in Home Assistant.");
-  const lettura = letturaDelTesto({ entity: id }, stato);
+  const lettura = letturaDelTesto({ entity: id, tipo }, stato);
   if (lettura.stato === "muto") return t("Adesso non risponde.", "It is not answering right now.");
   const frase = lettura.testo || "—";
   return lettura.stato === "neutro"
@@ -308,20 +334,35 @@ function rigaDiAdesso(entity, states = allStates()) {
     : `${t("Adesso", "Right now")}: «${frase}»`;
 }
 
-/** La scheda: due righe da riempire, l'interruttore della Home e il tasto.
+/* Quante righe offre la scheda: quelle scritte, piu' una vuota per
+ * aggiungerne un'altra, mai meno di due — lo stato e le anomalie, che e' il
+ * caso di chi l'ha chiesto — e mai piu' del tetto. */
+export function righeDaOffrire(config) {
+  return Math.min(QUANTI_TESTI, Math.max(2, (config?.righe?.length || 0) + 1));
+}
+
+/** La scheda: le righe da riempire, l'interruttore della Home e il tasto.
  *
- * Le due righe non usano `ed-slot-lbl` per il titolo: il foglio del guscio
+ * Le righe non usano `ed-slot-lbl` per il titolo: il foglio del guscio
  * appende una matita a ogni etichetta di quella classe, e la matita direbbe
  * «questo nome si puo' ribattezzare» di un titolo che e' solo un numero. */
 export function schedaDeiTestiMarkup(config, states = {}) {
   const righe = [];
-  for (let indice = 0; indice < QUANTI_TESTI; indice += 1) {
-    const riga = config.righe[indice] || { entity: "", etichetta: "" };
+  for (let indice = 0; indice < righeDaOffrire(config); indice += 1) {
+    /* Una casella vuota propone il tipo che ci si aspetta li': la prima e' lo
+     * stato, le altre le anomalie. Una riga gia' scritta tiene il suo. */
+    const riga = config.righe[indice] || {
+      entity: "",
+      etichetta: "",
+      tipo: indice === 0 ? "stato" : "anomalie",
+    };
     const id = `dm-tsic-entity-${indice}`;
     const esempio =
-      indice === 0
+      riga.tipo === "stato"
         ? { entity: "sensor.stato_allarme", etichetta: t("Stato allarme", "Alarm status") }
         : { entity: "sensor.anomalie", etichetta: t("Anomalie", "Faults") };
+    const scelta = (valore, parola) =>
+      `<option value="${valore}"${riga.tipo === valore ? " selected" : ""}>${esc(parola)}</option>`;
     righe.push(`<div class="ed-slot dm-tsic-riga" data-tsic-riga="${indice}">
       <span class="dm-tsic-lbl">${esc(t("Testo", "Text"))} ${indice + 1}</span>
       <span class="ed-form-row"><input id="${id}" class="ed-input mono" data-tsic-entity value="${esc(
@@ -329,20 +370,31 @@ export function schedaDeiTestiMarkup(config, states = {}) {
       )}" placeholder="${esc(esempio.entity)}" autocomplete="off" spellcheck="false"><button type="button" class="dm-entity-picker" data-tsic-pick="${id}" aria-label="${esc(
         t("Scegli entità", "Choose entity"),
       )}">🔍</button></span>
-      <span class="dm-tsic-lbl dm-tsic-lbl-piccola">${esc(
-        t("Etichetta (facoltativa)", "Label (optional)"),
-      )}</span>
-      <span class="ed-form-row"><input class="ed-input" data-tsic-etichetta maxlength="40" value="${esc(
-        riga.etichetta,
-      )}" placeholder="${esc(esempio.etichetta)}" aria-label="${esc(t("Etichetta", "Label"))}"></span>
-      <small class="dm-tsic-adesso" data-tsic-adesso>${esc(rigaDiAdesso(riga.entity, states))}</small>
+      <span class="dm-tsic-coppia">
+        <span class="dm-tsic-campo">
+          <span class="dm-tsic-lbl dm-tsic-lbl-piccola">${esc(t("Che cosa dice", "What it says"))}</span>
+          <select class="ed-input" data-tsic-tipo aria-label="${esc(t("Che cosa dice", "What it says"))}">${scelta(
+            "stato",
+            t("Lo stato dell'impianto", "The system status"),
+          )}${scelta("anomalie", t("Le anomalie", "The faults"))}</select>
+        </span>
+        <span class="dm-tsic-campo">
+          <span class="dm-tsic-lbl dm-tsic-lbl-piccola">${esc(
+            t("Etichetta (facoltativa)", "Label (optional)"),
+          )}</span>
+          <input class="ed-input" data-tsic-etichetta maxlength="40" value="${esc(
+            riga.etichetta,
+          )}" placeholder="${esc(esempio.etichetta)}" aria-label="${esc(t("Etichetta", "Label"))}">
+        </span>
+      </span>
+      <small class="dm-tsic-adesso" data-tsic-adesso>${esc(rigaDiAdesso(riga.entity, states, riga.tipo))}</small>
     </div>`);
   }
   return `<div class="ed-sec-title">🛡️ ${esc(t("Testi della sicurezza", "Security texts"))}</div>
     <p class="ed-intro dm-tsic-intro">${esc(
       t(
-        "Fino a due entità il cui stato è un testo — un sensore con lo stato dell'impianto, uno con le anomalie, un input_text. La pagina Sicurezza li mostra per intero sotto l'antifurto, e si colorano quando dicono qualcosa. In Home compaiono piccoli, e scorrono se non ci stanno, solo quando non sono tranquilli: «OK», «Normale» o «Nessuna anomalia» non si vedono. L'etichetta è facoltativa: senza, si usa il nome dell'entità.",
-        "Up to two entities whose state is a text — a sensor with the system status, one with the faults, an input_text. The Security page shows them in full under the alarm, coloured when they have something to say. On Home they appear small, scrolling when they do not fit, only when they are not quiet: “OK”, “Normal” or “No faults” are not shown. The label is optional: without one, the entity's name is used.",
+        "Fino a quattro entità il cui stato è un testo — un sensore con lo stato dell'impianto, uno con le anomalie, un input_text. La pagina Sicurezza li mostra per intero sotto l'antifurto. Lo stato dell'impianto compare nella tessera Sicurezza della Home, e scorre se non ci sta; le anomalie si colorano quando dicono qualcosa, e solo allora compaiono anche sotto il meteo: «OK», «Normale» o «Nessuna anomalia» non si vedono. L'etichetta è facoltativa: senza, si usa il nome dell'entità.",
+        "Up to four entities whose state is a text — a sensor with the system status, one with the faults, an input_text. The Security page shows them in full under the alarm. The system status shows in the Security tile on Home, scrolling when it does not fit; faults are coloured when they have something to say, and only then also appear under the weather: “OK”, “Normal” or “No faults” are not shown. The label is optional: without one, the entity's name is used.",
       ),
     )}</p>
     <div class="dm-tsic-righe">${righe.join("")}</div>
@@ -352,8 +404,8 @@ export function schedaDeiTestiMarkup(config, states = {}) {
         <b>${esc(t("Mostra in Home", "Show on Home"))}</b>
         <small>${esc(
           t(
-            "Una riga piccola sotto il meteo per ogni testo che dice qualcosa. Toccandola si apre la Sicurezza.",
-            "A small line under the weather for each text that has something to say. Tapping it opens Security.",
+            "Lo stato nella tessera Sicurezza, e una riga piccola sotto il meteo per ogni anomalia che dice qualcosa. Toccandola si apre la Sicurezza.",
+            "The status in the Security tile, and a small line under the weather for each fault that has something to say. Tapping it opens Security.",
           ),
         )}</small>
       </span>
@@ -421,7 +473,11 @@ function aggiornaLAdesso(blocco) {
   const states = allStates();
   for (const riga of blocco.querySelectorAll("[data-tsic-riga]")) {
     const campo = riga.querySelector("[data-tsic-adesso]");
-    const testo = rigaDiAdesso(riga.querySelector("[data-tsic-entity]")?.value, states);
+    const testo = rigaDiAdesso(
+      riga.querySelector("[data-tsic-entity]")?.value,
+      states,
+      riga.querySelector("[data-tsic-tipo]")?.value,
+    );
     if (campo && campo.textContent !== testo) campo.textContent = testo;
   }
 }
@@ -438,18 +494,21 @@ function righeDellaScheda(blocco) {
   for (const riga of blocco.querySelectorAll("[data-tsic-riga]")) {
     const entity = clean(riga.querySelector("[data-tsic-entity]")?.value);
     const etichetta = clean(riga.querySelector("[data-tsic-etichetta]")?.value);
+    const tipo = riga.querySelector("[data-tsic-tipo]")?.value === "stato" ? "stato" : "anomalie";
     if (!entity) continue;
     if (!/^[a-z0-9_]+\.[a-z0-9_]+$/i.test(entity)) return { errore: entity };
-    righe.push({ entity, etichetta });
+    righe.push({ entity, etichetta, tipo });
   }
   return { righe };
 }
 
 function salva(config) {
   writeJsonIfChanged(CHIAVE_TESTI_SICUREZZA, {
-    righe: config.righe.map(({ entity, etichetta }) =>
-      etichetta ? { entity, etichetta } : { entity },
-    ),
+    righe: config.righe.map(({ entity, etichetta, tipo }) => ({
+      entity,
+      ...(etichetta ? { etichetta } : {}),
+      tipo,
+    })),
     home: config.home,
   });
   /* La pagina Sicurezza e la Home si rifanno subito: chi ha appena scelto il
@@ -511,7 +570,7 @@ function onCambio(event) {
     blocco.dataset.firma = firmaDellaScheda(normalizzaTestiDellaSicurezza(config));
     return;
   }
-  if (event.target.closest?.("[data-tsic-entity]")) aggiornaLAdesso(blocco);
+  if (event.target.closest?.("[data-tsic-entity],[data-tsic-tipo]")) aggiornaLAdesso(blocco);
 }
 
 /* ── giro ──────────────────────────────────────────────────────────────── */
@@ -602,6 +661,10 @@ function css() {
       color:#d97706;background:color-mix(in srgb,#f59e0b 18%,transparent)}
     .dm-sec-testo[data-stato="avviso"] .dm-sec-testo-cap strong,
     .dm-sec-testo[data-stato="avviso"] .dm-sec-testo-frase{color:#b45309}
+    /* Lo stato dell'impianto e' una notizia, non un avviso: l'azzurro della
+       plancia, quello delle cose che si leggono e basta. */
+    .dm-sec-testo[data-stato="info"] .dm-sec-testo-ic{
+      color:#0284c7;background:color-mix(in srgb,#0284c7 12%,transparent)}
     .dm-sec-testo[data-stato="muto"]{opacity:.6}
     .dm-sec-testo[data-stato="muto"] .dm-sec-testo-ic{
       color:var(--text-dim,#64748b);background:color-mix(in srgb,var(--text-dim,#64748b) 12%,transparent)}
@@ -655,15 +718,27 @@ function css() {
     @media (prefers-reduced-motion:reduce){
       .dm-sic-testo-finestra[data-dm-deriva="true"]{text-overflow:ellipsis}
       .dm-sic-testo-finestra[data-dm-deriva="true"] > .dm-sic-testo-nastro{display:inline;animation:none}}
+    /* Lo stato dell'impianto, quando sta qui perche' la tessera Sicurezza non
+       c'e': lo stesso vestito, coi colori di chi informa e non avvisa. */
+    .dm-sic-testo[data-stato="info"]{
+      border-color:color-mix(in srgb,#0284c7 35%,transparent);
+      background:color-mix(in srgb,#0284c7 6%,var(--card-bg,#fff))}
+    .dm-sic-testo[data-stato="info"] .dm-sic-testo-ic{color:#0284c7;background:color-mix(in srgb,#0284c7 14%,transparent)}
+    .dm-sic-testo[data-stato="info"] .dm-sic-testo-cap{color:#0369a1}
+    .dm-sic-testo[data-stato="info"] .dm-sic-testo-finestra{color:var(--text,#0f172a)}
     html[data-theme="dark"] .dm-sic-testo{box-shadow:none}
     html[data-theme="dark"] .dm-sic-testo-finestra{color:#fcd34d}
     html[data-theme="dark"] .dm-sic-testo-cap{color:#fbbf24}
+    html[data-theme="dark"] .dm-sic-testo[data-stato="info"] .dm-sic-testo-finestra{color:#e2e8f0}
+    html[data-theme="dark"] .dm-sic-testo[data-stato="info"] .dm-sic-testo-cap{color:#7dd3fc}
 
     /* La scheda nella configurazione. */
     #ed-body .dm-tsic{display:grid;gap:8px;margin:14px 0 4px}
     #ed-body .dm-tsic-intro{margin:0}
     #ed-body .dm-tsic-righe{display:grid;gap:10px}
     #ed-body .dm-tsic-riga{display:grid;gap:6px}
+    #ed-body .dm-tsic-coppia{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px}
+    #ed-body .dm-tsic-campo{display:grid;gap:4px;min-width:0}
     #ed-body .dm-tsic-lbl{display:block;margin:0 2px;font-size:12.5px;font-weight:800;
       color:var(--text,#0f172a)}
     #ed-body .dm-tsic-lbl-piccola{font-size:11px;letter-spacing:.04em;text-transform:uppercase;

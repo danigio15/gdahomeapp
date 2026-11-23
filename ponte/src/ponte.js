@@ -125,6 +125,10 @@ export class Ponte {
     this.commissioni = commissioni;
     /* Le notifiche dei telefoni (`notifiche.js`): le mette `index.js`. */
     this.notifiche = null;
+    /* Gli orologi che si abbinano da se' (`il-polso.js`): il portiere
+     * consegna a lui, e non al ponte, le prese degli Amazfit. Li mette
+     * `index.js`; senza, un orologio resta fuori. */
+    this.polso = null;
     this.collegamenti = new Set();
     /* Chi parla di piu' in questa casa. Serve a una domanda sola, e non c'e'
      * altro posto da cui rispondere: un telefono che riceve seicento eventi
@@ -180,6 +184,10 @@ export class Ponte {
       if (!uno.dispositivo) continue;
       conto.set(uno.dispositivo.id, (conto.get(uno.dispositivo.id) || 0) + 1);
     }
+    /* E gli orologi, che non passano da qui ma sono collegati lo stesso. */
+    for (const [id, quanti] of this.polso?.collegatiPerDispositivo?.() ?? []) {
+      conto.set(id, (conto.get(id) || 0) + quanti);
+    }
     return conto;
   }
 
@@ -194,7 +202,7 @@ export class Ponte {
       uno.chiudi(1008, perche || "questo dispositivo e' stato staccato");
       quanti += 1;
     }
-    return quanti;
+    return quanti + (this.polso?.scollega?.(idDelDispositivo, perche) ?? 0);
   }
 
   /* Butta giu' i fili arrivati da fuori casa: la casa e' appena tornata
@@ -209,11 +217,12 @@ export class Ponte {
       uno.chiudi(codice, motivo);
       quanti += 1;
     }
-    return quanti;
+    return quanti + (this.polso?.chiudiQuelliDaFuori?.(codice, motivo) ?? 0);
   }
 
   chiudiTutto() {
     for (const uno of [...this.collegamenti]) uno.chiudi(1001, "il ponte si sta spegnendo");
+    this.polso?.chiudiTutto?.();
   }
 }
 
@@ -394,13 +403,30 @@ class Collegamento {
      * stacca e i suoi fili si chiudono. Solo per se stesso: il nuovo e' il
      * telefono di questo filo, nessun altro. */
     if (detto.type === SOSTITUISCI) {
+      const dispositivi = this.ponte.dispositivi;
+      const vecchio = String(detto.vecchio ?? "");
+      /* Di chi era il vecchio, finche' c'e': staccato non lo si sa piu'. */
+      const diChiEra = dispositivi?.utenteDi?.(vecchio) || "";
       const staccato =
-        this.ponte.dispositivi?.sostituisci?.({
+        dispositivi?.sostituisci?.({
           nuovo: this.dispositivo?.id,
           vecchio: detto.vecchio,
           segno: detto.segno,
         }) === true;
-      if (staccato) this.ponte.scollega(String(detto.vecchio));
+      if (staccato) {
+        this.ponte.scollega(vecchio);
+        /* Se il nuovo ha preso la persona del vecchio, il filo lo sa da
+         * subito: la Salute la manda solo un telefono intestato. */
+        const utente = dispositivi?.utenteDi?.(this.dispositivo?.id) || "";
+        if (utente && this.dispositivo && !this.dispositivo.utente) {
+          this.dispositivo = { ...this.dispositivo, utente };
+        }
+        /* E la serie della Salute passa al nuovo, senza buchi
+         * (`il-corpo-dal-telefono.js`, «Dopo un riabbinamento»). */
+        this.ponte.ilCorpo
+          ?.passaIlTelefono?.(vecchio, this.dispositivo?.id, { utente: diChiEra })
+          ?.catch?.(() => {});
+      }
       this.presa.manda(
         JSON.stringify({
           id: detto.id ?? null,

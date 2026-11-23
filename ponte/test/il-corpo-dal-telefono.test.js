@@ -257,6 +257,38 @@ test("l'anello Attività: distanza, piani, esercizio, ore in piedi, calorie a ri
     assert.equal(di(c).corpo.attributes.state_class, "total_increasing");
 });
 
+test("il WHOOP: HRV, respiro, pelle, recupero e sforzo", async () => {
+  /* Dall'app WHOOP in Salute, e dall'account WHOOP collegato nell'app. */
+  const { corpo, chiamate } = prepara();
+  const quando = "2026-10-29T06:40:00Z";
+  const dalWhoop = {
+    hrv: { valore: 48.2, quando },
+    respiro: { valore: 14.6, quando },
+    temperaturaPelle: { valore: 33.6, quando },
+    recupero: { valore: 78, quando },
+    sforzo: { valore: 12.4, quando },
+  };
+  const r = await corpo.rispondi(
+    { id: 1, type: SALUTE_MISURE, persona: "Marco", misure: dalWhoop },
+    { dispositivo: MARCO },
+  );
+  assert.deepEqual(r.result.scritte.sort(), Object.keys(dalWhoop).sort());
+  const radice = radiceDelTelefono("tel-marco");
+  const di = (pezzo) => chiamate.find((c) => c.percorso === `states/sensor.${radice}_${pezzo}`);
+  assert.equal(di("recupero").corpo.state, "78");
+  assert.equal(di("recupero").corpo.attributes.friendly_name, "Marco Recovery");
+  assert.equal(di("recupero").corpo.attributes.unit_of_measurement, "%");
+  assert.equal(di("sforzo").corpo.state, "12.4");
+  assert.equal(di("sforzo").corpo.attributes.unit_of_measurement, undefined);
+  assert.equal(di("hrv").corpo.attributes.unit_of_measurement, "ms");
+  assert.equal(di("temperatura_pelle").corpo.attributes.device_class, "temperature");
+  /* Uno sforzo oltre 21 non e' uno sforzo. */
+  assert.deepEqual(
+    Object.keys(misurePulite({ sforzo: { valore: 30, quando } }, Date.parse(quando))),
+    [],
+  );
+});
+
 test("riabbinato il telefono, i sensori della persona restano gli stessi", async () => {
   /* «Sei tu che hai cancellato qualcosa?»: cancellati i dati dell'app e
    * riabbinato, il telefono e' nuovo per la casa. I sensori no. */

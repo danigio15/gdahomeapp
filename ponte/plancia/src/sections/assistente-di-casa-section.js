@@ -467,7 +467,11 @@ export function contestoDellaCasa(states = allStates(), adesso = Date.now()) {
       entity: v.entity,
       name: v.name,
       aperta: v.state === "open",
-      chiudi: { dominio: "valve", servizio: "close_valve", dati: { entity_id: v.entity } },
+      /* Il comando lo porta la valvola (#495): su un rele' chiudere l'acqua e'
+       * spegnere, o accendere se la valvola e' normalmente aperta. */
+      chiudi: v.chiudi
+        ? { dominio: v.chiudi.domain, servizio: v.chiudi.service, dati: v.chiudi.data }
+        : { dominio: "valve", servizio: "close_valve", dati: { entity_id: v.entity } },
     })),
     fumo: elenco(modello("fumo")?.rows).filter((r) => r.on),
     stanze: stanze(states),

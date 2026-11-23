@@ -18,7 +18,9 @@ import {
   CHIAVE_TESTI_SICUREZZA,
   FRASI_NEUTRE,
   QUANTI_TESTI,
+  TIPI_DI_TESTO,
   ceQualcheTesto,
+  didascaliaDeiTesti,
   eNeutro,
   entitaDeiTesti,
   fraseDaConfrontare,
@@ -32,6 +34,7 @@ import {
   daQuantoECambiato,
   riquadroDeiTesti,
   rigaDelTestoInHome,
+  righeDaOffrire,
   schedaDeiTestiMarkup,
 } from "../src/sections/testi-della-sicurezza-section.js";
 
@@ -96,9 +99,10 @@ test("quello che non e' nell'elenco e' una notizia", () => {
     assert.equal(eNeutro(frase), false, `«${frase}» non deve essere neutro`);
 });
 
-test("la configurazione: due righe al massimo, entita' vere, senza doppioni", () => {
+test("la configurazione: quattro righe al massimo, entita' vere, senza doppioni", () => {
   assert.equal(CHIAVE_TESTI_SICUREZZA, "cd_testi_sicurezza");
-  assert.equal(QUANTI_TESTI, 2);
+  assert.equal(QUANTI_TESTI, 4);
+  assert.deepEqual(TIPI_DI_TESTO, ["stato", "anomalie"]);
   assert.deepEqual(normalizzaTestiDellaSicurezza(null), { righe: [], home: true });
   assert.deepEqual(normalizzaTestiDellaSicurezza("boh"), { righe: [], home: true });
   const config = normalizzaTestiDellaSicurezza({
@@ -108,19 +112,30 @@ test("la configurazione: due righe al massimo, entita' vere, senza doppioni", ()
       { entity: "non un'entita" },
       { entity: "" },
       { entity: "input_text.anomalie" },
-      { entity: "sensor.terzo" },
+      { entity: "sensor.terzo", tipo: "stato" },
+      { entity: "sensor.quarto", tipo: "boh" },
+      { entity: "sensor.quinto" },
     ],
   });
   assert.deepEqual(config, {
     righe: [
-      { entity: "sensor.stato_allarme", etichetta: "Stato allarme" },
-      { entity: "input_text.anomalie", etichetta: "" },
+      { entity: "sensor.stato_allarme", etichetta: "Stato allarme", tipo: "anomalie" },
+      { entity: "input_text.anomalie", etichetta: "", tipo: "anomalie" },
+      { entity: "sensor.terzo", etichetta: "", tipo: "stato" },
+      /* Un tipo che non si conosce e' «anomalie»: e' come si comportavano
+       * le righe salvate prima che il tipo esistesse. */
+      { entity: "sensor.quarto", etichetta: "", tipo: "anomalie" },
     ],
     home: true,
   });
   assert.equal(ceQualcheTesto(config), true);
   assert.equal(ceQualcheTesto(normalizzaTestiDellaSicurezza({})), false);
-  assert.deepEqual(entitaDeiTesti(config), ["sensor.stato_allarme", "input_text.anomalie"]);
+  assert.deepEqual(entitaDeiTesti(config), [
+    "sensor.stato_allarme",
+    "input_text.anomalie",
+    "sensor.terzo",
+    "sensor.quarto",
+  ]);
 });
 
 test("la Home si spegne solo con un no scritto", () => {
@@ -136,8 +151,8 @@ test("l'etichetta ha un tetto, e un elenco nudo di entita' vale come righe", () 
   });
   assert.equal(config.righe[0].etichetta.length, 40);
   assert.deepEqual(normalizzaTestiDellaSicurezza(["sensor.a", "sensor.b"]).righe, [
-    { entity: "sensor.a", etichetta: "" },
-    { entity: "sensor.b", etichetta: "" },
+    { entity: "sensor.a", etichetta: "", tipo: "anomalie" },
+    { entity: "sensor.b", etichetta: "", tipo: "anomalie" },
   ]);
 });
 
@@ -148,6 +163,7 @@ test("la lettura: avviso, neutro, muto, e da quando e' cambiato", () => {
     entity: "sensor.anomalie",
     etichetta: "Anomalie centrale",
     testo: "Batteria scarica sirena",
+    tipo: "anomalie",
     stato: "avviso",
     /* `last_changed`, non `last_updated`: un attributo che si muove non
      * cambia la frase. */
@@ -193,6 +209,61 @@ test("in Home vanno solo i testi che dicono qualcosa, e solo se la Home li vuole
   assert.deepEqual(testiPerLaHome(config, { "sensor.anomalie": stato("unavailable") }), []);
 });
 
+test("lo stato dell'impianto e' una notizia, non un avviso", () => {
+  const riga = { entity: "sensor.stato_allarme", etichetta: "Stato", tipo: "stato" };
+  assert.equal(letturaDelTesto(riga, stato("Inserito parziale")).stato, "info");
+  /* «Normale» detto dalla centrale e' la risposta a «com'e' la casa»: per
+   * lo stato non vale l'elenco dei neutri. */
+  assert.equal(letturaDelTesto(riga, stato("Normale")).stato, "info");
+  assert.equal(letturaDelTesto(riga, stato("")).stato, "neutro");
+  assert.equal(letturaDelTesto(riga, stato("none")).stato, "neutro");
+  assert.equal(letturaDelTesto(riga, stato("unavailable")).stato, "muto");
+  assert.equal(letturaDelTesto(riga, stato("x")).tipo, "stato");
+});
+
+test("lo stato va nella tessera, e sotto il meteo solo se la tessera non c'e'", () => {
+  const states = {
+    "sensor.stato_allarme": stato("Inserito parziale"),
+    "sensor.anomalie": stato("Batteria scarica sirena esterna"),
+  };
+  const config = normalizzaTestiDellaSicurezza({
+    righe: [
+      { entity: "sensor.stato_allarme", tipo: "stato" },
+      { entity: "sensor.anomalie", etichetta: "Anomalie" },
+    ],
+  });
+  assert.deepEqual(
+    testiPerLaHome(config, states, { conLaTessera: true }).map((lettura) => lettura.entity),
+    ["sensor.anomalie"],
+  );
+  assert.deepEqual(
+    testiPerLaHome(config, states).map((lettura) => lettura.entity),
+    ["sensor.stato_allarme", "sensor.anomalie"],
+  );
+  /* La didascalia della tessera: lo stato com'e', l'anomalia con la sua
+   * etichetta davanti. */
+  assert.equal(
+    didascaliaDeiTesti(config, states),
+    "Inserito parziale · Anomalie: Batteria scarica sirena esterna",
+  );
+  /* Le anomalie tranquille non ci sono, e senza niente da dire e' vuota. */
+  assert.equal(
+    didascaliaDeiTesti(config, { ...states, "sensor.anomalie": stato("Nessuna anomalia") }),
+    "Inserito parziale",
+  );
+  assert.equal(didascaliaDeiTesti(config, {}), "");
+  assert.equal(didascaliaDeiTesti({ ...config, home: false }, states), "");
+});
+
+test("la tessera Sicurezza dice i testi nella didascalia, e lo scattato li scavalca", () => {
+  const home = leggi("../src/sections/home-widgets-section.js");
+  assert.match(home, /caption: suona \? didascaliaDelloScattato\(scattato, states\) : testi,/);
+  assert.match(
+    home,
+    /didascaliaDeiTesti\(\s*normalizzaTestiDellaSicurezza\(readJson\(CHIAVE_TESTI_SICUREZZA/,
+  );
+});
+
 test("la scelta viaggia con la configurazione", () => {
   /* Scelte dal computer, le anomalie devono comparire anche sul tablet: e
    * senza stare nell'elenco il cancello degli stati non lascerebbe passare i
@@ -234,7 +305,10 @@ test("la riga in Home: etichetta, testo su un nastro, e il testo intero nel tito
     stato('Batteria scarica "sirena"'),
   );
   const riga = rigaDelTestoInHome(lettura);
-  assert.match(riga, /^<button type="button" class="dm-sic-testo" data-entity="sensor\.anomalie"/);
+  assert.match(
+    riga,
+    /^<button type="button" class="dm-sic-testo" data-entity="sensor\.anomalie" data-stato="avviso"/,
+  );
   assert.match(riga, /<b class="dm-sic-testo-cap">Anomalie<\/b>/);
   assert.match(
     riga,
@@ -244,6 +318,17 @@ test("la riga in Home: etichetta, testo su un nastro, e il testo intero nel tito
 });
 
 test("la scheda: due righe da riempire, l'interruttore della Home, il tasto", () => {
+  assert.equal(righeDaOffrire(normalizzaTestiDellaSicurezza({})), 2);
+  assert.equal(
+    righeDaOffrire(normalizzaTestiDellaSicurezza({ righe: ["sensor.a", "sensor.b"] })),
+    3,
+  );
+  assert.equal(
+    righeDaOffrire(
+      normalizzaTestiDellaSicurezza({ righe: ["sensor.a", "sensor.b", "sensor.c", "sensor.d"] }),
+    ),
+    4,
+  );
   const config = normalizzaTestiDellaSicurezza({
     righe: [{ entity: "sensor.anomalie", etichetta: "Anomalie" }],
     home: false,
@@ -257,6 +342,13 @@ test("la scheda: due righe da riempire, l'interruttore della Home, il tasto", ()
   assert.match(markup, /data-tsic-pick="dm-tsic-entity-1"/);
   assert.match(markup, /<input type="checkbox" data-tsic-home>/);
   assert.match(markup, /data-tsic-salva/);
+  /* La riga scritta tiene il suo tipo; quella vuota propone «anomalie»
+   * perche' non e' la prima. */
+  assert.match(markup, /data-tsic-riga="0"[\s\S]*?<option value="anomalie" selected>/);
+  assert.match(
+    schedaDeiTestiMarkup(normalizzaTestiDellaSicurezza({}), {}),
+    /data-tsic-riga="0"[\s\S]*?<option value="stato" selected>/,
+  );
   assert.match(
     schedaDeiTestiMarkup(normalizzaTestiDellaSicurezza({}), {}),
     /<input type="checkbox" data-tsic-home checked>/,

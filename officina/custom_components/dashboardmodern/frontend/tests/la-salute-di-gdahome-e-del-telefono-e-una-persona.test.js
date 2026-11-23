@@ -126,6 +126,35 @@ test("il telefono di un'altra persona non si mescola", () => {
   );
 });
 
+test("due serie di GdAHome della stessa persona: una sola Marco, la piu' recente davanti", () => {
+  /* «Quando ho riassociato il telefono ho perso i dati salute»: il telefono
+   * di prima e quello nuovo, per un po', scrivono ognuno la sua serie. La
+   * pagina ne mostra una, quella aggiornata, e l'altra le sta dietro per lo
+   * storico. */
+  const stati = statiDiMarco();
+  stati["sensor.gdahome_9f8e7d6c_passi"] = sensore(
+    3120,
+    "Marco Steps",
+    "steps",
+    { gdahome_persona: "Marco", misurato_il: "2026-11-04T09:00:00Z" },
+    "total_increasing",
+  );
+  const persone = personeDellaSalute(stati);
+  assert.deepEqual(
+    persone.map((p) => p.chi),
+    ["Marco"],
+  );
+  const [marco] = persone;
+  assert.equal(marco.misure.passi.entity, "sensor.gdahome_9f8e7d6c_passi");
+  assert.equal(marco.misure.passi.valore, 3120);
+  assert.deepEqual(marco.misure.passi.altre.map((a) => a.entity).sort(), [
+    "sensor.gdahome_1a2b3c4d_passi",
+    "sensor.iphone_di_marco_steps",
+  ]);
+  /* Dietro non c'e' nessuno con altri dietro: una fila sola. */
+  assert.ok(marco.misure.passi.altre.every((a) => !a.altre));
+});
+
 test("di chi e' un telefono, dal nome", () => {
   assert.equal(padroneDelTelefono("iPhone di marco"), "marco");
   assert.equal(padroneDelTelefono("iPhone 15 Pro di Marco Rossi"), "marco rossi");

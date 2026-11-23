@@ -67,6 +67,7 @@ import 'riquadro/pagine.dart';
 import 'premium.dart';
 import '../salute/lettore.dart';
 import '../salute/postino_della_salute.dart';
+import '../salute/whoop/collegamento_whoop.dart';
 import 'salute.dart';
 import 'segnalazioni.dart';
 
@@ -1072,6 +1073,10 @@ class _HomeState extends State<Home> {
                                       PostinoDellaSalute(
                                         lettore: lettoreDiQuestoSistema(),
                                       ),
+                                  /* Il WHOOP dell'app (`main.dart`): nelle
+                                   * prove non c'e', e la pagina e' quella
+                                   * di prima. */
+                                  whoop: CollegamentoWhoop.istanza,
                                   nuda: true,
                                 ),
                                 Sezione.segnalazioni =>

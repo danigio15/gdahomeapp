@@ -410,6 +410,10 @@ test("e non chiede di nuovo i gettoni che sono gia' sulla macchina", () => {
      * ritrovarsi a `registra` per aver rilanciato lo script. */
     ["MODO_LICENZE", "MODO_LICENZE", "ambiente"],
     ["QUADRO_REVOCHE", "QUADRO_REVOCHE", "ambiente"],
+    /* E il client di WHOOP, che si scrive a mano: rilanciare lo script non
+     * deve spegnere «Collega WHOOP». */
+    ["WHOOP_CLIENT_ID", "WHOOP_CLIENT_ID", "ambiente"],
+    ["WHOOP_CLIENT_SECRET", "WHOOP_CLIENT_SECRET", "ambiente"],
   ]) {
     const atteso = `${quale}="\${${quale}:-$(gia_scritto "$CONFIGURAZIONE/${dove}" ${chiave})}"`;
     assert.ok(
@@ -422,6 +426,8 @@ test("e non chiede di nuovo i gettoni che sono gia' sulla macchina", () => {
 test("il modo delle licenze e le licenze tolte finiscono in ambiente, e di serie vuoti", () => {
   assert.match(ACCENDI, /^  printf 'MODO_LICENZE=%s\\n' "\$MODO_LICENZE"$/m);
   assert.match(ACCENDI, /^  printf 'QUADRO_REVOCHE=%s\\n' "\$QUADRO_REVOCHE"$/m);
+  assert.match(ACCENDI, /^  printf 'WHOOP_CLIENT_ID=%s\\n' "\$WHOOP_CLIENT_ID"$/m);
+  assert.match(ACCENDI, /^  printf 'WHOOP_CLIENT_SECRET=%s\\n' "\$WHOOP_CLIENT_SECRET"$/m);
   /* Nessun «impone» scritto di serie da nessuna parte dello script. */
   assert.doesNotMatch(ACCENDI, /MODO_LICENZE=impone"|MODO_LICENZE:-impone/);
 });

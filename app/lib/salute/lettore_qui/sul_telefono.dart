@@ -51,6 +51,21 @@ List<HealthDataType> tipiDi(MisuraDelCorpo misura, {required bool iPhone}) =>
       MisuraDelCorpo.sistolica => [HealthDataType.BLOOD_PRESSURE_SYSTOLIC],
       MisuraDelCorpo.diastolica => [HealthDataType.BLOOD_PRESSURE_DIASTOLIC],
       MisuraDelCorpo.ossigeno => [HealthDataType.BLOOD_OXYGEN],
+      /* L'HRV: Apple la tiene come SDNN, Health Connect come RMSSD. L'app
+       * WHOOP scrive la sua (RMSSD) nell'una e nell'altra. */
+      MisuraDelCorpo.hrv => [
+        iPhone
+            ? HealthDataType.HEART_RATE_VARIABILITY_SDNN
+            : HealthDataType.HEART_RATE_VARIABILITY_RMSSD,
+      ],
+      MisuraDelCorpo.respiro => [HealthDataType.RESPIRATORY_RATE],
+      /* Sull'iPhone il polso nel sonno (Apple Watch), in gradi. Health
+       * Connect ha solo lo scarto dal solito (`SkinTemperatureRecord`), che
+       * non e' una temperatura: su Android arriva solo dal WHOOP collegato. */
+      MisuraDelCorpo.temperaturaPelle =>
+        iPhone ? [HealthDataType.SLEEP_WRIST_TEMPERATURE] : const [],
+      /* Solo dall'account WHOOP collegato (`whoop/`). */
+      MisuraDelCorpo.recupero || MisuraDelCorpo.sforzo => const [],
       MisuraDelCorpo.sonno =>
         iPhone
             ? [...sonnoDormitoSuIPhone, ...sonnoALettoSuIPhone]
@@ -160,6 +175,7 @@ class LettoreDelTelefono implements LettoreDellaSalute {
             (p.value as NumericHealthValue).numericValue.toDouble(),
             p.dateFrom,
             p.dateTo,
+            fonte: Fonte.daOrigine(p.sourceName, p.sourceId),
           ),
     ];
   }
@@ -233,9 +249,15 @@ class LettoreDelTelefono implements LettoreDellaSalute {
         ];
         return ilSonnoDiStanotte(await dei(sonnoDormitoSuIPhone), ora) ??
             ilSonnoDiStanotte(await dei(sonnoALettoSuIPhone), ora);
+      case MisuraDelCorpo.recupero:
+      case MisuraDelCorpo.sforzo:
+        return null;
       case MisuraDelCorpo.battito:
       case MisuraDelCorpo.battitoRiposo:
       case MisuraDelCorpo.ossigeno:
+      case MisuraDelCorpo.hrv:
+      case MisuraDelCorpo.respiro:
+      case MisuraDelCorpo.temperaturaPelle:
       case MisuraDelCorpo.peso:
       case MisuraDelCorpo.grasso:
       case MisuraDelCorpo.sistolica:
@@ -250,7 +272,11 @@ class LettoreDelTelefono implements LettoreDellaSalute {
             misura == MisuraDelCorpo.ossigeno ||
             misura == MisuraDelCorpo.grasso;
         return percentuale
-            ? Lettura(comePercentuale(ultimo.valore), ultimo.quando)
+            ? Lettura(
+                comePercentuale(ultimo.valore),
+                ultimo.quando,
+                fonte: ultimo.fonte,
+              )
             : ultimo;
     }
   }

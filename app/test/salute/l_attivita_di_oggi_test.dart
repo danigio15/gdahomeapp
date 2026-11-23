@@ -143,6 +143,12 @@ void main() {
         MisuraDelCorpo.esercizio,
         MisuraDelCorpo.inPiedi,
         MisuraDelCorpo.calorieRiposo,
+        /* E quelle del WHOOP, arrivate dopo. */
+        MisuraDelCorpo.hrv,
+        MisuraDelCorpo.respiro,
+        MisuraDelCorpo.temperaturaPelle,
+        MisuraDelCorpo.recupero,
+        MisuraDelCorpo.sforzo,
       });
     });
 

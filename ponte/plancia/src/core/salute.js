@@ -260,11 +260,16 @@ export function personeDellaSalute(states = {}, config = {}) {
     /* Dal telefono, con GdAHome: la persona la dice il sensore. */
     const chi = clean(stato?.attributes?.gdahome_persona) || chiDalNome(lettura.nome);
     const persona = persone.get(chi) || { chi, misure: {} };
-    /* Due sensori della stessa misura per la stessa persona: vince quello
-     * scritto piu' di recente. */
+    /* Due sensori della stessa misura per la stessa persona — due telefoni
+     * suoi, o quello di prima di un riabbinamento ancora in casa —: vince
+     * quello scritto piu' di recente, e l'altro le sta dietro (`altre`) per i
+     * giorni passati, invece di sparire col suo storico. */
     const gia = persona.misure[chiave];
-    if (!gia || (Date.parse(lettura.quando) || 0) > (Date.parse(gia.quando) || 0))
-      persona.misure[chiave] = lettura;
+    if (!gia) persona.misure[chiave] = lettura;
+    else if ((Date.parse(lettura.quando) || 0) > (Date.parse(gia.quando) || 0)) {
+      const { altre = [], ...battuto } = gia;
+      persona.misure[chiave] = { ...lettura, altre: [battuto, ...altre] };
+    } else gia.altre = [...(gia.altre || []), lettura];
     persone.set(chi, persona);
   };
   for (const [entity, stato] of Object.entries(states || {})) {
@@ -332,8 +337,9 @@ function unisciITelefoni(persone, states) {
     if (!sua) continue;
     for (const [chiave, lettura] of Object.entries(altra.misure)) {
       const gia = sua.misure[chiave];
+      const { altre = [], ...sola } = lettura;
       if (!gia) sua.misure[chiave] = lettura;
-      else gia.altre = [...(gia.altre || []), lettura];
+      else gia.altre = [...(gia.altre || []), sola, ...altre];
     }
     persone.delete(chi);
   }

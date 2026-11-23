@@ -467,6 +467,7 @@
     var detto = String((uno && uno.nome) || "").trim();
     if (detto && NOMI_CHE_NON_DICONO.indexOf(detto.toLowerCase()) < 0) return detto;
     var quale = String((uno && uno.sistema) || "").toLowerCase();
+    if (uno && uno.polso === "zepp") return "Amazfit";
     if (quale === "android") return due("Telefono Android", "Android phone");
     if (quale === "ios") return "iPhone";
     if (quale === "web") return due("Browser", "Browser");
@@ -497,6 +498,13 @@
     var app = String((uno && uno.app) || "").trim();
     var quale = String((uno && uno.sistema) || "").toLowerCase();
     var pezzi = [];
+    /* Un Amazfit si e' abbinato da se' (`il-polso.js`): non e' un telefono,
+     * e con la sua chiave si leggono solo le luci, le azioni e i cancelli. */
+    if (uno && uno.polso === "zepp") {
+      pezzi.push(due("orologio Zepp OS", "Zepp OS watch"));
+      if (app) pezzi.push("app " + app);
+      return pezzi.join(" · ");
+    }
     if (marca || versione) {
       if (marca) pezzi.push(marca);
       var sistema = quale === "ios" ? "iOS" : quale === "android" ? "Android" : "";
@@ -1341,13 +1349,15 @@
       var sistema = String(uno.sistema || "").toLowerCase();
       riga.appendChild(
         unaFaccia(
-          sistema === "ios"
-            ? "ic-mela"
-            : sistema === "android"
-              ? "ic-robot"
-              : sistema === "web"
-                ? "ic-browser"
-                : "ic-telefono",
+          uno.polso === "zepp"
+            ? "ic-orologio"
+            : sistema === "ios"
+              ? "ic-mela"
+              : sistema === "android"
+                ? "ic-robot"
+                : sistema === "web"
+                  ? "ic-browser"
+                  : "ic-telefono",
           uno.collegati ? "bene" : "spenta",
         ),
       );
@@ -1378,6 +1388,14 @@
         suo.className = "chip" + (uno.utente ? "" : " giallo");
         suo.textContent = diChi;
         rigaDelNome.appendChild(suo);
+      }
+      /* Un Amazfit lo dice accanto al nome: in un elenco di telefoni quella
+       * riga e' un'altra cosa, e chi guarda deve poterla riconoscere. */
+      if (uno.polso === "zepp") {
+        var orologio = vediPagina.createElement("span");
+        orologio.className = "chip etichetta-polso";
+        orologio.textContent = due("orologio · luci e azioni", "watch · lights and actions");
+        rigaDelNome.appendChild(orologio);
       }
       /* Un telefono entrato con la casa di prova lo dice accanto al nome, con
        * la sua scadenza: e' l'ora in cui uscira' da solo. */
@@ -1431,7 +1449,9 @@
        * ricollegano dalla pagina. */
       if (uno.sistema !== "browser") {
         var riabbina = unTasto(
-          due("Nuovo QR per questo telefono", "New QR for this phone"),
+          uno.polso === "zepp"
+            ? due("Nuovo codice per questo orologio", "New code for this watch")
+            : due("Nuovo QR per questo telefono", "New QR for this phone"),
           "voce-menu",
         );
         riabbina.setAttribute("role", "menuitem");

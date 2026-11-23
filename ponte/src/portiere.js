@@ -49,6 +49,7 @@
  * il `pronto` va cosi':
  *
  *   telefono → casa   busta {t:"conferma", telefono:"…", casa:"…", nome, sistema}
+ *   orologio → casa   busta {t:"conferma", …, polso:"zepp"}        un Amazfit
  *   casa → telefono   busta {t:"ecco", segno, chiave, dispositivo, ritorno, lega:1}
  *   casa → telefono   busta {t:"no", perche:"…", motivo:"…"}
  *   casa → telefono   {v:1, no:"codice sbagliato", motivo:"codice"}   in chiaro
@@ -93,7 +94,7 @@ import {
   VERSIONE_DELL_ABBINAMENTO,
 } from "./cifra.js";
 import { CodiceSbagliato, TroppiTentativi } from "./abbinamento.js";
-import { PERCHE_LIMITE_DI_BASE, TroppiDispositivi } from "./dispositivi.js";
+import { PERCHE_LIMITE_DI_BASE, POLSO_ZEPP, TroppiDispositivi } from "./dispositivi.js";
 import { impronta, stessoSegreto } from "./segreti.js";
 
 const CHIUSA_PER_REGOLA = 1008;
@@ -246,7 +247,12 @@ export class Portiere {
      * porta al negozio. Con la minima a zero non si ferma nessuno. Il numero
      * lo dice il telefono e nessuno lo firma: e' un cancello per le app
      * della prova, che non lo sanno dire, non una serratura. */
-    if (this.versioneMinima?.troppoVecchia(detto.app)) {
+    /* Un orologio Zepp (`il-polso.js`) non e' l'app e non ha il suo numero di
+     * costruzione: la minima dell'app non lo riguarda. Dirsi orologio non
+     * apre niente di piu' — un orologio chiede solo la fotografia e un
+     * comando, e lo decide quello che la casa ha scritto all'abbinamento. */
+    const dalPolso = detto.polso === POLSO_ZEPP;
+    if (!dalPolso && this.versioneMinima?.troppoVecchia(detto.app)) {
       this._no(
         presa,
         "questa versione di GdAHome e' vecchia: aggiornala dal negozio per continuare",
@@ -357,15 +363,33 @@ export class Portiere {
     }
 
     presa.manda(pronto);
+    const cifrata = new PresaCifrata(presa, chiaveDiQuestoFilo, {
+      comprime: detto.gzip === true,
+      /* La prima busta del telefono si e' aperta con la chiave legata:
+       * il `lega` l'ha scritto lui. Da qui in poi lo si pretende. */
+      allaPrimaAperta: legame ? () => this._segnaIlLegame(chi) : null,
+    });
+
+    /* ─── L'orologio ──────────────────────────────────────────────────
+     *
+     * Un orologio abbinato da se' non parla il protocollo di Home
+     * Assistant: chiede la fotografia e i comandi, e nient'altro. Lo dice
+     * quello che la casa ha scritto quando si e' abbinato, non quello che
+     * dice adesso. Senza chi lo ascolti, resta fuori. */
+    if (this.dispositivi.polsoDi?.(chi) === POLSO_ZEPP) {
+      const polso = this.ponte?.polso;
+      if (!polso) {
+        cifrata.chiudi(CHIUSA_PER_REGOLA, "qui gli orologi non entrano");
+        return;
+      }
+      polso.accogli(cifrata, { chi, da, daCasa: daCasa === true });
+      return;
+    }
+
     /* Da qui in poi il ponte vede una presa qualunque, e non sa niente di
      * tutto questo. */
     this.ponte.accogli(
-      new PresaCifrata(presa, chiaveDiQuestoFilo, {
-        comprime: detto.gzip === true,
-        /* La prima busta del telefono si e' aperta con la chiave legata:
-         * il `lega` l'ha scritto lui. Da qui in poi lo si pretende. */
-        allaPrimaAperta: legame ? () => this._segnaIlLegame(chi) : null,
-      }),
+      cifrata,
       /* `mucchio: true` dice «so spacchettare un mucchio di eventi». Come il
        * gzip: chi non lo dice riceve un messaggio per evento, come prima.
        *
@@ -674,6 +698,10 @@ export class Portiere {
         /* La conferma si e' appena aperta con la chiave legata: questo
          * telefono lega, e lo si pretende gia' dal primo collegamento. */
         lega: legata,
+        /* Un Amazfit si dice orologio nella conferma, che e' chiusa con la
+         * chiave del codice: da qui in poi con la sua chiave si chiede solo
+         * la fotografia e un comando (`il-polso.js`). */
+        ...(detto?.polso === POLSO_ZEPP ? { polso: POLSO_ZEPP } : {}),
       });
     } catch (errore) {
       const telefoni = errore instanceof TroppiDispositivi;

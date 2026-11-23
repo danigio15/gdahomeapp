@@ -8,6 +8,16 @@ i suoi in `ponte/CHANGELOG.md`, ed è quello che Home Assistant fa vedere. Un
 rilascio dell'app non fa comparire un aggiornamento dell'add-on, e al
 contrario.
 
+## 1.19.28
+
+- **Salute, i dati del WHOOP**: quello che l'app WHOOP scrive in Apple Salute
+  o in Health Connect arriva anche in GdAHome, con la scritta «da WHOOP»:
+  sonno, battito, battito a riposo e ossigeno.
+- **Salute, misure nuove**: la variabilità del battito (HRV) e la frequenza
+  del respiro; su iPhone anche la temperatura del polso durante il sonno.
+- **Salute dopo aver ricollegato il telefono**: le misure partono subito,
+  senza aspettare il quarto d'ora.
+
 ## 1.19.27
 
 - **Navigatore, vista «Corsie» sotto i cavalcavia**: il ponte che passa

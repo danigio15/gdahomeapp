@@ -292,7 +292,10 @@ test("togliere una chiave non alza la revisione", async () => {
    * e il suo orario valgono anche dal tablet, e il ponte le legge da li'. */
   /* La 80 col flusso dell'energia grande in Home (`cd_home_flusso`, #460):
    * acceso dal computer, si vede anche sul tablet a muro. */
-  assert.equal(CONFIG_KEYS_REVISION, 80);
+  /* E la 81 con la valvola dell'acqua (`cd_valvola_acqua`, #495): scelta
+   * dal computer, il tasto «Chiudi l'acqua» c'e' anche sul telefono. */
+  assert.equal(CONFIG_KEYS_REVISION, 81);
+  assert.ok(CONFIG_KEYS.includes("cd_valvola_acqua"));
   assert.ok(CONFIG_KEYS.includes("cd_home_flusso"));
   assert.ok(CONFIG_KEYS.includes("cd_feste"));
   assert.ok(CONFIG_KEYS.includes("cd_testi_sicurezza"));

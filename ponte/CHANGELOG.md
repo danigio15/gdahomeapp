@@ -14,6 +14,24 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.27
+
+- **Allagamenti, la valvola dell'acqua**: negli Avvisi si sceglie la valvola
+  generale (o il relè che la comanda). La tessera dice se l'acqua è aperta o
+  chiusa, e nella sua finestra c'è il tasto per aprirla e chiuderla; con una
+  perdita in corso «Chiudi l'acqua» è il primo tasto, rosso. Chiudere chiede
+  sempre conferma.
+- **Sicurezza, i testi dell'impianto**: ogni testo dice se è lo stato
+  dell'impianto (con lo scudo azzurro) o le anomalie (in ambra); lo stato
+  scorre anche nella tessera Sicurezza della Home, e i testi possono essere
+  fino a quattro. «1 ore fa» ora si legge «1 ora fa».
+- **Salute dopo aver ricollegato il telefono**: il telefono che ne sostituisce
+  un altro della stessa persona riprende i suoi sensori, con lo storico, e il
+  nome resta quello di prima. Chi li aveva persi li ritrova da solo dopo
+  l'aggiornamento.
+- **Salute, misure nuove**: variabilità del battito (HRV), frequenza del
+  respiro e temperatura della pelle arrivano in Home Assistant come sensori.
+
 ## 1.19.26
 
 - **Home, il riquadro delle luci**: diventa una scena disegnata in cui ogni

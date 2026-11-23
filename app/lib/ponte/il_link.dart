@@ -34,6 +34,10 @@ const String schemaDeiLink = 'gdahome';
 /// Il link che collega una casa: `gdahome://collega?invito=…`.
 const String linkDelCollega = 'collega';
 
+/// Il ritorno dal consenso di WHOOP: `gdahome://whoop?code=…&state=…`
+/// (`salute/whoop/collegamento_whoop.dart`).
+const String linkDiWhoop = 'whoop';
+
 /// Quello che c'era dentro un link.
 sealed class LinkLetto {
   const LinkLetto();
@@ -43,6 +47,13 @@ sealed class LinkLetto {
 final class InvitoDalLink extends LinkLetto {
   const InvitoDalLink(this.invito);
   final Invito invito;
+}
+
+/// Il ritorno da WHOOP: lo controlla e lo usa il collegamento WHOOP, che
+/// sa se l'aveva chiesto lui (lo `state`). Qui non si guarda dentro.
+final class RitornoDaWhoop extends LinkLetto {
+  const RitornoDaWhoop(this.link);
+  final Uri link;
 }
 
 /// Un link nostro, ma che non si legge: lo si dice, e non si fa niente.
@@ -58,6 +69,8 @@ final class LinkIllegibile extends LinkLetto {
 /// per noi.
 LinkLetto? leggiIlLink(Uri link) {
   if (link.scheme.toLowerCase() != schemaDeiLink) return null;
+
+  if (link.host.toLowerCase() == linkDiWhoop) return RitornoDaWhoop(link);
 
   if (link.host.toLowerCase() != linkDelCollega) {
     return LinkIllegibile(
