@@ -8,6 +8,19 @@ i suoi in `ponte/CHANGELOG.md`, ed è quello che Home Assistant fa vedere. Un
 rilascio dell'app non fa comparire un aggiornamento dell'add-on, e al
 contrario.
 
+## 1.19.27
+
+- **Navigatore, vista «Corsie» sotto i cavalcavia**: il ponte che passa
+  sopra l'auto resta visibile in trasparenza, invece di sparire tagliato di
+  netto.
+- **Navigatore, i rettilinei prima di un ponte**: il percorso resta pieno e
+  la freccia arancione, senza diventare tratteggiato come se qualcosa li
+  coprisse.
+- **Navigatore, le ferrovie**: i binari sollevati poggiano su un rilevato,
+  non restano sospesi nel vuoto.
+- **Navigatore, il riquadro della manovra**: senza la sfocatura sopra la
+  mappa, che su Android rallentava la guida.
+
 ## 1.19.26
 
 - **Novità**: dopo ogni aggiornamento l'app mostra una volta cosa è
