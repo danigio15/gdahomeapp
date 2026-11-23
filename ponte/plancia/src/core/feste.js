@@ -231,6 +231,81 @@ export function eUnaLuceDiNatale(entity) {
 const NOME_AL_MASSIMO = 40;
 const ICONA_AL_MASSIMO = 8;
 
+/* ── che cosa sono ────────────────────────────────────────────────────────── */
+
+/* Cosa illumina una luce: e' quello che il riquadro in Home disegna. L'albero
+ * e' l'abete coi festoni, il presepe la capanna con la Nativita', il balcone
+ * le lucine fuori dalla casa (la grondaia, la tenda, la ringhiera), la
+ * finestra le candele dietro i vetri, la stella la cometa in cielo, e la
+ * ghirlanda una catena di lucine qualunque, tesa fra due pali in giardino. */
+export const TIPI_DELLE_LUCI = Object.freeze([
+  "albero",
+  "presepe",
+  "balcone",
+  "finestra",
+  "stella",
+  "ghirlanda",
+]);
+
+/* Le parole da cui si indovina il tipo, nell'ordine in cui si cercano: il
+ * primo che risponde vince. «Stella cometa del presepe» e' il presepe, che
+ * viene prima; «luci del balcone» il balcone, anche se c'e' una finestra
+ * accanto. Si cerca nel nome scelto, in quello di Home Assistant e
+ * nell'entita', senza accenti e senza maiuscole. */
+const TIPI_DALLE_PAROLE = Object.freeze([
+  ["albero", ["albero", "abete", "tree"]],
+  ["presepe", ["presep", "nativit", "capanna", "grotta", "crib"]],
+  [
+    "balcone",
+    [
+      "balcon",
+      "estern",
+      "grond",
+      "terrazz",
+      "facciat",
+      "tetto",
+      "portico",
+      "ghiaccio",
+      "tenda luminosa",
+      "outdoor",
+      "eaves",
+      "porch",
+      "icicle",
+    ],
+  ],
+  ["finestra", ["finestr", "vetrin", "davanzal", "candel", "window", "candle"]],
+  ["stella", ["stella", "cometa", "star"]],
+]);
+
+/* Senza parole, l'icona scelta a volte basta: l'abete e' l'albero, una
+ * candela sta alla finestra, la casa sono le luci fuori. */
+const TIPI_DALLE_ICONE = Object.freeze({
+  "🎄": "albero",
+  "🌟": "stella",
+  "⭐": "stella",
+  "🕯️": "finestra",
+  "🕯": "finestra",
+  "🏠": "balcone",
+});
+
+/**
+ * Il tipo di una luce quando chi l'ha messa non l'ha scelto: dal nome, poi
+ * dall'icona; se niente dice niente, una ghirlanda. `nome` e' quello di Home
+ * Assistant, se si sa.
+ */
+export function tipoIndovinato(luce, nome = "") {
+  const piatto = appiattita(`${clean(luce?.nome)} ${clean(nome)} ${clean(luce?.entity)}`);
+  for (const [tipo, parole] of TIPI_DALLE_PAROLE)
+    if (parole.some((parola) => piatto.includes(parola))) return tipo;
+  return TIPI_DALLE_ICONE[clean(luce?.icona)] || "ghirlanda";
+}
+
+/** Il tipo di questa luce: quello scelto, o quello che si indovina. */
+export function tipoDellaLuce(luce, nome = "") {
+  const scelto = clean(luce?.tipo).toLowerCase();
+  return TIPI_DELLE_LUCI.includes(scelto) ? scelto : tipoIndovinato(luce, nome);
+}
+
 function lucePulita(grezza) {
   const sorgente = typeof grezza === "string" ? { entity: grezza } : grezza;
   if (!sorgente || typeof sorgente !== "object") return null;
@@ -239,8 +314,12 @@ function lucePulita(grezza) {
   const luce = { entity };
   const nome = clean(sorgente.nome).slice(0, NOME_AL_MASSIMO);
   const icona = [...clean(sorgente.icona)].slice(0, ICONA_AL_MASSIMO).join("");
+  const tipo = clean(sorgente.tipo).toLowerCase();
   if (nome) luce.nome = nome;
   if (icona) luce.icona = icona;
+  /* Il tipo si tiene solo se e' scelto e buono: quando manca lo si indovina
+   * a ogni lettura (`tipoDellaLuce`), col nome che Home Assistant da' oggi. */
+  if (TIPI_DELLE_LUCI.includes(tipo)) luce.tipo = tipo;
   return luce;
 }
 
@@ -248,7 +327,7 @@ function lucePulita(grezza) {
  * La configurazione delle luci di Natale, ripulita:
  *
  * ```
- * { luci: [{ entity, nome?, icona? }],
+ * { luci: [{ entity, nome?, icona?, tipo? }],
  *   accendi: { tipo: "tramonto"|"ora", ora: "17:00", scarto: 0 },
  *   spegni: { ora: "23:30" },
  *   giorni: [0..6] }         // come `Date#getDay`: 0 e' domenica
@@ -378,12 +457,21 @@ export const ICONE_DELLE_LUCI = Object.freeze([
   "🏠",
 ]);
 
+/* Quando il nome non dice niente ma il tipo e' scelto, l'icona del tipo. */
+const ICONE_DEI_TIPI = Object.freeze({
+  albero: "🎄",
+  presepe: "⭐",
+  balcone: "🏠",
+  finestra: "🕯️",
+  stella: "🌟",
+});
+
 /** L'icona da mostrare per questa luce. */
 export function iconaDellaLuce(luce, nome = "") {
   if (clean(luce?.icona)) return clean(luce.icona);
   const piatto = appiattita(`${clean(luce?.nome)} ${clean(nome)} ${clean(luce?.entity)}`);
   for (const [parola, icona] of ICONE_DAL_NOME) if (piatto.includes(parola)) return icona;
-  return "✨";
+  return ICONE_DEI_TIPI[clean(luce?.tipo)] || "✨";
 }
 
 /* ── gli orari ────────────────────────────────────────────────────────────── */

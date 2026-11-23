@@ -72,9 +72,25 @@ import {
   vistaDelMeteo,
 } from "./meteo-section.js";
 import { oggettoWidget } from "../core/oggetti-widget.js";
-import { CHIAVE_FESTE } from "../core/feste.js";
+import { CHIAVE_FESTE, festePulite, luciAccese } from "../core/feste.js";
+import { cieloDellaScena } from "../core/scena-delle-luci.js";
+import {
+  DURATA_DEL_MOMENTO,
+  ilToccoSveglia,
+  luciSullaPlancia,
+  momentoDellAccensione,
+  riposoDelleFeste,
+} from "../core/le-luci-al-muro.js";
+import {
+  animaLeLuciAlMuro,
+  chiamateDelToccoAlMuro,
+  fasciaDelleLuci,
+  scenaDaTenere,
+  stileDelleLuciAlMuro,
+} from "./le-luci-al-muro.js";
 import {
   animaLeFeste,
+  festaSullaCornice,
   fermaLeFeste,
   passaSopraLaNotte,
   riposoDeiFuochi,
@@ -928,7 +944,91 @@ function menuLaterale(muro) {
  * anteprima nel config. */
 function paginaIntera(pagina, muro) {
   const lato = menuDiLato(muro, state.verso, state.compatto);
-  return `<div class="mu-pagina mu-pag-${pagina.modello}${lato ? " mu-con-lato" : ""}">${lato ? menuLaterale(muro) : ""}${testa(pagina, muro)}${corpoDellaPagina(pagina)}</div>`;
+  const luci = fasciaDellaPagina(pagina, muro);
+  return `<div class="mu-pagina mu-pag-${pagina.modello}${lato ? " mu-con-lato" : ""}${luci ? " mu-con-luci" : ""}">${lato ? menuLaterale(muro) : ""}${testa(pagina, muro)}${corpoDellaPagina(pagina)}${luci}</div>`;
+}
+
+/* ── le luci di casa (`le-luci-al-muro.js`) ─────────────────────────────────
+ *
+ * La configurazione e' quella della plancia di origine, come il resto. Sulla
+ * prima pagina, sotto le sue righe, la fascia con la scena e i tocchi; sul
+ * riposo la scena a tutto schermo; e quando le luci si accendono col tablet a
+ * riposo, di sera, il momento dell'accensione. */
+const lucine = { prima: null, sera: "", fino: 0, timer: 0 };
+const configDelleLuci = () => festePulite(state.fonte?.feste ?? readJson(CHIAVE_FESTE, null));
+const nelMomento = () => Date.now() < lucine.fino;
+
+function fasciaDellaPagina(pagina, muro) {
+  if (anteprimaInCorso || pagina !== muro.pagine[0]) return "";
+  const config = configDelleLuci();
+  if (!luciSullaPlancia(new Date(), config)) return "";
+  for (const l of config.luci) segna(l.entity);
+  return fasciaDelleLuci({
+    config,
+    states: allStates() || {},
+    condizione: meteo()?.condizione || "",
+    compatto: state.compatto,
+  });
+}
+
+/* A ogni disegno: si guardano le luci (i loro cambi ridisegnano sempre, cosi'
+ * il conto di prima e' quello vero) e si decide se comincia il momento
+ * dell'accensione. Il momento non tocca il riposo ne' il tocco: lo schermo
+ * torna pieno (`regolaLaLuce`), l'app riaccende lo schermo se l'aveva spento,
+ * e dopo i suoi secondi un disegno rimette tutto com'era. */
+function guardaLeLuci(muro) {
+  const config = configDelleLuci();
+  if (!config.luci.length) {
+    lucine.prima = null;
+    return false;
+  }
+  for (const l of config.luci) segna(l.entity);
+  const adesso = new Date();
+  const stati = allStates() || {};
+  const { accese, note } = luciAccese(config, (e) => stati[e]);
+  const cielo = cieloDellaScena({ stati, condizione: meteo()?.condizione || "", adesso });
+  const decisione = momentoDellAccensione({
+    prima: lucine.prima,
+    accese,
+    note,
+    riposo: state.riposo,
+    conLeLuci:
+      riposoDelleFeste({
+        momento: scenaDelleFeste(adesso),
+        stile: stileDelRiposo(muro.riposo, fotoDelRiposo(muro).length),
+        config,
+      }) === "luci",
+    notte: muro.luce?.attiva ? Boolean(luce.notte) : eNotte(muro),
+    fase: cielo.fase,
+    mattina: cielo.mattina,
+    adesso,
+    fatta: lucine.sera,
+  });
+  lucine.prima = note ? accese : null;
+  if (!decisione.mostra) return false;
+  lucine.sera = decisione.sera;
+  lucine.fino = Date.now() + DURATA_DEL_MOMENTO;
+  root.clearTimeout?.(lucine.timer);
+  lucine.timer = root.setTimeout?.(() => disegna(), DURATA_DEL_MOMENTO + 50) || 0;
+  svegliaLoSchermo();
+  return true;
+}
+
+/* Un tocco sulle luci: «Spegni tutte» del riposo (che non sveglia), «Spegni
+ * o Accendi tutte» della fascia, una cosa della scena. */
+function toccaLeLuci(bersaglio, event) {
+  const chiamate = chiamateDelToccoAlMuro(bersaglio, configDelleLuci(), allStates() || {});
+  if (!chiamate) return false;
+  event.preventDefault?.();
+  event.stopPropagation?.();
+  if (ilToccoSveglia({ riposo: state.riposo, fa: bersaglio.dataset.muFa })) tocco();
+  for (const c of chiamate) comanda(c.domain, c.service, c.data);
+  bersaglio.classList.add("in-attesa");
+  if (bersaglio.classList.contains("sc-cosa")) {
+    bersaglio.classList.add("toccata");
+    root.setTimeout?.(() => bersaglio.classList.remove("toccata"), 240);
+  }
+  return true;
 }
 
 const STATI_DELL_ALLARME = () => ({
@@ -4141,8 +4241,12 @@ function riposo(muro) {
   const aperte = finestreAperte().length;
   /* Nelle feste, il resto del riposo e' la Vigilia: le stesse cose — l'ora,
    * il tempo, i gradi in casa, le finestre aperte, gli avvisi — sopra la
-   * scena col bosco e la baita. Il nero della notte, qui sopra, resta nero. */
-  if (festa === "vigilia")
+   * scena col bosco e la baita, o sopra la scena delle luci di casa. Il nero
+   * della notte, qui sopra, resta nero. Chi ha scelto la «Cornice foto»
+   * tiene le sue foto (`riposoDelleFeste`). */
+  const stile = stileDelRiposo(muro.riposo, fotoDelRiposo(muro).length);
+  const delleFeste = riposoDelleFeste({ momento: festa, stile, config: configDelleLuci() });
+  if (delleFeste === "luci" || delleFeste === "vigilia")
     return riposoDellaVigilia({
       ora: o.ora,
       lungo: o.lungo,
@@ -4166,6 +4270,7 @@ function riposo(muro) {
       states: allStates() || {},
       deriva: d,
       fioco: notte && !muro.luce?.attiva,
+      momento: nelMomento(),
     });
   const meteoDetto =
     m && soloCasa && PAROLE_DEL_METEO()[m.condizione]
@@ -4183,7 +4288,6 @@ function riposo(muro) {
   const tocca = `<div class="mu-et mu-tocca">${esc(t("Tocca per i comandi", "Tap for controls"))}</div>`;
   /* Lo stile del riposo (`core/il-riposo-vivo.js`): il cielo di casa, o la
    * cornice con le foto del ponte — che senza foto e' il cielo. */
-  const stile = stileDelRiposo(muro.riposo, fotoDelRiposo(muro).length);
   if (stile === "foto")
     return riposoDellaCornice({
       ora: o.ora,
@@ -4197,6 +4301,15 @@ function riposo(muro) {
       pila: pilaDelRiposo(muro),
       deriva: d,
       minimo: alMinimo,
+      festa:
+        delleFeste === "cornice"
+          ? festaSullaCornice({
+              feste: state.fonte?.feste ?? readJson(CHIAVE_FESTE, null),
+              states: allStates() || {},
+              deriva: d,
+              minimo: alMinimo,
+            })
+          : null,
     });
   if (stile === "cielo") {
     /* Il cielo legge il sole di casa (`sun.sun`) e, per stimarlo quando
@@ -4987,7 +5100,11 @@ function regolaLaLuce() {
   /* L'ultima ora dell'anno e i fuochi si guardano: lo schermo resta alla
    * luce di chi e' vicino, anche se di notte sarebbe al minimo. */
   const festa = passaSopraLaNotte(scenaDelleFeste(new Date(adesso)));
-  const livello = livelloDellaLuce(muro, { vicino: Boolean(fonte) || festa, notte: luce.notte });
+  /* E il momento dell'accensione delle luci: si guarda, per pochi secondi. */
+  const livello = livelloDellaLuce(muro, {
+    vicino: Boolean(fonte) || festa || nelMomento(),
+    notte: luce.notte,
+  });
   const detta = livello === null ? null : String(livello);
   if (detta !== luce.detta) {
     mandaAlloSchermo(`luce:${detta ?? "no"}`);
@@ -5185,6 +5302,7 @@ export function disegna() {
   raccolta = { ids: new Set(), domini: new Set() };
   let corpo = "";
   try {
+    if (guardaLeLuci(muro)) regolaLaLuce();
     corpo = state.riposo ? riposo(muro) : `${paginaIntera(pagina, muro)}${finestra()}`;
     corpo += avvisoGrande();
     corpo += pillolaDellaLuce(muro);
@@ -5226,6 +5344,12 @@ export function disegna() {
   rimettiLaVoce(nodo);
   if (state.riposo) posizionaIlRiposo(nodo);
   animaLeFeste(nodo, { ridisegna: () => disegna() });
+  animaLeLuciAlMuro(nodo, {
+    feste: state.fonte?.feste ?? readJson(CHIAVE_FESTE, null),
+    states: allStates() || {},
+    condizione: meteo()?.condizione || "",
+    momento: state.riposo && nelMomento(),
+  });
   animaIlRiposoVivo(nodo);
   /* «Tieni lo schermo acceso»: con un campanello che puo' suonare, lo schermo
    * non si spegne da solo — di notte resta al minimo. */
@@ -5267,8 +5391,9 @@ function posizionaIlRiposo(nodo) {
 /* Nel ridisegno, la telecamera e la copertina che ci sono gia' restano
  * quelle: col loro fotogramma, senza ricaricarsi. */
 function siTiene(vecchio, nuovo) {
-  /* E le tele delle feste, col loro disegno. */
+  /* E le tele delle feste, col loro disegno, e la scena delle luci. */
   if (teleDaTenere(vecchio, nuovo)) return true;
+  if (scenaDaTenere(vecchio, nuovo)) return true;
   /* E quelle del riposo vivo: il cielo dipinto e la cornice con la sua foto. */
   if (teleDelRiposoVivo(vecchio, nuovo)) return true;
   if (vecchio.nodeName !== "IMG") return false;
@@ -5532,6 +5657,10 @@ function cifra(k) {
 }
 
 function onClick(event) {
+  const luci = event.target?.closest?.(
+    '[data-mu-fa="luci-quiete"],[data-mu-fa="luci-tutte"],[data-mu-luci] [data-feste-entita]',
+  );
+  if (luci && toccaLeLuci(luci, event)) return;
   tocco();
   const linguettaClima = event.target?.closest?.("[data-mu-zona]");
   if (linguettaClima) {
@@ -5933,6 +6062,10 @@ function percentualeDalDito(event, barra, verticale, minimo = 1) {
 }
 
 function onPointerDown(event) {
+  /* «Spegni tutte» sul riposo non sveglia: il dito che lo preme non e'
+   * qualcuno che vuole il pannello, e la luce dello schermo non sale. */
+  const quieto = event.target?.closest?.("[data-mu-fa]");
+  if (quieto && !ilToccoSveglia({ riposo: state.riposo, fa: quieto.dataset.muFa })) return;
   tocco();
   /* Un tocco vale come «qualcuno vicino»: la luce sale subito, al dito, non
    * al disegno che segue. */
@@ -7974,6 +8107,7 @@ ${MURO}[data-verso="verticale"] .mu-reg-coppie{grid-template-columns:repeat(auto
 #${ID}[data-leggero="1"] .mu-velo{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(5,8,15,.8)}
 #${ID}[data-leggero="1"] *,#${ID}[data-leggero="1"] *::before,#${ID}[data-leggero="1"] *::after{transition:none!important}
 ${stileDelleFesteAlMuro(MURO)}
+${stileDelleLuciAlMuro(MURO)}
 ${stileDelRiposoVivo(MURO)}
 `,
   );

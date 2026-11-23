@@ -36,6 +36,9 @@ import {
   memoriaPulita,
   momentoDelMuro,
   oraPulita,
+  TIPI_DELLE_LUCI,
+  tipoDellaLuce,
+  tipoIndovinato,
   tramontoDelGiorno,
 } from "../src/core/feste.js";
 import { CONFIG_KEYS } from "../src/core/chiavi-di-configurazione.js";
@@ -158,7 +161,7 @@ test("la configurazione ripulita: valori di serie, entita' buone, otto al massim
   const piena = festePulite(
     JSON.stringify({
       luci: [
-        { entity: "switch.presa_albero", nome: " Albero ", icona: "🎄" },
+        { entity: "switch.presa_albero", nome: " Albero ", icona: "🎄", tipo: "albero" },
         { entity: "switch.presa_albero" },
         { entity: "sensor.temperatura" },
         "light.presepe",
@@ -171,7 +174,12 @@ test("la configurazione ripulita: valori di serie, entita' buone, otto al massim
     }),
   );
   assert.equal(piena.luci.length, LUCI_AL_MASSIMO);
-  assert.deepEqual(piena.luci[0], { entity: "switch.presa_albero", nome: "Albero", icona: "🎄" });
+  assert.deepEqual(piena.luci[0], {
+    entity: "switch.presa_albero",
+    nome: "Albero",
+    icona: "🎄",
+    tipo: "albero",
+  });
   assert.deepEqual(piena.luci[1], { entity: "light.presepe" });
   assert.deepEqual(piena.accendi, { tipo: "ora", ora: "07:05", scarto: 120 });
   assert.deepEqual(piena.spegni, { ora: "23:30" });
@@ -199,6 +207,56 @@ test("le luci proposte: quelle di casa che sembrano di Natale", () => {
   assert.equal(iconaDellaLuce({ entity: "light.presepe" }), "⭐");
   assert.equal(iconaDellaLuce({ entity: "light.x", icona: "🔔" }), "🔔");
   assert.equal(iconaDellaLuce({ entity: "light.balcone" }), "✨");
+  assert.equal(iconaDellaLuce({ entity: "switch.presa_1", tipo: "albero" }), "🎄");
+});
+
+/* ── il tipo ────────────────────────────────────────────────────────────── */
+
+test("il tipo di una luce: si tiene se e' scelto e buono, se no si lascia", () => {
+  const config = festePulite({
+    luci: [
+      { entity: "switch.presa_1", tipo: "presepe" },
+      { entity: "switch.presa_2", tipo: "Balcone" },
+      { entity: "switch.presa_3", tipo: "astronave" },
+      { entity: "switch.presa_4" },
+    ],
+  });
+  assert.equal(config.luci[0].tipo, "presepe");
+  assert.equal(config.luci[1].tipo, "balcone", "senza maiuscole");
+  assert.equal("tipo" in config.luci[2], false, "un tipo che non c'e' si butta");
+  assert.equal("tipo" in config.luci[3], false, "quello che manca non si inventa nel deposito");
+  assert.deepEqual(TIPI_DELLE_LUCI, [
+    "albero",
+    "presepe",
+    "balcone",
+    "finestra",
+    "stella",
+    "ghirlanda",
+  ]);
+});
+
+test("il tipo indovinato: dal nome, dal nome di casa, dall'entita', dall'icona", () => {
+  const indovina = (luce, nome) => tipoIndovinato(luce, nome);
+  assert.equal(indovina({ entity: "switch.presa_albero" }), "albero");
+  assert.equal(indovina({ entity: "switch.presa_1", nome: "Abete in sala" }), "albero");
+  assert.equal(indovina({ entity: "light.x" }, "Christmas tree"), "albero");
+  assert.equal(indovina({ entity: "light.presepio" }), "presepe");
+  assert.equal(indovina({ entity: "light.x", nome: "Stella cometa del presepe" }), "presepe");
+  assert.equal(indovina({ entity: "light.striscia_balcone" }), "balcone");
+  assert.equal(indovina({ entity: "light.x", nome: "Luci esterne" }), "balcone");
+  assert.equal(indovina({ entity: "light.x" }, "Grondaia"), "balcone");
+  assert.equal(indovina({ entity: "light.terrazzo_led" }), "balcone");
+  assert.equal(indovina({ entity: "light.x", nome: "Vetrina" }), "finestra");
+  assert.equal(indovina({ entity: "light.candele_finestra" }), "finestra");
+  assert.equal(indovina({ entity: "light.stella" }), "stella");
+  assert.equal(indovina({ entity: "light.x", icona: "🎄" }), "albero");
+  assert.equal(indovina({ entity: "light.x", icona: "🕯️" }), "finestra");
+  assert.equal(indovina({ entity: "light.lucine_scala" }), "ghirlanda");
+  assert.equal(indovina({ entity: "input_boolean.xmas_mode" }), "ghirlanda");
+  /* Quello scelto vince su quello che si indovinerebbe. */
+  assert.equal(tipoDellaLuce({ entity: "light.presepe", tipo: "stella" }), "stella");
+  assert.equal(tipoDellaLuce({ entity: "light.presepe", tipo: "boh" }), "presepe");
+  assert.equal(tipoDellaLuce({ entity: "light.x" }, "Albero di Natale"), "albero");
 });
 
 /* ── gli orari ──────────────────────────────────────────────────────────── */

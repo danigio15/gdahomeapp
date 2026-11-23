@@ -18,10 +18,13 @@
  *  - il CONTO ALLA ROVESCIA nella testata, dal 26 dicembre alla mezzanotte
  *    del 31: una pillola scura con «AL 2027 · 4g 05:17» in oro;
  *  - il riquadro LUCI DI NATALE in Home, sotto la barra dei conteggi, solo se
- *    in configurazione ci sono delle luci: quante sono accese, quando si
- *    spengono, una tessera per luce e «Spegni tutte». Questo NON aspetta le
- *    feste: l'albero si monta prima, e il riquadro c'e' tutto l'anno finche'
- *    non lo si spegne dalla scheda «Luci di Natale» (`riquadro`);
+ *    in configurazione ci sono delle luci: una scena d'inverno dove ogni luce
+ *    e' la cosa vera (l'albero, il presepe, la casa con le lucine fuori: la
+ *    disegna `la-scena-delle-luci.js`, col cielo dell'ora del giorno), e
+ *    accanto quante sono accese, quando si spengono, un interruttore per luce
+ *    e «Spegni tutte». Questo NON aspetta le feste: l'albero si monta prima,
+ *    e il riquadro c'e' tutto l'anno finche' non lo si spegne dalla scheda
+ *    «Luci di Natale» (`riquadro`);
  *  - il primo gennaio, nello stesso posto, gli AUGURI.
  *
  * ── Non deve rallentare la plancia ────────────────────────────────────────
@@ -43,11 +46,17 @@ import {
   eCapodanno,
   entitaDelleLuci,
   festePulite,
-  iconaDellaLuce,
   inFesta,
   intervalloDelGiorno,
   oraDi,
+  tipoDellaLuce,
 } from "../core/feste.js";
+import {
+  chiamateDelTocco,
+  cieloDellaScena,
+  coseDellaScena,
+  etichetteDellaScena,
+} from "../core/scena-delle-luci.js";
 import {
   NeveLeggera,
   disegnaLaGhirlanda,
@@ -56,6 +65,8 @@ import {
   preparaLaTela,
 } from "./disegni-delle-feste.js";
 import { corsiaDegliAvvisi } from "./come-sta-la-casa-section.js";
+import { entitaDelMeteo } from "./la-card-del-meteo-section.js";
+import { cssDellaScena, iconaDelTipo, mettiLaScena } from "./la-scena-delle-luci.js";
 import {
   allStates,
   chiamaServizio,
@@ -64,6 +75,8 @@ import {
   esc,
   ilCambioTocca,
   installStyle,
+  planciaVisibile,
+  quandoSiCambiaPagina,
   readJson,
   root,
   t,
@@ -90,6 +103,11 @@ const state = (root[KEY] ||= {
   /* Le entita' delle luci dell'ultimo disegno: quelle i cui cambi di stato
    * rifanno il riquadro. */
   luci: [],
+  /* Chi guarda se il riquadro delle luci e' sullo schermo, e se lo e'. */
+  osservatore: null,
+  inVista: true,
+  misuratore: null,
+  larghezzaDelRiquadro: 0,
 });
 
 export const configurazioneDelleFeste = () => festePulite(readJson(CHIAVE_FESTE, null));
@@ -115,29 +133,48 @@ function prossimoTramonto(states) {
   return states?.["sun.sun"]?.attributes?.next_setting || null;
 }
 
+/* Un'ora dentro una frase, in grassetto: la frase si scrive intera nella
+ * lingua di chi guarda, e l'ora poi si ritrova e si mette in evidenza. */
+function conLOra(frase, ora) {
+  const testo = esc(frase);
+  return ora ? testo.replace(esc(ora), `<b>${esc(ora)}</b>`) : testo;
+}
+
 /**
- * Le due righe del riquadro: quante sono accese e quando si spengono, poi
- * l'orario di oggi.
+ * Le parole del riquadro: quante sono accese (il titolo) e la riga
+ * dell'orario, gia' in HTML con le ore in grassetto.
  */
-export function righeDelleLuci(config, states, adesso = new Date()) {
+export function paroleDelleLuci(config, states, adesso = new Date()) {
+  const totale = config.luci.length;
   const accese = config.luci.filter((l) => clean(states?.[l.entity]?.state) === "on").length;
-  const spegni = config.spegni.ora;
-  const oggi = intervalloDelGiorno(config, adesso, prossimoTramonto(states));
-  const da = oggi ? oraDi(oggi.inizio) : "";
-  const prima = oggi && adesso.getTime() < oggi.inizio;
   let titolo;
-  if (accese === 1) titolo = t(`1 accesa · si spengono alle ${spegni}`, `1 on · off at ${spegni}`);
-  else if (accese > 1)
-    titolo = t(`${accese} accese · si spengono alle ${spegni}`, `${accese} on · off at ${spegni}`);
-  else if (prima) titolo = t(`Tutte spente · si accendono alle ${da}`, `All off · on at ${da}`);
-  else titolo = t("Tutte spente", "All off");
-  let sotto;
-  if (!oggi)
-    sotto = t("Oggi non si accendono da sole", "They do not switch on by themselves today");
-  else if (config.accendi.tipo === "tramonto" && prossimoTramonto(states))
-    sotto = t(`Dal tramonto (${da}) alle ${spegni}`, `From sunset (${da}) to ${spegni}`);
-  else sotto = t(`Dalle ${da} alle ${spegni}`, `From ${da} to ${spegni}`);
-  return { accese, titolo, sotto };
+  if (!accese) titolo = totale === 1 ? t("Spenta", "Off") : t("Tutte spente", "All off");
+  else if (totale === 1) titolo = t("Accesa", "On");
+  else if (accese === totale) titolo = t("Tutte accese", "All on");
+  else if (accese === 1) titolo = t("1 accesa", "1 on");
+  else titolo = t(`${accese} accese`, `${accese} on`);
+  const spegni = config.spegni.ora;
+  const tramonto = prossimoTramonto(states);
+  const alTramonto = config.accendi.tipo === "tramonto" && Boolean(tramonto);
+  const oggi = intervalloDelGiorno(config, adesso, tramonto);
+  const da = oggi ? oraDi(oggi.inizio) : "";
+  let orario;
+  if (config.automatico === false)
+    orario = esc(t("Si accendono e si spengono a mano", "Switched on and off by hand"));
+  else if (accese) orario = conLOra(t(`Si spengono alle ${spegni}`, `Off at ${spegni}`), spegni);
+  else if (oggi && adesso.getTime() < oggi.inizio)
+    orario = alTramonto
+      ? conLOra(t(`Si accendono al tramonto, alle ${da}`, `On at sunset, at ${da}`), da)
+      : conLOra(t(`Si accendono alle ${da}`, `On at ${da}`), da);
+  else {
+    const domani = new Date(adesso.getFullYear(), adesso.getMonth(), adesso.getDate() + 1);
+    const prossimo = intervalloDelGiorno(config, domani, tramonto);
+    const ora = prossimo ? oraDi(prossimo.inizio) : "";
+    orario = prossimo
+      ? conLOra(t(`Si riaccendono domani alle ${ora}`, `Back on tomorrow at ${ora}`), ora)
+      : esc(t("Oggi non si accendono da sole", "They do not switch on by themselves today"));
+  }
+  return { accese, totale, titolo, orario };
 }
 
 /* ── il riquadro delle luci ─────────────────────────────────────────────── */
@@ -150,37 +187,135 @@ function nomeDellaLuce(luce, states) {
   );
 }
 
-/** Una tessera: l'icona, il nome, acceso o spento. Il tocco l'accende o la spegne. */
-export function tesseraDellaLuce(luce, states) {
-  const valore = clean(states?.[luce.entity]?.state);
-  const accesa = valore === "on";
-  const muta = !valore || valore === "unavailable" || valore === "unknown";
+const nomiDiCasa = (config, states) =>
+  Object.fromEntries(
+    config.luci.map((l) => [l.entity, clean(states?.[l.entity]?.attributes?.friendly_name)]),
+  );
+
+/** Un interruttore: l'icona del tipo, il nome, l'interruttore. */
+export function interruttoreDellaLuce(luce, states) {
   const nome = nomeDellaLuce(luce, states);
-  const stato = muta
-    ? t("Non risponde", "Not responding")
-    : accesa
-      ? t("Acceso", "On")
-      : t("Spento", "Off");
-  return `<button type="button" class="dm-feste-tessera${accesa ? " accesa" : ""}${muta ? " muta" : ""}"
-    data-feste-luce="${esc(luce.entity)}" aria-pressed="${accesa}" title="${esc(nome)}">
-    <span class="dm-feste-tessera-ic" aria-hidden="true">${esc(iconaDellaLuce(luce, nome))}</span>
-    <span class="dm-feste-tessera-tx"><b>${esc(nome)}</b><small>${esc(stato)}</small></span>
+  const tipo = tipoDellaLuce(luce, clean(states?.[luce.entity]?.attributes?.friendly_name));
+  return `<button type="button" class="dm-luci-int" data-feste-luce="${esc(luce.entity)}" aria-pressed="false" title="${esc(nome)}">
+    <span class="dm-luci-int-ic">${iconaDelTipo(tipo, 18)}</span><span class="dm-luci-int-nome">${esc(nome)}</span><i class="dm-luci-int-sw" aria-hidden="true"></i>
   </button>`;
 }
 
-export function riquadroDelleLuci(config, states, adesso = new Date()) {
-  const { accese, titolo, sotto } = righeDelleLuci(config, states, adesso);
-  const tutte = accese > 0 ? "spegni" : "accendi";
-  return `<div class="dm-feste-luci-testo">
-      <div class="dm-feste-cap">${esc(t("Luci di Natale", "Christmas lights"))}</div>
-      <div class="dm-feste-titolo">${esc(titolo)}</div>
-      <div class="dm-feste-sotto">${esc(sotto)}</div>
-    </div>
-    <div class="dm-feste-tessere">${config.luci.map((l) => tesseraDellaLuce(l, states)).join("")}
-      <button type="button" class="dm-feste-tutte" data-feste-tutte="${tutte}">${esc(
-        tutte === "spegni" ? t("Spegni tutte", "Turn all off") : t("Accendi tutte", "Turn all on"),
-      )}</button>
-    </div>`;
+/* I comandi: si scrivono quando cambiano le luci (quali, come si chiamano);
+ * ai cambi di stato si cambiano solo le parole e le classi. */
+function comandiDelleLuci(config, states) {
+  return `<div class="dm-feste-cap">${esc(t("Luci di Natale", "Christmas lights"))}</div>
+    <div class="dm-luci-titolo" aria-live="polite"></div>
+    <div class="dm-luci-orario"></div>
+    <div class="dm-luci-ints">${config.luci.map((l) => interruttoreDellaLuce(l, states)).join("")}</div>
+    <button type="button" class="dm-luci-tutte" data-feste-tutte="accendi"></button>`;
+}
+
+/** Le entita' accese, fra quelle delle luci. */
+export function luciAcceseOra(config, states) {
+  return new Set(
+    config.luci.map((l) => l.entity).filter((e) => clean(states?.[e]?.state) === "on"),
+  );
+}
+
+/** Il cielo di adesso per la scena, col tempo dell'entita' meteo di Home. */
+export function cieloDiCasa(states, adesso = new Date()) {
+  const meteo = entitaDelMeteo(states);
+  return cieloDellaScena({
+    stati: states,
+    condizione: meteo ? states?.[meteo]?.state : "",
+    adesso,
+  });
+}
+
+/* Sotto questa larghezza i comandi scendono sotto la scena. */
+const STRETTO = 700;
+
+function aggiornaIlRiquadro(riquadro, config, states, adesso) {
+  const scena = riquadro.querySelector(".dm-luci-scena");
+  const comandi = riquadro.querySelector(".dm-luci-comandi");
+  if (!scena || !comandi) return;
+  const firmaComandi = JSON.stringify([
+    config.luci,
+    config.luci.map((l) => states?.[l.entity]?.attributes?.friendly_name || ""),
+    t("Luci di Natale", "Christmas lights"),
+  ]);
+  if (comandi.dataset.firma !== firmaComandi) {
+    comandi.dataset.firma = firmaComandi;
+    comandi.innerHTML = comandiDelleLuci(config, states);
+  }
+  const { accese, titolo, orario } = paroleDelleLuci(config, states, adesso);
+  const titoloNodo = comandi.querySelector(".dm-luci-titolo");
+  if (titoloNodo && titoloNodo.textContent !== titolo) titoloNodo.textContent = titolo;
+  const orarioNodo = comandi.querySelector(".dm-luci-orario");
+  if (orarioNodo && orarioNodo.dataset.scritto !== orario) {
+    orarioNodo.dataset.scritto = orario;
+    orarioNodo.innerHTML = orario;
+  }
+  for (const int of comandi.querySelectorAll("[data-feste-luce]")) {
+    const valore = clean(states?.[int.dataset.festeLuce]?.state);
+    const accesa = valore === "on";
+    int.setAttribute("aria-pressed", String(accesa));
+    int.classList.toggle("acceso", accesa);
+    int.classList.toggle("muta", !valore || valore === "unavailable" || valore === "unknown");
+    int.classList.remove("in-attesa");
+  }
+  const tutte = comandi.querySelector("[data-feste-tutte]");
+  if (tutte) {
+    const verso = accese ? "spegni" : "accendi";
+    const parola = accese ? t("Spegni tutte", "Turn all off") : t("Accendi tutte", "Turn all on");
+    tutte.dataset.festeTutte = verso;
+    tutte.classList.toggle("spegni", Boolean(accese));
+    if (tutte.textContent !== parola) tutte.textContent = parola;
+    tutte.classList.remove("in-attesa");
+  }
+  /* La scena: accanto ai comandi sullo schermo largo, sopra sullo stretto. */
+  const stretto = riquadro.clientWidth > 0 && riquadro.clientWidth < STRETTO;
+  riquadro.classList.toggle("stretto", stretto);
+  const cielo = cieloDiCasa(states, adesso);
+  riquadro.dataset.fase = cielo.fase;
+  riquadro.classList.toggle("testo-scuro", stretto ? cielo.pannelloChiaro : cielo.chiaro);
+  riquadro.style.setProperty("--dm-luci-pannello", cielo.colori.pannello);
+  const cose = coseDellaScena(config.luci, nomiDiCasa(config, states));
+  mettiLaScena(scena, {
+    cose,
+    cielo,
+    accese: luciAcceseOra(config, states),
+    etichette: etichetteDellaScena(cose, (e) =>
+      nomeDellaLuce(config.luci.find((l) => l.entity === e) || { entity: e }, states),
+    ),
+    prefisso: "dmlh",
+    da: stretto ? 12 : comandi.offsetLeft + comandi.offsetWidth + 8,
+    riserva: stretto ? 12 : 96,
+    astro: null,
+  });
+}
+
+/* La scena si ferma quando non si vede: fuori dallo schermo, o con la
+ * plancia messa da parte. */
+function osservaIlRiquadro(riquadro) {
+  /* La larghezza cambia anche senza che la finestra cambi (il menu di lato
+   * che si chiude): la scena si ridisegna per la misura nuova. */
+  if (!state.misuratore && root.ResizeObserver) {
+    state.misuratore = new root.ResizeObserver((voci) => {
+      const larga = Math.round(voci[0]?.contentRect?.width || 0);
+      if (larga && larga !== state.larghezzaDelRiquadro) {
+        state.larghezzaDelRiquadro = larga;
+        schedule();
+      }
+    });
+  }
+  state.misuratore?.observe(riquadro);
+  if (state.osservatore || !root.IntersectionObserver) return;
+  state.osservatore = new root.IntersectionObserver((voci) => {
+    for (const voce of voci) {
+      state.inVista = voce.isIntersecting;
+      voce.target
+        .querySelector(".dm-luci-scena")
+        ?.classList.toggle("dm-sc-fermo", !voce.isIntersecting || !planciaVisibile());
+    }
+  });
+  state.osservatore.observe(riquadro);
 }
 
 /* Il posto in Home: sotto la barra dei conteggi, e sotto i testi della
@@ -200,7 +335,11 @@ function mettiDopo(sopra, nodo) {
 function disegnaLeLuciInHome(config, states, adesso) {
   let riquadro = doc.getElementById(ID_LUCI);
   if (!config.luci.length || config.riquadro === false) {
-    riquadro?.remove();
+    if (riquadro) {
+      state.osservatore?.unobserve?.(riquadro);
+      state.misuratore?.unobserve?.(riquadro);
+      riquadro.remove();
+    }
     return false;
   }
   const sopra = postoInHome();
@@ -209,16 +348,16 @@ function disegnaLeLuciInHome(config, states, adesso) {
     riquadro = doc.createElement("section");
     riquadro.id = ID_LUCI;
     riquadro.className = "dm-feste-luci";
-    riquadro.innerHTML = `<canvas class="dm-feste-lucine" aria-hidden="true"></canvas><div class="dm-feste-luci-dentro"></div>`;
+    riquadro.setAttribute("aria-label", t("Luci di Natale", "Christmas lights"));
+    riquadro.innerHTML = `<div class="dm-luci-scena"></div><div class="dm-luci-comandi"></div>`;
   }
   mettiDopo(doc.getElementById(ID_AUGURI) || sopra, riquadro);
-  const dentro = riquadro.querySelector(".dm-feste-luci-dentro");
-  const markup = riquadroDelleLuci(config, states, adesso);
-  if (dentro && dentro.dataset.scritto !== markup) {
-    dentro.dataset.scritto = markup;
-    dentro.innerHTML = markup;
-  }
-  disegnaLeLucineDelRiquadro(riquadro);
+  osservaIlRiquadro(riquadro);
+  if (state.osservatore) state.osservatore.observe(riquadro);
+  aggiornaIlRiquadro(riquadro, config, states, adesso);
+  riquadro
+    .querySelector(".dm-luci-scena")
+    ?.classList.toggle("dm-sc-fermo", !planciaVisibile() || state.inVista === false);
   return true;
 }
 
@@ -458,7 +597,25 @@ function servizio(entity, verso) {
   return { domain: dominio, service: verso, data: { entity_id: entity } };
 }
 
+/* Un tocco su una cosa della scena: l'albero, il presepe, la casa. Accende
+ * o spegne tutte le sue luci, e la cosa si abbassa un attimo sotto il dito. */
+function toccaLaScena(cosa) {
+  const entita = clean(cosa.dataset.festeEntita).split(" ").filter(Boolean);
+  if (!entita.length) return;
+  const states = allStates() || {};
+  for (const chiamata of chiamateDelTocco(entita, (e) => clean(states?.[e]?.state) === "on"))
+    chiamaServizio(chiamata);
+  cosa.classList.add("in-attesa", "toccata");
+  root.setTimeout?.(() => cosa.classList.remove("toccata"), 240);
+}
+
 function onClick(event) {
+  const cosa = event.target?.closest?.(`#${ID_LUCI} [data-feste-entita]`);
+  if (cosa) {
+    event.preventDefault();
+    toccaLaScena(cosa);
+    return;
+  }
   const tessera = event.target?.closest?.(`#${ID_LUCI} [data-feste-luce]`);
   if (tessera) {
     event.preventDefault();
@@ -482,6 +639,15 @@ function onClick(event) {
   tutte.classList.add("in-attesa");
 }
 
+/* Le cose della scena si accendono anche dalla tastiera, come un tasto. */
+function onKeydown(event) {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  const cosa = event.target?.closest?.(`#${ID_LUCI} [data-feste-entita]`);
+  if (!cosa) return;
+  event.preventDefault();
+  toccaLaScena(cosa);
+}
+
 const agganciaIlTema = () => wrapFunction("applyTheme", "__dmFeste", schedule);
 
 export function installFeste() {
@@ -489,6 +655,7 @@ export function installFeste() {
   state.installed = true;
   installStyle(STYLE_ID, css());
   doc.addEventListener("click", onClick);
+  doc.addEventListener("keydown", onKeydown);
   for (const evento of [
     "dashboardmodern:legacy-ready",
     "dashboardmodern:runtime-ready",
@@ -517,6 +684,8 @@ export function installFeste() {
   doc.addEventListener("visibilitychange", () => {
     if (!doc.hidden) schedule();
   });
+  /* Tornando in Home il riquadro riprende misura: la scena si mette allora. */
+  quandoSiCambiaPagina(schedule);
   /* Il tema cambia la ghirlanda: l'oro sul bianco ha bisogno del punto
    * pieno. Il tema lo mette il guscio con `applyTheme` (dai tre tasti, e
    * quando il telefono passa da chiaro a scuro in «automatico»): ci si
@@ -570,55 +739,101 @@ function css() {
       .dm-feste-conto-ic{width:20px;height:20px}
       .dm-feste-conto-n{font-size:14px}}
 
-    /* Il riquadro delle luci di Natale e gli auguri: dal verde del bosco al
-       bordeaux, l'oro nei titoli, le lucine sul bordo alto. */
-    .dm-feste-luci,.dm-feste-auguri{position:relative;overflow:hidden;margin:0 0 14px;padding:22px 26px 20px;
-      border-radius:18px;color:#fff;
+    /* Gli auguri: dal verde del bosco al bordeaux, l'oro nel titolo, le
+       lucine sul bordo alto. */
+    .dm-feste-auguri{position:relative;overflow:hidden;margin:0 0 14px;padding:26px 24px 22px;
+      border-radius:18px;color:#fff;text-align:center;
       background:linear-gradient(120deg,#0c2b1e 0%,#123d2a 45%,#3b0f17 100%);
       box-shadow:0 14px 34px rgba(12,43,30,.28)}
-    html[data-theme="dark"] .dm-feste-luci,html[data-theme="dark"] .dm-feste-auguri{
+    html[data-theme="dark"] .dm-feste-auguri{
       box-shadow:0 0 0 1px rgba(255,214,140,.12),0 14px 34px rgba(0,0,0,.35)}
     .dm-feste-lucine{position:absolute;left:0;top:0;pointer-events:none}
-    .dm-feste-luci-dentro{position:relative;display:flex;align-items:center;gap:18px 26px;flex-wrap:wrap}
-    .dm-feste-luci-testo{flex:1 1 280px;min-width:0}
     .dm-feste-cap{font-size:12px;font-weight:600;letter-spacing:5px;text-transform:uppercase;
       background:linear-gradient(180deg,#fff7d6 0%,#f5d27a 45%,#c9952e 100%);
       -webkit-background-clip:text;background-clip:text;color:transparent;width:max-content;max-width:100%}
-    .dm-feste-titolo{margin-top:8px;font-size:22px;font-weight:600;line-height:1.25}
     .dm-feste-sotto{margin-top:4px;font-size:13px;opacity:.68}
-    .dm-feste-tessere{display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-end;flex:0 1 auto;min-width:0}
-    .dm-feste-tessera{display:flex;align-items:center;gap:10px;width:142px;height:68px;padding:10px 12px;
-      border-radius:16px;cursor:pointer;text-align:left;font:inherit;color:#fff;min-width:0;
-      background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
-      transition:background .25s ease,box-shadow .25s ease,border-color .25s ease}
-    .dm-feste-tessera.accesa{background:rgba(255,214,140,.14);border-color:rgba(255,214,140,.45);
-      box-shadow:0 0 24px rgba(255,190,90,.25),inset 0 0 18px rgba(255,190,90,.12)}
-    .dm-feste-tessera.muta{opacity:.5}
-    .dm-feste-tessera.in-attesa{opacity:.7}
-    .dm-feste-tessera:active{transform:scale(.98)}
-    .dm-feste-tessera:focus-visible,.dm-feste-tutte:focus-visible{outline:2px solid #f5d27a;outline-offset:2px}
-    .dm-feste-tessera-ic{font-size:24px;line-height:1;opacity:.5;flex:0 0 auto}
-    .dm-feste-tessera.accesa .dm-feste-tessera-ic{opacity:1;filter:drop-shadow(0 0 8px rgba(255,200,110,.8))}
-    .dm-feste-tessera-tx{display:grid;min-width:0}
-    .dm-feste-tessera-tx b{font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .dm-feste-tessera-tx small{font-size:12px;opacity:.55}
-    .dm-feste-tessera.accesa .dm-feste-tessera-tx small{opacity:1;color:#fcd88a}
-    .dm-feste-tutte{height:68px;padding:0 18px;border:0;border-radius:16px;cursor:pointer;font:inherit;
-      font-weight:700;font-size:13.5px;background:rgba(255,255,255,.95);color:#0c2b1e;white-space:nowrap}
-    .dm-feste-tutte.in-attesa{opacity:.7}
-    .dm-feste-auguri{text-align:center;padding:26px 24px 22px}
     .dm-feste-auguri .dm-feste-cap{margin:0 auto}
     .dm-feste-auguri-titolo{margin-top:8px;font-family:"Inter Display",Inter,sans-serif;font-weight:200;
       font-size:44px;letter-spacing:-1px;line-height:1.05;
       background:linear-gradient(180deg,#fff7d6 0%,#f5d27a 45%,#c9952e 100%);
       -webkit-background-clip:text;background-clip:text;color:transparent}
-    @media (max-width:700px){
-      .dm-feste-luci{padding:20px 16px 16px}
-      .dm-feste-titolo{font-size:19px}
-      .dm-feste-tessere{display:grid;grid-template-columns:1fr 1fr;width:100%;gap:10px}
-      .dm-feste-tessera{width:auto;height:60px}
-      .dm-feste-tutte{grid-column:1/-1;height:48px}
-      .dm-feste-auguri-titolo{font-size:32px}}
-    @media (prefers-reduced-motion:reduce){.dm-feste-tessera{transition:none}}
+    @media (max-width:700px){.dm-feste-auguri-titolo{font-size:32px}}
+
+    /* Il riquadro delle luci: la scena d'inverno sul fondo, i comandi a
+       sinistra sopra un velo che li fa leggere (scuro sul cielo di notte,
+       chiaro su quello di giorno). Sullo stretto la scena sta sopra e i
+       comandi sotto, su un fondo del colore della scena. */
+    ${cssDellaScena(`#${ID_LUCI} .dm-luci-scena`)}
+    #${ID_LUCI}{position:relative;overflow:hidden;margin:0 0 14px;min-height:300px;border-radius:22px;
+      color:#fff;background:var(--dm-luci-pannello,#0d1838);isolation:isolate;
+      box-shadow:0 18px 40px rgba(8,20,40,.24);-webkit-tap-highlight-color:transparent}
+    html[data-theme="dark"] #${ID_LUCI}{box-shadow:0 0 0 1px rgba(255,255,255,.06),0 18px 40px rgba(0,0,0,.45)}
+    #${ID_LUCI} .dm-luci-scena{position:absolute;inset:0;z-index:0}
+    #${ID_LUCI} .dm-luci-scena::after{content:"";position:absolute;inset:0;pointer-events:none;
+      background:linear-gradient(90deg,rgba(5,11,32,.74) 0,rgba(5,11,32,.46) 300px,rgba(5,11,32,0) 540px)}
+    #${ID_LUCI}.testo-scuro .dm-luci-scena::after{
+      background:linear-gradient(90deg,rgba(247,250,255,.86) 0,rgba(247,250,255,.55) 300px,rgba(247,250,255,0) 540px)}
+    #${ID_LUCI} .sc-cosa{transition:transform .2s ease;transform-box:fill-box;transform-origin:50% 100%}
+    #${ID_LUCI} .sc-cosa.toccata{transform:scale(.97)}
+    #${ID_LUCI} .dm-luci-comandi{position:relative;z-index:2;width:min(430px,44%);padding:30px 0 28px 34px;
+      pointer-events:none}
+    #${ID_LUCI} .dm-luci-comandi>*{pointer-events:auto}
+    #${ID_LUCI} .dm-feste-cap{font-weight:700;letter-spacing:.34em}
+    #${ID_LUCI} .dm-luci-titolo{margin-top:8px;font-size:32px;font-weight:700;line-height:1.08;letter-spacing:-.6px;
+      text-shadow:0 2px 16px rgba(0,0,0,.4)}
+    #${ID_LUCI} .dm-luci-orario{margin-top:6px;font-size:14px;font-weight:500;color:#d3def2;line-height:1.4}
+    #${ID_LUCI} .dm-luci-orario b{color:#ffdf9e;font-weight:700}
+    #${ID_LUCI} .dm-luci-ints{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+    #${ID_LUCI} .dm-luci-int{display:inline-flex;align-items:center;gap:8px;height:40px;max-width:100%;min-width:0;
+      padding:0 10px;border-radius:13px;border:1px solid rgba(255,255,255,.16);background:rgba(10,20,45,.62);
+      color:#fff;font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;
+      transition:background .3s ease,border-color .3s ease,box-shadow .3s ease}
+    #${ID_LUCI} .dm-luci-int-ic{display:grid;place-items:center;flex:none;color:rgba(255,255,255,.82)}
+    #${ID_LUCI} .dm-luci-int-nome{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    #${ID_LUCI} .dm-luci-int-sw{position:relative;flex:none;width:30px;height:18px;border-radius:99px;
+      background:rgba(255,255,255,.24);transition:background .25s ease}
+    #${ID_LUCI} .dm-luci-int-sw::after{content:"";position:absolute;top:3px;left:3px;width:12px;height:12px;
+      border-radius:50%;background:#fff;transition:transform .25s ease;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+    #${ID_LUCI} .dm-luci-int.acceso{border-color:rgba(255,214,140,.62);background:rgba(92,62,12,.6);
+      box-shadow:0 0 20px rgba(255,190,90,.22)}
+    #${ID_LUCI} .dm-luci-int.acceso .dm-luci-int-sw{background:#f0b65a}
+    #${ID_LUCI} .dm-luci-int.acceso .dm-luci-int-sw::after{transform:translateX(12px)}
+    #${ID_LUCI} .dm-luci-int.muta{opacity:.55}
+    #${ID_LUCI} .dm-luci-int.in-attesa,#${ID_LUCI} .dm-luci-tutte.in-attesa{opacity:.7}
+    #${ID_LUCI} .dm-luci-tutte{display:inline-flex;align-items:center;margin-top:14px;height:44px;padding:0 20px;
+      border-radius:14px;border:1px solid transparent;font:inherit;font-size:14.5px;font-weight:700;cursor:pointer;
+      background:linear-gradient(180deg,#ffe6ae,#eeb054);color:#3a2408;
+      box-shadow:0 10px 24px rgba(240,182,90,.32),inset 0 1px 0 rgba(255,255,255,.65);
+      transition:background .3s ease,box-shadow .3s ease}
+    #${ID_LUCI} .dm-luci-tutte.spegni{background:rgba(10,20,45,.62);color:#fff;border-color:rgba(255,255,255,.22);box-shadow:none}
+    #${ID_LUCI} .dm-luci-int:focus-visible,#${ID_LUCI} .dm-luci-tutte:focus-visible{outline:2px solid #f5d27a;outline-offset:2px}
+    #${ID_LUCI} .dm-luci-int:active,#${ID_LUCI} .dm-luci-tutte:active{transform:scale(.97)}
+
+    /* Sul cielo chiaro (o sul fondo chiaro dello stretto) il testo e' scuro. */
+    #${ID_LUCI}.testo-scuro{color:#12213d}
+    #${ID_LUCI}.testo-scuro .dm-feste-cap{background:none;color:#946210}
+    #${ID_LUCI}.testo-scuro .dm-luci-titolo{text-shadow:none}
+    #${ID_LUCI}.testo-scuro .dm-luci-orario{color:#3a4864}
+    #${ID_LUCI}.testo-scuro .dm-luci-orario b{color:#875400}
+    #${ID_LUCI}.testo-scuro .dm-luci-int{background:rgba(255,255,255,.8);border-color:rgba(20,40,80,.14);color:#14233f}
+    #${ID_LUCI}.testo-scuro .dm-luci-int-ic{color:#40506e}
+    #${ID_LUCI}.testo-scuro .dm-luci-int-sw{background:rgba(20,40,80,.2)}
+    #${ID_LUCI}.testo-scuro .dm-luci-int.acceso{background:#fff3d6;border-color:#e3ad4f;box-shadow:0 4px 14px rgba(227,173,79,.25)}
+    #${ID_LUCI}.testo-scuro .dm-luci-int.acceso .dm-luci-int-sw{background:#e8a63a}
+    #${ID_LUCI}.testo-scuro .dm-luci-tutte.spegni{background:rgba(255,255,255,.82);color:#14233f;border-color:rgba(20,40,80,.16)}
+
+    /* Lo stretto: la scena sopra, i comandi sotto. */
+    #${ID_LUCI}.stretto{min-height:0;display:flex;flex-direction:column}
+    #${ID_LUCI}.stretto .dm-luci-scena{position:relative;inset:auto;flex:none;height:clamp(176px,50vw,240px)}
+    #${ID_LUCI}.stretto .dm-luci-scena::after{background:linear-gradient(180deg,rgba(0,0,0,0) 78%,var(--dm-luci-pannello,#0d1838) 100%)}
+    #${ID_LUCI}.stretto .dm-luci-comandi{width:auto;padding:14px 16px 18px}
+    #${ID_LUCI}.stretto .dm-luci-titolo{font-size:26px}
+    #${ID_LUCI}.stretto .dm-luci-ints{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    #${ID_LUCI}.stretto .dm-luci-int{height:44px}
+    #${ID_LUCI}.stretto .dm-luci-int-sw{margin-left:auto}
+    #${ID_LUCI}.stretto .dm-luci-tutte{width:100%;justify-content:center;height:46px}
+    @media (prefers-reduced-motion:reduce){
+      #${ID_LUCI} .dm-luci-int,#${ID_LUCI} .dm-luci-int-sw,#${ID_LUCI} .dm-luci-int-sw::after,
+      #${ID_LUCI} .dm-luci-tutte,#${ID_LUCI} .sc-cosa{transition:none}}
   `;
 }

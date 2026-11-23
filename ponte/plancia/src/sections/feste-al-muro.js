@@ -49,6 +49,7 @@ import {
 import {
   Fuochi,
   NeveATreStrati,
+  NeveLeggera,
   disegnaIFuochiFermi,
   disegnaIlFondoDeiFuochi,
   disegnaIlFondoDelConto,
@@ -57,6 +58,8 @@ import {
   giraIFotogrammi,
   preparaLaTela,
 } from "./disegni-delle-feste.js";
+import { fiocchiSulRiposo } from "../core/le-luci-al-muro.js";
+import { annuncioDelleLuci, luciQuiete, neveSulRiposo, scenaSulRiposo } from "./le-luci-al-muro.js";
 import { clean, doc, esc, root, t } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_FESTE_AL_MURO__";
@@ -129,7 +132,12 @@ function pastigliaDelleLuci(feste, states, adesso) {
  * `cose`: quello che il pannello sa e passa pronto —
  * `{ ora, lungo, meteo: {gradi, condizione, parola}, casa: {testo, dove},
  *    aperte: {quante, parola}, avvisi, pila, feste, states, deriva: {x, y},
- *    fioco }`.
+ *    fioco, momento }`.
+ *
+ * Con delle luci in configurazione, dietro l'orologio non c'e' la baita: c'e'
+ * la scena delle luci di casa, con le luci nello stato vero
+ * (`le-luci-al-muro.js`), e in un angolo «Spegni tutte», che non sveglia.
+ * `momento` e' il momento dell'accensione: l'orologio si fa da parte.
  */
 export function riposoDellaVigilia(cose, adesso = new Date()) {
   const nome = GIORNI_COL_NOME()[giornoConUnNome(adesso)] || "";
@@ -141,13 +149,20 @@ export function riposoDellaVigilia(cose, adesso = new Date()) {
     );
   if (cose.casa?.testo) pastiglie.push(`🏠 <b>${esc(cose.casa.testo)}</b> ${esc(cose.casa.dove)}`);
   const luci = pastigliaDelleLuci(cose.feste, cose.states, adesso);
+  const quellaDelleLuci = luci ? pastiglie.length : -1;
   if (luci) pastiglie.push(luci);
   if (cose.aperte?.quante)
     pastiglie.push(`🪟 <b>${cose.aperte.quante}</b> ${esc(cose.aperte.parola)}`);
   const d = cose.deriva || { x: 0, y: 0 };
-  return `<div class="mu-riposo mu-feste${cose.fioco ? " fioco" : ""}" data-mu-fa="sveglia" data-mu-scena="vigilia">
-    <canvas class="mu-feste-fondo" data-mu-feste="vigilia" aria-hidden="true"></canvas>
-    <canvas class="mu-feste-moto" data-mu-feste="vigilia-neve" aria-hidden="true"></canvas>
+  const config = festePulite(cose.feste);
+  const conLeLuci = config.luci.length > 0;
+  const sotto = conLeLuci
+    ? `${scenaSulRiposo()}${cose.fioco ? "" : neveSulRiposo()}`
+    : `<canvas class="mu-feste-fondo" data-mu-feste="vigilia" aria-hidden="true"></canvas>
+    <canvas class="mu-feste-moto" data-mu-feste="vigilia-neve" aria-hidden="true"></canvas>`;
+  const classi = `${conLeLuci ? " mu-feste-luci" : ""}${conLeLuci && cose.momento ? " mu-luci-momento" : ""}${cose.fioco ? " fioco" : ""}`;
+  return `<div class="mu-riposo mu-feste${classi}" data-mu-fa="sveglia" data-mu-scena="${conLeLuci ? "luci" : "vigilia"}">
+    ${sotto}
     <div class="mu-deriva mu-feste-blocco" style="--dx:${d.x.toFixed(3)};--dy:${d.y.toFixed(3)}">
       ${cose.avvisi ? `<div class="mu-avvisi">${cose.avvisi}</div>` : ""}
       <div class="mu-feste-cap mu-feste-oro">${esc(t("Buone feste", "Happy holidays"))}</div>
@@ -157,9 +172,25 @@ export function riposoDellaVigilia(cose, adesso = new Date()) {
           ? `<span class="mu-feste-punto" aria-hidden="true">·</span><span class="mu-feste-oro">${esc(nome)}</span>`
           : ""
       }${cose.pila || ""}</div>
-      ${pastiglie.length ? `<div class="mu-feste-pastiglie">${pastiglie.map((p) => `<span class="mu-feste-pastiglia">${p}</span>`).join("")}</div>` : ""}
+      ${pastiglie.length ? `<div class="mu-feste-pastiglie">${pastiglie.map((p, i) => `<span class="mu-feste-pastiglia"${i === quellaDelleLuci ? " data-mu-pastiglia-luci" : ""}>${p}</span>`).join("")}</div>` : ""}
     </div>
+    ${conLeLuci ? `${annuncioDelleLuci()}${luciQuiete(config, cose.states, d)}` : ""}
   </div>`;
+}
+
+/**
+ * La cornice con le foto di casa, nel tempo delle scene: le foto restano
+ * quelle scelte, e sopra ci sono la neve che cade, gli auguri in oro sopra
+ * l'ora e, con delle luci accese, «Spegni tutte». Di notte al minimo niente
+ * neve. Torna i pezzi che `riposoDellaCornice` mette al loro posto.
+ */
+export function festaSullaCornice({ feste = null, states = {}, deriva, minimo = false } = {}) {
+  const config = festePulite(feste);
+  return {
+    cap: `<div class="mu-feste-cap mu-feste-oro mu-cornice-feste">${esc(t("Buone feste", "Happy holidays"))}</div>`,
+    neve: minimo ? "" : neveSulRiposo(),
+    dopo: config.luci.length ? luciQuiete(config, states, deriva) : "",
+  };
 }
 
 /* Quello che dice il conto in questo momento: nell'ultimo minuto i secondi,
@@ -243,13 +274,18 @@ export function animaLeFeste(nodo, { ridisegna = () => {} } = {}) {
     return false;
   }
   const scena = riposo.dataset.muScena;
+  /* La scena delle luci la mette il pannello; qui, sopra di lei e sopra le
+   * foto della cornice, solo la neve leggera. */
+  if (scena === "luci" || scena === "foto") return nevicaSulRiposo(riposo, scena);
   const fondo = riposo.querySelector("canvas.mu-feste-fondo");
   const moto = riposo.querySelector("canvas.mu-feste-moto");
   const w = Math.round(riposo.clientWidth);
   const h = Math.round(riposo.clientHeight);
   if (!fondo || !moto || !w || !h) return false;
   const fermo = menoMovimento();
-  const misura = `${scena}|${w}x${h}|${fermo}`;
+  /* Di notte, fioca, la Vigilia resta senza neve che cade. */
+  const fioca = riposo.classList.contains("fioco");
+  const misura = `${scena}|${w}x${h}|${fermo}|${fioca}`;
   /* Una tela tenuta dal rattoppo ha ancora il suo disegno: si rifa' solo se
    * cambia la scena o la misura, o se e' nata adesso (larghezza 300, quella
    * che il browser da' a una tela nuova). */
@@ -272,6 +308,7 @@ export function animaLeFeste(nodo, { ridisegna = () => {} } = {}) {
     if (fermo) disegnaIFuochiFermi(xf, w, h);
   }
   fondo.dataset.dipinta = misura;
+  if (scena === "vigilia" && fioca) return true;
   if (scena === "vigilia") {
     const neve = new NeveATreStrati({ w, h, documento: doc, quanti: Math.round((w * h) / 3000) });
     state.motore = neve;
@@ -325,6 +362,40 @@ export function animaLeFeste(nodo, { ridisegna = () => {} } = {}) {
       { finestra: root, fermo },
     );
   }
+  return true;
+}
+
+/* La neve leggera del riposo: una tela, poche decine di fiocchi, il solo
+ * giro di fotogrammi del riposo. Ferma (un fotogramma) con meno movimento. */
+function nevicaSulRiposo(riposo, scena) {
+  const tela = riposo.querySelector('canvas[data-mu-feste="neve"]');
+  const w = Math.round(riposo.clientWidth);
+  const h = Math.round(riposo.clientHeight);
+  if (!tela || !w || !h) {
+    if (state.giro) fermaLeFeste();
+    return true;
+  }
+  const fermo = menoMovimento();
+  const misura = `${scena}|neve|${w}x${h}|${fermo}`;
+  if (tela.dataset.dipinta === misura && state.misura === misura && state.giro) return true;
+  fermaLeFeste();
+  state.scena = scena;
+  state.misura = misura;
+  tela.style.width = `${w}px`;
+  tela.style.height = `${h}px`;
+  const x = preparaLaTela(tela, w, h, root);
+  if (!x) return false;
+  tela.dataset.dipinta = misura;
+  const neve = new NeveLeggera({ quanti: fiocchiSulRiposo(w), documento: doc });
+  neve.misura(w, h);
+  state.motore = neve;
+  state.giro = giraIFotogrammi(
+    (dt) => {
+      neve.passo(dt);
+      neve.disegna(x);
+    },
+    { finestra: root, fermo },
+  );
   return true;
 }
 

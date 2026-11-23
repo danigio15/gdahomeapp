@@ -82,7 +82,10 @@ export function riposoDelCielo(cose) {
  * Il riposo «Cornice foto».
  *
  * `cose`: `{ ora, lungo, meteo, foto: [id…], ogni, avvisi, pila, deriva,
- * minimo }` — `meteo` e' il markup corto del tempo (disegno, gradi, parola).
+ * minimo, festa }` — `meteo` e' il markup corto del tempo (disegno, gradi,
+ * parola); `festa`, quando c'e', sono i pezzi che vanno sopra le foto (la
+ * tela della neve, la riga sopra l'ora, un tasto in un angolo:
+ * `festaSullaCornice` in `feste-al-muro.js`).
  * Le foto le mette il giro (`animaIlRiposoVivo`), non il markup: la cornice
  * resta la stessa da un battito all'altro.
  */
@@ -90,16 +93,20 @@ export function riposoDellaCornice(cose) {
   state.fotoDaMostrare = Array.isArray(cose.foto) ? cose.foto.slice() : [];
   state.ogni = Number(cose.ogni) || 60;
   const d = cose.deriva || { x: 0, y: 0 };
-  return `<div class="mu-riposo mu-vivo mu-cornice${cose.minimo ? " minimo" : ""}" data-mu-fa="sveglia" data-mu-vivo-stile="foto">
+  const f = cose.festa || null;
+  return `<div class="mu-riposo mu-vivo mu-cornice${cose.minimo ? " minimo" : ""}${f ? " mu-cornice-festa" : ""}" data-mu-fa="sveglia" data-mu-vivo-stile="foto"${f ? ' data-mu-scena="foto"' : ""}>
     <div class="mu-cornice-foto" data-mu-vivo="cornice" aria-hidden="true"></div>
     <div class="mu-cornice-velo" aria-hidden="true"></div>
+    ${f?.neve || ""}
     <div class="mu-deriva mu-cornice-blocco" style="--dx:${d.x.toFixed(3)};--dy:${d.y.toFixed(3)}">
       ${cose.avvisi ? `<div class="mu-avvisi">${cose.avvisi}</div>` : ""}
+      ${f?.cap || ""}
       <div class="mu-cornice-ora">${esc(cose.ora)}</div>
       <div class="mu-cornice-data"><span>${esc(maiuscola(cose.lungo))}</span>${
         cose.meteo ? `<span class="mu-cornice-punto" aria-hidden="true">·</span>${cose.meteo}` : ""
       }${cose.pila || ""}</div>
     </div>
+    ${f?.dopo || ""}
   </div>`;
 }
 

@@ -1724,8 +1724,16 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // 572 col flusso dell'energia grande in Home (#460): `core/il-flusso-in-home.js`
   // (quali nodi, quali frecce e in che verso) e
   // `sections/il-flusso-grande-section.js` (il blocco che le disegna).
+  // 574 con la scena delle luci di Natale nel riquadro in Home:
+  // `core/scena-delle-luci.js` (che cielo c'e', quali cose e dove stanno) e
+  // `sections/la-scena-delle-luci.js` (il paesaggio in SVG, uguale nel
+  // riquadro e nell'anteprima della scheda).
+  // 576 con la scena delle luci sul tablet a muro: `core/le-luci-al-muro.js`
+  // (quando la scena prende il riposo, quando il tablet si sveglia per
+  // guardarle, quale tocco non sveglia) e `sections/le-luci-al-muro.js` (la
+  // scena a tutto schermo, la fascia coi tocchi e il loro stile).
   assert.ok(
-    relative.length <= 572,
+    relative.length <= 576,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);
