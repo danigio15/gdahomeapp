@@ -13,6 +13,7 @@ import { ilModoDelleLicenze } from "./modo-delle-licenze.js";
 import { apriIlRegistro } from "./registro.js";
 import { REVOCHE_DI_SERIE, Revoche } from "./revoche.js";
 import { Ricevute } from "./ricevute.js";
+import { SportelloDelPolso } from "./polso.js";
 import { costruisciIlServer } from "./server.js";
 import { Sportello } from "./sportello.js";
 import { leggiLaChiaveDiFirebase, Spinte } from "./spinte.js";
@@ -218,6 +219,7 @@ export async function alzaIlCentralino({
     contatti,
     ricevute: new Ricevute({ centralino, registro }),
     foto,
+    polso: new SportelloDelPolso({ centralino, registro }),
     registro,
     dove: { sito: ilSito, app: lApp },
     versioneMinima: minima,
