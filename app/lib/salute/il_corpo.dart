@@ -294,7 +294,16 @@ class ScelteDellaSalute {
     this.tentatoDaChiusa,
     this.rifiutataDaChiusa = false,
     this.negate = const {},
+    this.telefono = '',
   });
+
+  /// Il telefono a cui e' andato l'ultimo invio: l'identificativo che la
+  /// casa gli ha dato abbinandolo. Riabbinata la casa con un codice nuovo il
+  /// telefono, per la casa, e' un altro: il primo invio da lui parte subito,
+  /// senza aspettare il quarto d'ora ([PostinoDellaSalute.forseManda]),
+  /// cosi' la casa gli passa la serie della persona e la pagina Salute della
+  /// plancia non resta vuota.
+  final String telefono;
 
   /// Le misure per cui il permesso, richiesto di nuovo, e' rimasto negato
   /// (Android): non si richiedono da sole a ogni invio — chi ha detto di no
@@ -354,6 +363,7 @@ class ScelteDellaSalute {
     DateTime? tentatoDaChiusa,
     bool? rifiutataDaChiusa,
     Set<MisuraDelCorpo>? negate,
+    String? telefono,
   }) => ScelteDellaSalute(
     acceso: acceso ?? this.acceso,
     persona: persona ?? this.persona,
@@ -366,6 +376,7 @@ class ScelteDellaSalute {
     tentatoDaChiusa: tentatoDaChiusa ?? this.tentatoDaChiusa,
     rifiutataDaChiusa: rifiutataDaChiusa ?? this.rifiutataDaChiusa,
     negate: negate ?? this.negate,
+    telefono: telefono ?? this.telefono,
   );
 
   /// Da quando una sveglia ad app chiusa torna a valere la pena: un quarto
@@ -400,6 +411,7 @@ class ScelteDellaSalute {
       'tentato': tentatoDaChiusa!.millisecondsSinceEpoch,
     if (rifiutataDaChiusa) 'rifiutata': true,
     if (negate.isNotEmpty) 'negate': [for (final m in negate) m.name],
+    if (telefono.isNotEmpty) 'telefono': telefono,
   };
 
   String get comeSiScrive => jsonEncode(inJson());
@@ -447,6 +459,10 @@ class ScelteDellaSalute {
           : null,
       rifiutataDaChiusa: letto['rifiutata'] == true,
       negate: daNomi(letto['negate']) ?? const {},
+      telefono: switch (letto['telefono']) {
+        final String chi => chi,
+        _ => '',
+      },
     );
   }
 }

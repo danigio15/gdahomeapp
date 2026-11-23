@@ -199,8 +199,24 @@ class PostinoDellaSalute {
       return;
     }
     final ultimo = _scelte.ultimoInvio;
-    if (ultimo != null && _adesso().difference(ultimo) < ogniQuanto) return;
+    if (ultimo != null &&
+        _adesso().difference(ultimo) < ogniQuanto &&
+        !_eUnAltroTelefono(filo)) {
+      return;
+    }
     await manda(filo);
+  }
+
+  /* «Quando ho riassociato il telefono ho perso i dati salute.» Riabbinata
+   * la casa con un codice nuovo, il filo e' di un telefono che la casa non
+   * ha mai sentito mandare: si manda subito, letto da Salute o da Health
+   * Connect — le misure vere stanno li' — invece di aspettare il quarto
+   * d'ora. E' il primo invio a far ritrovare alla casa la serie della
+   * persona (`ponte/src/il-corpo-dal-telefono.js`). */
+  bool _eUnAltroTelefono(Filo? filo) {
+    if (filo == null || !filo.dentro) return false;
+    final chi = filo.chi;
+    return chi.isNotEmpty && chi != _scelte.telefono;
   }
 
   /// Legge e manda. Torna quante misure sono andate, o `null` se non e'
@@ -253,6 +269,7 @@ class PostinoDellaSalute {
           ultimoInvio: _adesso(),
           ultimoDaChiusa: false,
           rifiutataDaChiusa: false,
+          telefono: filo.chi,
         ),
       );
       return lette.length;
@@ -357,7 +374,13 @@ class PostinoDellaSalute {
         'aggiungi': true,
       });
       _ultimoGuasto = null;
-      await _salva(_scelte.con(ultimoInvio: _adesso(), ultimoDaChiusa: true));
+      await _salva(
+        _scelte.con(
+          ultimoInvio: _adesso(),
+          ultimoDaChiusa: true,
+          telefono: filo.chi,
+        ),
+      );
       return come = ComeEAndataDaChiusa.mandata;
     } on ComandoRifiutato catch (no) {
       _ultimoGuasto = GuastoDellaSalute.daCodice(no.codice);
