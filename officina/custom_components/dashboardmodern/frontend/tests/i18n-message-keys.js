@@ -6096,6 +6096,8 @@ export const MESSAGE_KEYS = Object.freeze([
   "The 3D home is a Premium feature. Its configuration stays saved.",
   "The 3D home is a Premium feature. What you've already saved stays saved.",
   "The 3D house cannot open on this device.",
+  "The 3D house is recovering…",
+  "The 3D house stopped several times: this device does not have enough graphics memory to keep it open.",
   "The address is missing a placeholder: all three are needed — {z} for the zoom, {x} and {y} for the tile. With only one it would always ask for the same piece of the world.",
   "The air conditioner has ${trovato.entity}, but it covers the whole machine (${trovato.zone.length} zones): the report does not split it between rooms. If each zone has its own plug, write it here.",
   "The air outside is drier: let some air in for a few minutes.",

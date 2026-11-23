@@ -7982,6 +7982,8 @@ export default Object.freeze({
   "tap «Outside» to step back out": "dotknij «Na zewnątrz», aby wyjść z powrotem",
   "Tap a floor to see its devices.": "Dotknij piętra, aby zobaczyć jego urządzenia.",
   "The 3D house cannot open on this device.": "Domu 3D nie można otworzyć na tym urządzeniu.",
+  "The 3D house is recovering…": "Dom 3D się przywraca…",
+  "The 3D house stopped several times: this device does not have enough graphics memory to keep it open.": "Dom 3D zatrzymał się kilka razy: to urządzenie nie ma dość pamięci graficznej, aby utrzymać go otwartym.",
   "The house": "Dom",
   "The house wizard is not available yet": "Kreator domu nie jest jeszcze dostępny",
   "View only": "Tylko podgląd",

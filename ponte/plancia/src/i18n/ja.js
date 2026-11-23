@@ -7963,6 +7963,8 @@ export default Object.freeze({
   "tap «Outside» to step back out": "«屋外» をタップすると外に戻ります",
   "Tap a floor to see its devices.": "階をタップするとデバイスが表示されます。",
   "The 3D house cannot open on this device.": "このデバイスでは 3D ホームを開けません。",
+  "The 3D house is recovering…": "3D ホームを復元しています…",
+  "The 3D house stopped several times: this device does not have enough graphics memory to keep it open.": "3D ホームが何度も停止しました。このデバイスには開いたままにするためのグラフィックメモリが足りません。",
   "The house": "家",
   "The house wizard is not available yet": "家のウィザードはまだ利用できません",
   "View only": "表示のみ",

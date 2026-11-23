@@ -1550,6 +1550,20 @@ export const MURO_VUOTO = Object.freeze({
   pagine: [],
 });
 
+/**
+ * La licenza quando il ponte non ha risposto: quello che si sapeva.
+ *
+ * `saputo` e' la risposta che questa pagina ha gia' avuto (`true`, `false`, o
+ * `null` se non ne ha ancora avuta una); `ricordato` quello che il tablet ha
+ * saputo l'ultima volta che il ponte ha risposto, scritto nel suo ricordo. Una
+ * risposta di questa pagina vale piu' del ricordo; senza, vale il ricordo. Un
+ * «non lo so» non e' mai un «no»: il «no» lo dice solo il ponte.
+ */
+export function premiumSenzaRisposta(saputo, ricordato) {
+  if (saputo === true || saputo === false) return saputo;
+  return ricordato === true;
+}
+
 /** Il config a muro pulito, da qualunque cosa ci sia in memoria. */
 export function muroPulito(input) {
   let dentro = input;

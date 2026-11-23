@@ -7943,6 +7943,8 @@ export default Object.freeze({
   "tap «Outside» to step back out": "वापस बाहर जाने के लिए «बाहर» पर टैप करें",
   "Tap a floor to see its devices.": "किसी मंज़िल के डिवाइस देखने के लिए उस पर टैप करें।",
   "The 3D house cannot open on this device.": "3D घर इस डिवाइस पर नहीं खुल सकता।",
+  "The 3D house is recovering…": "3D घर फिर से तैयार हो रहा है…",
+  "The 3D house stopped several times: this device does not have enough graphics memory to keep it open.": "3D घर कई बार रुक गया: इस डिवाइस में इसे खुला रखने के लिए पर्याप्त ग्राफ़िक्स मेमोरी नहीं है।",
   "The house": "घर",
   "The house wizard is not available yet": "घर विज़ार्ड अभी उपलब्ध नहीं है",
   "View only": "केवल देखें",
