@@ -16,6 +16,7 @@ import { Ricevute } from "./ricevute.js";
 import { SportelloDelPolso } from "./polso.js";
 import { costruisciIlServer } from "./server.js";
 import { Sportello } from "./sportello.js";
+import { SportelloDiWhoop } from "./whoop.js";
 import { leggiLaChiaveDiFirebase, Spinte } from "./spinte.js";
 import { MINIME_DI_SERIE, laMinimaCheVale, versioneMinimaDa } from "./versioni.js";
 
@@ -116,6 +117,15 @@ export async function alzaIlCentralino({
    * sono spente. */
   chiaveDiFirebase = undefined,
   percorsoDellaChiaveDiFirebase = process.env.FIREBASE_INVIO || "",
+  /* Il client di GdAHome sul portale di WHOOP, per «Collega WHOOP»
+   * (`whoop.js`). Il secret sta **qui** e in nessun'app: lo scambio dei token
+   * passa da questa macchina. Senza tutti e due lo sportello risponde che non
+   * e' configurato. Il ritorno e' l'unico `redirect_uri` che si accetta, e
+   * l'indirizzo dei token si cambia solo se WHOOP lo sposta. */
+  whoopClientId = process.env.WHOOP_CLIENT_ID || "",
+  whoopClientSecret = process.env.WHOOP_CLIENT_SECRET || "",
+  whoopRitorno = process.env.WHOOP_RITORNO || "",
+  whoopToken = process.env.WHOOP_INDIRIZZO_TOKEN || "",
 } = {}) {
   const registro = apriIlRegistro(livello);
   const definiti = (oggetto) =>
@@ -212,6 +222,13 @@ export async function alzaIlCentralino({
     registro,
   });
   const minima = laMinimaCheVale(versioneMinimaDellApp);
+  const whoop = new SportelloDiWhoop({
+    clientId: whoopClientId,
+    clientSecret: whoopClientSecret,
+    ritorno: whoopRitorno,
+    dove: whoopToken,
+    registro,
+  });
   const server = costruisciIlServer({
     centralino,
     sportello,
@@ -220,6 +237,7 @@ export async function alzaIlCentralino({
     ricevute: new Ricevute({ centralino, registro }),
     foto,
     polso: new SportelloDelPolso({ centralino, registro }),
+    whoop,
     registro,
     dove: { sito: ilSito, app: lApp },
     versioneMinima: minima,
@@ -281,6 +299,13 @@ export async function alzaIlCentralino({
       : "le notifiche sono spente: manca la chiave di Firebase",
   );
 
+  /* Di WHOOP si dice se lo sportello e' acceso. Del secret niente. */
+  registro.info(
+    whoop.pronto
+      ? `lo sportello di WHOOP e' acceso (ritorno ${whoop.ritorno})`
+      : "lo sportello di WHOOP e' spento: manca WHOOP_CLIENT_ID o WHOOP_CLIENT_SECRET",
+  );
+
   registro.info(
     contatti.pronto
       ? `il modulo dei contatti spedisce a ${postaA} passando da ${postaServer}`
@@ -313,6 +338,7 @@ export async function alzaIlCentralino({
     spinte,
     foto,
     sportello,
+    whoop,
     chat,
     contatti,
     server,

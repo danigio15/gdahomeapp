@@ -8,6 +8,7 @@
  *   GET  /console/                    la console della chat, e le sue vie
  *   POST /contatto                    il modulo «Contatti» del sito, che Caddy passa qui
  *   POST /licenza/<casa_…>           la ricevuta di chi compra fuori casa (`ricevute.js`)
+ *   POST /whoop/token                 lo scambio dei token di «Collega WHOOP» (`whoop.js`)
  *   WS   /casa/<casa_…>              una casa che chiama fuori
  *   WS   /telefono/<casa_…>?da=app    un telefono che va alla sua casa
  *   WS   /abbinamento/<impronta>      un telefono che si sta abbinando
@@ -158,6 +159,9 @@ export function costruisciIlServer({
   /* Lo sportello degli orologi che non sanno tenere un filo (`polso.js`):
    * `POST /polso/…`. Senza, la via non c'e'. */
   polso = null,
+  /* Lo sportello di WHOOP (`whoop.js`): `POST /whoop/token`. Senza, la via
+   * non c'e'. */
+  whoop = null,
   registro = null,
   acceso = Date.now(),
   /* Come si chiamano il sito e l'app di questo centralino, per la soglia.
@@ -245,6 +249,9 @@ export function costruisciIlServer({
         /* Gli orologi dallo sportello del polso: quante sessioni adesso, e
          * le richieste dall'accensione. Solo numeri. */
         polso: polso ? { sessioni: polso.quanteSessioni(), ...polso.conti } : null,
+        /* Se lo sportello di WHOOP ha il suo client, e i conti. Del secret
+         * niente: che c'e', e basta. */
+        whoop: whoop ? { pronto: whoop.pronto, ...whoop.conti } : null,
       });
       return;
     }
@@ -282,6 +289,7 @@ export function costruisciIlServer({
       if (ricevute && (await ricevute.forseServe(richiesta, risposta, via))) return;
       if (foto && (await foto.forseServe(richiesta, risposta, via))) return;
       if (polso && (await polso.forseServe(richiesta, risposta, via))) return;
+      if (whoop && (await whoop.forseServe(richiesta, risposta, via))) return;
       json(risposta, { errore: "qui non c'e' niente" }, 404);
     })().catch((errore) => {
       registro?.errore?.(`una porta e' inciampata: ${errore?.stack || errore}`);
