@@ -199,6 +199,49 @@ export const MISURE_DAL_TELEFONO = Object.freeze({
     classe: "total_increasing",
     icona: "mdi:human-handsup",
   },
+  /* Quelle della notte che il WHOOP (e non solo) scrive in Salute e in
+   * Health Connect, e quelle che da' solo l'account WHOOP collegato
+   * nell'app: il recupero in percentuale e lo sforzo da 0 a 21. */
+  hrv: {
+    nome: "Heart rate variability",
+    unita: "ms",
+    min: 1,
+    max: 400,
+    classe: "measurement",
+    icona: "mdi:heart-pulse",
+  },
+  respiro: {
+    nome: "Respiratory rate",
+    unita: "breaths/min",
+    min: 2,
+    max: 60,
+    classe: "measurement",
+    icona: "mdi:lungs",
+  },
+  temperaturaPelle: {
+    nome: "Skin temperature",
+    unita: "°C",
+    min: 20,
+    max: 45,
+    classe: "measurement",
+    tipo: "temperature",
+    icona: "mdi:thermometer",
+  },
+  recupero: {
+    nome: "Recovery",
+    unita: "%",
+    min: 0,
+    max: 100,
+    classe: "measurement",
+    icona: "mdi:battery-heart-variant",
+  },
+  sforzo: {
+    nome: "Strain",
+    min: 0,
+    max: 21,
+    classe: "measurement",
+    icona: "mdi:lightning-bolt",
+  },
 });
 
 const no = (id, code, message) => ({
