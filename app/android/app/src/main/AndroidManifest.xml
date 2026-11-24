@@ -69,11 +69,12 @@
     <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED" />
     <uses-permission android:name="android.permission.health.READ_DISTANCE" />
     <uses-permission android:name="android.permission.health.READ_FLOORS_CLIMBED" />
-    <!-- L'HRV e il respiro della notte: li scrivono il WHOOP e molti orologi.
-         Nuovi: vanno aggiunti alla dichiarazione dei dati salute del Play
-         Console prima di pubblicare. -->
-    <uses-permission android:name="android.permission.health.READ_HEART_RATE_VARIABILITY" />
-    <uses-permission android:name="android.permission.health.READ_RESPIRATORY_RATE" />
+    <!-- L'HRV e il respiro della notte (READ_HEART_RATE_VARIABILITY e
+         READ_RESPIRATORY_RATE) NON ci sono ancora: col pacchetto che li
+         chiede il Play Console rifiuta la consegna («You must let us know
+         whether your app includes any health features») finche' la
+         dichiarazione dei dati salute non li comprende. Si rimettono qui, e
+         in `lib/salute` (`siPuoLeggere`, `tipiDi`), quando e' approvata. -->
     <!-- Leggere anche ad app chiusa, per mandare le misure alla casa senza
          aprire GdAHome (`salute/LaSaluteAdAppChiusa.kt`). Si chiede a parte,
          con l'app davanti, e solo se Health Connect lo conosce; negato, le

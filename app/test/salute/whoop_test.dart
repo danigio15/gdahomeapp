@@ -2,8 +2,11 @@
 /// risposte dell'API lette e trasformate in misure, e le due strade unite.
 library;
 
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gdahome/salute/il_corpo.dart';
+import 'package:gdahome/salute/lettore_qui/sul_telefono.dart' show tipiDi;
 import 'package:gdahome/salute/whoop/whoop.dart';
 
 import 'whoop_finto.dart';
@@ -74,8 +77,6 @@ void main() {
           siPuoLeggere(MisuraDelCorpo.sforzo, iPhone: iPhone, whoop: true),
           isTrue,
         );
-        expect(siPuoLeggere(MisuraDelCorpo.hrv, iPhone: iPhone), isTrue);
-        expect(siPuoLeggere(MisuraDelCorpo.respiro, iPhone: iPhone), isTrue);
       }
       expect(
         siPuoLeggere(MisuraDelCorpo.temperaturaPelle, iPhone: false),
@@ -90,6 +91,29 @@ void main() {
         isTrue,
       );
     });
+
+    test(
+      'su Android l\'HRV e il respiro aspettano la dichiarazione del negozio',
+      () {
+        /* I due permessi di Health Connect non sono nel manifesto finche' il
+       * Play Console non ha la dichiarazione che li comprende: l'app non li
+       * chiede, e li mostra solo se arrivano dal WHOOP collegato. */
+        for (final m in [MisuraDelCorpo.hrv, MisuraDelCorpo.respiro]) {
+          expect(siPuoLeggere(m, iPhone: true), isTrue);
+          expect(siPuoLeggere(m, iPhone: false), isFalse);
+          expect(siPuoLeggere(m, iPhone: false, whoop: true), isTrue);
+          expect(tipiDi(m, iPhone: false), isEmpty);
+          expect(tipiDi(m, iPhone: true), isNotEmpty);
+        }
+        final manifesto = File('android/app/src/main/AndroidManifest.xml')
+            .readAsStringSync();
+        final chiesti = RegExp(
+          r'<uses-permission[^>]*android\.permission\.health\.(\w+)',
+        ).allMatches(manifesto).map((m) => m.group(1)).toSet();
+        expect(chiesti, isNot(contains('READ_HEART_RATE_VARIABILITY')));
+        expect(chiesti, isNot(contains('READ_RESPIRATORY_RATE')));
+      },
+    );
 
     test('su iPhone recupero e sforzo non svegliano nessuno', () {
       expect(

@@ -51,14 +51,14 @@ List<HealthDataType> tipiDi(MisuraDelCorpo misura, {required bool iPhone}) =>
       MisuraDelCorpo.sistolica => [HealthDataType.BLOOD_PRESSURE_SYSTOLIC],
       MisuraDelCorpo.diastolica => [HealthDataType.BLOOD_PRESSURE_DIASTOLIC],
       MisuraDelCorpo.ossigeno => [HealthDataType.BLOOD_OXYGEN],
-      /* L'HRV: Apple la tiene come SDNN, Health Connect come RMSSD. L'app
-       * WHOOP scrive la sua (RMSSD) nell'una e nell'altra. */
-      MisuraDelCorpo.hrv => [
-        iPhone
-            ? HealthDataType.HEART_RATE_VARIABILITY_SDNN
-            : HealthDataType.HEART_RATE_VARIABILITY_RMSSD,
-      ],
-      MisuraDelCorpo.respiro => [HealthDataType.RESPIRATORY_RATE],
+      /* L'HRV: Apple la tiene come SDNN. Su Android (Health Connect, RMSSD)
+       * non si chiede ancora, e nemmeno il respiro: i due permessi non sono
+       * nel manifesto finche' il Play Console non ha la dichiarazione dei
+       * dati salute che li comprende ([siPuoLeggere]). */
+      MisuraDelCorpo.hrv =>
+        iPhone ? [HealthDataType.HEART_RATE_VARIABILITY_SDNN] : const [],
+      MisuraDelCorpo.respiro =>
+        iPhone ? [HealthDataType.RESPIRATORY_RATE] : const [],
       /* Sull'iPhone il polso nel sonno (Apple Watch), in gradi. Health
        * Connect ha solo lo scarto dal solito (`SkinTemperatureRecord`), che
        * non e' una temperatura: su Android arriva solo dal WHOOP collegato. */
