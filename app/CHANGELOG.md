@@ -13,8 +13,8 @@ contrario.
 - **Salute su Android**: la variabilità del battito (HRV) e la frequenza del
   respiro da Health Connect arrivano con una prossima versione. Su iPhone ci
   sono già, e su Android si vedono quando arrivano da WHOOP collegato.
-- Dentro ci sono anche le novità della 1.19.28 e della 1.19.29, che su
-  Android non erano arrivate nel negozio.
+- **Android, le versioni di prima**: dentro ci sono anche le novità della
+  1.19.28 e della 1.19.29, che su Android non erano arrivate nel negozio.
 
 ## 1.19.29
 
