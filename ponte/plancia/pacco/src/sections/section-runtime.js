@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-T7CQ5FEF.js";
+} from "../../chunk-4IUFQGUH.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -14782,6 +14782,12 @@ function sfalsata(width, primaFila, size, column) {
   const inizio = Math.floor((varchi - size) / 2);
   return passo * (inizio + column + 0.5);
 }
+var PASSO_A_MATTONI = 0.28;
+function aMattoni(width, size, rowIndex, column) {
+  const passo = width * PASSO_A_MATTONI;
+  const verso3 = rowIndex === 0 ? 0.25 : -0.25;
+  return width / 2 + passo * (column - (size - 1) / 2 + verso3);
+}
 function nelVarco(width, primaFila, size, column) {
   const passo = width / primaFila;
   const inizio = Math.floor((primaFila - 1 - size) / 2) + 1;
@@ -14807,11 +14813,12 @@ function flowStageLayout(count, variant = "desktop") {
   const primaFila = sizes[0] || 0;
   const righe4 = sizes.length > 1 && geometry.dueFile ? geometry.dueFile : geometry;
   const mobile = variant === "mobile";
-  const uguali = mobile && sizes.length > 1 && sizes[1] === primaFila && primaFila >= 3;
+  const uguali = mobile && sizes.length > 1 && sizes[1] === primaFila && primaFila >= 4;
   const piena = mobile && (sizes.length === 1 || sizes[1] < primaFila || uguali);
+  const pari = mobile && !piena && sizes.length === 2 && sizes[1] === primaFila;
   sizes.forEach((size, rowIndex) => {
     for (let column = 0; column < size; column += 1) {
-      const x = piena ? rowIndex === 0 || uguali ? geometry.width * (column + 0.5) / size : nelVarco(geometry.width, primaFila, size, column) : rowIndex === 0 ? geometry.width * (column + 1) / (size + 1) : sfalsata(geometry.width, primaFila, size, column);
+      const x = piena ? rowIndex === 0 || uguali ? geometry.width * (column + 0.5) / size : nelVarco(geometry.width, primaFila, size, column) : pari ? aMattoni(geometry.width, size, rowIndex, column) : rowIndex === 0 ? geometry.width * (column + 1) / (size + 1) : sfalsata(geometry.width, primaFila, size, column);
       const oltre = rowIndex === 0 || uguali ? null : righe4.rowY[rowIndex - 1];
       positions.push({
         index: positions.length,

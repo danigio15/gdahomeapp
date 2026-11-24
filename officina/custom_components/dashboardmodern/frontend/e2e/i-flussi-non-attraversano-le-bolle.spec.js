@@ -218,10 +218,13 @@ test("sette carichi: le file si sfalsano e le linee passano nei varchi", async (
   });
 });
 
-test("sei cerchi: tre e tre in colonna sotto la Casa, e non si toccano", async ({
+test("sei cerchi: tre e tre sfalsati al centro, e le linee si vedono dove vanno", async ({
   page,
 }, testInfo) => {
   test.setTimeout(180_000);
+  /* «Le linee non si capisce dove vanno»: in colonna, quelle di sotto
+     passavano dietro i cerchi di sopra. Sfalsate a meta' per parte stanno al
+     centro e passano nei varchi. */
   const sei = CARICHI.slice(0, 6);
   await page.setViewportSize({ width: 412, height: 915 });
   await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
@@ -267,24 +270,50 @@ test("sei cerchi: tre e tre in colonna sotto la Casa, e non si toccano", async (
       .map((riga) => ({
         cx: riga.x - quadro.x + riga.width / 2,
         cy: riga.y - quadro.y + riga.height / 2,
-        lato: riga.width,
+        raggio: riga.width / 2,
       }));
-    return { bolle, largo: quadro.width, casa: casa.x - quadro.x + casa.width / 2 };
+    const svg = [...stage.querySelectorAll("svg")].find(
+      (uno) => getComputedStyle(uno).display !== "none",
+    );
+    const caselle = svg.viewBox.baseVal;
+    const linee = [...svg.querySelectorAll("path.dm-flow-arc")].map((path) => {
+      const lungo = path.getTotalLength();
+      const punti = [];
+      for (let passo = 0; passo <= 200; passo += 1) {
+        const punto = path.getPointAtLength((lungo * passo) / 200);
+        punti.push([
+          (punto.x / caselle.width) * quadro.width,
+          (punto.y / caselle.height) * quadro.height,
+        ]);
+      }
+      return punti;
+    });
+    return { bolle, linee, largo: quadro.width, casa: casa.x - quadro.x + casa.width / 2 };
   });
   const file = [...new Set(scena.bolle.map((b) => Math.round(b.cy)))].sort((a, b) => a - b);
   expect(file.length).toBe(2);
-  const sopra = scena.bolle.filter((b) => Math.round(b.cy) === file[0]).sort((a, b) => a.cx - b.cx);
-  const sotto = scena.bolle.filter((b) => Math.round(b.cy) === file[1]).sort((a, b) => a.cx - b.cx);
+  const sopra = scena.bolle.filter((b) => Math.round(b.cy) === file[0]);
+  const sotto = scena.bolle.filter((b) => Math.round(b.cy) === file[1]);
   expect(sopra.length).toBe(3);
   expect(sotto.length).toBe(3);
-  /* In colonna, e la colonna di mezzo e' quella della Casa. */
-  sopra.forEach((su, indice) => expect(Math.abs(su.cx - sotto[indice].cx)).toBeLessThan(1.5));
-  expect(Math.abs(sopra[1].cx - scena.casa)).toBeLessThan(1.5);
-  /* Lo stesso margine dai due lati. */
-  for (const fila of [sopra, sotto])
-    expect(Math.abs(fila[0].cx + fila[2].cx - scena.largo)).toBeLessThan(2);
-  /* E fra le due file resta aria: in colonna i cerchi crescevano fino a
-     toccarsi, perche' si guardava solo il passo nella fila. */
-  expect(file[1] - file[0] - sopra[0].lato).toBeGreaterThanOrEqual(12);
-  expect(sopra[1].cx - sopra[0].cx - sopra[0].lato).toBeGreaterThanOrEqual(12);
+  /* il blocco al centro, sotto la Casa */
+  const xs = scena.bolle.map((b) => b.cx);
+  expect(Math.abs((Math.min(...xs) + Math.max(...xs)) / 2 - scena.casa)).toBeLessThan(2);
+  /* nessuna di sotto incolonnata sotto una di sopra */
+  for (const giu of sotto)
+    for (const su of sopra) expect(Math.abs(giu.cx - su.cx)).toBeGreaterThan(su.raggio);
+  /* e nessuna linea entra in un cerchio che non e' il suo */
+  for (const linea of scena.linee) {
+    const arrivo = linea.at(-1);
+    const sua = scena.bolle.find(
+      (b) => Math.hypot(arrivo[0] - b.cx, arrivo[1] - b.cy) <= b.raggio + 4,
+    );
+    for (const punto of linea)
+      for (const bolla of scena.bolle) {
+        if (bolla === sua) continue;
+        expect(Math.hypot(punto[0] - bolla.cx, punto[1] - bolla.cy)).toBeGreaterThanOrEqual(
+          bolla.raggio,
+        );
+      }
+  }
 });
