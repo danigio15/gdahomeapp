@@ -8,6 +8,20 @@ i suoi in `ponte/CHANGELOG.md`, ed è quello che Home Assistant fa vedere. Un
 rilascio dell'app non fa comparire un aggiornamento dell'add-on, e al
 contrario.
 
+## 1.19.31
+
+- **Navigatore, vista «Corsie», le curve**: le strade non piegano più a
+  spigoli. Asfalto, righe e fascia verde seguono la curva insieme.
+- **Navigatore, la fascia verde**: resta sul mezzo della corsia senza pieghe
+  brusche, non resta più sospesa sopra la strada e nei sottopassi segue la
+  strada invece di attraversare il prato.
+- **Navigatore, svincoli e viadotti**: parapetti e muri stanno sul bordo
+  dell'asfalto, non di traverso sulla carreggiata. Il ponte che passa sopra
+  l'auto non lascia più le sue righe bianche sulla corsia.
+- **Navigatore, incroci e zebrature**: fra due carreggiate che si separano la
+  zebratura è un cuneo ordinato, e la corsia per svoltare a sinistra nasce dal
+  lato giusto.
+
 ## 1.19.30
 
 - **Salute su Android**: la variabilità del battito (HRV) e la frequenza del
