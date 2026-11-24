@@ -8554,4 +8554,7 @@ export default Object.freeze({
   "Yes, turn on": "Ja, openzetten",
   "1 day": "1 dag",
   "1 minute": "1 minuut",
+  "Furnishing is done in the 3D home, from a device that can run it": "Inrichten gebeurt in het 3D-huis, op een apparaat dat het aankan",
+  "Lighter, for tablets that struggle with 3D": "Lichter, voor tablets die moeite hebben met 3D",
+  "Plan": "Plattegrond",
 });

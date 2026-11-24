@@ -39,6 +39,13 @@ import {
   laCadutaConta,
   senzaLeCaduteDiAdesso,
 } from "../core/la-qualita-della-casa-3d.js";
+import {
+  comeMostrareLaCasa,
+  perchéLaPianta,
+  provaLaGrafica,
+  ricordaLaVista,
+  vistaRicordata,
+} from "../core/la-grafica-della-casa-3d.js";
 import { caricaIlMotore } from "./casa-3d-modello-section.js";
 import { apriIlMenu, premiumDellaCasa, premiumRicordato } from "./plancia-a-muro-section.js";
 import { CHIAVE_RISERVATE, telecamereVisibili } from "../core/telecamere-riservate.js";
@@ -122,6 +129,15 @@ const state = (root[KEY] ||= {
   finestraDal: 0,
   fuocoDaDare: false,
   fuocoPrima: null,
+  /* La casa in pianta (`sections/casa-3d/pianta.js`), dove il 3D non c'e' o
+   * non regge: che grafica c'e' qui (si chiede una volta), se la scena in
+   * mano adesso e' la pianta, se il 3D si e' fermato troppe volte, e
+   * l'errore del 3D che non e' partito (vedi `comeLaMostro`). */
+  grafica: null,
+  inPianta: false,
+  troppeCadute: false,
+  rotto: "",
+  dettaglio: "",
 });
 
 /** La casa del config, pulita. */
@@ -134,7 +150,7 @@ export function casa3dDiQui() {
  * e' troppo per un tablet piccolo — che allora, se c'e', apre la casa
  * generata. Senza casa generata si prova lo stesso: e' l'unica che c'e'. */
 function conIlModello(casa) {
-  if (!usaIlModello(casa)) return false;
+  if (state.inPianta || !usaIlModello(casa)) return false;
   if (state.modelloGuasto === casa.modello.id) return false;
   return !(casa.piani.length && troppoPerQuestoDispositivo(casa.modello));
 }
@@ -234,6 +250,11 @@ function testataMarkup(casa, admin, modello = false) {
         .map((x) => pillola(x.k, x.nome))
         .join("")}</div>
       <span class="c3-spazio"></span>
+      ${
+        state.scena && !state.inPianta && !modello && casa.piani.length
+          ? `<button type="button" class="c3-tasto" data-c3s="vistapianta" title="${esc(t("Più leggera, per i tablet che col 3D faticano", "Lighter, for tablets that struggle with 3D"))}">🗺️ ${esc(t("Pianta", "Plan"))}</button>`
+          : ""
+      }
       ${
         admin && casa.piani.length
           ? `<button type="button" class="c3-tasto" data-c3s="arreda" aria-pressed="${state.arreda}">🎨 ${esc(t("Arreda", "Furnish"))}</button>
@@ -952,7 +973,79 @@ function cadeIlModello(id) {
 /* La firma della scena: la casa, e se si sta mostrando il modello. */
 const firmaDi = (casa) => `${conIlModello(casa) ? "M" : "C"}${JSON.stringify(casa)}`;
 
+/* Dove tiene i suoi ricordi questo dispositivo (la vista scelta). */
+function memoria() {
+  try {
+    return root.localStorage || null;
+  } catch (_errore) {
+    return null;
+  }
+}
+
+/* 3D o pianta, qui e adesso (vedi `core/la-grafica-della-casa-3d.js`). La
+ * grafica si chiede una volta sola: crea una tela di prova. */
+function comeLaMostro() {
+  if (state.grafica === null) state.grafica = provaLaGrafica(doc);
+  return comeMostrareLaCasa({
+    grafica: state.grafica,
+    scelta: vistaRicordata(memoria()),
+    caduto: state.troppeCadute,
+    rotto: state.rotto,
+  });
+}
+
+/* La casa in pianta: nessun motore da scaricare, nessuna memoria grafica.
+ * Se non si apre nemmeno lei (una casa senza piani disegnati: c'e' solo il
+ * modello), lo si dice col perche'. */
+async function avviaLaPianta(admin, come) {
+  state.caricando = true;
+  state.guasto = "";
+  try {
+    const { creaPianta } = await import("./casa-3d/pianta.js");
+    const nodo = doc.getElementById(ID);
+    const posto = nodo?.querySelector(".c3-posto");
+    if (!posto) return;
+    const casa = casa3dDiQui();
+    if (!casa.attiva) return;
+    if (!casa.piani.length) {
+      state.guasto = come.motivo || "pianta";
+      return;
+    }
+    state.inPianta = true;
+    state.scena = creaPianta({
+      contenitore: posto,
+      casa,
+      stati: () => allStates() || {},
+      italiano: italiano(),
+      admin,
+      quandoTocchi: alToccoDellaScena,
+      quandoCambiVista: (vista) => {
+        if (state.vista === vista) return;
+        state.vista = vista;
+        ridisegna();
+      },
+      motivo: perchéLaPianta(come.motivo, italiano()),
+      si3d: come.si3d,
+    });
+    state.firma = firmaDi(casa);
+    if (state.vista !== "esterno") state.scena.apri(state.vista);
+    state.vista = state.scena.vista();
+  } catch (errore) {
+    state.inPianta = false;
+    state.scena = null;
+    state.guasto = come.motivo || "pianta";
+    state.dettaglio = String(errore?.message || errore);
+    root.console?.warn?.("[DashboardModern] casa 3d, la pianta", errore);
+    sgombraIlPosto();
+  } finally {
+    state.caricando = false;
+    ridisegna();
+  }
+}
+
 async function avviaLaScena(admin) {
+  const come = comeLaMostro();
+  if (come.vista === "pianta") return avviaLaPianta(admin, come);
   if (conIlModello(casa3dDiQui())) return avviaIlModello(admin);
   state.caricando = true;
   state.guasto = "";
@@ -993,8 +1086,12 @@ async function avviaLaScena(admin) {
     if (state.vista !== "esterno" && !state.scena.apri(state.vista)) state.vista = "esterno";
     if (state.arreda) state.scena.arreda(true);
   } catch (errore) {
-    state.guasto = String(errore?.message || errore);
+    /* Il 3D non e' nemmeno partito (il contesto WebGL negato, uno shader che
+     * questo processore grafico non compila): la casa si apre in pianta, e
+     * il perche' resta scritto per chi guarda. */
+    state.rotto = String(errore?.message || errore) || "?";
     root.console?.warn?.("[DashboardModern] casa 3d", errore);
+    spegniLaScena();
     sgombraIlPosto();
   } finally {
     state.caricando = false;
@@ -1035,6 +1132,7 @@ function spegniLaScena() {
   } catch (_errore) {}
   state.scena = null;
   state.firma = "";
+  state.inPianta = false;
 }
 
 /* ── il disegno che cade ──────────────────────────────────────────────────
@@ -1077,8 +1175,12 @@ function scenaCaduta() {
   state.cadute = esito.cadute;
   root.console?.warn?.("[DashboardModern] casa 3d: il disegno e' caduto", state.cadute.length);
   if (esito.azione === "basta") {
+    /* Troppe cadute: il 3D qui non regge. La casa passa in pianta, e questo
+     * dispositivo se lo ricorda — la prossima volta si apre gia' cosi', col
+     * tasto per riprovare il 3D. */
     spegniLaScena();
-    state.guasto = "disegno";
+    state.troppeCadute = true;
+    ricordaLaVista(memoria(), "pianta");
     ridisegna();
     return;
   }
@@ -1248,8 +1350,19 @@ function togliLaTela() {
 /* La casa che non si apre, detta: al posto della tela nera, cosa e' successo
  * e un tasto per riprovare. */
 function guastoMarkup() {
-  const testo =
-    state.guasto === "disegno"
+  const perche = perchéLaPianta(state.guasto, italiano());
+  const g = state.grafica;
+  /* Quello che serve per capire da una foto: che grafica ha il dispositivo,
+   * e l'errore del 3D se c'e'. */
+  const dettaglio = [
+    g ? `WebGL ${g.webgl2 ? "2" : g.webgl1 ? "1" : "—"}${g.gpu ? ` · ${g.gpu}` : ""}` : "",
+    state.rotto || state.dettaglio || "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const testo = perche
+    ? perche.replace(/: la casa è in pianta.*$|: the home is shown.*$/, ".")
+    : state.guasto === "disegno"
       ? t(
           "La casa in 3D si è fermata più volte: questo dispositivo non ha abbastanza memoria grafica per tenerla aperta.",
           "The 3D house stopped several times: this device does not have enough graphics memory to keep it open.",
@@ -1259,7 +1372,9 @@ function guastoMarkup() {
           "The 3D house cannot open on this device.",
         );
   const riprova = esc(t("Riprova", "Try again"));
-  return `<div class="c3-da-creare"><span aria-hidden="true">🏢</span><p>${esc(testo)}</p>
+  return `<div class="c3-da-creare"><span aria-hidden="true">🏢</span><p>${esc(testo)}</p>${
+    dettaglio ? `<small class="c3-dettaglio">${esc(dettaglio)}</small>` : ""
+  }
     <button type="button" class="c3-tasto c3-tasto-grande" data-c3s="riprova">↻ ${riprova}</button></div>`;
 }
 
@@ -1531,6 +1646,16 @@ function alClic(evento) {
     return scegliIlModo(el.dataset.c3sE, el.dataset.c3sM);
   }
   if (cosa === "arreda") {
+    if (state.inPianta) {
+      avviso(
+        t(
+          "Arredare si fa nella casa in 3D, da un dispositivo che la regge",
+          "Furnishing is done in the 3D home, from a device that can run it",
+        ),
+        "male",
+      );
+      return;
+    }
     state.arreda = !state.arreda;
     state.scena?.arreda(state.arreda);
     vibra(6);
@@ -1559,7 +1684,23 @@ function alClic(evento) {
     state.cadute = [];
     state.guasto = "";
     state.modelloGuasto = "";
+    state.rotto = "";
+    state.dettaglio = "";
     vibra(6);
+    return ridisegna();
+  }
+  /* «Prova il 3D» dalla pianta, e «Pianta» dal 3D: la scelta resta a questo
+   * dispositivo. */
+  if (cosa === "vista3d" || cosa === "vistapianta") {
+    ricordaLaVista(memoria(), cosa === "vista3d" ? "3d" : "pianta");
+    state.troppeCadute = false;
+    state.rotto = "";
+    state.dettaglio = "";
+    state.cadute = [];
+    state.guasto = "";
+    vibra(6);
+    spegniLaScena();
+    sgombraIlPosto();
     return ridisegna();
   }
   if (cosa === "modello") {
@@ -1701,6 +1842,7 @@ function installaLoStile() {
     ${C3} .c3-da-creare>span{font-size:44px}
     ${C3} .c3-da-creare h2{margin:0;font-size:20px;color:inherit}
     ${C3} .c3-da-creare p{margin:0;font-weight:500;line-height:1.45}
+    ${C3} .c3-da-creare .c3-dettaglio{max-width:520px;font-size:11px;font-weight:600;opacity:.7;word-break:break-word}
     ${C3} .c3-da-creare .c3-tasto-grande{padding:12px 20px;font-size:15px;background:#0ea5e9;border-color:#0ea5e9;color:#fff}
 
     ${C3} .c3-elenco-righe{display:grid;gap:8px;margin:0;padding:0;list-style:none}

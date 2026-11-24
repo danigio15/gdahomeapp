@@ -8468,4 +8468,7 @@ export default Object.freeze({
   "Yes, turn on": "نعم، افتح",
   "1 day": "يوم واحد",
   "1 minute": "دقيقة واحدة",
+  "Furnishing is done in the 3D home, from a device that can run it": "يتم التأثيث في المنزل ثلاثي الأبعاد، من جهاز يدعمه",
+  "Lighter, for tablets that struggle with 3D": "أخف، للأجهزة اللوحية التي تجد صعوبة مع العرض ثلاثي الأبعاد",
+  "Plan": "مخطط",
 });

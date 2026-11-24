@@ -8521,4 +8521,7 @@ export default Object.freeze({
   "Yes, turn on": "Evet, aç",
   "1 day": "1 gün",
   "1 minute": "1 dakika",
+  "Furnishing is done in the 3D home, from a device that can run it": "Döşeme, 3D'yi çalıştırabilen bir cihazda 3D evde yapılır",
+  "Lighter, for tablets that struggle with 3D": "Daha hafif, 3D'de zorlanan tabletler için",
+  "Plan": "Kat planı",
 });

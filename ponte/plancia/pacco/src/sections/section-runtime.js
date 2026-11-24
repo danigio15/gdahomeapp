@@ -411,67 +411,26 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-OYLIKB7S.js";
+} from "../../chunk-T7CQ5FEF.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
   controllaIlModello,
   troppoPerQuestoDispositivo,
   unitaProbabili
-} from "../../chunk-ZV2CIQQZ.js";
+} from "../../chunk-3G7LRMUX.js";
 import {
   ATTESA_DEL_RITORNO_MS,
-  CELLA,
-  CHIAVE_CASA3D,
   CHIAVE_NOMI_CASA3D,
-  CHIAVE_OCCHIO,
-  DISPOSITIVI_3D,
-  MODI_AL_MASSIMO,
-  PASSO_SALVATO,
-  PIANI_AL_MASSIMO,
-  RIQUADRI_AL_MASSIMO,
-  TELECAMERE_AL_MASSIMO,
-  TIPI_DI_DISPOSITIVO,
-  TIPI_DI_RIQUADRO,
-  azioneDelTocco,
-  casa3dPulita,
-  casaDelModello,
-  comprimiGriglia,
-  contaCollegati,
-  cosaFareDelVideo,
   cosaFareDopoLaCaduta,
-  entita,
-  entitaCandidate,
-  entitaProposta,
-  espandiGriglia,
-  flussoDaIstantanea,
-  flussoDellEnergia,
-  flussoInPausa,
-  ilCodiceCombacia,
-  ilCodiceServe,
   laCadutaConta,
   memoriaDelDispositivo,
-  mettiInPausaIlFlusso,
   modoDeiNomi,
   modoDopo,
-  modoInserito,
-  normalizzaIlCodice,
   nucleiDelDispositivo,
-  nuovoRiquadro,
-  occhioPulito,
-  percorsoDelFlusso,
-  percorsoDellIstantanea,
-  periodiDellEnergia,
   qualitaDellaCasa3D,
-  ricampiona,
-  senzaLeCaduteDiAdesso,
-  servizioDelModo,
-  servizioPerAprire,
-  statoDelDispositivo,
-  stessoFlusso,
-  usaIlModello,
-  vuoleIlVivo
-} from "../../chunk-GS7DKS73.js";
+  senzaLeCaduteDiAdesso
+} from "../../chunk-PUMDZYFV.js";
 import {
   ACCENTO,
   APPLIANCE_BINDING_FIELDS,
@@ -672,6 +631,49 @@ import {
   writeIconGlyph,
   writeJsonIfChanged
 } from "../../chunk-GT4H4BIJ.js";
+import {
+  CELLA,
+  CHIAVE_CASA3D,
+  CHIAVE_OCCHIO,
+  DISPOSITIVI_3D,
+  MODI_AL_MASSIMO,
+  PASSO_SALVATO,
+  PIANI_AL_MASSIMO,
+  RIQUADRI_AL_MASSIMO,
+  TELECAMERE_AL_MASSIMO,
+  TIPI_DI_DISPOSITIVO,
+  TIPI_DI_RIQUADRO,
+  azioneDelTocco,
+  casa3dPulita,
+  casaDelModello,
+  comprimiGriglia,
+  contaCollegati,
+  cosaFareDelVideo,
+  entita,
+  entitaCandidate,
+  entitaProposta,
+  espandiGriglia,
+  flussoDaIstantanea,
+  flussoDellEnergia,
+  flussoInPausa,
+  ilCodiceCombacia,
+  ilCodiceServe,
+  mettiInPausaIlFlusso,
+  modoInserito,
+  normalizzaIlCodice,
+  nuovoRiquadro,
+  occhioPulito,
+  percorsoDelFlusso,
+  percorsoDellIstantanea,
+  periodiDellEnergia,
+  ricampiona,
+  servizioDelModo,
+  servizioPerAprire,
+  statoDelDispositivo,
+  stessoFlusso,
+  usaIlModello,
+  vuoleIlVivo
+} from "../../chunk-HNM3TMKW.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -2990,6 +2992,7 @@ var SOURCE_INDEX = Object.freeze({
   "Armamento Totale": "Arm Away",
   "ARMATO ·": "ARMED ·",
   "Arreda": "Furnish",
+  "Arredare si fa nella casa in 3D, da un dispositivo che la regge": "Furnishing is done in the 3D home, from a device that can run it",
   "Arredi": "Furniture",
   "Arredi dalla pianta": "Furniture from the plan",
   "arriva a casa": "gets home",
@@ -6819,6 +6822,7 @@ var SOURCE_INDEX = Object.freeze({
   "Piano cottura": "Cooktop",
   "Piano Terra": "Ground Floor",
   "pianta": "plant",
+  "Pianta": "Plan",
   "Pianta ${i + 1}": "Plan ${i + 1}",
   "pianta arredata a colori: muri, finestre e arredi letti dai colori": "colour furnished plan: walls, windows and furniture read from the colours",
   "Pianta nuova": "New plant",
@@ -6864,6 +6868,7 @@ var SOURCE_INDEX = Object.freeze({
   "più entità": "more entities",
   "Più fitto": "Busiest",
   "più freddo del boiler": "colder than the boiler",
+  "Più leggera, per i tablet che col 3D faticano": "Lighter, for tablets that struggle with 3D",
   "Più rilevatori di fumo o gas stanno suonando.": "Several smoke or gas detectors are going off.",
   "Più tardi": "Later",
   "Più umidità": "More humidity",
@@ -17778,7 +17783,7 @@ function passoDellaFine(prima, { fase, rimasti = null, adesso: adesso2 = Date.no
     appenaFinita: finita
   };
 }
-function letturaDellaCottura(apparecchio = {}, states = {}, { adesso: adesso2 = Date.now(), modo = "", memoria = null } = {}) {
+function letturaDellaCottura(apparecchio = {}, states = {}, { adesso: adesso2 = Date.now(), modo = "", memoria: memoria2 = null } = {}) {
   const tipo = tipoDellaCucina(apparecchio);
   const leggi4 = (casella7) => {
     const entita4 = entitaDellaLettura(apparecchio, casella7);
@@ -17794,7 +17799,7 @@ function letturaDellaCottura(apparecchio = {}, states = {}, { adesso: adesso2 = 
   let totali = secondiTotali(leggi4("cottura_tempo_totale"));
   if (!faseViva(fase)) rimasti = null;
   if (rimasti != null && totali != null && totali < rimasti) totali = null;
-  const passo = passoDellaFine(memoria, {
+  const passo = passoDellaFine(memoria2, {
     fase,
     rimasti,
     adesso: adesso2,
@@ -38637,8 +38642,8 @@ function pastiglieDellaCasa(modelli2, { barra: barra3, posta, misure, mie, adess
     (pastiglia5) => pastiglia5.id ? pastiglia5 : { ...pastiglia5, id: pastiglia5.chiave }
   );
 }
-function passoDellaPosta(memoria, lettura4) {
-  const prima = memoria && typeof memoria === "object" ? memoria : {};
+function passoDellaPosta(memoria2, lettura4) {
+  const prima = memoria2 && typeof memoria2 === "object" ? memoria2 : {};
   const vista2 = Number(prima.vista) || 0;
   const primaAperto = typeof prima.aperto === "boolean" ? prima.aperto : null;
   const primaCambiatoIl = Number(prima.cambiatoIl) || 0;
@@ -38668,8 +38673,8 @@ function passoDellaPosta(memoria, lettura4) {
     cambiata: dopo.aperto !== primaAperto || dopo.cambiatoIl !== primaCambiatoIl || dopo.arrivo !== primaArrivo
   };
 }
-function postaRitirata(memoria, adesso2) {
-  const prima = memoria && typeof memoria === "object" ? memoria : {};
+function postaRitirata(memoria2, adesso2) {
+  const prima = memoria2 && typeof memoria2 === "object" ? memoria2 : {};
   return { ...prima, vista: Math.max(Number(adesso2) || 0, Number(prima.arrivo) || 0) };
 }
 
@@ -52772,17 +52777,17 @@ function creaLaMemoriaDeiLoghi({
   adesso: adesso2 = () => Date.now(),
   insieme: insieme3 = QUANTI_INSIEME
 } = {}) {
-  const memoria = /* @__PURE__ */ new Map();
+  const memoria2 = /* @__PURE__ */ new Map();
   const coda = [];
   let inCorso2 = 0;
   const diretto = (foto) => indirizzoDiretto(foto, { colPonte: colPonte() === true });
   function segna2(entita4, voce3) {
-    const prima = memoria.get(entita4);
-    memoria.set(entita4, voce3);
+    const prima = memoria2.get(entita4);
+    memoria2.set(entita4, voce3);
     if (voce3.url && voce3.url !== prima?.url) arrivato(entita4, voce3.url);
   }
   function cadutoDi(entita4, foto) {
-    const prima = memoria.get(entita4);
+    const prima = memoria2.get(entita4);
     const tentativi = (prima?.tentativi || 0) + 1;
     const fra = fraQuantoSiRiprova(tentativi);
     segna2(entita4, { esito: "caduto", url: diretto(foto), tentativi, dopo: adesso2() + fra });
@@ -52819,16 +52824,16 @@ function creaLaMemoriaDeiLoghi({
   function logo3(entita4, foto = "") {
     const chi = pulito34(entita4);
     if (!chi) return "";
-    const voce3 = memoria.get(chi);
+    const voce3 = memoria2.get(chi);
     if (voce3?.esito === "preso" || voce3?.esito === "niente" || voce3?.esito === "attesa")
       return voce3.url || "";
     if (voce3?.esito === "caduto" && adesso2() < voce3.dopo) return voce3.url || "";
     if (typeof chiedi9 !== "function") {
       const url = diretto(foto);
-      memoria.set(chi, { esito: "niente", url, tentativi: 0, dopo: 0 });
+      memoria2.set(chi, { esito: "niente", url, tentativi: 0, dopo: 0 });
       return url;
     }
-    memoria.set(chi, {
+    memoria2.set(chi, {
       esito: "attesa",
       url: voce3?.url || "",
       tentativi: voce3?.tentativi || 0,
@@ -52841,7 +52846,7 @@ function creaLaMemoriaDeiLoghi({
   return {
     logo: logo3,
     /** Cosa sa di quell'entita' (per le prove). */
-    voce: (entita4) => memoria.get(pulito34(entita4)) || null
+    voce: (entita4) => memoria2.get(pulito34(entita4)) || null
   };
 }
 
@@ -55008,7 +55013,7 @@ function storageMarkup(n) {
   ).join("")}</div></div>`;
 }
 function nodoMarkup(n, admin) {
-  const memoria = [quantita(n.memoria.usata, lingua2()), quantita(n.memoria.totale, lingua2())].filter(Boolean).join(" / ");
+  const memoria2 = [quantita(n.memoria.usata, lingua2()), quantita(n.memoria.totale, lingua2())].filter(Boolean).join(" / ");
   const disco = [quantita(n.disco.usato, lingua2()), quantita(n.disco.totale, lingua2())].filter(Boolean).join(" / ");
   const tasti2 = admin ? [
     n.tasti.reboot && tasto2(n.tasti.reboot, t("Riavvia il nodo", "Reboot node"), {
@@ -55051,7 +55056,7 @@ function nodoMarkup(n, admin) {
       </div>
       <div class="dm-px-barre">
         ${barra(t("CPU", "CPU"), n.cpu)}
-        ${barra(t("Memoria", "Memory"), n.memoria.perc, memoria)}
+        ${barra(t("Memoria", "Memory"), n.memoria.perc, memoria2)}
         ${barra(t("Disco", "Disk"), n.disco.perc, disco)}
         ${n.swap != null ? barra(t("Swap", "Swap"), n.swap) : ""}
       </div>
@@ -57788,15 +57793,15 @@ function memoriaPulita(salvata3) {
   }
   return { tipi, istanze };
 }
-function pesoDelTipo(memoria, tipo, adesso2) {
-  const voce3 = memoriaPulita(memoria).tipi[tipo];
+function pesoDelTipo(memoria2, tipo, adesso2) {
+  const voce3 = memoriaPulita(memoria2).tipi[tipo];
   if (!voce3) return 1;
   const vecchiaia = Math.max(0, adesso2 - voce3.ultimo) / DIMENTICA_IN;
   const no = voce3.no * 0.5 ** vecchiaia;
   return Math.min(1, (1 + voce3.si) / (1 + voce3.si + no));
 }
-function conLaRisposta(memoria, suggerimento, risposta, adesso2, fino = 0) {
-  const m = memoriaPulita(memoria);
+function conLaRisposta(memoria2, suggerimento, risposta, adesso2, fino = 0) {
+  const m = memoriaPulita(memoria2);
   const tipo = pulito38(suggerimento?.tipo);
   const id = pulito38(suggerimento?.id);
   if (!id) return m;
@@ -57846,8 +57851,8 @@ function finoA(scelta4, adesso2) {
   if (oraDi2(fino) < 7) fino = alleOre(fino, 8);
   return fino;
 }
-function memoriaDopo(memoria, idPresenti, adesso2) {
-  const m = memoriaPulita(memoria);
+function memoriaDopo(memoria2, idPresenti, adesso2) {
+  const m = memoriaPulita(memoria2);
   const presenti = new Set(idPresenti);
   for (const [id, voce3] of Object.entries(m.istanze)) {
     const ricorda3 = voce3.fatto || voce3.no;
@@ -57879,9 +57884,9 @@ function comeLoRicorda(s, istanza, adesso2) {
   }
   return istanza.fino > adesso2 ? "nascosto" : "visibile";
 }
-function suggerimentiDellaCasa(contesto3 = {}, memoria = {}, opzioni2 = {}, lingua9 = getLocale()) {
+function suggerimentiDellaCasa(contesto3 = {}, memoria2 = {}, opzioni2 = {}, lingua9 = getLocale()) {
   const o = opzioniDellAssistente(opzioni2);
-  const m = memoriaPulita(memoria);
+  const m = memoriaPulita(memoria2);
   const c = { ...contesto3, adesso: numero35(contesto3.adesso) ?? Date.now() };
   const notte = eNotte(c, o);
   const tutti = [];
@@ -58697,7 +58702,7 @@ function eUnSeguito(f) {
 function eUnaDomandaDiStato(f) {
   return f.tocca("acceso") || f.tocca("spento") || f.tocca("aperto") || f.tocca("chiuso") || /\b(come|stato|status|is|e|state)\b/.test(f.testo);
 }
-function capisci(testo5, sapere = {}, memoria = {}, opzioni2 = {}) {
+function capisci(testo5, sapere = {}, memoria2 = {}, opzioni2 = {}) {
   const f = frase2(testo5);
   if (!f.parole.length) return null;
   const adesso2 = Number(opzioni2.adesso ?? sapere.adesso ?? Date.now());
@@ -58725,7 +58730,7 @@ function capisci(testo5, sapere = {}, memoria = {}, opzioni2 = {}) {
     seguito: false
   };
   const con = (intento, resto = {}) => ({ ...base, intento, ...resto });
-  const attesa = memoria?.inAttesa;
+  const attesa = memoria2?.inAttesa;
   if (attesa) {
     if (attesa.codice && /^[a-z0-9]{3,12}$/i.test(pulito40(testo5).replace(/\s+/g, "")) && !f.tocca("no"))
       return con("codice", { codice: pulito40(testo5).replace(/\s+/g, "") });
@@ -58816,7 +58821,7 @@ function capisci(testo5, sapere = {}, memoria = {}, opzioni2 = {}) {
   if (categoria === "tapparelle") return con("tapparelle");
   const cosa = migliorePerNome(f, elenco5(sapere.entita), stanza2);
   if (cosa && eUnaDomandaDiStato(f)) return con("stato_dispositivo", { dispositivo: cosa });
-  const prima = memoria?.intento;
+  const prima = memoria2?.intento;
   if (prima && eUnSeguito(f)) {
     const seguito = { ...base, seguito: true };
     if (base.fuori && /^temperatura_dentro$/.test(prima))
@@ -58830,9 +58835,9 @@ function capisci(testo5, sapere = {}, memoria = {}, opzioni2 = {}) {
       return {
         ...seguito,
         intento: prima,
-        azione: memoria.azione || "",
-        categoria: memoria.categoria || "",
-        domini: elenco5(memoria.domini),
+        azione: memoria2.azione || "",
+        categoria: memoria2.categoria || "",
+        domini: elenco5(memoria2.domini),
         stanza: stanza2,
         casa: f.tocca("casa")
       };
@@ -61366,8 +61371,8 @@ RISPOSTE.aggiornamenti = (c, s) => {
   };
 };
 var DI_PASSAGGIO = /* @__PURE__ */ new Set(["saluto", "aiuto", "conferma", "annulla", "codice"]);
-function rispondiDaCasa(testo5, sapere = {}, memoria = {}, opzioni2 = {}) {
-  const m = memoria && typeof memoria === "object" ? memoria : {};
+function rispondiDaCasa(testo5, sapere = {}, memoria2 = {}, opzioni2 = {}) {
+  const m = memoria2 && typeof memoria2 === "object" ? memoria2 : {};
   const adesso2 = numero37(sapere.adesso) ?? Date.now();
   const s = { ...sapere, adesso: adesso2 };
   const capito = capisci(testo5, s, m, { lingua: opzioni2.lingua || s.lingua, adesso: adesso2 });
@@ -61467,9 +61472,9 @@ function scelte() {
     memoria: memoriaPulita(dato2.memoria)
   };
 }
-function scrivi(memoria) {
+function scrivi(memoria2) {
   const dato2 = readJson(CHIAVE_ASSISTENTE, {}) || {};
-  writeJsonIfChanged(CHIAVE_ASSISTENTE, { ...dato2, memoria: memoriaPulita(memoria) });
+  writeJsonIfChanged(CHIAVE_ASSISTENTE, { ...dato2, memoria: memoriaPulita(memoria2) });
 }
 var modello = (chiave2) => state52.modelli.find((m) => clean(m?.key) === chiave2) || null;
 var elenco8 = (valore3) => Array.isArray(valore3) ? valore3.filter(Boolean) : [];
@@ -61770,7 +61775,7 @@ function ricalcola() {
   }
   const adesso2 = Date.now();
   rinfrescaIModelli(adesso2);
-  const { opzioni: opzioni2, memoria } = scelte();
+  const { opzioni: opzioni2, memoria: memoria2 } = scelte();
   let contesto3;
   try {
     contesto3 = contestoDellaCasa(allStates() || {}, adesso2);
@@ -61778,15 +61783,15 @@ function ricalcola() {
     root.console?.warn?.("[DashboardModern] assistente", errore);
     return;
   }
-  const tutti = suggerimentiDellaCasa(contesto3, memoria, opzioni2, activeLocale());
+  const tutti = suggerimentiDellaCasa(contesto3, memoria2, opzioni2, activeLocale());
   const presenti = suggerimentiDellaCasa(
     contesto3,
     {},
     { ...opzioni2, sensibilita: "tutto" },
     activeLocale()
   ).map((s) => s.id);
-  const pulita3 = memoriaDopo(memoria, presenti, adesso2);
-  if (JSON.stringify(pulita3) !== JSON.stringify(memoria)) scrivi(pulita3);
+  const pulita3 = memoriaDopo(memoria2, presenti, adesso2);
+  if (JSON.stringify(pulita3) !== JSON.stringify(memoria2)) scrivi(pulita3);
   state52.suggerimenti = tutti;
   sistemaIlPostoAccanto();
   if (state52.aperto) disegnaIlFoglio();
@@ -62354,8 +62359,8 @@ function vai(azione) {
 function rispondi(id, risposta, fino = 0) {
   const s = state52.suggerimenti.find((x) => x.id === id);
   if (!s) return;
-  const { memoria } = scelte();
-  scrivi(conLaRisposta(memoria, s, risposta, Date.now(), fino));
+  const { memoria: memoria2 } = scelte();
+  scrivi(conLaRisposta(memoria2, s, risposta, Date.now(), fino));
   state52.rinvio = "";
   state52.conferma = "";
   ricalcola();
@@ -94634,11 +94639,11 @@ function lettureDelPeriodo(loads, period) {
   }
   for (const [, richiesta] of perVoce) richieste.push(richiesta);
   chiediIKwh(period, richieste);
-  const memoria = state73.kwhRicavati?.[period];
+  const memoria2 = state73.kwhRicavati?.[period];
   for (const [chiave2, { kind, entity: entity2 }] of perVoce) {
     const id = `${kind}:${entity2}`;
-    if (memoria?.valori.has(id)) valori[chiave2] = memoria.valori.get(id);
-    else if (memoria?.inCorso.has(id)) attese.add(chiave2);
+    if (memoria2?.valori.has(id)) valori[chiave2] = memoria2.valori.get(id);
+    else if (memoria2?.inCorso.has(id)) attese.add(chiave2);
   }
   return { valori, attese };
 }
@@ -94779,17 +94784,17 @@ function ultimiNumeri(periodo) {
 }
 function ricordaINumeri(periodo, model2) {
   if (periodo !== "day" && periodo !== "month") return;
-  const memoria = ultimiNumeri(periodo);
+  const memoria2 = ultimiNumeri(periodo);
   let cambiato = false;
   for (const nodo4 of model2.nodes) {
-    if (!Number.isFinite(nodo4.value) || memoria.valori[nodo4.id] === nodo4.value) continue;
-    memoria.valori[nodo4.id] = nodo4.value;
+    if (!Number.isFinite(nodo4.value) || memoria2.valori[nodo4.id] === nodo4.value) continue;
+    memoria2.valori[nodo4.id] = nodo4.value;
     cambiato = true;
   }
   if (!cambiato) return;
   try {
     const tutti = JSON.parse(root.localStorage?.getItem(ULTIMI_NUMERI_KEY) || "{}") || {};
-    tutti[periodo] = { chiave: memoria.chiave, valori: memoria.valori };
+    tutti[periodo] = { chiave: memoria2.chiave, valori: memoria2.valori };
     root.localStorage?.setItem(ULTIMI_NUMERI_KEY, JSON.stringify(tutti));
   } catch (_errore) {
   }
@@ -98560,9 +98565,9 @@ function tastoDelComando(voce3) {
 }
 function vesteIntegrazione(lista7, appliance, giaMostrate, titoletto4) {
   const deviceId = clean(appliance?.device_id);
-  const memoria = Array.isArray(appliance?.device_entities) ? appliance.device_entities : [];
+  const memoria2 = Array.isArray(appliance?.device_entities) ? appliance.device_entities : [];
   const catalogo = deviceId ? entitaDelDispositivo(deviceId) : null;
-  const delDispositivo = catalogo || memoria.map((entity_id) => ({ entity_id: clean(entity_id) }));
+  const delDispositivo = catalogo || memoria2.map((entity_id) => ({ entity_id: clean(entity_id) }));
   const gia = new Set(delDispositivo.map((voce3) => clean(voce3.entity_id)));
   const records = [
     ...delDispositivo,
@@ -154043,8 +154048,8 @@ function assistenteSalvato() {
 function assistenteMarkup() {
   const salvato2 = assistenteSalvato();
   const opzioni2 = opzioniDellAssistente(salvato2.opzioni);
-  const memoria = memoriaPulita(salvato2.memoria);
-  const imparato = Object.keys(memoria.tipi).length + Object.keys(memoria.istanze).length > 0;
+  const memoria2 = memoriaPulita(salvato2.memoria);
+  const imparato = Object.keys(memoria2.tipi).length + Object.keys(memoria2.istanze).length > 0;
   const ore3 = [18, 19, 20, 21, 22, 23];
   return `<div class="dm-people-assistente-ed" data-person-assistente>
     <span class="ed-slot-lbl">${esc(t("Di cosa parla", "What it talks about"))}</span>
@@ -176753,6 +176758,111 @@ function installOcchioEditor() {
 }
 senzaCadere(installOcchioEditor);
 
+// src/core/la-grafica-della-casa-3d.js
+var CHIAVE_DELLA_VISTA = "dm_casa3d_vista_v1";
+var VISTE = Object.freeze(["3d", "pianta"]);
+function provaLaGrafica(documento) {
+  const esito2 = { webgl2: false, webgl1: false, gpu: "" };
+  let tela4 = null;
+  try {
+    tela4 = documento?.createElement?.("canvas");
+  } catch (_errore) {
+    return esito2;
+  }
+  if (!tela4?.getContext) return esito2;
+  const prova3 = (tipo) => {
+    try {
+      return tela4.getContext(tipo, { failIfMajorPerformanceCaveat: false }) || null;
+    } catch (_errore) {
+      return null;
+    }
+  };
+  let gl = prova3("webgl2");
+  if (gl) esito2.webgl2 = true;
+  else {
+    try {
+      tela4 = documento.createElement("canvas");
+    } catch (_errore) {
+    }
+    gl = prova3("webgl") || prova3("experimental-webgl");
+    if (gl) esito2.webgl1 = true;
+  }
+  if (esito2.webgl2) esito2.webgl1 = true;
+  if (gl) {
+    try {
+      const info = gl.getExtension("WEBGL_debug_renderer_info");
+      const nome = info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+      esito2.gpu = String(nome || "").slice(0, 80);
+    } catch (_errore) {
+    }
+    try {
+      gl.getExtension("WEBGL_lose_context")?.loseContext();
+    } catch (_errore) {
+    }
+  }
+  return esito2;
+}
+function vistaRicordata(memoria2) {
+  try {
+    const v = String(memoria2?.getItem?.(CHIAVE_DELLA_VISTA) || "");
+    return VISTE.includes(v) ? v : "";
+  } catch (_errore) {
+    return "";
+  }
+}
+function ricordaLaVista(memoria2, vista2) {
+  try {
+    if (VISTE.includes(vista2)) memoria2?.setItem?.(CHIAVE_DELLA_VISTA, vista2);
+    else memoria2?.removeItem?.(CHIAVE_DELLA_VISTA);
+  } catch (_errore) {
+  }
+}
+function comeMostrareLaCasa({
+  grafica = null,
+  scelta: scelta4 = "",
+  caduto = false,
+  rotto = ""
+} = {}) {
+  const si3d = !grafica || grafica.webgl2 === true;
+  if (!si3d)
+    return {
+      vista: "pianta",
+      motivo: grafica?.webgl1 ? "solo-webgl1" : "senza-webgl",
+      si3d
+    };
+  if (rotto) return { vista: "pianta", motivo: "non-parte", si3d };
+  if (caduto) return { vista: "pianta", motivo: "memoria", si3d };
+  if (scelta4 === "pianta") return { vista: "pianta", motivo: "", si3d };
+  return { vista: "3d", motivo: "", si3d };
+}
+function perchéLaPianta(motivo, italiano2 = true) {
+  const L = (it, en) => italiano2 ? it : en;
+  switch (motivo) {
+    case "solo-webgl1":
+      return L(
+        "Questo dispositivo non ha la grafica per il 3D (solo WebGL 1): la casa è in pianta.",
+        "This device lacks the graphics for 3D (WebGL 1 only): the home is shown as a floor plan."
+      );
+    case "senza-webgl":
+      return L(
+        "Questo dispositivo non ha la grafica 3D (niente WebGL): la casa è in pianta.",
+        "This device has no 3D graphics (no WebGL): the home is shown as a floor plan."
+      );
+    case "non-parte":
+      return L(
+        "Il 3D non parte su questo dispositivo: la casa è in pianta.",
+        "3D won't start on this device: the home is shown as a floor plan."
+      );
+    case "memoria":
+      return L(
+        "Il 3D si è fermato più volte (poca memoria grafica): la casa è in pianta, più leggera.",
+        "3D stopped several times (low graphics memory): the home is shown as a lighter floor plan."
+      );
+    default:
+      return "";
+  }
+}
+
 // src/core/cartella-della-plancia.js
 function cartellaDellaPlancia(qui) {
   const m = /^(.*\/dashboardmodern_static\/(?:[^/?#]+\/)?)(?:legacy|src|pacco)\//.exec(
@@ -176792,7 +176902,7 @@ async function caricaIlMotore() {
   const [THREE, caricatori, scena2] = await Promise.all([
     import(MOTORE.tre),
     import(MOTORE.caricatori),
-    import("../../scena-modello-GHBEQ3UB.js")
+    import("../../scena-modello-5FWBEPB2.js")
   ]);
   return { THREE, caricatori, scena: scena2 };
 }
@@ -177401,13 +177511,22 @@ var state201 = root[KEY204] ||= {
    * il fuoco prima che si aprisse. */
   finestraDal: 0,
   fuocoDaDare: false,
-  fuocoPrima: null
+  fuocoPrima: null,
+  /* La casa in pianta (`sections/casa-3d/pianta.js`), dove il 3D non c'e' o
+   * non regge: che grafica c'e' qui (si chiede una volta), se la scena in
+   * mano adesso e' la pianta, se il 3D si e' fermato troppe volte, e
+   * l'errore del 3D che non e' partito (vedi `comeLaMostro`). */
+  grafica: null,
+  inPianta: false,
+  troppeCadute: false,
+  rotto: "",
+  dettaglio: ""
 };
 function casa3dDiQui() {
   return casa3dPulita(readJson(CHIAVE_CASA3D, null));
 }
 function conIlModello(casa4) {
-  if (!usaIlModello(casa4)) return false;
+  if (state201.inPianta || !usaIlModello(casa4)) return false;
   if (state201.modelloGuasto === casa4.modello.id) return false;
   return !(casa4.piani.length && troppoPerQuestoDispositivo(casa4.modello));
 }
@@ -177466,6 +177585,7 @@ function testataMarkup3(casa4, admin, modello2 = false) {
       </div>
       <div class="c3-pillole">${modello2 ? pillola2("modello", `🧊 ${casa4.piani[0]?.nome || ""}`) : pillola2("esterno", `${casa4.tipo === "palazzo" ? "🏢" : "🏡"} ${t("Esterno", "Outside")}`)}${modello2 ? "" : pianiDallAlto(casa4).map((x) => pillola2(x.k, x.nome)).join("")}</div>
       <span class="c3-spazio"></span>
+      ${state201.scena && !state201.inPianta && !modello2 && casa4.piani.length ? `<button type="button" class="c3-tasto" data-c3s="vistapianta" title="${esc(t("Più leggera, per i tablet che col 3D faticano", "Lighter, for tablets that struggle with 3D"))}">🗺️ ${esc(t("Pianta", "Plan"))}</button>` : ""}
       ${admin && casa4.piani.length ? `<button type="button" class="c3-tasto" data-c3s="arreda" aria-pressed="${state201.arreda}">🎨 ${esc(t("Arreda", "Furnish"))}</button>
              ${modello2 ? "" : `<button type="button" class="c3-tasto" data-c3s="crea">🏗️ ${esc(t("Crea / modifica la casa", "Create / edit the house"))}</button>`}
              <button type="button" class="c3-tasto" data-c3s="modello">🧊 ${esc(t("Il tuo modello 3D", "Your 3D model"))}</button>` : ""}
@@ -177984,12 +178104,75 @@ function cadeIlModello(id) {
   ridisegna35();
 }
 var firmaDi3 = (casa4) => `${conIlModello(casa4) ? "M" : "C"}${JSON.stringify(casa4)}`;
+function memoria() {
+  try {
+    return root.localStorage || null;
+  } catch (_errore) {
+    return null;
+  }
+}
+function comeLaMostro() {
+  if (state201.grafica === null) state201.grafica = provaLaGrafica(doc);
+  return comeMostrareLaCasa({
+    grafica: state201.grafica,
+    scelta: vistaRicordata(memoria()),
+    caduto: state201.troppeCadute,
+    rotto: state201.rotto
+  });
+}
+async function avviaLaPianta(admin, come2) {
+  state201.caricando = true;
+  state201.guasto = "";
+  try {
+    const { creaPianta } = await import("../../pianta-R6FPVSOM.js");
+    const nodo4 = doc.getElementById(ID5);
+    const posto = nodo4?.querySelector(".c3-posto");
+    if (!posto) return;
+    const casa4 = casa3dDiQui();
+    if (!casa4.attiva) return;
+    if (!casa4.piani.length) {
+      state201.guasto = come2.motivo || "pianta";
+      return;
+    }
+    state201.inPianta = true;
+    state201.scena = creaPianta({
+      contenitore: posto,
+      casa: casa4,
+      stati: () => allStates() || {},
+      italiano: italiano(),
+      admin,
+      quandoTocchi: alToccoDellaScena,
+      quandoCambiVista: (vista2) => {
+        if (state201.vista === vista2) return;
+        state201.vista = vista2;
+        ridisegna35();
+      },
+      motivo: perchéLaPianta(come2.motivo, italiano()),
+      si3d: come2.si3d
+    });
+    state201.firma = firmaDi3(casa4);
+    if (state201.vista !== "esterno") state201.scena.apri(state201.vista);
+    state201.vista = state201.scena.vista();
+  } catch (errore) {
+    state201.inPianta = false;
+    state201.scena = null;
+    state201.guasto = come2.motivo || "pianta";
+    state201.dettaglio = String(errore?.message || errore);
+    root.console?.warn?.("[DashboardModern] casa 3d, la pianta", errore);
+    sgombraIlPosto();
+  } finally {
+    state201.caricando = false;
+    ridisegna35();
+  }
+}
 async function avviaLaScena(admin) {
+  const come2 = comeLaMostro();
+  if (come2.vista === "pianta") return avviaLaPianta(admin, come2);
   if (conIlModello(casa3dDiQui())) return avviaIlModello(admin);
   state201.caricando = true;
   state201.guasto = "";
   try {
-    const [THREE, { creaScena }] = await Promise.all([import(TRE), import("../../scena-5B33ELWG.js")]);
+    const [THREE, { creaScena }] = await Promise.all([import(TRE), import("../../scena-5ORA47DD.js")]);
     const nodo4 = doc.getElementById(ID5);
     const posto = nodo4?.querySelector(".c3-posto");
     if (!posto) return;
@@ -178025,8 +178208,9 @@ async function avviaLaScena(admin) {
     if (state201.vista !== "esterno" && !state201.scena.apri(state201.vista)) state201.vista = "esterno";
     if (state201.arreda) state201.scena.arreda(true);
   } catch (errore) {
-    state201.guasto = String(errore?.message || errore);
+    state201.rotto = String(errore?.message || errore) || "?";
     root.console?.warn?.("[DashboardModern] casa 3d", errore);
+    spegniLaScena();
     sgombraIlPosto();
   } finally {
     state201.caricando = false;
@@ -178059,6 +178243,7 @@ function spegniLaScena() {
   }
   state201.scena = null;
   state201.firma = "";
+  state201.inPianta = false;
 }
 function scenaCaduta() {
   const adesso2 = Date.now();
@@ -178076,7 +178261,8 @@ function scenaCaduta() {
   root.console?.warn?.("[DashboardModern] casa 3d: il disegno e' caduto", state201.cadute.length);
   if (esito2.azione === "basta") {
     spegniLaScena();
-    state201.guasto = "disegno";
+    state201.troppeCadute = true;
+    ricordaLaVista(memoria(), "pianta");
     ridisegna35();
     return;
   }
@@ -178208,7 +178394,13 @@ function togliLaTela3() {
   doc?.documentElement?.classList?.remove("dm-casa3d-acceso");
 }
 function guastoMarkup() {
-  const testo5 = state201.guasto === "disegno" ? t(
+  const perche7 = perchéLaPianta(state201.guasto, italiano());
+  const g = state201.grafica;
+  const dettaglio = [
+    g ? `WebGL ${g.webgl2 ? "2" : g.webgl1 ? "1" : "—"}${g.gpu ? ` · ${g.gpu}` : ""}` : "",
+    state201.rotto || state201.dettaglio || ""
+  ].filter(Boolean).join(" · ");
+  const testo5 = perche7 ? perche7.replace(/: la casa è in pianta.*$|: the home is shown.*$/, ".") : state201.guasto === "disegno" ? t(
     "La casa in 3D si è fermata più volte: questo dispositivo non ha abbastanza memoria grafica per tenerla aperta.",
     "The 3D house stopped several times: this device does not have enough graphics memory to keep it open."
   ) : t(
@@ -178216,7 +178408,7 @@ function guastoMarkup() {
     "The 3D house cannot open on this device."
   );
   const riprova2 = esc(t("Riprova", "Try again"));
-  return `<div class="c3-da-creare"><span aria-hidden="true">🏢</span><p>${esc(testo5)}</p>
+  return `<div class="c3-da-creare"><span aria-hidden="true">🏢</span><p>${esc(testo5)}</p>${dettaglio ? `<small class="c3-dettaglio">${esc(dettaglio)}</small>` : ""}
     <button type="button" class="c3-tasto c3-tasto-grande" data-c3s="riprova">↻ ${riprova2}</button></div>`;
 }
 function attesaMarkup(casa4, vuota2, admin) {
@@ -178433,6 +178625,16 @@ function alClic6(evento) {
     return scegliIlModo(el.dataset.c3sE, el.dataset.c3sM);
   }
   if (cosa === "arreda") {
+    if (state201.inPianta) {
+      avviso3(
+        t(
+          "Arredare si fa nella casa in 3D, da un dispositivo che la regge",
+          "Furnishing is done in the 3D home, from a device that can run it"
+        ),
+        "male"
+      );
+      return;
+    }
     state201.arreda = !state201.arreda;
     state201.scena?.arreda(state201.arreda);
     vibra2(6);
@@ -178460,7 +178662,21 @@ function alClic6(evento) {
     state201.cadute = [];
     state201.guasto = "";
     state201.modelloGuasto = "";
+    state201.rotto = "";
+    state201.dettaglio = "";
     vibra2(6);
+    return ridisegna35();
+  }
+  if (cosa === "vista3d" || cosa === "vistapianta") {
+    ricordaLaVista(memoria(), cosa === "vista3d" ? "3d" : "pianta");
+    state201.troppeCadute = false;
+    state201.rotto = "";
+    state201.dettaglio = "";
+    state201.cadute = [];
+    state201.guasto = "";
+    vibra2(6);
+    spegniLaScena();
+    sgombraIlPosto();
     return ridisegna35();
   }
   if (cosa === "modello") {
@@ -178590,6 +178806,7 @@ function installaLoStile11() {
     ${C3} .c3-da-creare>span{font-size:44px}
     ${C3} .c3-da-creare h2{margin:0;font-size:20px;color:inherit}
     ${C3} .c3-da-creare p{margin:0;font-weight:500;line-height:1.45}
+    ${C3} .c3-da-creare .c3-dettaglio{max-width:520px;font-size:11px;font-weight:600;opacity:.7;word-break:break-word}
     ${C3} .c3-da-creare .c3-tasto-grande{padding:12px 20px;font-size:15px;background:#0ea5e9;border-color:#0ea5e9;color:#fff}
 
     ${C3} .c3-elenco-righe{display:grid;gap:8px;margin:0;padding:0;list-style:none}

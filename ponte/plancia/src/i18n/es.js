@@ -8569,4 +8569,7 @@ export default Object.freeze({
   "Yes, turn on": "Sí, abrir",
   "1 day": "1 día",
   "1 minute": "1 minuto",
+  "Furnishing is done in the 3D home, from a device that can run it": "Se amuebla en la casa 3D, desde un dispositivo que la soporte",
+  "Lighter, for tablets that struggle with 3D": "Más ligera, para las tabletas que sufren con el 3D",
+  "Plan": "Plano",
 });

@@ -8540,4 +8540,7 @@ export default Object.freeze({
   "Yes, turn on": "Да, открыть",
   "1 day": "1 день",
   "1 minute": "1 минута",
+  "Furnishing is done in the 3D home, from a device that can run it": "Обстановка делается в 3D-доме, на устройстве, которое его тянет",
+  "Lighter, for tablets that struggle with 3D": "Легче — для планшетов, которым тяжело с 3D",
+  "Plan": "План",
 });

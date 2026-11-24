@@ -8490,4 +8490,7 @@ export default Object.freeze({
   "Yes, turn on": "예, 열기",
   "1 day": "1일",
   "1 minute": "1분",
+  "Furnishing is done in the 3D home, from a device that can run it": "가구 배치는 3D를 실행할 수 있는 기기의 3D 집에서 합니다",
+  "Lighter, for tablets that struggle with 3D": "더 가볍게, 3D가 버거운 태블릿용",
+  "Plan": "평면도",
 });

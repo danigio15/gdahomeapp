@@ -1,21 +1,23 @@
 import {
-  CELLA,
-  DISPOSITIVI_3D,
   GRADINI_PER_LA_LENTEZZA,
   LATO_DEL_PALLINO,
-  azioneDelTocco,
   chiPrendeLaScritta,
-  dispositivoPulito,
-  entita,
-  entitaCandidate,
-  espandiGriglia,
   fotogrammiLenti,
   memoriaDelDispositivo,
   modoDeiNomi,
   nucleiDelDispositivo,
-  qualitaDellaCasa3D,
+  qualitaDellaCasa3D
+} from "./chunk-PUMDZYFV.js";
+import {
+  CELLA,
+  DISPOSITIVI_3D,
+  azioneDelTocco,
+  dispositivoPulito,
+  entita,
+  entitaCandidate,
+  espandiGriglia,
   statoDelDispositivo
-} from "./chunk-GS7DKS73.js";
+} from "./chunk-HNM3TMKW.js";
 
 // src/sections/casa-3d/arredi-3d.js
 var CATALOGO_ARREDI = Object.freeze([
@@ -143,7 +145,11 @@ function comuni(THREE) {
     acciaio: M("#c7ccd3", { metalness: 0.7, roughness: 0.25 }),
     ceramica: M("#fbfbfa", { roughness: 0.2 }),
     nero: M("#0b1220", { roughness: 0.15 }),
-    vetro: new THREE.MeshPhysicalMaterial({ color: "#d6ecff", transmission: 0.6, transparent: true, opacity: 0.35, roughness: 0.05 })
+    /* Il vetro dei mobili (vetrine, tavoli): trasparente e basta. Col vetro
+     * «vero» (`transmission`) three ridisegna tutta la casa una seconda volta a
+     * ogni fotogramma, per vederci attraverso: su un tablet a muro e' la
+     * differenza fra una casa che si muove e una che si ferma. */
+    vetro: new THREE.MeshStandardMaterial({ color: "#d6ecff", transparent: true, opacity: 0.35, roughness: 0.05, depthWrite: false })
   };
   COMUNI.set(THREE, c);
   return c;
