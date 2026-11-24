@@ -8,6 +8,14 @@ i suoi in `ponte/CHANGELOG.md`, ed è quello che Home Assistant fa vedere. Un
 rilascio dell'app non fa comparire un aggiornamento dell'add-on, e al
 contrario.
 
+## 1.19.29
+
+- **Le pagine che si aprono**: aprendo Premium o un'altra pagina, non si vede
+  più la pagina di prima attraverso quella nuova mentre arriva.
+- **Navigatore, vista «Corsie»**: non compaiono più strade e sopraelevate che
+  non esistono (strade private, viadotti in costruzione), le gallerie stanno
+  sotto le strade, e incroci e zebrature restano dentro l'asfalto.
+
 ## 1.19.28
 
 - **Salute, i dati del WHOOP**: quello che l'app WHOOP scrive in Apple Salute
