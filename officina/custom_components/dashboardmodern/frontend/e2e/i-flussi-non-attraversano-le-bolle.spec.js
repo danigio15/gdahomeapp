@@ -18,6 +18,7 @@ const CARICHI = [
   { id: "l4", name: "Lavatrice", power_entity: "sensor.l4", order: 4, icon: "🧺" },
   { id: "l5", name: "Cucina", power_entity: "sensor.l5", order: 5, icon: "🍳" },
   { id: "l6", name: "Pompa", power_entity: "sensor.l6", order: 6, icon: "💧" },
+  { id: "l7", name: "Forno", power_entity: "sensor.l7", order: 7, icon: "🔥" },
 ];
 
 const SEME = {
@@ -45,7 +46,11 @@ const SEME = {
   visibility: { home: true, energy: true },
 };
 
-test("sei carichi: le file si sfalsano e le linee passano nei varchi", async ({
+/* Sette, e non piu' sei. Con sei le file sono tre e tre, e due file uguali
+ * sfalsate non stanno tutte e due al centro («sistema anche la centratura,
+ * non mi piace»): adesso stanno in colonna, con le linee dietro, e lo dice la
+ * prova in fondo. Lo sfalsamento resta dove le file sono diverse. */
+test("sette carichi: le file si sfalsano e le linee passano nei varchi", async ({
   page,
 }, testInfo) => {
   test.setTimeout(180_000);
@@ -117,8 +122,8 @@ test("sei carichi: le file si sfalsano e le linee passano nei varchi", async ({
     return { bolle, linee, quadro: { largo: quadro.width, alto: quadro.height } };
   });
 
-  /* Sei bolle, due file. */
-  expect(scena.bolle.length).toBe(6);
+  /* Sette bolle, due file. */
+  expect(scena.bolle.length).toBe(7);
   const file = [...new Set(scena.bolle.map((b) => Math.round(b.cy)))].sort((a, b) => a - b);
   expect(file.length).toBe(2);
 
@@ -126,7 +131,7 @@ test("sei carichi: le file si sfalsano e le linee passano nei varchi", async ({
      costringeva la linea a passare dentro. */
   const sopra = scena.bolle.filter((b) => Math.round(b.cy) === file[0]);
   const sotto = scena.bolle.filter((b) => Math.round(b.cy) === file[1]);
-  expect(sopra.length).toBe(3);
+  expect(sopra.length).toBe(4);
   expect(sotto.length).toBe(3);
   for (const giu of sotto) {
     for (const su of sopra) {
@@ -139,7 +144,7 @@ test("sei carichi: le file si sfalsano e le linee passano nei varchi", async ({
 
   /* E nessuna linea entra in una bolla. Il capo di una linea finisce dentro la
      bolla a cui va: si guardano solo le altre. */
-  expect(scena.linee.length).toBeGreaterThanOrEqual(6);
+  expect(scena.linee.length).toBeGreaterThanOrEqual(7);
   for (const linea of scena.linee) {
     const arrivo = linea.at(-1);
     const sua = scena.bolle.find(
@@ -211,4 +216,75 @@ test("sei carichi: le file si sfalsano e le linee passano nei varchi", async ({
   await palco.screenshot({
     path: process.env.SCATTO_FLUSSI || "/tmp/flussi-dopo.png",
   });
+});
+
+test("sei cerchi: tre e tre in colonna sotto la Casa, e non si toccano", async ({
+  page,
+}, testInfo) => {
+  test.setTimeout(180_000);
+  const sei = CARICHI.slice(0, 6);
+  await page.setViewportSize({ width: 412, height: 915 });
+  await page.route("https://**", (route) => route.fulfill({ status: 200, body: "" }));
+  await bootNamespacedDashboard(page, "dashboard.html", testInfo, {
+    ...SEME,
+    sections: { ...SEME.sections, loads: sei },
+  });
+  await page.locator("#setup-wizard").evaluateAll((nodi) => nodi.forEach((n) => n.remove()));
+  await page.evaluate((carichi) => {
+    const scrivi = (id, valore) => {
+      _RAW_STATES[id] = {
+        entity_id: id,
+        state: String(valore),
+        attributes: { unit_of_measurement: "W" },
+      };
+      STATES[id] = _RAW_STATES[id];
+    };
+    scrivi("sensor.fv_w", 4180);
+    scrivi("sensor.rete_w", -2940);
+    scrivi("sensor.batt_w", 0);
+    carichi.forEach((carico, indice) => scrivi(carico.power_entity, 300 + indice * 220));
+    localStorage.setItem("cd_loads", JSON.stringify(carichi));
+    window.render?.();
+  }, sei);
+  await page.evaluate(() => document.getElementById("editor-modal")?.remove());
+  await page
+    .locator('.tab[data-tab="energy"]')
+    .first()
+    .evaluate((nodo) => nodo.click());
+  const palco = page.locator(".flow-stage").first();
+  await expect(palco.locator(".node.n-load[data-dm-flow-node]")).toHaveCount(6, {
+    timeout: 20_000,
+  });
+  await page.waitForTimeout(800);
+
+  const scena = await page.evaluate(() => {
+    const stage = document.querySelector(".flow-stage");
+    const quadro = stage.getBoundingClientRect();
+    const casa = document.querySelector("#n-home").getBoundingClientRect();
+    const bolle = [...stage.querySelectorAll(".node.n-load[data-dm-flow-node]")]
+      .map((nodo) => nodo.getBoundingClientRect())
+      .filter((riga) => riga.width > 0)
+      .map((riga) => ({
+        cx: riga.x - quadro.x + riga.width / 2,
+        cy: riga.y - quadro.y + riga.height / 2,
+        lato: riga.width,
+      }));
+    return { bolle, largo: quadro.width, casa: casa.x - quadro.x + casa.width / 2 };
+  });
+  const file = [...new Set(scena.bolle.map((b) => Math.round(b.cy)))].sort((a, b) => a - b);
+  expect(file.length).toBe(2);
+  const sopra = scena.bolle.filter((b) => Math.round(b.cy) === file[0]).sort((a, b) => a.cx - b.cx);
+  const sotto = scena.bolle.filter((b) => Math.round(b.cy) === file[1]).sort((a, b) => a.cx - b.cx);
+  expect(sopra.length).toBe(3);
+  expect(sotto.length).toBe(3);
+  /* In colonna, e la colonna di mezzo e' quella della Casa. */
+  sopra.forEach((su, indice) => expect(Math.abs(su.cx - sotto[indice].cx)).toBeLessThan(1.5));
+  expect(Math.abs(sopra[1].cx - scena.casa)).toBeLessThan(1.5);
+  /* Lo stesso margine dai due lati. */
+  for (const fila of [sopra, sotto])
+    expect(Math.abs(fila[0].cx + fila[2].cx - scena.largo)).toBeLessThan(2);
+  /* E fra le due file resta aria: in colonna i cerchi crescevano fino a
+     toccarsi, perche' si guardava solo il passo nella fila. */
+  expect(file[1] - file[0] - sopra[0].lato).toBeGreaterThanOrEqual(12);
+  expect(sopra[1].cx - sopra[0].cx - sopra[0].lato).toBeGreaterThanOrEqual(12);
 });

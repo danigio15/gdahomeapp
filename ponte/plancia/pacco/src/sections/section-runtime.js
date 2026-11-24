@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-RLDUJXCZ.js";
+} from "../../chunk-JVUOOPTA.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -14802,7 +14802,7 @@ function flowStageLayout(count, variant = "desktop") {
   const primaFila = sizes[0] || 0;
   const righe4 = sizes.length > 1 && geometry.dueFile ? geometry.dueFile : geometry;
   const mobile = variant === "mobile";
-  const uguali = mobile && sizes.length > 1 && sizes[1] === primaFila && primaFila >= 4;
+  const uguali = mobile && sizes.length > 1 && sizes[1] === primaFila && primaFila >= 3;
   const piena = mobile && (sizes.length === 1 || sizes[1] < primaFila || uguali);
   sizes.forEach((size, rowIndex) => {
     for (let column = 0; column < size; column += 1) {
@@ -15042,10 +15042,14 @@ function residuoNonMisurato(casa4, misurati = [], period = "instant") {
   if (!(resto >= soglia3)) return 0;
   return round(resto, period === "instant" ? 1 : 3);
 }
-function conIlResiduo({ visible, readings, casa: casa4, period, nome, tieni }) {
+var MUTO_DA_TANTO_MS = 2 * 60 * 1e3;
+var idDelCerchio = (voce3, index) => clean3(voce3?.load?.id) || `${voce3?.slotKey || "flow-load"}-${index}`;
+function conIlResiduo({ visible, readings, casa: casa4, period, nome, tieni, mutiDaTanto: mutiDaTanto2 }) {
   if (casa4 === null || !visible.length || visible.length >= FLOW_MAX_LOADS) return null;
   if (period !== "instant" && readings.some((lettura4) => lettura4.attesa)) return null;
-  if (readings.some((lettura4) => lettura4.sensore && lettura4.value === null)) return null;
+  const daTanto = (index) => Boolean(mutiDaTanto2 && typeof mutiDaTanto2.has === "function") && mutiDaTanto2.has(idDelCerchio(visible[index], index));
+  if (readings.some((lettura4, index) => lettura4.sensore && lettura4.value === null && !daTanto(index)))
+    return null;
   const resto = residuoNonMisurato(
     casa4,
     readings.map((lettura4) => lettura4.value),
@@ -15103,7 +15107,10 @@ function flowStageModel(options = {}) {
     nomeDelResiduo = "Non monitorati",
     /* Il cerchio dei non monitorati c'era gia' in questa vista: resta anche
      * a 0 W, invece di sparire e far ballare il disegno. */
-    tieniIlResiduo = false
+    tieniIlResiduo = false,
+    /* I cerchi (per id) il cui sensore tace da piu' di `MUTO_DA_TANTO_MS`:
+     * non si aspettano piu' per fare il conto dei non monitorati. */
+    mutiDaTanto: mutiDaTanto2 = null
   } = options;
   const attende = (voce3) => {
     const chiave2 = clean3(voce3?.id) || clean3(voce3?.name);
@@ -15140,7 +15147,8 @@ function flowStageModel(options = {}) {
     casa: valoreDellaCasa(casa4, period),
     period,
     nome: nomeDelResiduo,
-    tieni: Boolean(tieniIlResiduo)
+    tieni: Boolean(tieniIlResiduo),
+    mutiDaTanto: mutiDaTanto2
   });
   if (residuo?.nuovo) {
     visible.push(residuo.nuovo.voce);
@@ -94852,6 +94860,26 @@ function vehiclePopupTarget() {
   return { entities };
 }
 var residuoDi = (period) => `${clean(impiantoScelto2().plant?.id)}|${period}`;
+function mutiDaTanto(chiave2, adesso2 = Date.now()) {
+  const muti = state73.cerchiMuti?.[chiave2];
+  const tanti = /* @__PURE__ */ new Set();
+  if (muti) {
+    for (const [id, da] of muti) if (adesso2 - da >= MUTO_DA_TANTO_MS) tanti.add(id);
+  }
+  return tanti;
+}
+function ricordaIMuti(chiave2, model2, adesso2 = Date.now()) {
+  const muti = (state73.cerchiMuti ||= {})[chiave2] ||= /* @__PURE__ */ new Map();
+  const visti = /* @__PURE__ */ new Set();
+  for (const nodo4 of model2.nodes) {
+    if (nodo4.residuo) continue;
+    visti.add(nodo4.id);
+    if (nodo4.sensore && nodo4.value === null && !nodo4.waiting) {
+      if (!muti.has(nodo4.id)) muti.set(nodo4.id, adesso2);
+    } else muti.delete(nodo4.id);
+  }
+  for (const id of [...muti.keys()]) if (!visti.has(id)) muti.delete(id);
+}
 function stageModel(period) {
   const { loads, appliances: appliances4, perStanza } = carichiDelFlusso();
   const model2 = flowStageModel({
@@ -94877,8 +94905,10 @@ function stageModel(period) {
     nomeDelResiduo: t("Non monitorati", "Unmonitored"),
     /* Ricordato per impianto: il cerchio nato in una zona non deve restare
      * a 0 W nell'altra, dove non e' mai servito. */
-    tieniIlResiduo: Boolean(state73.nonMonitorati?.[residuoDi(period)])
+    tieniIlResiduo: Boolean(state73.nonMonitorati?.[residuoDi(period)]),
+    mutiDaTanto: mutiDaTanto(residuoDi(period))
   });
+  ricordaIMuti(residuoDi(period), model2);
   if (model2.nodes.some((nodo4) => nodo4.residuo))
     state73.nonMonitorati = { ...state73.nonMonitorati, [residuoDi(period)]: true };
   ricordaINumeri(period, model2);
@@ -95239,12 +95269,31 @@ function passoPiuStretto(nodes, stretto) {
   }
   return passo;
 }
+function distanzaFraLeFile(nodes, stretto, largo, alto) {
+  let vicino = 0;
+  for (let i = 0; i < nodes.length; i += 1) {
+    const uno3 = stretto ? nodes[i].mobile : nodes[i].desktop;
+    for (let j = i + 1; j < nodes.length; j += 1) {
+      const altro = stretto ? nodes[j].mobile : nodes[j].desktop;
+      if (!uno3 || !altro || uno3.top === altro.top) continue;
+      const qui = Math.hypot(
+        largo * (Number(uno3.left) - Number(altro.left)) / 100,
+        alto * (Number(uno3.top) - Number(altro.top)) / 100
+      );
+      if (qui > 0 && (!vicino || qui < vicino)) vicino = qui;
+    }
+  }
+  return vicino;
+}
 function quantoCiStaNelPalco(stage, model2, scala2) {
-  const largo = stage?.getBoundingClientRect?.().width || 0;
+  const quadro = stage?.getBoundingClientRect?.();
+  const largo = quadro?.width || 0;
   const { bolla, stretto } = comeSiamoMessi();
   const inFila = quanteInFila(model2.nodes, stretto);
   if (!largo || inFila <= 1) return scala2;
-  const passo = largo * passoPiuStretto(model2.nodes, stretto) / 100 || largo / (inFila + 1);
+  const inRiga = largo * passoPiuStretto(model2.nodes, stretto) / 100 || largo / (inFila + 1);
+  const fraFile = distanzaFraLeFile(model2.nodes, stretto, largo, quadro?.height || 0);
+  const passo = fraFile ? Math.min(inRiga, fraFile) : inRiga;
   const ciSta = Math.max(0, passo - ARIA_FRA_BOLLE) / bolla;
   const tetto = stretto ? 1 : scala2;
   return Math.max(QUANTO_STRETTE_AL_MASSIMO, Math.min(tetto, Number(ciSta.toFixed(3))));

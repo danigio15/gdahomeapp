@@ -3,6 +3,7 @@ import {
   flowPeriodEntity,
   flowRecorderEntity,
   flowStageModel,
+  MUTO_DA_TANTO_MS,
   fonteDiRipiego,
 } from "../core/energy-flow-topology.js";
 import {
@@ -712,6 +713,28 @@ export function lAutoNelFlusso() {
 
 const residuoDi = (period) => `${clean(impiantoScelto().plant?.id)}|${period}`;
 
+/* Da quando ogni cerchio tace, per impianto e periodo: chi non risponde da
+ * piu' di `MUTO_DA_TANTO_MS` non tiene piu' nascosti i «Non monitorati». */
+function mutiDaTanto(chiave, adesso = Date.now()) {
+  const muti = state.cerchiMuti?.[chiave];
+  const tanti = new Set();
+  if (muti) for (const [id, da] of muti) if (adesso - da >= MUTO_DA_TANTO_MS) tanti.add(id);
+  return tanti;
+}
+
+function ricordaIMuti(chiave, model, adesso = Date.now()) {
+  const muti = ((state.cerchiMuti ||= {})[chiave] ||= new Map());
+  const visti = new Set();
+  for (const nodo of model.nodes) {
+    if (nodo.residuo) continue;
+    visti.add(nodo.id);
+    if (nodo.sensore && nodo.value === null && !nodo.waiting) {
+      if (!muti.has(nodo.id)) muti.set(nodo.id, adesso);
+    } else muti.delete(nodo.id);
+  }
+  for (const id of [...muti.keys()]) if (!visti.has(id)) muti.delete(id);
+}
+
 function stageModel(period) {
   const { loads, appliances, perStanza } = carichiDelFlusso();
   const model = flowStageModel({
@@ -738,7 +761,9 @@ function stageModel(period) {
     /* Ricordato per impianto: il cerchio nato in una zona non deve restare
      * a 0 W nell'altra, dove non e' mai servito. */
     tieniIlResiduo: Boolean(state.nonMonitorati?.[residuoDi(period)]),
+    mutiDaTanto: mutiDaTanto(residuoDi(period)),
   });
+  ricordaIMuti(residuoDi(period), model);
   if (model.nodes.some((nodo) => nodo.residuo))
     state.nonMonitorati = { ...state.nonMonitorati, [residuoDi(period)]: true };
   ricordaINumeri(period, model);
@@ -1285,12 +1310,39 @@ function passoPiuStretto(nodes, stretto) {
   return passo;
 }
 
+/* Quanto dista, in punti, il cerchio piu' vicino di UN'ALTRA fila.
+ *
+ * Il passo nella fila non basta piu' da quando due file uguali stanno in
+ * colonna: tre cerchi per fila hanno fra loro centoventinove punti, e
+ * crescevano fino a novantasei — ma la fila di sotto sta cento punti piu'
+ * giu', e i cerchi si toccavano. Fra file sfalsate la distanza e' in
+ * diagonale ed e' sempre piu' del passo: per loro non cambia niente. */
+function distanzaFraLeFile(nodes, stretto, largo, alto) {
+  let vicino = 0;
+  for (let i = 0; i < nodes.length; i += 1) {
+    const uno = stretto ? nodes[i].mobile : nodes[i].desktop;
+    for (let j = i + 1; j < nodes.length; j += 1) {
+      const altro = stretto ? nodes[j].mobile : nodes[j].desktop;
+      if (!uno || !altro || uno.top === altro.top) continue;
+      const qui = Math.hypot(
+        (largo * (Number(uno.left) - Number(altro.left))) / 100,
+        (alto * (Number(uno.top) - Number(altro.top))) / 100,
+      );
+      if (qui > 0 && (!vicino || qui < vicino)) vicino = qui;
+    }
+  }
+  return vicino;
+}
+
 function quantoCiStaNelPalco(stage, model, scala) {
-  const largo = stage?.getBoundingClientRect?.().width || 0;
+  const quadro = stage?.getBoundingClientRect?.();
+  const largo = quadro?.width || 0;
   const { bolla, stretto } = comeSiamoMessi();
   const inFila = quanteInFila(model.nodes, stretto);
   if (!largo || inFila <= 1) return scala;
-  const passo = (largo * passoPiuStretto(model.nodes, stretto)) / 100 || largo / (inFila + 1);
+  const inRiga = (largo * passoPiuStretto(model.nodes, stretto)) / 100 || largo / (inFila + 1);
+  const fraFile = distanzaFraLeFile(model.nodes, stretto, largo, quadro?.height || 0);
+  const passo = fraFile ? Math.min(inRiga, fraFile) : inRiga;
   const ciSta = Math.max(0, passo - ARIA_FRA_BOLLE) / bolla;
   /* Sul telefono comanda solo lo spazio vero: il rimpicciolimento del modello
    * per «tante bolle» e' pensato per una fila sola, e su due file lo si
