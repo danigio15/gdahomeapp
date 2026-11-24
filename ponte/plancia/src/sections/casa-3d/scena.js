@@ -34,7 +34,13 @@ import {
 } from "../../core/casa-3d.js";
 import { ARREDI_SOTTO, CATALOGO_ARREDI, CON_TESSUTO, VOCI_ARREDI, arredo3D } from "./arredi-3d.js";
 import { STILE_DELLE_SCRITTE, creaLeScritte } from "./le-scritte.js";
-import { memoriaDelDispositivo, qualitaDellaCasa3D } from "../../core/la-qualita-della-casa-3d.js";
+import {
+  GRADINI_PER_LA_LENTEZZA,
+  fotogrammiLenti,
+  memoriaDelDispositivo,
+  nucleiDelDispositivo,
+  qualitaDellaCasa3D,
+} from "../../core/la-qualita-della-casa-3d.js";
 import {
   PARETE_DI_PARTENZA,
   PARETI,
@@ -203,13 +209,19 @@ export function creaScena(THREE, opzioni = {}) {
    * caduto su questa pagina: chi rifa' la scena dopo una caduta la vuole piu'
    * leggera. */
   const memoria = memoriaDelDispositivo(window.navigator);
+  const nuclei = nucleiDelDispositivo(window.navigator);
+  /* `lenta`: i gradini scesi perche' la casa andava a scatti — quelli che
+   * chi tiene la scena ricorda da prima, e quelli che si scendono qui (vedi
+   * `misuraIlPasso`). */
+  let lenta = Math.max(0, Math.floor(Number(opzioni.lenta) || 0));
   const qualita = (w = 0, h = 0) =>
-    qualitaDellaCasa3D({ dpr: window.devicePixelRatio || 1, larghezza: w, altezza: h, memoria, cadute: opzioni.cadute || 0 });
+    qualitaDellaCasa3D({ dpr: window.devicePixelRatio || 1, larghezza: w, altezza: h, memoria, nuclei, cadute: opzioni.cadute || 0, lenta });
   const Q = qualita(contenitore?.clientWidth || 0, contenitore?.clientHeight || 0);
   const renderer = new THREE.WebGLRenderer({ antialias: Q.antialias, alpha: true, preserveDrawingBuffer: Boolean(opzioni.perLeProve) });
   renderer.setPixelRatio(Q.pixel);
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  /* l'ombra sfumata (piu' letture per ogni punto) solo a qualita' piena */
+  renderer.shadowMap.type = Q.ombra >= 2048 ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -1148,8 +1160,8 @@ export function creaScena(THREE, opzioni = {}) {
   scena.add(cielo);
   const sole = new THREE.DirectionalLight("#cdd8ff", 0.6);
   sole.position.set(CX - 16, 30 + CIMA, 18);
-  sole.castShadow = true;
-  sole.shadow.mapSize.set(Q.ombra, Q.ombra);
+  sole.castShadow = Q.ombra > 0;
+  if (Q.ombra > 0) sole.shadow.mapSize.set(Q.ombra, Q.ombra);
   const ombra = MISURA + 12;
   Object.assign(sole.shadow.camera, { left: -ombra, right: ombra, top: ombra, bottom: -ombra, far: 120 + CIMA * 2 });
   sole.shadow.bias = -0.0006;
@@ -1195,22 +1207,30 @@ export function creaScena(THREE, opzioni = {}) {
     /* solo un sensore che pulsa tiene vivo il giro (vedi `giro`) */
     pulsa: false,
     timerPulsa: 0,
+    /* il fotogramma di prima era gia' di questo volo (vedi `misuraIlPasso`) */
+    diFila: false,
+    /* una finestra sta sopra la casa: non si disegna (vedi `sospendi`) */
+    sospesa: false,
   };
 
   /* ── il giro dei fotogrammi ───────────────────────────────────────── */
   function richiedi() {
     /* nelle prove i fotogrammi li chiede chi prova, uno alla volta */
-    if (S.morto || S.perso || S.raf || opzioni.perLeProve) return;
+    if (S.morto || S.perso || S.sospesa || S.raf || opzioni.perLeProve) return;
     S.ultimo = performance.now();
     S.raf = requestAnimationFrame(giro);
   }
   function giro(t) {
     S.raf = 0;
-    if (S.morto || S.perso) return;
-    const dt = Math.min(0.1, Math.max(0, (t - S.ultimo) / 1000));
+    if (S.morto || S.perso || S.sospesa) return;
+    const passato = t - S.ultimo;
+    const dt = Math.min(0.1, Math.max(0, passato / 1000));
     S.ultimo = t;
+    const diFila = S.diFila;
+    S.diFila = false;
     const ancora = avanza(dt);
     disegna();
+    if (diFila && S.vola) misuraIlPasso(passato);
     /* Detto sul palco: la vista e' arrivata (chi guarda da fuori — le prove,
      * una foto — sa quando la casa e' ferma). */
     const fermo = String(!S.vola);
@@ -1224,11 +1244,52 @@ export function creaScena(THREE, opzioni = {}) {
       if (!S.timerPulsa)
         S.timerPulsa = setTimeout(() => {
           S.timerPulsa = 0;
-          if (!S.morto && !S.perso && !S.raf) S.raf = requestAnimationFrame(giro);
+          if (!S.morto && !S.perso && !S.sospesa && !S.raf) S.raf = requestAnimationFrame(giro);
         }, PASSO_DEL_PULSARE_MS);
       return;
     }
+    S.diFila = true;
     S.raf = requestAnimationFrame(giro);
+  }
+  /* «Ora si apre, ma e' ancora pesante per lui.» Quanto regge un tablet non
+   * lo dice nessuno: lo si misura. Mentre la casa vola da una vista
+   * all'altra i fotogrammi arrivano uno dietro l'altro, e l'intervallo fra
+   * due e' quanto ci mette il dispositivo a disegnarne uno. Se sono pochi
+   * (`fotogrammiLenti`) si scende di un gradino, o di due se la casa quasi
+   * non si muove — meno pixel, poi niente ombra — e si rimisura: al massimo
+   * qualche gradino, e mai all'insu'.
+   * Si contano solo i fotogrammi di fila di un volo: il primo dopo una
+   * pausa, e quelli del sensore che pulsa col suo passo lento, non dicono
+   * niente. */
+  const passi = [];
+  function misuraIlPasso(ms) {
+    if (lenta >= GRADINI_PER_LA_LENTEZZA || !(ms > 0)) return;
+    passi.push(ms);
+    const gradini = fotogrammiLenti(passi);
+    /* troppo poco per decidere: si continua a misurare */
+    if (gradini === null) return;
+    passi.length = 0;
+    if (!gradini) return;
+    const prima = qualita(largo, alto);
+    lenta = Math.min(GRADINI_PER_LA_LENTEZZA, lenta + gradini);
+    const dopo = qualita(largo, alto);
+    if (dopo.pixel === prima.pixel && dopo.ombra === prima.ombra) {
+      /* piu' giu' di cosi' non si va */
+      lenta = GRADINI_PER_LA_LENTEZZA;
+      return;
+    }
+    if (dopo.ombra <= 0 && sole.castShadow) {
+      sole.castShadow = false;
+      sole.shadow.map?.dispose?.();
+      sole.shadow.map = null;
+    }
+    palco.dataset.qualita = "leggera";
+    /* i pixel si rifanno alla prossima inquadratura: se il volo finisce
+     * proprio qui, un fotogramma in piu' (dopo questo giro, che il suo lo sta
+     * ancora chiedendo) */
+    largo = alto = 0;
+    setTimeout(richiedi, 0);
+    opzioni.quandoRallenta?.(lenta);
   }
   /* Un passo dell'animazione; torna vero se qualcosa si sta ancora muovendo. */
   function avanza(dt) {
@@ -2348,6 +2409,23 @@ export function creaScena(THREE, opzioni = {}) {
     largo = alto = 0;
     richiedi();
   }
+  /* Con una finestra sopra (il video di una telecamera, le modalita' del
+   * clima) la casa non si vede: disegnarla lo stesso — il volo verso un
+   * piano, la zona di un sensore che pulsa — ruba al dito il tempo per
+   * chiudere la finestra, e su un tablet debole la ✕ risponde dopo secondi.
+   * Sospesa, la scena non chiede fotogrammi; ripresa, ne chiede uno e
+   * continua da dov'era. */
+  function sospendi(si) {
+    const ferma = Boolean(si);
+    if (S.sospesa === ferma || S.morto) return;
+    S.sospesa = ferma;
+    if (!ferma) return richiedi();
+    if (S.raf) cancelAnimationFrame(S.raf);
+    S.raf = 0;
+    clearTimeout(S.timerPulsa);
+    S.timerPulsa = 0;
+    S.diFila = false;
+  }
   const osservatore = typeof ResizeObserver === "function" ? new ResizeObserver(() => ridimensiona()) : null;
   osservatore?.observe(palco);
 
@@ -2371,6 +2449,7 @@ export function creaScena(THREE, opzioni = {}) {
     arreda,
     distruggi,
     ridimensiona,
+    sospendi,
     /** Le scritte dei dispositivi: «tutti», «accesi» o «nessuno» (vedi le-scritte.js). */
     nomi: (modo) => scritte.modo(modo),
     /** Un fotogramma subito, senza aspettare il giro: per le prove. */

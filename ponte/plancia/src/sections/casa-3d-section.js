@@ -27,12 +27,18 @@ import {
   casa3dPulita,
   casaDelModello,
   contaCollegati,
+  cosaFareDelVideo,
   statoDelDispositivo,
   usaIlModello,
 } from "../core/casa-3d.js";
 import { troppoPerQuestoDispositivo } from "../core/modello-3d.js";
 import { CHIAVE_NOMI_CASA3D, modoDeiNomi, modoDopo } from "../core/le-scritte-della-casa-3d.js";
-import { ATTESA_DEL_RITORNO_MS, cosaFareDopoLaCaduta } from "../core/la-qualita-della-casa-3d.js";
+import {
+  ATTESA_DEL_RITORNO_MS,
+  cosaFareDopoLaCaduta,
+  laCadutaConta,
+  senzaLeCaduteDiAdesso,
+} from "../core/la-qualita-della-casa-3d.js";
 import { caricaIlMotore } from "./casa-3d-modello-section.js";
 import { apriIlMenu, premiumDellaCasa, premiumRicordato } from "./plancia-a-muro-section.js";
 import { CHIAVE_RISERVATE, telecamereVisibili } from "../core/telecamere-riservate.js";
@@ -105,6 +111,17 @@ const state = (root[KEY] ||= {
   cadute: [],
   persa: false,
   timerDelRitorno: 0,
+  /* Quando la pagina e' tornata in vista l'ultima volta (vedi
+   * `laCadutaConta`), e quando il modello e' caduto col disegno. */
+  tornataIl: 0,
+  modelloCadutoIl: 0,
+  /* I gradini scesi perche' la casa andava a scatti (vedi `scenaLenta`). */
+  lenta: 0,
+  /* Quando si e' aperta la finestra (vedi il velo in `alClic`), e chi aveva
+   * il fuoco prima che si aprisse. */
+  finestraDal: 0,
+  fuocoDaDare: false,
+  fuocoPrima: null,
 });
 
 /** La casa del config, pulita. */
@@ -656,13 +673,36 @@ function finestraMarkup(casa, states) {
   const nome = d
     ? nomeDelDispositivo(d, states)
     : clean(states?.[f.entity]?.attributes?.friendly_name) || t("Telecamera", "Camera");
+  /* Sotto il video, per quando la telecamera non si apre: il motore dice
+   * cosa non ha funzionato (`.cam-popup-error`), qui si dice cosa fare, con i
+   * due tasti a portata di dito — riprovare, o uscire. Si vede solo se
+   * l'errore c'e' (vedi il foglio). */
   return `<div class="c3-velo" data-c3s="velo">
-      <section class="c3-finestra" role="dialog" aria-modal="true">
+      <section class="c3-finestra" role="dialog" aria-modal="true" aria-label="${esc(nome)}">
         <div class="c3-finestra-testa"><h3>📹 ${esc(nome)}</h3>
           <button type="button" class="c3-chiudi" data-c3s="chiudi" aria-label="${esc(t("Chiudi", "Close"))}">✕</button></div>
         <div class="c3-video" data-c3-video="${esc(f.entity)}"></div>
+        <div class="c3-video-aiuto">
+          <p>${esc(
+            t(
+              "Cosa fare: controlla che la telecamera sia accesa e che in Home Assistant si veda, poi riprova.",
+              "What to do: check that the camera is on and that it shows in Home Assistant, then try again.",
+            ),
+          )}</p>
+          <div class="c3-video-tasti">
+            <button type="button" class="c3-tasto" data-c3s="rivedi">↻ ${esc(t("Riprova", "Try again"))}</button>
+            <button type="button" class="c3-tasto" data-c3s="chiudi">${esc(t("Chiudi", "Close"))}</button>
+          </div>
+        </div>
       </section>
     </div>`;
+}
+
+/* L'errore detto da qui, con le classi del motore: cosa non va in grande,
+ * cosa fare sotto. `daSistemare`: riprovare non serve, prima va sistemata
+ * (sotto resta solo «Chiudi», vedi il foglio). */
+function erroreDelVideo(titolo, sotto, daSistemare = false) {
+  return `<div class="cam-popup-error${daSistemare ? " c3-da-sistemare" : ""}">⚠️ ${esc(titolo)}<br><span class="c3-video-perche">${esc(sotto)}</span></div>`;
 }
 
 /* Il video lo mette il motore delle telecamere della plancia, lo stesso del
@@ -676,16 +716,68 @@ function accendiIlVideo(sopra, casa, states) {
     return;
   }
   const entity = posto.dataset.c3Video;
+  /* Una telecamera che Home Assistant non conosce (tolta, rinominata) non ha
+   * strade da provare: il motore le tenterebbe tutte per dire alla fine
+   * «impossibile aprire». Si dice subito cosa non va, e chi la sistema. */
+  if (!states?.[entity]) {
+    let admin = false;
+    try {
+      admin = puoConfigurare();
+    } catch (_errore) {}
+    posto.innerHTML = erroreDelVideo(
+      t(
+        "Home Assistant non conosce questa telecamera: è stata tolta o rinominata.",
+        "Home Assistant does not know this camera: it was removed or renamed.",
+      ),
+      admin
+        ? t(
+            "Ricollegala da «Arreda» → Dispositivi.",
+            "Link it again from «Furnish» → Devices.",
+          )
+        : t(
+            "Chiedi a chi amministra la casa di ricollegarla.",
+            "Ask whoever manages the home to link it again.",
+          ),
+      true,
+    );
+    return;
+  }
   const d = [...casa.piani.flatMap((p) => p.dispositivi), ...casa.esterno.telecamere].find(
     (x) => x.entity === entity,
   );
   const nome = d ? nomeDelDispositivo(d, states) : entity;
   try {
-    apri({ entity, name: nome }, nome, posto);
+    /* Il motore e' asincrono: quello che gli va storto dopo (una strada che
+     * cade fuori dal suo giro) non deve restare un errore senza padrone, e la
+     * finestra non deve restare vuota. */
+    const corsa = apri({ entity, name: nome }, nome, posto);
     state.videoAperto = true;
+    corsa?.catch?.((errore) => {
+      root.console?.warn?.("[DashboardModern] casa 3d, video", errore);
+      if (posto.isConnected && !posto.querySelector("video,img,.cam-popup-error"))
+        posto.innerHTML = erroreDelVideo(
+          t("La telecamera non si apre.", "The camera cannot open."),
+          String(errore?.message || errore || ""),
+        );
+    });
   } catch (errore) {
     root.console?.warn?.("[DashboardModern] casa 3d, video", errore);
+    posto.innerHTML = erroreDelVideo(
+      t("La telecamera non si apre.", "The camera cannot open."),
+      String(errore?.message || errore || ""),
+    );
   }
+}
+
+/* «Riprova» sotto l'errore: lo stesso video, da capo, nella stessa finestra. */
+function rivediIlVideo() {
+  const nodo = doc.getElementById(ID);
+  const sopra = nodo?.querySelector(".c3-sopra");
+  const posto = sopra?.querySelector("[data-c3-video]");
+  if (!posto || state.finestra?.tipo !== "telecamera") return;
+  chiudiIlVideo();
+  posto.innerHTML = "";
+  accendiIlVideo(sopra, casaDaElencare(casa3dDiQui()), allStates() || {});
 }
 
 /* Chiude solo il video aperto da qui: il motore e' uno, e chiuderlo a ogni
@@ -704,10 +796,17 @@ function chiudiIlVideo() {
  * ponte dice che la casa e' Premium. La risposta vale mezz'ora; nel frattempo
  * vale quello che il dispositivo ha saputo l'ultima volta. */
 const MEZZ_ORA = 30 * 60 * 1000;
+/* Un «no» si richiede presto. Se l'ha detto il ponte, chi tiene la licenza
+ * (`premiumDellaCasa`) lo ricorda per mezz'ora e risponde senza disturbarlo;
+ * se invece era solo il ponte che non rispondeva — la casa che riparte, il
+ * filo che torna — la domanda riparte davvero, e la casa si apre da sola
+ * invece di restare chiusa mezz'ora, o finche' non si chiude e riapre l'app. */
+const UN_MINUTO = 60 * 1000;
 
 function eCasaPremium() {
   if (state.premium === null && premiumRicordato() === true) state.premium = true;
-  if (state.premium === null || Date.now() - (state.chiestaIl || 0) > MEZZ_ORA) chiediLaLicenza();
+  const vale = state.premium === false ? UN_MINUTO : MEZZ_ORA;
+  if (state.premium === null || Date.now() - (state.chiestaIl || 0) > vale) chiediLaLicenza();
   return state.premium === true;
 }
 
@@ -802,13 +901,23 @@ async function avviaIlModello(admin) {
       quandoTocchi: alToccoDellaScena,
       quandoSalvi: salvaLaCasa,
       /* il modello cade solo col disegno (`webglcontextlost`): la casa
-       * generata che prende il suo posto si fa piu' leggera */
+       * generata che prende il suo posto si fa piu' leggera. Ma non se e'
+       * caduto perche' la pagina stava dietro (`laCadutaConta`): allora il
+       * modello non ha colpe, e si rifa' com'era. */
       quandoCade: () => {
-        state.cadute = cosaFareDopoLaCaduta(state.cadute, Date.now()).cadute;
+        const adesso = Date.now();
+        if (!cadutaDelDispositivo(adesso)) {
+          spegniLaScena();
+          ridisegna();
+          return;
+        }
+        state.cadute = cosaFareDopoLaCaduta(state.cadute, adesso).cadute;
+        state.modelloCadutoIl = adesso;
         cadeIlModello(m.id);
       },
       nomi: nomiScelti(),
       cadute: state.cadute.length,
+      lenta: state.lenta || 0,
     });
     state.firma = firmaDi(ora);
     state.vista = "modello";
@@ -826,6 +935,7 @@ async function avviaIlModello(admin) {
 function cadeIlModello(id) {
   state.modelloGuasto = id || "";
   spegniLaScena();
+  sgombraIlPosto();
   const casa = casa3dDiQui();
   if (casa.piani.length)
     avviso(
@@ -870,6 +980,9 @@ async function avviaLaScena(admin) {
       cadute: state.cadute.length,
       quandoCade: scenaCaduta,
       quandoTorna: scenaTornata,
+      /* i gradini gia' scesi perche' la casa andava a scatti, e quelli nuovi */
+      lenta: state.lenta || 0,
+      quandoRallenta: scenaLenta,
       quandoCambiVista: (vista) => {
         if (state.vista === vista) return;
         state.vista = vista;
@@ -882,10 +995,35 @@ async function avviaLaScena(admin) {
   } catch (errore) {
     state.guasto = String(errore?.message || errore);
     root.console?.warn?.("[DashboardModern] casa 3d", errore);
+    sgombraIlPosto();
   } finally {
     state.caricando = false;
     ridisegna();
   }
+}
+
+/* La scena che non e' riuscita a nascere lascia i suoi pezzi sul palco (la
+ * tela, gli strati delle scritte): si tolgono, e il disegno che avesse fatto
+ * in tempo a prendersi si restituisce. Senza, ogni «Riprova» ne metteva
+ * un'altra sopra. */
+function sgombraIlPosto() {
+  if (state.scena) return;
+  const posto = doc.getElementById(ID)?.querySelector(".c3-posto");
+  if (!posto) return;
+  for (const tela of posto.querySelectorAll("canvas")) {
+    try {
+      const gl = tela.getContext("webgl2") || tela.getContext("webgl");
+      gl?.getExtension("WEBGL_lose_context")?.loseContext();
+    } catch (_errore) {}
+  }
+  posto.textContent = "";
+}
+
+/* La casa va a scatti (`fotogrammiLenti`): la scena e' gia' scesa di un
+ * gradino da se'; qui lo si ricorda, per quella che si rifara' su questa
+ * pagina. */
+function scenaLenta(gradini) {
+  state.lenta = Math.max(state.lenta || 0, Number(gradini) || 0);
 }
 
 function spegniLaScena() {
@@ -917,25 +1055,90 @@ function spegniLaScena() {
  *
  * Niente ricarica della pagina: si rifa' solo la scena. */
 function scenaCaduta() {
-  const esito = cosaFareDopoLaCaduta(state.cadute, Date.now());
-  state.cadute = esito.cadute;
+  const adesso = Date.now();
   state.persa = true;
-  root.console?.warn?.("[DashboardModern] casa 3d: il disegno e' caduto", state.cadute.length);
   root.clearTimeout?.(state.timerDelRitorno);
+  state.timerDelRitorno = 0;
+  /* «Non mi si apre piu' la casa, sempre da telefono.» Il telefono che passa
+   * a un'altra app, lo schermo che si spegne: il browser si riprende il
+   * disegno di una pagina che nessuno guarda, anche sul telefono migliore.
+   * Contate come le altre, quattro andate e ritorni in cinque minuti
+   * facevano dire alla casa che il dispositivo non ha memoria grafica, e
+   * gia' alla prima la casa tornava sgranata. Quelle non si contano
+   * (`laCadutaConta`): si aspetta che la pagina torni in vista, e li' il
+   * disegno torna o la scena si rifa' — com'era, non piu' leggera. */
+  if (!cadutaDelDispositivo(adesso)) {
+    root.console?.info?.("[DashboardModern] casa 3d: il disegno e' caduto con la pagina dietro");
+    if (!paginaNascosta()) aspettaIlRitorno();
+    ridisegna();
+    return;
+  }
+  const esito = cosaFareDopoLaCaduta(state.cadute, adesso);
+  state.cadute = esito.cadute;
+  root.console?.warn?.("[DashboardModern] casa 3d: il disegno e' caduto", state.cadute.length);
   if (esito.azione === "basta") {
     spegniLaScena();
     state.guasto = "disegno";
     ridisegna();
     return;
   }
+  aspettaIlRitorno();
+  ridisegna();
+}
+
+const paginaNascosta = () => doc?.hidden === true;
+
+function cadutaDelDispositivo(adesso) {
+  return laCadutaConta({ nascosta: paginaNascosta(), tornataIl: state.tornataIl || 0, adesso });
+}
+
+/* Si aspetta un poco che il browser restituisca il disegno; se non lo fa, si
+ * rifa' la scena (piu' leggera, se la caduta e' stata contata). */
+function aspettaIlRitorno() {
+  root.clearTimeout?.(state.timerDelRitorno);
   state.timerDelRitorno =
     root.setTimeout?.(() => {
       state.timerDelRitorno = 0;
       if (!state.persa) return;
-      /* non e' tornato: si rifa' la scena, piu' leggera */
       spegniLaScena();
       ridisegna();
     }, ATTESA_DEL_RITORNO_MS) || 0;
+}
+
+/* La pagina che va dietro e che torna.
+ *
+ * Andando dietro: le cadute degli ultimi istanti erano gia' questo (il
+ * browser la caduta la dice a volte un attimo prima di dire che la pagina non
+ * si vede), e non si contano piu' — e se una di quelle aveva fatto dire
+ * «basta», o aveva fatto cadere il modello, si torna indietro. Finche' la
+ * pagina non si vede non si aspetta niente: il disegno non torna a chi sta
+ * dietro.
+ *
+ * Tornando: la casa che si era fermata riparte da capo — chi torna vuole
+ * vedere la casa, non il messaggio di prima — e il disegno caduto intanto ha
+ * il suo tempo per tornare, poi la scena si rifa'. */
+function alCambioDiVista() {
+  const adesso = Date.now();
+  if (paginaNascosta()) {
+    const prima = (state.cadute || []).length;
+    state.cadute = senzaLeCaduteDiAdesso(state.cadute, adesso);
+    if (state.cadute.length !== prima) {
+      if (state.guasto === "disegno") state.guasto = "";
+      if (adesso - (state.modelloCadutoIl || 0) < ATTESA_DEL_RITORNO_MS * 2) {
+        state.modelloGuasto = "";
+        if (state.guasto === "modello") state.guasto = "";
+      }
+    }
+    root.clearTimeout?.(state.timerDelRitorno);
+    state.timerDelRitorno = 0;
+    return;
+  }
+  state.tornataIl = adesso;
+  if (state.guasto === "disegno") {
+    state.cadute = [];
+    state.guasto = "";
+  }
+  if (state.scena && state.persa) aspettaIlRitorno();
   ridisegna();
 }
 
@@ -1033,6 +1236,9 @@ function togliLaTela() {
   chiudiIlVideo();
   spegniLaScena();
   state.finestra = null;
+  /* la casa che si riapre riparte da capo: il «non si apre» di prima non la
+   * tiene chiusa (le cadute contate restano, e con loro la scena leggera) */
+  state.guasto = "";
   if (state.timer) root.clearInterval?.(state.timer);
   state.timer = 0;
   doc?.getElementById(ID)?.remove();
@@ -1066,7 +1272,8 @@ function attesaMarkup(casa, vuota, admin) {
   if (state.scena) return "";
   if (state.guasto && !vuota) return guastoMarkup();
   if (vuota && usaIlModello(casa))
-    return `<div class="c3-da-creare"><p>${esc(t("La casa in 3D non si apre su questo dispositivo.", "The 3D house cannot open on this device."))}</p>${
+    return `<div class="c3-da-creare"><p>${esc(t("La casa in 3D non si apre su questo dispositivo.", "The 3D house cannot open on this device."))}</p>
+      <button type="button" class="c3-tasto c3-tasto-grande" data-c3s="riprova">↻ ${esc(t("Riprova", "Try again"))}</button>${
       admin
         ? `<button type="button" class="c3-tasto" data-c3s="modello">🧊 ${esc(t("Il tuo modello 3D", "Your 3D model"))}</button>`
         : ""
@@ -1131,17 +1338,44 @@ function disegna() {
    * smette di potersi guardare si chiude subito. */
   const sopra = nodo.querySelector(".c3-sopra");
   const video = sopra.querySelector("[data-c3-video]");
-  if (video && guardabili.has(video.dataset.c3Video)) {
+  /* «Aperto» lo dice la finestra, non il video ancora in pagina: chiusa con
+   * la ✕, col tocco fuori o con Esc, la finestra se ne va anche se la
+   * telecamera si potrebbe guardare ancora (`cosaFareDelVideo`). */
+  const delVideo = cosaFareDelVideo(state.finestra, video?.dataset.c3Video, guardabili);
+  if (delVideo !== "niente" && delVideo !== "resta") chiudiIlVideo();
+  if (delVideo === "spegni") state.finestra = null;
+  /* con una finestra sopra la casa non si vede, e non si disegna (`sospendi`) */
+  state.scena?.sospendi?.(Boolean(state.finestra));
+  if (delVideo === "resta") {
     avviaIlBattito();
     return;
   }
-  if (video) {
-    chiudiIlVideo();
-    state.finestra = null;
-  }
-  if (scriviSeCambia(sopra, finestraMarkup(elencata, states)))
+  if (scriviSeCambia(sopra, finestraMarkup(elencata, states))) {
     accendiIlVideo(sopra, elencata, states);
+    fuocoAllaFinestra(sopra);
+  }
   avviaIlBattito();
+}
+
+/* La finestra appena aperta prende il fuoco sulla sua ✕: chi usa la tastiera
+ * la chiude con Invio, e non riapre da sotto il tasto che l'ha aperta. Solo
+ * all'apertura: quando la finestra si ridisegna (il clima che cambia stato)
+ * il fuoco resta a chi ce l'ha. Chiusa, torna dov'era. */
+function fuocoAllaFinestra(sopra) {
+  const chiudi = sopra.querySelector(".c3-finestra .c3-chiudi");
+  try {
+    if (chiudi) {
+      if (!state.fuocoDaDare) return;
+      state.fuocoDaDare = false;
+      const prima = doc.activeElement;
+      if (prima && prima !== doc.body && !sopra.contains(prima)) state.fuocoPrima = prima;
+      chiudi.focus({ preventScroll: true });
+    } else if (state.fuocoPrima) {
+      const prima = state.fuocoPrima;
+      state.fuocoPrima = null;
+      if (prima.isConnected) prima.focus({ preventScroll: true });
+    }
+  } catch (_errore) {}
 }
 
 function ridisegna() {
@@ -1205,24 +1439,45 @@ function disegnaOra() {
 function apriFinestra(finestra) {
   if (state.finestra?.tipo === "telecamera") chiudiIlVideo();
   state.finestra = finestra;
+  state.finestraDal = Date.now();
+  state.fuocoDaDare = true;
   disegnaOra();
 }
 
+/* Chiude la finestra aperta, qualunque sia e comunque stia: col video che
+ * va, in errore, o ancora in attesa. Il ridisegno la toglie dalla pagina; se
+ * per qualunque motivo non ci riesce (un errore a meta' strada), la si toglie
+ * lo stesso: una finestra da cui non si esce costringe a chiudere l'app. */
 function chiudi() {
-  if (state.finestra?.tipo === "telecamera") chiudiIlVideo();
+  chiudiIlVideo();
   state.finestra = null;
   disegnaOra();
+  const sopra = doc.getElementById(ID)?.querySelector(".c3-sopra");
+  if (sopra?.firstChild) {
+    sopra.textContent = "";
+    fuocoAllaFinestra(sopra);
+  }
 }
+
+/* Quanto dopo l'apertura un tocco sul velo e' ancora il tocco che ha aperto
+ * la finestra: toccata una telecamera nella casa, il `click` che segue
+ * arriva dove adesso c'e' il velo, e la finestra si chiuderebbe da sola. */
+const TOCCO_CHE_APRE_MS = 350;
 
 function alClic(evento) {
   const el = evento.target?.closest?.("[data-c3s]");
   if (!el) return;
   const cosa = el.dataset.c3s;
   if (cosa === "velo") {
-    if (evento.target === el) chiudi();
+    if (evento.target === el && Date.now() - (state.finestraDal || 0) > TOCCO_CHE_APRE_MS)
+      chiudi();
     return;
   }
   if (cosa === "chiudi") return chiudi();
+  if (cosa === "rivedi") {
+    vibra(6);
+    return rivediIlVideo();
+  }
   /* Il ⚙ di chi amministra: il Config di questa plancia, sulla scheda Casa 3D
    * — come il «Colpo d'occhio». Il Config sta sopra, e la casa si fa da parte
    * finche' e' aperto. */
@@ -1324,6 +1579,9 @@ function alClic(evento) {
 /** Rimette la Casa 3D (se il config la accende). */
 export function apriCasa3D() {
   state.nascosta = false;
+  /* chi la riapre, o l'ha appena rifatta, la vuole vedere: si riprova */
+  if (state.guasto === "disegno") state.cadute = [];
+  state.guasto = "";
   ridisegna();
 }
 
@@ -1476,7 +1734,19 @@ function installaLoStile() {
     ${C3} .c3-finestra-testa h3{margin:0;font-family:'Oswald',system-ui,sans-serif;font-size:18px;font-weight:700;letter-spacing:.8px;text-transform:uppercase}
     ${C3} .c3-chiudi{display:grid;place-items:center;width:36px;height:36px;border:0;border-radius:50%;cursor:pointer;font-weight:800;
       color:var(--c3-fioco);background:var(--c3-morbido)}
-    ${C3} .c3-video{min-height:220px;padding:12px}
+    ${C3} .c3-video{min-height:220px;padding:12px;overflow-y:auto}
+    /* L'aiuto sotto il video si vede solo quando il motore ha scritto un
+     * errore: cosa fare, e i due tasti per riprovare o uscire. */
+    ${C3} .c3-video-aiuto{display:none;flex-direction:column;gap:12px;padding:0 16px 16px}
+    ${C3} .c3-finestra:has(.cam-popup-error) .c3-video-aiuto{display:flex}
+    ${C3} .c3-finestra:has(.cam-popup-error) .c3-video{min-height:0}
+    ${C3} .c3-finestra:has(.c3-da-sistemare) .c3-video-aiuto p,
+    ${C3} .c3-finestra:has(.c3-da-sistemare) .c3-video-aiuto [data-c3s="rivedi"]{display:none}
+    ${C3} .c3-video-aiuto p{margin:0;font-size:13px;line-height:1.45;color:var(--c3-fioco);text-align:center}
+    ${C3} .c3-video-tasti{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+    ${C3} .c3-video-tasti .c3-tasto{min-height:44px;padding:10px 20px}
+    ${C3} .c3-video-tasti .c3-tasto[data-c3s="rivedi"]{background:var(--c3-accento);border-color:transparent;color:#fff}
+    ${C3} .c3-video-perche{font-weight:500;opacity:.85;font-size:12px;text-transform:none;letter-spacing:0}
     ${C3} .c3-finestra-clima{max-width:460px}
     ${C3} .c3-clima{display:flex;flex-direction:column;gap:12px;padding:16px 20px 20px;overflow-y:auto}
     ${C3} .c3-clima-ora{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin:0;font-size:14px;font-weight:700;color:var(--c3-fioco)}
@@ -1571,6 +1841,7 @@ export function installCasa3D() {
   doc.addEventListener?.("keydown", (evento) => {
     if (evento.key === "Escape" && state.finestra) chiudi();
   });
+  doc.addEventListener?.("visibilitychange", alCambioDiVista);
   ridisegna();
   return true;
 }

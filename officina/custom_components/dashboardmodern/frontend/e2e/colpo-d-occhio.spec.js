@@ -669,3 +669,35 @@ test("nel Config i riquadri del colpo d'occhio si spostano dalla maniglia", asyn
   await page.keyboard.press("ArrowDown");
   await expect.poll(tipi).toEqual([prima[1], prima[0], ...prima.slice(2)]);
 });
+
+/* Lo stesso difetto della Casa 3D («se premo sulla X… non mi fa uscire: devo
+ * chiudere tutta l'app e riaprirla»): la finestra del video dal vivo restava
+ * in pagina finche' la telecamera era fra quelle del colpo d'occhio, cioe'
+ * sempre. Si esce con la ✕, con la freccia che torna alle telecamere, e con
+ * l'Esc. */
+test("la telecamera dal vivo si chiude: la ✕, la freccia indietro, l'Esc", async ({
+  page,
+}, testInfo) => {
+  await boot(page, testInfo);
+  const tela = page.locator("#dm-occhio");
+  const video = tela.locator("[data-oc-video]");
+  const apri = async () => {
+    await expect(tela.locator(".oc-cam").first()).toBeVisible({ timeout: 10_000 });
+    await tela.locator(".oc-cam").first().click();
+    await expect(video).toHaveCount(1, { timeout: 10_000 });
+  };
+  await tela.locator('.oc-riquadro[data-tipo="telecamere"]').click();
+  await apri();
+  /* la freccia: di nuovo tutte le telecamere */
+  await tela.locator('.oc-finestra [data-oc="telecamere"]').click();
+  await expect(video).toHaveCount(0, { timeout: 10_000 });
+  await apri();
+  /* l'Esc */
+  await page.keyboard.press("Escape");
+  await expect(tela.locator(".oc-finestra")).toHaveCount(0, { timeout: 10_000 });
+  /* la ✕ */
+  await tela.locator('.oc-riquadro[data-tipo="telecamere"]').click();
+  await apri();
+  await tela.locator('.oc-finestra [data-oc="chiudi"]').first().click();
+  await expect(tela.locator(".oc-finestra")).toHaveCount(0, { timeout: 10_000 });
+});

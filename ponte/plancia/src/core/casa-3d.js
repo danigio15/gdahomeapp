@@ -829,3 +829,35 @@ export function contaCollegati(casa) {
   }
   return { tutti, collegati, mancano: tutti - collegati };
 }
+
+/**
+ * Cosa fare del video gia' in pagina, a ogni ridisegno della Casa 3D.
+ *
+ * Il video vivo non si riscrive finche' resta aperto: riscriverlo vorrebbe
+ * dire fermarlo e rifarlo a ogni stato che arriva. Ma «aperto» lo dice la
+ * finestra (`finestra`), non il fatto che il video sia ancora in pagina: qui
+ * si guardava solo se la telecamera si poteva ancora vedere, e la finestra
+ * chiusa con la ✕ restava li' per sempre — la ✕, il tocco fuori e l'Esc
+ * toglievano la finestra dallo stato, e il ridisegno la lasciava dov'era.
+ * «Se premo sulla X per togliere l'errore della telecamera non mi fa uscire:
+ * devo chiudere tutta l'app e riaprirla.»
+ *
+ * @param {{tipo?:string, entity?:string}|null} finestra la finestra aperta
+ *   adesso, o `null`.
+ * @param {string} inPagina l'entita' del video che sta in pagina ("" se non
+ *   ce n'e').
+ * @param {{has:(entity:string)=>boolean}} guardabili le telecamere che
+ *   adesso si possono guardare.
+ * @returns {"niente"|"resta"|"togli"|"spegni"} `niente`: nessun video in
+ *   pagina; `resta`: e' la finestra aperta, non si tocca; `togli`: la
+ *   finestra e' stata chiusa o e' di un'altra cosa, il video se ne va;
+ *   `spegni`: e' la finestra aperta ma la telecamera non si puo' piu'
+ *   guardare, si chiude anche lei.
+ */
+export function cosaFareDelVideo(finestra, inPagina, guardabili) {
+  const entity = String(inPagina || "");
+  if (!entity) return "niente";
+  const sua = finestra?.tipo === "telecamera" && finestra.entity === entity;
+  if (!sua) return "togli";
+  return guardabili?.has?.(entity) ? "resta" : "spegni";
+}

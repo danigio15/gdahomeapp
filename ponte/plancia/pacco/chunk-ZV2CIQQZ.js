@@ -1,6 +1,6 @@
 import {
   UNITA_DEL_MODELLO
-} from "./chunk-AENZDKD4.js";
+} from "./chunk-GS7DKS73.js";
 
 // src/core/modello-3d.js
 var MODELLO_MASSIMO = 50 * 1024 * 1024;

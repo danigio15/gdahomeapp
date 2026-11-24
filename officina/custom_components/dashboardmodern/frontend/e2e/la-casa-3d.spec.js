@@ -583,6 +583,140 @@ test("toccato il clima si sceglie la modalità: caldo, freddo…", async ({ page
   if (dove) await page.screenshot({ path: dove });
 });
 
+/* «Premendo sulla videocamera mi dà errore… ma se premo sulla X per togliere
+ * l'errore della telecamera non mi fa uscire: devo chiudere tutta l'app e
+ * riaprirla.» La finestra del video restava in pagina finche' la telecamera
+ * si poteva guardare, cioe' sempre: ne' la ✕, ne' il tocco fuori, ne' l'Esc
+ * la toglievano. Qui Home Assistant non da' nessun flusso: la telecamera si
+ * apre in errore, che e' il caso di chi ha scritto. */
+test("la finestra della telecamera si chiude sempre: la ✕, il tocco fuori, l'Esc", async ({
+  page,
+}, testInfo) => {
+  await boot(page, testInfo, { orologio: false });
+  await senzaMovimento(page);
+  const casa = page.locator("#dm-casa3d");
+  const finestra = casa.locator(".c3-finestra");
+  const guarda = (entity) =>
+    casa.locator(`[data-c3s="guarda"][data-c3s-e="${entity}"]`).first().click();
+
+  /* fuori, la telecamera dell'ingresso: mentre ancora prova ad aprirsi */
+  await guarda("camera.ingresso");
+  await expect(finestra).toBeVisible({ timeout: 30_000 });
+  await expect(finestra.locator("h3")).toContainText("Ingresso");
+  await finestra.locator(".c3-chiudi").click();
+  await expect(finestra).toHaveCount(0, { timeout: 30_000 });
+
+  /* il tocco fuori dalla finestra, sul velo */
+  await guarda("camera.ingresso");
+  await expect(finestra).toBeVisible({ timeout: 30_000 });
+  await page.waitForTimeout(500);
+  await casa.locator(".c3-velo").click({ position: { x: 6, y: 6 } });
+  await expect(finestra).toHaveCount(0, { timeout: 30_000 });
+
+  /* l'Esc */
+  await guarda("camera.ingresso");
+  await expect(finestra).toBeVisible({ timeout: 30_000 });
+  await page.keyboard.press("Escape");
+  await expect(finestra).toHaveCount(0, { timeout: 30_000 });
+
+  /* dentro, in errore: detto cosa fare, coi due tasti; e si esce lo stesso */
+  await vai(page, "terra");
+  await guarda("camera.soggiorno");
+  await expect(finestra).toBeVisible({ timeout: 30_000 });
+  await expect(finestra.locator(".cam-popup-error")).toBeVisible({ timeout: 60_000 });
+  const aiuto = finestra.locator(".c3-video-aiuto");
+  await expect(aiuto).toBeVisible();
+  await expect(aiuto).toContainText("Cosa fare");
+  const dove = foto(testInfo, "casa3d-telecamera-in-errore");
+  if (dove) await page.screenshot({ path: dove });
+  /* «Riprova» resta nella finestra, «Chiudi» esce */
+  await aiuto.locator('[data-c3s="rivedi"]').click();
+  await expect(finestra).toBeVisible();
+  await expect(finestra.locator(".cam-popup-error")).toBeVisible({ timeout: 60_000 });
+  await finestra.locator(".c3-chiudi").click();
+  await expect(finestra).toHaveCount(0, { timeout: 30_000 });
+  await guarda("camera.soggiorno");
+  await expect(aiuto).toBeVisible({ timeout: 60_000 });
+  await aiuto.locator('[data-c3s="chiudi"]').click();
+  await expect(finestra).toHaveCount(0, { timeout: 30_000 });
+
+  /* una telecamera che Home Assistant non conosce piu': lo dice subito */
+  await page.evaluate(() => {
+    delete _RAW_STATES["camera.soggiorno"];
+    const stati = { ...(window.__HASS__?.states || {}) };
+    delete stati["camera.soggiorno"];
+    window.__HASS__ = { states: stati };
+    window.dispatchEvent(new CustomEvent("dashboardmodern:states-ready"));
+  });
+  await guarda("camera.soggiorno");
+  await expect(finestra.locator(".cam-popup-error")).toContainText(
+    "Home Assistant non conosce questa telecamera",
+    { timeout: 30_000 },
+  );
+  await page.keyboard.press("Escape");
+  await expect(finestra).toHaveCount(0, { timeout: 30_000 });
+
+  /* e la casa sotto si usa ancora */
+  await vai(page, "esterno");
+  await expect(casa.locator('[data-c3s="vista"][data-c3s-k="esterno"]').first()).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(casa.locator("canvas")).toHaveCount(1);
+});
+
+/* «Anzi, non mi si apre più la casa, sempre da telefono.» Il telefono che
+ * passa a un'altra app si vede riprendere il disegno dal browser
+ * (`webglcontextlost`): contate come quelle di un dispositivo che non ce la
+ * fa, quattro andate e ritorni in cinque minuti chiudevano la casa col suo
+ * «non ha abbastanza memoria grafica», e gia' alla prima tornava sgranata.
+ * Con la pagina dietro non contano: al ritorno la casa c'e', com'era. */
+test("il telefono che va dietro e torna non spegne la casa", async ({ page }, testInfo) => {
+  await boot(page, testInfo, { orologio: false });
+  await senzaMovimento(page);
+  const casa = page.locator("#dm-casa3d");
+  const palco = casa.locator(".c3-scena");
+  const prima = await palco.getAttribute("data-qualita");
+  const nascondi = (si) =>
+    page.evaluate((si) => {
+      Object.defineProperty(document, "hidden", { configurable: true, get: () => si });
+      Object.defineProperty(document, "visibilityState", {
+        configurable: true,
+        get: () => (si ? "hidden" : "visible"),
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+    }, si);
+  for (let giro = 0; giro < 5; giro++) {
+    await nascondi(true);
+    const perso = await page.evaluate(() => {
+      const tela = document.querySelector("#dm-casa3d canvas");
+      const gl = tela.getContext("webgl2") || tela.getContext("webgl");
+      const perdi = gl.getExtension("WEBGL_lose_context");
+      perdi.loseContext();
+      return new Promise((fatto) => setTimeout(() => fatto(gl.isContextLost()), 300));
+    });
+    expect(perso).toBe(true);
+    await nascondi(false);
+    /* la scena si rifa' (qui il disegno non torna da solo): di nuovo una tela viva */
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const tela = document.querySelector("#dm-casa3d canvas");
+            const gl = tela?.getContext("webgl2") || tela?.getContext("webgl");
+            return Boolean(gl && !gl.isContextLost());
+          }),
+        { timeout: 60_000 },
+      )
+      .toBe(true);
+  }
+  await expect(casa.locator('[data-c3s="riprova"]')).toHaveCount(0);
+  await expect(casa.locator(".c3-attesa")).toBeEmpty();
+  await expect(casa.locator("canvas")).toHaveCount(1);
+  expect(await palco.getAttribute("data-qualita")).toBe(prima);
+  expect(await page.evaluate(() => window.__DASHBOARDMODERN_CASA_3D__.cadute.length)).toBe(0);
+});
+
 /* «In cucina ho 3 luci: quando le aggiungo i tasti quasi si sovrappongono».
  * Le luci andavano tutte al centro della stanza. Una casa salvata cosi' si
  * sistema da sola aprendola, e i tasti sullo schermo non si coprono. */

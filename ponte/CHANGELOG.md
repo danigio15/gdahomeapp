@@ -14,6 +14,19 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.29
+
+- **Casa 3D, si riapre sempre**: passare a un'altra app o spegnere lo schermo
+  non viene più scambiato per un guasto della grafica. Con la 1.19.28, dopo
+  qualche andata e ritorno la casa smetteva di aprirsi o tornava sgranata.
+- **Casa 3D, la telecamera**: la finestra della telecamera si chiude sempre,
+  con la ✕ o toccando fuori, anche quando il video non arriva. In quel caso
+  dice cosa fare e ha «Riprova» e «Chiudi». Vale anche per il Colpo d'occhio.
+- **Casa 3D più leggera**: i dispositivi con poca memoria partono dalla
+  grafica leggera, e se la casa va a scatti la qualità scende da sola.
+- **Home su iPhone**: la prima fila della testata (menu, nome della casa, data
+  e ora) non sparisce più tornando da un'altra pagina.
+
 ## 1.19.28
 
 - **Casa 3D sui tablet**: non si chiude più da sola dopo un attimo lasciando la

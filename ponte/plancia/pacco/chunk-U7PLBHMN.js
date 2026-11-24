@@ -1,6 +1,7 @@
 import {
   CELLA,
   DISPOSITIVI_3D,
+  GRADINI_PER_LA_LENTEZZA,
   LATO_DEL_PALLINO,
   azioneDelTocco,
   chiPrendeLaScritta,
@@ -8,11 +9,13 @@ import {
   entita,
   entitaCandidate,
   espandiGriglia,
+  fotogrammiLenti,
   memoriaDelDispositivo,
   modoDeiNomi,
+  nucleiDelDispositivo,
   qualitaDellaCasa3D,
   statoDelDispositivo
-} from "./chunk-AENZDKD4.js";
+} from "./chunk-GS7DKS73.js";
 
 // src/sections/casa-3d/arredi-3d.js
 var CATALOGO_ARREDI = Object.freeze([
@@ -1132,12 +1135,14 @@ function creaScena(THREE, opzioni = {}) {
   const scritte = creaLeScritte({ strato: stratoChip, perLeProve: Boolean(opzioni.perLeProve), richiedi: () => richiedi() });
   scritte.modo(opzioni.nomi);
   const memoria = memoriaDelDispositivo(window.navigator);
-  const qualita = (w = 0, h = 0) => qualitaDellaCasa3D({ dpr: window.devicePixelRatio || 1, larghezza: w, altezza: h, memoria, cadute: opzioni.cadute || 0 });
+  const nuclei = nucleiDelDispositivo(window.navigator);
+  let lenta = Math.max(0, Math.floor(Number(opzioni.lenta) || 0));
+  const qualita = (w = 0, h = 0) => qualitaDellaCasa3D({ dpr: window.devicePixelRatio || 1, larghezza: w, altezza: h, memoria, nuclei, cadute: opzioni.cadute || 0, lenta });
   const Q = qualita(contenitore?.clientWidth || 0, contenitore?.clientHeight || 0);
   const renderer = new THREE.WebGLRenderer({ antialias: Q.antialias, alpha: true, preserveDrawingBuffer: Boolean(opzioni.perLeProve) });
   renderer.setPixelRatio(Q.pixel);
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = Q.ombra >= 2048 ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -2003,8 +2008,8 @@ function creaScena(THREE, opzioni = {}) {
   scena.add(cielo);
   const sole = new THREE.DirectionalLight("#cdd8ff", 0.6);
   sole.position.set(CX - 16, 30 + CIMA, 18);
-  sole.castShadow = true;
-  sole.shadow.mapSize.set(Q.ombra, Q.ombra);
+  sole.castShadow = Q.ombra > 0;
+  if (Q.ombra > 0) sole.shadow.mapSize.set(Q.ombra, Q.ombra);
   const ombra = MISURA + 12;
   Object.assign(sole.shadow.camera, { left: -ombra, right: ombra, top: ombra, bottom: -ombra, far: 120 + CIMA * 2 });
   sole.shadow.bias = -6e-4;
@@ -2042,20 +2047,28 @@ function creaScena(THREE, opzioni = {}) {
     perso: false,
     /* solo un sensore che pulsa tiene vivo il giro (vedi `giro`) */
     pulsa: false,
-    timerPulsa: 0
+    timerPulsa: 0,
+    /* il fotogramma di prima era gia' di questo volo (vedi `misuraIlPasso`) */
+    diFila: false,
+    /* una finestra sta sopra la casa: non si disegna (vedi `sospendi`) */
+    sospesa: false
   };
   function richiedi() {
-    if (S.morto || S.perso || S.raf || opzioni.perLeProve) return;
+    if (S.morto || S.perso || S.sospesa || S.raf || opzioni.perLeProve) return;
     S.ultimo = performance.now();
     S.raf = requestAnimationFrame(giro);
   }
   function giro(t) {
     S.raf = 0;
-    if (S.morto || S.perso) return;
-    const dt = Math.min(0.1, Math.max(0, (t - S.ultimo) / 1e3));
+    if (S.morto || S.perso || S.sospesa) return;
+    const passato = t - S.ultimo;
+    const dt = Math.min(0.1, Math.max(0, passato / 1e3));
     S.ultimo = t;
+    const diFila = S.diFila;
+    S.diFila = false;
     const ancora = avanza(dt);
     disegna();
+    if (diFila && S.vola) misuraIlPasso(passato);
     const fermo = String(!S.vola);
     if (palco.dataset.fermo !== fermo) palco.dataset.fermo = fermo;
     if (!ancora && !S.presa) return;
@@ -2063,11 +2076,37 @@ function creaScena(THREE, opzioni = {}) {
       if (!S.timerPulsa)
         S.timerPulsa = setTimeout(() => {
           S.timerPulsa = 0;
-          if (!S.morto && !S.perso && !S.raf) S.raf = requestAnimationFrame(giro);
+          if (!S.morto && !S.perso && !S.sospesa && !S.raf) S.raf = requestAnimationFrame(giro);
         }, PASSO_DEL_PULSARE_MS);
       return;
     }
+    S.diFila = true;
     S.raf = requestAnimationFrame(giro);
+  }
+  const passi = [];
+  function misuraIlPasso(ms) {
+    if (lenta >= GRADINI_PER_LA_LENTEZZA || !(ms > 0)) return;
+    passi.push(ms);
+    const gradini = fotogrammiLenti(passi);
+    if (gradini === null) return;
+    passi.length = 0;
+    if (!gradini) return;
+    const prima = qualita(largo, alto);
+    lenta = Math.min(GRADINI_PER_LA_LENTEZZA, lenta + gradini);
+    const dopo = qualita(largo, alto);
+    if (dopo.pixel === prima.pixel && dopo.ombra === prima.ombra) {
+      lenta = GRADINI_PER_LA_LENTEZZA;
+      return;
+    }
+    if (dopo.ombra <= 0 && sole.castShadow) {
+      sole.castShadow = false;
+      sole.shadow.map?.dispose?.();
+      sole.shadow.map = null;
+    }
+    palco.dataset.qualita = "leggera";
+    largo = alto = 0;
+    setTimeout(richiedi, 0);
+    opzioni.quandoRallenta?.(lenta);
   }
   function avanza(dt) {
     S.tempo += dt;
@@ -2720,8 +2759,8 @@ function creaScena(THREE, opzioni = {}) {
     A.fantasmaOk = posa(A, x, y);
     maniglie.classList.toggle("c3-no", !A.fantasmaOk);
   }
-  function ruota(A, passi) {
-    const prima = A.dati.rot || 0, nuovo = prima + passi * (Math.PI / 12);
+  function ruota(A, passi2) {
+    const prima = A.dati.rot || 0, nuovo = prima + passi2 * (Math.PI / 12);
     if (A.D) {
       A.dati.rot = +nuovo.toFixed(4);
       salva();
@@ -3117,6 +3156,17 @@ function creaScena(THREE, opzioni = {}) {
     largo = alto = 0;
     richiedi();
   }
+  function sospendi(si) {
+    const ferma = Boolean(si);
+    if (S.sospesa === ferma || S.morto) return;
+    S.sospesa = ferma;
+    if (!ferma) return richiedi();
+    if (S.raf) cancelAnimationFrame(S.raf);
+    S.raf = 0;
+    clearTimeout(S.timerPulsa);
+    S.timerPulsa = 0;
+    S.diFila = false;
+  }
   const osservatore = typeof ResizeObserver === "function" ? new ResizeObserver(() => ridimensiona()) : null;
   osservatore?.observe(palco);
   apri("esterno");
@@ -3137,6 +3187,7 @@ function creaScena(THREE, opzioni = {}) {
     arreda,
     distruggi,
     ridimensiona,
+    sospendi,
     /** Le scritte dei dispositivi: «tutti», «accesi» o «nessuno» (vedi le-scritte.js). */
     nomi: (modo) => scritte.modo(modo),
     /** Un fotogramma subito, senza aspettare il giro: per le prove. */
