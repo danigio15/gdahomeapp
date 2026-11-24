@@ -213,6 +213,11 @@ bool siPuoLeggere(
 }) => switch (misura) {
   MisuraDelCorpo.recupero || MisuraDelCorpo.sforzo => whoop,
   MisuraDelCorpo.temperaturaPelle => iPhone || whoop,
+  /* Su Android l'HRV e il respiro da Health Connect aspettano la
+   * dichiarazione dei dati salute del Play Console: finche' non c'e', il
+   * negozio non prende il pacchetto che li chiede (la 1.19.28 e la 1.19.29
+   * non sono mai arrivate). Per ora li da' l'iPhone, o WHOOP collegato. */
+  MisuraDelCorpo.hrv || MisuraDelCorpo.respiro => iPhone || whoop,
   MisuraDelCorpo.esercizio || MisuraDelCorpo.inPiedi => iPhone,
   _ => true,
 };

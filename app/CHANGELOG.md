@@ -8,6 +8,14 @@ i suoi in `ponte/CHANGELOG.md`, ed è quello che Home Assistant fa vedere. Un
 rilascio dell'app non fa comparire un aggiornamento dell'add-on, e al
 contrario.
 
+## 1.19.30
+
+- **Salute su Android**: la variabilità del battito (HRV) e la frequenza del
+  respiro da Health Connect arrivano con una prossima versione. Su iPhone ci
+  sono già, e su Android si vedono quando arrivano da WHOOP collegato.
+- Dentro ci sono anche le novità della 1.19.28 e della 1.19.29, che su
+  Android non erano arrivate nel negozio.
+
 ## 1.19.29
 
 - **Le pagine che si aprono**: aprendo Premium o un'altra pagina, non si vede
