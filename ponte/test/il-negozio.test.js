@@ -206,6 +206,7 @@ function negozioFinto({
   soloLaConsegna = false,
   inRevisione = "",
   salute = "",
+  mandaDaSolo = false,
 } = {}) {
   const fatte = [];
   const prendi = async (dove, opzioni = {}) => {
@@ -277,6 +278,15 @@ function negozioFinto({
           ],
         },
       });
+    /* Com'e' andata la 1.19.28: il negozio manda in revisione da solo, e la
+     * consegna senza revisione non la vuole piu'. */
+    if (mandaDaSolo && /:commit/.test(via) && via.includes("changesNotSentForReview"))
+      return risposta(400, {
+        error: {
+          message:
+            "Changes are sent for review automatically. The query parameter changesNotSentForReview must not be set.",
+        },
+      });
     /* Com'e' andata la 1.18.19: col pacchetto che chiede Health Connect il
      * negozio vuole la dichiarazione della salute. «controllo»: lo dice al
      * controllo e alla consegna che manda in revisione; «sempre»: anche a
@@ -284,7 +294,7 @@ function negozioFinto({
     if (
       salute &&
       (via.endsWith(":validate") ||
-        consegnaInRevisione ||
+        (salute !== "soloIlControllo" && consegnaInRevisione) ||
         (salute === "sempre" && /:commit/.test(via)))
     )
       return risposta(403, {
@@ -758,6 +768,65 @@ test("quando il negozio vuole la dichiarazione della salute, si consegna senza r
     detto.some((riga) => /Health Connect/.test(riga) && /Contenuti app/.test(riga)),
     "il registro dice di completare le dichiarazioni e mandare in revisione dal Play Console",
   );
+});
+
+test("se il negozio manda da solo in revisione, la salute chiesta al controllo non ferma la consegna", async (t) => {
+  /* La 1.19.28 e la 1.19.29: il controllo chiede la salute, la consegna senza
+   * revisione torna 400 «must not be set», e la versione si buttava. */
+  const negozio = negozioFinto({ salute: "soloIlControllo", mandaDaSolo: true });
+  const detto = [];
+  const esito = await porta({
+    pacco: unPacco(t),
+    piste: ["internal"],
+    novita: NOVITA,
+    segreto: JSON.stringify(credenzialeFinto()),
+    prendi: negozio.prendi,
+    dillo: (riga) => detto.push(riga),
+    aspetta: async () => {},
+  });
+  assert.equal(esito.pubblicato, true);
+  const app = `/androidpublisher/v3/applications/${COME_SI_CHIAMA}`;
+  const chiamate = negozio.fatte.filter((una) => /:(validate|commit)/.test(una));
+  assert.deepEqual(chiamate, [
+    `POST ${app}/edits/modifica-1:validate`,
+    `POST ${app}/edits/modifica-1:commit?changesNotSentForReview=true&changesInReviewBehavior=ERROR_IF_IN_REVIEW`,
+    `POST ${app}/edits/modifica-1:commit?changesInReviewBehavior=ERROR_IF_IN_REVIEW`,
+  ]);
+  assert.ok(
+    detto.some((riga) => /il controllo del negozio dice: .*health features/.test(riga)),
+    "il registro dice cosa ha risposto il controllo",
+  );
+  assert.ok(
+    detto.some((riga) => /manda da solo in revisione/.test(riga)),
+    "il registro dice che si consegna nel modo normale",
+  );
+  assert.ok(!detto.some((riga) => /stata buttata/.test(riga)), "la modifica non si butta");
+  assert.ok(
+    detto.some((riga) => /Contenuti app/.test(riga) && /va in revisione da sola/.test(riga)),
+    "il registro ricorda di guardare le dichiarazioni",
+  );
+});
+
+test("se manda da solo e vuole la salute anche alla consegna, si butta e dice dove dichiararla", async (t) => {
+  const negozio = negozioFinto({ salute: "controllo", mandaDaSolo: true });
+  const detto = [];
+  await assert.rejects(
+    porta({
+      pacco: unPacco(t),
+      piste: ["internal"],
+      novita: NOVITA,
+      segreto: JSON.stringify(credenzialeFinto()),
+      prendi: negozio.prendi,
+      dillo: (riga) => detto.push(riga),
+      aspetta: async () => {},
+    }),
+    (errore) =>
+      /App per la\s+salute/.test(errore.message) &&
+      /health features/.test(errore.message) &&
+      !/must not be set/.test(errore.message),
+  );
+  const app = `/androidpublisher/v3/applications/${COME_SI_CHIAMA}`;
+  assert.ok(negozio.fatte.includes(`DELETE ${app}/edits/modifica-1`), "la modifica si butta");
 });
 
 test("se la salute la vuole anche la consegna senza revisione, si butta come prima", async (t) => {

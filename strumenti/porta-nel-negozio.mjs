@@ -316,6 +316,20 @@ export const SALUTE_DA_DICHIARARE = /health features/i;
  * in corso il negozio si ferma e risponde «CHANGES_ALREADY_IN_REVIEW». Allora
  * si consegna senza mandare in revisione: la revisione in corso resta dov'e',
  * e la nostra si manda a mano quando si vuole. */
+/* E il contrario: il negozio che manda in revisione da solo, e non vuole altro.
+ *
+ * La 1.19.28 e la 1.19.29 (novembre 2026): il controllo chiedeva la salute o
+ * la revisione a mano, la consegna partiva senza revisione come sempre, e il
+ * negozio rispondeva 400 «Changes are sent for review automatically. The query
+ * parameter changesNotSentForReview must not be set». Finita la revisione
+ * rimasta ferma per settimane, l'app era tornata a mandare le modifiche da
+ * sola, e la strada «senza revisione» non c'era piu': la modifica si buttava e
+ * la versione non arrivava a nessuno. Allora si consegna nel modo normale, che
+ * non annulla niente (`ERROR_IF_IN_REVIEW`); e se il negozio non la prende
+ * nemmeno cosi', si dice perche' con le parole del primo rifiuto. */
+export const SI_MANDA_DA_SOLA =
+  /changesNotSentForReview must not be set|sent for review automatically/i;
+
 const NON_ANNULLARE = "changesInReviewBehavior=ERROR_IF_IN_REVIEW";
 const CON_REVISIONE = `?${NON_ANNULLARE}`;
 const SENZA_REVISIONE = `?changesNotSentForReview=true&${NON_ANNULLARE}`;
@@ -331,7 +345,18 @@ async function controlla(prendi, quale, gettone, come) {
     if (SALUTE_DA_DICHIARARE.test(perche)) come.salute = true;
     else if (!DA_MANDARE_A_MANO.test(perche)) throw errore;
     come.aMano = true;
+    come.perche = perche;
   }
+}
+
+/** Il negozio vuole la dichiarazione della salute e non c'e' modo di consegnare. */
+function serveLaSalute(perche) {
+  return new Error(
+    "il negozio non prende la versione finche' non si aggiorna la dichiarazione della salute " +
+      "(Health Connect): nel Play Console, Norme e programmi → Contenuti app → App per la " +
+      "salute, dichiara i dati che l'app legge adesso, salva, e poi rilancia questa corsa " +
+      `(${perche})`,
+  );
 }
 
 async function consegna(prendi, quale, gettone, dillo = () => {}, come = { aMano: false }) {
@@ -353,8 +378,25 @@ async function consegna(prendi, quale, gettone, dillo = () => {}, come = { aMano
       throw errore;
     }
   };
-  if (come.aMano) await consegnaCosi(SENZA_REVISIONE);
-  else {
+  if (come.aMano) {
+    try {
+      await consegnaCosi(SENZA_REVISIONE);
+    } catch (errore) {
+      if (!SI_MANDA_DA_SOLA.test(errore?.message || "")) throw errore;
+      dillo(
+        "il negozio manda da solo in revisione e non accetta la consegna senza: " +
+          "si consegna nel modo normale",
+      );
+      try {
+        await consegnaCosi(CON_REVISIONE);
+      } catch (secondo) {
+        const perche = secondo?.message || "";
+        if (SALUTE_DA_DICHIARARE.test(perche)) throw serveLaSalute(perche);
+        throw secondo;
+      }
+      come.aMano = false;
+    }
+  } else {
     try {
       await consegnaCosi(CON_REVISIONE);
     } catch (errore) {
@@ -369,10 +411,24 @@ async function consegna(prendi, quale, gettone, dillo = () => {}, come = { aMano
             "senza mandarla in revisione",
         );
       come.aMano = true;
-      await consegnaCosi(SENZA_REVISIONE);
+      try {
+        await consegnaCosi(SENZA_REVISIONE);
+      } catch (secondo) {
+        /* Ne' con la revisione ne' senza: resta il primo rifiuto, che e' quello
+         * che dice cosa manca. */
+        if (!SI_MANDA_DA_SOLA.test(secondo?.message || "")) throw secondo;
+        if (salute) throw serveLaSalute(perche);
+        throw errore;
+      }
     }
   }
-  if (come.salute)
+  if (come.salute && !come.aMano)
+    dillo(
+      "ATTENZIONE: il controllo del negozio chiedeva la dichiarazione della salute (Health " +
+        "Connect), ma la versione e' stata presa e va in revisione da sola. Nel Play Console " +
+        "guarda che in Contenuti app non manchi niente",
+    );
+  else if (come.salute)
     dillo(
       "ATTENZIONE: il negozio vuole che si dichiari la salute (Health Connect): la versione e' " +
         "consegnata senza revisione. Nel Play Console completa le dichiarazioni che chiede " +
@@ -590,7 +646,9 @@ export async function porta({
      * scoprire un guaio **senza** averlo pubblicato. */
     const come = { aMano: false };
     await controlla(prendi, quale, gettone, come);
-    dillo("il negozio dice che va bene");
+    dillo(
+      come.perche ? `il controllo del negozio dice: ${come.perche}` : "il negozio dice che va bene",
+    );
 
     if (prova) {
       await chiedi(prendi, perApp(`/edits/${quale}`), { metodo: "DELETE", gettone });
