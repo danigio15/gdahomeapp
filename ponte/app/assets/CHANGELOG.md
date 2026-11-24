@@ -8,6 +8,28 @@ i suoi in `ponte/CHANGELOG.md`, ed è quello che Home Assistant fa vedere. Un
 rilascio dell'app non fa comparire un aggiornamento dell'add-on, e al
 contrario.
 
+## 1.19.31
+
+- **Navigatore, vista «Corsie», le curve**: le strade non piegano più a
+  spigoli. Asfalto, righe e fascia verde seguono la curva insieme.
+- **Navigatore, la fascia verde**: resta sul mezzo della corsia senza pieghe
+  brusche, non resta più sospesa sopra la strada e nei sottopassi segue la
+  strada invece di attraversare il prato.
+- **Navigatore, svincoli e viadotti**: parapetti e muri stanno sul bordo
+  dell'asfalto, non di traverso sulla carreggiata. Il ponte che passa sopra
+  l'auto non lascia più le sue righe bianche sulla corsia.
+- **Navigatore, incroci e zebrature**: fra due carreggiate che si separano la
+  zebratura è un cuneo ordinato, e la corsia per svoltare a sinistra nasce dal
+  lato giusto.
+
+## 1.19.30
+
+- **Salute su Android**: la variabilità del battito (HRV) e la frequenza del
+  respiro da Health Connect arrivano con una prossima versione. Su iPhone ci
+  sono già, e su Android si vedono quando arrivano da WHOOP collegato.
+- **Android, le versioni di prima**: dentro ci sono anche le novità della
+  1.19.28 e della 1.19.29, che su Android non erano arrivate nel negozio.
+
 ## 1.19.29
 
 - **Le pagine che si aprono**: aprendo Premium o un'altra pagina, non si vede
