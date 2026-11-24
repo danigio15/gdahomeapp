@@ -290,14 +290,21 @@ export function flowStageLayout(count, variant = "desktop") {
    *
    * Quando le file sono uguali da quattro — otto carichi — i varchi non
    * bastano: sfalsarle voleva dire spartire la larghezza in `n + 1`, e le
-   * bolle scendevano a cinquantotto punti, illeggibili. Con sei (tre e tre)
-   * lo sfalsamento ci sta ancora, e resta. «4+4
+   * bolle scendevano a cinquantotto punti, illeggibili. «4+4
    * grandi, linee dietro»: le due file si prendono la stessa larghezza, una
    * sotto l'altra, e la linea di chi sta sotto passa dietro il cerchio di
    * sopra. Il disegno largo ha una fila sola e lo spazio ce l'ha gia': non
-   * cambia. */
+   * cambia.
+   *
+   * Con sei (tre e tre) lo sfalsamento ci stava ancora, ed era rimasto. Ma
+   * due file uguali sfalsate non possono stare tutte e due al centro: la
+   * prima stava sotto la Casa e la seconda mezzo passo a sinistra, con un
+   * cerchio contro il bordo e un buco in basso a destra. «Sistema anche la
+   * centratura, non mi piace.» Le file uguali fanno tutte come le quattro e
+   * quattro: una sotto l'altra, in colonna sotto la Casa, con la linea di
+   * chi sta sotto che passa dietro. */
   const mobile = variant === "mobile";
-  const uguali = mobile && sizes.length > 1 && sizes[1] === primaFila && primaFila >= 4;
+  const uguali = mobile && sizes.length > 1 && sizes[1] === primaFila && primaFila >= 3;
   const piena = mobile && (sizes.length === 1 || sizes[1] < primaFila || uguali);
   sizes.forEach((size, rowIndex) => {
     for (let column = 0; column < size; column += 1) {
@@ -802,12 +809,31 @@ export function residuoNonMisurato(casa, misurati = [], period = "instant") {
   return round(resto, period === "instant" ? 1 : 3);
 }
 
-function conIlResiduo({ visible, readings, casa, period, nome, tieni }) {
+/** Da quanto un cerchio deve tacere perche' non lo si aspetti piu'. */
+export const MUTO_DA_TANTO_MS = 2 * 60 * 1000;
+
+/** Il nome di un cerchio nella scena, lo stesso che avra' il suo nodo. */
+const idDelCerchio = (voce, index) =>
+  clean(voce?.load?.id) || `${voce?.slotKey || "flow-load"}-${index}`;
+
+function conIlResiduo({ visible, readings, casa, period, nome, tieni, mutiDaTanto }) {
   if (casa === null || !visible.length || visible.length >= FLOW_MAX_LOADS) return null;
   if (period !== "instant" && readings.some((lettura) => lettura.attesa)) return null;
   /* Un cerchio col sensore che non risponde (all'avvio, o «unavailable»):
-   * il suo consumo finirebbe tutto fra i non monitorati. Si aspetta. */
-  if (readings.some((lettura) => lettura.sensore && lettura.value === null)) return null;
+   * il suo consumo finirebbe tutto fra i non monitorati. Si aspetta.
+   *
+   * Ma non per sempre. «Sono scomparsi i consumi non monitorati?»: una
+   * wallbox spenta, col sensore che dice «—» da ore, teneva nascosto il
+   * resto di tutta la casa. Chi tace da tanto (`mutiDaTanto`, lo dice la
+   * sezione che vede passare il tempo) non misura niente, e quello che
+   * consuma, se consuma, e' davvero non monitorato: il cerchio torna. */
+  const daTanto = (index) =>
+    Boolean(mutiDaTanto && typeof mutiDaTanto.has === "function") &&
+    mutiDaTanto.has(idDelCerchio(visible[index], index));
+  if (
+    readings.some((lettura, index) => lettura.sensore && lettura.value === null && !daTanto(index))
+  )
+    return null;
   const resto = residuoNonMisurato(
     casa,
     readings.map((lettura) => lettura.value),
@@ -870,6 +896,9 @@ export function flowStageModel(options = {}) {
     /* Il cerchio dei non monitorati c'era gia' in questa vista: resta anche
      * a 0 W, invece di sparire e far ballare il disegno. */
     tieniIlResiduo = false,
+    /* I cerchi (per id) il cui sensore tace da piu' di `MUTO_DA_TANTO_MS`:
+     * non si aspettano piu' per fare il conto dei non monitorati. */
+    mutiDaTanto = null,
   } = options;
   const attende = (voce) => {
     const chiave = clean(voce?.id) || clean(voce?.name);
@@ -910,6 +939,7 @@ export function flowStageModel(options = {}) {
     period,
     nome: nomeDelResiduo,
     tieni: Boolean(tieniIlResiduo),
+    mutiDaTanto,
   });
   if (residuo?.nuovo) {
     visible.push(residuo.nuovo.voce);

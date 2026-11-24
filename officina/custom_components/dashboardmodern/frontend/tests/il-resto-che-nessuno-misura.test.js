@@ -99,6 +99,39 @@ test("un sensore che non risponde: niente resto, non si inventa", () => {
   assert.equal(nodo(model, CERCHIO_NON_MONITORATI), undefined);
 });
 
+test("ma chi tace da tanto non tiene nascosto il resto della casa", () => {
+  /* «Sono scomparsi i consumi non monitorati?»: Casa 2,30 kW, i cerchi che
+   * rispondono ne sommano 2,035, e la wallbox dice «—» da ore. */
+  const loads = [
+    { id: "cucina", name: "Cucina", power_entity: "sensor.cucina_w" },
+    { id: "cucinino", name: "Cucinino", power_entity: "sensor.cucinino_w" },
+    { id: "wallbox", name: "Wallbox", power_entity: "sensor.wallbox_w" },
+  ];
+  const states = {
+    "sensor.cucina_w": watt(85),
+    "sensor.cucinino_w": watt(1950),
+    "sensor.wallbox_w": { state: "unavailable" },
+  };
+  const subito = flowStageModel({ loads, states, casa: 2300 });
+  assert.equal(nodo(subito, CERCHIO_NON_MONITORATI), undefined, "appena tace si aspetta");
+  assert.equal(nodo(subito, "wallbox").value, null);
+
+  const dopo = flowStageModel({ loads, states, casa: 2300, mutiDaTanto: new Set(["wallbox"]) });
+  const resto = nodo(dopo, CERCHIO_NON_MONITORATI);
+  assert.ok(resto, "dopo un po' il cerchio torna");
+  assert.equal(resto.value, 265);
+  assert.equal(nodo(dopo, "wallbox").value, null, "la wallbox resta col trattino");
+
+  /* Un altro cerchio che tace da poco fa ancora aspettare. */
+  const due = flowStageModel({
+    loads,
+    states: { ...states, "sensor.cucina_w": { state: "unavailable" } },
+    casa: 2300,
+    mutiDaTanto: new Set(["wallbox"]),
+  });
+  assert.equal(nodo(due, CERCHIO_NON_MONITORATI), undefined);
+});
+
 test("Casa in kW e carichi in W si confrontano nella stessa unita'", () => {
   const model = flowStageModel({
     ...laCasaDiAndrea(),

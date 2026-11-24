@@ -151,10 +151,11 @@ test("sul telefono nessuna linea attraversa la bolla di un altro carico (#118)",
     const bolle = flowStageLayout(quanti, "mobile");
     const raggio = raggioDellaBolla(quanti);
     for (const bolla of bolle) {
-      /* Con otto le file sono due da quattro, una sotto l'altra, e la linea
-       * di sotto passa DIETRO il cerchio di sopra: scelto, per avere cerchi
-       * che si leggono («4+4 grandi, linee dietro»). Lo dice la prova sotto. */
-      if (quanti === 8 && bolla.row > 0) continue;
+      /* Con sei e con otto le file sono uguali, una sotto l'altra, e la
+       * linea di sotto passa DIETRO il cerchio di sopra: scelto, per avere
+       * cerchi che si leggono e un disegno al centro («4+4 grandi, linee
+       * dietro», «sistema anche la centratura»). Lo dice la prova sotto. */
+      if ((quanti === 6 || quanti === 8) && bolla.row > 0) continue;
       for (const punto of puntiDelConnettore(bolla.path)) {
         for (const altra of bolle) {
           if (altra === bolla) continue;
@@ -175,12 +176,16 @@ test("la linea che scavalca una fila arriva dritta sulla sua verticale (#118)", 
   /* E' la regola da cui esce il punto di comando: se a quell'altezza la linea
    * non fosse ancora arrivata alla sua x, si mangerebbe il mezzo passo dello
    * sfalsamento e tornerebbe a sfiorare la bolla di sopra. */
-  const sei = flowStageLayout(6, "mobile");
+  /* Con sette: quattro sopra e tre nei varchi. (Con sei le file sono uguali
+   * e stanno in colonna: li' non c'e' niente da scavalcare.) */
+  const sei = flowStageLayout(7, "mobile");
   /* L'altezza della prima fila si chiede al disegno, non si scrive qui: le
    * file si sono gia' spostate una volta, e una prova che se la ricorda a
    * memoria misura il posto sbagliato senza dirlo. */
   const primaFila = sei.find(({ row }) => row === 0).y;
-  for (const bolla of sei.filter(({ row }) => row > 0)) {
+  const scavalcano = sei.filter(({ row, path }) => row > 0 && path.includes("Q"));
+  assert.equal(scavalcano.length, 2, "le due ai lati di quella sotto Casa");
+  for (const bolla of scavalcano) {
     const [, , , cx, , x1] = bolla.path.match(/^M (\S+) (\S+) Q (\S+) (\S+) (\S+) (\S+)$/);
     const punto = puntiDelConnettore(bolla.path).find(([, y]) => y >= primaFila);
     /* Due unita' su mille di sfrido: la linea qui si campiona a passi, e il
@@ -259,10 +264,15 @@ test("le file si sfalsano come i mattoni, e non si incolonnano (#118)", () => {
   /* Il perche' sta nella prova qui sopra: incolonnate, la linea di sotto
    * passa per forza dentro quella di sopra. Questa dice COME si e' risolto,
    * cosi' chi un giorno rimette le x uguali sa cosa sta rompendo. */
+  /* Con sei le file sono tre e tre, e due file uguali sfalsate non stanno
+   * tutte e due al centro: la seconda finiva mezzo passo a sinistra, con un
+   * buco in basso a destra. «Sistema anche la centratura, non mi piace.»
+   * Stanno in colonna sotto la Casa, come le quattro e quattro, e le linee
+   * di sotto passano dietro. */
   const sei = flowStageLayout(6, "mobile");
   assert.deepEqual(
     sei.map(({ x }) => x),
-    [250, 500, 750, 125, 375, 625],
+    [166.7, 500, 833.3, 166.7, 500, 833.3],
   );
   /* Con sette la fila di sopra si prende tutta la larghezza — ogni bolla al
    * centro della sua parte, perche' «sono troppo attaccati» — e quella di
@@ -287,6 +297,25 @@ test("le file si sfalsano come i mattoni, e non si incolonnano (#118)", () => {
     flowStageLayout(4, "mobile").map(({ x }) => x),
     [125, 375, 625, 875],
   );
+});
+
+test("sul telefono ogni fila sta al centro, qualunque sia il numero dei cerchi", () => {
+  /* «Sistema anche la centratura, non mi piace»: con sei la seconda fila
+   * stava spostata a sinistra. La regola vale per tutti i conti: ogni fila
+   * e' uno specchio intorno alla verticale della Casa. */
+  for (let quanti = 1; quanti <= FLOW_MAX_LOADS; quanti += 1) {
+    const bolle = flowStageLayout(quanti, "mobile");
+    for (const fila of new Set(bolle.map(({ row }) => row))) {
+      const x = bolle.filter(({ row }) => row === fila).map((bolla) => bolla.x);
+      x.forEach((qui, indice) => {
+        const specchio = x[x.length - 1 - indice];
+        assert.ok(
+          Math.abs(qui + specchio - 1000) < 0.5,
+          `con ${quanti} cerchi la fila ${fila + 1} non sta al centro: ${x.join(", ")}`,
+        );
+      });
+    }
+  }
 });
 
 test("il disegno largo non e' cambiato: li' la fila e' una sola (#118)", () => {

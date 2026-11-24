@@ -14,6 +14,14 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.30
+
+- **Energia, «Non monitorati»**: il cerchio non sparisce più quando un carico
+  ha il sensore che non risponde (il trattino «—»). Si aspetta due minuti, poi
+  torna col suo valore.
+- **Energia, sei cerchi sul telefono**: stanno tre sopra e tre sotto, in
+  colonna sotto la Casa, invece che con la seconda fila spostata a sinistra.
+
 ## 1.19.29
 
 - **Casa 3D, si riapre sempre**: passare a un'altra app o spegnere lo schermo
