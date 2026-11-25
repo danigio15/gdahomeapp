@@ -6280,13 +6280,16 @@ function spegniEntitaDettaglio(id) {
 }
 
 let currentPin = ''; let targetAlarmService = '';
-/* The dots follow the code: four to start with, one more for every digit
- * past the fourth, up to eight. With four fixed dots a six-digit code looked
- * like it did not fit (the fifth and sixth digits were typed but not shown). */
-function updatePinDisplay() { const box = document.getElementById('pin-display'); if (!box) return; const total = Math.min(8, Math.max(4, currentPin.length)); while (box.children.length < total) { const dot = document.createElement('div'); dot.className = 'pin-dot'; box.appendChild(dot); } while (box.children.length > total) box.lastElementChild.remove(); box.style.gap = total > 6 ? '12px' : (total > 4 ? '16px' : ''); Array.from(box.children).forEach((dot, i) => dot.classList.toggle('filled', i < currentPin.length)); }
+/* The dots follow the code, up to eight. Home Assistant does not say how
+ * many digits the panel code has, so the device remembers how many the last
+ * code had (only the number, never the code): four the first time, then as
+ * many as the home code has. With four fixed dots a six-digit code looked
+ * like it did not fit. */
+function pinCifreRicordate() { try { const n = parseInt(localStorage.getItem('dm_pin_cifre_v1') || '', 10); return n >= 4 && n <= 8 ? n : 4; } catch(e) { return 4; } }
+function updatePinDisplay() { const box = document.getElementById('pin-display'); if (!box) return; const total = Math.min(8, Math.max(pinCifreRicordate(), currentPin.length)); while (box.children.length < total) { const dot = document.createElement('div'); dot.className = 'pin-dot'; box.appendChild(dot); } while (box.children.length > total) box.lastElementChild.remove(); box.style.gap = total > 6 ? '12px' : (total > 4 ? '16px' : ''); Array.from(box.children).forEach((dot, i) => dot.classList.toggle('filled', i < currentPin.length)); }
 function kp(num) { if(navigator.vibrate) navigator.vibrate(15); if(currentPin.length < 8) { currentPin += num; updatePinDisplay(); } }
 function kpDel() { if(navigator.vibrate) navigator.vibrate(10); if(currentPin.length > 0) { currentPin = currentPin.slice(0, -1); updatePinDisplay(); } }
-function kpOk() { if(!ws) return; if(navigator.vibrate) navigator.vibrate([15, 30, 15]); callAlarmService(targetAlarmService, currentPin.length > 0 ? currentPin : ''); forceClose('custom-keypad'); }
+function kpOk() { if(!ws) return; if(navigator.vibrate) navigator.vibrate([15, 30, 15]); if (currentPin.length >= 4 && currentPin.length <= 8) { try { localStorage.setItem('dm_pin_cifre_v1', String(currentPin.length)); } catch(e) {} } callAlarmService(targetAlarmService, currentPin.length > 0 ? currentPin : ''); forceClose('custom-keypad'); }
 /* Chiama la centrale, con il codice se il tastierino ne ha raccolto uno. */
 function callAlarmService(service, code) {
     if(!ws) return;
