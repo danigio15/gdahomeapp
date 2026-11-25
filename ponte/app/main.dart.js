@@ -32153,8 +32153,8 @@ return A.f(a.wl(),$async$aph)
 case 4:p=c
 o=t.N
 o=A.y(o,o)
-o.m(0,"app","1.19.31")
-o.m(0,"costruzione","1193100")
+o.m(0,"app","1.19.32")
+o.m(0,"costruzione","1193200")
 if(p.length!==0)o.m(0,"proprietario",p)
 q=o
 s=1
@@ -35381,7 +35381,7 @@ else h.m(0,"chi",b)
 h.m(0,"apertura",B.ey.gkT().bj(m))
 h.m(0,"mia",B.ey.gkT().bj(l))
 h.m(0,"mucchio",!0)
-h.m(0,"app",1193100)
+h.m(0,"app",1193200)
 h.m(0,"lega",1)
 p=B.a7.hR(h,null)
 g.arJ(new A.bjm(o,e,g,n,m,c,d,p))
@@ -123051,7 +123051,7 @@ q=q.a9(p==null?m.k3:p)}p=t.p
 q=A.aS(A.a8(A.a([k,B.vb,s,B.aK,A.r(r,o,o,o,o,o,q,B.aq,o,o)],p),B.m,o,B.dv,B.i,0,B.j),1)
 r=A.h5(o,o,o,o,B.le,o,o,o,o,o)
 k=A.iu(B.AC,o,A.r(l===B.Y?A.c("Update from the App Store","Aggiorna dall'App Store"):A.c("Update from Google Play","Aggiorna dal Play Store"),o,o,o,o,o,o,o,o,o),new A.aIo(this),r)
-s=A.c("This is 1.19.31 (1193100)","Questa \xe8 la 1.19.31 (1193100)")
+s=A.c("This is 1.19.32 (1193200)","Questa \xe8 la 1.19.32 (1193200)")
 r=n.Q
 if(r==null)l=o
 else{l=m.rx
@@ -130074,7 +130074,7 @@ i=t.N
 i=A.y(i,i)
 h=g
 if(h!=null)h.b1w()
-i.m(0,"app","1.19.31")
+i.m(0,"app","1.19.32")
 if(k.length!==0)i.m(0,"proprietario",k)
 q=new A.ajf(i,j.a)
 s=1
@@ -132728,9 +132728,9 @@ else{l=a5.rx
 l=n.a9(l==null?a5.k3:l)}l=A.r(o,a4,a4,a4,a4,a4,l,a4,a4,a4)
 o=a6.w
 k=A.r(A.c("This app","Questa app"),a4,a4,a4,a4,a4,o,a4,a4,a4)
-j=p.$2(A.c("Version","Versione"),"1.19.31 (1193100)")
+j=p.$2(A.c("Version","Versione"),"1.19.32 (1193200)")
 i=A.c("Package","Pacchetto")
-i=p.$2(i,"121-0f2e7f4")
+i=p.$2(i,"122-d173f5d")
 h=A.c("Relay","Centralino")
 g=t.p
 h=A.a8(A.a([k,B.aX,j,i,p.$2(h,$.WY()==null?A.c("none","nessuno"):"GdAHome")],g),B.q,a4,B.h,B.i,0,B.j)
@@ -132860,7 +132860,7 @@ A.JC.prototype={
 v(a){var s,r=null,q=A.t(a).ax,p=A.t(a).ok.Q
 if(p==null)p=r
 else{s=q.rx
-p=p.yG((s==null?q.k3:s).ao(0.7),11)}return new A.ac(new A.U(0,this.c,0,0),A.r("GdAHome 1.19.31 (1193100)",r,r,r,r,r,p,B.aq,r,r),r)}}
+p=p.yG((s==null?q.k3:s).ao(0.7),11)}return new A.ac(new A.U(0,this.c,0,0),A.r("GdAHome 1.19.32 (1193200)",r,r,r,r,r,p,B.aq,r,r),r)}}
 A.K3.prototype={
 aa(){var s=$.an()
 return new A.RR(new A.bF(null,t.Pq),new A.bF(null,t.dS),B.de,new A.bF(null,t.b7),new A.cq(!1,s),new A.cq(!1,s))}}
@@ -133029,7 +133029,7 @@ else s=!0
 return s},
 auV(){var s,r,q=null,p=this.a.c,o=t.N
 o=A.y(o,o)
-o.m(0,"app","121-0f2e7f4")
+o.m(0,"app","122-d173f5d")
 o.m(0,"sistema","web")
 s=p.k1
 s=s==null?q:s.b
@@ -133475,7 +133475,7 @@ $0(){},
 $S:0}
 A.agR.prototype={
 v(a){var s=null,r=A.c("The app","L'app"),q=A.r(A.c("What's new","Novit\xe0"),s,s,s,s,s,s,s,s,s)
-return A.a8(A.a([new A.h7(r,s,s),new A.c3(A.pZ(!1,s,s,s,!0,s,s,s,!0,s,B.aDM,B.X7,s,s,s,s,new A.b1x(this,a),!1,s,s,s,s,A.r(A.c("Version 1.19.31: what changed","Versione 1.19.31: cosa \xe8 cambiato"),s,s,s,s,s,s,s,s,s),s,q,s,B.AG,s),B.a4S,s,s,s,s),B.br],t.p),B.q,s,B.h,B.i,0,B.j)}}
+return A.a8(A.a([new A.h7(r,s,s),new A.c3(A.pZ(!1,s,s,s,!0,s,s,s,!0,s,B.aDM,B.X7,s,s,s,s,new A.b1x(this,a),!1,s,s,s,s,A.r(A.c("Version 1.19.32: what changed","Versione 1.19.32: cosa \xe8 cambiato"),s,s,s,s,s,s,s,s,s),s,q,s,B.AG,s),B.a4S,s,s,s,s),B.br],t.p),B.q,s,B.h,B.i,0,B.j)}}
 A.b1x.prototype={
 $0(){return A.bTF(this.b,this.a.c)},
 $S:0}
@@ -137134,7 +137134,7 @@ var $async$NO=A.o(function(a,b){if(a===1)return A.k(b,r)
 for(;;)switch(s){case 0:o=A
 s=3
 return A.f(p.aXD(),$async$NO)
-case 3:q=o.bVY("1.19.31",b)
+case 3:q=o.bVY("1.19.32",b)
 s=1
 break
 case 1:return A.l(q,r)}})
@@ -137144,7 +137144,7 @@ ajQ(a){var s=0,r=A.n(t.H),q,p=this
 var $async$Gs=A.o(function(b,c){if(b===1)return A.k(c,r)
 for(;;)switch(s){case 0:if(!a||p.a.x!=null){s=1
 break}s=3
-return A.f(p.a.aXc("1.19.31"),$async$Gs)
+return A.f(p.a.aXc("1.19.32"),$async$Gs)
 case 3:case 1:return A.l(q,r)}})
 return A.m($async$Gs,r)}}
 A.aDv.prototype={
@@ -137218,7 +137218,7 @@ p=A.a([new A.ac(B.a4E,A.r(q,l,l,l,l,l,p,l,l,l),l)],o)
 for(r=r.gae(s),q=this.a;r.q();){n=r.gM()
 m=n.a
 q.a.toString
-B.b.C(p,A.a([new A.an1(n,A.byQ(m,"1.19.31")===0,l),B.j9],o))}return new A.u4(A.f3(p,l,B.za,l,!1),720,l)},
+B.b.C(p,A.a([new A.an1(n,A.byQ(m,"1.19.32")===0,l),B.j9],o))}return new A.u4(A.f3(p,l,B.za,l,!1),720,l)},
 $S:805}
 A.an1.prototype={
 v(a){var s,r,q,p,o,n,m,l=null,k=A.t(a).ax,j=this.c,i=j.a
