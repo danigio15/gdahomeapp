@@ -20,6 +20,23 @@
  * il tablet debole resta in pianta, il telefono di chi abita resta in 3D.
  * Qui le decisioni, senza toccare la pagina, per poterle provare. */
 
+/**
+ * I processori grafici che il WebGL 2 ce l'hanno ma il 3D della casa non lo
+ * reggono: quelli dei tablet a muro economici. Il Teclast P25T (e gli altri
+ * con lo stesso Allwinner) monta un PowerVR GE8300: il 3D si apre e cade, o
+ * resta lo sfondo. Su questi la casa parte gia' in pianta, col tasto per
+ * provare il 3D. Si riconoscono dal nome che il browser da' alla grafica.
+ */
+export const GRAFICHE_DEBOLI = Object.freeze([
+  /PowerVR\s+Rogue\s+GE8\d{2,3}/i,
+  /PowerVR\s+(SGX|Rogue\s+G6\d{2})/i,
+  /Mali-(400|450|T6\d{2}|T7\d{2}|G31|G51)\b/i,
+  /Adreno\s*\(TM\)\s*(3\d{2}|50[4-6])\b/i,
+]);
+
+/** Se la grafica di questo nome e' fra quelle che il 3D non lo reggono. */
+export const graficaDebole = (gpu) => GRAFICHE_DEBOLI.some((re) => re.test(String(gpu || "")));
+
 /** Dove questo dispositivo ricorda come vuole la casa: «3d», «pianta», o niente (decide la grafica). */
 export const CHIAVE_DELLA_VISTA = "dm_casa3d_vista_v1";
 
@@ -122,6 +139,10 @@ export function comeMostrareLaCasa({
   if (rotto) return { vista: "pianta", motivo: "non-parte", si3d };
   if (caduto) return { vista: "pianta", motivo: "memoria", si3d };
   if (scelta === "pianta") return { vista: "pianta", motivo: "", si3d };
+  /* una grafica debole parte in pianta, a meno che chi guarda non abbia
+   * scelto di provare il 3D */
+  if (scelta !== "3d" && graficaDebole(grafica?.gpu))
+    return { vista: "pianta", motivo: "debole", si3d };
   return { vista: "3d", motivo: "", si3d };
 }
 
@@ -143,6 +164,11 @@ export function perchéLaPianta(motivo, italiano = true) {
       return L(
         "Il 3D non parte su questo dispositivo: la casa è in pianta.",
         "3D won't start on this device: the home is shown as a floor plan.",
+      );
+    case "debole":
+      return L(
+        "La grafica di questo tablet è troppo debole per il 3D: la casa è in pianta, più leggera.",
+        "This tablet's graphics are too weak for 3D: the home is shown as a lighter floor plan.",
       );
     case "memoria":
       return L(

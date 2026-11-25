@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   CHIAVE_DELLA_VISTA,
+  graficaDebole,
   comeMostrareLaCasa,
   perchéLaPianta,
   provaLaGrafica,
@@ -184,4 +185,21 @@ test("la pianta sta nel suo spazio, col margine, qualunque sia la forma", () => 
   assert.ok(20 * s <= 432 - 32 && 10 * s <= 300 - 32);
   /* uno spazio che non c'e' ancora non fa una scala negativa */
   assert.ok(scalaDelPiano(P, 0, 0) > 0);
+});
+
+test("una grafica debole (il Teclast P25T, PowerVR GE8300) parte in pianta, ma si puo' provare il 3D", () => {
+  const p25t = { webgl2: true, webgl1: true, gpu: "PowerVR Rogue GE8300" };
+  assert.equal(graficaDebole(p25t.gpu), true);
+  assert.deepEqual(comeMostrareLaCasa({ grafica: p25t }), {
+    vista: "pianta",
+    motivo: "debole",
+    si3d: true,
+  });
+  /* chi ha scelto «Prova il 3D» su quel tablet ha il 3D */
+  assert.equal(comeMostrareLaCasa({ grafica: p25t, scelta: "3d" }).vista, "3d");
+  assert.match(perchéLaPianta("debole"), /troppo debole/);
+  for (const gpu of ["Mali-400 MP", "Mali-T720", "Adreno (TM) 306", "PowerVR Rogue GE8320"])
+    assert.equal(graficaDebole(gpu), true, gpu);
+  for (const gpu of ["Adreno (TM) 650", "Mali-G78", "Apple GPU", "ANGLE (Intel)", "", null])
+    assert.equal(graficaDebole(gpu), false, String(gpu));
 });

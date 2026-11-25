@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-LN522XP5.js";
+} from "../../chunk-AQTJTDZ5.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -176827,6 +176827,13 @@ function installOcchioEditor() {
 senzaCadere(installOcchioEditor);
 
 // src/core/la-grafica-della-casa-3d.js
+var GRAFICHE_DEBOLI = Object.freeze([
+  /PowerVR\s+Rogue\s+GE8\d{2,3}/i,
+  /PowerVR\s+(SGX|Rogue\s+G6\d{2})/i,
+  /Mali-(400|450|T6\d{2}|T7\d{2}|G31|G51)\b/i,
+  /Adreno\s*\(TM\)\s*(3\d{2}|50[4-6])\b/i
+]);
+var graficaDebole = (gpu) => GRAFICHE_DEBOLI.some((re) => re.test(String(gpu || "")));
 var CHIAVE_DELLA_VISTA = "dm_casa3d_vista_v1";
 var VISTE = Object.freeze(["3d", "pianta"]);
 function provaLaGrafica(documento) {
@@ -176901,6 +176908,8 @@ function comeMostrareLaCasa({
   if (rotto) return { vista: "pianta", motivo: "non-parte", si3d };
   if (caduto) return { vista: "pianta", motivo: "memoria", si3d };
   if (scelta4 === "pianta") return { vista: "pianta", motivo: "", si3d };
+  if (scelta4 !== "3d" && graficaDebole(grafica?.gpu))
+    return { vista: "pianta", motivo: "debole", si3d };
   return { vista: "3d", motivo: "", si3d };
 }
 function perchéLaPianta(motivo, italiano2 = true) {
@@ -176920,6 +176929,11 @@ function perchéLaPianta(motivo, italiano2 = true) {
       return L(
         "Il 3D non parte su questo dispositivo: la casa è in pianta.",
         "3D won't start on this device: the home is shown as a floor plan."
+      );
+    case "debole":
+      return L(
+        "La grafica di questo tablet è troppo debole per il 3D: la casa è in pianta, più leggera.",
+        "This tablet's graphics are too weak for 3D: the home is shown as a lighter floor plan."
       );
     case "memoria":
       return L(
