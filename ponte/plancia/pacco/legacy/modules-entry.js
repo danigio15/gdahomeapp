@@ -34,7 +34,7 @@ import {
   stepReporter,
   stradaAppenaCaduta,
   strategieDellaTelecamera
-} from "../chunk-6MCXTCDY.js";
+} from "../chunk-ZAE5SWXY.js";
 import {
   IMPIANTO_SCELTO_KEY,
   SCHEMA_VERSION,

@@ -2881,17 +2881,15 @@
     },
     {
      "riga": 6338,
-     "via": 5,
+     "via": 4,
      "metti": [
-      "/* The dots follow the code, up to eight. Home Assistant does not say how",
-      " * many digits the panel code has, so the device remembers how many the last",
-      " * code had (only the number, never the code): four the first time, then as",
-      " * many as the home code has. With four fixed dots a six-digit code looked",
-      " * like it did not fit. */"
+      "/* The dots appear while typing, one per digit, up to eight: as on the wall",
+      " * panel. Home Assistant does not say how many digits the panel code has, and",
+      " * four fixed empty slots made a six-digit code look like it did not fit. */"
      ]
     },
     {
-     "riga": 6368,
+     "riga": 6366,
      "via": 2,
      "metti": [
       "    const labels = { 'alarm_arm_home': 'Arm Home', 'alarm_arm_away': 'Arm Away', 'alarm_arm_night': 'Arm Night', 'alarm_arm_vacation': 'Arm Vacation', 'alarm_arm_custom_bypass': 'Arm Partial', 'alarm_disarm': 'Disarm Alarm' };",
@@ -2899,14 +2897,14 @@
      ]
     },
     {
-     "riga": 6422,
+     "riga": 6420,
      "via": 1,
      "metti": [
       "/* ── The units of electricity ────────────────────────────────────────────"
      ]
     },
     {
-     "riga": 6424,
+     "riga": 6422,
      "via": 2,
      "metti": [
       " * «When it is 1000 W you then have to show it in kW; when it reaches 1000 kWh",
@@ -2914,7 +2912,7 @@
      ]
     },
     {
-     "riga": 6427,
+     "riga": 6425,
      "via": 5,
      "metti": [
       " * Same rule as the core (`src/core/le-unita-della-corrente.js`), repeated here",
@@ -2925,7 +2923,7 @@
      ]
     },
     {
-     "riga": 6433,
+     "riga": 6431,
      "via": 5,
      "metti": [
       " * It steps up at a thousand, and it looks at the number AS IT WILL BE SEEN:",
@@ -2936,14 +2934,14 @@
      ]
     },
     {
-     "riga": 6439,
+     "riga": 6437,
      "via": 2,
      "metti": [
       " * Comma or dot is decided by the page language, like everything else here. */"
      ]
     },
     {
-     "riga": 6443,
+     "riga": 6441,
      "via": 4,
      "metti": [
       "/* Declared as `function`, not arrows: something slices them out of the shell",
@@ -2953,14 +2951,14 @@
      ]
     },
     {
-     "riga": 6448,
+     "riga": 6446,
      "via": 1,
      "metti": [
       "  const lingua = typeof document !== 'undefined' && document.documentElement ? document.documentElement.lang : 'en';"
      ]
     },
     {
-     "riga": 6464,
+     "riga": 6462,
      "via": 2,
      "metti": [
       "/* Rounded with the same tool that then writes it: `toFixed` and `Intl` do not",
@@ -2968,28 +2966,28 @@
      ]
     },
     {
-     "riga": 6486,
+     "riga": 6484,
      "via": 1,
      "metti": [
       "/* The two shorthands used all over this file. */"
      ]
     },
     {
-     "riga": 6554,
+     "riga": 6552,
      "via": 1,
      "metti": [
       "              const rosa = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];"
      ]
     },
     {
-     "riga": 6701,
+     "riga": 6699,
      "via": 1,
      "metti": [
       "          el.textContent = items.length ? (on + ' active / ' + items.length) : 'empty — add loads';"
      ]
     },
     {
-     "riga": 6710,
+     "riga": 6708,
      "via": 4,
      "metti": [
       "      /* v0.8.4 (#6): HOME as in HA's Energy dashboard — balance of the displayed flows:",
@@ -2998,7 +2996,7 @@
      ]
     },
     {
-     "riga": 6726,
+     "riga": 6724,
      "via": 4,
      "metti": [
       "      /* v0.8.4 (#6): HOME as in HA's Energy dashboard — balance of the displayed flows:",
@@ -3007,19 +3005,19 @@
      ]
     },
     {
-     "riga": 6739,
+     "riga": 6737,
      "via": 1,
      "metti": []
     },
     {
-     "riga": 6893,
+     "riga": 6891,
      "via": 1,
      "metti": [
       "      // Cambia foto idle ↔ plugged"
      ]
     },
     {
-     "riga": 6929,
+     "riga": 6927,
      "via": 2,
      "metti": [
       "      /* v0.8.1: DYNAMIC RAM — % sensors show %, value sensors (MB/GB) show the value",
@@ -3027,63 +3025,63 @@
      ]
     },
     {
-     "riga": 6999,
+     "riga": 6997,
      "via": 1,
      "metti": [
       "              lavFase = lavPw > 5 ? '🌀 Running (' + Math.round(lavPw) + ' W)' : 'Off';"
      ]
     },
     {
-     "riga": 7014,
+     "riga": 7012,
      "via": 1,
      "metti": [
       "          if (btnMainPwr && mainPwrSwitch) { const isOn = mainPwrSwitch.state === 'on'; btnMainPwr.classList.toggle('active', isOn); txtMainPwr.textContent = isOn ? 'ON' : 'OFF'; btnMainPwr.querySelector('.icon').textContent = isOn ? '⚡' : '🔌'; if(isOn) { btnMainPwr.style.setProperty('--btn-col', '#0ea5e9'); btnMainPwr.style.setProperty('--btn-bg', '#e0f2fe'); } else { btnMainPwr.style.setProperty('--btn-col', '#64748b'); btnMainPwr.style.setProperty('--btn-bg', '#fff'); } }"
      ]
     },
     {
-     "riga": 7026,
+     "riga": 7024,
      "via": 1,
      "metti": [
       "      const chiaveState = getRawState(cdRefChiaveSolare()); const isChiaveOpen = chiaveState === 'open' || chiaveState === 'on'; setActiveState('syn-v-chiave', isChiaveOpen); updateBoilerBtn('b-c-valvola', isChiaveOpen, 'OPEN', 'CHIUSA'); setTxt('txt-chiave', isChiaveOpen ? 'OPEN' : 'CHIUSA');"
      ]
     },
     {
-     "riga": 7101,
+     "riga": 7099,
      "via": 1,
      "metti": [
       "              text = 'ARMED \\u00B7 ' + String(suMisura.label || '').toUpperCase();"
      ]
     },
     {
-     "riga": 7385,
+     "riga": 7383,
      "via": 1,
      "metti": [
       "      else if (stato === 'off')  { el.classList.add('off');     txt.textContent = 'OFF'; }"
      ]
     },
     {
-     "riga": 7472,
+     "riga": 7470,
      "via": 1,
      "metti": [
       "      show = true; icon = '🛡️'; text = 'Antifurto · Total'; rgb = '225,29,72';  textRgb = '157,23,53';"
      ]
     },
     {
-     "riga": 7600,
+     "riga": 7598,
      "via": 1,
      "metti": [
       "// Apre un popup con 3 bottoni (Total/Notte/Sblocca). Riusa promptPinAndSet"
      ]
     },
     {
-     "riga": 7694,
+     "riga": 7692,
      "via": 1,
      "metti": [
       "// Sensori dispositivi mese corrente → usati anche per mesi precedenti via History"
      ]
     },
     {
-     "riga": 7710,
+     "riga": 7708,
      "via": 4,
      "metti": [
       "/* v0.7.3 fix (#6): now a callable function — adding an entry from the editor",
@@ -3091,49 +3089,49 @@
      ]
     },
     {
-     "riga": 7735,
+     "riga": 7733,
      "via": 3,
      "metti": [
       "const COSTO_KWH  = 0.25;"
      ]
     },
     {
-     "riga": 7787,
+     "riga": 7785,
      "via": 1,
      "metti": [
       "    const guadagnoGSE = immesso * 0.10;                        // stima 0.10€/kWh per energia immessa (GSE)"
      ]
     },
     {
-     "riga": 7790,
+     "riga": 7788,
      "via": 1,
      "metti": [
       "    edSetText('ed-fin-pagato-sub', cons.toFixed(0) + ' kWh × 0.25€');"
      ]
     },
     {
-     "riga": 7792,
+     "riga": 7790,
      "via": 1,
      "metti": [
       "    edSetText('ed-fin-costo-sub', prelevato.toFixed(1) + ' kWh × 0.25€');"
      ]
     },
     {
-     "riga": 7796,
+     "riga": 7794,
      "via": 1,
      "metti": [
       "    edSetText('ed-fin-imm-sub', immesso.toFixed(1) + ' kWh × 0.10€');"
      ]
     },
     {
-     "riga": 7846,
+     "riga": 7844,
      "via": 1,
      "metti": [
       "        /* v0.8.1: all year sensors; if consumption is missing, estimate it from the energy balance */"
      ]
     },
     {
-     "riga": 7875,
+     "riga": 7873,
      "via": 2,
      "metti": [
       "    /* v0.8.1: if yearly statistics yield nothing but the current month does (period engine),",
@@ -3141,14 +3139,14 @@
      ]
     },
     {
-     "riga": 7907,
+     "riga": 7905,
      "via": 1,
      "metti": [
       "    // Mostra subito il prelevato (non richiede History)"
      ]
     },
     {
-     "riga": 7978,
+     "riga": 7976,
      "via": 2,
      "metti": [
       "    /* v0.7.5: \"this week / last week\" only makes sense in the current month —",
@@ -3156,14 +3154,14 @@
      ]
     },
     {
-     "riga": 8014,
+     "riga": 8012,
      "via": 1,
      "metti": [
       "    // Somma kWh di un periodo da History"
      ]
     },
     {
-     "riga": 8136,
+     "riga": 8134,
      "via": 4,
      "metti": [
       "        // ── CURRENT MONTH: period engine (delta from the 1st) ──",
@@ -3173,49 +3171,49 @@
      ]
     },
     {
-     "riga": 8180,
+     "riga": 8178,
      "via": 1,
      "metti": [
       "            // del giorno prima dell'inizio). È il metodo del pannello Energy di HA, esatto sui"
      ]
     },
     {
-     "riga": 8191,
+     "riga": 8189,
      "via": 1,
      "metti": [
       "               Questo è ESATTAMENTE come il pannello Energy di HA calcola i totali, e con contatori"
      ]
     },
     {
-     "riga": 8237,
+     "riga": 8235,
      "via": 1,
      "metti": [
       "               del cumulativo), lascio statsOk=false così parte il fallback History col delta. */"
      ]
     },
     {
-     "riga": 8244,
+     "riga": 8242,
      "via": 1,
      "metti": [
       "        // ── METODO 2: History API (fallback - max ultimi 10 giorni) ──"
      ]
     },
     {
-     "riga": 8270,
+     "riga": 8268,
      "via": 1,
      "metti": [
       "                    // la History può restituire i sensori in ordine diverso: mappo per entity_id"
      ]
     },
     {
-     "riga": 8283,
+     "riga": 8281,
      "via": 1,
      "metti": [
       "            } catch(e) { console.error('History fetch error:', e); }"
      ]
     },
     {
-     "riga": 8287,
+     "riga": 8285,
      "via": 5,
      "metti": [
       "    /* v0.9.5 DEFINITIVE FIX: HOME as HA's Energy panel and the Monthly map.",
@@ -3225,7 +3223,7 @@
      ]
     },
     {
-     "riga": 8299,
+     "riga": 8297,
      "via": 5,
      "metti": [
       "    /* v0.7.5 (#6): DATA COHERENCE — if total consumption is unavailable but the rest is,",
@@ -3236,21 +3234,21 @@
      ]
     },
     {
-     "riga": 8326,
+     "riga": 8324,
      "via": 1,
      "metti": [
       "    edSetText('ed-fin-pagato-sub', cons.toFixed(0) + ' kWh × 0.25€');"
      ]
     },
     {
-     "riga": 8328,
+     "riga": 8326,
      "via": 1,
      "metti": [
       "    edSetText('ed-fin-costo-sub', prelevato.toFixed(1) + ' kWh × 0.25€');"
      ]
     },
     {
-     "riga": 8331,
+     "riga": 8329,
      "via": 2,
      "metti": [
       "    edSetText('ed-fin-imm',    (immesso * 0.10).toFixed(2) + ' €');",
@@ -3258,49 +3256,49 @@
      ]
     },
     {
-     "riga": 8360,
+     "riga": 8358,
      "via": 1,
      "metti": [
       "        /* v0.8.1: past month with no statistics at all → honest note instead of confident zeros */"
      ]
     },
     {
-     "riga": 8362,
+     "riga": 8360,
      "via": 1,
      "metti": [
       "            badgesEl.innerHTML = '<span class=\"ed-badge\" style=\"background:rgba(245,158,11,0.14); color:#b45309;\">⚠️ No statistics available for this month</span>';"
      ]
     },
     {
-     "riga": 8377,
+     "riga": 8375,
      "via": 1,
      "metti": [
       "    // ── Confronto settimanale via History API ───────────────────"
      ]
     },
     {
-     "riga": 8411,
+     "riga": 8409,
      "via": 1,
      "metti": [
       "            list.innerHTML = '<div style=\"text-align:center; padding:26px; color:var(--text-dim); font-weight:800;\">📊 Aggiungi i tuoi dispositivi da ⚙️ → Configure Entities → Carichi → \"Report Analisi — voci\"<br><span style=\"font-weight:600; font-size:12px;\">You can use monthly entities or cumulative TOTALS: months are computed automatically.</span></div>';"
      ]
     },
     {
-     "riga": 8463,
+     "riga": 8461,
      "via": 1,
      "metti": [
       "        // ── METODO 2: History API (fallback - max 10 giorni) ──"
      ]
     },
     {
-     "riga": 8483,
+     "riga": 8481,
      "via": 1,
      "metti": [
       "                console.error('[ED Device List] History error:', e);"
      ]
     },
     {
-     "riga": 8505,
+     "riga": 8503,
      "via": 2,
      "metti": [
       "    /* v0.7.5: if the selected month has neither production nor main consumption but device",
@@ -3308,73 +3306,73 @@
      ]
     },
     {
-     "riga": 8508,
+     "riga": 8506,
      "via": 1,
      "metti": [
       "        ? '<div style=\"padding:10px 14px; margin-bottom:8px; border-radius:14px; background:rgba(245,158,11,0.12); color:#b45309; font-size:11.5px; font-weight:700;\">⚠️ Main production and consumption unavailable for this month: the values below come from meter history and may include earlier periods.</div>'"
      ]
     },
     {
-     "riga": 8529,
+     "riga": 8527,
      "via": 2,
      "metti": []
     },
     {
-     "riga": 8532,
+     "riga": 8530,
      "via": 1,
      "metti": [
       "        list.innerHTML += '<div style=\"padding:10px 14px; margin-top:8px; border-radius:14px; background:rgba(14,165,233,0.08); color:#0369a1; font-size:11.5px; font-weight:700;\">ℹ️ The Report reads Home Assistant <b>Long-Term Statistics</b>. If values stay at zero, make sure the entities have <code>state_class: total_increasing</code> (or <code>total</code>): Developer Tools → Statistics.</div>';"
      ]
     },
     {
-     "riga": 8542,
+     "riga": 8540,
      "via": 1,
      "metti": [
       "/* ═══ v0.8.0: PERIOD ENGINE ═══"
      ]
     },
     {
-     "riga": 8570,
+     "riga": 8568,
      "via": 1,
      "metti": [
       "    if (!service) return Promise.reject(new Error('Canonical Energy service unavailable'));"
      ]
     },
     {
-     "riga": 8626,
+     "riga": 8624,
      "via": 1,
      "metti": [
       "    // ── METODO 2: History API (fallback - solo ultimi 10 giorni di default) ──"
      ]
     },
     {
-     "riga": 8659,
+     "riga": 8657,
      "via": 1,
      "metti": [
       "            console.warn('History API non raggiungibile:', e.message);"
      ]
     },
     {
-     "riga": 8747,
+     "riga": 8745,
      "via": 1,
      "metti": []
     },
     {
-     "riga": 8782,
+     "riga": 8780,
      "via": 1,
      "metti": [
       "    if(!visible.length){ grid.innerHTML='<div style=\"text-align:center; padding:30px; color:var(--text-dim); font-weight:700;\">No room con sensore — aggiungila nel tab Temperatura dell&#39;editor</div>'; return; } grid.innerHTML = tabs + visible.map(r => {"
      ]
     },
     {
-     "riga": 8834,
+     "riga": 8832,
      "via": 1,
      "metti": [
       "    /* v0.7.4: average temperature of each floor in the tabs */"
      ]
     },
     {
-     "riga": 9012,
+     "riga": 9010,
      "via": 6,
      "metti": [
       "                'on':          { label: '🟢 On-Grid',     cls: 'ongrid',       col: '#10b981' },",
@@ -3386,21 +3384,21 @@
      ]
     },
     {
-     "riga": 9103,
+     "riga": 9101,
      "via": 1,
      "metti": [
       "                ${duration ? `<div class=\"srv-event-duration\">Duration: ${duration}</div>` : ''}"
      ]
     },
     {
-     "riga": 9112,
+     "riga": 9110,
      "via": 1,
      "metti": [
       "        timeline.innerHTML = `<div style=\"text-align:center;padding:24px;color:#ef4444;font-weight:800;font-size:12px;\">❌ History non disponibile<br><span style=\"color:var(--text-dim);font-size:10px;\">${cdEsc(e.message)}</span></div>`;"
      ]
     },
     {
-     "riga": 9141,
+     "riga": 9139,
      "via": 10,
      "metti": [
       "        'dm.core_005':                    ['❄️ Air conditioner','Salone'],",
@@ -3416,28 +3414,28 @@
      ]
     },
     {
-     "riga": 9173,
+     "riga": 9171,
      "via": 1,
      "metti": [
       "                          '4':'Vel.4', '5':'Vel.5', on:'On', off:'Off' };"
      ]
     },
     {
-     "riga": 9409,
+     "riga": 9407,
      "via": 1,
      "metti": [
       "    // ── History giornaliero del periodo selezionato ──"
      ]
     },
     {
-     "riga": 9447,
+     "riga": 9445,
      "via": 1,
      "metti": [
       "        // ── METODO 2: History API (fallback per ultimi 10 giorni) ──"
      ]
     },
     {
-     "riga": 9546,
+     "riga": 9544,
      "via": 2,
      "metti": [
       "        setTxt('ed-dkpi-picco-sub', 'History N/D');",

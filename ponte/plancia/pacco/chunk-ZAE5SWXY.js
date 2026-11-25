@@ -35690,7 +35690,7 @@ function installSegnalazioniSection() {
 senzaCadere(installSegnalazioniSection);
 
 // legacy/build-info.js
-var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.19.32", "dashboardVersion": "1.19.32", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-11-25T21:25:43+00:00", "commit": "7725e46508605ada5e61e612d8854a86c92ad69b", "assetHash": "8dbb91fd23df1790" });
+var BUILD_INFO = Object.freeze({ "generated": true, "integrationVersion": "1.19.32", "dashboardVersion": "1.19.32", "moduleVersion": 14, "schemaVersion": 4, "date": "2026-11-25T21:29:53+00:00", "commit": "eab01825d57aea26eb7bba1fd8d230006f38529a", "assetHash": "4d145ca338638cde" });
 
 export {
   faseInParole,
