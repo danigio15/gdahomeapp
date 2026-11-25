@@ -28,9 +28,12 @@
  * un'immagine ferma, con le luci accese piene.
  */
 import {
+  GRUPPI_DELLE_LAMPADINE,
   MISURE_DELLE_COSE,
+  PASSO_DEI_GIOCHI_S,
   disposizioneDellaScena,
   partiDivise,
+  programmaDelleLuci,
   variabiliDellaScena,
 } from "../core/scena-delle-luci.js";
 
@@ -94,7 +97,9 @@ function lampadine(
       const quale = COLORI_DELLE_LAMPADINE.indexOf(colore);
       const aloneId = quale >= 0 ? `${p}al${quale}` : `${p}alc`;
       const ritardo = -((i * 0.73) % 2.8);
-      return `<g class="sc-l" style="--i:${i};--j:${Math.max(0, tutte - i)};--d:${n1(ritardo)}s"><circle class="sc-l0" cx="${n1(x)}" cy="${n1(y)}" r="${n1(r * 0.85)}"/><g class="sc-l1"><circle class="sc-lh" cx="${n1(x)}" cy="${n1(y)}" r="${n1(r * alone)}" fill="url(#${aloneId})"/><circle cx="${n1(x)}" cy="${n1(y)}" r="${n1(r)}" fill="${colore}"/><circle cx="${n1(x - r * 0.3)}" cy="${n1(y - r * 0.35)}" r="${n1(r * 0.38)}" fill="#fff" opacity=".75"/></g></g>`;
+      /* il gruppo dei giochi (vedi `programmaDelleLuci`): in fila lungo il filo */
+      const gioco = i % GRUPPI_DELLE_LAMPADINE;
+      return `<g class="sc-l" style="--i:${i};--j:${Math.max(0, tutte - i)};--d:${n1(ritardo)}s"><circle class="sc-l0" cx="${n1(x)}" cy="${n1(y)}" r="${n1(r * 0.85)}"/><g class="sc-l1"><g class="sc-lg sc-lg${gioco}"><circle class="sc-lh" cx="${n1(x)}" cy="${n1(y)}" r="${n1(r * alone)}" fill="url(#${aloneId})"/><circle cx="${n1(x)}" cy="${n1(y)}" r="${n1(r)}" fill="${colore}"/><circle cx="${n1(x - r * 0.3)}" cy="${n1(y - r * 0.35)}" r="${n1(r * 0.38)}" fill="#fff" opacity=".75"/></g></g></g>`;
     })
     .join("");
 }
@@ -236,7 +241,7 @@ function albero(p, cosa, accese) {
   const stella = parte(
     chi[giri.length],
     accese,
-    `<g transform="translate(0 -216)"><circle class="sc-alone-stella" r="34" fill="url(#${p}aloneoro)"/><path class="sc-stella-spenta" d="${stellaACinque(13)}"/><g class="sc-l1 sc-stella-accesa" style="--i:${totale}"><path d="${stellaACinque(13)}" fill="url(#${p}oro)"/><path d="${stellaACinque(6)}" fill="#fff8de" opacity=".7"/></g></g>`,
+    `<g transform="translate(0 -216)"><circle class="sc-alone-stella" r="34" fill="url(#${p}aloneoro)"/><path class="sc-stella-spenta" d="${stellaACinque(13)}"/><g class="sc-l1 sc-stella-accesa" style="--i:${totale}"><path d="${stellaACinque(13)}" fill="url(#${p}oro)"/><path d="${stellaACinque(6)}" fill="#fff8de" opacity=".7"/><path class="sc-luccica" d="${stellaAQuattro(24, 1.4)}" fill="#fffbe9"/></g></g>`,
     "sc-stella-albero",
   );
   const tutte = ent;
@@ -794,6 +799,9 @@ export function scenaDelleLuci({
     }
   }
   if (cielo.fiocchi) sopra += `<span class="dm-sc-fiocchi" aria-hidden="true"></span>`;
+  /* Una stella cadente, ogni tanto, quando le stelle si vedono. */
+  if (cielo.fase === "sera" || cielo.fase === "notte")
+    sopra += `<span class="dm-sc-cadente" aria-hidden="true"></span>`;
   const stile = Object.entries(variabiliDellaScena(cielo))
     .map(([k, v]) => `${k}:${v}`)
     .join(";");
@@ -921,9 +929,23 @@ export function cssDellaScena(radice) {
       ${r} .dm-sc-fumo i:nth-child(2){animation-delay:-2.33s}
       ${r} .dm-sc-fumo i:nth-child(3){animation-delay:-4.66s}
       ${r} .dm-sc-fiocchi{animation:dm-sc-cade 26s linear infinite}
+      ${r} .acceso .sc-luccica{animation:dm-sc-luccica 3.2s steps(8,end) infinite}
+      ${r} .acceso .sc-alone-stella{animation:dm-sc-pulsa 2.4s steps(6,end) infinite 1.6s}
+      ${r} .dm-sc-cadente{animation:dm-sc-cadente 17s linear infinite 4s}
     }
+    /* Lo scintillio della stella in cima: una croce di luce che si allarga e
+       gira piano. Ferma (con «riduci animazioni») non si vede. */
+    ${r} .sc-luccica{opacity:0;transform-box:fill-box;transform-origin:center}
+    @keyframes dm-sc-luccica{0%{opacity:0;transform:scale(.35) rotate(0deg)}25%{opacity:.95;transform:scale(1) rotate(22deg)}50%{opacity:0;transform:scale(.4) rotate(45deg)}100%{opacity:0;transform:scale(.35) rotate(45deg)}}
+    @keyframes dm-sc-pulsa{0%,100%{opacity:1}50%{opacity:.55}}
+    /* La stella cadente: un trattino di luce che attraversa il cielo in un
+       attimo, poi niente per un po'. Si sposta da sola, senza ridisegno. */
+    ${r} .dm-sc-cadente{position:absolute;left:18%;top:9%;width:min(110px,18%);height:2px;border-radius:2px;pointer-events:none;opacity:0;
+      background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,250,225,.95));transform-origin:right center;will-change:transform,opacity}
+    @keyframes dm-sc-cadente{0%{opacity:0;transform:translate(0,0) rotate(18deg) scaleX(.3)}1%{opacity:1}6%{opacity:0;transform:translate(min(420px,55vw),130px) rotate(18deg) scaleX(1)}100%{opacity:0;transform:translate(min(420px,55vw),130px) rotate(18deg) scaleX(1)}}
     ${r}.dm-sc-fermo *,${r}.dm-sc-fermo *::before,${r}.dm-sc-fermo *::after{animation-play-state:paused!important}
     @keyframes dm-sc-brilla{0%,100%{opacity:var(--sc-alone)}50%{opacity:calc(var(--sc-alone) * .45)}}
+    ${giochiDelleLuci(r)}
     @keyframes dm-sc-tremola{0%,100%{opacity:1}50%{opacity:.25}}
     @keyframes dm-sc-fumo{0%{transform:translate(-50%,0) scale(.5);opacity:0}15%{opacity:.5}100%{transform:translate(-160%,-420%) scale(1.9);opacity:0}}
     @keyframes dm-sc-cade{from{transform:translateY(-50%)}to{transform:translateY(0)}}
@@ -948,6 +970,30 @@ export function cssDellaScena(radice) {
         radial-gradient(circle at 6% 46%,#fff 0 1.1px,transparent 1.6px);
       background-size:100% 50%;background-repeat:repeat-y;will-change:transform}
   `;
+}
+
+/* I giochi delle lampadine accese, uno per gruppo (`programmaDelleLuci`): ogni
+ * passo tiene la sua luce fino al prossimo (`steps(1)`), cosi' il browser
+ * ridisegna solo quando una lampadina cambia, tre volte al secondo. Fuori da
+ * «riduci animazioni» e solo per le parti accese: spente o ferme, restano
+ * piene. */
+function giochiDelleLuci(r) {
+  let css = "";
+  for (let g = 0; g < GRUPPI_DELLE_LAMPADINE; g += 1) {
+    const passi = programmaDelleLuci(g);
+    const n = passi.length;
+    const fotogrammi = passi
+      .map((luce, t) => `${Math.round((t / n) * 10000) / 100}%{opacity:${luce}}`)
+      .concat(`100%{opacity:${passi[0]}}`)
+      .join("");
+    css += `@keyframes dm-sc-gioco${g}{${fotogrammi}}`;
+  }
+  const durata = Math.round(programmaDelleLuci(0).length * PASSO_DEI_GIOCHI_S * 100) / 100;
+  css += `@media (prefers-reduced-motion:no-preference){${Array.from(
+    { length: GRUPPI_DELLE_LAMPADINE },
+    (_, g) => `${r} .acceso .sc-lg${g}{animation:dm-sc-gioco${g} ${durata}s steps(1,end) infinite}`,
+  ).join("")}}`;
+  return css;
 }
 
 /* ── la scena in un contenitore ─────────────────────────────────────────── */

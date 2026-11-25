@@ -275,3 +275,57 @@ test("la fascia si ridisegna quando cambia uno stato", async () => {
   );
   assert.match(sezione, /"dashboardmodern:state-changed"/);
 });
+
+/* «Su HA il sensore di potenza del Raspberry lo vedo su Ok, su GdA lo vedo
+ * come “spento”.» (#504) Il Raspberry Pi pubblica un sensore di classe
+ * «problem»: «off» vuol dire che l'alimentatore regge, e Home Assistant scrive
+ * «OK». Non dice se il nodo e' acceso: dice come sta. */
+test("il sensore di guai del Raspberry dice OK, non spento", () => {
+  const states = {
+    "binary_sensor.rpi_power_status": stato("off", {
+      device_class: "problem",
+      friendly_name: "Raspberry Pi Power status",
+    }),
+  };
+  const bene = letturaDelNodo({ nome: "Raspberry Pi", stato: "binary_sensor.rpi_power_status" }, states);
+  assert.equal(bene.acceso, null);
+  assert.equal(bene.salute, "ok");
+  assert.equal(bene.muto, false);
+  assert.deepEqual(
+    { spenti: riassuntoDeiNodi([bene]).spenti, problemi: riassuntoDeiNodi([bene]).problemi },
+    { spenti: 0, problemi: 0 },
+  );
+
+  states["binary_sensor.rpi_power_status"] = stato("on", { device_class: "problem" });
+  const male = letturaDelNodo({ nome: "Raspberry Pi", stato: "binary_sensor.rpi_power_status" }, states);
+  assert.equal(male.salute, "problema");
+  assert.equal(riassuntoDeiNodi([male]).problemi, 1);
+  assert.equal(riassuntoDeiNodi([male]).spenti, 0);
+
+  /* Un interruttore resta un interruttore. */
+  const ping = letturaDelNodo({ stato: "binary_sensor.nas" }, { "binary_sensor.nas": stato("off", { device_class: "connectivity" }) });
+  assert.equal(ping.acceso, false);
+  assert.equal(ping.salute, "");
+});
+
+test("dall'integrazione lo stato del nodo non e' mai un sensore di guai, se ce n'e' un altro", () => {
+  const states = {
+    "binary_sensor.rpi_power_status": stato("off", { device_class: "problem" }),
+    "binary_sensor.rpi_status": stato("on", {}),
+  };
+  const nodo = bindNodoToDevice({
+    device: { name: "Raspberry Pi" },
+    entities: [
+      { entity_id: "binary_sensor.rpi_power_status", name: "Power status", device_class: "problem" },
+      { entity_id: "binary_sensor.rpi_status", name: "Status" },
+    ],
+    states,
+  });
+  assert.equal(nodo.stato, "binary_sensor.rpi_status");
+});
+
+test("la scheda scrive OK e problema per i sensori di guai", async () => {
+  const sorgente = await readFile(new URL("../src/sections/nodi-section.js", import.meta.url), "utf8");
+  assert.match(sorgente, /lettura\.salute === "ok"[\s\S]*?>OK</);
+  assert.match(sorgente, /data-stato="problema"/);
+});

@@ -359,6 +359,59 @@ export function variabiliDellaScena(scena) {
   return v;
 }
 
+/* ── i giochi delle lampadine ───────────────────────────────────────────── *
+ *
+ * «Riesci a fare qualcosa di più animato, tipo le luci sull'albero a
+ * intermittenza?» Come le centraline delle luci vere, le lampadine accese
+ * girano fra qualche gioco, sempre gli stessi e sempre nello stesso ordine:
+ *
+ *   · «alterna»: meta' accese e meta' spente, e si scambiano;
+ *   · «rincorsa»: un tratto acceso che corre lungo il filo;
+ *   · «respiro»: tutte insieme, piano, si abbassano e tornano;
+ *   · «scintille»: qua e la', a caso;
+ *   · e un momento tutte accese, ferme.
+ *
+ * Ogni lampadina sta in uno di `GRUPPI_DELLE_LAMPADINE` gruppi (in fila lungo
+ * il filo: la rincorsa corre); qui c'e', per ogni gruppo, quanto e' accesa a
+ * ogni passo del giro. Il disegno ne fa un'animazione CSS a scatti
+ * (`passi(1)`): pochi ridisegni al secondo, come il resto della scena —
+ * i tablet a muro sono economici. «Spenta» non e' buia: si vede il vetro. */
+export const GRUPPI_DELLE_LAMPADINE = 6;
+export const PASSO_DEI_GIOCHI_S = 0.35;
+export const GIOCHI_DELLE_LUCI = Object.freeze([
+  ["alterna", 24],
+  ["rincorsa", 24],
+  ["respiro", 16],
+  ["scintille", 8],
+  ["ferme", 8],
+]);
+export const LUCE_BASSA = 0.16;
+
+/* Un numero a caso, sempre lo stesso per lo stesso gruppo e lo stesso passo. */
+const scintilla = (g, t) => {
+  const x = Math.sin((g + 1) * 12.9898 + (t + 1) * 78.233) * 43758.5453;
+  return x - Math.floor(x);
+};
+
+/** Quanto e' accesa (fra `LUCE_BASSA` e 1) una lampadina del gruppo `g` a ogni passo del giro. */
+export function programmaDelleLuci(g) {
+  const gruppo =
+    (((Math.floor(Number(g)) || 0) % GRUPPI_DELLE_LAMPADINE) + GRUPPI_DELLE_LAMPADINE) %
+    GRUPPI_DELLE_LAMPADINE;
+  const passi = [];
+  for (const [gioco, quanti] of GIOCHI_DELLE_LUCI)
+    for (let t = 0; t < quanti; t += 1) {
+      let luce = 1;
+      if (gioco === "alterna") luce = (Math.floor(t / 2) + gruppo) % 2 === 0 ? 1 : LUCE_BASSA;
+      else if (gioco === "rincorsa") luce = (((t - gruppo) % 6) + 6) % 6 < 3 ? 1 : LUCE_BASSA;
+      else if (gioco === "respiro")
+        luce = LUCE_BASSA + (1 - LUCE_BASSA) * (0.5 + 0.5 * Math.cos((2 * Math.PI * t) / 8));
+      else if (gioco === "scintille") luce = scintilla(gruppo, t) > 0.45 ? 1 : LUCE_BASSA;
+      passi.push(Math.round(luce * 100) / 100);
+    }
+  return passi;
+}
+
 /* ── le cose ────────────────────────────────────────────────────────────── */
 
 /* Quanto e' grande ogni cosa, a scala uno, in unita' della scena (alta 300):

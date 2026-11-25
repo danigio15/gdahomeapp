@@ -1739,8 +1739,12 @@ test("production graph is single-owner, acyclic and contains no facade pass-thro
   // 579 con `core/la-qualita-della-casa-3d.js`: quanti pixel, l'antialias e
   // l'ombra che la Casa 3D chiede a uno schermo, e cosa fare quando il suo
   // disegno cade, invece di restare nera su un tablet con poca memoria.
+  // 581 con la Casa 3D che si apre ovunque: `core/la-grafica-della-casa-3d.js`
+  // (che grafica c'e', 3D o pianta, la scelta di questo dispositivo) e
+  // `sections/casa-3d/pianta.js` (i piani visti dall'alto, coi dispositivi da
+  // toccare, dove il 3D non c'e': un tablet col solo WebGL 1).
   assert.ok(
-    relative.length <= 579,
+    relative.length <= 581,
     `production graph unexpectedly grew to ${relative.length} modules`,
   );
   assertAcyclic(edges);

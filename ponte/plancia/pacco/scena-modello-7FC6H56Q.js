@@ -4,22 +4,24 @@ import {
   posaDelModello,
   puntoDelFile,
   puntoNelMondo
-} from "./chunk-ZV2CIQQZ.js";
+} from "./chunk-3G7LRMUX.js";
 import {
   creaLeScritte,
   installaLoStile
-} from "./chunk-U7PLBHMN.js";
+} from "./chunk-IGFDQTPI.js";
+import {
+  memoriaDelDispositivo,
+  nucleiDelDispositivo,
+  qualitaDellaCasa3D
+} from "./chunk-IPWWRYQF.js";
 import {
   DISPOSITIVI_3D,
   azioneDelTocco,
   entita,
   entitaCandidate,
   entitaProposta,
-  memoriaDelDispositivo,
-  nucleiDelDispositivo,
-  qualitaDellaCasa3D,
   statoDelDispositivo
-} from "./chunk-GS7DKS73.js";
+} from "./chunk-HNM3TMKW.js";
 
 // src/sections/casa-3d/scena-modello.js
 var LUCI_ACCESE_AL_MASSIMO = 6;

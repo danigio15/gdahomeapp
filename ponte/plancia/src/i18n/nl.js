@@ -8554,4 +8554,13 @@ export default Object.freeze({
   "Yes, turn on": "Ja, openzetten",
   "1 day": "1 dag",
   "1 minute": "1 minuut",
+  "Furnishing is done in the 3D home, from a device that can run it": "Inrichten gebeurt in het 3D-huis, op een apparaat dat het aankan",
+  "Lighter, for tablets that struggle with 3D": "Lichter, voor tablets die moeite hebben met 3D",
+  "Plan": "Plattegrond",
+  "Covers": "Rolluiken",
+  "Media players": "Mediaspelers",
+  "problem": "probleem",
+  "This entity's room is set by the other card it belongs to": "De kamer van deze entiteit wordt bepaald door de andere kaart waar ze bij hoort",
+  "with a problem": "met een probleem",
+  "with problems": "met problemen",
 });

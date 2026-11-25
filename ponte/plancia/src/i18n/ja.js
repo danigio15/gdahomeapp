@@ -8521,4 +8521,13 @@ export default Object.freeze({
   "Yes, turn on": "はい、開ける",
   "1 day": "1 日",
   "1 minute": "1 分",
+  "Furnishing is done in the 3D home, from a device that can run it": "家具の配置は、3D を動かせる端末の 3D ハウスで行います",
+  "Lighter, for tablets that struggle with 3D": "軽量版。3D が重いタブレット向け",
+  "Plan": "間取り図",
+  "Covers": "シャッター",
+  "Media players": "メディアプレーヤー",
+  "problem": "問題",
+  "This entity's room is set by the other card it belongs to": "このエンティティの部屋は、所属する別のカードで設定されます",
+  "with a problem": "問題あり",
+  "with problems": "問題あり（複数）",
 });

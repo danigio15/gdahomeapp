@@ -8490,4 +8490,13 @@ export default Object.freeze({
   "Yes, turn on": "예, 열기",
   "1 day": "1일",
   "1 minute": "1분",
+  "Furnishing is done in the 3D home, from a device that can run it": "가구 배치는 3D를 실행할 수 있는 기기의 3D 집에서 합니다",
+  "Lighter, for tablets that struggle with 3D": "더 가볍게, 3D가 버거운 태블릿용",
+  "Plan": "평면도",
+  "Covers": "블라인드",
+  "Media players": "미디어 플레이어",
+  "problem": "문제",
+  "This entity's room is set by the other card it belongs to": "이 엔티티의 방은 소속된 다른 카드에서 정해집니다",
+  "with a problem": "문제 있음",
+  "with problems": "문제 여러 개",
 });

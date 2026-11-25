@@ -107,6 +107,7 @@ export function qualitaDellaCasa3D({
   cadute = 0,
   nuclei = null,
   lenta = 0,
+  debole = false,
 } = {}) {
   const base = numero(dpr) && dpr > 0 ? dpr : 1;
   let pixel = Math.min(2, base);
@@ -119,15 +120,20 @@ export function qualitaDellaCasa3D({
   const giu = Math.max(0, Math.floor(numero(cadute) || 0));
   const area = Math.max(0, numero(larghezza) || 0) * Math.max(0, numero(altezza) || 0);
 
-  if (poca || giu > 0) pixel = Math.min(pixel, 1);
+  /* Una grafica debole (`core/la-grafica-della-casa-3d.js`: il PowerVR del
+   * Teclast P25T e simili) parte dal fondo: un pixel per punto, niente
+   * antialias, niente ombra, materiali semplici, pavimenti piu' piccoli. «Prima
+   * si apriva»: la casa la vuole in 3D, e il 3D pieno su quella grafica cade. */
+  const piano = debole === true;
+  if (poca || giu > 0 || piano) pixel = Math.min(pixel, 1);
   else if (area >= SCHERMO_GRANDE) pixel = Math.min(pixel, 1.5);
   /* Il tetto dei pixel veri: si scende fino a uno, non oltre — sotto uno la
    * casa si sgrana, e uno schermo cosi' grande ha la memoria per reggerlo. */
   const tetto = media ? PIXEL_AL_MASSIMO : PIXEL_AL_MASSIMO_CON_MEMORIA;
   if (area > 0 && area * pixel * pixel > tetto)
     pixel = Math.max(Math.min(1, pixel), Math.sqrt(tetto / area));
-  const antialias = !poca && giu === 0;
-  let ombra = giu >= 2 ? 512 : poca || giu === 1 ? 1024 : 2048;
+  const antialias = !poca && giu === 0 && !piano;
+  let ombra = piano ? 0 : giu >= 2 ? 512 : poca || giu === 1 ? 1024 : 2048;
   /* I gradini della lentezza, uno alla volta: prima i pixel (da due a uno e
    * mezzo, poi a uno), poi l'ombra — che e' un secondo disegno della casa a
    * ogni fotogramma — e solo in fondo sotto il pixel per punto: sgranata ma
@@ -146,6 +152,12 @@ export function qualitaDellaCasa3D({
     antialias,
     ombra,
     leggera: pixel < Math.min(2, base) || !antialias || ombra < 2048,
+    /* Materiali senza riflessi (Lambert invece di Standard): meno conti per
+     * ogni punto dello schermo. Sulla grafica debole e dopo due cadute. */
+    semplice: piano || giu >= 2,
+    /* Il lato piu' lungo della tela del pavimento di un piano, in pixel: ogni
+     * piano e' una trama, e a 2048 sono sedici mega di memoria grafica. */
+    tela: piano || giu >= 1 ? 1024 : 2048,
   };
 }
 

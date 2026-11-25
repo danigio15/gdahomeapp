@@ -153,7 +153,11 @@ function comuni(THREE) {
     acciaio: M("#c7ccd3", { metalness: 0.7, roughness: 0.25 }),
     ceramica: M("#fbfbfa", { roughness: 0.2 }),
     nero: M("#0b1220", { roughness: 0.15 }),
-    vetro: new THREE.MeshPhysicalMaterial({ color: "#d6ecff", transmission: 0.6, transparent: true, opacity: 0.35, roughness: 0.05 }),
+    /* Il vetro dei mobili (vetrine, tavoli): trasparente e basta. Col vetro
+     * «vero» (`transmission`) three ridisegna tutta la casa una seconda volta a
+     * ogni fotogramma, per vederci attraverso: su un tablet a muro e' la
+     * differenza fra una casa che si muove e una che si ferma. */
+    vetro: new THREE.MeshStandardMaterial({ color: "#d6ecff", transparent: true, opacity: 0.35, roughness: 0.05, depthWrite: false }),
   };
   COMUNI.set(THREE, c);
   return c;

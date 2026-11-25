@@ -292,9 +292,9 @@ const TELA_AL_MASSIMO = 2048;
  * della stanza accanto, il resto trasparente. `tipo` e' la griglia espansa.
  * Torna la tela (W×H celle in scala).
  */
-export function pavimentoDellaPianta(piano, tipo, disegna = riquadro) {
+export function pavimentoDellaPianta(piano, tipo, disegna = riquadro, tela = TELA_AL_MASSIMO) {
   const { W, H, passo } = piano;
-  const scala = Math.max(1, Math.min(PIXEL_PER_METRO * passo, TELA_AL_MASSIMO / Math.max(W, H)));
+  const scala = Math.max(1, Math.min(PIXEL_PER_METRO * passo, Math.min(TELA_AL_MASSIMO, tela) / Math.max(W, H)));
   const fattore = scala / (PIXEL_PER_METRO * passo);
   const out = document.createElement("canvas");
   out.width = Math.round(W * scala);

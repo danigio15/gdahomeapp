@@ -14,6 +14,26 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.31
+
+- **Casa 3D su ogni tablet**: dove il 3D non c'è (niente WebGL 2) o non
+  regge, la casa si apre in pianta: ogni piano visto dall'alto, con stanze e
+  dispositivi da toccare. Si passa dal 3D alla pianta e ritorno con un tasto,
+  e il tablet si ricorda la scelta.
+- **Casa 3D sui tablet con la grafica debole** (come il Teclast P25T): si
+  apre in 3D più leggero, senza ombre e con materiali più semplici.
+- **Energia, sei cerchi sul telefono**: tre sopra e tre sotto, sfalsati e al
+  centro, e ogni linea si vede fino al suo cerchio.
+- **Luci di Natale**: le lampadine si accendono a giochi, la stella brilla e
+  la sera passa una stella cadente.
+- **Server, «Altri nodi»**: il sensore dell'alimentazione del Raspberry Pi
+  dice «OK» come in Home Assistant, non più «spento».
+- **Configurazione, la stanza**: un sensore che appartiene già a un'altra
+  scheda (per esempio la batteria del frigo) mostra la sua stanza e dove si
+  cambia, invece di perdere la tendina.
+- **Robot sul computer**: la sezione si prende tutta la pagina, con la mappa
+  grande accanto ai comandi.
+
 ## 1.19.30
 
 - **Energia, «Non monitorati»**: il cerchio non sparisce più quando un carico

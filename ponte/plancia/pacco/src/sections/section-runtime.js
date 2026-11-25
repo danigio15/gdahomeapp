@@ -411,67 +411,26 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-OYLIKB7S.js";
+} from "../../chunk-BGWVBE2V.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
   controllaIlModello,
   troppoPerQuestoDispositivo,
   unitaProbabili
-} from "../../chunk-ZV2CIQQZ.js";
+} from "../../chunk-3G7LRMUX.js";
 import {
   ATTESA_DEL_RITORNO_MS,
-  CELLA,
-  CHIAVE_CASA3D,
   CHIAVE_NOMI_CASA3D,
-  CHIAVE_OCCHIO,
-  DISPOSITIVI_3D,
-  MODI_AL_MASSIMO,
-  PASSO_SALVATO,
-  PIANI_AL_MASSIMO,
-  RIQUADRI_AL_MASSIMO,
-  TELECAMERE_AL_MASSIMO,
-  TIPI_DI_DISPOSITIVO,
-  TIPI_DI_RIQUADRO,
-  azioneDelTocco,
-  casa3dPulita,
-  casaDelModello,
-  comprimiGriglia,
-  contaCollegati,
-  cosaFareDelVideo,
   cosaFareDopoLaCaduta,
-  entita,
-  entitaCandidate,
-  entitaProposta,
-  espandiGriglia,
-  flussoDaIstantanea,
-  flussoDellEnergia,
-  flussoInPausa,
-  ilCodiceCombacia,
-  ilCodiceServe,
   laCadutaConta,
   memoriaDelDispositivo,
-  mettiInPausaIlFlusso,
   modoDeiNomi,
   modoDopo,
-  modoInserito,
-  normalizzaIlCodice,
   nucleiDelDispositivo,
-  nuovoRiquadro,
-  occhioPulito,
-  percorsoDelFlusso,
-  percorsoDellIstantanea,
-  periodiDellEnergia,
   qualitaDellaCasa3D,
-  ricampiona,
-  senzaLeCaduteDiAdesso,
-  servizioDelModo,
-  servizioPerAprire,
-  statoDelDispositivo,
-  stessoFlusso,
-  usaIlModello,
-  vuoleIlVivo
-} from "../../chunk-GS7DKS73.js";
+  senzaLeCaduteDiAdesso
+} from "../../chunk-IPWWRYQF.js";
 import {
   ACCENTO,
   APPLIANCE_BINDING_FIELDS,
@@ -672,6 +631,49 @@ import {
   writeIconGlyph,
   writeJsonIfChanged
 } from "../../chunk-GT4H4BIJ.js";
+import {
+  CELLA,
+  CHIAVE_CASA3D,
+  CHIAVE_OCCHIO,
+  DISPOSITIVI_3D,
+  MODI_AL_MASSIMO,
+  PASSO_SALVATO,
+  PIANI_AL_MASSIMO,
+  RIQUADRI_AL_MASSIMO,
+  TELECAMERE_AL_MASSIMO,
+  TIPI_DI_DISPOSITIVO,
+  TIPI_DI_RIQUADRO,
+  azioneDelTocco,
+  casa3dPulita,
+  casaDelModello,
+  comprimiGriglia,
+  contaCollegati,
+  cosaFareDelVideo,
+  entita,
+  entitaCandidate,
+  entitaProposta,
+  espandiGriglia,
+  flussoDaIstantanea,
+  flussoDellEnergia,
+  flussoInPausa,
+  ilCodiceCombacia,
+  ilCodiceServe,
+  mettiInPausaIlFlusso,
+  modoInserito,
+  normalizzaIlCodice,
+  nuovoRiquadro,
+  occhioPulito,
+  percorsoDelFlusso,
+  percorsoDellIstantanea,
+  periodiDellEnergia,
+  ricampiona,
+  servizioDelModo,
+  servizioPerAprire,
+  statoDelDispositivo,
+  stessoFlusso,
+  usaIlModello,
+  vuoleIlVivo
+} from "../../chunk-HNM3TMKW.js";
 
 // src/core/appliance-hero-artwork.js
 var FLOOR = (w = 150, id = "") => `<ellipse cx="120" cy="216" rx="${w / 2}" ry="11" fill="#0f172a" opacity=".14" filter="url(#dmh-blur-${id})"/>`;
@@ -2990,6 +2992,7 @@ var SOURCE_INDEX = Object.freeze({
   "Armamento Totale": "Arm Away",
   "ARMATO ·": "ARMED ·",
   "Arreda": "Furnish",
+  "Arredare si fa nella casa in 3D, da un dispositivo che la regge": "Furnishing is done in the 3D home, from a device that can run it",
   "Arredi": "Furniture",
   "Arredi dalla pianta": "Furniture from the plan",
   "arriva a casa": "gets home",
@@ -3723,10 +3726,12 @@ var SOURCE_INDEX = Object.freeze({
   "Con l'orario": "By the clock",
   "Con l'orario: chiaro di giorno, scuro la sera": "By the clock: light by day, dark in the evening",
   "Con la carica di adesso": "With the charge it has now",
+  "con problemi": "with problems",
   "Con questa la pagina prende il tasto: lo stato dice se lavora, questo la comanda.": "With this the page grows a switch: the state says whether it is working, this one commands it.",
   "Con questa misura i muri esterni sarebbero spessi ${cm} cm: controlla la misura, in metri (10,92 e non 1092).": "With this length the outer walls would be ${cm} cm thick: check the length, in metres (10.92, not 1092).",
   "Con questi valori un ciclo solo può diventare tanti mini cicli.": "With these values one cycle can turn into many mini-cycles.",
   "Con un contatore totale configurato la dashboard ricava giorno, mese e anno da quello con Recorder, cosi' i numeri restano coerenti tra loro. Le entita' scritte nei campi di periodo restano salvate ma non vengono usate: svuotale, oppure togli il contatore totale se preferisci leggere i periodi direttamente.": "With a total meter configured the dashboard derives day, month and year from it through Recorder, so the numbers agree with each other. Entities written in the period fields stay saved but are not used: clear them, or remove the total meter if you would rather read the periods directly.",
+  "con un problema": "with a problem",
   "Con una dissolvenza e un avvicinamento lentissimo": "With a fade and a very slow zoom",
   "Con una foto l'avatar non si vede: la foto vince.": "With a photo the avatar is not shown: the photo wins.",
   "Con una tariffa unica": "With a single rate",
@@ -5517,6 +5522,7 @@ var SOURCE_INDEX = Object.freeze({
   "La sessione è finita.": "The session is over.",
   "la somma di tutti gli impianti": "the total of every plant",
   "La spengo?": "Turn it off?",
+  "La stanza di questa entità la decide l'altra scheda in cui è scritta": "This entity's room is set by the other card it belongs to",
   "La stanza in cui si trova: serve alla pagina Stanze, non cambia niente qui.": "The room it sits in: it feeds the Rooms page and changes nothing here.",
   "La stanza selezionata ha già sensori temperatura configurati.": "The selected room already has temperature sensors configured.",
   "La stessa entità è scritta in più caselle: è una copertura sola. Per avere più cursori sulla stessa finestra servono entità cover diverse (tapparella, tenda, tenda da sole).": "The same entity is written in more than one box: that is one cover. To get multiple sliders on one window, use different cover entities (shutter, curtain, awning).",
@@ -5734,7 +5740,7 @@ var SOURCE_INDEX = Object.freeze({
   "lettore multimediale": "media player",
   "Lettore multimediale": "Media player",
   "Lettore nuovo": "New player",
-  "Lettori": "Players",
+  "Lettori": "Media players",
   "Lettori di casa ed Echo": "Home players and Echos",
   "Lettura del pannello": "Panel reading",
   "Letture": "Readings",
@@ -6819,6 +6825,7 @@ var SOURCE_INDEX = Object.freeze({
   "Piano cottura": "Cooktop",
   "Piano Terra": "Ground Floor",
   "pianta": "plant",
+  "Pianta": "Plan",
   "Pianta ${i + 1}": "Plan ${i + 1}",
   "pianta arredata a colori: muri, finestre e arredi letti dai colori": "colour furnished plan: walls, windows and furniture read from the colours",
   "Pianta nuova": "New plant",
@@ -6864,6 +6871,7 @@ var SOURCE_INDEX = Object.freeze({
   "più entità": "more entities",
   "Più fitto": "Busiest",
   "più freddo del boiler": "colder than the boiler",
+  "Più leggera, per i tablet che col 3D faticano": "Lighter, for tablets that struggle with 3D",
   "Più rilevatori di fumo o gas stanno suonando.": "Several smoke or gas detectors are going off.",
   "Più tardi": "Later",
   "Più umidità": "More humidity",
@@ -7083,6 +7091,7 @@ var SOURCE_INDEX = Object.freeze({
   "Prima scegli l'entità della persona": "Choose the person entity first",
   "Prima seleziona le luci nello step Luci (o nel wizard).": "First select your lights in the Lights step (or wizard).",
   "principale": "main",
+  "problema": "problem",
   "Problema": "Problem",
   "Processore": "CPU",
   "Processore, memoria e disco": "CPU, memory and disk",
@@ -14777,6 +14786,12 @@ function sfalsata(width, primaFila, size, column) {
   const inizio = Math.floor((varchi - size) / 2);
   return passo * (inizio + column + 0.5);
 }
+var PASSO_A_MATTONI = 0.28;
+function aMattoni(width, size, rowIndex, column) {
+  const passo = width * PASSO_A_MATTONI;
+  const verso3 = rowIndex === 0 ? 0.25 : -0.25;
+  return width / 2 + passo * (column - (size - 1) / 2 + verso3);
+}
 function nelVarco(width, primaFila, size, column) {
   const passo = width / primaFila;
   const inizio = Math.floor((primaFila - 1 - size) / 2) + 1;
@@ -14802,11 +14817,12 @@ function flowStageLayout(count, variant = "desktop") {
   const primaFila = sizes[0] || 0;
   const righe4 = sizes.length > 1 && geometry.dueFile ? geometry.dueFile : geometry;
   const mobile = variant === "mobile";
-  const uguali = mobile && sizes.length > 1 && sizes[1] === primaFila && primaFila >= 3;
+  const uguali = mobile && sizes.length > 1 && sizes[1] === primaFila && primaFila >= 4;
   const piena = mobile && (sizes.length === 1 || sizes[1] < primaFila || uguali);
+  const pari = mobile && !piena && sizes.length === 2 && sizes[1] === primaFila;
   sizes.forEach((size, rowIndex) => {
     for (let column = 0; column < size; column += 1) {
-      const x = piena ? rowIndex === 0 || uguali ? geometry.width * (column + 0.5) / size : nelVarco(geometry.width, primaFila, size, column) : rowIndex === 0 ? geometry.width * (column + 1) / (size + 1) : sfalsata(geometry.width, primaFila, size, column);
+      const x = piena ? rowIndex === 0 || uguali ? geometry.width * (column + 0.5) / size : nelVarco(geometry.width, primaFila, size, column) : pari ? aMattoni(geometry.width, size, rowIndex, column) : rowIndex === 0 ? geometry.width * (column + 1) / (size + 1) : sfalsata(geometry.width, primaFila, size, column);
       const oltre = rowIndex === 0 || uguali ? null : righe4.rowY[rowIndex - 1];
       positions.push({
         index: positions.length,
@@ -17778,7 +17794,7 @@ function passoDellaFine(prima, { fase, rimasti = null, adesso: adesso2 = Date.no
     appenaFinita: finita
   };
 }
-function letturaDellaCottura(apparecchio = {}, states = {}, { adesso: adesso2 = Date.now(), modo = "", memoria = null } = {}) {
+function letturaDellaCottura(apparecchio = {}, states = {}, { adesso: adesso2 = Date.now(), modo = "", memoria: memoria2 = null } = {}) {
   const tipo = tipoDellaCucina(apparecchio);
   const leggi4 = (casella7) => {
     const entita4 = entitaDellaLettura(apparecchio, casella7);
@@ -17794,7 +17810,7 @@ function letturaDellaCottura(apparecchio = {}, states = {}, { adesso: adesso2 = 
   let totali = secondiTotali(leggi4("cottura_tempo_totale"));
   if (!faseViva(fase)) rimasti = null;
   if (rimasti != null && totali != null && totali < rimasti) totali = null;
-  const passo = passoDellaFine(memoria, {
+  const passo = passoDellaFine(memoria2, {
     fase,
     rimasti,
     adesso: adesso2,
@@ -38637,8 +38653,8 @@ function pastiglieDellaCasa(modelli2, { barra: barra3, posta, misure, mie, adess
     (pastiglia5) => pastiglia5.id ? pastiglia5 : { ...pastiglia5, id: pastiglia5.chiave }
   );
 }
-function passoDellaPosta(memoria, lettura4) {
-  const prima = memoria && typeof memoria === "object" ? memoria : {};
+function passoDellaPosta(memoria2, lettura4) {
+  const prima = memoria2 && typeof memoria2 === "object" ? memoria2 : {};
   const vista2 = Number(prima.vista) || 0;
   const primaAperto = typeof prima.aperto === "boolean" ? prima.aperto : null;
   const primaCambiatoIl = Number(prima.cambiatoIl) || 0;
@@ -38668,8 +38684,8 @@ function passoDellaPosta(memoria, lettura4) {
     cambiata: dopo.aperto !== primaAperto || dopo.cambiatoIl !== primaCambiatoIl || dopo.arrivo !== primaArrivo
   };
 }
-function postaRitirata(memoria, adesso2) {
-  const prima = memoria && typeof memoria === "object" ? memoria : {};
+function postaRitirata(memoria2, adesso2) {
+  const prima = memoria2 && typeof memoria2 === "object" ? memoria2 : {};
   return { ...prima, vista: Math.max(Number(adesso2) || 0, Number(prima.arrivo) || 0) };
 }
 
@@ -52772,17 +52788,17 @@ function creaLaMemoriaDeiLoghi({
   adesso: adesso2 = () => Date.now(),
   insieme: insieme3 = QUANTI_INSIEME
 } = {}) {
-  const memoria = /* @__PURE__ */ new Map();
+  const memoria2 = /* @__PURE__ */ new Map();
   const coda = [];
   let inCorso2 = 0;
   const diretto = (foto) => indirizzoDiretto(foto, { colPonte: colPonte() === true });
   function segna2(entita4, voce3) {
-    const prima = memoria.get(entita4);
-    memoria.set(entita4, voce3);
+    const prima = memoria2.get(entita4);
+    memoria2.set(entita4, voce3);
     if (voce3.url && voce3.url !== prima?.url) arrivato(entita4, voce3.url);
   }
   function cadutoDi(entita4, foto) {
-    const prima = memoria.get(entita4);
+    const prima = memoria2.get(entita4);
     const tentativi = (prima?.tentativi || 0) + 1;
     const fra = fraQuantoSiRiprova(tentativi);
     segna2(entita4, { esito: "caduto", url: diretto(foto), tentativi, dopo: adesso2() + fra });
@@ -52819,16 +52835,16 @@ function creaLaMemoriaDeiLoghi({
   function logo3(entita4, foto = "") {
     const chi = pulito34(entita4);
     if (!chi) return "";
-    const voce3 = memoria.get(chi);
+    const voce3 = memoria2.get(chi);
     if (voce3?.esito === "preso" || voce3?.esito === "niente" || voce3?.esito === "attesa")
       return voce3.url || "";
     if (voce3?.esito === "caduto" && adesso2() < voce3.dopo) return voce3.url || "";
     if (typeof chiedi9 !== "function") {
       const url = diretto(foto);
-      memoria.set(chi, { esito: "niente", url, tentativi: 0, dopo: 0 });
+      memoria2.set(chi, { esito: "niente", url, tentativi: 0, dopo: 0 });
       return url;
     }
-    memoria.set(chi, {
+    memoria2.set(chi, {
       esito: "attesa",
       url: voce3?.url || "",
       tentativi: voce3?.tentativi || 0,
@@ -52841,7 +52857,7 @@ function creaLaMemoriaDeiLoghi({
   return {
     logo: logo3,
     /** Cosa sa di quell'entita' (per le prove). */
-    voce: (entita4) => memoria.get(pulito34(entita4)) || null
+    voce: (entita4) => memoria2.get(pulito34(entita4)) || null
   };
 }
 
@@ -54795,7 +54811,7 @@ function serverProxmox({ dispositivi = [], entita: entita4 = {}, states = {} } =
       });
     } else if (tipo === "qemu" || tipo === "lxc") {
       const { nome, vmid } = nomeDelGuest(dispositivo3);
-      const salute = l("health");
+      const salute2 = l("health");
       guest.push({
         id: clean24(dispositivo3.id),
         tipo,
@@ -54804,7 +54820,7 @@ function serverProxmox({ dispositivi = [], entita: entita4 = {}, states = {} } =
         nodo: clean24(l("node")?.testo),
         stato: statoDi(l("status")),
         dettaglio: clean24(l("status_raw")?.testo),
-        problema: salute && !salute.muto ? salute.testo === "on" : false,
+        problema: salute2 && !salute2.muto ? salute2.testo === "on" : false,
         cpu: percento3(l("cpu_used")),
         memoria: { perc: percento3(l("memory_used_perc")), usata: l("memory_used") },
         disco: { perc: percento3(l("disk_used_perc")), usato: l("disk_used") },
@@ -54816,14 +54832,14 @@ function serverProxmox({ dispositivi = [], entita: entita4 = {}, states = {} } =
       });
     } else if (tipo === "disco") {
       const { nodo: nodo4, nome } = nomeDelDisco(dispositivo3);
-      const salute = l("health");
+      const salute2 = l("health");
       dischi.push({
         id: clean24(dispositivo3.id),
         nodo: nodo4,
         nome,
         modello: clean24(dispositivo3.model),
         /* «health» e' un sensore di problema: acceso vuol dire guasto. */
-        sano: salute && !salute.muto ? salute.testo !== "on" : null,
+        sano: salute2 && !salute2.muto ? salute2.testo !== "on" : null,
         temperatura: l("temperature")?.valore ?? l("temperature_air")?.valore ?? null,
         temperaturaEntita: clean24((l("temperature") || l("temperature_air"))?.entity),
         vita: l("life_left")?.valore ?? (l("disk_wearout")?.valore != null ? 100 - l("disk_wearout").valore : null),
@@ -55008,7 +55024,7 @@ function storageMarkup(n) {
   ).join("")}</div></div>`;
 }
 function nodoMarkup(n, admin) {
-  const memoria = [quantita(n.memoria.usata, lingua2()), quantita(n.memoria.totale, lingua2())].filter(Boolean).join(" / ");
+  const memoria2 = [quantita(n.memoria.usata, lingua2()), quantita(n.memoria.totale, lingua2())].filter(Boolean).join(" / ");
   const disco = [quantita(n.disco.usato, lingua2()), quantita(n.disco.totale, lingua2())].filter(Boolean).join(" / ");
   const tasti2 = admin ? [
     n.tasti.reboot && tasto2(n.tasti.reboot, t("Riavvia il nodo", "Reboot node"), {
@@ -55051,7 +55067,7 @@ function nodoMarkup(n, admin) {
       </div>
       <div class="dm-px-barre">
         ${barra(t("CPU", "CPU"), n.cpu)}
-        ${barra(t("Memoria", "Memory"), n.memoria.perc, memoria)}
+        ${barra(t("Memoria", "Memory"), n.memoria.perc, memoria2)}
         ${barra(t("Disco", "Disk"), n.disco.perc, disco)}
         ${n.swap != null ? barra(t("Swap", "Swap"), n.swap) : ""}
       </div>
@@ -57788,15 +57804,15 @@ function memoriaPulita(salvata3) {
   }
   return { tipi, istanze };
 }
-function pesoDelTipo(memoria, tipo, adesso2) {
-  const voce3 = memoriaPulita(memoria).tipi[tipo];
+function pesoDelTipo(memoria2, tipo, adesso2) {
+  const voce3 = memoriaPulita(memoria2).tipi[tipo];
   if (!voce3) return 1;
   const vecchiaia = Math.max(0, adesso2 - voce3.ultimo) / DIMENTICA_IN;
   const no = voce3.no * 0.5 ** vecchiaia;
   return Math.min(1, (1 + voce3.si) / (1 + voce3.si + no));
 }
-function conLaRisposta(memoria, suggerimento, risposta, adesso2, fino = 0) {
-  const m = memoriaPulita(memoria);
+function conLaRisposta(memoria2, suggerimento, risposta, adesso2, fino = 0) {
+  const m = memoriaPulita(memoria2);
   const tipo = pulito38(suggerimento?.tipo);
   const id = pulito38(suggerimento?.id);
   if (!id) return m;
@@ -57846,8 +57862,8 @@ function finoA(scelta4, adesso2) {
   if (oraDi2(fino) < 7) fino = alleOre(fino, 8);
   return fino;
 }
-function memoriaDopo(memoria, idPresenti, adesso2) {
-  const m = memoriaPulita(memoria);
+function memoriaDopo(memoria2, idPresenti, adesso2) {
+  const m = memoriaPulita(memoria2);
   const presenti = new Set(idPresenti);
   for (const [id, voce3] of Object.entries(m.istanze)) {
     const ricorda3 = voce3.fatto || voce3.no;
@@ -57879,9 +57895,9 @@ function comeLoRicorda(s, istanza, adesso2) {
   }
   return istanza.fino > adesso2 ? "nascosto" : "visibile";
 }
-function suggerimentiDellaCasa(contesto3 = {}, memoria = {}, opzioni2 = {}, lingua9 = getLocale()) {
+function suggerimentiDellaCasa(contesto3 = {}, memoria2 = {}, opzioni2 = {}, lingua9 = getLocale()) {
   const o = opzioniDellAssistente(opzioni2);
-  const m = memoriaPulita(memoria);
+  const m = memoriaPulita(memoria2);
   const c = { ...contesto3, adesso: numero35(contesto3.adesso) ?? Date.now() };
   const notte = eNotte(c, o);
   const tutti = [];
@@ -58697,7 +58713,7 @@ function eUnSeguito(f) {
 function eUnaDomandaDiStato(f) {
   return f.tocca("acceso") || f.tocca("spento") || f.tocca("aperto") || f.tocca("chiuso") || /\b(come|stato|status|is|e|state)\b/.test(f.testo);
 }
-function capisci(testo5, sapere = {}, memoria = {}, opzioni2 = {}) {
+function capisci(testo5, sapere = {}, memoria2 = {}, opzioni2 = {}) {
   const f = frase2(testo5);
   if (!f.parole.length) return null;
   const adesso2 = Number(opzioni2.adesso ?? sapere.adesso ?? Date.now());
@@ -58725,7 +58741,7 @@ function capisci(testo5, sapere = {}, memoria = {}, opzioni2 = {}) {
     seguito: false
   };
   const con = (intento, resto = {}) => ({ ...base, intento, ...resto });
-  const attesa = memoria?.inAttesa;
+  const attesa = memoria2?.inAttesa;
   if (attesa) {
     if (attesa.codice && /^[a-z0-9]{3,12}$/i.test(pulito40(testo5).replace(/\s+/g, "")) && !f.tocca("no"))
       return con("codice", { codice: pulito40(testo5).replace(/\s+/g, "") });
@@ -58816,7 +58832,7 @@ function capisci(testo5, sapere = {}, memoria = {}, opzioni2 = {}) {
   if (categoria === "tapparelle") return con("tapparelle");
   const cosa = migliorePerNome(f, elenco5(sapere.entita), stanza2);
   if (cosa && eUnaDomandaDiStato(f)) return con("stato_dispositivo", { dispositivo: cosa });
-  const prima = memoria?.intento;
+  const prima = memoria2?.intento;
   if (prima && eUnSeguito(f)) {
     const seguito = { ...base, seguito: true };
     if (base.fuori && /^temperatura_dentro$/.test(prima))
@@ -58830,9 +58846,9 @@ function capisci(testo5, sapere = {}, memoria = {}, opzioni2 = {}) {
       return {
         ...seguito,
         intento: prima,
-        azione: memoria.azione || "",
-        categoria: memoria.categoria || "",
-        domini: elenco5(memoria.domini),
+        azione: memoria2.azione || "",
+        categoria: memoria2.categoria || "",
+        domini: elenco5(memoria2.domini),
         stanza: stanza2,
         casa: f.tocca("casa")
       };
@@ -61366,8 +61382,8 @@ RISPOSTE.aggiornamenti = (c, s) => {
   };
 };
 var DI_PASSAGGIO = /* @__PURE__ */ new Set(["saluto", "aiuto", "conferma", "annulla", "codice"]);
-function rispondiDaCasa(testo5, sapere = {}, memoria = {}, opzioni2 = {}) {
-  const m = memoria && typeof memoria === "object" ? memoria : {};
+function rispondiDaCasa(testo5, sapere = {}, memoria2 = {}, opzioni2 = {}) {
+  const m = memoria2 && typeof memoria2 === "object" ? memoria2 : {};
   const adesso2 = numero37(sapere.adesso) ?? Date.now();
   const s = { ...sapere, adesso: adesso2 };
   const capito = capisci(testo5, s, m, { lingua: opzioni2.lingua || s.lingua, adesso: adesso2 });
@@ -61467,9 +61483,9 @@ function scelte() {
     memoria: memoriaPulita(dato2.memoria)
   };
 }
-function scrivi(memoria) {
+function scrivi(memoria2) {
   const dato2 = readJson(CHIAVE_ASSISTENTE, {}) || {};
-  writeJsonIfChanged(CHIAVE_ASSISTENTE, { ...dato2, memoria: memoriaPulita(memoria) });
+  writeJsonIfChanged(CHIAVE_ASSISTENTE, { ...dato2, memoria: memoriaPulita(memoria2) });
 }
 var modello = (chiave2) => state52.modelli.find((m) => clean(m?.key) === chiave2) || null;
 var elenco8 = (valore3) => Array.isArray(valore3) ? valore3.filter(Boolean) : [];
@@ -61770,7 +61786,7 @@ function ricalcola() {
   }
   const adesso2 = Date.now();
   rinfrescaIModelli(adesso2);
-  const { opzioni: opzioni2, memoria } = scelte();
+  const { opzioni: opzioni2, memoria: memoria2 } = scelte();
   let contesto3;
   try {
     contesto3 = contestoDellaCasa(allStates() || {}, adesso2);
@@ -61778,15 +61794,15 @@ function ricalcola() {
     root.console?.warn?.("[DashboardModern] assistente", errore);
     return;
   }
-  const tutti = suggerimentiDellaCasa(contesto3, memoria, opzioni2, activeLocale());
+  const tutti = suggerimentiDellaCasa(contesto3, memoria2, opzioni2, activeLocale());
   const presenti = suggerimentiDellaCasa(
     contesto3,
     {},
     { ...opzioni2, sensibilita: "tutto" },
     activeLocale()
   ).map((s) => s.id);
-  const pulita3 = memoriaDopo(memoria, presenti, adesso2);
-  if (JSON.stringify(pulita3) !== JSON.stringify(memoria)) scrivi(pulita3);
+  const pulita3 = memoriaDopo(memoria2, presenti, adesso2);
+  if (JSON.stringify(pulita3) !== JSON.stringify(memoria2)) scrivi(pulita3);
   state52.suggerimenti = tutti;
   sistemaIlPostoAccanto();
   if (state52.aperto) disegnaIlFoglio();
@@ -62354,8 +62370,8 @@ function vai(azione) {
 function rispondi(id, risposta, fino = 0) {
   const s = state52.suggerimenti.find((x) => x.id === id);
   if (!s) return;
-  const { memoria } = scelte();
-  scrivi(conLaRisposta(memoria, s, risposta, Date.now(), fino));
+  const { memoria: memoria2 } = scelte();
+  scrivi(conLaRisposta(memoria2, s, risposta, Date.now(), fino));
   state52.rinvio = "";
   state52.conferma = "";
   ricalcola();
@@ -94634,11 +94650,11 @@ function lettureDelPeriodo(loads, period) {
   }
   for (const [, richiesta] of perVoce) richieste.push(richiesta);
   chiediIKwh(period, richieste);
-  const memoria = state73.kwhRicavati?.[period];
+  const memoria2 = state73.kwhRicavati?.[period];
   for (const [chiave2, { kind, entity: entity2 }] of perVoce) {
     const id = `${kind}:${entity2}`;
-    if (memoria?.valori.has(id)) valori[chiave2] = memoria.valori.get(id);
-    else if (memoria?.inCorso.has(id)) attese.add(chiave2);
+    if (memoria2?.valori.has(id)) valori[chiave2] = memoria2.valori.get(id);
+    else if (memoria2?.inCorso.has(id)) attese.add(chiave2);
   }
   return { valori, attese };
 }
@@ -94779,17 +94795,17 @@ function ultimiNumeri(periodo) {
 }
 function ricordaINumeri(periodo, model2) {
   if (periodo !== "day" && periodo !== "month") return;
-  const memoria = ultimiNumeri(periodo);
+  const memoria2 = ultimiNumeri(periodo);
   let cambiato = false;
   for (const nodo4 of model2.nodes) {
-    if (!Number.isFinite(nodo4.value) || memoria.valori[nodo4.id] === nodo4.value) continue;
-    memoria.valori[nodo4.id] = nodo4.value;
+    if (!Number.isFinite(nodo4.value) || memoria2.valori[nodo4.id] === nodo4.value) continue;
+    memoria2.valori[nodo4.id] = nodo4.value;
     cambiato = true;
   }
   if (!cambiato) return;
   try {
     const tutti = JSON.parse(root.localStorage?.getItem(ULTIMI_NUMERI_KEY) || "{}") || {};
-    tutti[periodo] = { chiave: memoria.chiave, valori: memoria.valori };
+    tutti[periodo] = { chiave: memoria2.chiave, valori: memoria2.valori };
     root.localStorage?.setItem(ULTIMI_NUMERI_KEY, JSON.stringify(tutti));
   } catch (_errore) {
   }
@@ -98560,9 +98576,9 @@ function tastoDelComando(voce3) {
 }
 function vesteIntegrazione(lista7, appliance, giaMostrate, titoletto4) {
   const deviceId = clean(appliance?.device_id);
-  const memoria = Array.isArray(appliance?.device_entities) ? appliance.device_entities : [];
+  const memoria2 = Array.isArray(appliance?.device_entities) ? appliance.device_entities : [];
   const catalogo = deviceId ? entitaDelDispositivo(deviceId) : null;
-  const delDispositivo = catalogo || memoria.map((entity_id) => ({ entity_id: clean(entity_id) }));
+  const delDispositivo = catalogo || memoria2.map((entity_id) => ({ entity_id: clean(entity_id) }));
   const gia = new Set(delDispositivo.map((voce3) => clean(voce3.entity_id)));
   const records = [
     ...delDispositivo,
@@ -115546,6 +115562,35 @@ function variabiliDellaScena(scena2) {
   for (const [chiave2, nome] of Object.entries(VARIABILI)) v[nome] = String(scena2.colori[chiave2]);
   return v;
 }
+var GRUPPI_DELLE_LAMPADINE = 6;
+var PASSO_DEI_GIOCHI_S = 0.35;
+var GIOCHI_DELLE_LUCI = Object.freeze([
+  ["alterna", 24],
+  ["rincorsa", 24],
+  ["respiro", 16],
+  ["scintille", 8],
+  ["ferme", 8]
+]);
+var LUCE_BASSA = 0.16;
+var scintilla2 = (g, t2) => {
+  const x = Math.sin((g + 1) * 12.9898 + (t2 + 1) * 78.233) * 43758.5453;
+  return x - Math.floor(x);
+};
+function programmaDelleLuci(g) {
+  const gruppo2 = ((Math.floor(Number(g)) || 0) % GRUPPI_DELLE_LAMPADINE + GRUPPI_DELLE_LAMPADINE) % GRUPPI_DELLE_LAMPADINE;
+  const passi2 = [];
+  for (const [gioco, quanti4] of GIOCHI_DELLE_LUCI)
+    for (let t2 = 0; t2 < quanti4; t2 += 1) {
+      let luce4 = 1;
+      if (gioco === "alterna") luce4 = (Math.floor(t2 / 2) + gruppo2) % 2 === 0 ? 1 : LUCE_BASSA;
+      else if (gioco === "rincorsa") luce4 = ((t2 - gruppo2) % 6 + 6) % 6 < 3 ? 1 : LUCE_BASSA;
+      else if (gioco === "respiro")
+        luce4 = LUCE_BASSA + (1 - LUCE_BASSA) * (0.5 + 0.5 * Math.cos(2 * Math.PI * t2 / 8));
+      else if (gioco === "scintille") luce4 = scintilla2(gruppo2, t2) > 0.45 ? 1 : LUCE_BASSA;
+      passi2.push(Math.round(luce4 * 100) / 100);
+    }
+  return passi2;
+}
 var MISURE_DELLE_COSE = Object.freeze({
   albero: { larghezza: 196, altezza: 226 },
   presepe: { larghezza: 224, altezza: 158 },
@@ -116605,7 +116650,8 @@ function lampadine(p, punti, { r = 3, colori: colori2 = COLORI_DELLE_LAMPADINE, 
     const quale = COLORI_DELLE_LAMPADINE.indexOf(colore4);
     const aloneId = quale >= 0 ? `${p}al${quale}` : `${p}alc`;
     const ritardo = -(i * 0.73 % 2.8);
-    return `<g class="sc-l" style="--i:${i};--j:${Math.max(0, tutte - i)};--d:${n1(ritardo)}s"><circle class="sc-l0" cx="${n1(x)}" cy="${n1(y)}" r="${n1(r * 0.85)}"/><g class="sc-l1"><circle class="sc-lh" cx="${n1(x)}" cy="${n1(y)}" r="${n1(r * alone2)}" fill="url(#${aloneId})"/><circle cx="${n1(x)}" cy="${n1(y)}" r="${n1(r)}" fill="${colore4}"/><circle cx="${n1(x - r * 0.3)}" cy="${n1(y - r * 0.35)}" r="${n1(r * 0.38)}" fill="#fff" opacity=".75"/></g></g>`;
+    const gioco = i % GRUPPI_DELLE_LAMPADINE;
+    return `<g class="sc-l" style="--i:${i};--j:${Math.max(0, tutte - i)};--d:${n1(ritardo)}s"><circle class="sc-l0" cx="${n1(x)}" cy="${n1(y)}" r="${n1(r * 0.85)}"/><g class="sc-l1"><g class="sc-lg sc-lg${gioco}"><circle class="sc-lh" cx="${n1(x)}" cy="${n1(y)}" r="${n1(r * alone2)}" fill="url(#${aloneId})"/><circle cx="${n1(x)}" cy="${n1(y)}" r="${n1(r)}" fill="${colore4}"/><circle cx="${n1(x - r * 0.3)}" cy="${n1(y - r * 0.35)}" r="${n1(r * 0.38)}" fill="#fff" opacity=".75"/></g></g></g>`;
   }).join("");
 }
 function parte(entita4, accese, dentro3, classe3 = "") {
@@ -116703,7 +116749,7 @@ function albero(p, cosa, accese) {
   const stella = parte(
     chi[giri.length],
     accese,
-    `<g transform="translate(0 -216)"><circle class="sc-alone-stella" r="34" fill="url(#${p}aloneoro)"/><path class="sc-stella-spenta" d="${stellaACinque(13)}"/><g class="sc-l1 sc-stella-accesa" style="--i:${totale}"><path d="${stellaACinque(13)}" fill="url(#${p}oro)"/><path d="${stellaACinque(6)}" fill="#fff8de" opacity=".7"/></g></g>`,
+    `<g transform="translate(0 -216)"><circle class="sc-alone-stella" r="34" fill="url(#${p}aloneoro)"/><path class="sc-stella-spenta" d="${stellaACinque(13)}"/><g class="sc-l1 sc-stella-accesa" style="--i:${totale}"><path d="${stellaACinque(13)}" fill="url(#${p}oro)"/><path d="${stellaACinque(6)}" fill="#fff8de" opacity=".7"/><path class="sc-luccica" d="${stellaAQuattro(24, 1.4)}" fill="#fffbe9"/></g></g>`,
     "sc-stella-albero"
   );
   const tutte = ent;
@@ -117161,6 +117207,8 @@ function scenaDelleLuci({
     }
   }
   if (cielo.fiocchi) sopra += `<span class="dm-sc-fiocchi" aria-hidden="true"></span>`;
+  if (cielo.fase === "sera" || cielo.fase === "notte")
+    sopra += `<span class="dm-sc-cadente" aria-hidden="true"></span>`;
   const stile9 = Object.entries(variabiliDellaScena(cielo)).map(([k, v]) => `${k}:${v}`).join(";");
   const svg3 = `<svg class="dm-sc dm-sc-${cielo.fase}" viewBox="0 0 ${W2} ${H7}" preserveAspectRatio="xMidYMax slice" style="${stile9}" xmlns="http://www.w3.org/2000/svg">${gradienti(p)}${dietro}<g class="sc-cose">${disegni5.join("")}</g>${davanti}</svg>`;
   return { svg: svg3, sopra };
@@ -117266,9 +117314,23 @@ function cssDellaScena(radice3) {
       ${r} .dm-sc-fumo i:nth-child(2){animation-delay:-2.33s}
       ${r} .dm-sc-fumo i:nth-child(3){animation-delay:-4.66s}
       ${r} .dm-sc-fiocchi{animation:dm-sc-cade 26s linear infinite}
+      ${r} .acceso .sc-luccica{animation:dm-sc-luccica 3.2s steps(8,end) infinite}
+      ${r} .acceso .sc-alone-stella{animation:dm-sc-pulsa 2.4s steps(6,end) infinite 1.6s}
+      ${r} .dm-sc-cadente{animation:dm-sc-cadente 17s linear infinite 4s}
     }
+    /* Lo scintillio della stella in cima: una croce di luce che si allarga e
+       gira piano. Ferma (con «riduci animazioni») non si vede. */
+    ${r} .sc-luccica{opacity:0;transform-box:fill-box;transform-origin:center}
+    @keyframes dm-sc-luccica{0%{opacity:0;transform:scale(.35) rotate(0deg)}25%{opacity:.95;transform:scale(1) rotate(22deg)}50%{opacity:0;transform:scale(.4) rotate(45deg)}100%{opacity:0;transform:scale(.35) rotate(45deg)}}
+    @keyframes dm-sc-pulsa{0%,100%{opacity:1}50%{opacity:.55}}
+    /* La stella cadente: un trattino di luce che attraversa il cielo in un
+       attimo, poi niente per un po'. Si sposta da sola, senza ridisegno. */
+    ${r} .dm-sc-cadente{position:absolute;left:18%;top:9%;width:min(110px,18%);height:2px;border-radius:2px;pointer-events:none;opacity:0;
+      background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,250,225,.95));transform-origin:right center;will-change:transform,opacity}
+    @keyframes dm-sc-cadente{0%{opacity:0;transform:translate(0,0) rotate(18deg) scaleX(.3)}1%{opacity:1}6%{opacity:0;transform:translate(min(420px,55vw),130px) rotate(18deg) scaleX(1)}100%{opacity:0;transform:translate(min(420px,55vw),130px) rotate(18deg) scaleX(1)}}
     ${r}.dm-sc-fermo *,${r}.dm-sc-fermo *::before,${r}.dm-sc-fermo *::after{animation-play-state:paused!important}
     @keyframes dm-sc-brilla{0%,100%{opacity:var(--sc-alone)}50%{opacity:calc(var(--sc-alone) * .45)}}
+    ${giochiDelleLuci(r)}
     @keyframes dm-sc-tremola{0%,100%{opacity:1}50%{opacity:.25}}
     @keyframes dm-sc-fumo{0%{transform:translate(-50%,0) scale(.5);opacity:0}15%{opacity:.5}100%{transform:translate(-160%,-420%) scale(1.9);opacity:0}}
     @keyframes dm-sc-cade{from{transform:translateY(-50%)}to{transform:translateY(0)}}
@@ -117293,6 +117355,21 @@ function cssDellaScena(radice3) {
         radial-gradient(circle at 6% 46%,#fff 0 1.1px,transparent 1.6px);
       background-size:100% 50%;background-repeat:repeat-y;will-change:transform}
   `;
+}
+function giochiDelleLuci(r) {
+  let css14 = "";
+  for (let g = 0; g < GRUPPI_DELLE_LAMPADINE; g += 1) {
+    const passi2 = programmaDelleLuci(g);
+    const n = passi2.length;
+    const fotogrammi = passi2.map((luce4, t2) => `${Math.round(t2 / n * 1e4) / 100}%{opacity:${luce4}}`).concat(`100%{opacity:${passi2[0]}}`).join("");
+    css14 += `@keyframes dm-sc-gioco${g}{${fotogrammi}}`;
+  }
+  const durata7 = Math.round(programmaDelleLuci(0).length * PASSO_DEI_GIOCHI_S * 100) / 100;
+  css14 += `@media (prefers-reduced-motion:no-preference){${Array.from(
+    { length: GRUPPI_DELLE_LAMPADINE },
+    (_, g) => `${r} .acceso .sc-lg${g}{animation:dm-sc-gioco${g} ${durata7}s steps(1,end) infinite}`
+  ).join("")}}`;
+  return css14;
 }
 function seguiLeLuci(contenitore5, accese) {
   for (const nodo4 of contenitore5.querySelectorAll("[data-luce]")) {
@@ -147780,8 +147857,28 @@ function installStyles59() {
        * --dm-page-room, e tutte le pagine la seguono insieme. Qui era scritto
        * 1040 a mano — la vecchia misura della piscina — e il robot si apriva
        * quattrocento pixel piu' stretto di tutti gli altri. */
-      #page-robot .dm-robot-wrap{box-sizing:border-box;width:100%;max-width:var(--dm-page-room,none);margin:0 auto;padding:0 4px 18px;display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr))}
+      #page-robot .dm-robot-wrap{box-sizing:border-box;width:100%;max-width:var(--dm-page-room,none);margin:0 auto;padding:0 4px 18px;display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(360px,100%),1fr))}
       #page-robot .dm-robot-card{display:grid;align-content:start;gap:12px;padding:14px;border:1px solid var(--divider-color,#dbe4ee);border-radius:20px;background:var(--card-bg,#fff);box-shadow:0 18px 34px -28px rgba(15,23,42,.55)}
+      /* «È possibile avere nel browser di HA la scheda Robot grande come le
+       * altre? Quando clicco per aprire la sezione si vede piccolo.» (#502)
+       * La griglia teneva le colonne vuote (auto-fill): un robot solo, su un
+       * monitor, era una scheda da trecento pixel in un angolo e il resto
+       * della pagina bianco. Adesso le schede si prendono la riga (auto-fit),
+       * e un robot solo su uno schermo largo si apre come le altre sezioni: la
+       * mappa grande a sinistra, lo stato e i comandi a destra. */
+      @media(min-width:900px){
+        #page-robot .dm-robot-card:only-child{gap:14px;padding:20px}
+        #page-robot .dm-robot-card:only-child:has(>.dm-robot-map:not(.dm-vuota)){
+          grid-template-columns:minmax(0,1.4fr) minmax(min(320px,100%),1fr);column-gap:26px;grid-auto-flow:row dense}
+        #page-robot .dm-robot-card:only-child:has(>.dm-robot-map:not(.dm-vuota))>*{grid-column:2}
+        #page-robot .dm-robot-card:only-child:has(>.dm-robot-map:not(.dm-vuota))>.dm-robot-head{grid-column:1/-1}
+        #page-robot .dm-robot-card:only-child>.dm-robot-mappe{grid-column:1}
+        #page-robot .dm-robot-card:only-child>.dm-robot-map:not(.dm-vuota){grid-column:1;grid-row:span 12;align-self:start}
+        #page-robot .dm-robot-card:only-child .dm-robot-title strong{font-size:18px}
+        #page-robot .dm-robot-card:only-child .dm-robot-state{font-size:12px;padding:5px 12px}
+        #page-robot .dm-robot-card:only-child .dm-robot-actions{grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+        #page-robot .dm-robot-card:only-child .dm-robot-btn{min-height:74px;justify-content:center;font-size:12px}
+      }
       #page-robot .dm-robot-head{display:flex;align-items:center;gap:10px;min-width:0}
       #page-robot .dm-robot-icon{display:grid;place-items:center;width:32px;height:32px;flex:0 0 auto}
       #page-robot .dm-robot-title{display:grid;min-width:0;flex:1 1 auto}
@@ -150088,29 +150185,83 @@ function assegna(entity2, room) {
   } catch (_error) {
   }
 }
-function ownedEntities(sorgenti = roomSources()) {
-  const dentro3 = /* @__PURE__ */ new Set();
-  const guarda3 = (item) => {
+var NOMI_DELLE_SCHEDE = Object.freeze({
+  lights: () => t("Luci", "Lights"),
+  prese: () => t("Prese", "Plugs"),
+  climate: () => t("Clima", "Climate"),
+  covers: () => t("Tapparelle", "Covers"),
+  appliances: () => t("Elettrodomestici", "Appliances"),
+  media: () => t("Lettori", "Media players"),
+  cameras: () => t("Telecamere", "Cameras"),
+  loads: () => t("Carichi", "Loads"),
+  robots: () => t("Robot", "Robots"),
+  irrigation: () => t("Irrigazione", "Irrigation")
+});
+function padroniDelleEntita(sorgenti = roomSources()) {
+  const padroni = /* @__PURE__ */ new Map();
+  const guarda3 = (scheda9) => (item) => {
     if (!item || typeof item !== "object") return;
-    for (const campo6 of ["entity", "entity_id", "id", "cam", "camera_entity"]) {
-      const valore3 = clean(item[campo6]);
-      if (ENTITY_RE.test(valore3)) dentro3.add(valore3);
-    }
+    const padrone = {
+      scheda: scheda9,
+      nome: clean(item.name || item.nome || item.label),
+      stanza: clean(item.room_id || item.roomId || item.room || item.stanza)
+    };
+    const segna2 = (valore3) => {
+      if (ENTITY_RE.test(valore3) && !padroni.has(valore3)) padroni.set(valore3, padrone);
+    };
+    for (const campo6 of ["entity", "entity_id", "id", "cam", "camera_entity"]) segna2(clean(item[campo6]));
     for (const campo6 of ["entities", "ents"]) {
       const elenco18 = item[campo6];
       if (!Array.isArray(elenco18)) continue;
-      for (const voce3 of elenco18) {
-        const valore3 = clean(typeof voce3 === "string" ? voce3 : voce3?.entity);
-        if (ENTITY_RE.test(valore3)) dentro3.add(valore3);
-      }
+      for (const voce3 of elenco18) segna2(clean(typeof voce3 === "string" ? voce3 : voce3?.entity));
     }
   };
   for (const [nome, valore3] of Object.entries(sorgenti || {})) {
     if (nome === "rooms" || nome === "assigned") continue;
-    if (Array.isArray(valore3)) valore3.forEach(guarda3);
-    else if (valore3 && typeof valore3 === "object") Object.values(valore3).forEach(guarda3);
+    if (Array.isArray(valore3)) valore3.forEach(guarda3(nome));
+    else if (valore3 && typeof valore3 === "object") Object.values(valore3).forEach(guarda3(nome));
   }
-  return dentro3;
+  return padroni;
+}
+function nomeDellaStanza2(valore3, stanze4) {
+  const cercato = clean(valore3);
+  if (!cercato) return "";
+  const trovata2 = (Array.isArray(stanze4) ? stanze4 : []).find(
+    (stanza2) => [stanza2?.id, stanza2?.name].map(clean).includes(cercato)
+  );
+  return clean(trovata2?.name) || cercato;
+}
+function stanzaDaUnAltraScheda(padrone, stanze4 = []) {
+  if (!padrone?.stanza) return null;
+  const scheda9 = NOMI_DELLE_SCHEDE[padrone.scheda]?.() || "";
+  return {
+    stanza: nomeDellaStanza2(padrone.stanza, stanze4),
+    /* sulla pastiglia, corta: il nome della cosa che la possiede */
+    chi: padrone.nome || scheda9,
+    /* nel suggerimento, per intero: la scheda e la cosa */
+    dove: [scheda9, padrone.nome].filter(Boolean).join(" › ")
+  };
+}
+function pastigliaDelPadrone(contenitore5, entity2, detto3, dove3) {
+  contenitore5.querySelector(`:scope [${ASSIGN_ATTRIBUTE}]`)?.remove();
+  const testo5 = `🏠 ${detto3.stanza}${detto3.chi ? ` · ${t("da", "from")} «${detto3.chi}»` : ""}`;
+  const suggerimento = `${t(
+    "La stanza di questa entità la decide l'altra scheda in cui è scritta",
+    "This entity's room is set by the other card it belongs to"
+  )}${detto3.dove ? `: ${detto3.dove}` : ""}.`;
+  let pastiglia5 = contenitore5.querySelector(":scope .dm-room-entity-padrone");
+  if (pastiglia5) {
+    if (pastiglia5.textContent !== testo5) pastiglia5.textContent = testo5;
+    if (pastiglia5.title !== suggerimento) pastiglia5.title = suggerimento;
+    return false;
+  }
+  pastiglia5 = doc.createElement("span");
+  pastiglia5.className = "dm-room-entity-padrone";
+  pastiglia5.setAttribute("data-dm-room-padrone", entity2);
+  pastiglia5.title = suggerimento;
+  pastiglia5.textContent = testo5;
+  dove3(pastiglia5);
+  return true;
 }
 function tendina3(entity2, scelta4) {
   const select = doc.createElement("select");
@@ -150128,6 +150279,7 @@ function tendina3(entity2, scelta4) {
   return select;
 }
 function attacca(contenitore5, entity2, mappa2, dove3) {
+  contenitore5.querySelector(":scope .dm-room-entity-padrone")?.remove();
   let select = contenitore5.querySelector(`:scope [${ASSIGN_ATTRIBUTE}]`);
   const scelta4 = clean(mappa2[entity2]);
   if (select) {
@@ -150151,19 +150303,35 @@ function ensureRoomChoices() {
   const body = doc?.getElementById?.("ed-body");
   if (!body) return 0;
   const mappa2 = roomAssignments();
-  let suoi2;
+  let padroni;
+  let stanze4 = [];
   try {
-    suoi2 = ownedEntities();
+    const sorgenti = roomSources();
+    padroni = padroniDelleEntita(sorgenti);
+    stanze4 = sorgenti.rooms;
   } catch (_error) {
-    suoi2 = /* @__PURE__ */ new Set();
+    padroni = /* @__PURE__ */ new Map();
   }
   let messi = 0;
-  const salta = (entity2) => !entity2 || suoi2.has(entity2);
+  const detto3 = (entity2) => stanzaDaUnAltraScheda(padroni.get(entity2), stanze4);
+  const salta = (entity2) => !entity2 || Boolean(detto3(entity2));
   for (const slot of body.querySelectorAll(".ed-slot")) {
     if (slot.closest("[data-load-form]")) continue;
     const entity2 = clean(slot.querySelector(".ed-slot-in[data-ref]")?.value);
+    if (ENTITY_RE.test(entity2) && detto3(entity2)) {
+      if (pastigliaDelPadrone(slot, entity2, detto3(entity2), (pastiglia5) => {
+        const etichetta3 = slot.querySelector(".ed-slot-lbl");
+        if (etichetta3) {
+          etichetta3.classList.add("dm-slot-lbl-affollata");
+          etichetta3.append(pastiglia5);
+        } else slot.append(pastiglia5);
+      }))
+        messi += 1;
+      continue;
+    }
     if (!ENTITY_RE.test(entity2) || salta(entity2)) {
       slot.querySelector(`:scope [${ASSIGN_ATTRIBUTE}]`)?.remove();
+      slot.querySelector(":scope .dm-room-entity-padrone")?.remove();
       continue;
     }
     if (attacca(slot, entity2, mappa2, (select) => {
@@ -150179,8 +150347,18 @@ function ensureRoomChoices() {
   for (const row of body.querySelectorAll(".ed-row")) {
     if (row.matches(".dm-people-row, .dm-scollegati-riga")) continue;
     const entity2 = entityOfRow(row);
+    if (entity2 && detto3(entity2)) {
+      if (pastigliaDelPadrone(row, entity2, detto3(entity2), (pastiglia5) => {
+        const testo5 = row.querySelector(".ed-row-main");
+        if (testo5) testo5.append(pastiglia5);
+        else row.append(pastiglia5);
+      }))
+        messi += 1;
+      continue;
+    }
     if (salta(entity2)) {
       row.querySelector(`:scope [${ASSIGN_ATTRIBUTE}]`)?.remove();
+      row.querySelector(":scope .dm-room-entity-padrone")?.remove();
       continue;
     }
     if (attacca(row, entity2, mappa2, (select) => {
@@ -150220,6 +150398,12 @@ function css13() {
       #ed-body .dm-room-entity:focus{outline:2px solid var(--primary-color,#0ea5e9);outline-offset:1px}
       /* Assegnata: si vede da lontano quali righe una stanza ce l'hanno. */
       #ed-body .dm-room-entity:not([data-dm-vuota="true"]){color:var(--text,#0f172a)}
+      /* La stanza che decide un'altra scheda (#503): si legge, non si tocca. */
+      #ed-body .dm-room-entity-padrone{
+        display:inline-block;max-width:100%;margin:5px 0 0;padding:4px 10px;
+        font-size:11px;font-weight:700;line-height:1.35;border-radius:12px;white-space:normal;
+        background:var(--surface-2,#f8fafc);border:1px dashed var(--card-border,#cbd5e1);
+        color:var(--text-dim,#64748b)}
       #ed-body .ed-slot .dm-room-entity-slot{margin:5px 0 0;align-self:flex-start}
       /* L'etichetta della casella tiene il nome, la tendina della stanza e
        * l'interruttore dei widget: in una riga sola, su un telefono, il nome
@@ -154043,8 +154227,8 @@ function assistenteSalvato() {
 function assistenteMarkup() {
   const salvato2 = assistenteSalvato();
   const opzioni2 = opzioniDellAssistente(salvato2.opzioni);
-  const memoria = memoriaPulita(salvato2.memoria);
-  const imparato = Object.keys(memoria.tipi).length + Object.keys(memoria.istanze).length > 0;
+  const memoria2 = memoriaPulita(salvato2.memoria);
+  const imparato = Object.keys(memoria2.tipi).length + Object.keys(memoria2.istanze).length > 0;
   const ore3 = [18, 19, 20, 21, 22, 23];
   return `<div class="dm-people-assistente-ed" data-person-assistente>
     <span class="ed-slot-lbl">${esc(t("Di cosa parla", "What it talks about"))}</span>
@@ -176753,6 +176937,118 @@ function installOcchioEditor() {
 }
 senzaCadere(installOcchioEditor);
 
+// src/core/la-grafica-della-casa-3d.js
+var GRAFICHE_DEBOLI = Object.freeze([
+  /PowerVR\s+Rogue\s+GE8\d{2,3}/i,
+  /PowerVR\s+(SGX|Rogue\s+G6\d{2})/i,
+  /Mali-(400|450|T6\d{2}|T7\d{2}|G31|G51)\b/i,
+  /Adreno\s*\(TM\)\s*(3\d{2}|50[4-6])\b/i
+]);
+var graficaDebole = (gpu) => GRAFICHE_DEBOLI.some((re) => re.test(String(gpu || "")));
+var CHIAVE_DELLA_VISTA = "dm_casa3d_vista_v1";
+var VISTE = Object.freeze(["3d", "pianta"]);
+function provaLaGrafica(documento) {
+  const esito2 = { webgl2: false, webgl1: false, gpu: "" };
+  let tela4 = null;
+  try {
+    tela4 = documento?.createElement?.("canvas");
+  } catch (_errore) {
+    return esito2;
+  }
+  if (!tela4?.getContext) return esito2;
+  const prova3 = (tipo) => {
+    try {
+      return tela4.getContext(tipo, { failIfMajorPerformanceCaveat: false }) || null;
+    } catch (_errore) {
+      return null;
+    }
+  };
+  let gl = prova3("webgl2");
+  if (gl) esito2.webgl2 = true;
+  else {
+    try {
+      tela4 = documento.createElement("canvas");
+    } catch (_errore) {
+    }
+    gl = prova3("webgl") || prova3("experimental-webgl");
+    if (gl) esito2.webgl1 = true;
+  }
+  if (esito2.webgl2) esito2.webgl1 = true;
+  if (gl) {
+    try {
+      const info = gl.getExtension("WEBGL_debug_renderer_info");
+      const nome = info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+      esito2.gpu = String(nome || "").slice(0, 80);
+    } catch (_errore) {
+    }
+    try {
+      gl.getExtension("WEBGL_lose_context")?.loseContext();
+    } catch (_errore) {
+    }
+  }
+  return esito2;
+}
+function vistaRicordata(memoria2) {
+  try {
+    const v = String(memoria2?.getItem?.(CHIAVE_DELLA_VISTA) || "");
+    return VISTE.includes(v) ? v : "";
+  } catch (_errore) {
+    return "";
+  }
+}
+function ricordaLaVista(memoria2, vista2) {
+  try {
+    if (VISTE.includes(vista2)) memoria2?.setItem?.(CHIAVE_DELLA_VISTA, vista2);
+    else memoria2?.removeItem?.(CHIAVE_DELLA_VISTA);
+  } catch (_errore) {
+  }
+}
+function comeMostrareLaCasa({
+  grafica = null,
+  scelta: scelta4 = "",
+  caduto = false,
+  rotto = ""
+} = {}) {
+  const si3d = !grafica || grafica.webgl2 === true;
+  if (!si3d)
+    return {
+      vista: "pianta",
+      motivo: grafica?.webgl1 ? "solo-webgl1" : "senza-webgl",
+      si3d
+    };
+  if (rotto) return { vista: "pianta", motivo: "non-parte", si3d };
+  if (caduto) return { vista: "pianta", motivo: "memoria", si3d };
+  if (scelta4 === "pianta") return { vista: "pianta", motivo: "", si3d };
+  return { vista: "3d", motivo: "", si3d, leggera: graficaDebole(grafica?.gpu) };
+}
+function perchéLaPianta(motivo, italiano2 = true) {
+  const L = (it, en) => italiano2 ? it : en;
+  switch (motivo) {
+    case "solo-webgl1":
+      return L(
+        "Questo dispositivo non ha la grafica per il 3D (solo WebGL 1): la casa è in pianta.",
+        "This device lacks the graphics for 3D (WebGL 1 only): the home is shown as a floor plan."
+      );
+    case "senza-webgl":
+      return L(
+        "Questo dispositivo non ha la grafica 3D (niente WebGL): la casa è in pianta.",
+        "This device has no 3D graphics (no WebGL): the home is shown as a floor plan."
+      );
+    case "non-parte":
+      return L(
+        "Il 3D non parte su questo dispositivo: la casa è in pianta.",
+        "3D won't start on this device: the home is shown as a floor plan."
+      );
+    case "memoria":
+      return L(
+        "Il 3D si è fermato più volte (poca memoria grafica): la casa è in pianta, più leggera.",
+        "3D stopped several times (low graphics memory): the home is shown as a lighter floor plan."
+      );
+    default:
+      return "";
+  }
+}
+
 // src/core/cartella-della-plancia.js
 function cartellaDellaPlancia(qui) {
   const m = /^(.*\/dashboardmodern_static\/(?:[^/?#]+\/)?)(?:legacy|src|pacco)\//.exec(
@@ -176792,7 +177088,7 @@ async function caricaIlMotore() {
   const [THREE, caricatori, scena2] = await Promise.all([
     import(MOTORE.tre),
     import(MOTORE.caricatori),
-    import("../../scena-modello-GHBEQ3UB.js")
+    import("../../scena-modello-7FC6H56Q.js")
   ]);
   return { THREE, caricatori, scena: scena2 };
 }
@@ -177401,13 +177697,22 @@ var state201 = root[KEY204] ||= {
    * il fuoco prima che si aprisse. */
   finestraDal: 0,
   fuocoDaDare: false,
-  fuocoPrima: null
+  fuocoPrima: null,
+  /* La casa in pianta (`sections/casa-3d/pianta.js`), dove il 3D non c'e' o
+   * non regge: che grafica c'e' qui (si chiede una volta), se la scena in
+   * mano adesso e' la pianta, se il 3D si e' fermato troppe volte, e
+   * l'errore del 3D che non e' partito (vedi `comeLaMostro`). */
+  grafica: null,
+  inPianta: false,
+  troppeCadute: false,
+  rotto: "",
+  dettaglio: ""
 };
 function casa3dDiQui() {
   return casa3dPulita(readJson(CHIAVE_CASA3D, null));
 }
 function conIlModello(casa4) {
-  if (!usaIlModello(casa4)) return false;
+  if (state201.inPianta || !usaIlModello(casa4)) return false;
   if (state201.modelloGuasto === casa4.modello.id) return false;
   return !(casa4.piani.length && troppoPerQuestoDispositivo(casa4.modello));
 }
@@ -177466,6 +177771,7 @@ function testataMarkup3(casa4, admin, modello2 = false) {
       </div>
       <div class="c3-pillole">${modello2 ? pillola2("modello", `🧊 ${casa4.piani[0]?.nome || ""}`) : pillola2("esterno", `${casa4.tipo === "palazzo" ? "🏢" : "🏡"} ${t("Esterno", "Outside")}`)}${modello2 ? "" : pianiDallAlto(casa4).map((x) => pillola2(x.k, x.nome)).join("")}</div>
       <span class="c3-spazio"></span>
+      ${state201.scena && !state201.inPianta && !modello2 && casa4.piani.length ? `<button type="button" class="c3-tasto" data-c3s="vistapianta" title="${esc(t("Più leggera, per i tablet che col 3D faticano", "Lighter, for tablets that struggle with 3D"))}">🗺️ ${esc(t("Pianta", "Plan"))}</button>` : ""}
       ${admin && casa4.piani.length ? `<button type="button" class="c3-tasto" data-c3s="arreda" aria-pressed="${state201.arreda}">🎨 ${esc(t("Arreda", "Furnish"))}</button>
              ${modello2 ? "" : `<button type="button" class="c3-tasto" data-c3s="crea">🏗️ ${esc(t("Crea / modifica la casa", "Create / edit the house"))}</button>`}
              <button type="button" class="c3-tasto" data-c3s="modello">🧊 ${esc(t("Il tuo modello 3D", "Your 3D model"))}</button>` : ""}
@@ -177984,12 +178290,75 @@ function cadeIlModello(id) {
   ridisegna35();
 }
 var firmaDi3 = (casa4) => `${conIlModello(casa4) ? "M" : "C"}${JSON.stringify(casa4)}`;
+function memoria() {
+  try {
+    return root.localStorage || null;
+  } catch (_errore) {
+    return null;
+  }
+}
+function comeLaMostro() {
+  if (state201.grafica === null) state201.grafica = provaLaGrafica(doc);
+  return comeMostrareLaCasa({
+    grafica: state201.grafica,
+    scelta: vistaRicordata(memoria()),
+    caduto: state201.troppeCadute,
+    rotto: state201.rotto
+  });
+}
+async function avviaLaPianta(admin, come2) {
+  state201.caricando = true;
+  state201.guasto = "";
+  try {
+    const { creaPianta } = await import("../../pianta-R6FPVSOM.js");
+    const nodo4 = doc.getElementById(ID5);
+    const posto = nodo4?.querySelector(".c3-posto");
+    if (!posto) return;
+    const casa4 = casa3dDiQui();
+    if (!casa4.attiva) return;
+    if (!casa4.piani.length) {
+      state201.guasto = come2.motivo || "pianta";
+      return;
+    }
+    state201.inPianta = true;
+    state201.scena = creaPianta({
+      contenitore: posto,
+      casa: casa4,
+      stati: () => allStates() || {},
+      italiano: italiano(),
+      admin,
+      quandoTocchi: alToccoDellaScena,
+      quandoCambiVista: (vista2) => {
+        if (state201.vista === vista2) return;
+        state201.vista = vista2;
+        ridisegna35();
+      },
+      motivo: perchéLaPianta(come2.motivo, italiano()),
+      si3d: come2.si3d
+    });
+    state201.firma = firmaDi3(casa4);
+    if (state201.vista !== "esterno") state201.scena.apri(state201.vista);
+    state201.vista = state201.scena.vista();
+  } catch (errore) {
+    state201.inPianta = false;
+    state201.scena = null;
+    state201.guasto = come2.motivo || "pianta";
+    state201.dettaglio = String(errore?.message || errore);
+    root.console?.warn?.("[DashboardModern] casa 3d, la pianta", errore);
+    sgombraIlPosto();
+  } finally {
+    state201.caricando = false;
+    ridisegna35();
+  }
+}
 async function avviaLaScena(admin) {
+  const come2 = comeLaMostro();
+  if (come2.vista === "pianta") return avviaLaPianta(admin, come2);
   if (conIlModello(casa3dDiQui())) return avviaIlModello(admin);
   state201.caricando = true;
   state201.guasto = "";
   try {
-    const [THREE, { creaScena }] = await Promise.all([import(TRE), import("../../scena-5B33ELWG.js")]);
+    const [THREE, { creaScena }] = await Promise.all([import(TRE), import("../../scena-2ROUKCFT.js")]);
     const nodo4 = doc.getElementById(ID5);
     const posto = nodo4?.querySelector(".c3-posto");
     if (!posto) return;
@@ -178010,6 +178379,8 @@ async function avviaLaScena(admin) {
       nomi: nomiScelti(),
       /* le volte che il disegno e' gia' caduto: la scena rifatta e' piu' leggera */
       cadute: state201.cadute.length,
+      /* la grafica dei tablet economici (il Teclast P25T): il 3D leggero */
+      debole: Boolean(come2.leggera),
       quandoCade: scenaCaduta,
       quandoTorna: scenaTornata,
       /* i gradini gia' scesi perche' la casa andava a scatti, e quelli nuovi */
@@ -178025,8 +178396,9 @@ async function avviaLaScena(admin) {
     if (state201.vista !== "esterno" && !state201.scena.apri(state201.vista)) state201.vista = "esterno";
     if (state201.arreda) state201.scena.arreda(true);
   } catch (errore) {
-    state201.guasto = String(errore?.message || errore);
+    state201.rotto = String(errore?.message || errore) || "?";
     root.console?.warn?.("[DashboardModern] casa 3d", errore);
+    spegniLaScena();
     sgombraIlPosto();
   } finally {
     state201.caricando = false;
@@ -178059,6 +178431,7 @@ function spegniLaScena() {
   }
   state201.scena = null;
   state201.firma = "";
+  state201.inPianta = false;
 }
 function scenaCaduta() {
   const adesso2 = Date.now();
@@ -178076,7 +178449,8 @@ function scenaCaduta() {
   root.console?.warn?.("[DashboardModern] casa 3d: il disegno e' caduto", state201.cadute.length);
   if (esito2.azione === "basta") {
     spegniLaScena();
-    state201.guasto = "disegno";
+    state201.troppeCadute = true;
+    ricordaLaVista(memoria(), "pianta");
     ridisegna35();
     return;
   }
@@ -178208,7 +178582,13 @@ function togliLaTela3() {
   doc?.documentElement?.classList?.remove("dm-casa3d-acceso");
 }
 function guastoMarkup() {
-  const testo5 = state201.guasto === "disegno" ? t(
+  const perche7 = perchéLaPianta(state201.guasto, italiano());
+  const g = state201.grafica;
+  const dettaglio = [
+    g ? `WebGL ${g.webgl2 ? "2" : g.webgl1 ? "1" : "—"}${g.gpu ? ` · ${g.gpu}` : ""}` : "",
+    state201.rotto || state201.dettaglio || ""
+  ].filter(Boolean).join(" · ");
+  const testo5 = perche7 ? perche7.replace(/: la casa è in pianta.*$|: the home is shown.*$/, ".") : state201.guasto === "disegno" ? t(
     "La casa in 3D si è fermata più volte: questo dispositivo non ha abbastanza memoria grafica per tenerla aperta.",
     "The 3D house stopped several times: this device does not have enough graphics memory to keep it open."
   ) : t(
@@ -178216,7 +178596,7 @@ function guastoMarkup() {
     "The 3D house cannot open on this device."
   );
   const riprova2 = esc(t("Riprova", "Try again"));
-  return `<div class="c3-da-creare"><span aria-hidden="true">🏢</span><p>${esc(testo5)}</p>
+  return `<div class="c3-da-creare"><span aria-hidden="true">🏢</span><p>${esc(testo5)}</p>${dettaglio ? `<small class="c3-dettaglio">${esc(dettaglio)}</small>` : ""}
     <button type="button" class="c3-tasto c3-tasto-grande" data-c3s="riprova">↻ ${riprova2}</button></div>`;
 }
 function attesaMarkup(casa4, vuota2, admin) {
@@ -178433,6 +178813,16 @@ function alClic6(evento) {
     return scegliIlModo(el.dataset.c3sE, el.dataset.c3sM);
   }
   if (cosa === "arreda") {
+    if (state201.inPianta) {
+      avviso3(
+        t(
+          "Arredare si fa nella casa in 3D, da un dispositivo che la regge",
+          "Furnishing is done in the 3D home, from a device that can run it"
+        ),
+        "male"
+      );
+      return;
+    }
     state201.arreda = !state201.arreda;
     state201.scena?.arreda(state201.arreda);
     vibra2(6);
@@ -178460,7 +178850,21 @@ function alClic6(evento) {
     state201.cadute = [];
     state201.guasto = "";
     state201.modelloGuasto = "";
+    state201.rotto = "";
+    state201.dettaglio = "";
     vibra2(6);
+    return ridisegna35();
+  }
+  if (cosa === "vista3d" || cosa === "vistapianta") {
+    ricordaLaVista(memoria(), cosa === "vista3d" ? "3d" : "pianta");
+    state201.troppeCadute = false;
+    state201.rotto = "";
+    state201.dettaglio = "";
+    state201.cadute = [];
+    state201.guasto = "";
+    vibra2(6);
+    spegniLaScena();
+    sgombraIlPosto();
     return ridisegna35();
   }
   if (cosa === "modello") {
@@ -178590,6 +178994,7 @@ function installaLoStile11() {
     ${C3} .c3-da-creare>span{font-size:44px}
     ${C3} .c3-da-creare h2{margin:0;font-size:20px;color:inherit}
     ${C3} .c3-da-creare p{margin:0;font-weight:500;line-height:1.45}
+    ${C3} .c3-da-creare .c3-dettaglio{max-width:520px;font-size:11px;font-weight:600;opacity:.7;word-break:break-word}
     ${C3} .c3-da-creare .c3-tasto-grande{padding:12px 20px;font-size:15px;background:#0ea5e9;border-color:#0ea5e9;color:#fff}
 
     ${C3} .c3-elenco-righe{display:grid;gap:8px;margin:0;padding:0;list-style:none}
@@ -190468,6 +190873,17 @@ function acceso5(stato3) {
   if (SPENTI5.has(grezzo2)) return false;
   return null;
 }
+var CLASSI_DEI_GUAI = /* @__PURE__ */ new Set(["problem"]);
+function classeDiGuai(stato3) {
+  return CLASSI_DEI_GUAI.has(clean36(stato3?.attributes?.device_class).toLowerCase());
+}
+function salute(stato3) {
+  if (!classeDiGuai(stato3)) return "";
+  const grezzo2 = clean36(stato3.state).toLowerCase();
+  if (grezzo2 === "off") return "ok";
+  if (grezzo2 === "on") return "problema";
+  return "";
+}
 function nonRisponde3(stato3) {
   return !stato3 || clean36(stato3.state).toLowerCase() === "unavailable";
 }
@@ -190494,11 +190910,13 @@ function misura8(entity2, states, soglie) {
 }
 function letturaDelNodo(nodo4 = {}, states = {}) {
   const statoDelNodo = states?.[clean36(nodo4.stato)] || null;
-  const risposta = acceso5(statoDelNodo);
+  const guai = classeDiGuai(statoDelNodo);
+  const risposta = guai ? null : acceso5(statoDelNodo);
   return {
     id: clean36(nodo4.id),
     nome: clean36(nodo4.nome) || clean36(statoDelNodo?.attributes?.friendly_name) || clean36(nodo4.stato).split(".")[1] || clean36(nodo4.id),
     acceso: risposta,
+    salute: salute(statoDelNodo),
     /* «Non risponde» e «e' spento» sono due cose diverse, e la scheda le dice
      * diverse: la prima e' un problema di rete o di Home Assistant, la seconda
      * e' un nodo che qualcuno ha fermato. */
@@ -190520,6 +190938,7 @@ function riassuntoDeiNodi(letture2 = []) {
     accesi: righe4.filter((riga5) => riga5.acceso === true).length,
     spenti: righe4.filter((riga5) => riga5.acceso === false).length,
     muti: righe4.filter((riga5) => riga5.muto).length,
+    problemi: righe4.filter((riga5) => riga5.salute === "problema").length,
     peggiore: carichi.length ? Math.max(...carichi) : null
   };
 }
@@ -190549,6 +190968,10 @@ function bindNodoToDevice({
   );
   const stato3 = elenco18.find(
     (voce3) => dominio8(voce3) === "binary_sensor" && ["connectivity", "running", "power"].includes(classe3(voce3))
+  ) || elenco18.find(
+    (voce3) => dominio8(voce3) === "binary_sensor" && /* «RPi Power status» ha «status» nel nome ma e' un sensore di guai
+     * (#504): dice se l'alimentatore regge, non se il nodo e' acceso. */
+    !CLASSI_DEI_GUAI.has(classe3(voce3).toLowerCase()) && PAROLE7.stato.test(parole4(voce3, states))
   ) || elenco18.find(
     (voce3) => dominio8(voce3) === "binary_sensor" && PAROLE7.stato.test(parole4(voce3, states))
   );
@@ -190591,6 +191014,10 @@ function barraMarkup6(etichetta3, misura9) {
 function statoMarkup(lettura4) {
   if (lettura4.muto)
     return `<span class="dm-nodo-stato" data-stato="muto">${esc(t("non risponde", "not answering"))}</span>`;
+  if (lettura4.salute === "ok")
+    return `<span class="dm-nodo-stato" data-stato="acceso">OK</span>`;
+  if (lettura4.salute === "problema")
+    return `<span class="dm-nodo-stato" data-stato="problema">${esc(t("problema", "problem"))}</span>`;
   if (lettura4.acceso === true)
     return `<span class="dm-nodo-stato" data-stato="acceso">${esc(t("acceso", "up"))}</span>`;
   if (lettura4.acceso === false)
@@ -190614,7 +191041,8 @@ function fasciaMarkup11(letture2) {
   const sotto = [
     `${riassunto4.quanti} ${riassunto4.quanti === 1 ? t("nodo", "node") : t("nodi", "nodes")}`,
     riassunto4.spenti ? `${riassunto4.spenti} ${t("giù", "down")}` : "",
-    riassunto4.muti ? `${riassunto4.muti} ${t("senza risposta", "not answering")}` : ""
+    riassunto4.muti ? `${riassunto4.muti} ${t("senza risposta", "not answering")}` : "",
+    riassunto4.problemi ? `${riassunto4.problemi} ${riassunto4.problemi === 1 ? t("con un problema", "with a problem") : t("con problemi", "with problems")}` : ""
   ].filter(Boolean).join(" · ");
   return `<section class="dm-nodi-sezione">
     <div class="dm-nodi-testa">
@@ -190695,6 +191123,7 @@ function installaStile2() {
         letter-spacing:.06em;text-transform:uppercase}
       #${FASCIA_ID} .dm-nodo-stato[data-stato="acceso"]{background:rgba(16,185,129,.16);color:#047857}
       #${FASCIA_ID} .dm-nodo-stato[data-stato="spento"]{background:rgba(220,38,38,.14);color:#b91c1c}
+      #${FASCIA_ID} .dm-nodo-stato[data-stato="problema"]{background:rgba(245,158,11,.18);color:#b45309}
       #${FASCIA_ID} .dm-nodo-stato[data-stato="muto"]{background:rgba(148,163,184,.2);color:#475569}
       #${FASCIA_ID} .dm-nodo-barra{display:grid;grid-template-columns:64px minmax(0,1fr) 46px;align-items:center;gap:8px}
       #${FASCIA_ID} .dm-nodo-barra-lbl{

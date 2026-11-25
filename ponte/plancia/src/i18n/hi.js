@@ -8503,4 +8503,13 @@ export default Object.freeze({
   "Yes, turn on": "हाँ, खोलें",
   "1 day": "1 दिन",
   "1 minute": "1 मिनट",
+  "Furnishing is done in the 3D home, from a device that can run it": "सजावट 3D घर में होती है, उस डिवाइस से जो इसे चला सके",
+  "Lighter, for tablets that struggle with 3D": "हल्का, उन टैबलेट के लिए जिन्हें 3D में दिक्कत होती है",
+  "Plan": "नक्शा",
+  "Covers": "पर्दे",
+  "Media players": "मीडिया प्लेयर",
+  "problem": "समस्या",
+  "This entity's room is set by the other card it belongs to": "इस एंटिटी का कमरा उस दूसरे कार्ड से तय होता है जिसका यह हिस्सा है",
+  "with a problem": "एक समस्या के साथ",
+  "with problems": "समस्याओं के साथ",
 });

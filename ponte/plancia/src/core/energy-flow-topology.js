@@ -225,6 +225,17 @@ function sfalsata(width, primaFila, size, column) {
   return passo * (inizio + column + 0.5);
 }
 
+/* Due file uguali sfalsate, col blocco al centro: la prima un quarto di
+ * passo a destra, la seconda un quarto a sinistra, e il passo il piu' largo
+ * che il palco permette (ogni linea di sotto passa a mezzo passo dai due
+ * cerchi di sopra che le stanno ai lati). Il perche' sta in `flowStageLayout`. */
+export const PASSO_A_MATTONI = 0.28;
+function aMattoni(width, size, rowIndex, column) {
+  const passo = width * PASSO_A_MATTONI;
+  const verso = rowIndex === 0 ? 0.25 : -0.25;
+  return width / 2 + passo * (column - (size - 1) / 2 + verso);
+}
+
 /* Dove sta una bolla di sotto quando la fila di sopra si prende tutta la
  * larghezza: nei varchi FRA le bolle di sopra, che sono `n - 1`, al centro. */
 function nelVarco(width, primaFila, size, column) {
@@ -300,12 +311,17 @@ export function flowStageLayout(count, variant = "desktop") {
    * due file uguali sfalsate non possono stare tutte e due al centro: la
    * prima stava sotto la Casa e la seconda mezzo passo a sinistra, con un
    * cerchio contro il bordo e un buco in basso a destra. «Sistema anche la
-   * centratura, non mi piace.» Le file uguali fanno tutte come le quattro e
-   * quattro: una sotto l'altra, in colonna sotto la Casa, con la linea di
-   * chi sta sotto che passa dietro. */
+   * centratura, non mi piace.» Messe in colonna sotto la Casa, come le
+   * quattro e quattro, le linee di sotto passavano dietro i cerchi di sopra
+   * e non si capiva piu' dove andassero («le linee non si capisce dove
+   * vanno»). Adesso restano sfalsate, ma lo sfalsamento se lo dividono:
+   * la fila di sopra un quarto di passo a destra, quella di sotto un quarto
+   * a sinistra (`aMattoni`). Il blocco sta al centro, e ogni linea di sotto
+   * passa nel varco fra due cerchi di sopra. */
   const mobile = variant === "mobile";
-  const uguali = mobile && sizes.length > 1 && sizes[1] === primaFila && primaFila >= 3;
+  const uguali = mobile && sizes.length > 1 && sizes[1] === primaFila && primaFila >= 4;
   const piena = mobile && (sizes.length === 1 || sizes[1] < primaFila || uguali);
+  const pari = mobile && !piena && sizes.length === 2 && sizes[1] === primaFila;
   sizes.forEach((size, rowIndex) => {
     for (let column = 0; column < size; column += 1) {
       /* La prima fila spartisce la larghezza; quelle sotto si sfalsano nei
@@ -314,9 +330,11 @@ export function flowStageLayout(count, variant = "desktop") {
         ? rowIndex === 0 || uguali
           ? (geometry.width * (column + 0.5)) / size
           : nelVarco(geometry.width, primaFila, size, column)
-        : rowIndex === 0
-          ? (geometry.width * (column + 1)) / (size + 1)
-          : sfalsata(geometry.width, primaFila, size, column);
+        : pari
+          ? aMattoni(geometry.width, size, rowIndex, column)
+          : rowIndex === 0
+            ? (geometry.width * (column + 1)) / (size + 1)
+            : sfalsata(geometry.width, primaFila, size, column);
       /* Chi sta sotto deve scavalcare la fila di sopra: la sua linea si
        * raddrizza prima di arrivarci. Il perche' sta in `connectorPath`. */
       /* Con le file uguali non c'e' niente da scavalcare: passa dietro. */

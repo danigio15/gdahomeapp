@@ -8388,4 +8388,13 @@ export default Object.freeze({
   "Yes, turn on": "是，打开",
   "1 day": "1 天",
   "1 minute": "1 分钟",
+  "Furnishing is done in the 3D home, from a device that can run it": "布置家具请在能运行 3D 的设备上的 3D 房屋中进行",
+  "Lighter, for tablets that struggle with 3D": "更轻量，适合运行 3D 吃力的平板",
+  "Plan": "平面图",
+  "Covers": "窗帘",
+  "Media players": "媒体播放器",
+  "problem": "问题",
+  "This entity's room is set by the other card it belongs to": "此实体的房间由其所属的另一张卡片决定",
+  "with a problem": "有一个问题",
+  "with problems": "有多个问题",
 });

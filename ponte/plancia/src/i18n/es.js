@@ -8569,4 +8569,13 @@ export default Object.freeze({
   "Yes, turn on": "Sí, abrir",
   "1 day": "1 día",
   "1 minute": "1 minuto",
+  "Furnishing is done in the 3D home, from a device that can run it": "Se amuebla en la casa 3D, desde un dispositivo que la soporte",
+  "Lighter, for tablets that struggle with 3D": "Más ligera, para las tabletas que sufren con el 3D",
+  "Plan": "Plano",
+  "Covers": "Persianas",
+  "Media players": "Reproductores",
+  "problem": "problema",
+  "This entity's room is set by the other card it belongs to": "La habitación de esta entidad la decide la otra tarjeta a la que pertenece",
+  "with a problem": "con un problema",
+  "with problems": "con problemas",
 });

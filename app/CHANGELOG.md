@@ -8,6 +8,13 @@ i suoi in `ponte/CHANGELOG.md`, ed è quello che Home Assistant fa vedere. Un
 rilascio dell'app non fa comparire un aggiornamento dell'add-on, e al
 contrario.
 
+## 1.19.32
+
+- **Navigatore in auto, a metà schermo**: quando Android Auto divide lo
+  schermo e la mappa ha un pannello piccolo, la vista si allontana e si
+  inclina un po' di più, così il percorso davanti all'auto si vede invece dei
+  palazzi a tutto schermo.
+
 ## 1.19.31
 
 - **Navigatore, vista «Corsie», le curve**: le strade non piegano più a

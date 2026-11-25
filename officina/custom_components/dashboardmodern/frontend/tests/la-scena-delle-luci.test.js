@@ -362,3 +362,67 @@ test("la mattina d'inverno, appena sorto il sole, e' gia' giorno: chiaro anche c
   assert.equal(sera.fase, "tramonto");
   assert.ok(chiarezza(sera.cielo.alto) < chiarezza(coperta.cielo.alto));
 });
+
+/* «Riesci a fare qualcosa di più animato, tipo le luci sull'albero a
+ * intermittenza?» Le lampadine accese girano fra alcuni giochi; qui il
+ * programma, e che il disegno lo usi solo per chi non ha chiesto di ridurre
+ * le animazioni. */
+test("i giochi delle lampadine: alterna, rincorsa, respiro, scintille, ferme", async () => {
+  const { GIOCHI_DELLE_LUCI, GRUPPI_DELLE_LAMPADINE, LUCE_BASSA, programmaDelleLuci } =
+    await import("../src/core/scena-delle-luci.js");
+  const passi = GIOCHI_DELLE_LUCI.reduce((n, [, q]) => n + q, 0);
+  const tutti = Array.from({ length: GRUPPI_DELLE_LAMPADINE }, (_, g) => programmaDelleLuci(g));
+  for (const p of tutti) {
+    assert.equal(p.length, passi);
+    for (const v of p) assert.ok(v >= LUCE_BASSA && v <= 1, `luce fuori misura: ${v}`);
+  }
+  /* «alterna»: due gruppi vicini sono uno acceso e uno basso, e si scambiano */
+  assert.notEqual(tutti[0][0], tutti[1][0]);
+  assert.equal(tutti[0][0], tutti[1][2]);
+  /* «rincorsa»: il tratto acceso si sposta di un gruppo a ogni passo */
+  const r = GIOCHI_DELLE_LUCI[0][1];
+  for (let g = 0; g < GRUPPI_DELLE_LAMPADINE - 1; g += 1)
+    assert.equal(tutti[g][r + 1], tutti[g + 1][r + 2]);
+  /* «respiro»: tutte insieme */
+  const respiro = r + GIOCHI_DELLE_LUCI[1][1];
+  for (let t = respiro; t < respiro + GIOCHI_DELLE_LUCI[2][1]; t += 1)
+    assert.equal(new Set(tutti.map((p) => p[t])).size, 1);
+  /* in fondo, tutte accese */
+  for (const p of tutti) assert.equal(p.at(-1), 1);
+  /* un gruppo fuori misura torna nel giro */
+  assert.deepEqual(programmaDelleLuci(GRUPPI_DELLE_LAMPADINE + 2), tutti[2]);
+  assert.deepEqual(programmaDelleLuci(-1), tutti[GRUPPI_DELLE_LAMPADINE - 1]);
+});
+
+test("il disegno: le lampadine nei gruppi, i giochi solo senza «riduci animazioni»", async () => {
+  const { cssDellaScena } = await import("../src/sections/la-scena-delle-luci.js");
+  const { cieloDellaScena, coseDellaScena, disposizioneDellaScena } =
+    await import("../src/core/scena-delle-luci.js");
+  const cielo = cieloDellaScena({ adesso: new Date(2026, 11, 20, 22, 30) });
+  const cose = disposizioneDellaScena(coseDellaScena([{ entity: "switch.presa_albero" }]), {
+    larghezza: 600,
+    da: 0,
+    a: 600,
+  });
+  const { svg, sopra } = scenaDelleLuci({ cose, cielo, larghezza: 600 });
+  assert.match(svg, /class="sc-lg sc-lg0"/);
+  assert.match(svg, /class="sc-lg sc-lg5"/);
+  assert.match(svg, /sc-luccica/);
+  /* di notte passa una stella cadente; di giorno no */
+  assert.match(sopra, /dm-sc-cadente/);
+  const giorno = scenaDelleLuci({
+    cose,
+    cielo: cieloDellaScena({ adesso: new Date(2026, 11, 20, 13) }),
+    larghezza: 600,
+  });
+  assert.doesNotMatch(giorno.sopra, /dm-sc-cadente/);
+  const css = cssDellaScena("#x");
+  assert.match(css, /@keyframes dm-sc-gioco0\{/);
+  /* le animazioni dei giochi stanno tutte dentro «no-preference» */
+  const fuori = css.replace(
+    /@media \(prefers-reduced-motion:no-preference\)\{[^{}]*(\{[^{}]*\}[^{}]*)*\}/g,
+    "",
+  );
+  assert.doesNotMatch(fuori, /animation:dm-sc-gioco/);
+  assert.doesNotMatch(fuori, /animation:dm-sc-cadente/);
+});

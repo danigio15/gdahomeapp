@@ -123,6 +123,32 @@ function acceso(stato) {
   return null;
 }
 
+/* «Problema»: la classe di Home Assistant in cui «on» e' il guaio e «off» e'
+ * che va tutto bene (#504).
+ *
+ * «Su HA il sensore di potenza del Raspberry lo vedo su Ok, su GdA lo vedo
+ * come “spento”.» Il Raspberry Pi pubblica `binary_sensor.rpi_power_status`,
+ * che dice se l'alimentatore regge: «off» vuol dire nessuna sottotensione, e
+ * Home Assistant scrive «OK». Letto come un interruttore era un nodo spento,
+ * in rosso, con «1 giù» nel titolo — su un Raspberry che stava benissimo. Un
+ * sensore cosi' non dice se il nodo e' acceso: dice come sta, e la scheda lo
+ * scrive cosi', «OK» o «problema». */
+const CLASSI_DEI_GUAI = new Set(["problem"]);
+
+function classeDiGuai(stato) {
+  return CLASSI_DEI_GUAI.has(clean(stato?.attributes?.device_class).toLowerCase());
+}
+
+/* Come sta un nodo il cui stato e' un sensore di guai: «ok», «problema», o
+ * "" quando non lo e' o non si sa. */
+function salute(stato) {
+  if (!classeDiGuai(stato)) return "";
+  const grezzo = clean(stato.state).toLowerCase();
+  if (grezzo === "off") return "ok";
+  if (grezzo === "on") return "problema";
+  return "";
+}
+
 /* Un nodo che non risponde: o l'entita' non c'e' piu' in Home Assistant, o c'e'
  * e vale «unavailable», che vuol dire la stessa cosa — non si riesce a
  * chiedergli come sta. */
@@ -170,7 +196,8 @@ function misura(entity, states, soglie) {
  */
 export function letturaDelNodo(nodo = {}, states = {}) {
   const statoDelNodo = states?.[clean(nodo.stato)] || null;
-  const risposta = acceso(statoDelNodo);
+  const guai = classeDiGuai(statoDelNodo);
+  const risposta = guai ? null : acceso(statoDelNodo);
   return {
     id: clean(nodo.id),
     nome:
@@ -179,6 +206,7 @@ export function letturaDelNodo(nodo = {}, states = {}) {
       clean(nodo.stato).split(".")[1] ||
       clean(nodo.id),
     acceso: risposta,
+    salute: salute(statoDelNodo),
     /* «Non risponde» e «e' spento» sono due cose diverse, e la scheda le dice
      * diverse: la prima e' un problema di rete o di Home Assistant, la seconda
      * e' un nodo che qualcuno ha fermato. */
@@ -216,6 +244,7 @@ export function riassuntoDeiNodi(letture = []) {
     accesi: righe.filter((riga) => riga.acceso === true).length,
     spenti: righe.filter((riga) => riga.acceso === false).length,
     muti: righe.filter((riga) => riga.muto).length,
+    problemi: righe.filter((riga) => riga.salute === "problema").length,
     peggiore: carichi.length ? Math.max(...carichi) : null,
   };
 }
@@ -277,6 +306,14 @@ export function bindNodoToDevice({
       (voce) =>
         dominio(voce) === "binary_sensor" &&
         ["connectivity", "running", "power"].includes(classe(voce)),
+    ) ||
+    elenco.find(
+      (voce) =>
+        dominio(voce) === "binary_sensor" &&
+        /* «RPi Power status» ha «status» nel nome ma e' un sensore di guai
+         * (#504): dice se l'alimentatore regge, non se il nodo e' acceso. */
+        !CLASSI_DEI_GUAI.has(classe(voce).toLowerCase()) &&
+        PAROLE.stato.test(parole(voce, states)),
     ) ||
     elenco.find(
       (voce) => dominio(voce) === "binary_sensor" && PAROLE.stato.test(parole(voce, states)),

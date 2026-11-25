@@ -8582,4 +8582,13 @@ export default Object.freeze({
   "Yes, turn on": "Ja, aufdrehen",
   "1 day": "1 Tag",
   "1 minute": "1 Minute",
+  "Furnishing is done in the 3D home, from a device that can run it": "Eingerichtet wird im 3D-Haus, auf einem Gerät, das es schafft",
+  "Lighter, for tablets that struggle with 3D": "Leichter, für Tablets, die mit 3D Mühe haben",
+  "Plan": "Grundriss",
+  "Covers": "Rollläden",
+  "Media players": "Mediaplayer",
+  "problem": "Problem",
+  "This entity's room is set by the other card it belongs to": "Den Raum dieser Entität legt die andere Karte fest, zu der sie gehört",
+  "with a problem": "mit einem Problem",
+  "with problems": "mit Problemen",
 });
