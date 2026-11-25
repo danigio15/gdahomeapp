@@ -62,30 +62,110 @@ function assegna(entity, room) {
 
 /* ── chi la stanza ce l'ha gia' ───────────────────────────────────────── */
 
-/** Gli entity_id che una sezione tiene gia' legati a una stanza sua. */
-export function ownedEntities(sorgenti = roomSources()) {
-  const dentro = new Set();
-  const guarda = (item) => {
+/* Le schede che la stanza la chiedono gia', col nome con cui si cercano nel
+ * Config. */
+const NOMI_DELLE_SCHEDE = Object.freeze({
+  lights: () => t("Luci", "Lights"),
+  prese: () => t("Prese", "Plugs"),
+  climate: () => t("Clima", "Climate"),
+  covers: () => t("Tapparelle", "Covers"),
+  appliances: () => t("Elettrodomestici", "Appliances"),
+  media: () => t("Lettori", "Media players"),
+  cameras: () => t("Telecamere", "Cameras"),
+  loads: () => t("Carichi", "Loads"),
+  robots: () => t("Robot", "Robots"),
+  irrigation: () => t("Irrigazione", "Irrigation"),
+});
+
+/**
+ * Chi tiene gia' legata ogni entita' a una stanza sua: `entity_id → { scheda,
+ * nome, stanza }`. La prima scheda che la nomina vince.
+ */
+export function padroniDelleEntita(sorgenti = roomSources()) {
+  const padroni = new Map();
+  const guarda = (scheda) => (item) => {
     if (!item || typeof item !== "object") return;
-    for (const campo of ["entity", "entity_id", "id", "cam", "camera_entity"]) {
-      const valore = clean(item[campo]);
-      if (ENTITY_RE.test(valore)) dentro.add(valore);
-    }
+    const padrone = {
+      scheda,
+      nome: clean(item.name || item.nome || item.label),
+      stanza: clean(item.room_id || item.roomId || item.room || item.stanza),
+    };
+    const segna = (valore) => {
+      if (ENTITY_RE.test(valore) && !padroni.has(valore)) padroni.set(valore, padrone);
+    };
+    for (const campo of ["entity", "entity_id", "id", "cam", "camera_entity"]) segna(clean(item[campo]));
     for (const campo of ["entities", "ents"]) {
       const elenco = item[campo];
       if (!Array.isArray(elenco)) continue;
-      for (const voce of elenco) {
-        const valore = clean(typeof voce === "string" ? voce : voce?.entity);
-        if (ENTITY_RE.test(valore)) dentro.add(valore);
-      }
+      for (const voce of elenco) segna(clean(typeof voce === "string" ? voce : voce?.entity));
     }
   };
   for (const [nome, valore] of Object.entries(sorgenti || {})) {
     if (nome === "rooms" || nome === "assigned") continue;
-    if (Array.isArray(valore)) valore.forEach(guarda);
-    else if (valore && typeof valore === "object") Object.values(valore).forEach(guarda);
+    if (Array.isArray(valore)) valore.forEach(guarda(nome));
+    else if (valore && typeof valore === "object") Object.values(valore).forEach(guarda(nome));
   }
-  return dentro;
+  return padroni;
+}
+
+/** Gli entity_id che una sezione tiene gia' legati a una stanza sua. */
+export function ownedEntities(sorgenti = roomSources()) {
+  return new Set(padroniDelleEntita(sorgenti).keys());
+}
+
+/* Il nome di una stanza dal suo id (o dal nome stesso, per le schede vecchie). */
+function nomeDellaStanza(valore, stanze) {
+  const cercato = clean(valore);
+  if (!cercato) return "";
+  const trovata = (Array.isArray(stanze) ? stanze : []).find((stanza) =>
+    [stanza?.id, stanza?.name].map(clean).includes(cercato),
+  );
+  return clean(trovata?.name) || cercato;
+}
+
+/**
+ * Che cosa dire su una riga la cui entita' ha gia' una stanza da un'altra
+ * scheda (#503).
+ *
+ * «Ho un sensore a cui non riesco ad inserire la relativa stanza. Per altri
+ * simili non ho avuto problemi.» La «Batteria Frigo» era anche un'entita' del
+ * Frigo, negli Elettrodomestici: la stanza la decide quella scheda, e qui la
+ * tendina spariva senza una parola — sembrava un guasto. Adesso la riga dice
+ * la stanza che ha e dove si cambia. E se la scheda che la possiede una stanza
+ * non gliel'ha data, non c'e' nessun padrone da rispettare: la tendina torna.
+ */
+export function stanzaDaUnAltraScheda(padrone, stanze = []) {
+  if (!padrone?.stanza) return null;
+  const scheda = NOMI_DELLE_SCHEDE[padrone.scheda]?.() || "";
+  return {
+    stanza: nomeDellaStanza(padrone.stanza, stanze),
+    /* sulla pastiglia, corta: il nome della cosa che la possiede */
+    chi: padrone.nome || scheda,
+    /* nel suggerimento, per intero: la scheda e la cosa */
+    dove: [scheda, padrone.nome].filter(Boolean).join(" › "),
+  };
+}
+
+function pastigliaDelPadrone(contenitore, entity, detto, dove) {
+  contenitore.querySelector(`:scope [${ASSIGN_ATTRIBUTE}]`)?.remove();
+  const testo = `🏠 ${detto.stanza}${detto.chi ? ` · ${t("da", "from")} «${detto.chi}»` : ""}`;
+  const suggerimento = `${t(
+    "La stanza di questa entità la decide l'altra scheda in cui è scritta",
+    "This entity's room is set by the other card it belongs to",
+  )}${detto.dove ? `: ${detto.dove}` : ""}.`;
+  let pastiglia = contenitore.querySelector(":scope .dm-room-entity-padrone");
+  if (pastiglia) {
+    if (pastiglia.textContent !== testo) pastiglia.textContent = testo;
+    if (pastiglia.title !== suggerimento) pastiglia.title = suggerimento;
+    return false;
+  }
+  pastiglia = doc.createElement("span");
+  pastiglia.className = "dm-room-entity-padrone";
+  pastiglia.setAttribute("data-dm-room-padrone", entity);
+  pastiglia.title = suggerimento;
+  pastiglia.textContent = testo;
+  dove(pastiglia);
+  return true;
 }
 
 /* ── la tendina ───────────────────────────────────────────────────────── */
@@ -107,6 +187,7 @@ function tendina(entity, scelta) {
 }
 
 function attacca(contenitore, entity, mappa, dove) {
+  contenitore.querySelector(":scope .dm-room-entity-padrone")?.remove();
   let select = contenitore.querySelector(`:scope [${ASSIGN_ATTRIBUTE}]`);
   const scelta = clean(mappa[entity]);
   if (select) {
@@ -138,20 +219,40 @@ export function ensureRoomChoices() {
   const body = doc?.getElementById?.("ed-body");
   if (!body) return 0;
   const mappa = roomAssignments();
-  let suoi;
+  let padroni;
+  let stanze = [];
   try {
-    suoi = ownedEntities();
+    const sorgenti = roomSources();
+    padroni = padroniDelleEntita(sorgenti);
+    stanze = sorgenti.rooms;
   } catch (_error) {
-    suoi = new Set();
+    padroni = new Map();
   }
   let messi = 0;
-  const salta = (entity) => !entity || suoi.has(entity);
+  const detto = (entity) => stanzaDaUnAltraScheda(padroni.get(entity), stanze);
+  /* Un'entita' di un'altra scheda che una stanza non gliel'ha data si
+   * assegna qui come tutte (#503). */
+  const salta = (entity) => !entity || Boolean(detto(entity));
 
   for (const slot of body.querySelectorAll(".ed-slot")) {
     if (slot.closest("[data-load-form]")) continue;
     const entity = clean(slot.querySelector(".ed-slot-in[data-ref]")?.value);
+    if (ENTITY_RE.test(entity) && detto(entity)) {
+      if (
+        pastigliaDelPadrone(slot, entity, detto(entity), (pastiglia) => {
+          const etichetta = slot.querySelector(".ed-slot-lbl");
+          if (etichetta) {
+            etichetta.classList.add("dm-slot-lbl-affollata");
+            etichetta.append(pastiglia);
+          } else slot.append(pastiglia);
+        })
+      )
+        messi += 1;
+      continue;
+    }
     if (!ENTITY_RE.test(entity) || salta(entity)) {
       slot.querySelector(`:scope [${ASSIGN_ATTRIBUTE}]`)?.remove();
+      slot.querySelector(":scope .dm-room-entity-padrone")?.remove();
       continue;
     }
     if (
@@ -182,8 +283,20 @@ export function ensureRoomChoices() {
      * scheda che la possiede. */
     if (row.matches(".dm-people-row, .dm-scollegati-riga")) continue;
     const entity = entityOfRow(row);
+    if (entity && detto(entity)) {
+      if (
+        pastigliaDelPadrone(row, entity, detto(entity), (pastiglia) => {
+          const testo = row.querySelector(".ed-row-main");
+          if (testo) testo.append(pastiglia);
+          else row.append(pastiglia);
+        })
+      )
+        messi += 1;
+      continue;
+    }
     if (salta(entity)) {
       row.querySelector(`:scope [${ASSIGN_ATTRIBUTE}]`)?.remove();
+      row.querySelector(":scope .dm-room-entity-padrone")?.remove();
       continue;
     }
     if (
@@ -229,6 +342,12 @@ function css() {
       #ed-body .dm-room-entity:focus{outline:2px solid var(--primary-color,#0ea5e9);outline-offset:1px}
       /* Assegnata: si vede da lontano quali righe una stanza ce l'hanno. */
       #ed-body .dm-room-entity:not([data-dm-vuota="true"]){color:var(--text,#0f172a)}
+      /* La stanza che decide un'altra scheda (#503): si legge, non si tocca. */
+      #ed-body .dm-room-entity-padrone{
+        display:inline-block;max-width:100%;margin:5px 0 0;padding:4px 10px;
+        font-size:11px;font-weight:700;line-height:1.35;border-radius:12px;white-space:normal;
+        background:var(--surface-2,#f8fafc);border:1px dashed var(--card-border,#cbd5e1);
+        color:var(--text-dim,#64748b)}
       #ed-body .ed-slot .dm-room-entity-slot{margin:5px 0 0;align-self:flex-start}
       /* L'etichetta della casella tiene il nome, la tendina della stanza e
        * l'interruttore dei widget: in una riga sola, su un telefono, il nome

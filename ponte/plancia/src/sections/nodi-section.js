@@ -60,6 +60,11 @@ function statoMarkup(lettura) {
    * grigia con scritto «—». */
   if (lettura.muto)
     return `<span class="dm-nodo-stato" data-stato="muto">${esc(t("non risponde", "not answering"))}</span>`;
+  /* Un sensore di guai (#504): non dice se il nodo e' acceso, dice come sta. */
+  if (lettura.salute === "ok")
+    return `<span class="dm-nodo-stato" data-stato="acceso">OK</span>`;
+  if (lettura.salute === "problema")
+    return `<span class="dm-nodo-stato" data-stato="problema">${esc(t("problema", "problem"))}</span>`;
   if (lettura.acceso === true)
     return `<span class="dm-nodo-stato" data-stato="acceso">${esc(t("acceso", "up"))}</span>`;
   if (lettura.acceso === false)
@@ -93,6 +98,9 @@ function fasciaMarkup(letture) {
     `${riassunto.quanti} ${riassunto.quanti === 1 ? t("nodo", "node") : t("nodi", "nodes")}`,
     riassunto.spenti ? `${riassunto.spenti} ${t("giù", "down")}` : "",
     riassunto.muti ? `${riassunto.muti} ${t("senza risposta", "not answering")}` : "",
+    riassunto.problemi
+      ? `${riassunto.problemi} ${riassunto.problemi === 1 ? t("con un problema", "with a problem") : t("con problemi", "with problems")}`
+      : "",
   ]
     .filter(Boolean)
     .join(" · ");
@@ -184,6 +192,7 @@ function installaStile() {
         letter-spacing:.06em;text-transform:uppercase}
       #${FASCIA_ID} .dm-nodo-stato[data-stato="acceso"]{background:rgba(16,185,129,.16);color:#047857}
       #${FASCIA_ID} .dm-nodo-stato[data-stato="spento"]{background:rgba(220,38,38,.14);color:#b91c1c}
+      #${FASCIA_ID} .dm-nodo-stato[data-stato="problema"]{background:rgba(245,158,11,.18);color:#b45309}
       #${FASCIA_ID} .dm-nodo-stato[data-stato="muto"]{background:rgba(148,163,184,.2);color:#475569}
       #${FASCIA_ID} .dm-nodo-barra{display:grid;grid-template-columns:64px minmax(0,1fr) 46px;align-items:center;gap:8px}
       #${FASCIA_ID} .dm-nodo-barra-lbl{

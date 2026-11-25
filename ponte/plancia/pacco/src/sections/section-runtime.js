@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-BCQO4M2F.js";
+} from "../../chunk-OGYDLU4T.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -3726,10 +3726,12 @@ var SOURCE_INDEX = Object.freeze({
   "Con l'orario": "By the clock",
   "Con l'orario: chiaro di giorno, scuro la sera": "By the clock: light by day, dark in the evening",
   "Con la carica di adesso": "With the charge it has now",
+  "con problemi": "with problems",
   "Con questa la pagina prende il tasto: lo stato dice se lavora, questo la comanda.": "With this the page grows a switch: the state says whether it is working, this one commands it.",
   "Con questa misura i muri esterni sarebbero spessi ${cm} cm: controlla la misura, in metri (10,92 e non 1092).": "With this length the outer walls would be ${cm} cm thick: check the length, in metres (10.92, not 1092).",
   "Con questi valori un ciclo solo può diventare tanti mini cicli.": "With these values one cycle can turn into many mini-cycles.",
   "Con un contatore totale configurato la dashboard ricava giorno, mese e anno da quello con Recorder, cosi' i numeri restano coerenti tra loro. Le entita' scritte nei campi di periodo restano salvate ma non vengono usate: svuotale, oppure togli il contatore totale se preferisci leggere i periodi direttamente.": "With a total meter configured the dashboard derives day, month and year from it through Recorder, so the numbers agree with each other. Entities written in the period fields stay saved but are not used: clear them, or remove the total meter if you would rather read the periods directly.",
+  "con un problema": "with a problem",
   "Con una dissolvenza e un avvicinamento lentissimo": "With a fade and a very slow zoom",
   "Con una foto l'avatar non si vede: la foto vince.": "With a photo the avatar is not shown: the photo wins.",
   "Con una tariffa unica": "With a single rate",
@@ -5520,6 +5522,7 @@ var SOURCE_INDEX = Object.freeze({
   "La sessione è finita.": "The session is over.",
   "la somma di tutti gli impianti": "the total of every plant",
   "La spengo?": "Turn it off?",
+  "La stanza di questa entità la decide l'altra scheda in cui è scritta": "This entity's room is set by the other card it belongs to",
   "La stanza in cui si trova: serve alla pagina Stanze, non cambia niente qui.": "The room it sits in: it feeds the Rooms page and changes nothing here.",
   "La stanza selezionata ha già sensori temperatura configurati.": "The selected room already has temperature sensors configured.",
   "La stessa entità è scritta in più caselle: è una copertura sola. Per avere più cursori sulla stessa finestra servono entità cover diverse (tapparella, tenda, tenda da sole).": "The same entity is written in more than one box: that is one cover. To get multiple sliders on one window, use different cover entities (shutter, curtain, awning).",
@@ -5737,7 +5740,7 @@ var SOURCE_INDEX = Object.freeze({
   "lettore multimediale": "media player",
   "Lettore multimediale": "Media player",
   "Lettore nuovo": "New player",
-  "Lettori": "Players",
+  "Lettori": "Media players",
   "Lettori di casa ed Echo": "Home players and Echos",
   "Lettura del pannello": "Panel reading",
   "Letture": "Readings",
@@ -7088,6 +7091,7 @@ var SOURCE_INDEX = Object.freeze({
   "Prima scegli l'entità della persona": "Choose the person entity first",
   "Prima seleziona le luci nello step Luci (o nel wizard).": "First select your lights in the Lights step (or wizard).",
   "principale": "main",
+  "problema": "problem",
   "Problema": "Problem",
   "Processore": "CPU",
   "Processore, memoria e disco": "CPU, memory and disk",
@@ -54807,7 +54811,7 @@ function serverProxmox({ dispositivi = [], entita: entita4 = {}, states = {} } =
       });
     } else if (tipo === "qemu" || tipo === "lxc") {
       const { nome, vmid } = nomeDelGuest(dispositivo3);
-      const salute = l("health");
+      const salute2 = l("health");
       guest.push({
         id: clean24(dispositivo3.id),
         tipo,
@@ -54816,7 +54820,7 @@ function serverProxmox({ dispositivi = [], entita: entita4 = {}, states = {} } =
         nodo: clean24(l("node")?.testo),
         stato: statoDi(l("status")),
         dettaglio: clean24(l("status_raw")?.testo),
-        problema: salute && !salute.muto ? salute.testo === "on" : false,
+        problema: salute2 && !salute2.muto ? salute2.testo === "on" : false,
         cpu: percento3(l("cpu_used")),
         memoria: { perc: percento3(l("memory_used_perc")), usata: l("memory_used") },
         disco: { perc: percento3(l("disk_used_perc")), usato: l("disk_used") },
@@ -54828,14 +54832,14 @@ function serverProxmox({ dispositivi = [], entita: entita4 = {}, states = {} } =
       });
     } else if (tipo === "disco") {
       const { nodo: nodo4, nome } = nomeDelDisco(dispositivo3);
-      const salute = l("health");
+      const salute2 = l("health");
       dischi.push({
         id: clean24(dispositivo3.id),
         nodo: nodo4,
         nome,
         modello: clean24(dispositivo3.model),
         /* «health» e' un sensore di problema: acceso vuol dire guasto. */
-        sano: salute && !salute.muto ? salute.testo !== "on" : null,
+        sano: salute2 && !salute2.muto ? salute2.testo !== "on" : null,
         temperatura: l("temperature")?.valore ?? l("temperature_air")?.valore ?? null,
         temperaturaEntita: clean24((l("temperature") || l("temperature_air"))?.entity),
         vita: l("life_left")?.valore ?? (l("disk_wearout")?.valore != null ? 100 - l("disk_wearout").valore : null),
@@ -147853,8 +147857,28 @@ function installStyles59() {
        * --dm-page-room, e tutte le pagine la seguono insieme. Qui era scritto
        * 1040 a mano — la vecchia misura della piscina — e il robot si apriva
        * quattrocento pixel piu' stretto di tutti gli altri. */
-      #page-robot .dm-robot-wrap{box-sizing:border-box;width:100%;max-width:var(--dm-page-room,none);margin:0 auto;padding:0 4px 18px;display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr))}
+      #page-robot .dm-robot-wrap{box-sizing:border-box;width:100%;max-width:var(--dm-page-room,none);margin:0 auto;padding:0 4px 18px;display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(360px,100%),1fr))}
       #page-robot .dm-robot-card{display:grid;align-content:start;gap:12px;padding:14px;border:1px solid var(--divider-color,#dbe4ee);border-radius:20px;background:var(--card-bg,#fff);box-shadow:0 18px 34px -28px rgba(15,23,42,.55)}
+      /* «È possibile avere nel browser di HA la scheda Robot grande come le
+       * altre? Quando clicco per aprire la sezione si vede piccolo.» (#502)
+       * La griglia teneva le colonne vuote (auto-fill): un robot solo, su un
+       * monitor, era una scheda da trecento pixel in un angolo e il resto
+       * della pagina bianco. Adesso le schede si prendono la riga (auto-fit),
+       * e un robot solo su uno schermo largo si apre come le altre sezioni: la
+       * mappa grande a sinistra, lo stato e i comandi a destra. */
+      @media(min-width:900px){
+        #page-robot .dm-robot-card:only-child{gap:14px;padding:20px}
+        #page-robot .dm-robot-card:only-child:has(>.dm-robot-map:not(.dm-vuota)){
+          grid-template-columns:minmax(0,1.4fr) minmax(min(320px,100%),1fr);column-gap:26px;grid-auto-flow:row dense}
+        #page-robot .dm-robot-card:only-child:has(>.dm-robot-map:not(.dm-vuota))>*{grid-column:2}
+        #page-robot .dm-robot-card:only-child:has(>.dm-robot-map:not(.dm-vuota))>.dm-robot-head{grid-column:1/-1}
+        #page-robot .dm-robot-card:only-child>.dm-robot-mappe{grid-column:1}
+        #page-robot .dm-robot-card:only-child>.dm-robot-map:not(.dm-vuota){grid-column:1;grid-row:span 12;align-self:start}
+        #page-robot .dm-robot-card:only-child .dm-robot-title strong{font-size:18px}
+        #page-robot .dm-robot-card:only-child .dm-robot-state{font-size:12px;padding:5px 12px}
+        #page-robot .dm-robot-card:only-child .dm-robot-actions{grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+        #page-robot .dm-robot-card:only-child .dm-robot-btn{min-height:74px;justify-content:center;font-size:12px}
+      }
       #page-robot .dm-robot-head{display:flex;align-items:center;gap:10px;min-width:0}
       #page-robot .dm-robot-icon{display:grid;place-items:center;width:32px;height:32px;flex:0 0 auto}
       #page-robot .dm-robot-title{display:grid;min-width:0;flex:1 1 auto}
@@ -150161,29 +150185,83 @@ function assegna(entity2, room) {
   } catch (_error) {
   }
 }
-function ownedEntities(sorgenti = roomSources()) {
-  const dentro3 = /* @__PURE__ */ new Set();
-  const guarda3 = (item) => {
+var NOMI_DELLE_SCHEDE = Object.freeze({
+  lights: () => t("Luci", "Lights"),
+  prese: () => t("Prese", "Plugs"),
+  climate: () => t("Clima", "Climate"),
+  covers: () => t("Tapparelle", "Covers"),
+  appliances: () => t("Elettrodomestici", "Appliances"),
+  media: () => t("Lettori", "Media players"),
+  cameras: () => t("Telecamere", "Cameras"),
+  loads: () => t("Carichi", "Loads"),
+  robots: () => t("Robot", "Robots"),
+  irrigation: () => t("Irrigazione", "Irrigation")
+});
+function padroniDelleEntita(sorgenti = roomSources()) {
+  const padroni = /* @__PURE__ */ new Map();
+  const guarda3 = (scheda9) => (item) => {
     if (!item || typeof item !== "object") return;
-    for (const campo6 of ["entity", "entity_id", "id", "cam", "camera_entity"]) {
-      const valore3 = clean(item[campo6]);
-      if (ENTITY_RE.test(valore3)) dentro3.add(valore3);
-    }
+    const padrone = {
+      scheda: scheda9,
+      nome: clean(item.name || item.nome || item.label),
+      stanza: clean(item.room_id || item.roomId || item.room || item.stanza)
+    };
+    const segna2 = (valore3) => {
+      if (ENTITY_RE.test(valore3) && !padroni.has(valore3)) padroni.set(valore3, padrone);
+    };
+    for (const campo6 of ["entity", "entity_id", "id", "cam", "camera_entity"]) segna2(clean(item[campo6]));
     for (const campo6 of ["entities", "ents"]) {
       const elenco18 = item[campo6];
       if (!Array.isArray(elenco18)) continue;
-      for (const voce3 of elenco18) {
-        const valore3 = clean(typeof voce3 === "string" ? voce3 : voce3?.entity);
-        if (ENTITY_RE.test(valore3)) dentro3.add(valore3);
-      }
+      for (const voce3 of elenco18) segna2(clean(typeof voce3 === "string" ? voce3 : voce3?.entity));
     }
   };
   for (const [nome, valore3] of Object.entries(sorgenti || {})) {
     if (nome === "rooms" || nome === "assigned") continue;
-    if (Array.isArray(valore3)) valore3.forEach(guarda3);
-    else if (valore3 && typeof valore3 === "object") Object.values(valore3).forEach(guarda3);
+    if (Array.isArray(valore3)) valore3.forEach(guarda3(nome));
+    else if (valore3 && typeof valore3 === "object") Object.values(valore3).forEach(guarda3(nome));
   }
-  return dentro3;
+  return padroni;
+}
+function nomeDellaStanza2(valore3, stanze4) {
+  const cercato = clean(valore3);
+  if (!cercato) return "";
+  const trovata2 = (Array.isArray(stanze4) ? stanze4 : []).find(
+    (stanza2) => [stanza2?.id, stanza2?.name].map(clean).includes(cercato)
+  );
+  return clean(trovata2?.name) || cercato;
+}
+function stanzaDaUnAltraScheda(padrone, stanze4 = []) {
+  if (!padrone?.stanza) return null;
+  const scheda9 = NOMI_DELLE_SCHEDE[padrone.scheda]?.() || "";
+  return {
+    stanza: nomeDellaStanza2(padrone.stanza, stanze4),
+    /* sulla pastiglia, corta: il nome della cosa che la possiede */
+    chi: padrone.nome || scheda9,
+    /* nel suggerimento, per intero: la scheda e la cosa */
+    dove: [scheda9, padrone.nome].filter(Boolean).join(" › ")
+  };
+}
+function pastigliaDelPadrone(contenitore5, entity2, detto3, dove3) {
+  contenitore5.querySelector(`:scope [${ASSIGN_ATTRIBUTE}]`)?.remove();
+  const testo5 = `🏠 ${detto3.stanza}${detto3.chi ? ` · ${t("da", "from")} «${detto3.chi}»` : ""}`;
+  const suggerimento = `${t(
+    "La stanza di questa entità la decide l'altra scheda in cui è scritta",
+    "This entity's room is set by the other card it belongs to"
+  )}${detto3.dove ? `: ${detto3.dove}` : ""}.`;
+  let pastiglia5 = contenitore5.querySelector(":scope .dm-room-entity-padrone");
+  if (pastiglia5) {
+    if (pastiglia5.textContent !== testo5) pastiglia5.textContent = testo5;
+    if (pastiglia5.title !== suggerimento) pastiglia5.title = suggerimento;
+    return false;
+  }
+  pastiglia5 = doc.createElement("span");
+  pastiglia5.className = "dm-room-entity-padrone";
+  pastiglia5.setAttribute("data-dm-room-padrone", entity2);
+  pastiglia5.title = suggerimento;
+  pastiglia5.textContent = testo5;
+  dove3(pastiglia5);
+  return true;
 }
 function tendina3(entity2, scelta4) {
   const select = doc.createElement("select");
@@ -150201,6 +150279,7 @@ function tendina3(entity2, scelta4) {
   return select;
 }
 function attacca(contenitore5, entity2, mappa2, dove3) {
+  contenitore5.querySelector(":scope .dm-room-entity-padrone")?.remove();
   let select = contenitore5.querySelector(`:scope [${ASSIGN_ATTRIBUTE}]`);
   const scelta4 = clean(mappa2[entity2]);
   if (select) {
@@ -150224,19 +150303,35 @@ function ensureRoomChoices() {
   const body = doc?.getElementById?.("ed-body");
   if (!body) return 0;
   const mappa2 = roomAssignments();
-  let suoi2;
+  let padroni;
+  let stanze4 = [];
   try {
-    suoi2 = ownedEntities();
+    const sorgenti = roomSources();
+    padroni = padroniDelleEntita(sorgenti);
+    stanze4 = sorgenti.rooms;
   } catch (_error) {
-    suoi2 = /* @__PURE__ */ new Set();
+    padroni = /* @__PURE__ */ new Map();
   }
   let messi = 0;
-  const salta = (entity2) => !entity2 || suoi2.has(entity2);
+  const detto3 = (entity2) => stanzaDaUnAltraScheda(padroni.get(entity2), stanze4);
+  const salta = (entity2) => !entity2 || Boolean(detto3(entity2));
   for (const slot of body.querySelectorAll(".ed-slot")) {
     if (slot.closest("[data-load-form]")) continue;
     const entity2 = clean(slot.querySelector(".ed-slot-in[data-ref]")?.value);
+    if (ENTITY_RE.test(entity2) && detto3(entity2)) {
+      if (pastigliaDelPadrone(slot, entity2, detto3(entity2), (pastiglia5) => {
+        const etichetta3 = slot.querySelector(".ed-slot-lbl");
+        if (etichetta3) {
+          etichetta3.classList.add("dm-slot-lbl-affollata");
+          etichetta3.append(pastiglia5);
+        } else slot.append(pastiglia5);
+      }))
+        messi += 1;
+      continue;
+    }
     if (!ENTITY_RE.test(entity2) || salta(entity2)) {
       slot.querySelector(`:scope [${ASSIGN_ATTRIBUTE}]`)?.remove();
+      slot.querySelector(":scope .dm-room-entity-padrone")?.remove();
       continue;
     }
     if (attacca(slot, entity2, mappa2, (select) => {
@@ -150252,8 +150347,18 @@ function ensureRoomChoices() {
   for (const row of body.querySelectorAll(".ed-row")) {
     if (row.matches(".dm-people-row, .dm-scollegati-riga")) continue;
     const entity2 = entityOfRow(row);
+    if (entity2 && detto3(entity2)) {
+      if (pastigliaDelPadrone(row, entity2, detto3(entity2), (pastiglia5) => {
+        const testo5 = row.querySelector(".ed-row-main");
+        if (testo5) testo5.append(pastiglia5);
+        else row.append(pastiglia5);
+      }))
+        messi += 1;
+      continue;
+    }
     if (salta(entity2)) {
       row.querySelector(`:scope [${ASSIGN_ATTRIBUTE}]`)?.remove();
+      row.querySelector(":scope .dm-room-entity-padrone")?.remove();
       continue;
     }
     if (attacca(row, entity2, mappa2, (select) => {
@@ -150293,6 +150398,12 @@ function css13() {
       #ed-body .dm-room-entity:focus{outline:2px solid var(--primary-color,#0ea5e9);outline-offset:1px}
       /* Assegnata: si vede da lontano quali righe una stanza ce l'hanno. */
       #ed-body .dm-room-entity:not([data-dm-vuota="true"]){color:var(--text,#0f172a)}
+      /* La stanza che decide un'altra scheda (#503): si legge, non si tocca. */
+      #ed-body .dm-room-entity-padrone{
+        display:inline-block;max-width:100%;margin:5px 0 0;padding:4px 10px;
+        font-size:11px;font-weight:700;line-height:1.35;border-radius:12px;white-space:normal;
+        background:var(--surface-2,#f8fafc);border:1px dashed var(--card-border,#cbd5e1);
+        color:var(--text-dim,#64748b)}
       #ed-body .ed-slot .dm-room-entity-slot{margin:5px 0 0;align-self:flex-start}
       /* L'etichetta della casella tiene il nome, la tendina della stanza e
        * l'interruttore dei widget: in una riga sola, su un telefono, il nome
@@ -190762,6 +190873,17 @@ function acceso5(stato3) {
   if (SPENTI5.has(grezzo2)) return false;
   return null;
 }
+var CLASSI_DEI_GUAI = /* @__PURE__ */ new Set(["problem"]);
+function classeDiGuai(stato3) {
+  return CLASSI_DEI_GUAI.has(clean36(stato3?.attributes?.device_class).toLowerCase());
+}
+function salute(stato3) {
+  if (!classeDiGuai(stato3)) return "";
+  const grezzo2 = clean36(stato3.state).toLowerCase();
+  if (grezzo2 === "off") return "ok";
+  if (grezzo2 === "on") return "problema";
+  return "";
+}
 function nonRisponde3(stato3) {
   return !stato3 || clean36(stato3.state).toLowerCase() === "unavailable";
 }
@@ -190788,11 +190910,13 @@ function misura8(entity2, states, soglie) {
 }
 function letturaDelNodo(nodo4 = {}, states = {}) {
   const statoDelNodo = states?.[clean36(nodo4.stato)] || null;
-  const risposta = acceso5(statoDelNodo);
+  const guai = classeDiGuai(statoDelNodo);
+  const risposta = guai ? null : acceso5(statoDelNodo);
   return {
     id: clean36(nodo4.id),
     nome: clean36(nodo4.nome) || clean36(statoDelNodo?.attributes?.friendly_name) || clean36(nodo4.stato).split(".")[1] || clean36(nodo4.id),
     acceso: risposta,
+    salute: salute(statoDelNodo),
     /* «Non risponde» e «e' spento» sono due cose diverse, e la scheda le dice
      * diverse: la prima e' un problema di rete o di Home Assistant, la seconda
      * e' un nodo che qualcuno ha fermato. */
@@ -190814,6 +190938,7 @@ function riassuntoDeiNodi(letture2 = []) {
     accesi: righe4.filter((riga5) => riga5.acceso === true).length,
     spenti: righe4.filter((riga5) => riga5.acceso === false).length,
     muti: righe4.filter((riga5) => riga5.muto).length,
+    problemi: righe4.filter((riga5) => riga5.salute === "problema").length,
     peggiore: carichi.length ? Math.max(...carichi) : null
   };
 }
@@ -190843,6 +190968,10 @@ function bindNodoToDevice({
   );
   const stato3 = elenco18.find(
     (voce3) => dominio8(voce3) === "binary_sensor" && ["connectivity", "running", "power"].includes(classe3(voce3))
+  ) || elenco18.find(
+    (voce3) => dominio8(voce3) === "binary_sensor" && /* «RPi Power status» ha «status» nel nome ma e' un sensore di guai
+     * (#504): dice se l'alimentatore regge, non se il nodo e' acceso. */
+    !CLASSI_DEI_GUAI.has(classe3(voce3).toLowerCase()) && PAROLE7.stato.test(parole4(voce3, states))
   ) || elenco18.find(
     (voce3) => dominio8(voce3) === "binary_sensor" && PAROLE7.stato.test(parole4(voce3, states))
   );
@@ -190885,6 +191014,10 @@ function barraMarkup6(etichetta3, misura9) {
 function statoMarkup(lettura4) {
   if (lettura4.muto)
     return `<span class="dm-nodo-stato" data-stato="muto">${esc(t("non risponde", "not answering"))}</span>`;
+  if (lettura4.salute === "ok")
+    return `<span class="dm-nodo-stato" data-stato="acceso">OK</span>`;
+  if (lettura4.salute === "problema")
+    return `<span class="dm-nodo-stato" data-stato="problema">${esc(t("problema", "problem"))}</span>`;
   if (lettura4.acceso === true)
     return `<span class="dm-nodo-stato" data-stato="acceso">${esc(t("acceso", "up"))}</span>`;
   if (lettura4.acceso === false)
@@ -190908,7 +191041,8 @@ function fasciaMarkup11(letture2) {
   const sotto = [
     `${riassunto4.quanti} ${riassunto4.quanti === 1 ? t("nodo", "node") : t("nodi", "nodes")}`,
     riassunto4.spenti ? `${riassunto4.spenti} ${t("giù", "down")}` : "",
-    riassunto4.muti ? `${riassunto4.muti} ${t("senza risposta", "not answering")}` : ""
+    riassunto4.muti ? `${riassunto4.muti} ${t("senza risposta", "not answering")}` : "",
+    riassunto4.problemi ? `${riassunto4.problemi} ${riassunto4.problemi === 1 ? t("con un problema", "with a problem") : t("con problemi", "with problems")}` : ""
   ].filter(Boolean).join(" · ");
   return `<section class="dm-nodi-sezione">
     <div class="dm-nodi-testa">
@@ -190989,6 +191123,7 @@ function installaStile2() {
         letter-spacing:.06em;text-transform:uppercase}
       #${FASCIA_ID} .dm-nodo-stato[data-stato="acceso"]{background:rgba(16,185,129,.16);color:#047857}
       #${FASCIA_ID} .dm-nodo-stato[data-stato="spento"]{background:rgba(220,38,38,.14);color:#b91c1c}
+      #${FASCIA_ID} .dm-nodo-stato[data-stato="problema"]{background:rgba(245,158,11,.18);color:#b45309}
       #${FASCIA_ID} .dm-nodo-stato[data-stato="muto"]{background:rgba(148,163,184,.2);color:#475569}
       #${FASCIA_ID} .dm-nodo-barra{display:grid;grid-template-columns:64px minmax(0,1fr) 46px;align-items:center;gap:8px}
       #${FASCIA_ID} .dm-nodo-barra-lbl{

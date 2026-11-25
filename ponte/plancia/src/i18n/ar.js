@@ -8471,4 +8471,10 @@ export default Object.freeze({
   "Furnishing is done in the 3D home, from a device that can run it": "يتم التأثيث في المنزل ثلاثي الأبعاد، من جهاز يدعمه",
   "Lighter, for tablets that struggle with 3D": "أخف، للأجهزة اللوحية التي تجد صعوبة مع العرض ثلاثي الأبعاد",
   "Plan": "مخطط",
+  "Covers": "الستائر",
+  "Media players": "مشغلات الوسائط",
+  "problem": "مشكلة",
+  "This entity's room is set by the other card it belongs to": "غرفة هذا الكيان تحددها البطاقة الأخرى التي ينتمي إليها",
+  "with a problem": "بها مشكلة",
+  "with problems": "بها مشاكل",
 });

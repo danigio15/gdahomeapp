@@ -954,8 +954,28 @@ function installStyles() {
        * --dm-page-room, e tutte le pagine la seguono insieme. Qui era scritto
        * 1040 a mano — la vecchia misura della piscina — e il robot si apriva
        * quattrocento pixel piu' stretto di tutti gli altri. */
-      #page-robot .dm-robot-wrap{box-sizing:border-box;width:100%;max-width:var(--dm-page-room,none);margin:0 auto;padding:0 4px 18px;display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr))}
+      #page-robot .dm-robot-wrap{box-sizing:border-box;width:100%;max-width:var(--dm-page-room,none);margin:0 auto;padding:0 4px 18px;display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(360px,100%),1fr))}
       #page-robot .dm-robot-card{display:grid;align-content:start;gap:12px;padding:14px;border:1px solid var(--divider-color,#dbe4ee);border-radius:20px;background:var(--card-bg,#fff);box-shadow:0 18px 34px -28px rgba(15,23,42,.55)}
+      /* «È possibile avere nel browser di HA la scheda Robot grande come le
+       * altre? Quando clicco per aprire la sezione si vede piccolo.» (#502)
+       * La griglia teneva le colonne vuote (auto-fill): un robot solo, su un
+       * monitor, era una scheda da trecento pixel in un angolo e il resto
+       * della pagina bianco. Adesso le schede si prendono la riga (auto-fit),
+       * e un robot solo su uno schermo largo si apre come le altre sezioni: la
+       * mappa grande a sinistra, lo stato e i comandi a destra. */
+      @media(min-width:900px){
+        #page-robot .dm-robot-card:only-child{gap:14px;padding:20px}
+        #page-robot .dm-robot-card:only-child:has(>.dm-robot-map:not(.dm-vuota)){
+          grid-template-columns:minmax(0,1.4fr) minmax(min(320px,100%),1fr);column-gap:26px;grid-auto-flow:row dense}
+        #page-robot .dm-robot-card:only-child:has(>.dm-robot-map:not(.dm-vuota))>*{grid-column:2}
+        #page-robot .dm-robot-card:only-child:has(>.dm-robot-map:not(.dm-vuota))>.dm-robot-head{grid-column:1/-1}
+        #page-robot .dm-robot-card:only-child>.dm-robot-mappe{grid-column:1}
+        #page-robot .dm-robot-card:only-child>.dm-robot-map:not(.dm-vuota){grid-column:1;grid-row:span 12;align-self:start}
+        #page-robot .dm-robot-card:only-child .dm-robot-title strong{font-size:18px}
+        #page-robot .dm-robot-card:only-child .dm-robot-state{font-size:12px;padding:5px 12px}
+        #page-robot .dm-robot-card:only-child .dm-robot-actions{grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+        #page-robot .dm-robot-card:only-child .dm-robot-btn{min-height:74px;justify-content:center;font-size:12px}
+      }
       #page-robot .dm-robot-head{display:flex;align-items:center;gap:10px;min-width:0}
       #page-robot .dm-robot-icon{display:grid;place-items:center;width:32px;height:32px;flex:0 0 auto}
       #page-robot .dm-robot-title{display:grid;min-width:0;flex:1 1 auto}

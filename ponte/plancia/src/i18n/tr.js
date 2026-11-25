@@ -8524,4 +8524,10 @@ export default Object.freeze({
   "Furnishing is done in the 3D home, from a device that can run it": "Döşeme, 3D'yi çalıştırabilen bir cihazda 3D evde yapılır",
   "Lighter, for tablets that struggle with 3D": "Daha hafif, 3D'de zorlanan tabletler için",
   "Plan": "Kat planı",
+  "Covers": "Panjurlar",
+  "Media players": "Medya oynatıcılar",
+  "problem": "sorun",
+  "This entity's room is set by the other card it belongs to": "Bu varlığın odasını ait olduğu diğer kart belirler",
+  "with a problem": "bir sorunla",
+  "with problems": "sorunlarla",
 });

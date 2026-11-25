@@ -8543,4 +8543,10 @@ export default Object.freeze({
   "Furnishing is done in the 3D home, from a device that can run it": "Обстановка делается в 3D-доме, на устройстве, которое его тянет",
   "Lighter, for tablets that struggle with 3D": "Легче — для планшетов, которым тяжело с 3D",
   "Plan": "План",
+  "Covers": "Шторы",
+  "Media players": "Медиаплееры",
+  "problem": "проблема",
+  "This entity's room is set by the other card it belongs to": "Комнату этой сущности задаёт другая карточка, к которой она относится",
+  "with a problem": "с проблемой",
+  "with problems": "с проблемами",
 });

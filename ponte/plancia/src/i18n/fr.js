@@ -8601,4 +8601,10 @@ export default Object.freeze({
   "Furnishing is done in the 3D home, from a device that can run it": "L'aménagement se fait dans la maison 3D, depuis un appareil qui la supporte",
   "Lighter, for tablets that struggle with 3D": "Plus légère, pour les tablettes qui peinent avec la 3D",
   "Plan": "Vue en plan",
+  "Covers": "Volets",
+  "Media players": "Lecteurs multimédia",
+  "problem": "problème",
+  "This entity's room is set by the other card it belongs to": "La pièce de cette entité est définie par l'autre carte à laquelle elle appartient",
+  "with a problem": "avec un problème",
+  "with problems": "avec des problèmes",
 });
