@@ -14,6 +14,13 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.32
+
+- **Allarme, il codice**: nel tastierino della plancia i pallini seguono le
+  cifre del codice, fino a otto. Prima erano sempre quattro, e un codice da
+  sei cifre sembrava non entrare (le cifre in più si scrivevano ma non si
+  vedevano).
+
 ## 1.19.31
 
 - **Casa 3D su ogni tablet**: dove il 3D non c'è (niente WebGL 2) o non
