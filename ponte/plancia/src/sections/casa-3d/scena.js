@@ -150,6 +150,24 @@ function stanzeDellaPianta(dati, tipo) {
   return out;
 }
 
+/* THREE con i materiali «Standard» e «Physical» che diventano Lambert: le
+ * stesse opzioni (colore, trama, trasparenza, luce propria), senza ruvidezza
+ * e metallo, che Lambert non conosce. Uno per THREE, perche' gli arredi
+ * tengono i loro materiali comuni per THREE (`arredi-3d.js`). */
+const SEMPLICI = new WeakMap();
+function treSemplice(THREE) {
+  if (SEMPLICI.has(THREE)) return SEMPLICI.get(THREE);
+  const togli = ({ roughness, metalness, envMapIntensity, transmission, clearcoat, clearcoatRoughness, ior, thickness, ...resto } = {}) => resto;
+  class Semplice extends THREE.MeshLambertMaterial {
+    constructor(parametri) {
+      super(togli(parametri));
+    }
+  }
+  const tre = { ...THREE, MeshStandardMaterial: Semplice, MeshPhysicalMaterial: Semplice };
+  SEMPLICI.set(THREE, tre);
+  return tre;
+}
+
 /**
  * Costruisce la scena dentro `contenitore` e torna i comandi per guidarla.
  *
@@ -215,8 +233,13 @@ export function creaScena(THREE, opzioni = {}) {
    * `misuraIlPasso`). */
   let lenta = Math.max(0, Math.floor(Number(opzioni.lenta) || 0));
   const qualita = (w = 0, h = 0) =>
-    qualitaDellaCasa3D({ dpr: window.devicePixelRatio || 1, larghezza: w, altezza: h, memoria, nuclei, cadute: opzioni.cadute || 0, lenta });
+    qualitaDellaCasa3D({ dpr: window.devicePixelRatio || 1, larghezza: w, altezza: h, memoria, nuclei, cadute: opzioni.cadute || 0, lenta, debole: Boolean(opzioni.debole) });
   const Q = qualita(contenitore?.clientWidth || 0, contenitore?.clientHeight || 0);
+  /* La grafica debole, o dopo due cadute: i materiali senza riflessi. Tutta la
+   * scena (e gli arredi, che usano lo stesso THREE) chiede un materiale
+   * «Standard», e qui lo riceve Lambert: un conto della luce per punto
+   * invece di quello fisico, che su un PowerVR da tablet si mangia il disegno. */
+  if (Q.semplice) THREE = treSemplice(THREE);
   const renderer = new THREE.WebGLRenderer({ antialias: Q.antialias, alpha: true, preserveDrawingBuffer: Boolean(opzioni.perLeProve) });
   renderer.setPixelRatio(Q.pixel);
   renderer.shadowMap.enabled = true;
@@ -228,7 +251,7 @@ export function creaScena(THREE, opzioni = {}) {
   const taglio = new THREE.Plane(new THREE.Vector3(0, -1, 0), 200);
   renderer.clippingPlanes = [taglio];
   palco.prepend(renderer.domElement);
-  palco.dataset.qualita = Q.leggera ? "leggera" : "piena";
+  palco.dataset.qualita = Q.semplice ? "semplice" : Q.leggera ? "leggera" : "piena";
   /* Il disegno che cade: il browser si riprende la memoria grafica (un tablet
    * che non ne ha abbastanza, l'app che va dietro) e la tela resta nera.
    * three si ferma da se' e, se il browser lo restituisce, si rifa' da se':
@@ -542,7 +565,7 @@ export function creaScena(THREE, opzioni = {}) {
       s.castShadow = false;
     }
     /* il pavimento: una tela sola col motivo di ogni stanza */
-    p.pavCanvas = pavimentoDellaPianta(p.dati, tipo, riquadro);
+    p.pavCanvas = pavimentoDellaPianta(p.dati, tipo, riquadro, Q.tela);
     const tx = new THREE.CanvasTexture(p.pavCanvas);
     tx.colorSpace = THREE.SRGBColorSpace;
     tx.anisotropy = 4;
@@ -2085,7 +2108,7 @@ export function creaScena(THREE, opzioni = {}) {
     richiedi();
   }
   function ridipingi(p) {
-    p.pavCanvas = pavimentoDellaPianta(p.dati, p.tipo, riquadro);
+    p.pavCanvas = pavimentoDellaPianta(p.dati, p.tipo, riquadro, Q.tela);
     p.pavTex.image = p.pavCanvas;
     p.pavTex.needsUpdate = true;
   }

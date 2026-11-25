@@ -30,7 +30,8 @@ function qualitaDellaCasa3D({
   memoria = null,
   cadute = 0,
   nuclei = null,
-  lenta = 0
+  lenta = 0,
+  debole = false
 } = {}) {
   const base = numero(dpr) && dpr > 0 ? dpr : 1;
   let pixel = Math.min(2, base);
@@ -40,13 +41,14 @@ function qualitaDellaCasa3D({
   const media = mem === null || mem <= MEMORIA_MEDIA;
   const giu = Math.max(0, Math.floor(numero(cadute) || 0));
   const area = Math.max(0, numero(larghezza) || 0) * Math.max(0, numero(altezza) || 0);
-  if (poca || giu > 0) pixel = Math.min(pixel, 1);
+  const piano = debole === true;
+  if (poca || giu > 0 || piano) pixel = Math.min(pixel, 1);
   else if (area >= SCHERMO_GRANDE) pixel = Math.min(pixel, 1.5);
   const tetto = media ? PIXEL_AL_MASSIMO : PIXEL_AL_MASSIMO_CON_MEMORIA;
   if (area > 0 && area * pixel * pixel > tetto)
     pixel = Math.max(Math.min(1, pixel), Math.sqrt(tetto / area));
-  const antialias = !poca && giu === 0;
-  let ombra = giu >= 2 ? 512 : poca || giu === 1 ? 1024 : 2048;
+  const antialias = !poca && giu === 0 && !piano;
+  let ombra = piano ? 0 : giu >= 2 ? 512 : poca || giu === 1 ? 1024 : 2048;
   const passi = Math.min(GRADINI_PER_LA_LENTEZZA, Math.max(0, Math.floor(numero(lenta) || 0)));
   for (let i = 0; i < passi; i++) {
     if (pixel > 1.5) pixel = 1.5;
@@ -59,7 +61,13 @@ function qualitaDellaCasa3D({
     pixel,
     antialias,
     ombra,
-    leggera: pixel < Math.min(2, base) || !antialias || ombra < 2048
+    leggera: pixel < Math.min(2, base) || !antialias || ombra < 2048,
+    /* Materiali senza riflessi (Lambert invece di Standard): meno conti per
+     * ogni punto dello schermo. Sulla grafica debole e dopo due cadute. */
+    semplice: piano || giu >= 2,
+    /* Il lato piu' lungo della tela del pavimento di un piano, in pixel: ogni
+     * piano e' una trama, e a 2048 sono sedici mega di memoria grafica. */
+    tela: piano || giu >= 1 ? 1024 : 2048
   };
 }
 var ATTESA_DEL_RITORNO_MS = 2500;

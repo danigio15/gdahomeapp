@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-AQTJTDZ5.js";
+} from "../../chunk-BCQO4M2F.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -430,7 +430,7 @@ import {
   nucleiDelDispositivo,
   qualitaDellaCasa3D,
   senzaLeCaduteDiAdesso
-} from "../../chunk-PUMDZYFV.js";
+} from "../../chunk-IPWWRYQF.js";
 import {
   ACCENTO,
   APPLIANCE_BINDING_FIELDS,
@@ -176908,9 +176908,7 @@ function comeMostrareLaCasa({
   if (rotto) return { vista: "pianta", motivo: "non-parte", si3d };
   if (caduto) return { vista: "pianta", motivo: "memoria", si3d };
   if (scelta4 === "pianta") return { vista: "pianta", motivo: "", si3d };
-  if (scelta4 !== "3d" && graficaDebole(grafica?.gpu))
-    return { vista: "pianta", motivo: "debole", si3d };
-  return { vista: "3d", motivo: "", si3d };
+  return { vista: "3d", motivo: "", si3d, leggera: graficaDebole(grafica?.gpu) };
 }
 function perchéLaPianta(motivo, italiano2 = true) {
   const L = (it, en) => italiano2 ? it : en;
@@ -176929,11 +176927,6 @@ function perchéLaPianta(motivo, italiano2 = true) {
       return L(
         "Il 3D non parte su questo dispositivo: la casa è in pianta.",
         "3D won't start on this device: the home is shown as a floor plan."
-      );
-    case "debole":
-      return L(
-        "La grafica di questo tablet è troppo debole per il 3D: la casa è in pianta, più leggera.",
-        "This tablet's graphics are too weak for 3D: the home is shown as a lighter floor plan."
       );
     case "memoria":
       return L(
@@ -176984,7 +176977,7 @@ async function caricaIlMotore() {
   const [THREE, caricatori, scena2] = await Promise.all([
     import(MOTORE.tre),
     import(MOTORE.caricatori),
-    import("../../scena-modello-5FWBEPB2.js")
+    import("../../scena-modello-7FC6H56Q.js")
   ]);
   return { THREE, caricatori, scena: scena2 };
 }
@@ -178254,7 +178247,7 @@ async function avviaLaScena(admin) {
   state201.caricando = true;
   state201.guasto = "";
   try {
-    const [THREE, { creaScena }] = await Promise.all([import(TRE), import("../../scena-5ORA47DD.js")]);
+    const [THREE, { creaScena }] = await Promise.all([import(TRE), import("../../scena-2ROUKCFT.js")]);
     const nodo4 = doc.getElementById(ID5);
     const posto = nodo4?.querySelector(".c3-posto");
     if (!posto) return;
@@ -178275,6 +178268,8 @@ async function avviaLaScena(admin) {
       nomi: nomiScelti(),
       /* le volte che il disegno e' gia' caduto: la scena rifatta e' piu' leggera */
       cadute: state201.cadute.length,
+      /* la grafica dei tablet economici (il Teclast P25T): il 3D leggero */
+      debole: Boolean(come2.leggera),
       quandoCade: scenaCaduta,
       quandoTorna: scenaTornata,
       /* i gradini gia' scesi perche' la casa andava a scatti, e quelli nuovi */

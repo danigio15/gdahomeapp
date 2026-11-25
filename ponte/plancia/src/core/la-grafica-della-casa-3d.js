@@ -21,11 +21,13 @@
  * Qui le decisioni, senza toccare la pagina, per poterle provare. */
 
 /**
- * I processori grafici che il WebGL 2 ce l'hanno ma il 3D della casa non lo
- * reggono: quelli dei tablet a muro economici. Il Teclast P25T (e gli altri
- * con lo stesso Allwinner) monta un PowerVR GE8300: il 3D si apre e cade, o
- * resta lo sfondo. Su questi la casa parte gia' in pianta, col tasto per
- * provare il 3D. Si riconoscono dal nome che il browser da' alla grafica.
+ * I processori grafici che il WebGL 2 ce l'hanno ma il 3D pieno della casa
+ * non lo reggono: quelli dei tablet a muro economici. Il Teclast P25T (e gli
+ * altri con lo stesso Allwinner) monta un PowerVR GE8300: «prima si apriva»,
+ * e il 3D pieno — l'ombra, i materiali coi riflessi, i pavimenti grandi —
+ * gli faceva cadere il disegno. Su questi la casa si apre in 3D, ma leggero
+ * (`qualitaDellaCasa3D` con `debole`). Si riconoscono dal nome che il
+ * browser da' alla grafica.
  */
 export const GRAFICHE_DEBOLI = Object.freeze([
   /PowerVR\s+Rogue\s+GE8\d{2,3}/i,
@@ -119,9 +121,10 @@ export function ricordaLaVista(memoria, vista) {
  *   · caduto: il 3D si e' gia' fermato troppe volte su questa pagina;
  *   · rotto: il 3D non e' nemmeno partito (l'errore, per dirlo).
  *
- * Torna `{ vista: "3d" | "pianta", motivo, si3d }`: `motivo` e' "" quando la
+ * Torna `{ vista: "3d" | "pianta", motivo, si3d, leggera }`: `motivo` e' "" quando la
  * vista e' quella scelta o quella piena, e `si3d` dice se il 3D si puo'
- * almeno provare (il tasto «Prova il 3D» c'e' solo allora).
+ * almeno provare (il tasto «Prova il 3D» c'e' solo allora), `leggera` se
+ * il 3D va acceso leggero.
  */
 export function comeMostrareLaCasa({
   grafica = null,
@@ -139,11 +142,8 @@ export function comeMostrareLaCasa({
   if (rotto) return { vista: "pianta", motivo: "non-parte", si3d };
   if (caduto) return { vista: "pianta", motivo: "memoria", si3d };
   if (scelta === "pianta") return { vista: "pianta", motivo: "", si3d };
-  /* una grafica debole parte in pianta, a meno che chi guarda non abbia
-   * scelto di provare il 3D */
-  if (scelta !== "3d" && graficaDebole(grafica?.gpu))
-    return { vista: "pianta", motivo: "debole", si3d };
-  return { vista: "3d", motivo: "", si3d };
+  /* la grafica debole ha il 3D, leggero (vedi `GRAFICHE_DEBOLI`) */
+  return { vista: "3d", motivo: "", si3d, leggera: graficaDebole(grafica?.gpu) };
 }
 
 /** Il perche' della pianta, detto a chi guarda. */
@@ -164,11 +164,6 @@ export function perchéLaPianta(motivo, italiano = true) {
       return L(
         "Il 3D non parte su questo dispositivo: la casa è in pianta.",
         "3D won't start on this device: the home is shown as a floor plan.",
-      );
-    case "debole":
-      return L(
-        "La grafica di questo tablet è troppo debole per il 3D: la casa è in pianta, più leggera.",
-        "This tablet's graphics are too weak for 3D: the home is shown as a lighter floor plan.",
       );
     case "memoria":
       return L(

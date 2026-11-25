@@ -1071,6 +1071,8 @@ async function avviaLaScena(admin) {
       nomi: nomiScelti(),
       /* le volte che il disegno e' gia' caduto: la scena rifatta e' piu' leggera */
       cadute: state.cadute.length,
+      /* la grafica dei tablet economici (il Teclast P25T): il 3D leggero */
+      debole: Boolean(come.leggera),
       quandoCade: scenaCaduta,
       quandoTorna: scenaTornata,
       /* i gradini gia' scesi perche' la casa andava a scatti, e quelli nuovi */

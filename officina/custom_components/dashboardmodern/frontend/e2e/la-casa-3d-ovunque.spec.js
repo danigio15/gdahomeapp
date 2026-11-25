@@ -247,9 +247,26 @@ function stati(notte) {
 async function boot(
   page,
   testInfo,
-  { tema = "light", notte = false, casa = CASA, orologio = true, senzaWebgl2 = false } = {},
+  {
+    tema = "light",
+    notte = false,
+    casa = CASA,
+    orologio = true,
+    senzaWebgl2 = false,
+    gpu = "",
+  } = {},
 ) {
   test.setTimeout(480_000);
+  /* Il nome della grafica che il browser dice (il Teclast P25T: PowerVR GE8300). */
+  if (gpu)
+    await page.addInitScript((nome) => {
+      for (const Classe of [WebGLRenderingContext, WebGL2RenderingContext]) {
+        const prima = Classe.prototype.getParameter;
+        Classe.prototype.getParameter = function (p) {
+          return p === 0x9246 ? nome : prima.call(this, p);
+        };
+      }
+    }, gpu);
   /* Un tablet col solo WebGL 1: il browser non da' il contesto WebGL 2. */
   if (senzaWebgl2)
     await page.addInitScript(() => {
@@ -461,4 +478,21 @@ test("la pianta al buio, sul telefono", async ({ page }, testInfo) => {
   await casa.locator(".c3-pianta-scheda").filter({ hasText: "Primo piano" }).click();
   await expect(casa.locator(".c3-pianta canvas")).toBeVisible();
   await scattaPianta(page, testInfo, "pianta-buio-primo");
+});
+
+test("il Teclast P25T (PowerVR GE8300) apre la casa in 3D, leggero", async ({ page }, testInfo) => {
+  /* «Prima si apriva»: sulla grafica debole niente pianta, il 3D leggero. */
+  await boot(page, testInfo, { gpu: "PowerVR Rogue GE8300", orologio: false });
+  const casa = page.locator("#dm-casa3d");
+  await expect(casa.locator(".c3-scena canvas")).toHaveCount(1, { timeout: 60_000 });
+  await expect(casa.locator(".c3-pianta")).toHaveCount(0);
+  await expect(casa.locator('.c3-scena[data-qualita="semplice"]')).toHaveCount(1);
+  await expect(casa.locator('.c3-scena[data-fermo="true"]')).toHaveCount(1, { timeout: 120_000 });
+  const dove = foto(testInfo, "3d-leggero-esterno");
+  if (dove) await page.screenshot({ path: dove });
+  await casa.locator('[data-c3s="vista"][data-c3s-k="terra"]').first().click();
+  await page.waitForTimeout(400);
+  await expect(casa.locator('.c3-scena[data-fermo="true"]')).toHaveCount(1, { timeout: 120_000 });
+  const dentro = foto(testInfo, "3d-leggero-piano-terra");
+  if (dentro) await page.screenshot({ path: dentro });
 });

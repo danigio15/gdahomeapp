@@ -7,7 +7,7 @@ import {
   modoDeiNomi,
   nucleiDelDispositivo,
   qualitaDellaCasa3D
-} from "./chunk-PUMDZYFV.js";
+} from "./chunk-IPWWRYQF.js";
 import {
   CELLA,
   DISPOSITIVI_3D,
@@ -959,9 +959,9 @@ function finituraDellaStanza(s) {
 }
 var PIXEL_PER_METRO = 75;
 var TELA_AL_MASSIMO = 2048;
-function pavimentoDellaPianta(piano, tipo, disegna = riquadro) {
+function pavimentoDellaPianta(piano, tipo, disegna = riquadro, tela = TELA_AL_MASSIMO) {
   const { W, H, passo } = piano;
-  const scala = Math.max(1, Math.min(PIXEL_PER_METRO * passo, TELA_AL_MASSIMO / Math.max(W, H)));
+  const scala = Math.max(1, Math.min(PIXEL_PER_METRO * passo, Math.min(TELA_AL_MASSIMO, tela) / Math.max(W, H)));
   const fattore = scala / (PIXEL_PER_METRO * passo);
   const out = document.createElement("canvas");
   out.width = Math.round(W * scala);
@@ -1099,6 +1099,19 @@ function stanzeDellaPianta(dati, tipo) {
   }
   return out;
 }
+var SEMPLICI = /* @__PURE__ */ new WeakMap();
+function treSemplice(THREE) {
+  if (SEMPLICI.has(THREE)) return SEMPLICI.get(THREE);
+  const togli = ({ roughness, metalness, envMapIntensity, transmission, clearcoat, clearcoatRoughness, ior, thickness, ...resto } = {}) => resto;
+  class Semplice extends THREE.MeshLambertMaterial {
+    constructor(parametri) {
+      super(togli(parametri));
+    }
+  }
+  const tre = { ...THREE, MeshStandardMaterial: Semplice, MeshPhysicalMaterial: Semplice };
+  SEMPLICI.set(THREE, tre);
+  return tre;
+}
 function creaScena(THREE, opzioni = {}) {
   const {
     contenitore,
@@ -1143,8 +1156,9 @@ function creaScena(THREE, opzioni = {}) {
   const memoria = memoriaDelDispositivo(window.navigator);
   const nuclei = nucleiDelDispositivo(window.navigator);
   let lenta = Math.max(0, Math.floor(Number(opzioni.lenta) || 0));
-  const qualita = (w = 0, h = 0) => qualitaDellaCasa3D({ dpr: window.devicePixelRatio || 1, larghezza: w, altezza: h, memoria, nuclei, cadute: opzioni.cadute || 0, lenta });
+  const qualita = (w = 0, h = 0) => qualitaDellaCasa3D({ dpr: window.devicePixelRatio || 1, larghezza: w, altezza: h, memoria, nuclei, cadute: opzioni.cadute || 0, lenta, debole: Boolean(opzioni.debole) });
   const Q = qualita(contenitore?.clientWidth || 0, contenitore?.clientHeight || 0);
+  if (Q.semplice) THREE = treSemplice(THREE);
   const renderer = new THREE.WebGLRenderer({ antialias: Q.antialias, alpha: true, preserveDrawingBuffer: Boolean(opzioni.perLeProve) });
   renderer.setPixelRatio(Q.pixel);
   renderer.shadowMap.enabled = true;
@@ -1155,7 +1169,7 @@ function creaScena(THREE, opzioni = {}) {
   const taglio = new THREE.Plane(new THREE.Vector3(0, -1, 0), 200);
   renderer.clippingPlanes = [taglio];
   palco.prepend(renderer.domElement);
-  palco.dataset.qualita = Q.leggera ? "leggera" : "piena";
+  palco.dataset.qualita = Q.semplice ? "semplice" : Q.leggera ? "leggera" : "piena";
   const alPerso = () => {
     if (S.morto) return;
     S.perso = true;
@@ -1444,7 +1458,7 @@ function creaScena(THREE, opzioni = {}) {
       const s = box(G, r.w, 0.25, r.d, solaioMat, X(r.x + r.w / 2), -0.25, Z(r.y + r.d / 2));
       s.castShadow = false;
     }
-    p.pavCanvas = pavimentoDellaPianta(p.dati, tipo, riquadro);
+    p.pavCanvas = pavimentoDellaPianta(p.dati, tipo, riquadro, Q.tela);
     const tx = new THREE.CanvasTexture(p.pavCanvas);
     tx.colorSpace = THREE.SRGBColorSpace;
     tx.anisotropy = 4;
@@ -2862,7 +2876,7 @@ function creaScena(THREE, opzioni = {}) {
     richiedi();
   }
   function ridipingi(p) {
-    p.pavCanvas = pavimentoDellaPianta(p.dati, p.tipo, riquadro);
+    p.pavCanvas = pavimentoDellaPianta(p.dati, p.tipo, riquadro, Q.tela);
     p.pavTex.image = p.pavCanvas;
     p.pavTex.needsUpdate = true;
   }

@@ -67,7 +67,12 @@ test("3D o pianta: senza WebGL 2 sempre pianta, e senza il tasto per provare il 
     "senza-webgl",
   );
   const pieno = { webgl2: true, webgl1: true };
-  assert.deepEqual(comeMostrareLaCasa({ grafica: pieno }), { vista: "3d", motivo: "", si3d: true });
+  assert.deepEqual(comeMostrareLaCasa({ grafica: pieno }), {
+    vista: "3d",
+    motivo: "",
+    si3d: true,
+    leggera: false,
+  });
   /* il 3D che non parte, o che cade troppe volte, porta in pianta col perche' */
   assert.equal(
     comeMostrareLaCasa({ grafica: pieno, rotto: "Error creating WebGL context" }).motivo,
@@ -187,19 +192,46 @@ test("la pianta sta nel suo spazio, col margine, qualunque sia la forma", () => 
   assert.ok(scalaDelPiano(P, 0, 0) > 0);
 });
 
-test("una grafica debole (il Teclast P25T, PowerVR GE8300) parte in pianta, ma si puo' provare il 3D", () => {
+test("una grafica debole (il Teclast P25T, PowerVR GE8300) apre il 3D, leggero", () => {
+  /* «Prima si apriva»: la casa la si vuole in 3D. */
   const p25t = { webgl2: true, webgl1: true, gpu: "PowerVR Rogue GE8300" };
   assert.equal(graficaDebole(p25t.gpu), true);
   assert.deepEqual(comeMostrareLaCasa({ grafica: p25t }), {
-    vista: "pianta",
-    motivo: "debole",
+    vista: "3d",
+    motivo: "",
     si3d: true,
+    leggera: true,
   });
-  /* chi ha scelto «Prova il 3D» su quel tablet ha il 3D */
-  assert.equal(comeMostrareLaCasa({ grafica: p25t, scelta: "3d" }).vista, "3d");
-  assert.match(perchéLaPianta("debole"), /troppo debole/);
+  assert.equal(
+    comeMostrareLaCasa({ grafica: { webgl2: true, gpu: "Adreno (TM) 650" } }).leggera,
+    false,
+  );
+  /* se anche il 3D leggero cade troppe volte, la pianta */
+  assert.equal(comeMostrareLaCasa({ grafica: p25t, caduto: true }).vista, "pianta");
   for (const gpu of ["Mali-400 MP", "Mali-T720", "Adreno (TM) 306", "PowerVR Rogue GE8320"])
     assert.equal(graficaDebole(gpu), true, gpu);
   for (const gpu of ["Adreno (TM) 650", "Mali-G78", "Apple GPU", "ANGLE (Intel)", "", null])
     assert.equal(graficaDebole(gpu), false, String(gpu));
+});
+
+test("il 3D leggero: un pixel, niente antialias ne' ombra, materiali semplici, pavimenti piccoli", async () => {
+  const { qualitaDellaCasa3D } = await import("../src/core/la-qualita-della-casa-3d.js");
+  const leggero = qualitaDellaCasa3D({
+    dpr: 1.5,
+    larghezza: 1280,
+    altezza: 700,
+    memoria: 4,
+    debole: true,
+  });
+  assert.deepEqual(leggero, {
+    pixel: 1,
+    antialias: false,
+    ombra: 0,
+    leggera: true,
+    semplice: true,
+    tela: 1024,
+  });
+  const pieno = qualitaDellaCasa3D({ dpr: 1, larghezza: 1400, altezza: 800, memoria: 8 });
+  assert.equal(pieno.semplice, false);
+  assert.equal(pieno.tela, 2048);
 });

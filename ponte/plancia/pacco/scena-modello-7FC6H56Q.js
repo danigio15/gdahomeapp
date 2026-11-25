@@ -8,12 +8,12 @@ import {
 import {
   creaLeScritte,
   installaLoStile
-} from "./chunk-IRDLNKFP.js";
+} from "./chunk-IGFDQTPI.js";
 import {
   memoriaDelDispositivo,
   nucleiDelDispositivo,
   qualitaDellaCasa3D
-} from "./chunk-PUMDZYFV.js";
+} from "./chunk-IPWWRYQF.js";
 import {
   DISPOSITIVI_3D,
   azioneDelTocco,

@@ -254,7 +254,14 @@ const TABLET = { larghezza: 1250, altezza: 660 };
 
 test("un tablet con memoria media e quattro nuclei parte gia' leggero", () => {
   const debole = qualitaDellaCasa3D({ dpr: 2, ...TABLET, memoria: 4, nuclei: 4 });
-  assert.deepEqual(debole, { pixel: 1, antialias: false, ombra: 1024, leggera: true });
+  assert.deepEqual(debole, {
+    pixel: 1,
+    antialias: false,
+    ombra: 1024,
+    leggera: true,
+    semplice: false,
+    tela: 2048,
+  });
   /* con otto nuclei resta com'era */
   const medio = qualitaDellaCasa3D({ dpr: 2, ...TABLET, memoria: 4, nuclei: 8 });
   assert.equal(medio.pixel, 1.5);
@@ -267,7 +274,14 @@ test("un tablet con memoria media e quattro nuclei parte gia' leggero", () => {
     memoria: 8,
     nuclei: 4,
   });
-  assert.deepEqual(computer, { pixel: 1, antialias: true, ombra: 2048, leggera: false });
+  assert.deepEqual(computer, {
+    pixel: 1,
+    antialias: true,
+    ombra: 2048,
+    leggera: false,
+    semplice: false,
+    tela: 2048,
+  });
 });
 
 test("i nuclei da soli non dicono niente: Safari ne dichiara quattro anche a un iPhone", () => {

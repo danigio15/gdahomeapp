@@ -55,7 +55,14 @@ test("su uno schermo grande uno e mezzo: a un metro dal muro non si distingue", 
 
 test("con poca memoria un pixel per punto, senza antialias, l'ombra piu' piccola", () => {
   const q = qualitaDellaCasa3D({ dpr: 2, ...TABLET, memoria: 2 });
-  assert.deepEqual(q, { pixel: 1, antialias: false, ombra: 1024, leggera: true });
+  assert.deepEqual(q, {
+    pixel: 1,
+    antialias: false,
+    ombra: 1024,
+    leggera: true,
+    semplice: false,
+    tela: 2048,
+  });
   assert.equal(qualitaDellaCasa3D({ dpr: 1.5, larghezza: 360, altezza: 500, memoria: 1 }).pixel, 1);
 });
 
@@ -75,7 +82,14 @@ test("il tetto dei pixel veri: si scende fino a uno, non sotto", () => {
 
 test("un computer potente non perde niente", () => {
   const q = qualitaDellaCasa3D({ dpr: 1, larghezza: 1400, altezza: 800, memoria: 8 });
-  assert.deepEqual(q, { pixel: 1, antialias: true, ombra: 2048, leggera: false });
+  assert.deepEqual(q, {
+    pixel: 1,
+    antialias: true,
+    ombra: 2048,
+    leggera: false,
+    semplice: false,
+    tela: 2048,
+  });
   /* un portatile retina: uno e mezzo e l'antialias, come un tablet */
   const retina = qualitaDellaCasa3D({ dpr: 2, larghezza: 1100, altezza: 700, memoria: 8 });
   assert.equal(retina.pixel, 1.5);
@@ -87,8 +101,17 @@ test("dopo ogni caduta del disegno un gradino piu' in basso", () => {
   const una = qualitaDellaCasa3D({ dpr: 2, ...TABLET, memoria: 8, cadute: 1 });
   const due = qualitaDellaCasa3D({ dpr: 2, ...TABLET, memoria: 8, cadute: 2 });
   assert.equal(prima.pixel, 1.5);
-  assert.deepEqual(una, { pixel: 1, antialias: false, ombra: 1024, leggera: true });
+  assert.deepEqual(una, {
+    pixel: 1,
+    antialias: false,
+    ombra: 1024,
+    leggera: true,
+    semplice: false,
+    tela: 1024,
+  });
   assert.equal(due.ombra, 512);
+  /* dopo due cadute anche i materiali si fanno semplici */
+  assert.equal(due.semplice, true);
 });
 
 test("numeri storti o mancanti non rompono niente", () => {
