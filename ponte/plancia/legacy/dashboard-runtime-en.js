@@ -6280,7 +6280,10 @@ function spegniEntitaDettaglio(id) {
 }
 
 let currentPin = ''; let targetAlarmService = '';
-function updatePinDisplay() { for(let i=1; i<=4; i++) { const dot = document.getElementById('dot-'+i); if(i <= Math.min(currentPin.length, 4)) dot.classList.add('filled'); else dot.classList.remove('filled'); } }
+/* The dots follow the code: four to start with, one more for every digit
+ * past the fourth, up to eight. With four fixed dots a six-digit code looked
+ * like it did not fit (the fifth and sixth digits were typed but not shown). */
+function updatePinDisplay() { const box = document.getElementById('pin-display'); if (!box) return; const total = Math.min(8, Math.max(4, currentPin.length)); while (box.children.length < total) { const dot = document.createElement('div'); dot.className = 'pin-dot'; box.appendChild(dot); } while (box.children.length > total) box.lastElementChild.remove(); box.style.gap = total > 6 ? '12px' : (total > 4 ? '16px' : ''); Array.from(box.children).forEach((dot, i) => dot.classList.toggle('filled', i < currentPin.length)); }
 function kp(num) { if(navigator.vibrate) navigator.vibrate(15); if(currentPin.length < 8) { currentPin += num; updatePinDisplay(); } }
 function kpDel() { if(navigator.vibrate) navigator.vibrate(10); if(currentPin.length > 0) { currentPin = currentPin.slice(0, -1); updatePinDisplay(); } }
 function kpOk() { if(!ws) return; if(navigator.vibrate) navigator.vibrate([15, 30, 15]); callAlarmService(targetAlarmService, currentPin.length > 0 ? currentPin : ''); forceClose('custom-keypad'); }

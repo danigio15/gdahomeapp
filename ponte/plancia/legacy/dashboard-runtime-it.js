@@ -6336,7 +6336,10 @@ function spegniEntitaDettaglio(id) {
 }
 
 let currentPin = ''; let targetAlarmService = '';
-function updatePinDisplay() { for(let i=1; i<=4; i++) { const dot = document.getElementById('dot-'+i); if(i <= Math.min(currentPin.length, 4)) dot.classList.add('filled'); else dot.classList.remove('filled'); } }
+/* I pallini seguono il codice: quattro all'inizio, uno in piu' per ogni cifra
+ * oltre la quarta, fino a otto. Con quattro fissi un codice da sei cifre
+ * sembrava non entrare (la quinta e la sesta si scrivevano ma non si vedevano). */
+function updatePinDisplay() { const box = document.getElementById('pin-display'); if (!box) return; const total = Math.min(8, Math.max(4, currentPin.length)); while (box.children.length < total) { const dot = document.createElement('div'); dot.className = 'pin-dot'; box.appendChild(dot); } while (box.children.length > total) box.lastElementChild.remove(); box.style.gap = total > 6 ? '12px' : (total > 4 ? '16px' : ''); Array.from(box.children).forEach((dot, i) => dot.classList.toggle('filled', i < currentPin.length)); }
 function kp(num) { if(navigator.vibrate) navigator.vibrate(15); if(currentPin.length < 8) { currentPin += num; updatePinDisplay(); } }
 function kpDel() { if(navigator.vibrate) navigator.vibrate(10); if(currentPin.length > 0) { currentPin = currentPin.slice(0, -1); updatePinDisplay(); } }
 function kpOk() { if(!ws) return; if(navigator.vibrate) navigator.vibrate([15, 30, 15]); callAlarmService(targetAlarmService, currentPin.length > 0 ? currentPin : ''); forceClose('custom-keypad'); }
