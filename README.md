@@ -235,7 +235,8 @@ disinserire l'antifurto.
   <img src="docs/immagini/readme/navigatore-notte.webp" alt="GdANav sul telefono, di notte: l'avviso «Auto carica all'80%»" width="30%">
 </p>
 
-GdANav esiste anche come **app a sé**, per chi non ha Home Assistant.
+GdANav si usa **dentro l'app GdAHome**: è in alto nel menu, e non va
+scaricato a parte.
 
 Sullo schermo dell'auto, con **Android Auto** e **CarPlay**, la casa è a un
 tasto: il cancello e il portone, «Quasi a casa» quando arrivi, gli avvisi di
@@ -343,23 +344,11 @@ dall'app, con Google Play o l'App Store (**4,99 € al mese** o **49,99 €
 all'anno**), e **i primi 14 giorni sono gratis**. Se finisce non si perde
 niente: la configurazione resta salvata e torna appena Premium torna.
 
-<details>
-<summary><b>GdANav da solo, senza Home Assistant</b></summary>
-
-<br>
-
-|                            |             **GdANav**<br>gratis              |        **GdANav Premium**<br>2,99 € al mese · 29,99 € all'anno        |
-| -------------------------- | :-------------------------------------------: | :-------------------------------------------------------------------: |
-| Auto a benzina o gasolio   |   completa: percorso, distributori, prezzi    |                               completa                                |
-| Auto elettrica             | batteria scritta a mano, percorso senza soste | batteria **letta dall'auto**, **soste alle colonnine** in tempo reale |
-| Traffico, autovelox, meteo |                      ✅                       |                                  ✅                                   |
-| Home Assistant             |                       —                       |                                  ✅                                   |
-| Android Auto e CarPlay     |                       —                       |                                  ✅                                   |
-
-Anche GdANav Premium ha i primi 14 giorni gratis. Con **GdAHome Premium è già
-compreso**, senza un secondo abbonamento.
-
-</details>
+**GdANav è compreso nell'app.** Con Base ci sono il percorso con la voce, il
+traffico, gli autovelox, il meteo e i distributori con i prezzi; con
+l'elettrica la batteria si scrive a mano. Con **Premium** la batteria si
+legge dall'auto, il percorso sceglie le soste alle colonnine in tempo reale,
+e ci sono Android Auto e CarPlay. Non c'è un secondo abbonamento.
 
 ## Installazione in Home Assistant
 
