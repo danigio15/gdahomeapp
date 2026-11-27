@@ -1,0 +1,84 @@
+# GdAHome Muro: l'APK che gira sul pannello a muro.
+#
+# E' la stessa app (`app/`), costruita con un'altra identita'
+# (`com.gdahome.muro`, dalla variabile GDAHOME_APP_ID) e un altro ingresso
+# (`lib/main_muro.dart`). La build dell'app di casa non cambia: senza quella
+# variabile tutto resta com'era.
+#
+# **Non si pubblica su GitHub**, come l'app: l'APK esce **cifrato** (7z AES con
+# la parola della chiave), e lo apre solo chi ha quella parola. Da li' si porta
+# sul centralino, che lo da' solo alle case Premium. Si accende a mano.
+name: GdAHome Muro (APK)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  muro:
+    name: APK del pannello a muro
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: 3.47.5
+          channel: stable
+          cache: true
+      - run: flutter pub get
+        working-directory: app
+
+      # La chiave vera, se c'e': l'APK del pannello si firma come l'app, cosi'
+      # un aggiornamento si installa sopra quello di prima. Senza, si ferma:
+      # un pannello non si aggiorna con una firma di prova.
+      - name: La chiave
+        working-directory: app
+        env:
+          CHIAVE: ${{ secrets.CHIAVE_ANDROID }}
+          PAROLA: ${{ secrets.CHIAVE_ANDROID_PASSWORD }}
+          PAROLA_DELLA_CHIAVE: ${{ secrets.CHIAVE_ANDROID_KEY_PASSWORD }}
+          COME_SI_CHIAMA: ${{ secrets.CHIAVE_ANDROID_ALIAS }}
+        run: |
+          if [ -z "$CHIAVE" ] || [ -z "$PAROLA" ]; then
+            echo "::error::Per l'APK del pannello serve la chiave vera (CHIAVE_ANDROID, CHIAVE_ANDROID_PASSWORD)."
+            exit 1
+          fi
+          dove="$RUNNER_TEMP/chiave.jks"
+          printf '%s' "$CHIAVE" | tr -d '[:space:]' | base64 -d > "$dove"
+          {
+            echo "storeFile=$dove"
+            echo "storePassword=$PAROLA"
+            echo "keyAlias=${COME_SI_CHIAMA:-gdahome}"
+            echo "keyPassword=${PAROLA_DELLA_CHIAVE:-$PAROLA}"
+          } > android/chiave.properties
+
+      - name: Il pacchetto
+        working-directory: app
+        env:
+          GDAHOME_APP_ID: com.gdahome.muro
+          CORSA: ${{ github.run_number }}
+        run: |
+          flutter build apk --release \
+            --target lib/main_muro.dart \
+            --build-number="$CORSA" \
+            --dart-define=VERSIONE="$CORSA-${GITHUB_SHA:0:7}"
+          ls -la build/app/outputs/flutter-apk/app-release.apk
+
+      # Cifrato, mai in chiaro: la repository e' pubblica.
+      - name: Chiudi l'APK
+        working-directory: app
+        env:
+          PAROLA: ${{ secrets.CHIAVE_ANDROID_PASSWORD }}
+        run: |
+          7z a -tzip -mem=AES256 -p"$PAROLA" \
+            "$GITHUB_WORKSPACE/gdahome-muro-cifrato.zip" \
+            build/app/outputs/flutter-apk/app-release.apk > /dev/null
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: gdahome-muro-cifrato
+          path: gdahome-muro-cifrato.zip
+          retention-days: 7

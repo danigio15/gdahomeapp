@@ -37,6 +37,7 @@ export class Installatore {
     abbinaPannello = null,
     dispositivi = null,
     scriviCopia = null,
+    muroPackage = "com.gdahome.muro",
   } = {}) {
     this.adb = adb;
     this.pezzi = cartellaDeiPezzi;
@@ -45,6 +46,7 @@ export class Installatore {
     this.dispositivi = dispositivi;
     /* Come si scrive una partizione sul disco: iniettabile per le prove. */
     this.scriviCopia = scriviCopia;
+    this.muroPackage = muroPackage;
   }
 
   _pezzo(nome) {
@@ -278,16 +280,31 @@ export class Installatore {
       plancia: planciaId || "",
       case: abb.case || null,
     });
+    /* Il foglietto va nella cartella dell'app GdAHome Muro, non in una cartella
+     * di root: l'app gira come utente normale e una cartella di root non la
+     * leggerebbe. Lo si scrive li' come root, poi lo si intesta all'utente
+     * dell'app (il suo uid) e gli si rimette l'etichetta SELinux della cartella,
+     * cosi' l'app lo legge come un suo file qualunque (`avvio_muro.dart`). */
+    const pkg = this.muroPackage;
+    const dir = `/data/data/${pkg}/files`;
     try {
-      await this.adb.shell(indirizzo, "mkdir -p /data/local/gdahome", { root: true });
+      /* L'uid dell'app, da dumpsys: "userId=10234". */
+      const detto = await this.adb.shell(indirizzo, `dumpsys package ${pkg} | grep -m1 userId=`, {
+        root: true,
+      });
+      const uid = (/userId=(\d+)/.exec(detto) || [])[1];
+      if (!uid) return { errore: "L'app GdAHome Muro non risulta installata." };
+      await this.adb.shell(indirizzo, `mkdir -p ${dir}`, { root: true });
       await this.adb.shell(
         indirizzo,
-        `cat > /data/local/gdahome/abbinamento.json <<'GDAJSON'\n${foglietto}\nGDAJSON`,
+        `cat > ${dir}/abbinamento.json <<'GDAJSON'\n${foglietto}\nGDAJSON`,
         { root: true },
       );
-      await this.adb
-        .shell(indirizzo, "chmod 600 /data/local/gdahome/abbinamento.json", { root: true })
-        .catch(() => {});
+      await this.adb.shell(
+        indirizzo,
+        `chown ${uid}:${uid} ${dir}/abbinamento.json; chmod 600 ${dir}/abbinamento.json; restorecon ${dir}/abbinamento.json 2>/dev/null || chcon u:object_r:app_data_file:s0:c512,c768 ${dir}/abbinamento.json 2>/dev/null || true`,
+        { root: true },
+      );
     } catch (errore) {
       return { errore: scusa(errore) };
     }

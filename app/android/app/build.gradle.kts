@@ -102,8 +102,12 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.gdahome.gdahome"
+        // L'identita' dell'app. Di norma e' quella di casa; GdAHome Muro — la
+        // stessa app che gira sul pannello a muro (`lib/main_muro.dart`) — si
+        // costruisce con GDAHOME_APP_ID=com.gdahome.muro, cosi' un pannello e il
+        // telefono di casa non si pestano i piedi. Senza la variabile, tutto
+        // resta com'era: la build dell'app di casa non cambia di una riga.
+        applicationId = System.getenv("GDAHOME_APP_ID") ?: "com.gdahome.gdahome"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         // Almeno Android 8 (API 26): Health Connect, che porta le misure
