@@ -259,6 +259,43 @@
     return vediPagina.querySelector('.sezioni [data-vai="' + nome + '"]');
   }
 
+  var attesaDellaRete = null;
+
+  /* Aspetta un pannello: cerca in rete ogni pochi secondi, e appena ne compare
+   * uno nuovo (ADB appena acceso) lo sceglie e fa partire la verifica. Cosi'
+   * l'unico gesto a mano — i tocchi sul pannello — basta: il resto parte solo. */
+  function aspettaUnPannello() {
+    fermaAttesaDellaRete();
+    var attesa = trova("attesa-rete");
+    if (attesa) attesa.hidden = false;
+    var giro = function () {
+      chiedi("api/pannelli/rete", { method: "POST", body: "{}" })
+        .then(function (detto) {
+          if (!attesaDellaRete) return;
+          var nuovo = (detto.trovati || []).find(function (uno) {
+            return !uno.gia;
+          });
+          if (nuovo) {
+            fermaAttesaDellaRete();
+            trova("indirizzo-pannello").value = nuovo.indirizzo;
+            controllaIlPannello();
+          }
+        })
+        .catch(function () {});
+    };
+    giro();
+    attesaDellaRete = setInterval(giro, 4000);
+  }
+
+  function fermaAttesaDellaRete() {
+    if (attesaDellaRete) {
+      clearInterval(attesaDellaRete);
+      attesaDellaRete = null;
+    }
+    var attesa = trova("attesa-rete");
+    if (attesa) attesa.hidden = true;
+  }
+
   function vaiA(nome, comeSiArriva) {
     if (nome === "indietro")
       nome = sezionePrima && sezionePrima !== laSezione ? sezionePrima : "panoramica";
@@ -268,6 +305,8 @@
      * partiti (dai telefoni a «Collega l'app», e ritorno). */
     if (nome !== laSezione) sezionePrima = nome === "panoramica" ? "" : laSezione;
     laSezione = nome;
+    if (nome === "nuovo-pannello") aspettaUnPannello();
+    else fermaAttesaDellaRete();
     /* Sul telefono la testata dice dove si e': il marchio nella Casa, «‹» e
      * il nome della sezione altrove (`data-sezione` lo legge il foglio). */
     vediPagina.documentElement.setAttribute("data-sezione", nome);
@@ -2049,6 +2088,7 @@
   }
 
   function controllaIlPannello() {
+    fermaAttesaDellaRete();
     var indirizzo = trova("indirizzo-pannello").value.trim();
     avvisa("avviso-indirizzo", "");
     if (!/^[0-9a-zA-Z.:-]{3,64}$/.test(indirizzo)) {
@@ -2113,6 +2153,7 @@
   /* I pannelli trovati in rete: chi ha ADB aperto sulla 5555. Un tocco
    * scrive l'indirizzo e controlla quel pannello. */
   function cercaInRete() {
+    fermaAttesaDellaRete();
     var tasto = trova("cerca-in-rete");
     var lista = trova("trovati-in-rete");
     tasto.disabled = true;

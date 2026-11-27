@@ -2622,3 +2622,31 @@ button.al-lavoro {
 .elenco > li.riga-pannello.al-lavoro {
   align-items: flex-start;
 }
+
+/* L'attesa di un pannello: una riga con un girello, mentre GdAHome aspetta
+   che si accenda l'ADB. */
+.attesa-rete {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0 4px;
+  font-size: 14px;
+  color: var(--tenue);
+}
+
+.girello {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  border-radius: 50%;
+  border: 2px solid var(--linea-forte);
+  border-top-color: var(--acceso);
+  animation: gira-il-segno 0.9s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .girello {
+    animation: none;
+    border-top-color: var(--linea-forte);
+  }
+}
