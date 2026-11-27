@@ -890,7 +890,7 @@ export class Installatore {
     };
     quanto();
     /* Il pannello ci mette un po' a spegnersi: non lo si prende mentre va giu'. */
-    for (const fine = Date.now() + Math.min(20_000, attesa / 4); Date.now() < fine; ) {
+    for (const fine = Date.now() + Math.min(20_000, attesa / 4); Date.now() < fine;) {
       await dorme(Math.min(2_000, Math.max(10, fine - Date.now())));
       quanto();
     }
