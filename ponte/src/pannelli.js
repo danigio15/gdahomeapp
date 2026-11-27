@@ -63,7 +63,14 @@ export class Pannelli {
     this.adb = adb || new Adb(avvia ? { avvia } : {});
     this.installatore =
       installatore ||
-      new Installatore({ adb: this.adb, cartellaDeiPezzi, abbinaPannello, dispositivi });
+      new Installatore({
+        adb: this.adb,
+        cartellaDeiPezzi,
+        abbinaPannello,
+        dispositivi,
+        /* Per la copia diretta: dove il pannello manda i dati. */
+        indirizzoDiCasa: () => reteDiCasa?.indirizzo?.() || "",
+      });
     this.licenze = licenze;
     this.reteDiCasa = reteDiCasa;
     this.dispositivi = dispositivi;

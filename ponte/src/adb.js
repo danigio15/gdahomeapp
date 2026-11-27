@@ -22,12 +22,34 @@
  */
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { createWriteStream, mkdirSync } from "node:fs";
+import { createWriteStream, mkdirSync, readFileSync, readdirSync } from "node:fs";
+import { createServer } from "node:net";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 /* Dove tenere la chiave di ADB, cosi' non ne nasce una nuova a ogni comando
  * (e il pannello non richiede di nuovo il permesso sullo schermo). */
 export const CARTELLA_DELLA_CHIAVE = "/data/adb";
+
+/* La porta del server di adb dell'add-on: non la 5037 di serie, che con
+ * `host_network` e' quella di tutta la macchina (vedi `_ambiente`). */
+export const PORTA_DEL_SERVER = 5137;
+
+/* L'ultima riga d'errore del registro del server di adb (/tmp/adb.<uid>.log),
+ * o "": e' li' che adb scrive perche' non e' partito. */
+export function rigaDelRegistroDelServer(cartella = tmpdir()) {
+  try {
+    const registri = readdirSync(cartella).filter((f) => /^adb\..*\.log$/.test(f));
+    for (const nome of registri) {
+      const righe = readFileSync(join(cartella, nome), "utf8").trim().split("\n");
+      const male = righe.reverse().find((r) => / [FE] adb\s*:/.test(r));
+      if (male) return male.replace(/^.*? [FE] adb\s*:\s*\S+\s*/, "").trim();
+    }
+  } catch (_e) {
+    /* Nessun registro. */
+  }
+  return "";
+}
 
 /* Il tempo massimo di un comando, secondo cosa fa. Una shell risponde
  * subito; una copia di sicurezza di due giga no. */
@@ -94,6 +116,7 @@ export class Adb {
     chiave = CARTELLA_DELLA_CHIAVE,
     registro = null,
     fermoDellaCopia = 90_000,
+    portaDelServer = PORTA_DEL_SERVER,
   } = {}) {
     this.programma = programma;
     this.avvia = avvia;
@@ -101,6 +124,7 @@ export class Adb {
     this.registro = registro;
     /* Dopo quanto silenzio una copia e' «ferma». */
     this.fermoDellaCopia = fermoDellaCopia;
+    this.portaDelServer = portaDelServer;
   }
 
   /* Avvia `adb <argomenti>` e torna { codice, fuori } quando finisce, o lancia
@@ -121,14 +145,23 @@ export class Adb {
     }
   }
 
+  /* L'ambiente di ogni adb: la chiave nella sua cartella, e il server su una
+   * porta **sua**. Con `host_network` la porta di serie (5037) e' quella della
+   * macchina: un altro adb di casa (l'add-on «Android Debug Bridge», per
+   * esempio) la occupa, e il nostro server non parte piu' («ADB server didn't
+   * ACK»). Su una porta propria non si incontrano. */
+  _ambiente() {
+    const ambiente = { ...process.env };
+    if (this.chiave) ambiente.HOME = this.chiave;
+    if (this.portaDelServer) ambiente.ANDROID_ADB_SERVER_PORT = String(this.portaDelServer);
+    return ambiente;
+  }
+
   grezzo(argomenti, { attesa = ATTESE.svelto, dentro = null, binario = false } = {}) {
     this._preparaLaChiave();
     return new Promise((risolvi, rifiuta) => {
       let proc;
-      const ambiente = { ...process.env };
-      /* La chiave di ADB sta nella sua cartella, non in quella di chi avvia
-       * l'add-on: cosi' e' una sola, e persiste. */
-      if (this.chiave) ambiente.HOME = this.chiave;
+      const ambiente = this._ambiente();
       try {
         proc = this.avvia(this.programma, argomenti, {
           stdio: ["pipe", "pipe", "pipe"],
@@ -295,7 +328,23 @@ export class Adb {
    * i collegamenti in parallelo non si contendono l'avvio, e se il server non
    * parte lo si sa subito, con la sua ragione, invece di 254 «non risponde». */
   async avviaServer() {
-    await this.comando(["start-server"], { attesa: ATTESE.svelto });
+    try {
+      await this.comando(["start-server"], { attesa: ATTESE.svelto });
+    } catch (prima) {
+      if (prima.causa === "niente_adb") throw prima;
+      /* Un server rimasto a meta': lo si ferma e si riparte, una volta. */
+      await this.comando(["kill-server"], { attesa: ATTESE.svelto }).catch(() => {});
+      try {
+        await this.comando(["start-server"], { attesa: ATTESE.svelto });
+      } catch (errore) {
+        /* Il perche' vero sta nel registro del server: la riga d'errore va
+         * con l'errore, cosi' la console la mostra. */
+        const riga = rigaDelRegistroDelServer();
+        if (riga) errore.uscita = `${errore.uscita || ""}\n${riga}`;
+        if (!errore.causa) errore.causa = "demone";
+        throw errore;
+      }
+    }
   }
 
   async stacca(indirizzo) {
@@ -332,8 +381,7 @@ export class Adb {
   ) {
     this._preparaLaChiave();
     return new Promise((risolvi, rifiuta) => {
-      const ambiente = { ...process.env };
-      if (this.chiave) ambiente.HOME = this.chiave;
+      const ambiente = this._ambiente();
       let proc;
       try {
         proc = this.avvia(
@@ -430,6 +478,156 @@ export class Adb {
         file.end(() => fine(null, { byte: scritti, ricevuti: byte, md5: impronta.digest("hex") }));
       });
     });
+  }
+
+  /* La copia diretta: i dati non passano da adb ma da una connessione di
+   * rete normale fra il pannello e l'add-on. adb di Android 8 manda un
+   * pacchetto e aspetta la conferma prima del successivo: su un Wi-Fi lento a
+   * rispondere (l'86 rispondeva in 2 secondi) la copia andava a 0,3 MB/s. Una
+   * connessione TCP tiene in volo molti pacchetti insieme e va alla velocita'
+   * del Wi-Fi. adb serve solo a dare il comando.
+   *
+   * L'add-on apre una porta su `verso` (il suo indirizzo di casa), il pannello
+   * ci manda l'uscita del comando con `nc`. Come `copiaInFile`: si tengono i
+   * primi `limite` byte, con impronta, avanzamento e guardiano. Se il pannello
+   * non si collega entro `attesaDelCollegamento`, causa «diretta»: chi chiama
+   * torna ad adb. Torna { byte, ricevuti, md5 }. */
+  copiaDiretta(
+    indirizzo,
+    comando,
+    dove,
+    {
+      verso,
+      nc = "nc",
+      limite = 0,
+      avanzamento = null,
+      fermo = this.fermoDellaCopia,
+      attesa = ATTESE.pull,
+      attesaDelCollegamento = 20_000,
+    } = {},
+  ) {
+    return new Promise((risolvi, rifiuta) => {
+      const server = createServer();
+      let proc = null;
+      let presa = null;
+      let file = null;
+      let finito = false;
+      let byte = 0;
+      let scritti = 0;
+      let detto = 0;
+      let ultimoDato = Date.now();
+      const impronta = createHash("md5");
+      const fine = (errore, esito) => {
+        if (finito) return;
+        finito = true;
+        clearTimeout(scade);
+        clearTimeout(nessuno);
+        clearInterval(guardia);
+        try {
+          presa?.destroy();
+          server.close();
+          proc?.kill?.("SIGKILL");
+        } catch (_e) {
+          /* Gia' chiuso. */
+        }
+        if (errore) {
+          file?.destroy();
+          rifiuta(errore);
+        } else if (file) file.end(() => risolvi(esito));
+        else risolvi(esito);
+      };
+      const scade = setTimeout(
+        () => fine(new ErroreAdb("la copia ci ha messo troppo", { causa: "tempo" })),
+        attesa,
+      );
+      const nessuno = setTimeout(
+        () =>
+          fine(
+            new ErroreAdb("il pannello non si e' collegato per la copia diretta", {
+              causa: "diretta",
+            }),
+          ),
+        attesaDelCollegamento,
+      );
+      const guardia = setInterval(
+        () => {
+          if (presa && Date.now() - ultimoDato > fermo)
+            fine(
+              new ErroreAdb(`nessun dato da ${Math.round(fermo / 1000)} secondi`, {
+                causa: "fermo",
+              }),
+            );
+        },
+        Math.min(5_000, Math.max(50, fermo / 3)),
+      );
+      server.on("error", (e) =>
+        fine(new ErroreAdb(`copia diretta: ${e.message}`, { causa: "diretta" })),
+      );
+      server.on("connection", (s) => {
+        if (presa) return s.destroy();
+        presa = s;
+        clearTimeout(nessuno);
+        ultimoDato = Date.now();
+        file = createWriteStream(dove);
+        file.on("error", (e) =>
+          fine(new ErroreAdb(`non riesco a scrivere ${dove}: ${e.message}`, { causa: "spazio" })),
+        );
+        s.on("data", (tutto) => {
+          byte += tutto.length;
+          ultimoDato = Date.now();
+          let pezzo = tutto;
+          if (limite) {
+            const resta = limite - scritti;
+            if (resta <= 0) return;
+            if (pezzo.length > resta) pezzo = pezzo.subarray(0, resta);
+          }
+          scritti += pezzo.length;
+          impronta.update(pezzo);
+          if (avanzamento && Date.now() - detto > 500) {
+            detto = Date.now();
+            avanzamento(scritti);
+          }
+          if (!file.write(pezzo)) {
+            s.pause();
+            file.once("drain", () => s.resume());
+          }
+          /* Arrivato tutto: la coda non serve, si chiude da qui. */
+          if (limite && scritti >= limite)
+            fine(null, { byte: scritti, ricevuti: byte, md5: impronta.digest("hex") });
+        });
+        s.on("end", () =>
+          fine(null, { byte: scritti, ricevuti: byte, md5: impronta.digest("hex") }),
+        );
+        s.on("error", () =>
+          fine(null, { byte: scritti, ricevuti: byte, md5: impronta.digest("hex") }),
+        );
+      });
+      server.listen(0, "0.0.0.0", () => {
+        const porta = server.address().port;
+        const riga = `${comando} | ${nc} ${verso} ${porta}`;
+        try {
+          proc = this.avvia(
+            this.programma,
+            ["-s", this._dev(indirizzo), "exec-out", `su -c ${scappa(riga)}`],
+            { stdio: ["ignore", "ignore", "ignore"], env: this._ambiente() },
+          );
+          proc.on?.("error", () => {});
+        } catch (errore) {
+          fine(new ErroreAdb(`adb non si avvia: ${errore.message}`, { causa: "niente_adb" }));
+        }
+      });
+    });
+  }
+
+  /* Quale `nc` c'e' sul pannello, o "" se non c'e'. */
+  async ncSulPannello(indirizzo) {
+    const detto = await this.shell(
+      indirizzo,
+      "command -v nc 2>/dev/null || { toybox nc --help >/dev/null 2>&1 && echo 'toybox nc'; }",
+      { root: true, attesa: ATTESE.svelto },
+    ).catch(() => "");
+    const riga = String(detto).trim().split("\n").pop().trim();
+    return /(^|\/)nc$|^toybox nc$/.test(riga) ? riga : "";
   }
 
   /* Scarica un file dal pannello col protocollo di adb, che conta i byte: il

@@ -398,3 +398,33 @@ test("il foglietto arriva come file, e cartella e file sono dell'app", async () 
   );
   assert.match(intesta, /restorecon -R \/data\/data\/com\.gdahome\.muro/);
 });
+
+test("la copia prova prima la diretta; se il pannello non si collega torna ad adb, e non la riprova", async () => {
+  const copie = mkdtempSync(join(tmpdir(), "copie-"));
+  try {
+    const dirette = [];
+    const viaAdb = [];
+    const adb = pannelloDaCopiare();
+    adb.ncSulPannello = async () => "/system/bin/nc";
+    const inst = new Installatore({
+      adb,
+      cartellaDelleCopie: copie,
+      indirizzoDiCasa: () => "192.168.1.174",
+      copiaDiretta: async (_i, _c, dove, o) => {
+        dirette.push([dove.split("/").pop(), o.verso, o.nc]);
+        throw Object.assign(new Error("non si e' collegato"), { causa: "diretta" });
+      },
+      scriviCopia: async (_i, _c, dove) => {
+        viaAdb.push(dove.split("/").pop());
+        return { byte: 1000, md5: "a".repeat(32) };
+      },
+    });
+    const esito = await inst._copiaDiSicurezza("1.2.3.4", "x", () => {});
+    assert.equal(esito.errore, undefined);
+    /* Provata una volta, sulla prima partizione; poi solo adb. */
+    assert.deepEqual(dirette, [["boot.img", "192.168.1.174", "/system/bin/nc"]]);
+    assert.deepEqual(viaAdb, ["boot.img", "system.img"]);
+  } finally {
+    rmSync(copie, { recursive: true, force: true });
+  }
+});

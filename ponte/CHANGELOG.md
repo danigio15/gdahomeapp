@@ -14,6 +14,21 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.41
+
+- **Pannelli a muro, la copia di sicurezza veloce**: andava a 0,3 MB/s. Non
+  era la rete: adb di Android 8 manda un pacchetto e aspetta la conferma
+  prima del successivo, e su un pannello lento a rispondere (l'86 rispondeva
+  in 2 secondi) va a passo d'uomo. Ora i dati arrivano su una connessione
+  diretta fra pannello e add-on, che tiene in viaggio molti pacchetti e va
+  alla velocità del Wi-Fi; adb serve solo per i comandi. Se il pannello non
+  ha `nc` si torna al modo di prima. L'impronta MD5 resta la garanzia.
+- **Quanto manca**: la copia dice anche «mancano ~N min».
+- **«adb non parte (ADB server didn't ACK)»**: con la rete di Home Assistant
+  l'add-on usava la porta di adb di tutta la macchina (5037), che un altro adb
+  di casa può occupare. Ora ha la sua (5137); se il server non parte riprova
+  da capo una volta, e l'errore porta la riga del registro di adb.
+
 ## 1.19.40
 
 - **Pannelli a muro, una ricerca alla volta**: mentre si aggiunge un pannello
