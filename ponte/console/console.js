@@ -240,12 +240,14 @@
     "panoramica",
     "abbina",
     "telefoni",
+    "pannelli",
+    "nuovo-pannello",
     "plance",
     "licenza",
     "installatore",
     "avanzate",
   ];
-  var LINGUETTA_DI = { abbina: "telefoni" };
+  var LINGUETTA_DI = { abbina: "telefoni", "nuovo-pannello": "pannelli" };
   var laSezione = "panoramica";
   var sezionePrima = "";
   var richiesta = (function () {
@@ -257,6 +259,43 @@
     return vediPagina.querySelector('.sezioni [data-vai="' + nome + '"]');
   }
 
+  var attesaDellaRete = null;
+
+  /* Aspetta un pannello: cerca in rete ogni pochi secondi, e appena ne compare
+   * uno nuovo (ADB appena acceso) lo sceglie e fa partire la verifica. Cosi'
+   * l'unico gesto a mano — i tocchi sul pannello — basta: il resto parte solo. */
+  function aspettaUnPannello() {
+    fermaAttesaDellaRete();
+    var attesa = trova("attesa-rete");
+    if (attesa) attesa.hidden = false;
+    var giro = function () {
+      chiedi("api/pannelli/rete", { method: "POST", body: "{}" })
+        .then(function (detto) {
+          if (!attesaDellaRete) return;
+          var nuovo = (detto.trovati || []).find(function (uno) {
+            return !uno.gia;
+          });
+          if (nuovo) {
+            fermaAttesaDellaRete();
+            trova("indirizzo-pannello").value = nuovo.indirizzo;
+            controllaIlPannello();
+          }
+        })
+        .catch(function () {});
+    };
+    giro();
+    attesaDellaRete = setInterval(giro, 4000);
+  }
+
+  function fermaAttesaDellaRete() {
+    if (attesaDellaRete) {
+      clearInterval(attesaDellaRete);
+      attesaDellaRete = null;
+    }
+    var attesa = trova("attesa-rete");
+    if (attesa) attesa.hidden = true;
+  }
+
   function vaiA(nome, comeSiArriva) {
     if (nome === "indietro")
       nome = sezionePrima && sezionePrima !== laSezione ? sezionePrima : "panoramica";
@@ -266,6 +305,8 @@
      * partiti (dai telefoni a «Collega l'app», e ritorno). */
     if (nome !== laSezione) sezionePrima = nome === "panoramica" ? "" : laSezione;
     laSezione = nome;
+    if (nome === "nuovo-pannello") aspettaUnPannello();
+    else fermaAttesaDellaRete();
     /* Sul telefono la testata dice dove si e': il marchio nella Casa, «‹» e
      * il nome della sezione altrove (`data-sezione` lo legge il foglio). */
     vediPagina.documentElement.setAttribute("data-sezione", nome);
@@ -1608,6 +1649,579 @@
     return vuoto;
   }
 
+  /* ─── I pannelli a muro ─────────────────────────────────────────────────────
+   *
+   * I Sonoff NSPanel Pro della casa, con GdAHome OS. L'elenco arriva da
+   * `api/pannelli`, a parte dallo stato: i pannelli si guardano via ADB e una
+   * domanda costa qualche decimo di secondo per pannello, che nel giro dei
+   * dieci secondi della pagina non deve pesare.
+   *
+   * Una riga per pannello: com'e' fatto, cosa mostra, se e' acceso, e il suo
+   * tasto quando c'e' qualcosa da fare («Installa», «Aggiorna»). Il resto sta
+   * nel «⋯», come per i telefoni. Mentre un pannello lavora (si installa, si
+   * aggiorna) la riga mostra i passi, e la pagina lo richiede piu' spesso. */
+  var iPannelli = null;
+  var menuDelPannello = "";
+  var pannelloNuovo = { verificato: null, id: "" };
+  var giroDeiPannelli = null;
+
+  var MODELLI_DEI_PANNELLI = {
+    86: "NSPanel Pro 86",
+    120: "NSPanel Pro 120",
+  };
+
+  function ilModelloDelPannello(uno) {
+    return MODELLI_DEI_PANNELLI[uno.modello] || due("Pannello", "Panel");
+  }
+
+  function ilNomeDelPannello(uno) {
+    return String(uno.nome || "").trim() || due("Pannello nuovo", "New panel");
+  }
+
+  function aggiornaIPannelli() {
+    clearTimeout(giroDeiPannelli);
+    giroDeiPannelli = null;
+    return chiedi("api/pannelli")
+      .then(function (detti) {
+        iPannelli = detti;
+        disegnaIPannelli(detti);
+        disegnaIlNuovoPannello();
+        /* Un pannello al lavoro si guarda ogni due secondi; gli altri al
+         * giro della pagina. */
+        var alLavoro = (detti.pannelli || []).some(function (uno) {
+          return uno.lavoro && !uno.lavoro.finito;
+        });
+        if (alLavoro) giroDeiPannelli = setTimeout(aggiornaIPannelli, 2000);
+      })
+      .catch(function (errore) {
+        avvisa("avviso-pannelli", errore.message);
+      });
+  }
+
+  function avvisa(id, parole) {
+    var dove = trova(id);
+    if (!dove) return;
+    dove.textContent = parole || "";
+    dove.hidden = !parole;
+  }
+
+  /* I passi di un lavoro: spuntati, quello in corso, quelli dopo. */
+  function iPassi(lavoro) {
+    var lista = vediPagina.createElement("ol");
+    lista.className = "lavoro-passi";
+    (lavoro.passi || []).forEach(function (passo) {
+      var riga = vediPagina.createElement("li");
+      riga.setAttribute("data-stato", passo.stato || "dopo");
+      var segno = vediPagina.createElement("span");
+      segno.className = "segno";
+      if (passo.stato === "fatto") segno.appendChild(unDisegno("ic-spunta"));
+      if (passo.stato === "male") segno.appendChild(unDisegno("ic-attenzione"));
+      riga.appendChild(segno);
+      var parole = vediPagina.createElement("span");
+      parole.className = "parole";
+      var nome = vediPagina.createElement("b");
+      nome.textContent = passo.nome;
+      parole.appendChild(nome);
+      if (passo.dettaglio) {
+        var come = vediPagina.createElement("small");
+        come.textContent = passo.dettaglio;
+        parole.appendChild(come);
+      }
+      riga.appendChild(parole);
+      if (passo.stato === "adesso" && typeof passo.percento === "number") {
+        var barra = vediPagina.createElement("span");
+        barra.className = "barra";
+        var piena = vediPagina.createElement("i");
+        piena.style.width = Math.max(2, Math.min(100, passo.percento)) + "%";
+        barra.appendChild(piena);
+        riga.appendChild(barra);
+      }
+      lista.appendChild(riga);
+    });
+    return lista;
+  }
+
+  function disegnaIPannelli(detti) {
+    var pannelli = detti.pannelli || [];
+    var premium = detti.premium === true;
+    var installati = pannelli.filter(function (uno) {
+      return uno.stato !== "sonoff";
+    }).length;
+    scriviIlNumerino("quanti-pannelli", pannelli.length);
+    trova("pannelli-premium").hidden = premium;
+    trova("aggiungi-pannello").hidden = !premium || !pannelli.length;
+    trova("conteggio-pannelli").textContent = pannelli.length
+      ? due(
+          installati === 1 ? "1 con GdAHome OS" : installati + " con GdAHome OS",
+          installati + " with GdAHome OS",
+        )
+      : "";
+    avvisa(
+      "avviso-pannelli",
+      detti.adb === false
+        ? due(
+            "Questo add-on non trova ADB: aggiornalo all'ultima versione.",
+            "This add-on can't find ADB: update it to the latest version.",
+          )
+        : "",
+    );
+
+    if (inModifica.indexOf("pannello:") === 0) return;
+    var elenco = trova("elenco-pannelli");
+    elenco.textContent = "";
+    if (!pannelli.length) {
+      elenco.appendChild(
+        unVuoto(
+          "ic-pannello",
+          due("Nessun pannello, per ora", "No panels yet"),
+          due(
+            "Un Sonoff NSPanel Pro diventa un pannello GdAHome da qui, senza computer.",
+            "A Sonoff NSPanel Pro becomes a GdAHome panel from here, with no computer.",
+          ),
+          premium ? due("Aggiungi un pannello", "Add a panel") : "",
+          "nuovo-pannello",
+        ),
+      );
+      return;
+    }
+
+    pannelli.forEach(function (uno) {
+      var riga = vediPagina.createElement("li");
+      var alLavoro = uno.lavoro && !uno.lavoro.finito;
+      riga.className = "riga-pannello" + (alLavoro ? " al-lavoro" : "");
+      riga.appendChild(
+        unaFaccia(
+          "ic-pannello",
+          uno.stato === "sonoff"
+            ? "attesa"
+            : alLavoro
+              ? "attesa"
+              : uno.stato === "errore"
+                ? "male"
+                : uno.acceso
+                  ? "bene"
+                  : "spenta",
+        ),
+      );
+
+      var nome = vediPagina.createElement("div");
+      nome.className = "nome";
+      var rigaDelNome = vediPagina.createElement("div");
+      rigaDelNome.className = "riga-del-nome";
+      var forte = vediPagina.createElement("strong");
+      forte.textContent =
+        uno.stato === "sonoff" && !uno.nome ? uno.indirizzo : ilNomeDelPannello(uno);
+      rigaDelNome.appendChild(forte);
+      var modello = vediPagina.createElement("span");
+      modello.className = "chip";
+      modello.textContent = ilModelloDelPannello(uno);
+      rigaDelNome.appendChild(modello);
+      if (uno.plancia) {
+        var plancia = vediPagina.createElement("span");
+        plancia.className = "chip blu";
+        plancia.textContent = due(
+          "plancia «" + uno.plancia + "»",
+          "“" + uno.plancia + "” dashboard",
+        );
+        rigaDelNome.appendChild(plancia);
+      }
+      if (uno.aggiornabile && !alLavoro) {
+        var nuovo = vediPagina.createElement("span");
+        nuovo.className = "chip giallo";
+        nuovo.textContent = due("aggiornamento pronto", "update ready");
+        rigaDelNome.appendChild(nuovo);
+      }
+      nome.appendChild(rigaDelNome);
+
+      var sotto = vediPagina.createElement("span");
+      var quando = vediPagina.createElement("b");
+      var resto = [];
+      if (alLavoro) {
+        quando.className = "attesa";
+        quando.textContent = uno.lavoro.titolo || due("Al lavoro…", "Working…");
+      } else if (uno.stato === "sonoff") {
+        quando.className = "attesa";
+        quando.textContent = due("Ancora col software Sonoff", "Still on the Sonoff software");
+        resto.push(due("pronto per GdAHome OS", "ready for GdAHome OS"));
+      } else if (uno.stato === "errore") {
+        quando.className = "male";
+        quando.textContent = uno.errore || due("Qualcosa non va", "Something is wrong");
+      } else if (uno.acceso) {
+        quando.className = "vivo";
+        quando.textContent = due("Acceso adesso", "On now");
+      } else {
+        quando.textContent = due("Visto ", "Seen ") + quantoTempoFa(uno.vistoIl);
+      }
+      if (uno.os) resto.push("GdAHome OS " + uno.os);
+      if (uno.app) resto.push("app " + uno.app);
+      if (uno.utente) {
+        var di = ilNomeDellUtente(uno.utente);
+        if (di) resto.push(due("di " + di, di + "'s"));
+      }
+      /* Un pannello senza nome ha l'indirizzo come titolo: non si ripete. */
+      if (uno.nome || uno.stato !== "sonoff") resto.push(uno.indirizzo);
+      sotto.appendChild(quando);
+      sotto.appendChild(vediPagina.createTextNode(" · " + resto.join(" · ")));
+      nome.appendChild(sotto);
+      if (alLavoro) nome.appendChild(iPassi(uno.lavoro));
+      riga.appendChild(nome);
+
+      var tasti = vediPagina.createElement("div");
+      tasti.className = "tasti stretti";
+      if (uno.stato === "sonoff" && !alLavoro) {
+        var installa = unTasto(due("Installa GdAHome OS", "Install GdAHome OS"), "");
+        installa.disabled = !premium;
+        installa.addEventListener("click", function () {
+          trova("indirizzo-pannello").value = uno.indirizzo;
+          vaiA("nuovo-pannello");
+          controllaIlPannello();
+        });
+        tasti.appendChild(installa);
+      } else if (uno.aggiornabile && !alLavoro) {
+        var aggiorna = unTasto(due("Aggiorna", "Update"), "");
+        aggiorna.addEventListener("click", function () {
+          fallo(uno, "aggiorna");
+        });
+        tasti.appendChild(aggiorna);
+      }
+
+      var aperto = menuDelPannello === uno.id;
+      var treSegni = unTasto("", "tenue tre-punti");
+      treSegni.appendChild(unDisegno("ic-altro"));
+      treSegni.setAttribute("aria-label", due("Altro", "More"));
+      treSegni.setAttribute("aria-haspopup", "menu");
+      treSegni.setAttribute("aria-expanded", aperto ? "true" : "false");
+      treSegni.setAttribute("data-render", "menu-" + uno.id);
+      treSegni.disabled = alLavoro;
+      treSegni.addEventListener("click", function () {
+        menuDelPannello = menuDelPannello === uno.id ? "" : uno.id;
+        if (iPannelli) disegnaIPannelli(iPannelli);
+      });
+      tasti.appendChild(treSegni);
+      var menu = vediPagina.createElement("div");
+      menu.className = "menu";
+      menu.setAttribute("role", "menu");
+      menu.hidden = !aperto;
+      tasti.appendChild(menu);
+
+      function voce(parole, classe, quando) {
+        var tasto = unTasto(parole, "voce-menu" + (classe ? " " + classe : ""));
+        tasto.setAttribute("role", "menuitem");
+        tasto.addEventListener("click", function () {
+          menuDelPannello = "";
+          menu.hidden = true;
+          quando();
+        });
+        menu.appendChild(tasto);
+      }
+
+      if (uno.stato !== "sonoff") {
+        voce(due("Rinomina", "Rename"), "", function () {
+          rinominaQui(
+            riga,
+            "pannello:" + uno.id,
+            ilNomeDelPannello(uno),
+            40,
+            function (nuovo) {
+              return chiedi("api/pannelli/" + encodeURIComponent(uno.id), {
+                method: "PATCH",
+                body: JSON.stringify({ nome: nuovo }),
+              });
+            },
+            function (parole) {
+              avvisa("avviso-pannelli", parole);
+            },
+          );
+        });
+        voce(due("Cambia plancia", "Change dashboard"), "", function () {
+          trova("indirizzo-pannello").value = uno.indirizzo;
+          pannelloNuovo.id = uno.id;
+          vaiA("nuovo-pannello");
+        });
+        voce(due("Riavvia", "Restart"), "", function () {
+          fallo(uno, "riavvia");
+        });
+        voce(due("Analisi hardware", "Hardware check"), "", function () {
+          fallo(uno, "analisi");
+        });
+        voce(
+          due("Rimetti il software Sonoff", "Put the Sonoff software back"),
+          "toglie",
+          function () {
+            chiediConferma(
+              due(
+                "Rimettere Sonoff su «" + ilNomeDelPannello(uno) + "»?",
+                "Put Sonoff back on “" + ilNomeDelPannello(uno) + "”?",
+              ),
+              due(
+                "Il pannello torna com'era, dalla copia salvata quando hai installato GdAHome OS, ed esce da questa casa.",
+                "The panel goes back to how it was, from the copy saved when you installed GdAHome OS, and leaves this home.",
+              ),
+              due("Rimetti Sonoff", "Put Sonoff back"),
+            ).then(function (si) {
+              if (si) fallo(uno, "sonoff");
+            });
+          },
+        );
+      }
+      voce(due("Togli dall'elenco", "Remove from the list"), "toglie", function () {
+        chiediConferma(
+          due(
+            "Togliere «" + ilNomeDelPannello(uno) + "»?",
+            "Remove “" + ilNomeDelPannello(uno) + "”?",
+          ),
+          due(
+            "Esce subito da questa casa, come un telefono tolto. GdAHome OS resta sul pannello finché non rimetti Sonoff.",
+            "It leaves this home at once, like a removed phone. GdAHome OS stays on the panel until you put Sonoff back.",
+          ),
+          due("Togli", "Remove"),
+        ).then(function (si) {
+          if (!si) return;
+          chiedi("api/pannelli/" + encodeURIComponent(uno.id), { method: "DELETE" })
+            .then(aggiornaIPannelli)
+            .catch(function (errore) {
+              avvisa("avviso-pannelli", errore.message);
+            });
+        });
+      });
+      riga.appendChild(tasti);
+      elenco.appendChild(riga);
+    });
+  }
+
+  /* Un lavoro su un pannello: aggiorna, riavvia, analisi, sonoff. */
+  function fallo(uno, cosa) {
+    avvisa("avviso-pannelli", "");
+    return chiedi("api/pannelli/" + encodeURIComponent(uno.id) + "/" + cosa, {
+      method: "POST",
+      body: "{}",
+    })
+      .then(aggiornaIPannelli)
+      .catch(function (errore) {
+        avvisa("avviso-pannelli", errore.message);
+      });
+  }
+
+  /* ─── Il pannello nuovo, tappa per tappa ─── */
+  function laTappa(id, stato) {
+    var tappa = trova(id);
+    if (tappa) tappa.setAttribute("data-stato", stato);
+  }
+
+  function riempiLeScelte() {
+    var plance = (lUltimoStato && lUltimoStato.plance) || [];
+    var aMuro = plance.filter(function (una) {
+      return una.modello === "muro";
+    });
+    var scelta = trova("plancia-pannello");
+    var prima = scelta.value;
+    scelta.textContent = "";
+    (aMuro.length ? aMuro : plance).forEach(function (una) {
+      var voce = vediPagina.createElement("option");
+      voce.value = una.id;
+      voce.textContent =
+        una.nome + (una.modello === "muro" ? "" : due(" (non a muro)", " (not a wall one)"));
+      scelta.appendChild(voce);
+    });
+    if (prima) scelta.value = prima;
+    chiediGliUtenti().then(function (utenti) {
+      var chi = trova("chi-pannello");
+      var primaChi = chi.value;
+      chi.textContent = "";
+      utenti.forEach(function (uno) {
+        var voce = vediPagina.createElement("option");
+        voce.value = uno.id;
+        voce.textContent = uno.nome;
+        chi.appendChild(voce);
+      });
+      if (primaChi) chi.value = primaChi;
+    });
+  }
+
+  function disegnaIlNuovoPannello() {
+    var detti = iPannelli || {};
+    var verificato = pannelloNuovo.verificato;
+    var buono = Boolean(verificato && verificato.adatto);
+    laTappa("tappa-adb", buono ? "fatto" : "adesso");
+    laTappa("tappa-indirizzo", buono ? "fatto" : "adesso");
+    laTappa("tappa-cosa", buono ? "adesso" : "dopo");
+    var lavoro = null;
+    (detti.pannelli || []).forEach(function (uno) {
+      if (uno.id === pannelloNuovo.id && uno.lavoro) lavoro = uno.lavoro;
+    });
+    laTappa(
+      "tappa-installa",
+      lavoro ? (lavoro.finito && !lavoro.errore ? "fatto" : "adesso") : buono ? "adesso" : "dopo",
+    );
+    trova("installa-pannello").disabled =
+      !buono || detti.premium !== true || Boolean(lavoro && !lavoro.finito);
+    var pronto = trova("pronto-messaggio");
+    if (pronto) pronto.hidden = !buono || Boolean(lavoro);
+    var passi = trova("passi-installazione");
+    passi.hidden = !lavoro;
+    if (lavoro) passi.replaceWith(Object.assign(iPassi(lavoro), { id: "passi-installazione" }));
+    avvisa("avviso-installa", lavoro && lavoro.errore ? lavoro.errore : "");
+  }
+
+  function disegnaLaVerifica(detto) {
+    var trovato = trova("pannello-trovato");
+    trovato.hidden = !detto;
+    if (!detto) return;
+    trova("trovato-modello").textContent =
+      (MODELLI_DEI_PANNELLI[detto.modello] || due("Pannello sconosciuto", "Unknown panel")) +
+      (detto.schermo ? " · " + detto.schermo : "");
+    trova("trovato-dettagli").textContent = [
+      detto.android ? "Android " + detto.android : "",
+      detto.indirizzo,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+    var lista = trova("trovato-verifiche");
+    lista.textContent = "";
+    (detto.verifiche || []).forEach(function (una) {
+      var riga = vediPagina.createElement("li");
+      riga.setAttribute("data-esito", una.esito || "bene");
+      riga.appendChild(unDisegno(una.esito === "bene" ? "ic-spunta" : "ic-attenzione"));
+      var parole = vediPagina.createElement("span");
+      parole.textContent = una.detto;
+      riga.appendChild(parole);
+      lista.appendChild(riga);
+    });
+  }
+
+  function controllaIlPannello() {
+    fermaAttesaDellaRete();
+    var indirizzo = trova("indirizzo-pannello").value.trim();
+    avvisa("avviso-indirizzo", "");
+    if (!/^[0-9a-zA-Z.:-]{3,64}$/.test(indirizzo)) {
+      avvisa(
+        "avviso-indirizzo",
+        due(
+          "Scrivi l'indirizzo del pannello, per esempio 192.168.1.50.",
+          "Type the panel's address, for example 192.168.1.50.",
+        ),
+      );
+      return Promise.resolve();
+    }
+    var tasto = trova("cerca-pannello");
+    tasto.disabled = true;
+    tasto.classList.add("al-lavoro");
+    pannelloNuovo.verificato = null;
+    disegnaLaVerifica(null);
+    return chiedi("api/pannelli/verifica", {
+      method: "POST",
+      body: JSON.stringify({ indirizzo: indirizzo }),
+    })
+      .then(function (detto) {
+        pannelloNuovo.verificato = detto;
+        disegnaLaVerifica(detto);
+        if (detto.nome && !trova("nome-pannello").value) trova("nome-pannello").value = detto.nome;
+        riempiLeScelte();
+        disegnaIlNuovoPannello();
+      })
+      .catch(function (errore) {
+        avvisa("avviso-indirizzo", errore.message);
+      })
+      .then(function () {
+        tasto.disabled = false;
+        tasto.classList.remove("al-lavoro");
+      });
+  }
+
+  function installaIlPannello() {
+    var detto = pannelloNuovo.verificato;
+    if (!detto || !detto.adatto) return;
+    avvisa("avviso-installa", "");
+    trova("installa-pannello").disabled = true;
+    chiedi("api/pannelli", {
+      method: "POST",
+      body: JSON.stringify({
+        indirizzo: detto.indirizzo,
+        nome: trova("nome-pannello").value.trim(),
+        plancia: trova("plancia-pannello").value,
+        utente: trova("chi-pannello").value,
+      }),
+    })
+      .then(function (fatto) {
+        pannelloNuovo.id = fatto.id;
+        return aggiornaIPannelli();
+      })
+      .catch(function (errore) {
+        trova("installa-pannello").disabled = false;
+        avvisa("avviso-installa", errore.message);
+      });
+  }
+
+  /* I pannelli trovati in rete: chi ha ADB aperto sulla 5555. Un tocco
+   * scrive l'indirizzo e controlla quel pannello. */
+  function cercaInRete() {
+    fermaAttesaDellaRete();
+    var tasto = trova("cerca-in-rete");
+    var lista = trova("trovati-in-rete");
+    tasto.disabled = true;
+    tasto.classList.add("al-lavoro");
+    avvisa("avviso-indirizzo", "");
+    return chiedi("api/pannelli/rete", { method: "POST", body: "{}" })
+      .then(function (detto) {
+        var trovati = detto.trovati || [];
+        lista.textContent = "";
+        lista.hidden = false;
+        if (!trovati.length) {
+          var niente = vediPagina.createElement("li");
+          niente.className = "niente";
+          niente.textContent = due(
+            "Nessun pannello con ADB acceso. Controlla la tappa 1, o scrivi l'indirizzo.",
+            "No panel with ADB on. Check step 1, or type the address.",
+          );
+          lista.appendChild(niente);
+          return;
+        }
+        trovati.forEach(function (uno) {
+          var riga = vediPagina.createElement("li");
+          var scegli = unTasto("", "tenue scegli-pannello");
+          scegli.appendChild(unDisegno("ic-pannello"));
+          var parole = vediPagina.createElement("span");
+          var forte = vediPagina.createElement("b");
+          forte.textContent = MODELLI_DEI_PANNELLI[uno.modello] || due("Pannello", "Panel");
+          parole.appendChild(forte);
+          var dove = vediPagina.createElement("small");
+          dove.textContent =
+            uno.indirizzo + (uno.gia ? due(" · già in elenco", " · already listed") : "");
+          parole.appendChild(dove);
+          scegli.appendChild(parole);
+          scegli.disabled = Boolean(uno.gia);
+          scegli.addEventListener("click", function () {
+            trova("indirizzo-pannello").value = uno.indirizzo;
+            controllaIlPannello();
+          });
+          riga.appendChild(scegli);
+          lista.appendChild(riga);
+        });
+      })
+      .catch(function (errore) {
+        avvisa("avviso-indirizzo", errore.message);
+      })
+      .then(function () {
+        tasto.disabled = false;
+        tasto.classList.remove("al-lavoro");
+      });
+  }
+
+  trova("cerca-in-rete").addEventListener("click", cercaInRete);
+  trova("cerca-pannello").addEventListener("click", controllaIlPannello);
+  trova("indirizzo-pannello").addEventListener("keydown", function (evento) {
+    if (evento.key === "Enter") controllaIlPannello();
+  });
+  trova("installa-pannello").addEventListener("click", installaIlPannello);
+  trova("aggiungi-pannello").addEventListener("click", function () {
+    pannelloNuovo = { verificato: null, id: "" };
+    trova("indirizzo-pannello").value = "";
+    trova("nome-pannello").value = "";
+    trova("trovati-in-rete").hidden = true;
+    disegnaLaVerifica(null);
+    disegnaIlNuovoPannello();
+  });
+
   /* ─── Le plance ─────────────────────────────────────────────────────────────
    *
    * Una riga per plancia: come si chiama, che tipo e', chi la vede, e due
@@ -2601,6 +3215,8 @@
     /* Il tema di Home Assistant si cambia senza ricaricare questa pagina: lo
      * si riguarda a ogni giro, e costa una lettura. */
     ilTemaDiCasa();
+    /* I pannelli col loro giro: se uno sta lavorando li guarda gia' lui. */
+    if (!giroDeiPannelli) aggiornaIPannelli();
     return chiedi("api/stato")
       .then(function (stato) {
         lUltimoStato = stato;

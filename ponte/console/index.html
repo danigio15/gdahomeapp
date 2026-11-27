@@ -22,6 +22,10 @@
         <rect x="6.5" y="2.5" width="11" height="19" rx="2.5" />
         <path d="M10.5 18.5h3" />
       </symbol>
+      <symbol id="ic-pannello" viewBox="0 0 24 24">
+        <rect x="3.5" y="3.5" width="17" height="17" rx="3" />
+        <rect x="7" y="7" width="10" height="10" rx="1.2" />
+      </symbol>
       <symbol id="ic-plance" viewBox="0 0 24 24">
         <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" />
         <rect x="13.5" y="3.5" width="7" height="7" rx="1.5" />
@@ -186,6 +190,11 @@
             <svg class="ic" aria-hidden="true"><use href="#ic-telefono" /></svg
             ><span data-en="Phones">Telefoni</span
             ><span class="quanti" id="quanti-telefoni" hidden></span>
+          </button>
+          <button type="button" data-vai="pannelli">
+            <svg class="ic" aria-hidden="true"><use href="#ic-pannello" /></svg
+            ><span data-en="Wall panels">Pannelli a muro</span
+            ><span class="quanti" id="quanti-pannelli" hidden></span>
           </button>
           <button type="button" data-vai="plance">
             <svg class="ic" aria-hidden="true"><use href="#ic-plance" /></svg
@@ -603,6 +612,285 @@
           >
             Un telefono che togli esce subito da questa casa: per rientrare si abbina di nuovo con
             un QR code nuovo.
+          </p>
+        </section>
+
+        <!-- ─── I pannelli a muro ────────────────────────────────────────────
+             I Sonoff NSPanel Pro della casa, con GdAHome OS: ognuno con la sua
+             plancia a muro. L'add-on li installa da qui, via rete, senza
+             computer: si scrive l'indirizzo e fa tutto lui. Piu' d'uno per
+             casa. La plancia a muro e' Premium: con Base la pagina lo dice e
+             non installa niente. -->
+        <section class="sezione" id="sezione-pannelli" data-sezione="pannelli" hidden>
+          <div class="capo-sezione">
+            <div class="capo-riga">
+              <div>
+                <h2 data-en="Wall panels">I pannelli a muro</h2>
+                <p
+                  data-en="The Sonoff NSPanel Pro panels of this home, with GdAHome OS. Each one shows its own wall dashboard."
+                >
+                  I Sonoff NSPanel Pro di questa casa, con GdAHome OS. Ognuno mostra la sua plancia
+                  a muro.
+                </p>
+              </div>
+              <button type="button" data-vai="nuovo-pannello" id="aggiungi-pannello">
+                <svg class="ic" aria-hidden="true"><use href="#ic-piu" /></svg
+                ><span data-en="Add a panel">Aggiungi un pannello</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Con Base: la plancia a muro e' Premium, e qui non si installa. -->
+          <section class="scheda" id="pannelli-premium" hidden>
+            <div class="testa-di-scheda">
+              <h3>
+                <svg class="ic" aria-hidden="true"><use href="#ic-stella" /></svg
+                ><span data-en="Wall panels are Premium">I pannelli a muro sono Premium</span>
+              </h3>
+            </div>
+            <p
+              class="spiegazione"
+              data-en="The wall dashboard is part of GdAHome Premium. With Premium you can turn every NSPanel in the home into a GdAHome panel from here."
+            >
+              La plancia a muro fa parte di GdAHome Premium. Con Premium da qui trasformi ogni
+              NSPanel di casa in un pannello GdAHome.
+            </p>
+            <div class="bottoni">
+              <button type="button" data-vai="licenza" data-en="See Premium">Scopri Premium</button>
+            </div>
+          </section>
+
+          <section class="scheda" id="scheda-pannelli">
+            <div class="testa-di-scheda">
+              <h3 data-en="In this home">In questa casa</h3>
+              <span class="conta" id="conteggio-pannelli"></span>
+            </div>
+            <ul id="elenco-pannelli" class="elenco"></ul>
+            <p class="avviso" id="avviso-pannelli" hidden></p>
+          </section>
+          <p
+            class="nota-fondo"
+            data-en="Each panel enters the home like a paired phone, with the person you choose. The software it had before is saved in the shared folder of Home Assistant, and you can put it back from the menu."
+          >
+            Ogni pannello entra nella casa come un telefono abbinato, con la persona che scegli. Il
+            software che aveva prima resta salvato nella cartella condivisa di Home Assistant, e lo
+            rimetti dal menu del pannello.
+          </p>
+        </section>
+
+        <!-- ─── Un pannello nuovo ─────────────────────────────────────────────
+             Quattro tappe, come «Collega l'app»:
+             1. ADB acceso dall'app eWeLink (una volta, a mano: e' l'unica cosa
+                che dall'add-on non si puo' fare);
+             2. l'indirizzo, e la verifica: che pannello e', se si puo';
+             3. nome, plancia a muro e persona;
+             4. l'installazione, coi suoi passi che si spuntano. -->
+        <section class="sezione" id="sezione-nuovo-pannello" data-sezione="nuovo-pannello" hidden>
+          <div class="capo-sezione">
+            <h2 data-en="Add a wall panel">Aggiungi un pannello a muro</h2>
+            <p
+              data-en="A Sonoff NSPanel Pro (86 or 120) becomes a GdAHome panel. It takes about ten minutes, and you don't need a computer."
+            >
+              Un Sonoff NSPanel Pro (86 o 120) diventa un pannello GdAHome. Ci vogliono una decina
+              di minuti, e non serve un computer.
+            </p>
+          </div>
+
+          <section class="scheda abbina">
+            <ol class="tappe in-colonna">
+              <li class="tappa" id="tappa-adb" data-stato="adesso">
+                <span class="tappa-numero"
+                  ><b>1</b><svg class="ic" aria-hidden="true"><use href="#ic-spunta" /></svg
+                ></span>
+                <div class="tappa-corpo">
+                  <p class="tappa-titolo" data-en="Turn on ADB on the panel (once)">
+                    Accendi ADB sul pannello (una volta sola)
+                  </p>
+                  <p
+                    class="nota"
+                    data-en="This is the one thing GdAHome can't do for you: Sonoff requires it to be turned on from the panel itself. It takes a minute, and only the first time. Then GdAHome does everything."
+                  >
+                    È l'unica cosa che GdAHome non può fare al posto tuo: Sonoff vuole che si
+                    accenda dal pannello stesso. Ci vuole un minuto, e solo la prima volta. Poi fa
+                    tutto GdAHome.
+                  </p>
+                  <ol class="guida">
+                    <li
+                      data-en="Open the eWeLink app and, if you haven't yet, add the panel to your account."
+                    >
+                      Apri l'app eWeLink e, se non l'hai già fatto, aggiungi il pannello al tuo
+                      account.
+                    </li>
+                    <li data-en="Open the panel, then Settings › About.">
+                      Apri il pannello, poi <b>Impostazioni › Informazioni</b>.
+                    </li>
+                    <li
+                      data-en="Tap “Device ID” quickly 7-8 times, until “Developer mode” appears."
+                    >
+                      Tocca <b>«ID dispositivo»</b> rapidamente 7-8 volte, finché compare
+                      <b>«Modalità sviluppatore»</b>.
+                    </li>
+                    <li
+                      data-en="Open “Developer mode”, turn on ADB, and accept the notice that appears on the panel's screen."
+                    >
+                      Apri <b>«Modalità sviluppatore»</b>, accendi <b>ADB</b> e accetta l'avviso che
+                      compare sullo schermo del pannello.
+                    </li>
+                  </ol>
+                  <p
+                    class="avviso giallo visibile"
+                    data-en="Sonoff warns that turning on ADB can't be undone: the panel won't get Sonoff updates any more (GdAHome takes over)."
+                  >
+                    Sonoff avvisa che accendere ADB non si annulla: il pannello non riceverà più gli
+                    aggiornamenti Sonoff (ci pensa GdAHome).
+                  </p>
+                  <p
+                    class="fatto-adb"
+                    data-en="Done? Leave it on — GdAHome finds the panel by itself, below."
+                  >
+                    Fatto? Lascialo acceso: GdAHome trova il pannello da solo, qui sotto.
+                  </p>
+                </div>
+              </li>
+              <li class="tappa" id="tappa-indirizzo" data-stato="adesso">
+                <span class="tappa-numero"
+                  ><b>2</b><svg class="ic" aria-hidden="true"><use href="#ic-spunta" /></svg
+                ></span>
+                <div class="tappa-corpo">
+                  <label class="tappa-titolo" for="indirizzo-pannello" data-en="Find the panel"
+                    >Trova il pannello</label
+                  >
+                  <p
+                    class="nota"
+                    data-en="GdAHome looks for the panels with ADB on in your home network. You can also type the address."
+                  >
+                    GdAHome cerca i pannelli con ADB acceso nella rete di casa. Puoi anche scrivere
+                    l'indirizzo.
+                  </p>
+                  <div class="bottoni">
+                    <button id="cerca-in-rete" type="button" class="tenue" data-render="rete">
+                      <svg class="ic" aria-hidden="true"><use href="#ic-segnale" /></svg
+                      ><span data-en="Search the network">Cerca in rete</span>
+                    </button>
+                  </div>
+                  <p class="attesa-rete" id="attesa-rete" hidden>
+                    <span class="girello" aria-hidden="true"></span
+                    ><span
+                      data-en="Waiting for a panel with ADB on. Do the taps on the panel (step 1): it shows up here by itself."
+                      >Aspetto un pannello con ADB acceso. Fai i tocchi sul pannello (tappa 1):
+                      compare qui da solo.</span
+                    >
+                  </p>
+                  <ul class="trovati-in-rete" id="trovati-in-rete" hidden></ul>
+                  <div class="in-riga">
+                    <input
+                      id="indirizzo-pannello"
+                      class="campo"
+                      type="text"
+                      inputmode="decimal"
+                      autocomplete="off"
+                      spellcheck="false"
+                      placeholder="192.168.1.50"
+                    />
+                    <button id="cerca-pannello" type="button" data-render="cerca">
+                      <span data-en="Check the panel">Controlla il pannello</span>
+                    </button>
+                  </div>
+                  <div class="trovato" id="pannello-trovato" hidden>
+                    <div class="trovato-testa">
+                      <span class="faccia bene"
+                        ><svg class="ic" aria-hidden="true"><use href="#ic-pannello" /></svg
+                      ></span>
+                      <div>
+                        <strong id="trovato-modello"></strong>
+                        <span id="trovato-dettagli"></span>
+                      </div>
+                    </div>
+                    <ul class="verifiche" id="trovato-verifiche"></ul>
+                  </div>
+                  <p class="avviso" id="avviso-indirizzo" hidden></p>
+                </div>
+              </li>
+              <li class="tappa" id="tappa-cosa" data-stato="dopo">
+                <span class="tappa-numero"
+                  ><b>3</b><svg class="ic" aria-hidden="true"><use href="#ic-spunta" /></svg
+                ></span>
+                <div class="tappa-corpo">
+                  <p class="tappa-titolo" data-en="Name, dashboard and person">
+                    Nome, plancia e persona
+                  </p>
+                  <div class="campi">
+                    <label
+                      ><span data-en="Name">Nome</span
+                      ><input
+                        id="nome-pannello"
+                        class="campo"
+                        type="text"
+                        maxlength="40"
+                        placeholder="Ingresso"
+                        data-en-placeholder="Hallway"
+                    /></label>
+                    <label
+                      ><span data-en="Wall dashboard">Plancia a muro</span
+                      ><select id="plancia-pannello" class="scelta"></select
+                    ></label>
+                    <label
+                      ><span data-en="Home Assistant person">Persona di Home Assistant</span
+                      ><select id="chi-pannello" class="scelta"></select
+                    ></label>
+                  </div>
+                  <p
+                    class="nota"
+                    data-en="The panel will see what this person sees, like a phone paired for them."
+                  >
+                    Il pannello vedrà quello che vede questa persona, come un telefono abbinato per
+                    lei.
+                  </p>
+                </div>
+              </li>
+              <li class="tappa" id="tappa-installa" data-stato="dopo">
+                <span class="tappa-numero"
+                  ><b>4</b><svg class="ic" aria-hidden="true"><use href="#ic-spunta" /></svg
+                ></span>
+                <div class="tappa-corpo">
+                  <p class="tappa-titolo" data-en="Install GdAHome OS">Installa GdAHome OS</p>
+                  <p
+                    class="nota"
+                    id="installa-spiega"
+                    data-en="The Sonoff software is saved first, then replaced. The panel restarts a couple of times: don't unplug it."
+                  >
+                    Prima si salva il software Sonoff, poi lo si sostituisce. Il pannello si riavvia
+                    un paio di volte: non staccarlo.
+                  </p>
+                  <p
+                    class="pronto-messaggio"
+                    id="pronto-messaggio"
+                    hidden
+                    data-en="The panel is ready. Press the button: from here GdAHome does everything by itself — backup, install, pairing. Just don't unplug the panel."
+                  >
+                    Il pannello è pronto. Premi il tasto: da qui fa tutto GdAHome, da solo — copia
+                    di sicurezza, installazione, abbinamento. Tu non staccare il pannello.
+                  </p>
+                  <div class="bottoni">
+                    <button id="installa-pannello" type="button" disabled data-render="installa">
+                      <svg class="ic" aria-hidden="true"><use href="#ic-pannello" /></svg
+                      ><span data-en="Install GdAHome OS — we do the rest"
+                        >Installa GdAHome OS — al resto pensiamo noi</span
+                      >
+                    </button>
+                  </div>
+                  <ol class="lavoro-passi" id="passi-installazione" hidden></ol>
+                  <p class="avviso" id="avviso-installa" hidden></p>
+                </div>
+              </li>
+            </ol>
+          </section>
+          <p
+            class="nota-fondo"
+            data-en="The copy of the Sonoff software goes in the shared folder of Home Assistant, in gdahome-os."
+          >
+            La copia del software Sonoff va nella cartella condivisa di Home Assistant, in
+            «gdahome-os».
           </p>
         </section>
 

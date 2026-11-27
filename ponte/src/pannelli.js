@@ -1,0 +1,532 @@
+/* I pannelli a muro, dall'add-on.
+ *
+ * «Un inject semplice che puo' fare qualsiasi utente»: un Sonoff NSPanel Pro
+ * (o un altro pannello Android) diventa un pannello GdAHome dalla pagina
+ * dell'add-on, senza computer. L'utente scrive — o fa trovare — l'indirizzo,
+ * e l'add-on fa tutto lui via ADB: guarda il pannello, ne salva una copia,
+ * installa GdAHome OS e l'app GdAHome Muro, e lo fa entrare nella casa come
+ * un telefono abbinato. Piu' d'uno per casa.
+ *
+ * Qui c'e' l'orchestrazione e lo stato: l'elenco (in `/data/pannelli.json`),
+ * i lavori coi loro passi che la console segue, la scansione della rete, la
+ * verifica. Il «come si parla» col pannello sta in `adb.js`; il lavoro grezzo
+ * di installazione sta in un `Installatore` iniettabile, cosi' le prove gli
+ * danno un finto e non serve un pannello vero.
+ *
+ * La plancia a muro e' Premium: un'installazione con la casa Base viene
+ * rifiutata qui, dove la licenza si sa (`licenze.js`), non nell'app.
+ */
+import { Archivio } from "./archivio.js";
+import { Adb, adbCE } from "./adb.js";
+import { Installatore } from "./installatore-pannelli.js";
+import { join } from "node:path";
+
+/* Riconosce il modello dal numero dei punti dello schermo. */
+export function modelloDalloSchermo(schermo) {
+  const s = String(schermo || "").replace(/[x×]/i, "x");
+  if (s === "480x480") return "86";
+  if (s === "750x1334" || s === "1334x750") return "120";
+  return "";
+}
+
+function idNuovo() {
+  let s = "pm_";
+  for (let i = 0; i < 12; i += 1) s += "0123456789abcdef"[Math.floor(Math.random() * 16)];
+  return s;
+}
+
+/* Gli indirizzi di una rete /24, dal .1 al .254, a partire dall'indirizzo
+ * della macchina (se e' 192.168.1.x, cerca 192.168.1.1..254). */
+export function indirizziDellaRete(mio) {
+  const m = /^(\d+\.\d+\.\d+)\.\d+$/.exec(String(mio || ""));
+  if (!m) return [];
+  const indirizzi = [];
+  for (let n = 1; n <= 254; n += 1) indirizzi.push(`${m[1]}.${n}`);
+  return indirizzi;
+}
+
+export class Pannelli {
+  constructor({
+    cartella = "/data",
+    adb = null,
+    installatore = null,
+    licenze = null,
+    reteDiCasa = null,
+    dispositivi = null,
+    abbinaPannello = null,
+    plance = null,
+    cartellaDeiPezzi = "/app/muro",
+    avvia = undefined,
+    adesso = () => Date.now(),
+  } = {}) {
+    this.archivio = new Archivio(join(cartella, "pannelli.json"), { pannelli: [] });
+    this.adb = adb || new Adb(avvia ? { avvia } : {});
+    this.installatore =
+      installatore ||
+      new Installatore({ adb: this.adb, cartellaDeiPezzi, abbinaPannello, dispositivi });
+    this.licenze = licenze;
+    this.reteDiCasa = reteDiCasa;
+    this.dispositivi = dispositivi;
+    this.plance = plance;
+    this.adesso = adesso;
+    /* I lavori in corso, per pannello: non si salvano su disco, vivono quanto
+     * dura il lavoro. La console li segue. */
+    this.lavori = new Map();
+  }
+
+  _premium() {
+    /* Senza `licenze` (sul banco) si fa come se fosse Premium: le prove
+     * dell'orchestrazione non passano dalla licenza. In casa, `licenze`
+     * c'e' sempre. */
+    if (!this.licenze) return true;
+    try {
+      const stato = this.licenze.stato?.();
+      return Boolean(stato?.gdahome?.attiva);
+    } catch (_e) {
+      return false;
+    }
+  }
+
+  _trova(id) {
+    return this.archivio.dati.pannelli.find((uno) => uno.id === id) || null;
+  }
+
+  _salva() {
+    this.archivio.salva();
+  }
+
+  /* Cosa mostra la console: l'elenco coi lavori in corso attaccati, se e'
+   * Premium, e se `adb` c'e'. */
+  async elenco() {
+    const adb = await adbCE(this.adb);
+    const pannelli = this.archivio.dati.pannelli.map((uno) => {
+      const lavoro = this.lavori.get(uno.id) || null;
+      return {
+        ...uno,
+        lavoro: lavoro ? { ...lavoro, passi: lavoro.passi.map((p) => ({ ...p })) } : null,
+      };
+    });
+    return { pannelli, premium: this._premium(), adb };
+  }
+
+  /* ─── La scansione della rete ─── */
+
+  /* Cerca i pannelli con ADB acceso sulla rete di casa. Prova a collegarsi a
+   * ogni indirizzo; quelli che rispondono e hanno l'aria di un pannello
+   * tornano nell'elenco. Pochi alla volta, per non riempire la rete. */
+  async rete({ concorrenti = 24 } = {}) {
+    if (!(await adbCE(this.adb))) return { trovati: [], adb: false };
+    const mio = this.reteDiCasa?.indirizzo?.() || this.reteDiCasa?.mio || "";
+    const indirizzi = indirizziDellaRete(mio);
+    if (!indirizzi.length) return { trovati: [], adb: true, senzaRete: true };
+    const gia = new Set(this.archivio.dati.pannelli.map((u) => u.indirizzo));
+    const trovati = [];
+    let i = 0;
+    const lavoratore = async () => {
+      while (i < indirizzi.length) {
+        const indirizzo = indirizzi[i++];
+        try {
+          if (!(await this.adb.connetti(indirizzo))) continue;
+          const modello = await this._modelloDi(indirizzo);
+          if (modello.pannello)
+            trovati.push({ indirizzo, modello: modello.modello, gia: gia.has(indirizzo) });
+          await this.adb.stacca(indirizzo);
+        } catch (_e) {
+          /* Un indirizzo che non risponde non ferma la scansione. */
+        }
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(concorrenti, indirizzi.length) }, lavoratore));
+    trovati.sort((a, b) => a.indirizzo.localeCompare(b.indirizzo, undefined, { numeric: true }));
+    return { trovati, adb: true };
+  }
+
+  async _modelloDi(indirizzo) {
+    const marca =
+      (await this.adb.getprop(indirizzo, "ro.product.manufacturer").catch(() => "")) || "";
+    const schermo = await this._schermo(indirizzo).catch(() => "");
+    const modello = modelloDalloSchermo(schermo);
+    /* Un pannello: un NSPanel riconosciuto, o comunque un Android con lo
+     * schermo piccolo che risponde ad ADB. */
+    const pannello = Boolean(modello) || /sonoff|smatek|eachen|coolkit/i.test(marca);
+    return { pannello, modello, schermo, marca };
+  }
+
+  async _schermo(indirizzo) {
+    const detto = await this.adb.shell(indirizzo, "wm size", { root: false });
+    const m = /(\d+)x(\d+)/.exec(String(detto).replace(/.*:/, ""));
+    return m ? `${m[1]}x${m[2]}` : "";
+  }
+
+  /* ─── La verifica ─── */
+
+  /* Guarda un pannello: che modello e', se e' sbloccato, se c'e' spazio per la
+   * copia, com'e' la WebView. Dice se si puo' installare (`adatto`). */
+  async verifica(indirizzo) {
+    if (!(await adbCE(this.adb)))
+      return {
+        indirizzo,
+        adatto: false,
+        verifiche: [{ esito: "male", detto: "adb non e' in questo add-on" }],
+      };
+    const pulito = indirizzoPulito(indirizzo);
+    if (!pulito) {
+      const e = new Error("L'indirizzo non va bene: scrivi per esempio 192.168.1.50.");
+      e.perUtente = true;
+      throw e;
+    }
+    if (!(await this.adb.connetti(pulito))) {
+      const e = new Error(
+        "Il pannello non risponde. Controlla l'indirizzo e che ADB sia acceso (tappa 1).",
+      );
+      e.perUtente = true;
+      throw e;
+    }
+    const android =
+      (await this.adb.getprop(pulito, "ro.build.version.release").catch(() => "")) || "";
+    const schermo = await this._schermo(pulito).catch(() => "");
+    const modello = modelloDalloSchermo(schermo);
+    const root = await this.adb.root(pulito);
+    const verifiche = [];
+    let adatto = true;
+
+    if (root === "0") verifiche.push({ esito: "bene", detto: "ADB acceso, accesso root" });
+    else {
+      verifiche.push({
+        esito: "male",
+        detto: "Manca l'accesso root: GdAHome OS non si puo' installare",
+      });
+      adatto = false;
+    }
+
+    const sistema = await this._sistemaModificabile(pulito);
+    if (sistema.ok) verifiche.push({ esito: "bene", detto: "Partizione di sistema modificabile" });
+    else {
+      verifiche.push({
+        esito: "male",
+        detto: sistema.detto || "La partizione di sistema non e' modificabile",
+      });
+      adatto = false;
+    }
+
+    const spazio = await this._spazio(pulito);
+    if (spazio.ok) verifiche.push({ esito: "bene", detto: spazio.detto });
+    else verifiche.push({ esito: spazio.grave ? "male" : "giallo", detto: spazio.detto });
+    if (spazio.grave) adatto = false;
+
+    const webview = await this._webview(pulito);
+    verifiche.push(webview);
+
+    await this.adb.stacca(pulito);
+    return {
+      indirizzo: pulito,
+      modello,
+      schermo,
+      android,
+      adatto,
+      nome: "",
+      verifiche,
+    };
+  }
+
+  async _sistemaModificabile(indirizzo) {
+    try {
+      const detto = await this.adb.shell(indirizzo, "mount | grep -E ' /system | / ' | head -n1", {
+        root: true,
+      });
+      if (/\/dev\/block\/dm-/.test(detto))
+        return { ok: false, detto: "dm-verity attivo: /system non si puo' modificare" };
+      return { ok: true };
+    } catch (_e) {
+      return { ok: false, detto: "Non riesco a leggere le partizioni" };
+    }
+  }
+
+  async _spazio(indirizzo) {
+    try {
+      const detto = await this.adb.shell(indirizzo, "df /data | tail -n1", { root: true });
+      const col = detto.trim().split(/\s+/);
+      /* df: … Avail … ; o in blocchi, o con la G/M. Si prende il penultimo o
+       * terz'ultimo numero come «disponibile». */
+      /* df: Filesystem  blocchi  usato  disponibile  uso%  montato.
+       * Tolti il filesystem, l'uso% e il punto di montaggio restano tre
+       * numeri — blocchi, usato, disponibile — e il disponibile e' l'ultimo. */
+      const liberi = col.map((c) => leggiByte(c)).filter((n) => n != null);
+      const gb = liberi.length ? liberi[liberi.length - 1] : null;
+      if (gb == null) return { ok: true, detto: "Spazio: non misurato" };
+      const servono = 2 * 1024 * 1024 * 1024;
+      if (gb < servono)
+        return {
+          ok: false,
+          grave: true,
+          detto: `Poco spazio: servono 2 GB, liberi ${mostraByte(gb)}`,
+        };
+      return { ok: true, detto: `Spazio per la copia: liberi ${mostraByte(gb)}` };
+    } catch (_e) {
+      return { ok: true, detto: "Spazio: non misurato" };
+    }
+  }
+
+  async _webview(indirizzo) {
+    try {
+      const detto = await this.adb.shell(indirizzo, "dumpsys webviewupdate", { root: false });
+      const m = /current webview package.*?(\d+)\.[\d.]+/is.exec(detto);
+      const grande = m ? Number(m[1]) : 0;
+      if (!grande) return { esito: "giallo", detto: "Versione della WebView non letta" };
+      if (grande < 108)
+        return {
+          esito: "giallo",
+          detto: `WebView ${grande}: si aggiorna durante l'installazione`,
+          webviewVecchia: true,
+        };
+      return { esito: "bene", detto: `WebView ${grande}` };
+    } catch (_e) {
+      return { esito: "giallo", detto: "Versione della WebView non letta" };
+    }
+  }
+
+  /* ─── I lavori ─── */
+
+  _lavoro(id, titolo, nomiDeiPassi) {
+    const lavoro = {
+      titolo,
+      passi: nomiDeiPassi.map((p) => ({
+        nome: typeof p === "string" ? p : p.nome,
+        dettaglio: typeof p === "string" ? "" : p.dettaglio || "",
+        stato: "dopo",
+      })),
+      finito: false,
+      errore: "",
+      iniziatoIl: this.adesso(),
+    };
+    this.lavori.set(id, lavoro);
+    return {
+      /* Segna il passo `i` «in corso», con un eventuale dettaglio e percento. */
+      passo: (i, dettaglio, percento) => {
+        for (let k = 0; k < i; k += 1) lavoro.passi[k].stato = "fatto";
+        if (lavoro.passi[i]) {
+          lavoro.passi[i].stato = "adesso";
+          if (dettaglio != null) lavoro.passi[i].dettaglio = dettaglio;
+          if (percento != null) lavoro.passi[i].percento = percento;
+        }
+      },
+      finito: () => {
+        lavoro.passi.forEach((p) => {
+          if (p.stato !== "male") p.stato = "fatto";
+        });
+        lavoro.finito = true;
+      },
+      male: (i, messaggio) => {
+        if (lavoro.passi[i]) lavoro.passi[i].stato = "male";
+        lavoro.errore = messaggio;
+        lavoro.finito = true;
+      },
+      oggetto: lavoro,
+    };
+  }
+
+  /* Installa GdAHome OS su un pannello nuovo. Torna subito con l'id del
+   * pannello creato; il lavoro va avanti per conto suo e la console lo segue. */
+  async installa({ indirizzo, nome = "", plancia = "", utente = "" }) {
+    if (!this._premium()) {
+      const e = new Error("La plancia a muro fa parte di GdAHome Premium.");
+      e.perUtente = true;
+      throw e;
+    }
+    const pulito = indirizzoPulito(indirizzo);
+    if (!pulito) {
+      const e = new Error("L'indirizzo non va bene.");
+      e.perUtente = true;
+      throw e;
+    }
+    /* Un pannello gia' in elenco a questo indirizzo si riusa; se no, nuovo. */
+    let pannello = this.archivio.dati.pannelli.find((u) => u.indirizzo === pulito);
+    if (!pannello) {
+      pannello = { id: idNuovo(), indirizzo: pulito, nome, stato: "sonoff", natoIl: this.adesso() };
+      this.archivio.dati.pannelli.push(pannello);
+    }
+    if (nome) pannello.nome = nome;
+    if (plancia) pannello.plancia = this._nomeDellaPlancia(plancia);
+    if (utente) pannello.utente = utente;
+    pannello.planciaId = plancia || pannello.planciaId;
+    this._salva();
+
+    const passi = this._lavoro(pannello.id, "Copia di sicurezza in corso…", [
+      { nome: "Verifica", dettaglio: "" },
+      { nome: "Copia di sicurezza", dettaglio: "" },
+      { nome: "Installazione", dettaglio: "GdAHome OS, app GdAHome Muro, animazione d'avvio" },
+      { nome: "Abbinamento", dettaglio: "con la casa" },
+      { nome: "Riavvio", dettaglio: "il pannello si accende con GdAHome" },
+    ]);
+
+    /* Il lavoro gira da solo: non si aspetta che finisca per rispondere alla
+     * console. Gli errori finiscono nel lavoro, che la console mostra. */
+    this._esegui(pannello, passi).catch((errore) => {
+      passi.oggetto.errore = messaggioDi(errore);
+      passi.oggetto.finito = true;
+    });
+    return { id: pannello.id };
+  }
+
+  async _esegui(pannello, passi) {
+    const esito = await this.installatore.installa({
+      indirizzo: pannello.indirizzo,
+      planciaId: pannello.planciaId,
+      utente: pannello.utente,
+      nome: pannello.nome,
+      avanti: ({ passo, dettaglio, percento }) => passi.passo(passo, dettaglio, percento),
+    });
+    if (esito.errore) {
+      passi.male(esito.passoRotto ?? 0, esito.errore);
+      pannello.stato = "errore";
+      pannello.errore = esito.errore;
+      this._salva();
+      return;
+    }
+    pannello.stato = "pronto";
+    pannello.acceso = true;
+    pannello.os = esito.os || pannello.os;
+    pannello.app = esito.app || pannello.app;
+    pannello.modello = esito.modello || pannello.modello;
+    pannello.schermo = esito.schermo || pannello.schermo;
+    pannello.dispositivo = esito.dispositivo || pannello.dispositivo;
+    pannello.errore = "";
+    pannello.vistoIl = this.adesso();
+    this._salva();
+    passi.finito();
+    /* Il lavoro finito resta un attimo a schermo, poi sparisce dal prossimo
+     * elenco: la riga torna quella normale, accesa. */
+    setTimeout(() => {
+      const l = this.lavori.get(pannello.id);
+      if (l && l.finito && !l.errore) this.lavori.delete(pannello.id);
+    }, 8000).unref?.();
+  }
+
+  _nomeDellaPlancia(id) {
+    const una = this.plance?.elenco?.()?.find?.((p) => p.id === id);
+    return una ? una.nome : id;
+  }
+
+  /* ─── Le azioni su un pannello gia' GdAHome ─── */
+
+  async azione(id, cosa) {
+    const pannello = this._trova(id);
+    if (!pannello) {
+      const e = new Error("Pannello non trovato.");
+      e.perUtente = true;
+      throw e;
+    }
+    if (cosa === "aggiorna") return this._aggiorna(pannello);
+    if (cosa === "riavvia") return this._riavvia(pannello);
+    if (cosa === "analisi") return this._analisi(pannello);
+    if (cosa === "sonoff") return this._sonoff(pannello);
+    const e = new Error("Azione sconosciuta.");
+    e.perUtente = true;
+    throw e;
+  }
+
+  async _aggiorna(pannello) {
+    const passi = this._lavoro(pannello.id, "Aggiornamento…", ["App GdAHome Muro", "GdAHome OS"]);
+    this.installatore
+      .aggiorna({ indirizzo: pannello.indirizzo, avanti: ({ passo }) => passi.passo(passo) })
+      .then((esito) => {
+        if (esito.errore) return passi.male(0, esito.errore);
+        pannello.app = esito.app || pannello.app;
+        pannello.os = esito.os || pannello.os;
+        pannello.aggiornabile = false;
+        this._salva();
+        passi.finito();
+        setTimeout(() => this.lavori.delete(pannello.id), 5000).unref?.();
+      })
+      .catch((e) => passi.male(0, messaggioDi(e)));
+    return { avviato: true };
+  }
+
+  async _riavvia(pannello) {
+    await this.installatore.riavvia({ indirizzo: pannello.indirizzo });
+    return { fatto: true };
+  }
+
+  async _analisi(pannello) {
+    const rapporto = await this.installatore.analisi({ indirizzo: pannello.indirizzo });
+    pannello.analisi = { quando: this.adesso() };
+    this._salva();
+    return { rapporto };
+  }
+
+  async _sonoff(pannello) {
+    const passi = this._lavoro(pannello.id, "Rimetto il software Sonoff…", [
+      "Ripristino",
+      "Riavvio",
+    ]);
+    this.installatore
+      .sonoff({ indirizzo: pannello.indirizzo, avanti: ({ passo }) => passi.passo(passo) })
+      .then((esito) => {
+        if (esito.errore) return passi.male(0, esito.errore);
+        /* Rimesso Sonoff, il pannello esce dalla casa come un telefono tolto. */
+        if (pannello.dispositivo) this.dispositivi?.stacca?.(pannello.dispositivo);
+        this._rimuovi(pannello.id);
+        passi.finito();
+      })
+      .catch((e) => passi.male(0, messaggioDi(e)));
+    return { avviato: true };
+  }
+
+  /* ─── Rinomina e togli ─── */
+
+  rinomina(id, nome) {
+    const pannello = this._trova(id);
+    if (!pannello) {
+      const e = new Error("Pannello non trovato.");
+      e.perUtente = true;
+      throw e;
+    }
+    pannello.nome = String(nome || "").slice(0, 40);
+    this._salva();
+    return { nome: pannello.nome };
+  }
+
+  togli(id) {
+    const pannello = this._trova(id);
+    if (pannello?.dispositivo) this.dispositivi?.stacca?.(pannello.dispositivo);
+    this._rimuovi(id);
+    return { tolto: true };
+  }
+
+  _rimuovi(id) {
+    this.archivio.dati.pannelli = this.archivio.dati.pannelli.filter((u) => u.id !== id);
+    this.lavori.delete(id);
+    this._salva();
+  }
+}
+
+/* ─── Aiutanti ─── */
+
+export function indirizzoPulito(testo) {
+  const t = String(testo || "").trim();
+  if (!/^[0-9a-zA-Z.:-]{3,64}$/.test(t)) return "";
+  /* Niente di piu' di cifre, punti, due punti, lettere e trattini: non ci
+   * finisce dentro un comando. */
+  return t;
+}
+
+function messaggioDi(errore) {
+  return errore?.perUtente ? errore.message : "Qualcosa non ha funzionato. Riprova.";
+}
+
+/* Legge "1.9G", "500M", "1024" in byte. `null` se non e' un numero. */
+export function leggiByte(testo) {
+  const m = /^([\d.]+)\s*([kmgt])?i?b?$/i.exec(String(testo).trim());
+  if (!m) return null;
+  const n = Number(m[1]);
+  if (!Number.isFinite(n)) return null;
+  const scala = { k: 1024, m: 1024 ** 2, g: 1024 ** 3, t: 1024 ** 4 }[(m[2] || "").toLowerCase()];
+  /* Senza unita', df lo da' in blocchi da 1 KB. */
+  return Math.round(n * (scala || 1024));
+}
+
+function mostraByte(n) {
+  if (n >= 1024 ** 3) return `${(n / 1024 ** 3).toFixed(1).replace(".", ",")} GB`;
+  if (n >= 1024 ** 2) return `${Math.round(n / 1024 ** 2)} MB`;
+  return `${Math.round(n / 1024)} KB`;
+}

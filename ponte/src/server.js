@@ -481,6 +481,8 @@ export function costruisciLaConsole({
   /* Le licenze di questa casa (`licenze.js`): la scheda «Licenza» dice
    * com'e' messa, e ha la casella del codice regalo. */
   licenze = null,
+  /* I pannelli a muro (`pannelli.js`): la linguetta «Pannelli a muro». */
+  pannelli = null,
   cartellaDellaConsole,
   cartellaDellApp,
   /* Da dove arriva l'ingress: vedi `daLIngress`. Si cambia solo nelle prove. */
@@ -561,6 +563,7 @@ export function costruisciLaConsole({
           ferro,
           aggiornamento,
           licenze,
+          pannelli,
         });
       } catch (errore) {
         registro.errore(`la console e' inciampata: ${errore?.message || errore}`);
@@ -977,6 +980,7 @@ async function api({
   ferro,
   aggiornamento,
   licenze = null,
+  pannelli = null,
 }) {
   /* C'e' una versione nuova del ponte?
    *
@@ -1738,6 +1742,101 @@ async function api({
     }
     json(risposta, { rinominato: true });
     return;
+  }
+
+  /* ─── I pannelli a muro ─────────────────────────────────────────────────
+     Un NSPanel diventa un pannello GdAHome da qui: l'add-on lo trova, lo
+     salva, installa GdAHome OS e lo abbina. Tutto via ADB, senza computer.
+     Solo chi amministra (lo controlla gia' chi chiama `api`). Senza il
+     gestore dei pannelli (un add-on senza ADB) si risponde con un elenco
+     vuoto, cosi' la console lo dice invece di rompersi. */
+  if (via === "/api/pannelli" && metodo === "GET") {
+    json(
+      risposta,
+      pannelli ? await pannelli.elenco() : { pannelli: [], premium: false, adb: false },
+    );
+    return;
+  }
+  if (via === "/api/pannelli/rete" && metodo === "POST") {
+    if (!pannelli) return void json(risposta, { trovati: [], adb: false });
+    try {
+      json(risposta, await pannelli.rete());
+    } catch (errore) {
+      male(risposta, 500, "La ricerca in rete non e' riuscita.");
+    }
+    return;
+  }
+  if (via === "/api/pannelli/verifica" && metodo === "POST") {
+    if (!pannelli) return void male(risposta, 503, "Questo add-on non puo' gestire i pannelli.");
+    let corpo;
+    try {
+      corpo = await corpoDiJson(richiesta);
+    } catch (errore) {
+      return void male(risposta, 400, errore.message);
+    }
+    try {
+      json(risposta, await pannelli.verifica(corpo.indirizzo));
+    } catch (errore) {
+      male(
+        risposta,
+        errore.perUtente ? 400 : 500,
+        errore.perUtente ? errore.message : "Non riesco a controllare il pannello.",
+      );
+    }
+    return;
+  }
+  if (via === "/api/pannelli" && metodo === "POST") {
+    if (!pannelli) return void male(risposta, 503, "Questo add-on non puo' gestire i pannelli.");
+    let corpo;
+    try {
+      corpo = await corpoDiJson(richiesta);
+    } catch (errore) {
+      return void male(risposta, 400, errore.message);
+    }
+    try {
+      json(risposta, await pannelli.installa(corpo));
+    } catch (errore) {
+      male(
+        risposta,
+        errore.perUtente ? 400 : 500,
+        errore.perUtente ? errore.message : "L'installazione non e' partita.",
+      );
+    }
+    return;
+  }
+  const pannello = /^\/api\/pannelli\/(pm_[a-f0-9]+)(?:\/([a-z]+))?$/.exec(via);
+  if (pannello && pannelli) {
+    const [, id, azione] = pannello;
+    if (azione && metodo === "POST") {
+      try {
+        json(risposta, await pannelli.azione(id, azione));
+      } catch (errore) {
+        male(
+          risposta,
+          errore.perUtente ? 400 : 500,
+          errore.perUtente ? errore.message : "L'azione non e' riuscita.",
+        );
+      }
+      return;
+    }
+    if (!azione && metodo === "PATCH") {
+      let corpo;
+      try {
+        corpo = await corpoDiJson(richiesta);
+      } catch (errore) {
+        return void male(risposta, 400, errore.message);
+      }
+      try {
+        json(risposta, pannelli.rinomina(id, corpo.nome));
+      } catch (errore) {
+        male(risposta, 404, "questo pannello non c'e'");
+      }
+      return;
+    }
+    if (!azione && metodo === "DELETE") {
+      json(risposta, pannelli.togli(id));
+      return;
+    }
   }
 
   male(risposta, 404, "qui non c'e' niente");

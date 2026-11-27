@@ -1,0 +1,307 @@
+/* I pannelli a muro: l'orchestrazione, con un adb e un installatore finti.
+ * Nessun pannello vero, nessun file di GdAHome OS. */
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import {
+  Pannelli,
+  indirizziDellaRete,
+  modelloDalloSchermo,
+  indirizzoPulito,
+  leggiByte,
+} from "../src/pannelli.js";
+
+function cartella() {
+  return mkdtempSync(join(tmpdir(), "pannelli-"));
+}
+
+/* Un adb finto guidato da una tabella «comando → risposta». */
+function adbFinto(tabella = {}) {
+  const chiamate = [];
+  const rispondi = (chiave) => {
+    const v = tabella[chiave];
+    return typeof v === "function" ? v() : v;
+  };
+  return {
+    chiamate,
+    async connetti(ind) {
+      chiamate.push(["connetti", ind]);
+      return tabella[`connetti ${ind}`] ?? tabella.connetti ?? true;
+    },
+    async stacca() {},
+    async getprop(ind, nome) {
+      return rispondi(`getprop ${nome}`) ?? "";
+    },
+    async shell(ind, comando) {
+      chiamate.push(["shell", comando]);
+      for (const chiave of Object.keys(tabella))
+        if (chiave.startsWith("shell:") && comando.includes(chiave.slice(6)))
+          return rispondi(chiave);
+      return "";
+    },
+    async root(ind) {
+      return tabella.root ?? "0";
+    },
+  };
+}
+
+/* Un installatore finto: segna i passi e torna quello che gli si dice. */
+function installatoreFinto(esito = {}) {
+  const fatti = [];
+  return {
+    fatti,
+    async installa({ avanti }) {
+      for (let i = 0; i < 5; i += 1) avanti({ passo: i });
+      fatti.push("installa");
+      return esito.installa ?? { os: "2.0.0", app: "1.19.33", modello: "86", dispositivo: "dm_x" };
+    },
+    async aggiorna({ avanti }) {
+      avanti({ passo: 0 });
+      avanti({ passo: 1 });
+      fatti.push("aggiorna");
+      return esito.aggiorna ?? { app: "1.19.34", os: "2.0.1" };
+    },
+    async riavvia() {
+      fatti.push("riavvia");
+      return { fatto: true };
+    },
+    async analisi() {
+      fatti.push("analisi");
+      return "== Dispositivo ==\nNSPanel Pro 86";
+    },
+    async sonoff({ avanti }) {
+      avanti({ passo: 0 });
+      avanti({ passo: 1 });
+      fatti.push("sonoff");
+      return esito.sonoff ?? { fatto: true };
+    },
+  };
+}
+
+const premium = { stato: () => ({ gdahome: { attiva: true } }) };
+const base = { stato: () => ({ gdahome: { attiva: false } }) };
+
+/* Aspetta che il lavoro del pannello sia finito (gira da solo). */
+async function finoAllaFine(pannelli, id) {
+  for (let i = 0; i < 100; i += 1) {
+    const l = pannelli.lavori.get(id);
+    if (!l || l.finito) return l;
+    await new Promise((r) => setTimeout(r, 5));
+  }
+  throw new Error("il lavoro non finisce");
+}
+
+test("modelloDalloSchermo riconosce 86 e 120", () => {
+  assert.equal(modelloDalloSchermo("480x480"), "86");
+  assert.equal(modelloDalloSchermo("750x1334"), "120");
+  assert.equal(modelloDalloSchermo("1334x750"), "120");
+  assert.equal(modelloDalloSchermo("1024x600"), "");
+});
+
+test("indirizziDellaRete da' .1..254 della /24", () => {
+  const i = indirizziDellaRete("192.168.1.42");
+  assert.equal(i.length, 254);
+  assert.equal(i[0], "192.168.1.1");
+  assert.equal(i.at(-1), "192.168.1.254");
+  assert.deepEqual(indirizziDellaRete("non-un-ip"), []);
+});
+
+test("indirizzoPulito accetta un ip e rifiuta un comando", () => {
+  assert.equal(indirizzoPulito(" 192.168.1.5 "), "192.168.1.5");
+  assert.equal(indirizzoPulito("a; rm -rf /"), "");
+  assert.equal(indirizzoPulito(""), "");
+});
+
+test("leggiByte legge le unita'", () => {
+  assert.equal(leggiByte("1.9G"), Math.round(1.9 * 1024 ** 3));
+  assert.equal(leggiByte("500M"), 500 * 1024 ** 2);
+  assert.equal(leggiByte("1024"), 1024 * 1024);
+  assert.equal(leggiByte("boh"), null);
+});
+
+test("con Base, installare e' rifiutato prima di toccare il pannello", async () => {
+  const dir = cartella();
+  try {
+    const inst = installatoreFinto();
+    const pannelli = new Pannelli({ cartella: dir, installatore: inst, licenze: base });
+    await assert.rejects(() => pannelli.installa({ indirizzo: "192.168.1.5" }), /Premium/);
+    assert.deepEqual(inst.fatti, []);
+    const { premium: p } = await pannelli.elenco();
+    assert.equal(p, false);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("installa crea il pannello, segue i passi, e lo lascia pronto", async () => {
+  const dir = cartella();
+  try {
+    const inst = installatoreFinto();
+    const plance = { elenco: () => [{ id: "soggiorno", nome: "Soggiorno" }] };
+    const pannelli = new Pannelli({ cartella: dir, installatore: inst, licenze: premium, plance });
+    const { id } = await pannelli.installa({
+      indirizzo: "192.168.1.5",
+      nome: "Soggiorno",
+      plancia: "soggiorno",
+      utente: "u1",
+    });
+    assert.ok(id.startsWith("pm_"));
+    /* Durante il lavoro la riga mostra i passi. */
+    const durante = (await pannelli.elenco()).pannelli.find((p) => p.id === id);
+    assert.ok(durante.lavoro);
+    assert.equal(durante.lavoro.passi.length, 5);
+    await finoAllaFine(pannelli, id);
+    assert.deepEqual(inst.fatti, ["installa"]);
+    const dopo = (await pannelli.elenco()).pannelli.find((p) => p.id === id);
+    assert.equal(dopo.stato, "pronto");
+    assert.equal(dopo.os, "2.0.0");
+    assert.equal(dopo.plancia, "Soggiorno");
+    assert.equal(dopo.utente, "u1");
+    assert.equal(dopo.dispositivo, "dm_x");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("un'installazione fallita lascia il pannello in errore, non a meta'", async () => {
+  const dir = cartella();
+  try {
+    const inst = installatoreFinto({
+      installa: { errore: "Il pannello non risponde piu'.", passoRotto: 1 },
+    });
+    const pannelli = new Pannelli({ cartella: dir, installatore: inst, licenze: premium });
+    const { id } = await pannelli.installa({ indirizzo: "192.168.1.5" });
+    const l = await finoAllaFine(pannelli, id);
+    assert.equal(l.errore, "Il pannello non risponde piu'.");
+    assert.equal(l.passi[1].stato, "male");
+    const dopo = (await pannelli.elenco()).pannelli.find((p) => p.id === id);
+    assert.equal(dopo.stato, "errore");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("l'elenco si salva e torna dopo un riavvio dell'add-on", async () => {
+  const dir = cartella();
+  try {
+    const inst = installatoreFinto();
+    const uno = new Pannelli({ cartella: dir, installatore: inst, licenze: premium });
+    const { id } = await uno.installa({ indirizzo: "192.168.1.5", nome: "Ingresso" });
+    await finoAllaFine(uno, id);
+    /* Un secondo gestore legge lo stesso file. */
+    const due = new Pannelli({
+      cartella: dir,
+      installatore: installatoreFinto(),
+      licenze: premium,
+    });
+    const trovato = (await due.elenco()).pannelli.find((p) => p.id === id);
+    assert.ok(trovato, "il pannello e' sul disco");
+    assert.equal(trovato.nome, "Ingresso");
+    assert.equal(trovato.lavoro, null, "un lavoro finito non si salva");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("rimetti Sonoff stacca il dispositivo e toglie il pannello", async () => {
+  const dir = cartella();
+  try {
+    const staccati = [];
+    const dispositivi = { stacca: (id) => staccati.push(id) };
+    const pannelli = new Pannelli({
+      cartella: dir,
+      installatore: installatoreFinto(),
+      licenze: premium,
+      dispositivi,
+    });
+    const { id } = await pannelli.installa({ indirizzo: "192.168.1.5" });
+    await finoAllaFine(pannelli, id);
+    await pannelli.azione(id, "sonoff");
+    await finoAllaFine(pannelli, id);
+    assert.deepEqual(staccati, ["dm_x"]);
+    const resta = (await pannelli.elenco()).pannelli.find((p) => p.id === id);
+    assert.equal(resta, undefined);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("la scansione della rete trova i pannelli che rispondono", async () => {
+  const dir = cartella();
+  try {
+    const adb = adbFinto({
+      connetti: false,
+      "connetti 10.0.0.5": true,
+      "connetti 10.0.0.9": true,
+      "getprop ro.product.manufacturer": "Sonoff",
+      "shell:wm size": "Physical size: 480x480",
+    });
+    const reteDiCasa = { indirizzo: () => "10.0.0.2" };
+    const pannelli = new Pannelli({
+      cartella: dir,
+      adb,
+      installatore: installatoreFinto(),
+      licenze: premium,
+      reteDiCasa,
+    });
+    const { trovati } = await pannelli.rete({ concorrenti: 8 });
+    const indirizzi = trovati.map((t) => t.indirizzo);
+    assert.ok(indirizzi.includes("10.0.0.5"));
+    assert.ok(indirizzi.includes("10.0.0.9"));
+    assert.equal(
+      trovati.every((t) => t.modello === "86"),
+      true,
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("verifica dice adatto quando root, sistema e spazio ci sono", async () => {
+  const dir = cartella();
+  try {
+    const adb = adbFinto({
+      "getprop ro.build.version.release": "8.1.0",
+      "shell:wm size": "Physical size: 480x480",
+      "shell:mount": "/dev/block/mmcblk0p20 /system ext4 ro",
+      "shell:df /data": "/dev/x 28000000 1000000 26000000 4% /data",
+      "shell:dumpsys webviewupdate":
+        "Current WebView package (name, version): (com.android.webview, 61.0.3163.98)",
+      root: "0",
+    });
+    const pannelli = new Pannelli({
+      cartella: dir,
+      adb,
+      installatore: installatoreFinto(),
+      licenze: premium,
+    });
+    const v = await pannelli.verifica("192.168.1.5");
+    assert.equal(v.adatto, true);
+    assert.equal(v.modello, "86");
+    assert.equal(v.android, "8.1.0");
+    /* La WebView vecchia e' un avviso giallo, non un no. */
+    const wv = v.verifiche.find((r) => /WebView/.test(r.detto));
+    assert.equal(wv.esito, "giallo");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("verifica dice NON adatto senza root", async () => {
+  const dir = cartella();
+  try {
+    const adb = adbFinto({ "shell:wm size": "Physical size: 480x480", root: "" });
+    const pannelli = new Pannelli({
+      cartella: dir,
+      adb,
+      installatore: installatoreFinto(),
+      licenze: premium,
+    });
+    const v = await pannelli.verifica("192.168.1.5");
+    assert.equal(v.adatto, false);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
