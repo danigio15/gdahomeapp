@@ -27,6 +27,10 @@ aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
   calcola l'impronta di una partizione lo dice.
 - **Una copia ferma non resta ferma**: se per 90 secondi non arriva niente si
   riprova, poi si passa al piano B, invece di aspettare mezz'ora.
+- **I pannelli a muro anche dal telefono**: sul telefono la console non ha le
+  linguette, e la sezione dei pannelli non si raggiungeva. Ora nella Casa c'è
+  la mattonella «Pannelli a muro», che durante un'installazione dice il passo
+  e a che punto è.
 
 ## 1.19.39
 
