@@ -27,6 +27,7 @@ import 'casa/la_guardia.dart';
 import 'notifiche/dietro_il_velo.dart';
 import 'notifiche/postino.dart';
 import 'parole.dart';
+import 'muro/sul_muro.dart';
 import 'ponte/centralino.dart';
 import 'ponte/il_link.dart';
 import 'ponte/invito.dart';
@@ -308,6 +309,8 @@ class _AppDiCasaState extends State<AppDiCasa> with WidgetsBindingObserver {
    * scritta in due lingue per un minuto. */
   @override
   void didChangeLocales(List<Locale>? quelle) {
+    /* Sul pannello a muro la lingua e' quella della casa, non di Android. */
+    if (sulMuro) return;
     final adesso = linguaPer([
       for (final quale in quelle ?? const <Locale>[]) quale.languageCode,
     ]);

@@ -411,15 +411,26 @@ test("verifica spiega quando l'ADB di rete e' spento (5555 rifiutata)", async ()
   const dir = cartella();
   try {
     const adb = adbFinto({ connetti: false, causa: "rifiutato" });
+    let prove = 0;
+    const prova = adb.provaCollegamento;
+    adb.provaCollegamento = (ind) => {
+      prove += 1;
+      return prova(ind);
+    };
     const pannelli = new Pannelli({
       cartella: dir,
       adb,
       installatore: installatoreFinto(),
       licenze: premium,
+      riprovaDelRifiuto: { volte: 2, pausa: 1 },
     });
     await assert.rejects(
       () => pannelli.verifica("192.168.1.5"),
       (e) => {
+        /* Un rifiuto si riprova prima di dirlo. */
+        assert.equal(prove, 3);
+        /* Prima l'indirizzo, che il router puo' aver cambiato; poi l'ADB. */
+        assert.match(e.message, /indirizzo nuovo/);
         assert.match(e.message, /ADB di rete/);
         assert.equal(e.perUtente, true);
         /* Il codice-macchina arriva fino alla console, che su «rifiutato»
@@ -427,6 +438,76 @@ test("verifica spiega quando l'ADB di rete e' spento (5555 rifiutata)", async ()
         assert.equal(e.causa, "rifiutato");
         return true;
       },
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("verifica: un rifiuto di un attimo non e' «ADB spento»", async () => {
+  const dir = cartella();
+  try {
+    let volta = 0;
+    const adb = adbFinto({ "getprop ro.build.version.release": "8.1.0" });
+    adb.provaCollegamento = async () =>
+      (volta += 1) === 1 ? { ok: false, causa: "rifiutato" } : { ok: true, causa: "" };
+    const pannelli = new Pannelli({
+      cartella: dir,
+      adb,
+      installatore: installatoreFinto(),
+      licenze: premium,
+      riprovaDelRifiuto: { volte: 3, pausa: 1 },
+    });
+    const v = await pannelli.verifica("192.168.1.5");
+    assert.equal(volta, 2);
+    assert.equal(v.indirizzo ?? "192.168.1.5", "192.168.1.5");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("verifica: un indirizzo che e' gia' un pannello GdAHome non si reinstalla", async () => {
+  const dir = cartella();
+  try {
+    const pannelli = new Pannelli({
+      cartella: dir,
+      adb: adbFinto(),
+      installatore: installatoreFinto(),
+      licenze: premium,
+    });
+    pannelli.archivio.dati.pannelli.push({
+      id: "pm_a",
+      indirizzo: "192.168.1.100",
+      nome: "Salone",
+      stato: "pronto",
+    });
+    await assert.rejects(
+      () => pannelli.verifica("192.168.1.100"),
+      (e) => e.causa === "gia_gdahome" && /Salone/.test(e.message),
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("verifica: una cifra sbagliata fuori dalla rete di casa si dice, col probabile giusto", async () => {
+  const dir = cartella();
+  try {
+    const pannelli = new Pannelli({
+      cartella: dir,
+      adb: adbFinto({ connetti: false, causa: "irraggiungibile" }),
+      installatore: installatoreFinto(),
+      licenze: premium,
+      reteDiCasa: { indirizzo: () => "192.168.1.174" },
+    });
+    await assert.rejects(
+      () => pannelli.verifica("192.198.1.120"),
+      (e) => /forse volevi 192\.168\.1\.120/.test(e.message) && e.causa === "irraggiungibile",
+    );
+    /* Nella rete di casa resta il messaggio di sempre. */
+    await assert.rejects(
+      () => pannelli.verifica("192.168.1.121"),
+      (e) => /non risponde a questo indirizzo/.test(e.message),
     );
   } finally {
     rmSync(dir, { recursive: true, force: true });
@@ -670,6 +751,40 @@ test("una ricerca alla volta, e nessuna mentre si lavora su un pannello", async 
     const occupato = await pannelli.rete();
     assert.equal(occupato.occupato, true);
     assert.equal(connessioni, 254);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("l'analisi dice da che strada il pannello parla con la casa", async () => {
+  const dir = cartella();
+  try {
+    const installatore = {
+      ...installatoreFinto(),
+      analisi: async () => "== Dispositivo ==\nNSPanel",
+    };
+    const fili = {
+      dm_casa: [{ da: "192.168.1.100", daCasa: true, vistoSecondiFa: 2 }],
+      dm_fuori: [{ da: "centralino", daCasa: false, vistoSecondiFa: 1 }],
+    };
+    const pannelli = new Pannelli({
+      cartella: dir,
+      adb: adbFinto(),
+      installatore,
+      licenze: premium,
+      collegamenti: (id) => fili[id] || [],
+    });
+    pannelli.archivio.dati.pannelli.push(
+      { id: "pm_a", indirizzo: "192.168.1.100", stato: "pronto", dispositivo: "dm_casa" },
+      { id: "pm_b", indirizzo: "192.168.1.101", stato: "pronto", dispositivo: "dm_fuori" },
+      { id: "pm_c", indirizzo: "192.168.1.102", stato: "pronto", dispositivo: "dm_spento" },
+    );
+    const a = await pannelli.azione("pm_a", "analisi");
+    assert.match(a.rapporto, /== Collegamento con la casa ==\ndentro casa · da 192\.168\.1\.100/);
+    const b = await pannelli.azione("pm_b", "analisi");
+    assert.match(b.rapporto, /da fuori \(centralino\)/);
+    const c = await pannelli.azione("pm_c", "analisi");
+    assert.match(c.rapporto, /non collegato adesso/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

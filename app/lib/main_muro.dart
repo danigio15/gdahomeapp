@@ -20,16 +20,13 @@ import 'casa/impostazioni.dart';
 import 'main.dart';
 import 'muro/avvio_muro.dart';
 import 'muro/sul_muro.dart';
-import 'parole.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   sulMuro = true;
-  /* La lingua, come `main.dart`: la decide il pannello. */
-  laLingua = linguaPer([
-    for (final quale in WidgetsBinding.instance.platformDispatcher.locales)
-      quale.languageCode,
-  ]);
+  /* La lingua NON la decide il pannello: un NSPanel esce di fabbrica con
+   * Android in inglese, e la plancia di una casa italiana parlava inglese.
+   * Resta quella di serie dell'app (`laLingua`), che e' quella della casa. */
   /* Prima di disegnare: se c'e' il foglietto dell'add-on, si entra nella casa.
    * Poi l'app parte come sempre, e trova la casa gia' pronta. */
   await provvediDalFoglietto();

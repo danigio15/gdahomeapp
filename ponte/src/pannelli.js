@@ -58,6 +58,8 @@ export class Pannelli {
     cartellaDeiPezzi = "/app/muro",
     avvia = undefined,
     adesso = () => Date.now(),
+    riprovaDelRifiuto = { volte: 3, pausa: 3_000 },
+    collegamenti = null,
   } = {}) {
     this.archivio = new Archivio(join(cartella, "pannelli.json"), { pannelli: [] });
     this.adb = adb || new Adb(avvia ? { avvia } : {});
@@ -79,6 +81,10 @@ export class Pannelli {
     /* I lavori in corso, per pannello: non si salvano su disco, vivono quanto
      * dura il lavoro. La console li segue. */
     this.lavori = new Map();
+    /* Quante volte, e ogni quanto, si riprova un pannello che rifiuta. */
+    this.riprovaDelRifiuto = riprovaDelRifiuto;
+    /* Da dove e' collegato un dispositivo (`Ponte.comeECollegato`). */
+    this.collegamenti = collegamenti;
   }
 
   _premium() {
@@ -243,6 +249,18 @@ export class Pannelli {
 
   /* Guarda un pannello: che modello e', se e' sbloccato, se c'e' spazio per la
    * copia, com'e' la WebView. Dice se si puo' installare (`adatto`). */
+  /* Un indirizzo fuori dalla rete di casa e' quasi sempre una cifra sbagliata
+   * («192.198.1.120» per «192.168.1.120»): lo si dice, col probabile giusto
+   * — la rete di casa con l'ultimo numero scritto. `""` se e' nella rete, o
+   * se la rete non si sa. */
+  _fuoriDallaRete(indirizzo) {
+    const casa = this.reteDiCasa?.indirizzo?.() || "";
+    const rete = casa.split(".").slice(0, 3).join(".");
+    const scritto = String(indirizzo).split(":")[0].split(".");
+    if (!rete || scritto.length !== 4 || scritto.slice(0, 3).join(".") === rete) return "";
+    return `${scritto.join(".")} non e' nella rete di casa (${rete}.x): forse volevi ${rete}.${scritto[3]}? Controlla le cifre e riprova.`;
+  }
+
   async verifica(indirizzo) {
     if (!(await adbCE(this.adb)))
       return {
@@ -256,6 +274,19 @@ export class Pannelli {
       e.perUtente = true;
       throw e;
     }
+    /* Un indirizzo che e' gia' un pannello GdAHome non si installa di nuovo:
+     * lo si dice, invece di farlo ricominciare da capo. */
+    const gia = this.archivio.dati.pannelli.find(
+      (uno) => uno.indirizzo === pulito && uno.stato !== "sonoff",
+    );
+    if (gia) {
+      const e = new Error(
+        `${pulito} e' gia' «${gia.nome || "un pannello"}», con GdAHome OS: lo trovi nell'elenco dei pannelli, coi suoi aggiornamenti.`,
+      );
+      e.perUtente = true;
+      e.causa = "gia_gdahome";
+      throw e;
+    }
     const rotto = await this._serverDiAdb();
     if (rotto) {
       const e = new Error(rotto);
@@ -266,6 +297,17 @@ export class Pannelli {
     let collegamento;
     try {
       collegamento = await this.adb.provaCollegamento(pulito);
+      /* Un rifiuto puo' essere di un attimo — il pannello che riapre le sue
+       * app, adb che si riavvia — e una volta sola non basta per dire
+       * «spento»: si riprova per qualche secondo. */
+      for (
+        let k = 0;
+        k < this.riprovaDelRifiuto.volte && collegamento.causa === "rifiutato";
+        k += 1
+      ) {
+        await new Promise((fatto) => setTimeout(fatto, this.riprovaDelRifiuto.pausa));
+        collegamento = await this.adb.provaCollegamento(pulito);
+      }
     } catch (errore) {
       const e = new Error(messaggioDelDemone(errore));
       e.perUtente = true;
@@ -283,8 +325,9 @@ export class Pannelli {
     if (!collegamento.ok) {
       const e = new Error(
         collegamento.causa === "rifiutato"
-          ? "Il pannello risponde ma l'ADB di rete e' spento (porta 5555 chiusa): la modalita' sviluppatore da sola non basta su tutti i firmware. Nelle opzioni sviluppatore del pannello cerca «ADB di rete» o «Debug senza fili» e accendilo; se non c'e', va acceso una volta con un cavo USB (adb tcpip 5555). Poi riprova."
-          : "Il pannello non risponde a questo indirizzo. Controlla che sia quello giusto, che il pannello sia acceso e sulla stessa rete.",
+          ? `A ${pulito} risponde qualcosa che non accetta l'ADB (porta 5555 chiusa). Prima guarda l'indirizzo: il router puo' aver dato al pannello un indirizzo nuovo, e qui adesso c'e' un altro apparecchio. Lo trovi in eWeLink, nella pagina del pannello, o con «Cerca in rete». Se l'indirizzo e' giusto, e' l'ADB di rete del pannello a essere spento: vedi qui sotto.`
+          : this._fuoriDallaRete(pulito) ||
+              "Il pannello non risponde a questo indirizzo. Controlla che sia quello giusto, che il pannello sia acceso e sulla stessa rete.",
       );
       e.perUtente = true;
       e.causa = collegamento.causa;
@@ -386,14 +429,18 @@ export class Pannelli {
     const liberi = this.installatore.spazioLibero?.(this.installatore.copie);
     if (liberi == null)
       return { esito: "giallo", detto: "Spazio per la copia su Home Assistant: non misurato" };
-    if (liberi < 4 * 1024 ** 3)
+    /* Si salvano solo system e oem (`DA_SALVARE`), compresse: finita la copia
+     * restano poche centinaia di MB. Mentre si copia, per stare larghi, si
+     * chiede il posto delle partizioni intere: su un NSPanel fino a ~2 GB.
+     * Prima qui c'era «ne servono 2-4 GB», di quando si copiava tutto. */
+    if (liberi < 2 * 1024 ** 3)
       return {
         esito: "giallo",
-        detto: `Spazio per la copia su Home Assistant: liberi ${mostraByte(liberi)}, ne servono di solito 2-4 GB`,
+        detto: `Spazio per la copia su Home Assistant: liberi ${mostraByte(liberi)}; durante la copia ne servono fino a ~2 GB (poi, compressa, poche centinaia di MB)`,
       };
     return {
       esito: "bene",
-      detto: `Spazio per la copia su Home Assistant: liberi ${mostraByte(liberi)}`,
+      detto: `Spazio per la copia su Home Assistant: liberi ${mostraByte(liberi)} (la copia, compressa, ne occupa poche centinaia di MB)`,
     };
   }
 
@@ -572,6 +619,21 @@ export class Pannelli {
     throw e;
   }
 
+  /* Da che strada parla con la casa: dentro casa, o dal centralino (da
+   * internet, che allunga ogni comando). Detto in chiaro per l'analisi. */
+  _comeECollegato(pannello) {
+    if (!pannello.dispositivo) return "nessun dispositivo abbinato";
+    if (typeof this.collegamenti !== "function") return "(non si sa)";
+    const fili = this.collegamenti(pannello.dispositivo) || [];
+    if (!fili.length) return "non collegato adesso";
+    return fili
+      .map(
+        (f) =>
+          `${f.daCasa ? "dentro casa" : "da fuori (centralino)"} · da ${f.da} · ultimo segno ${f.vistoSecondiFa} s fa`,
+      )
+      .join("\n");
+  }
+
   /* Il pannello e' entrato nella casa? Il suo dispositivo si e' fatto vedere
    * dopo l'abbinamento. `null` se non si puo' sapere: senza casa da guardare,
    * o un dispositivo che non c'e' piu' — tolto a mano dalla console, e allora
@@ -687,7 +749,8 @@ export class Pannelli {
   }
 
   async _analisi(pannello) {
-    const rapporto = await this.installatore.analisi({ indirizzo: pannello.indirizzo });
+    let rapporto = await this.installatore.analisi({ indirizzo: pannello.indirizzo });
+    rapporto += `\n\n== Collegamento con la casa ==\n${this._comeECollegato(pannello)}`;
     pannello.analisi = { quando: this.adesso() };
     this._salva();
     return { rapporto };

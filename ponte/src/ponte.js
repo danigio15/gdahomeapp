@@ -191,6 +191,21 @@ export class Ponte {
     return conto;
   }
 
+  /* Da dove e' collegato un dispositivo adesso: un elemento per filo, con
+   * l'indirizzo da cui arriva («192.168.1.100», o «centralino…» se passa da
+   * fuori) e da quanti secondi. Serve all'analisi di un pannello: un comando
+   * che tarda e' spesso un filo che fa il giro da internet. */
+  comeECollegato(idDelDispositivo) {
+    const adesso = Date.now();
+    return [...this.collegamenti]
+      .filter((uno) => uno.dispositivo?.id === idDelDispositivo)
+      .map((uno) => ({
+        da: String(uno.da || "?"),
+        daCasa: uno.daCasa === true,
+        vistoSecondiFa: Math.round((adesso - (uno.vistoIl || adesso)) / 1000),
+      }));
+  }
+
   /* Butta giu' i fili di un telefono staccato dalla console. Senza questo, un
    * telefono revocato resterebbe dentro finche' non chiude lui. */
   scollega(idDelDispositivo, perche = "") {
