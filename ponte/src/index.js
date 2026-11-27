@@ -440,6 +440,8 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
       };
     },
   });
+  /* Gli aggiornamenti dei pannelli arrivano da soli: vedi `avviaIlGiro`. */
+  pannelli.avviaIlGiro();
 
   /* Il rapporto al quadro di chi ha fatto l'impianto.
    *

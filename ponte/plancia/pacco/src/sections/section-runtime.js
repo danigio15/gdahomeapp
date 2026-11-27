@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-FYWUYBCW.js";
+} from "../../chunk-2OGTUP6U.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,

@@ -14,6 +14,23 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.37
+
+- **Pannelli a muro, l'installazione arriva in fondo**: GdAHome OS e l'app
+  GdAHome Muro adesso sono dentro l'add-on (prima mancavano: «Manca GdAHome OS
+  in questo add-on»). E l'installazione **toglie davvero il software Sonoff**
+  ed eWeLink e le app inutili a muro, mettendoli da parte: «Rimetti Sonoff»
+  riporta il pannello com'era, comprese le app che stavano in /data.
+- **All'accensione si apre GdAHome**: GdAHome OS apriva l'app sbagliata e un
+  pannello appena installato diceva «GdAHome non è installata».
+- **Gli aggiornamenti arrivano da soli sui pannelli**: quando l'add-on si
+  aggiorna porta con sé GdAHome OS e l'app più nuovi; poco dopo, e poi ogni
+  sei ore, controlla i pannelli e aggiorna quelli indietro, installando sopra
+  (restano abbinamento e impostazioni). Un pannello spento si aggiorna al giro
+  dopo; nella console c'è anche il tasto «Aggiorna».
+- **La plancia a muro si sceglie per nome**: diceva «undefined (non a muro)».
+- **Ricerca e verifica dicono cosa stanno facendo**, invece di un tasto spento.
+
 ## 1.19.36
 
 - **Pannelli a muro, adb parte davvero**: il programma `adb` dentro l'add-on

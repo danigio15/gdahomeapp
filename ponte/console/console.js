@@ -1676,6 +1676,15 @@
 
   /* Mostra o nasconde il riquadro «ADB di rete spento» (guida eWeLink +
    * Riprova). Compare solo quando serve: la 5555 rifiuta, o la rete e' vuota. */
+  /* La riga «sto lavorando» sotto i tasti della tappa 2: girello e cosa si sta
+   * facendo. Vuota la nasconde. */
+  function lavoroPannello(testo) {
+    var riga = trova("lavoro-pannello");
+    if (!riga) return;
+    trova("lavoro-pannello-testo").textContent = testo || "";
+    riga.hidden = !testo;
+  }
+
   function mostraAiutoAdbRete(mostra) {
     var dove = trova("aiuto-adb-rete");
     if (dove) dove.hidden = !mostra;
@@ -2026,19 +2035,25 @@
 
   function riempiLeScelte() {
     var plance = (lUltimoStato && lUltimoStato.plance) || [];
+    /* L'elenco delle plance le descrive con `profilo` (il cassetto, che e'
+     * quello che va al pannello), `titolo` e `a_muro`. Prima qui si leggevano
+     * `id`, `nome` e `modello`, che non ci sono: usciva «undefined (non a
+     * muro)» anche per una plancia a muro, e al pannello arrivava «undefined». */
     var aMuro = plance.filter(function (una) {
-      return una.modello === "muro";
+      return una.a_muro === true;
     });
     var scelta = trova("plancia-pannello");
     var prima = scelta.value;
     scelta.textContent = "";
     (aMuro.length ? aMuro : plance).forEach(function (una) {
       var voce = vediPagina.createElement("option");
-      voce.value = una.id;
+      voce.value = una.profilo;
       voce.textContent =
-        una.nome + (una.modello === "muro" ? "" : due(" (non a muro)", " (not a wall one)"));
+        (una.titolo || una.profilo) + (una.a_muro ? "" : due(" (non a muro)", " (not a wall one)"));
       scelta.appendChild(voce);
     });
+    var nota = trova("nota-plancia-muro");
+    if (nota) nota.hidden = Boolean(aMuro.length) || !plance.length;
     if (prima) scelta.value = prima;
     chiediGliUtenti().then(function (utenti) {
       var chi = trova("chi-pannello");
@@ -2126,6 +2141,16 @@
     pannelloNuovo.verificato = null;
     ultimaRicercaPannello = { tipo: "indirizzo", indirizzo: indirizzo };
     disegnaLaVerifica(null);
+    lavoroPannello(
+      due(
+        "Controllo il pannello a " +
+          indirizzo +
+          ": mi collego, guardo modello, accesso, spazio e WebView. Ci vogliono una decina di secondi.",
+        "Checking the panel at " +
+          indirizzo +
+          ": connecting, then model, access, space and WebView. It takes about ten seconds.",
+      ),
+    );
     return chiedi("api/pannelli/verifica", {
       method: "POST",
       body: JSON.stringify({ indirizzo: indirizzo }),
@@ -2144,6 +2169,7 @@
         if (errore.causa === "rifiutato") mostraAiutoAdbRete(true);
       })
       .then(function () {
+        lavoroPannello("");
         tasto.disabled = false;
         tasto.classList.remove("al-lavoro");
       });
@@ -2184,6 +2210,13 @@
     avvisa("avviso-indirizzo", "");
     mostraAiutoAdbRete(false);
     ultimaRicercaPannello = { tipo: "rete" };
+    lista.hidden = true;
+    lavoroPannello(
+      due(
+        "Cerco i pannelli su tutta la rete di casa (254 indirizzi, pochi alla volta). Può volerci fino a un minuto.",
+        "Looking for panels across the home network (254 addresses, a few at a time). It can take up to a minute.",
+      ),
+    );
     return chiedi("api/pannelli/rete", { method: "POST", body: "{}" })
       .then(function (detto) {
         var trovati = detto.trovati || [];
@@ -2279,6 +2312,7 @@
         avvisa("avviso-indirizzo", errore.message);
       })
       .then(function () {
+        lavoroPannello("");
         tasto.disabled = false;
         tasto.classList.remove("al-lavoro");
       });

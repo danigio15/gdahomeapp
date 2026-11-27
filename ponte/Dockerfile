@@ -51,6 +51,11 @@ COPY plancia/ /app/plancia/
 # aprono niente (il perche' per intero sta in `costruisciLaPortaDellApp`,
 # `src/server.js`).
 COPY app/ /app/app/
+# I pezzi di GdAHome OS da mettere sui pannelli a muro: l'APK del sistema, il
+# ponte Zigbee, le animazioni d'avvio. Li costruisce la CI dal sorgente di
+# GdAHome OS (`muro/LEGGIMI.md`). Senza, l'installazione si fermava su «Manca
+# GdAHome OS in questo add-on».
+COPY muro/ /app/muro/
 COPY run.sh /
 RUN chmod a+x /run.sh
 

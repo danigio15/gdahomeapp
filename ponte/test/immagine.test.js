@@ -78,3 +78,23 @@ test("e le due che erano rimaste fuori ci sono per nome", () => {
   assert.match(dockerfile, /^COPY carta\/ /m);
   assert.match(dockerfile, /^COPY marchio\/ /m);
 });
+
+test("i pezzi di GdAHome OS entrano nell'immagine, e la CI li costruisce", () => {
+  /* «Manca GdAHome OS in questo add-on»: l'installatore li cerca in
+   * `/app/muro`, e nell'immagine non c'erano. Ora il Dockerfile li copia e il
+   * workflow delle immagini li costruisce dal sorgente fissato. */
+  const dockerfile = readFileSync(qui("../Dockerfile"), "utf8");
+  assert.match(dockerfile, /^COPY muro\/ \/app\/muro\/$/m);
+  const origine = JSON.parse(readFileSync(qui("../muro/ORIGINE.json"), "utf8"));
+  assert.match(origine.commit, /^[0-9a-f]{40}$/, "il commit di GdAHome OS si fissa per intero");
+  const flusso = readFileSync(qui("../../.github/workflows/immagini-add-on.yml"), "utf8");
+  for (const pezzo of [
+    "GdAHome-OS.apk",
+    "GdAHome-Muro.apk",
+    "versioni.json",
+    "gdaserial-arm64-v8a",
+    "bootanimation-86.zip",
+    "bootanimation-120.zip",
+  ])
+    assert.ok(flusso.includes(pezzo), `il workflow delle immagini non costruisce ${pezzo}`);
+});

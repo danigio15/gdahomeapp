@@ -143,7 +143,8 @@ test("installa crea il pannello, segue i passi, e lo lascia pronto", async () =>
   const dir = cartella();
   try {
     const inst = installatoreFinto();
-    const plance = { elenco: () => [{ id: "soggiorno", nome: "Soggiorno" }] };
+    /* La forma vera di `plance.elenco()`: `profilo` e `titolo`. */
+    const plance = { elenco: () => [{ profilo: "soggiorno", titolo: "Soggiorno" }] };
     const pannelli = new Pannelli({ cartella: dir, installatore: inst, licenze: premium, plance });
     const { id } = await pannelli.installa({
       indirizzo: "192.168.1.5",
@@ -449,6 +450,47 @@ test("verifica: un indirizzo muto da' causa «irraggiungibile», non «rifiutato
         return true;
       },
     );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("il giro degli aggiornamenti aggiorna da solo i pannelli indietro, e salta quelli spenti", async () => {
+  const dir = cartella();
+  try {
+    const aggiornati = [];
+    const pezzi = { os: { codice: 620, nome: "2.0.0" }, muro: { codice: 621, nome: "1.19.37" } };
+    const installatore = {
+      versioniDeiPezzi: () => pezzi,
+      async versioniSulPannello() {
+        return { os: { codice: 620, nome: "2.0.0" }, muro: { codice: 600, nome: "1.19.36" } };
+      },
+      daAggiornare: (sul, p) => (sul.muro.codice < p.muro.codice ? ["muro"] : []),
+      async aggiorna({ indirizzo }) {
+        aggiornati.push(indirizzo);
+        return { app: "1.19.37", os: "2.0.0", versioni: pezzi, aggiornati: ["muro"] };
+      },
+    };
+    const adb = {
+      async provaCollegamento(ind) {
+        return ind === "192.168.1.120"
+          ? { ok: true, causa: "" }
+          : { ok: false, causa: "irraggiungibile" };
+      },
+    };
+    const pannelli = new Pannelli({ cartella: dir, adb, installatore, licenze: premium });
+    pannelli.archivio.dati.pannelli.push(
+      { id: "pm_a", indirizzo: "192.168.1.120", stato: "pronto" },
+      { id: "pm_b", indirizzo: "192.168.1.100", stato: "pronto" },
+      { id: "pm_c", indirizzo: "192.168.1.130", stato: "sonoff" },
+    );
+    const esito = await pannelli.controllaGliAggiornamenti();
+    assert.deepEqual(esito, { controllati: 1, aggiornati: 1 });
+    assert.deepEqual(aggiornati, ["192.168.1.120"]);
+    const [a, b] = pannelli.archivio.dati.pannelli;
+    assert.equal(a.app, "1.19.37");
+    assert.equal(a.aggiornabile, false);
+    assert.equal(b.acceso, false);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

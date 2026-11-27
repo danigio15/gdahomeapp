@@ -782,6 +782,12 @@
                     >
                   </p>
                   <ul class="trovati-in-rete" id="trovati-in-rete" hidden></ul>
+                  <!-- Cosa sta facendo l'add-on mentre cerca o controlla: un
+                       tasto che si spegne da solo non diceva niente. -->
+                  <p class="attesa-rete" id="lavoro-pannello" hidden>
+                    <span class="girello" aria-hidden="true"></span
+                    ><span id="lavoro-pannello-testo" role="status" aria-live="polite"></span>
+                  </p>
                   <div class="in-riga">
                     <input
                       id="indirizzo-pannello"
@@ -886,6 +892,15 @@
                       ><select id="chi-pannello" class="scelta"></select
                     ></label>
                   </div>
+                  <p
+                    class="nota"
+                    id="nota-plancia-muro"
+                    hidden
+                    data-en="You don't have a wall dashboard yet: the panel will show this one. To make one cut for the wall, create it in “Dashboards” and choose “wall”."
+                  >
+                    Non hai ancora una plancia a muro: il pannello mostrerà questa. Per averne una
+                    fatta per il muro, creala in «Le plance» e scegli «a muro».
+                  </p>
                   <p
                     class="nota"
                     data-en="The panel will see what this person sees, like a phone paired for them."

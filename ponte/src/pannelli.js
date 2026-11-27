@@ -453,6 +453,7 @@ export class Pannelli {
     pannello.os = esito.os || pannello.os;
     pannello.app = esito.app || pannello.app;
     pannello.modello = esito.modello || pannello.modello;
+    if (esito.versioni) pannello.versioni = esito.versioni;
     pannello.schermo = esito.schermo || pannello.schermo;
     pannello.dispositivo = esito.dispositivo || pannello.dispositivo;
     pannello.errore = "";
@@ -468,8 +469,9 @@ export class Pannelli {
   }
 
   _nomeDellaPlancia(id) {
-    const una = this.plance?.elenco?.()?.find?.((p) => p.id === id);
-    return una ? una.nome : id;
+    /* L'elenco delle plance le chiama per `profilo` e le mostra col `titolo`. */
+    const una = this.plance?.elenco?.()?.find?.((p) => p.profilo === id);
+    return una ? una.titolo || una.profilo : id;
   }
 
   /* ─── Le azioni su un pannello gia' GdAHome ─── */
@@ -492,19 +494,67 @@ export class Pannelli {
 
   async _aggiorna(pannello) {
     const passi = this._lavoro(pannello.id, "Aggiornamento…", ["App GdAHome Muro", "GdAHome OS"]);
-    this.installatore
+    const finito = this.installatore
       .aggiorna({ indirizzo: pannello.indirizzo, avanti: ({ passo }) => passi.passo(passo) })
       .then((esito) => {
         if (esito.errore) return passi.male(0, esito.errore);
         pannello.app = esito.app || pannello.app;
         pannello.os = esito.os || pannello.os;
+        if (esito.versioni) pannello.versioni = esito.versioni;
         pannello.aggiornabile = false;
+        pannello.aggiornatoIl = this.adesso();
         this._salva();
         passi.finito();
         setTimeout(() => this.lavori.delete(pannello.id), 5000).unref?.();
       })
       .catch((e) => passi.male(0, messaggioDi(e)));
-    return { avviato: true };
+    return { avviato: true, finito };
+  }
+
+  /* ─── Gli aggiornamenti che arrivano da soli ───
+   *
+   * Un add-on nuovo porta con se' GdAHome OS e l'app GdAHome Muro piu' nuovi
+   * (`/app/muro`, con `versioni.json`). Questo giro chiede a ogni pannello
+   * gia' GdAHome che versioni ha, e quelli indietro li aggiorna installando
+   * sopra: stessa firma, quindi restano dati, abbinamento e impostazioni.
+   * Un pannello spento o fuori casa non e' un errore: si riprova al giro dopo,
+   * e intanto la console lo mostra con «aggiornamento pronto». */
+  async controllaGliAggiornamenti({ installaDaSolo = true } = {}) {
+    const pezzi = this.installatore.versioniDeiPezzi?.();
+    if (!pezzi) return { controllati: 0, aggiornati: 0 };
+    let controllati = 0;
+    let aggiornati = 0;
+    for (const pannello of this.archivio.dati.pannelli) {
+      if (pannello.stato !== "pronto" || this.lavori.has(pannello.id)) continue;
+      const prova = await this.adb.provaCollegamento(pannello.indirizzo).catch(() => null);
+      pannello.acceso = Boolean(prova?.ok);
+      if (!prova?.ok) continue;
+      controllati += 1;
+      pannello.vistoIl = this.adesso();
+      const sul = await this.installatore.versioniSulPannello(pannello.indirizzo);
+      pannello.versioni = sul;
+      if (sul.os?.nome) pannello.os = sul.os.nome;
+      if (sul.muro?.nome) pannello.app = sul.muro.nome;
+      pannello.aggiornabile = this.installatore.daAggiornare(sul, pezzi).length > 0;
+      if (pannello.aggiornabile && installaDaSolo) {
+        const { finito } = await this._aggiorna(pannello);
+        await finito;
+        aggiornati += 1;
+      }
+    }
+    this._salva();
+    return { controllati, aggiornati };
+  }
+
+  /* Il giro: poco dopo l'avvio — un add-on appena aggiornato porta pezzi
+   * nuovi — e poi ogni tante ore. Non tiene sveglio il processo. */
+  avviaIlGiro({ primaDopo = 2 * 60_000, ogni = 6 * 60 * 60_000 } = {}) {
+    const giro = () =>
+      this.controllaGliAggiornamenti().catch(() => {
+        /* Un giro andato male non ferma i successivi. */
+      });
+    setTimeout(giro, primaDopo).unref?.();
+    setInterval(giro, ogni).unref?.();
   }
 
   async _riavvia(pannello) {
