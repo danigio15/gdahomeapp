@@ -2055,6 +2055,8 @@
     );
     trova("installa-pannello").disabled =
       !buono || detti.premium !== true || Boolean(lavoro && !lavoro.finito);
+    var pronto = trova("pronto-messaggio");
+    if (pronto) pronto.hidden = !buono || Boolean(lavoro);
     var passi = trova("passi-installazione");
     passi.hidden = !lavoro;
     if (lavoro) passi.replaceWith(Object.assign(iPassi(lavoro), { id: "passi-installazione" }));

@@ -2650,3 +2650,62 @@ button.al-lavoro {
     border-top-color: var(--linea-forte);
   }
 }
+
+/* La guida dei passaggi che tocca all'utente: i tocchi sul pannello per
+   accendere l'ADB. Numerata, chiara, dentro la tappa. */
+.guida {
+  margin: 10px 0 12px;
+  padding-left: 0;
+  list-style: none;
+  counter-reset: guida;
+  display: grid;
+  gap: 10px;
+}
+
+.guida > li {
+  counter-increment: guida;
+  position: relative;
+  padding-left: 36px;
+  min-height: 24px;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--testo);
+}
+
+.guida > li::before {
+  content: counter(guida);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--acceso-soft);
+  color: var(--acceso-forte);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.fatto-adb {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--bene-soft);
+  color: var(--bene);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* «Il pannello è pronto, premi»: il messaggio che riduce tutto a un tasto. */
+.pronto-messaggio {
+  margin: 4px 0 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--acceso-soft);
+  color: var(--acceso-forte);
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.4;
+}

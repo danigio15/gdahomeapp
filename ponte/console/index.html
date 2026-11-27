@@ -703,22 +703,52 @@
                   ><b>1</b><svg class="ic" aria-hidden="true"><use href="#ic-spunta" /></svg
                 ></span>
                 <div class="tappa-corpo">
-                  <p class="tappa-titolo" data-en="Turn on ADB on the panel">
-                    Accendi ADB sul pannello
+                  <p class="tappa-titolo" data-en="Turn on ADB on the panel (once)">
+                    Accendi ADB sul pannello (una volta sola)
                   </p>
                   <p
                     class="nota"
-                    data-en="In the eWeLink app open the panel, tap its device ID several times until developer mode turns on, then turn on ADB. You only do this once."
+                    data-en="This is the one thing GdAHome can't do for you: Sonoff requires it to be turned on from the panel itself. It takes a minute, and only the first time. Then GdAHome does everything."
                   >
-                    Nell'app eWeLink apri il pannello, tocca più volte l'ID del dispositivo finché
-                    si attiva la modalità sviluppatore, poi accendi ADB. Si fa una volta sola.
+                    È l'unica cosa che GdAHome non può fare al posto tuo: Sonoff vuole che si
+                    accenda dal pannello stesso. Ci vuole un minuto, e solo la prima volta. Poi fa
+                    tutto GdAHome.
                   </p>
+                  <ol class="guida">
+                    <li
+                      data-en="Open the eWeLink app and, if you haven't yet, add the panel to your account."
+                    >
+                      Apri l'app eWeLink e, se non l'hai già fatto, aggiungi il pannello al tuo
+                      account.
+                    </li>
+                    <li data-en="Open the panel, then Settings › About.">
+                      Apri il pannello, poi <b>Impostazioni › Informazioni</b>.
+                    </li>
+                    <li
+                      data-en="Tap “Device ID” quickly 7-8 times, until “Developer mode” appears."
+                    >
+                      Tocca <b>«ID dispositivo»</b> rapidamente 7-8 volte, finché compare
+                      <b>«Modalità sviluppatore»</b>.
+                    </li>
+                    <li
+                      data-en="Open “Developer mode”, turn on ADB, and accept the notice that appears on the panel's screen."
+                    >
+                      Apri <b>«Modalità sviluppatore»</b>, accendi <b>ADB</b> e accetta l'avviso che
+                      compare sullo schermo del pannello.
+                    </li>
+                  </ol>
                   <p
                     class="avviso giallo visibile"
-                    data-en="Sonoff warns that turning on ADB can't be undone: the panel won't get Sonoff updates any more."
+                    data-en="Sonoff warns that turning on ADB can't be undone: the panel won't get Sonoff updates any more (GdAHome takes over)."
                   >
                     Sonoff avvisa che accendere ADB non si annulla: il pannello non riceverà più gli
-                    aggiornamenti Sonoff.
+                    aggiornamenti Sonoff (ci pensa GdAHome).
+                  </p>
+                  <p
+                    class="fatto-adb"
+                    data-en="Done? Leave it on — GdAHome finds the panel by itself, below."
+                  >
+                    Fatto? Lascialo acceso: GdAHome trova il pannello da solo, qui sotto.
                   </p>
                 </div>
               </li>
@@ -832,10 +862,21 @@
                     Prima si salva il software Sonoff, poi lo si sostituisce. Il pannello si riavvia
                     un paio di volte: non staccarlo.
                   </p>
+                  <p
+                    class="pronto-messaggio"
+                    id="pronto-messaggio"
+                    hidden
+                    data-en="The panel is ready. Press the button: from here GdAHome does everything by itself — backup, install, pairing. Just don't unplug the panel."
+                  >
+                    Il pannello è pronto. Premi il tasto: da qui fa tutto GdAHome, da solo — copia
+                    di sicurezza, installazione, abbinamento. Tu non staccare il pannello.
+                  </p>
                   <div class="bottoni">
                     <button id="installa-pannello" type="button" disabled data-render="installa">
                       <svg class="ic" aria-hidden="true"><use href="#ic-pannello" /></svg
-                      ><span data-en="Install GdAHome OS">Installa GdAHome OS</span>
+                      ><span data-en="Install GdAHome OS — we do the rest"
+                        >Installa GdAHome OS — al resto pensiamo noi</span
+                      >
                     </button>
                   </div>
                   <ol class="lavoro-passi" id="passi-installazione" hidden></ol>
