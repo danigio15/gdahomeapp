@@ -42,9 +42,16 @@ function animazione(modello) {
   return modello === "120" ? "bootanimation-120.zip" : "bootanimation-86.zip";
 }
 
-/* Le partizioni che si salvano prima di installare: quella di sistema, che
- * e' l'unica che l'installazione modifica. */
-export const DA_SALVARE = /^system(_[ab])?$/i;
+/* Le partizioni che si salvano prima di installare: le sole che
+ * l'installazione modifica — quella di sistema e `oem`, dove Sonoff tiene la
+ * sua animazione d'avvio e alcune app (256 MB quasi vuoti: compressa e' poco). */
+/* Il foglietto dell'abbinamento e l'esito che GdAHome Muro scrive accanto
+ * (`app/lib/muro/avvio_muro.dart`), nella cartella `files` dell'app. */
+const FOGLIETTO = "abbinamento.json";
+const ESITO = "abbinamento.esito";
+const ROVINATO = "abbinamento.rovinato";
+
+export const DA_SALVARE = /^(system|oem)(_[ab])?$/i;
 
 /* Le app che non si toccano MAI: senza, Android o GdAHome non funzionano.
  * Lo stesso elenco di `gdahome-os.sh` (KEEP_RE), gia' provato sui pannelli. */
@@ -56,22 +63,27 @@ export const DI_SONOFF = "sonoff|ewelink|itead|coolkit|smatek|nspanel";
 export const SUPERFLUE =
   "^com\\.android\\.(browser|calendar|contacts|dialer|mms|email|exchange|gallery3d|gallery|music|musicfx|camera2?|deskclock|calculator2|soundrecorder|quicksearchbox|launcher3?|wallpaper\\.livepicker|wallpapercropper|dreams\\..*|printspooler|bips|egg|htmlviewer|bookmarkprovider|galaxy4|noisefield|phasebeam|magicsmoke|musicvis|stk|calllogbackup|cellbroadcastreceiver|emergency|smspush|onetimeinitializer|apps\\.tag|printservice\\.recommendation|traceur|companiondevicemanager|wallpaper|webview\\.shell)$";
 
-/* Lo script che gira sul pannello, da root. Toglie il software Sonoff e le
- * app superflue — quelle di /system spostate in /system/gdahome-removed,
- * quelle di /data salvate in /data/gdahome-removed e disinstallate, ognuna
- * scritta nel suo manifesto — poi mette GdAHome OS, il ponte Zigbee e
- * l'animazione d'avvio (tenendo l'originale), e fissa l'ADB di rete.
- * Scrive «TOLTA <app>» per ognuna e finisce con GDA_OK, o GDA_ERR <perche'>. */
-export function scriptDiSistema() {
+/* Le righe che aprono in scrittura /system e /oem. /oem e' la partizione di
+ * Sonoff: li' stanno la sua animazione d'avvio — che Android 8.1 cerca PRIMA
+ * di quella di /system, e quindi vince sulla nostra — e alcune sue app. */
+const APRI_IN_SCRITTURA = [
+  "mount -o rw,remount /system 2>/dev/null || mount -o rw,remount / 2>/dev/null",
+  'touch /system/.gdatest 2>/dev/null && rm -f /system/.gdatest || { echo "GDA_ERR /system non si puo\' scrivere"; exit 1; }',
+  "OEM=0; if [ -d /oem ] && mount -o rw,remount /oem 2>/dev/null && touch /oem/.gdatest 2>/dev/null; then rm -f /oem/.gdatest; OEM=1; fi",
+];
+const CHIUDI_IN_SCRITTURA = [
+  "sync",
+  "[ $OEM = 1 ] && mount -o ro,remount /oem 2>/dev/null",
+  "mount -o ro,remount /system 2>/dev/null || mount -o ro,remount / 2>/dev/null || true",
+];
+
+/* Il cuore della pulizia: toglie le app Sonoff e superflue — quelle di
+ * /system e /oem spostate in /system/gdahome-removed, quelle di /data salvate
+ * in /data/gdahome-removed e disinstallate, ognuna scritta nel suo manifesto —
+ * e mette da parte l'animazione Sonoff di /oem. Si puo' rifare quante volte si
+ * vuole: quello che e' gia' tolto non si tocca. */
+function righeDellaPulizia() {
   return [
-    "TMP=/data/local/tmp",
-    "R=/system/gdahome-removed",
-    "D=/data/gdahome-removed",
-    `TENERE='${DA_TENERE}'`,
-    `SONOFF='${DI_SONOFF}'`,
-    `SUPERFLUE='${SUPERFLUE}'`,
-    "mount -o rw,remount /system 2>/dev/null || mount -o rw,remount / 2>/dev/null",
-    'touch /system/.gdatest 2>/dev/null && rm -f /system/.gdatest || { echo "GDA_ERR /system non si puo\' scrivere"; exit 1; }',
     "mkdir -p $R $D",
     "[ -f $R/build.prop.orig ] || cp -p /system/build.prop $R/build.prop.orig",
     /* Il launcher di adesso: su un NSPanel e' quello di Sonoff. */
@@ -91,6 +103,7 @@ export function scriptDiSistema() {
     "    /data/*)",
     '      cp "$apk" $D/$pkg.apk && pm uninstall "$pkg" >/dev/null 2>&1 && echo "$pkg" >> $D/manifest.txt && echo "TOLTA $pkg ($perche)" ;;',
     "    *)",
+    '      case "$apk" in /oem/*) [ $OEM = 1 ] || { echo "RESTA $pkg (/oem non si scrive)"; continue; } ;; esac',
     '      cartella=$(dirname "$apk"); sopra=$(basename "$cartella")',
     '      if [ "$sopra" = app ] || [ "$sopra" = priv-app ]; then via="$apk"; else via="$cartella"; fi',
     '      grep -q "^$pkg|" $R/manifest.txt 2>/dev/null && continue',
@@ -98,6 +111,31 @@ export function scriptDiSistema() {
     "  esac",
     "done < $TMP/gda-app.txt",
     "rm -f $TMP/gda-app.txt",
+    /* L'animazione Sonoff di /oem: finche' c'e', Android mostra quella. */
+    "if [ -f /oem/media/bootanimation.zip ]; then",
+    '  if [ $OEM = 1 ] && mv /oem/media/bootanimation.zip $R/oem-bootanimation.zip.orig; then echo "TOLTA animazione Sonoff (/oem)"; else echo "RESTA animazione Sonoff (/oem non si scrive)"; fi',
+    "fi",
+  ];
+}
+
+const INTESTAZIONE = () => [
+  "TMP=/data/local/tmp",
+  "R=/system/gdahome-removed",
+  "D=/data/gdahome-removed",
+  `TENERE='${DA_TENERE}'`,
+  `SONOFF='${DI_SONOFF}'`,
+  `SUPERFLUE='${SUPERFLUE}'`,
+];
+
+/* Lo script che gira sul pannello, da root. La pulizia qui sopra, poi
+ * GdAHome OS, il ponte Zigbee e l'animazione d'avvio (tenendo l'originale), e
+ * l'ADB di rete fisso. Scrive «TOLTA <app>» per ognuna e finisce con GDA_OK,
+ * o GDA_ERR <perche'>. */
+export function scriptDiSistema() {
+  return [
+    ...INTESTAZIONE(),
+    ...APRI_IN_SCRITTURA,
+    ...righeDellaPulizia(),
     "mkdir -p /system/app/GdAHomeOS",
     'cp $TMP/GdAHome-OS.apk /system/app/GdAHomeOS/GdAHomeOS.apk || { echo "GDA_ERR GdAHome OS non si copia in /system"; exit 1; }',
     "chmod 755 /system/app/GdAHomeOS; chmod 644 /system/app/GdAHomeOS/GdAHomeOS.apk",
@@ -111,9 +149,23 @@ export function scriptDiSistema() {
     /* L'ADB di rete per sempre: senza le app Sonoff nessuno lo riaccenderebbe. */
     'grep -q "^ro.gdahome.os=" /system/build.prop || printf "\\n# GdAHome OS\\nro.gdahome.os=2\\npersist.sys.gdahome=1\\nservice.adb.tcp.port=5555\\n" >> /system/build.prop',
     "setprop persist.adb.tcp.port 5555",
-    "sync",
-    "mount -o ro,remount /system 2>/dev/null || mount -o ro,remount / 2>/dev/null || true",
+    ...CHIUDI_IN_SCRITTURA,
     "rm -f $TMP/GdAHome-OS.apk $TMP/bootanimation.zip $TMP/gdaserial",
+    "echo GDA_OK",
+  ].join("\n");
+}
+
+/* Il ritocco: la sola pulizia, su un pannello gia' GdAHome. Serve ai pannelli
+ * installati prima che si sapesse di /oem — l'animazione Sonoff restava li' —
+ * e gira a ogni aggiornamento: se non c'e' niente da togliere, non fa niente.
+ * Quando cambia cosa toglie, si alza RITOCCO e i pannelli lo rifanno. */
+export const RITOCCO = 1;
+export function scriptDelRitocco() {
+  return [
+    ...INTESTAZIONE(),
+    ...APRI_IN_SCRITTURA,
+    ...righeDellaPulizia(),
+    ...CHIUDI_IN_SCRITTURA,
     "echo GDA_OK",
   ].join("\n");
 }
@@ -124,15 +176,16 @@ export function scriptDelRipristino() {
   return [
     "R=/system/gdahome-removed",
     "D=/data/gdahome-removed",
-    "mount -o rw,remount /system 2>/dev/null || mount -o rw,remount / 2>/dev/null",
+    ...APRI_IN_SCRITTURA,
     "if [ -d $R ]; then",
     '  [ -f $R/manifest.txt ] && while IFS="|" read -r pkg via; do [ -e $R/$pkg.removed ] && mv $R/$pkg.removed "$via" && echo "RIMESSA $pkg"; done < $R/manifest.txt',
     "  if [ -f $R/bootanimation.zip.orig ]; then mv $R/bootanimation.zip.orig /system/media/bootanimation.zip; else rm -f /system/media/bootanimation.zip; fi",
+    "  [ -f $R/oem-bootanimation.zip.orig ] && mkdir -p /oem/media && mv $R/oem-bootanimation.zip.orig /oem/media/bootanimation.zip && echo RIMESSA animazione Sonoff",
     "  [ -f $R/build.prop.orig ] && cp -p $R/build.prop.orig /system/build.prop",
     "  rm -rf $R",
     "fi",
     "rm -rf /system/app/GdAHomeOS /system/bin/gdaserial",
-    "sync; mount -o ro,remount /system 2>/dev/null || mount -o ro,remount / 2>/dev/null || true",
+    ...CHIUDI_IN_SCRITTURA,
     '[ -f $D/manifest.txt ] && while read -r pkg; do [ -f $D/$pkg.apk ] && pm install -r $D/$pkg.apk >/dev/null 2>&1 && echo "RIMESSA $pkg"; done < $D/manifest.txt',
     "rm -rf $D",
     "echo GDA_OK",
@@ -149,6 +202,7 @@ export class Installatore {
     scriviCopia = null,
     muroPackage = "com.gdahome.muro",
     attesaDelRiavvio = undefined,
+    attesaDellAbbinamento = undefined,
     indirizzoDiCasa = null,
     copiaDiretta = null,
   } = {}) {
@@ -167,6 +221,8 @@ export class Installatore {
     this.muroPackage = muroPackage;
     /* Quanto aspettare il pannello dopo il riavvio: corto nelle prove. */
     this.attesaDelRiavvio = attesaDelRiavvio;
+    /* Quanto aspettare che il pannello entri nella casa: corto nelle prove. */
+    this.attesaDellAbbinamento = attesaDellAbbinamento;
     /* L'indirizzo dell'add-on sulla rete di casa, per la copia diretta. */
     this.indirizzoDiCasa = indirizzoDiCasa;
     this.copiaDiretta =
@@ -228,25 +284,48 @@ export class Installatore {
       );
       if (copia.errore) return { errore: copia.errore, passoRotto: 1 };
 
+      /* Ogni passo dice la fase in cui e', con la sua barra: «Installazione»
+       * ferma su «Copio i file sul pannello…» non diceva se andava avanti. */
+      const fase = (passo) => (testo, percento) => avanti({ passo, dettaglio: testo, percento });
+
       // 3. Installazione
-      avanti({ passo: 2, dettaglio: "Copio i file sul pannello…" });
-      const inst = await this._installaOs(indirizzo, modello, osApk, muroApk);
+      const inst = await this._installaOs(indirizzo, modello, osApk, muroApk, fase(2));
       if (inst.errore) return { errore: inst.errore, passoRotto: 2 };
+      fase(2)(`Fatto: tolte ${inst.tolte ?? 0} app Sonoff e superflue`, 100);
 
       // 4. Abbinamento
-      avanti({ passo: 3, dettaglio: "Faccio entrare il pannello nella casa…" });
-      const abb = await this._abbina(indirizzo, { nome, utente, planciaId });
+      const abb = await this._abbina(indirizzo, { nome, utente, planciaId }, fase(3));
       if (abb.errore) return { errore: abb.errore, passoRotto: 3 };
+      fase(3)("Fatto: il foglietto e' sul pannello, entra nella casa al riavvio", 100);
 
       // 5. Riavvio, e GdAHome OS che parte davvero
-      avanti({ passo: 4, dettaglio: "Il pannello si riavvia…" });
+      fase(4)("Il pannello si riavvia…", 5);
       await this._riavvia(indirizzo);
-      avanti({ passo: 4, dettaglio: "Aspetto che il pannello torni…" });
-      const dopo = await this._dopoIlRiavvio(indirizzo, this.attesaDelRiavvio);
+      const dopo = await this._dopoIlRiavvio(indirizzo, {
+        ...this.attesaDelRiavvio,
+        dice: fase(4),
+      });
       if (dopo.errore) return { errore: dopo.errore, passoRotto: 4 };
+
+      /* E il pannello e' entrato davvero nella casa? GdAHome OS ha aperto
+       * GdAHome Muro, che legge il foglietto e si collega. Se non succede, il
+       * sistema resta installato — non si butta via niente — ma lo si dice,
+       * e il giro degli aggiornamenti riprova l'abbinamento da solo. */
+      fase(4)("GdAHome OS e' partito: aspetto che il pannello entri nella casa…", 92);
+      const entrato = await this._controllaLAbbinamento(indirizzo, {
+        dispositivo: abb.dispositivo,
+        dal: abb.dal,
+        ...this.attesaDellAbbinamento,
+        dice: fase(4),
+      });
+      if (entrato.abbinato) fase(4)("Fatto: GdAHome OS e' attivo e il pannello e' nella casa", 100);
       await this.adb.stacca(indirizzo);
 
       return {
+        abbinato: entrato.abbinato,
+        abbinatoIl: abb.dal,
+        ...(entrato.abbinato ? {} : { avviso: entrato.errore, passoRotto: 3 }),
+        ritocco: RITOCCO,
         os: inst.os,
         app: inst.versioni?.muro?.nome || abb.app,
         versioni: inst.versioni || null,
@@ -526,26 +605,34 @@ export class Installatore {
    * le app inutili a muro, mettendole da parte perche' «Rimetti Sonoff» le
    * possa rimettere. E' l'installazione di `gdahome-os.sh install` (repository
    * di GdAHome OS), fatta tutta dall'add-on. */
-  async _installaOs(indirizzo, modello, osApk, muroApk) {
+  async _installaOs(indirizzo, modello, osApk, muroApk, dice = () => {}) {
     const tmp = "/data/local/tmp";
+    /* Le fasi, nell'ordine: la barra avanza di una a ogni fase. */
+    const fasi = 6;
+    const a = (k, testo) => dice(`${testo} (${k}/${fasi})`, Math.round(((k - 1) / fasi) * 100));
     try {
       /* Prima l'app GdAHome Muro (l'interfaccia): se qualcosa va storto dopo,
        * il pannello ce l'ha gia'. */
+      a(1, "Installo l'app GdAHome Muro…");
       await this.adb.install(indirizzo, this._pezzo(muroApk), { permessi: true });
       /* La WebView, se c'e' il pezzo e serve. */
       if (this._ceIlPezzo("webview.apk"))
         await this.adb.install(indirizzo, this._pezzo("webview.apk")).catch(() => {});
       /* I pezzi di sistema. */
+      a(2, "Copio GdAHome OS sul pannello…");
       await this.adb.push(indirizzo, this._pezzo(osApk), `${tmp}/GdAHome-OS.apk`);
       const anim = animazione(modello);
+      a(3, "Copio l'animazione d'avvio…");
       if (this._ceIlPezzo(anim))
         await this.adb.push(indirizzo, this._pezzo(anim), `${tmp}/bootanimation.zip`);
       const serial = "gdaserial-arm64-v8a";
+      a(4, "Copio il ponte Zigbee…");
       if (this._ceIlPezzo(serial))
         await this.adb.push(indirizzo, this._pezzo(serial), `${tmp}/gdaserial`).catch(() => {});
 
       /* Lo script va sul pannello come file e si lancia da li': un comando di
        * cento righe passato a `su -c` attraverso `adb exec-out` e' fragile. */
+      a(5, "Tolgo il software Sonoff e metto GdAHome OS nel sistema…");
       await this._mandaLoScript(indirizzo, `${tmp}/gda-os.sh`, scriptDiSistema());
       const esito = await this.adb.shell(indirizzo, `sh ${tmp}/gda-os.sh`, {
         root: true,
@@ -562,6 +649,7 @@ export class Installatore {
       const tolte = (esito.match(/^TOLTA /gm) || []).length;
 
       /* GdAHome OS come schermata home, e il sistema da pannello a muro. */
+      a(6, `Sistemo il pannello per il muro (tolte ${tolte} app)…`);
       await this.adb
         .shell(indirizzo, "cmd package set-home-activity com.gdahome.os/.ui.AvvioActivity", {
           root: true,
@@ -617,16 +705,29 @@ export class Installatore {
 
   /* Fa entrare il pannello nella casa come un telefono abbinato, e scrive sul
    * pannello il foglietto che GdAHome Muro legge al primo avvio. */
-  async _abbina(indirizzo, { nome, utente, planciaId }) {
+  async _abbina(indirizzo, { nome, utente, planciaId, sostituisce = "" }, dice = () => {}) {
     if (!this.abbinaPannello) return { errore: "Questo add-on non sa abbinare i pannelli." };
+    dice("Creo il pannello nella casa, come un telefono abbinato… (1/2)", 0);
     let abb;
     try {
-      abb = await this.abbinaPannello({ nome, utente, plancia: planciaId, sistema: "muro" });
+      /* `sostituisce`: un pannello che si riabbina riprende il suo posto, non
+       * ne occupa un altro (`dispositivi.abbina`). */
+      abb = await this.abbinaPannello({
+        nome,
+        utente,
+        plancia: planciaId,
+        sistema: "muro",
+        sostituisce,
+      });
     } catch (errore) {
       return { errore: scusa(errore) };
     }
     if (!abb?.dispositivo || !abb?.segno)
       return { errore: "L'abbinamento non ha dato un gettone." };
+    /* Da quando si guarda se il pannello si e' collegato
+     * (`_controllaLAbbinamento`): dopo l'abbinamento, che da solo segna il
+     * dispositivo «visto adesso» quando riprende un posto. */
+    const dal = Date.now();
     /* Il foglietto: dove entrare (la rete di casa), per chi, con quale gettone
      * e quale plancia. GdAHome Muro lo legge e si collega come un telefono. */
     const foglietto = JSON.stringify({
@@ -657,12 +758,15 @@ export class Installatore {
        * mette nella cartella dell'app, e **cartella e file** si intestano
        * all'app: una cartella `files` creata da root resterebbe di root, e
        * l'app non ci potrebbe piu' scrivere niente. */
+      dice("Mando al pannello il foglietto per entrare in casa… (2/2)", 50);
       await this._mandaLoScript(indirizzo, "/data/local/tmp/gda-abbinamento.json", foglietto);
       const base = `/data/data/${pkg}`;
       const esito = await this.adb.shell(
         indirizzo,
         [
           `mkdir -p ${dir}`,
+          /* L'esito di prima non vale piu': quello nuovo lo scrive l'app. */
+          `rm -f ${dir}/${ESITO} ${dir}/${ROVINATO}`,
           `cp /data/local/tmp/gda-abbinamento.json ${dir}/abbinamento.json`,
           `rm -f /data/local/tmp/gda-abbinamento.json`,
           `chown ${uid}:${uid} ${dir} ${dir}/abbinamento.json`,
@@ -677,7 +781,87 @@ export class Installatore {
     } catch (errore) {
       return { errore: scusa(errore) };
     }
-    return { dispositivo: abb.dispositivo, app: abb.app || "" };
+    return { dispositivo: abb.dispositivo, app: abb.app || "", dal };
+  }
+
+  /* Il pannello e' entrato davvero nella casa? Prima si diceva «fatto» appena
+   * il foglietto era sul pannello, e se GdAHome Muro non riusciva a leggerlo
+   * il pannello chiedeva il codice senza che nessuno lo sapesse. Adesso si
+   * guarda la casa — il dispositivo del pannello si e' fatto vedere dopo
+   * l'abbinamento — e l'esito che GdAHome Muro scrive accanto al foglietto
+   * (`avvio_muro.dart`): «OK», o «ERRORE <perche'>». Se dopo un po' l'app non
+   * ha ancora letto niente, la si apre. */
+  async _controllaLAbbinamento(
+    indirizzo,
+    { dispositivo, dal = 0, attesa = 90_000, pausa = 3_000, dice = () => {} } = {},
+  ) {
+    const dir = `/data/data/${this.muroPackage}/files`;
+    const partito = Date.now();
+    let riaperta = false;
+    let letto = "";
+    for (;;) {
+      if (this._collegato(dispositivo, dal)) return { abbinato: true };
+      letto = await this.adb
+        .shell(
+          indirizzo,
+          `cat ${dir}/${ESITO} 2>/dev/null; [ -f ${dir}/${FOGLIETTO} ] && echo GDA_FOGLIETTO`,
+          { root: true },
+        )
+        .catch(() => "");
+      const male = (/^ERRORE (.*)$/m.exec(letto) || [])[1];
+      if (male)
+        return {
+          abbinato: false,
+          errore: `GdAHome Muro non e' riuscito a entrare nella casa: ${male.trim()}.`,
+        };
+      const ok = /^OK\b/m.test(letto);
+      /* Senza la casa da guardare (sul banco) basta l'esito dell'app. */
+      if (ok && this._collegato(dispositivo, dal) === null) return { abbinato: true };
+      const passati = Date.now() - partito;
+      if (passati >= attesa) break;
+      /* Il foglietto e' ancora li' e nessun esito: l'app non e' partita. */
+      if (!riaperta && !ok && passati >= Math.min(20_000, attesa / 3)) {
+        riaperta = true;
+        await this._riapriIlMuro(indirizzo);
+      }
+      const secondi = Math.round(passati / 1000);
+      dice(
+        ok
+          ? `GdAHome Muro ha letto il foglietto: aspetto che si colleghi alla casa… ${secondi} s`
+          : `Aspetto che GdAHome Muro entri nella casa… ${secondi} s`,
+        Math.min(95, 10 + Math.round((passati / attesa) * 85)),
+      );
+      await dorme(pausa);
+    }
+    if (/^OK\b/m.test(letto))
+      return {
+        abbinato: false,
+        errore:
+          "GdAHome Muro ha letto il foglietto ma non si collega alla casa: controlla che il pannello raggiunga Home Assistant sulla rete di casa.",
+      };
+    if (/GDA_FOGLIETTO/.test(letto))
+      return {
+        abbinato: false,
+        errore: "GdAHome Muro non ha letto il foglietto dell'abbinamento: non si e' aperto.",
+      };
+    return { abbinato: false, errore: "Il pannello non si e' collegato alla casa." };
+  }
+
+  /* Il dispositivo del pannello si e' fatto vedere dalla casa dopo `dal`?
+   * `null` se non si puo' sapere (nessuna casa da guardare). */
+  _collegato(dispositivo, dal = 0) {
+    if (!dispositivo || typeof this.dispositivi?.elenco !== "function") return null;
+    const uno = this.dispositivi.elenco().find((d) => d.id === dispositivo);
+    return Boolean(uno && Number(uno.vistoIl) > dal);
+  }
+
+  /* Chiude e riapre GdAHome Muro, che al riavvio legge il foglietto. */
+  async _riapriIlMuro(indirizzo) {
+    for (const r of [
+      `am force-stop ${this.muroPackage}`,
+      `monkey -p ${this.muroPackage} -c android.intent.category.LAUNCHER 1`,
+    ])
+      await this.adb.shell(indirizzo, r, { root: true }).catch(() => {});
   }
 
   async _riavvia(indirizzo) {
@@ -691,10 +875,25 @@ export class Installatore {
    * un'app solo al riavvio, quindi solo adesso Android accetta la schermata
    * home, i permessi e il risparmio energetico per lui — e si guarda che sia
    * davvero li'. Come `gdahome-os.sh install` dopo `aspetta_avvio`. */
-  async _dopoIlRiavvio(indirizzo, { attesa = 5 * 60_000, pausa = 5_000 } = {}) {
-    const fino = Date.now() + attesa;
+  async _dopoIlRiavvio(indirizzo, { attesa = 5 * 60_000, pausa = 5_000, dice = () => {} } = {}) {
+    const partito = Date.now();
+    const fino = partito + attesa;
+    /* Il tempo che passa, nella riga: un pannello che si riavvia sta un paio
+     * di minuti senza dire niente, e senza un segno sembra fermo. */
+    const quanto = () => {
+      const secondi = Math.round((Date.now() - partito) / 1000);
+      /* La barra arriva all'80% verso i due minuti, poi ci resta. */
+      dice(
+        `Aspetto che il pannello torni… ${secondi} s`,
+        Math.min(80, 10 + Math.round((secondi / 120) * 70)),
+      );
+    };
+    quanto();
     /* Il pannello ci mette un po' a spegnersi: non lo si prende mentre va giu'. */
-    await dorme(Math.min(20_000, attesa / 4));
+    for (const fine = Date.now() + Math.min(20_000, attesa / 4); Date.now() < fine; ) {
+      await dorme(Math.min(2_000, Math.max(10, fine - Date.now())));
+      quanto();
+    }
     let pronto = false;
     while (Date.now() < fino) {
       const ok = await this.adb.connetti(indirizzo).catch(() => false);
@@ -707,6 +906,7 @@ export class Installatore {
           break;
         }
       }
+      quanto();
       await dorme(pausa);
     }
     if (!pronto)
@@ -714,6 +914,7 @@ export class Installatore {
         errore:
           "Il pannello non e' tornato dopo il riavvio. Aspetta qualche minuto: se non si accende con GdAHome, usa «Rimetti Sonoff» o la copia di sicurezza.",
       };
+    dice("Il pannello e' tornato: imposto GdAHome OS come schermata home…", 90);
     for (const r of [
       "cmd package set-home-activity com.gdahome.os/.ui.AvvioActivity",
       "appops set com.gdahome.os WRITE_SETTINGS allow",
@@ -777,8 +978,12 @@ export class Installatore {
 
   /* Aggiorna quello che e' indietro, installando sopra: la firma e' la
    * stessa, quindi restano dati, abbinamento e impostazioni. Prima l'app,
-   * poi GdAHome OS, che la riapre da solo. */
-  async aggiorna({ indirizzo, avanti = () => {} }) {
+   * poi GdAHome OS, che la riapre da solo. Poi il ritocco (`scriptDelRitocco`:
+   * quello che un'installazione di prima aveva lasciato di Sonoff), e se il
+   * pannello non e' mai entrato nella casa (`abbina`) lo si riabbina: nuovo
+   * foglietto, GdAHome Muro riaperto, e si guarda che entri davvero.
+   * Passi: 0 app, 1 GdAHome OS, 2 ritocco, 3 abbinamento. */
+  async aggiorna({ indirizzo, avanti = () => {}, abbina = null }) {
     try {
       if (!(await this.adb.connetti(indirizzo))) return { errore: "Il pannello non risponde." };
       const prima = await this.versioniSulPannello(indirizzo);
@@ -795,6 +1000,45 @@ export class Installatore {
       avanti({ passo: 1 });
       if (quali.includes("os") && this._ceIlPezzo("GdAHome-OS.apk"))
         await this.adb.install(indirizzo, this._pezzo("GdAHome-OS.apk"));
+
+      avanti({ passo: 2, dettaglio: "Tolgo quello che resta di Sonoff…" });
+      const ritocco = await this._ritocca(indirizzo);
+
+      let abbinato = null;
+      let avviso = "";
+      let dispositivo = "";
+      let abbinatoIl = 0;
+      if (abbina) {
+        const fase = (testo, percento) => avanti({ passo: 3, dettaglio: testo, percento });
+        const abb = await this._abbina(
+          indirizzo,
+          {
+            nome: abbina.nome,
+            utente: abbina.utente,
+            planciaId: abbina.planciaId,
+            sostituisce: abbina.dispositivo || "",
+          },
+          fase,
+        );
+        if (abb.errore) {
+          abbinato = false;
+          avviso = abb.errore;
+        } else {
+          dispositivo = abb.dispositivo;
+          abbinatoIl = abb.dal;
+          /* GdAHome Muro e' gia' aperto: lo si riapre, cosi' legge il foglietto. */
+          await this._riapriIlMuro(indirizzo);
+          const entrato = await this._controllaLAbbinamento(indirizzo, {
+            dispositivo: abb.dispositivo,
+            dal: abb.dal,
+            ...this.attesaDellAbbinamento,
+            dice: fase,
+          });
+          abbinato = entrato.abbinato;
+          avviso = entrato.abbinato ? "" : entrato.errore;
+        }
+      }
+
       const dopo = await this.versioniSulPannello(indirizzo);
       await this.adb.stacca(indirizzo);
       return {
@@ -802,9 +1046,31 @@ export class Installatore {
         os: dopo.os?.nome || "",
         versioni: dopo,
         aggiornati: quali,
+        ritocco: ritocco.fatto ? RITOCCO : 0,
+        tolte: ritocco.tolte || [],
+        ...(abbina ? { abbinato, dispositivo, abbinatoIl } : {}),
+        ...(avviso ? { avviso } : {}),
       };
     } catch (errore) {
       return { errore: scusa(errore) };
+    }
+  }
+
+  /* Il ritocco sul pannello: torna { fatto, tolte: [ "com.sonoff…", … ] }.
+   * Non e' un errore se non riesce: il pannello funziona lo stesso, e si
+   * riprova al prossimo giro. */
+  async _ritocca(indirizzo) {
+    try {
+      const dove = "/data/local/tmp/gda-ritocco.sh";
+      await this._mandaLoScript(indirizzo, dove, scriptDelRitocco());
+      const esito = await this.adb.shell(indirizzo, `sh ${dove}; rm -f ${dove}`, {
+        root: true,
+        attesa: 3 * 60_000,
+      });
+      const tolte = [...String(esito).matchAll(/^TOLTA (.*)$/gm)].map((m) => m[1].trim());
+      return { fatto: /GDA_OK/.test(esito), tolte };
+    } catch (_e) {
+      return { fatto: false, tolte: [] };
     }
   }
 

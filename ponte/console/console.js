@@ -1928,6 +1928,11 @@
       } else if (uno.stato === "errore") {
         quando.className = "male";
         quando.textContent = uno.errore || due("Qualcosa non va", "Something is wrong");
+      } else if (uno.avviso) {
+        /* Installato ma non entrato nella casa: il perche', detto dal
+         * pannello. Il giro degli aggiornamenti riprova da solo. */
+        quando.className = "male";
+        quando.textContent = uno.avviso;
       } else if (uno.acceso) {
         quando.className = "vivo";
         quando.textContent = due("Acceso adesso", "On now");
@@ -1960,7 +1965,10 @@
         });
         tasti.appendChild(installa);
       } else if (uno.aggiornabile && !alLavoro) {
-        var aggiorna = unTasto(due("Aggiorna", "Update"), "");
+        var aggiorna = unTasto(
+          uno.avviso ? due("Riprova l'abbinamento", "Retry pairing") : due("Aggiorna", "Update"),
+          "",
+        );
         aggiorna.addEventListener("click", function () {
           fallo(uno, "aggiorna");
         });

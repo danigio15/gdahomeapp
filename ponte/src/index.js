@@ -421,9 +421,11 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
         return v4?.ip || "";
       },
     },
-    abbinaPannello: async ({ nome, utente, plancia: _plancia }) => {
+    abbinaPannello: async ({ nome, utente, plancia: _plancia, sostituisce = "" }) => {
       const dove = (await ritorno.cosaDire?.()) ?? {};
       const abb = dispositivi.abbina({
+        /* Un pannello che si riabbina riprende il suo posto. */
+        sostituisce,
         nome: nome || "Pannello a muro",
         sistema: "muro",
         marca: "Sonoff",

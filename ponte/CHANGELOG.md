@@ -23,6 +23,25 @@ aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
   accende più; e la si salva compressa (`system.img.gz`), così lo spazio vuoto
   dell'immagine non occupa posto. L'impronta MD5 resta quella dell'immagine
   com'era sul pannello.
+- **Pannelli a muro, all'avvio GdAHome e non più Sonoff**: Sonoff tiene la
+  sua animazione d'avvio nella partizione `oem`, che Android 8.1 guarda prima
+  di quella di sistema, dove si metteva la nostra. Ora l'installazione apre
+  anche `oem`, mette da parte la loro animazione e toglie le app Sonoff che
+  stavano lì. «Rimetti Sonoff» rimette tutto, e la copia di sicurezza ora
+  comprende anche `oem` (quasi vuota: compressa occupa poco).
+- **Pannelli a muro, l'abbinamento si controlla davvero**: l'installazione
+  diceva «fatto» appena il foglietto era sul pannello. Se GdAHome Muro non
+  riusciva a leggerlo, il pannello chiedeva il codice e nessuno sapeva
+  perché. Ora l'app scrive com'è andata, e dopo il riavvio l'add-on aspetta
+  che il pannello entri nella casa. Se non entra lo dice col perché, e se
+  l'app non si è aperta la riapre.
+- **I pannelli già installati si sistemano da soli**: al giro degli
+  aggiornamenti (due minuti dopo l'avvio dell'add-on, poi ogni sei ore) un
+  pannello installato prima toglie quello che resta di Sonoff. Se non è mai
+  entrato nella casa, si riabbina nel suo stesso posto. Non serve
+  reinstallare niente. Nella console c'è anche il tasto «Riprova
+  l'abbinamento».
+- **Ogni passo dell'installazione dice a che punto è**, con la sua barra.
 
 ## 1.19.41
 
