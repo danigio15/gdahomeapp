@@ -1074,23 +1074,69 @@ export class Installatore {
     }
   }
 
+  /* L'analisi del pannello: quello che serve per capire perche' va lento o
+   * cosa non va, in un testo solo da copiare. Ogni domanda ha il suo limite
+   * di tempo: una che non risponde non ferma le altre. */
   async analisi({ indirizzo }) {
     if (!(await this.adb.connetti(indirizzo))) throw perUtente("Il pannello non risponde.");
+    const pkg = this.muroPackage;
     const righe = [];
     const chiedi = async (titolo, comando, root = true) => {
       const detto = await this.adb
-        .shell(indirizzo, comando, { root })
+        .shell(indirizzo, comando, { root, attesa: 20_000 })
         .catch((e) => `? ${e.message}`);
-      righe.push(`== ${titolo} ==\n${detto}`);
+      righe.push(`== ${titolo} ==\n${String(detto).trim() || "(niente)"}`);
     };
-    await chiedi("Dispositivo", "getprop | grep -iE 'product.model|build.version|hardware'", true);
     await chiedi(
-      "GPIO",
-      "ls /sys/class/gpio 2>/dev/null; cat /sys/kernel/debug/gpio 2>/dev/null | head -n 80",
+      "Dispositivo",
+      "getprop ro.product.model; getprop ro.build.version.release; getprop ro.board.platform; getprop ro.hardware; uptime",
     );
-    await chiedi("Retroilluminazione", "ls /sys/class/backlight 2>/dev/null");
-    await chiedi("Termico", "ls /sys/class/thermal 2>/dev/null");
-    await chiedi("Porte seriali", "ls -l /dev/ttyS* /dev/ttyUSB* 2>/dev/null");
+    await chiedi(
+      "Processore",
+      "grep -E 'Hardware|processor' /proc/cpuinfo | sort | uniq -c; for c in /sys/devices/system/cpu/cpu[0-9]*; do echo \"$(basename $c) $(cat $c/cpufreq/scaling_cur_freq 2>/dev/null)/$(cat $c/cpufreq/cpuinfo_max_freq 2>/dev/null) $(cat $c/cpufreq/scaling_governor 2>/dev/null)\"; done",
+    );
+    await chiedi(
+      "Memoria",
+      "grep -E 'MemTotal|MemFree|MemAvailable|Cached|SwapTotal|SwapFree' /proc/meminfo",
+    );
+    await chiedi(
+      "Temperatura",
+      'for z in /sys/class/thermal/thermal_zone*; do echo "$(cat $z/type 2>/dev/null) $(cat $z/temp 2>/dev/null)"; done',
+    );
+    await chiedi("Chi usa il processore", "top -b -n 1 -m 12 2>/dev/null || top -n 1 -m 12");
+    await chiedi(
+      "Scheda video",
+      "dumpsys SurfaceFlinger 2>/dev/null | grep -iE 'GLES|Vendor|Renderer' | head -n 5; getprop ro.hardware.egl; getprop debug.hwui.renderer",
+    );
+    await chiedi(
+      "Disegno di GdAHome Muro",
+      `dumpsys gfxinfo ${pkg} 2>/dev/null | grep -E 'Total frames|Janky|percentile|Number' | head -n 14`,
+    );
+    await chiedi(
+      "Memoria di GdAHome Muro",
+      `dumpsys meminfo ${pkg} 2>/dev/null | grep -E 'TOTAL|Native Heap|Graphics|GL mtrack' | head -n 6`,
+    );
+    await chiedi(
+      "App",
+      `dumpsys package ${pkg} | grep -m2 -E 'versionName|versionCode'; dumpsys package com.gdahome.os | grep -m2 -E 'versionName|versionCode'; dumpsys package com.google.android.webview | grep -m1 versionName; dumpsys package com.android.webview | grep -m1 versionName`,
+    );
+    await chiedi("Sullo schermo", "dumpsys window | grep -m1 mCurrentFocus");
+    await chiedi(
+      "Rete",
+      "ip -4 addr show wlan0 2>/dev/null | grep inet; dumpsys wifi 2>/dev/null | grep -m1 -E 'mWifiInfo'; ip route | head -n 3",
+    );
+    await chiedi(
+      "Abbinamento",
+      `ls -la /data/data/${pkg}/files/ 2>/dev/null; cat /data/data/${pkg}/files/${ESITO} 2>/dev/null`,
+    );
+    await chiedi(
+      "Animazione d'avvio",
+      "ls -la /oem/media /system/media 2>/dev/null; ls /system/gdahome-removed 2>/dev/null",
+    );
+    await chiedi(
+      "Registro di GdAHome Muro",
+      "logcat -d -t 400 2>/dev/null | grep -iE 'flutter|gdahome|chromium.*(error|crash)' | tail -n 40",
+    );
     await this.adb.stacca(indirizzo);
     return righe.join("\n\n");
   }

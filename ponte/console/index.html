@@ -680,6 +680,21 @@
             <ul id="elenco-pannelli" class="elenco"></ul>
             <p class="avviso" id="avviso-pannelli" hidden></p>
           </section>
+          <!-- L'analisi di un pannello: il testo da copiare e mandare a chi
+               aiuta. Prima il tasto la chiedeva e la risposta si perdeva. -->
+          <section class="scheda" id="scheda-analisi" hidden>
+            <div class="testa-di-scheda">
+              <h3 id="titolo-analisi" data-en="Hardware check">Analisi hardware</h3>
+            </div>
+            <p class="spiegazione" id="stato-analisi"></p>
+            <pre class="testo-analisi" id="testo-analisi" hidden></pre>
+            <div class="bottoni">
+              <button type="button" class="tenue" id="chiudi-analisi" data-en="Close">
+                Chiudi
+              </button>
+              <button type="button" id="copia-analisi" data-en="Copy" hidden>Copia</button>
+            </div>
+          </section>
           <p
             class="nota-fondo"
             data-en="Each panel enters the home like a paired phone, with the person you choose. The software it had before is saved in the shared folder of Home Assistant, and you can put it back from the menu."

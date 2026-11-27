@@ -570,3 +570,38 @@ test("riabbinare in un aggiornamento: stesso posto, nuovo foglietto, app riapert
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("l'analisi chiede tutto, e una domanda che non risponde non ferma le altre", async () => {
+  const chiesti = [];
+  const adb = {
+    async connetti() {
+      return true;
+    },
+    async stacca() {},
+    async shell(_i, c, opzioni) {
+      chiesti.push([c, opzioni?.attesa]);
+      if (c.startsWith("top ")) throw new Error("scaduto");
+      if (c.startsWith("getprop ro.product.model")) return "NSPanel Pro\n8.1.0";
+      return "";
+    },
+  };
+  const inst = new Installatore({ adb, cartellaDeiPezzi: tmpdir() });
+  const rapporto = await inst.analisi({ indirizzo: "1.2.3.4" });
+  for (const titolo of [
+    "Dispositivo",
+    "Processore",
+    "Memoria",
+    "Temperatura",
+    "Chi usa il processore",
+    "Scheda video",
+    "Disegno di GdAHome Muro",
+    "Rete",
+    "Abbinamento",
+    "Animazione d'avvio",
+    "Registro di GdAHome Muro",
+  ])
+    assert.match(rapporto, new RegExp(`== ${titolo} ==`));
+  assert.match(rapporto, /NSPanel Pro/);
+  assert.match(rapporto, /== Chi usa il processore ==\n\? scaduto/);
+  assert.ok(chiesti.every(([, attesa]) => attesa === 20_000));
+});

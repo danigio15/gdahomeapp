@@ -42,6 +42,19 @@ aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
   reinstallare niente. Nella console c'è anche il tasto «Riprova
   l'abbinamento».
 - **Ogni passo dell'installazione dice a che punto è**, con la sua barra.
+- **Il pannello più veloce**: GdAHome Muro usava le impostazioni di un
+  telefono di oggi. Sul pannello ora la plancia è sempre leggera, senza vetri
+  sfocati e senza animazioni continue. Il riquadro della plancia lo disegna
+  Flutter invece della «composizione ibrida», che prima di Android 10 copia
+  ogni fotogramma avanti e indietro dalla scheda video e rallentava anche i
+  comandi. Le due voci nelle impostazioni dell'app, sul pannello, sono ferme.
+- **Niente più «Di chi è questo telefono?» sul pannello**: un pannello non è
+  un telefono, e a chi appartiene l'ha già detto l'add-on abbinandolo.
+- **«Analisi hardware» mostra il risultato**: prima il tasto la chiedeva e la
+  risposta non compariva da nessuna parte. Ora si apre una scheda con
+  processore, memoria, temperatura, chi usa il processore, quanti fotogrammi
+  vanno a scatti, rete, abbinamento e animazione d'avvio, col tasto «Copia».
+  «Riavvia» dice che il pannello si sta riavviando.
 
 ## 1.19.41
 

@@ -204,10 +204,13 @@ class _LaPlancia extends StatelessWidget {
                   ),
                 ),
                 value: impostazioni.planciaLeggera,
-                onChanged: (valore) async {
-                  await impostazioni.metti(planciaLeggera: valore);
-                  cambiato();
-                },
+                /* Sul pannello a muro sta ferma accesa (`Impostazioni`). */
+                onChanged: impostazioni.pannelloAMuro
+                    ? null
+                    : (valore) async {
+                        await impostazioni.metti(planciaLeggera: valore);
+                        cambiato();
+                      },
               ),
               if (impostazioni.android) ...[
                 const Divider(height: 1, indent: 16, endIndent: 16),
@@ -234,10 +237,12 @@ class _LaPlancia extends StatelessWidget {
                     ),
                   ),
                   value: impostazioni.composizioneIbrida,
-                  onChanged: (valore) async {
-                    await impostazioni.metti(composizioneIbrida: valore);
-                    cambiato();
-                  },
+                  onChanged: impostazioni.pannelloAMuro
+                      ? null
+                      : (valore) async {
+                          await impostazioni.metti(composizioneIbrida: valore);
+                          cambiato();
+                        },
                 ),
               ],
               Padding(

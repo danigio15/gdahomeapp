@@ -2029,10 +2029,18 @@
           vaiA("nuovo-pannello");
         });
         voce(due("Riavvia", "Restart"), "", function () {
-          fallo(uno, "riavvia");
+          fallo(uno, "riavvia").then(function () {
+            avvisa(
+              "avviso-pannelli",
+              due(
+                "«" + ilNomeDelPannello(uno) + "» si sta riavviando: torna fra un paio di minuti.",
+                "“" + ilNomeDelPannello(uno) + "” is restarting: it's back in a couple of minutes.",
+              ),
+            );
+          });
         });
         voce(due("Analisi hardware", "Hardware check"), "", function () {
-          fallo(uno, "analisi");
+          analizza(uno);
         });
         voce(
           due("Rimetti il software Sonoff", "Put the Sonoff software back"),
@@ -2077,6 +2085,70 @@
       riga.appendChild(tasti);
       elenco.appendChild(riga);
     });
+  }
+
+  /* L'analisi di un pannello, nella sua scheda: prima il tasto la chiedeva
+   * all'add-on e la risposta non si mostrava da nessuna parte. */
+  function analizza(uno) {
+    var scheda = trova("scheda-analisi");
+    var stato = trova("stato-analisi");
+    var testo = trova("testo-analisi");
+    var copia = trova("copia-analisi");
+    trova("titolo-analisi").textContent =
+      due("Analisi di «", "Check of “") + ilNomeDelPannello(uno) + due("»", "”");
+    stato.textContent = due(
+      "Chiedo al pannello come sta… ci vuole una ventina di secondi.",
+      "Asking the panel how it's doing… it takes about twenty seconds.",
+    );
+    testo.hidden = true;
+    copia.hidden = true;
+    scheda.hidden = false;
+    scheda.scrollIntoView({ behavior: "smooth", block: "start" });
+    return chiedi("api/pannelli/" + encodeURIComponent(uno.id) + "/analisi", {
+      method: "POST",
+      body: "{}",
+    })
+      .then(function (risposta) {
+        testo.textContent = (risposta && risposta.rapporto) || "";
+        testo.hidden = false;
+        copia.hidden = false;
+        stato.textContent = due(
+          "Fatto. Copialo e mandalo a chi ti aiuta: dice come sta il pannello e cosa lo rallenta.",
+          "Done. Copy it and send it to whoever is helping you: it says how the panel is doing and what slows it down.",
+        );
+      })
+      .catch(function (errore) {
+        stato.textContent =
+          due("L'analisi non è riuscita: ", "The check failed: ") + errore.message;
+      });
+  }
+
+  function copiaLAnalisi() {
+    var testo = trova("testo-analisi").textContent;
+    var bottone = trova("copia-analisi");
+    var fatto = function () {
+      bottone.textContent = due("Copiato", "Copied");
+      setTimeout(function () {
+        bottone.textContent = due("Copia", "Copy");
+      }, 2000);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(testo).then(fatto, function () {
+        selezionaLAnalisi();
+      });
+    } else {
+      selezionaLAnalisi();
+    }
+  }
+
+  /* Senza appunti (dentro l'ingress a volte non ci sono): si seleziona il
+   * testo, e lo si copia a mano. */
+  function selezionaLAnalisi() {
+    var intervallo = vediPagina.createRange();
+    intervallo.selectNodeContents(trova("testo-analisi"));
+    var scelta = window.getSelection();
+    scelta.removeAllRanges();
+    scelta.addRange(intervallo);
   }
 
   /* Un lavoro su un pannello: aggiorna, riavvia, analisi, sonoff. */
@@ -2415,6 +2487,10 @@
     else cercaInRete();
   });
   trova("installa-pannello").addEventListener("click", installaIlPannello);
+  trova("copia-analisi").addEventListener("click", copiaLAnalisi);
+  trova("chiudi-analisi").addEventListener("click", function () {
+    trova("scheda-analisi").hidden = true;
+  });
   trova("aggiungi-pannello").addEventListener("click", function () {
     pannelloNuovo = { verificato: null, id: "" };
     ultimaRicercaPannello = null;
