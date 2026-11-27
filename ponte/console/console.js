@@ -2196,7 +2196,16 @@
             ? detto.rete + ".x"
             : due("la rete di casa", "the home network");
           var contattati = detto.contattati || 0;
-          if (detto.senzaRete) {
+          if (detto.adbRotto) {
+            /* Non e' la rete e non e' il pannello: e' adb, dentro l'add-on,
+             * che non parte. Lo si dice con la sua ragione. */
+            niente.textContent =
+              detto.perche ||
+              due(
+                "Il programma adb dentro l'add-on non parte. Riavvia l'add-on.",
+                "The adb program inside the add-on doesn't start. Restart the add-on.",
+              );
+          } else if (detto.senzaRete) {
             /* Home Assistant non ci ha detto qual e' la rete di casa. */
             niente.textContent = due(
               "Non riesco a leggere la rete di casa da Home Assistant. Scrivi l'indirizzo del pannello qui sotto.",
@@ -2244,8 +2253,17 @@
           forte.textContent = MODELLI_DEI_PANNELLI[uno.modello] || due("Pannello", "Panel");
           parole.appendChild(forte);
           var dove = vediPagina.createElement("small");
+          /* Un pannello con l'ADB di rete acceso che aspetta il «Consenti»:
+           * si dice cosa fare, sul pannello, prima di toccarlo qui. */
           dove.textContent =
-            uno.indirizzo + (uno.gia ? due(" · già in elenco", " · already listed") : "");
+            uno.indirizzo +
+            (uno.gia ? due(" · già in elenco", " · already listed") : "") +
+            (uno.daAutorizzare
+              ? due(
+                  " · tocca «Consenti» sullo schermo del pannello",
+                  " · tap “Allow” on the panel's screen",
+                )
+              : "");
           parole.appendChild(dove);
           scegli.appendChild(parole);
           scegli.disabled = Boolean(uno.gia);

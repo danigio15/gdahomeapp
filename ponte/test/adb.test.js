@@ -125,3 +125,117 @@ test("provaCollegamento distingue rifiutato da irraggiungibile", async () => {
   const ok = new Adb({ avvia: finto({ fuori: "connected to 1.2.3.4:5555" }).avvia, chiave: null });
   assert.deepEqual(await ok.provaCollegamento("1.2.3.4"), { ok: true, causa: "" });
 });
+
+/* Un adb finto che risponde secondo il comando: serve ai casi in cui il
+ * «connect» e il «get-state» dicono cose diverse. `risposte` mappa un pezzo
+ * degli argomenti ("connect", "get-state", …) in { fuori, errore, codice }. */
+function fintoPerComando(risposte) {
+  const avvia = (_programma, argomenti) => {
+    const chiave = Object.keys(risposte).find((k) => argomenti.includes(k)) ?? "*";
+    const { fuori = "", errore = "", codice = 0 } = risposte[chiave] ?? {};
+    const p = new EventEmitter();
+    p.stdout = new EventEmitter();
+    p.stderr = new EventEmitter();
+    p.stdin = { end() {}, on() {} };
+    p.kill = () => {};
+    queueMicrotask(() => {
+      if (fuori) p.stdout.emit("data", Buffer.from(fuori));
+      if (errore) p.stderr.emit("data", Buffer.from(errore));
+      p.emit("close", codice);
+    });
+    return p;
+  };
+  return avvia;
+}
+
+test("il server di adb che non parte non diventa «non risponde»: lancia «demone»", async () => {
+  /* E' il guasto vero visto dal campo: senza la cartella della chiave il
+   * server si fermava, e la ricerca diceva «nessun dispositivo» su 254. */
+  const adb = new Adb({
+    avvia: finto({
+      errore:
+        "* daemon not running; starting now at tcp:5037\nADB server didn't ACK\nCannot mkdir '/data/adb/.android': No such file or directory\n* failed to start daemon\nerror: cannot connect to daemon",
+      codice: 1,
+    }).avvia,
+    chiave: null,
+  });
+  await assert.rejects(
+    () => adb.provaCollegamento("192.168.1.120"),
+    (e) => {
+      assert.equal(e.causa, "demone");
+      return true;
+    },
+  );
+  await assert.rejects(
+    () => adb.avviaServer(),
+    (e) => e.causa === "demone",
+  );
+});
+
+test("la cartella della chiave si crea prima di lanciare adb", async () => {
+  const { mkdtempSync, existsSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const base = mkdtempSync(join(tmpdir(), "chiave-"));
+  const chiave = join(base, "adb");
+  try {
+    const adb = new Adb({ avvia: finto({ fuori: "Android Debug Bridge" }).avvia, chiave });
+    await adb.comando(["version"]);
+    assert.equal(existsSync(join(chiave, ".android")), true);
+  } finally {
+    rmSync(base, { recursive: true, force: true });
+  }
+});
+
+test("«failed to authenticate» e' un pannello che aspetta il Consenti", async () => {
+  const adb = new Adb({
+    avvia: fintoPerComando({ connect: { fuori: "failed to authenticate to 192.168.1.120:5555" } }),
+    chiave: null,
+  });
+  assert.deepEqual(await adb.provaCollegamento("192.168.1.120"), {
+    ok: false,
+    causa: "non_autorizzato",
+  });
+});
+
+test("collegato ma «unauthorized» non e' pronto: aspetta il Consenti", async () => {
+  const adb = new Adb({
+    avvia: fintoPerComando({
+      connect: { fuori: "connected to 192.168.1.120:5555" },
+      "get-state": { errore: "error: device unauthorized.", codice: 1 },
+    }),
+    chiave: null,
+  });
+  assert.deepEqual(await adb.provaCollegamento("192.168.1.120"), {
+    ok: false,
+    causa: "non_autorizzato",
+  });
+});
+
+test("porta aperta ma muta: adb dice «failed to connect» e lo tiene «offline» — non e' «non risponde»", async () => {
+  /* Visto con un adb vero: una 5555 aperta che non ha ancora risposto come si
+   * deve da' «failed to connect to …» senza «refused», e resta nell'elenco
+   * come «offline». Un indirizzo che non risponde, invece, non c'e'. */
+  const aperta = new Adb({
+    avvia: fintoPerComando({
+      connect: { fuori: "failed to connect to 192.168.1.120:5555" },
+      "get-state": { errore: "error: device offline", codice: 1 },
+    }),
+    chiave: null,
+  });
+  assert.deepEqual(await aperta.provaCollegamento("192.168.1.120"), {
+    ok: false,
+    causa: "non_autorizzato",
+  });
+  const vuota = new Adb({
+    avvia: fintoPerComando({
+      connect: { fuori: "failed to connect to 192.168.1.200:5555" },
+      "get-state": { errore: "error: device '192.168.1.200:5555' not found", codice: 1 },
+    }),
+    chiave: null,
+  });
+  assert.deepEqual(await vuota.provaCollegamento("192.168.1.200"), {
+    ok: false,
+    causa: "irraggiungibile",
+  });
+});

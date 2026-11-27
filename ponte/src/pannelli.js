@@ -124,6 +124,10 @@ export class Pannelli {
    *    pannello sta su un'altra sottorete, si vede subito. */
   async rete({ concorrenti = 24 } = {}) {
     if (!(await adbCE(this.adb))) return { trovati: [], adb: false };
+    /* Il server di adb, una volta, prima di tutto: se non parte, la ricerca
+     * non ha senso e la ragione va detta (prima diceva «nessun dispositivo»). */
+    const rotto = await this._serverDiAdb();
+    if (rotto) return { trovati: [], adb: true, adbRotto: true, perche: rotto };
     const mio = this.reteDiCasa?.indirizzo?.() || this.reteDiCasa?.mio || "";
     const indirizzi = indirizziDellaRete(mio);
     if (!indirizzi.length) return { trovati: [], adb: true, senzaRete: true };
@@ -137,9 +141,17 @@ export class Pannelli {
         const indirizzo = indirizzi[i++];
         try {
           const prova = await this.adb.provaCollegamento(indirizzo);
-          /* Una risposta — collegato o «rifiutato» — dice che l'add-on arriva
-           * a quell'indirizzo: la rete e' raggiungibile. */
-          if (prova.ok || prova.causa === "rifiutato") contattati += 1;
+          /* Una risposta — collegato, «rifiutato» o «da autorizzare» — dice
+           * che l'add-on arriva a quell'indirizzo: la rete e' raggiungibile. */
+          if (prova.ok || prova.causa === "rifiutato" || prova.causa === "non_autorizzato")
+            contattati += 1;
+          /* L'ADB di rete e' acceso ma il pannello aspetta il permesso: non si
+           * sa ancora che modello e', ma e' quasi certamente lui. Si mostra,
+           * e il collegamento resta aperto perche' l'avviso resti a schermo. */
+          if (prova.causa === "non_autorizzato") {
+            trovati.push({ indirizzo, modello: "", daAutorizzare: true, gia: gia.has(indirizzo) });
+            continue;
+          }
           if (!prova.ok) continue;
           const modello = await this._modelloDi(indirizzo);
           if (modello.pannello)
@@ -153,6 +165,18 @@ export class Pannelli {
     await Promise.all(Array.from({ length: Math.min(concorrenti, indirizzi.length) }, lavoratore));
     trovati.sort((a, b) => a.indirizzo.localeCompare(b.indirizzo, undefined, { numeric: true }));
     return { trovati, adb: true, contattati, rete };
+  }
+
+  /* Fa partire il server di adb. Torna "" se e' su, o la frase da mostrare se
+   * non parte. Un adb finto (le prove) senza `avviaServer` e' sempre su. */
+  async _serverDiAdb() {
+    if (typeof this.adb.avviaServer !== "function") return "";
+    try {
+      await this.adb.avviaServer();
+      return "";
+    } catch (errore) {
+      return messaggioDelDemone(errore);
+    }
   }
 
   async _modelloDi(indirizzo) {
@@ -189,7 +213,30 @@ export class Pannelli {
       e.perUtente = true;
       throw e;
     }
-    const collegamento = await this.adb.provaCollegamento(pulito);
+    const rotto = await this._serverDiAdb();
+    if (rotto) {
+      const e = new Error(rotto);
+      e.perUtente = true;
+      e.causa = "adb_rotto";
+      throw e;
+    }
+    let collegamento;
+    try {
+      collegamento = await this.adb.provaCollegamento(pulito);
+    } catch (errore) {
+      const e = new Error(messaggioDelDemone(errore));
+      e.perUtente = true;
+      e.causa = "adb_rotto";
+      throw e;
+    }
+    if (collegamento.causa === "non_autorizzato") {
+      const e = new Error(
+        "Il pannello ha risposto e chiede il permesso: sul suo schermo c'e' «Consentire il debug USB?». Tocca «Consenti» (spunta «Consenti sempre da questo computer»), poi premi di nuovo «Controlla il pannello».",
+      );
+      e.perUtente = true;
+      e.causa = "non_autorizzato";
+      throw e;
+    }
     if (!collegamento.ok) {
       const e = new Error(
         collegamento.causa === "rifiutato"
@@ -526,6 +573,21 @@ export function indirizzoPulito(testo) {
   /* Niente di piu' di cifre, punti, due punti, lettere e trattini: non ci
    * finisce dentro un comando. */
   return t;
+}
+
+/* La frase per quando il programma adb dell'add-on non parte: con la riga che
+ * dice perche', se adb l'ha scritta (per esempio «Cannot mkdir …»). */
+function messaggioDelDemone(errore) {
+  const righe = `${errore?.uscita || ""}\n${errore?.message || ""}`
+    .split("\n")
+    .map((r) => r.trim());
+  /* La riga piu' utile per prima: «Cannot mkdir …» dice il perche', «didn't
+   * ACK» dice solo che non e' partito. */
+  const riga = [/cannot mkdir|permission denied/i, /failed to start|didn't ack/i]
+    .map((cerca) => righe.find((r) => cerca.test(r)))
+    .find(Boolean);
+  const dettaglio = riga ? ` (${riga.replace(/^.*?adb\s*:\s*\S+\s*/i, "").slice(0, 160)})` : "";
+  return `Il programma adb dentro l'add-on non parte${dettaglio}. Riavvia l'add-on; se si ripete, mandaci il registro dell'add-on.`;
 }
 
 function messaggioDi(errore) {
