@@ -1777,11 +1777,11 @@ async function api({
     try {
       json(risposta, await pannelli.verifica(corpo.indirizzo));
     } catch (errore) {
-      male(
-        risposta,
-        errore.perUtente ? 400 : 500,
-        errore.perUtente ? errore.message : "Non riesco a controllare il pannello.",
-      );
+      if (errore.perUtente)
+        /* `causa` ("rifiutato"/"irraggiungibile") serve alla console per
+         * mostrare, solo quando l'ADB di rete e' spento, la guida eWeLink. */
+        json(risposta, { errore: errore.message, causa: errore.causa || "" }, 400);
+      else male(risposta, 500, "Non riesco a controllare il pannello.");
     }
     return;
   }
