@@ -296,6 +296,68 @@ test("la scansione dice quanti ne ha contattati e su che rete (per capire «perc
   }
 });
 
+test("se adb non parte, la ricerca e la verifica lo dicono (non «nessun dispositivo»)", async () => {
+  const dir = cartella();
+  try {
+    const adb = adbFinto({});
+    adb.avviaServer = async () => {
+      throw Object.assign(new Error("* failed to start daemon"), {
+        causa: "demone",
+        uscita: "Cannot mkdir '/data/adb/.android': No such file or directory",
+      });
+    };
+    const pannelli = new Pannelli({
+      cartella: dir,
+      adb,
+      installatore: installatoreFinto(),
+      licenze: premium,
+      reteDiCasa: { indirizzo: () => "192.168.1.174" },
+    });
+    const r = await pannelli.rete();
+    assert.equal(r.adbRotto, true);
+    assert.match(r.perche, /adb dentro l'add-on non parte/);
+    assert.match(r.perche, /Cannot mkdir/);
+    await assert.rejects(
+      () => pannelli.verifica("192.168.1.120"),
+      (e) => e.causa === "adb_rotto" && e.perUtente === true,
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("un pannello che aspetta il Consenti si trova, e la verifica dice di toccarlo", async () => {
+  const dir = cartella();
+  try {
+    const adb = adbFinto({ connetti: false, causa: "irraggiungibile" });
+    const prima = adb.provaCollegamento;
+    adb.provaCollegamento = async (ind) =>
+      ind === "192.168.1.120" ? { ok: false, causa: "non_autorizzato" } : prima(ind);
+    const pannelli = new Pannelli({
+      cartella: dir,
+      adb,
+      installatore: installatoreFinto(),
+      licenze: premium,
+      reteDiCasa: { indirizzo: () => "192.168.1.174" },
+    });
+    const r = await pannelli.rete({ concorrenti: 16 });
+    assert.deepEqual(r.trovati, [
+      { indirizzo: "192.168.1.120", modello: "", daAutorizzare: true, gia: false },
+    ]);
+    assert.equal(r.contattati, 1);
+    await assert.rejects(
+      () => pannelli.verifica("192.168.1.120"),
+      (e) => {
+        assert.equal(e.causa, "non_autorizzato");
+        assert.match(e.message, /Consenti/);
+        return true;
+      },
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("verifica dice adatto quando root, sistema e spazio ci sono", async () => {
   const dir = cartella();
   try {

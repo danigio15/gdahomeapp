@@ -14,6 +14,19 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.36
+
+- **Pannelli a muro, adb parte davvero**: il programma `adb` dentro l'add-on
+  non partiva — teneva la sua chiave in una cartella che nessuno creava — e
+  ogni collegamento falliva in un istante, su qualunque indirizzo. Da lì il
+  «nessun dispositivo» della ricerca e il «non risponde» anche su un pannello
+  con la porta 5555 aperta. Ora la cartella si crea, e se adb non parte lo si
+  dice con il motivo, invece di dare la colpa alla rete.
+- **Il pannello che aspetta il «Consenti» si riconosce**: al primo
+  collegamento il pannello chiede «Consentire il debug USB?». Prima l'add-on lo
+  scambiava per un pannello che non risponde; ora la ricerca lo mostra e dice
+  di toccare «Consenti» sul suo schermo, e la verifica fa lo stesso.
+
 ## 1.19.35
 
 - **Pannelli a muro, ora l'add-on arriva ai pannelli**: dove Home Assistant

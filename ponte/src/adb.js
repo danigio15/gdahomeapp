@@ -21,6 +21,8 @@
  * `adb`, gli danno un finto che risponde quello che serve a provare.
  */
 import { spawn } from "node:child_process";
+import { mkdirSync } from "node:fs";
+import { join } from "node:path";
 
 /* Dove tenere la chiave di ADB, cosi' non ne nasce una nuova a ogni comando
  * (e il pannello non richiede di nuovo il permesso sullo schermo). */
@@ -40,7 +42,24 @@ export const ATTESE = Object.freeze({
  * del verbale di `adb`. */
 function perche(uscita) {
   const t = String(uscita || "").toLowerCase();
-  if (t.includes("device unauthorized") || t.includes("device still authorizing"))
+  /* Il server di adb non parte (per esempio non riesce a creare la cartella
+   * della sua chiave): ogni comando fallisce cosi', su qualunque indirizzo.
+   * Va prima di «cannot connect», che e' anche dentro «cannot connect to
+   * daemon» e lo farebbe sembrare un pannello che non risponde. */
+  if (
+    t.includes("cannot connect to daemon") ||
+    t.includes("failed to start daemon") ||
+    t.includes("server didn't ack") ||
+    t.includes("cannot mkdir")
+  )
+    return "demone";
+  /* Il pannello ha risposto e chiede il permesso: sullo schermo c'e'
+   * «Consentire il debug USB?». */
+  if (
+    t.includes("device unauthorized") ||
+    t.includes("device still authorizing") ||
+    t.includes("failed to authenticate")
+  )
     return "non_autorizzato";
   if (
     t.includes("failed to connect") ||
@@ -83,7 +102,23 @@ export class Adb {
   /* Avvia `adb <argomenti>` e torna { codice, fuori } quando finisce, o lancia
    * ErroreAdb se il programma non c'e' o ci mette troppo. `dentro` e' quello
    * che gli si scrive sullo stdin (per `exec-out`, o un file corto). */
+  /* La cartella della chiave deve esistere prima che adb parta: se manca, il
+   * server di adb si ferma su «Cannot mkdir …/.android» e non parte, e ogni
+   * comando — su qualunque pannello — fallisce. E' successo: la ricerca non
+   * trovava niente e un pannello con la 5555 aperta «non rispondeva». */
+  _preparaLaChiave() {
+    if (!this.chiave || this._chiavePronta) return;
+    try {
+      mkdirSync(join(this.chiave, ".android"), { recursive: true });
+      this._chiavePronta = true;
+    } catch (_e) {
+      /* Se non si puo' creare, adb lo dira' da se' («demone»), e la console
+       * lo mostra invece di un «non risponde». */
+    }
+  }
+
   grezzo(argomenti, { attesa = ATTESE.svelto, dentro = null, binario = false } = {}) {
+    this._preparaLaChiave();
     return new Promise((risolvi, rifiuta) => {
       let proc;
       const ambiente = { ...process.env };
@@ -187,15 +222,76 @@ export class Adb {
     const dev = this._dev(indirizzo);
     try {
       const detto = await this.comando(["connect", dev], { attesa: ATTESE.svelto });
-      if (/connected to|already connected/i.test(detto)) return { ok: true, causa: "" };
-      return { ok: false, causa: perche(detto) || "irraggiungibile" };
+      if (/connected to|already connected/i.test(detto)) {
+        /* Collegato non vuol dire autorizzato: al primo incontro il pannello
+         * mostra «Consentire il debug USB?» e finche' non si tocca Consenti
+         * resta «unauthorized» (o «offline» mentre ci pensa). */
+        const stato = await this._statoDopoIlCollegamento(dev);
+        if (stato === "unauthorized" || stato === "offline")
+          return { ok: false, causa: "non_autorizzato" };
+        return { ok: true, causa: "" };
+      }
+      const causa = perche(detto);
+      if (causa === "demone") throw new ErroreAdb(detto, { causa });
+      if (causa === "non_autorizzato") return { ok: false, causa };
+      if (/refus/i.test(detto)) return { ok: false, causa: "rifiutato" };
+      return { ok: false, causa: await this._apertaMaMuta(dev) };
     } catch (errore) {
-      if (errore.causa === "niente_adb") throw errore;
-      /* "connection refused" = la 5555 e' chiusa: ADB di rete spento.
-       * Il resto (timeout, host irraggiungibile) = non si arriva. */
-      const rifiutato = /refus/i.test(errore.uscita || errore.message || "");
-      return { ok: false, causa: rifiutato ? "rifiutato" : "irraggiungibile" };
+      /* adb che manca, o il suo server che non parte: non e' il pannello, e
+       * non si fa finta che lo sia. Lo dice chi chiama. */
+      if (errore.causa === "niente_adb" || errore.causa === "demone") throw errore;
+      if (errore.causa === "non_autorizzato") return { ok: false, causa: "non_autorizzato" };
+      /* "connection refused" = la 5555 e' chiusa: ADB di rete spento. */
+      if (/refus/i.test(errore.uscita || errore.message || ""))
+        return { ok: false, causa: "rifiutato" };
+      return { ok: false, causa: await this._apertaMaMuta(dev) };
     }
+  }
+
+  /* Un collegamento non riuscito che non e' un «rifiutato»: o non si arriva
+   * all'indirizzo, o la porta c'e' ma il pannello non ha ancora risposto come
+   * si deve. adb scrive in tutti e due i casi «failed to connect to …», e la
+   * differenza la dice il suo elenco: una porta aperta resta registrata
+   * («offline» o «unauthorized»), un indirizzo che non risponde no. E' il caso
+   * di un pannello con l'ADB di rete acceso che aspetta il «Consenti». */
+  async _apertaMaMuta(dev) {
+    const stato = await this.stato(dev);
+    return stato === "offline" || stato === "unauthorized" ? "non_autorizzato" : "irraggiungibile";
+  }
+
+  /* Lo stato del pannello subito dopo il collegamento: "device",
+   * "unauthorized", "offline", o quello che adb risponde. Un «offline» si
+   * riguarda per qualche istante: e' il pannello che sta ancora decidendo. */
+  async _statoDopoIlCollegamento(dev, { volte = 6, pausa = 500 } = {}) {
+    let stato = "";
+    for (let i = 0; i < volte; i += 1) {
+      stato = await this.stato(dev);
+      if (stato !== "offline") return stato;
+      await new Promise((fatto) => setTimeout(fatto, pausa));
+    }
+    return stato;
+  }
+
+  /* `adb get-state`: "device" se si puo' lavorare, "unauthorized" se il
+   * pannello aspetta il permesso, "offline", o "" se non si sa. */
+  async stato(indirizzo) {
+    try {
+      const detto = await this.comando(["-s", this._dev(indirizzo), "get-state"], {
+        attesa: ATTESE.svelto,
+      });
+      return String(detto).trim().split("\n").pop().trim();
+    } catch (errore) {
+      if (errore.causa === "non_autorizzato") return "unauthorized";
+      if (errore.causa === "offline") return "offline";
+      return "";
+    }
+  }
+
+  /* Fa partire il server di adb una volta sola, prima di una ricerca: cosi'
+   * i collegamenti in parallelo non si contendono l'avvio, e se il server non
+   * parte lo si sa subito, con la sua ragione, invece di 254 «non risponde». */
+  async avviaServer() {
+    await this.comando(["start-server"], { attesa: ATTESE.svelto });
   }
 
   async stacca(indirizzo) {
