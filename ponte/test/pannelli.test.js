@@ -525,3 +525,40 @@ test("la ricerca dice a che punto e', mentre va", async () => {
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("una ricerca alla volta, e nessuna mentre si lavora su un pannello", async () => {
+  const dir = cartella();
+  try {
+    let connessioni = 0;
+    const adb = {
+      async comando() {
+        return "";
+      },
+      async provaCollegamento() {
+        connessioni += 1;
+        await new Promise((r) => setTimeout(r, 1));
+        return { ok: false, causa: "rifiutato" };
+      },
+    };
+    const pannelli = new Pannelli({
+      cartella: dir,
+      adb,
+      installatore: installatoreFinto(),
+      licenze: premium,
+      reteDiCasa: { indirizzo: () => "10.0.0.2" },
+    });
+    /* Due richieste insieme (la console che chiede, e chiede ancora): una
+     * ricerca sola, 254 indirizzi e non 508. */
+    const [a, b] = await Promise.all([pannelli.rete(), pannelli.rete()]);
+    assert.equal(a, b);
+    assert.equal(connessioni, 254);
+    assert.equal(pannelli.statoDellaRicerca().fatti, 254);
+    /* Con un'installazione in corso non si cerca: adb serve al pannello. */
+    pannelli.lavori.set("pm_x", { finito: false, passi: [] });
+    const occupato = await pannelli.rete();
+    assert.equal(occupato.occupato, true);
+    assert.equal(connessioni, 254);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

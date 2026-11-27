@@ -14,6 +14,24 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.40
+
+- **Pannelli a muro, una ricerca alla volta**: mentre si aggiunge un pannello
+  la console cercava in rete ogni 4 secondi, ma una ricerca dura fino a un
+  minuto: se ne accumulavano a decine, il conteggio arrivava a «500 di 254» e
+  centinaia di connessioni intasavano adb mentre copiava il pannello. Ora la
+  ricerca successiva parte solo dopo la fine della precedente, il ponte ne fa
+  una sola alla volta, e durante un'installazione non cerca proprio.
+- **La copia di sicurezza mostra che va avanti**: «oem · 120 MB di 256 MB ·
+  4,2 MB/s», con la barra che segue i byte copiati; e mentre il pannello
+  calcola l'impronta di una partizione lo dice.
+- **Una copia ferma non resta ferma**: se per 90 secondi non arriva niente si
+  riprova, poi si passa al piano B, invece di aspettare mezz'ora.
+- **I pannelli a muro anche dal telefono**: sul telefono la console non ha le
+  linguette, e la sezione dei pannelli non si raggiungeva. Ora nella Casa c'è
+  la mattonella «Pannelli a muro», che durante un'installazione dice il passo
+  e a che punto è.
+
 ## 1.19.39
 
 - **Pannelli a muro, la copia di sicurezza regge su un pannello vero**: sul

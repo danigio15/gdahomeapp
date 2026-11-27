@@ -274,10 +274,15 @@
     fermaAttesaDellaRete();
     var attesa = trova("attesa-rete");
     if (attesa) attesa.hidden = false;
+    /* Un giro dopo l'altro: il prossimo parte 4 secondi dopo la FINE di
+     * quello prima. Prima ne partiva uno ogni 4 secondi comunque, e una
+     * ricerca dura fino a un minuto: si sovrapponevano a decine. */
+    var questa = { prossimo: null };
+    attesaDellaRete = questa;
     var giro = function () {
       chiedi("api/pannelli/rete", { method: "POST", body: "{}" })
         .then(function (detto) {
-          if (!attesaDellaRete) return;
+          if (attesaDellaRete !== questa) return;
           var nuovo = (detto.trovati || []).find(function (uno) {
             return !uno.gia;
           });
@@ -287,15 +292,17 @@
             controllaIlPannello();
           }
         })
-        .catch(function () {});
+        .catch(function () {})
+        .then(function () {
+          if (attesaDellaRete === questa) questa.prossimo = setTimeout(giro, 4000);
+        });
     };
     giro();
-    attesaDellaRete = setInterval(giro, 4000);
   }
 
   function fermaAttesaDellaRete() {
     if (attesaDellaRete) {
-      clearInterval(attesaDellaRete);
+      clearTimeout(attesaDellaRete.prossimo);
       attesaDellaRete = null;
     }
     var attesa = trova("attesa-rete");
@@ -1775,6 +1782,46 @@
     return lista;
   }
 
+  /* La mattonella della Casa: quanti pannelli, e se uno sta lavorando cosa
+   * sta facendo adesso — cosi' anche dal telefono si vede che va avanti. */
+  function disegnaLaMattonellaDeiPannelli(pannelli) {
+    var dove = trova("riepilogo-pannelli");
+    if (!dove) return;
+    var alLavoro = pannelli.find(function (uno) {
+      return uno.lavoro && !uno.lavoro.finito;
+    });
+    if (alLavoro) {
+      var passo = (alLavoro.lavoro.passi || []).find(function (p) {
+        return p.stato === "adesso";
+      });
+      dove.textContent =
+        (alLavoro.nome || alLavoro.indirizzo) +
+        " · " +
+        (passo
+          ? passo.nome + (passo.dettaglio ? ": " + passo.dettaglio : "")
+          : alLavoro.lavoro.titolo);
+      return;
+    }
+    if (!pannelli.length) {
+      dove.textContent = due("Fai diventare GdAHome un NSPanel", "Turn an NSPanel into GdAHome");
+      return;
+    }
+    var aggiornabili = pannelli.filter(function (uno) {
+      return uno.aggiornabile;
+    }).length;
+    var inErrore = pannelli.filter(function (uno) {
+      return uno.stato === "errore";
+    }).length;
+    var parti = [
+      pannelli.length === 1
+        ? due("1 pannello", "1 panel")
+        : due(pannelli.length + " pannelli", pannelli.length + " panels"),
+    ];
+    if (inErrore) parti.push(due(inErrore + " da guardare", inErrore + " to check"));
+    if (aggiornabili) parti.push(due("aggiornamento pronto", "update ready"));
+    dove.textContent = parti.join(" · ");
+  }
+
   function disegnaIPannelli(detti) {
     var pannelli = detti.pannelli || [];
     var premium = detti.premium === true;
@@ -1782,6 +1829,7 @@
       return uno.stato !== "sonoff";
     }).length;
     scriviIlNumerino("quanti-pannelli", pannelli.length);
+    disegnaLaMattonellaDeiPannelli(pannelli);
     trova("pannelli-premium").hidden = premium;
     trova("aggiungi-pannello").hidden = !premium || !pannelli.length;
     trova("conteggio-pannelli").textContent = pannelli.length
