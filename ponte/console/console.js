@@ -1712,7 +1712,7 @@
   };
 
   function ilModelloDelPannello(uno) {
-    return MODELLI_DEI_PANNELLI[uno.modello] || due("Pannello", "Panel");
+    return MODELLI_DEI_PANNELLI[uno.modello] || uno.nomeDelModello || due("Pannello", "Panel");
   }
 
   function ilNomeDelPannello(uno) {
@@ -1857,8 +1857,8 @@
           "ic-pannello",
           due("Nessun pannello, per ora", "No panels yet"),
           due(
-            "Un Sonoff NSPanel Pro diventa un pannello GdAHome da qui, senza computer.",
-            "A Sonoff NSPanel Pro becomes a GdAHome panel from here, with no computer.",
+            "Un Sonoff NSPanel Pro, uno Shelly Wall Display o un display Android diventa un pannello GdAHome da qui, senza computer.",
+            "A Sonoff NSPanel Pro, a Shelly Wall Display or an Android display becomes a GdAHome panel from here, with no computer.",
           ),
           premium ? due("Aggiungi un pannello", "Add a panel") : "",
           "nuovo-pannello",
@@ -2042,49 +2042,103 @@
         voce(due("Analisi hardware", "Hardware check"), "", function () {
           analizza(uno);
         });
+        voce(ilRitornoDelPannello(uno).voce, "toglie", function () {
+          rimettiETogli(uno);
+        });
+      }
+      /* «Togli dall'elenco»: un pannello ancora Sonoff (mai installato) esce
+       * e basta. Uno con GdAHome sopra no: prima torna il software originale,
+       * dalla copia, e solo dopo esce — lo fa «Rimetti e togli» da solo. */
+      voce(due("Togli dall'elenco", "Remove from the list"), "toglie", function () {
+        if (uno.stato === "sonoff") return togliDallElenco(uno, false);
+        rimettiETogli(uno);
+      });
+      /* Per un pannello perso (rotto, mai piu' in rete): solo quando non
+       * risponde, e dicendo chiaro cosa resta sul pannello. */
+      if (uno.stato !== "sonoff" && !uno.acceso)
         voce(
-          due("Rimetti il software Sonoff", "Put the Sonoff software back"),
+          due("Togli solo dall'elenco (pannello perso)", "Remove from the list only (lost panel)"),
           "toglie",
           function () {
             chiediConferma(
               due(
-                "Rimettere Sonoff su «" + ilNomeDelPannello(uno) + "»?",
-                "Put Sonoff back on “" + ilNomeDelPannello(uno) + "”?",
+                "Togliere «" + ilNomeDelPannello(uno) + "» senza rimettere il software originale?",
+                "Remove “" +
+                  ilNomeDelPannello(uno) +
+                  "” without putting the original software back?",
               ),
               due(
-                "Il pannello torna com'era, dalla copia salvata quando hai installato GdAHome OS, ed esce da questa casa.",
-                "The panel goes back to how it was, from the copy saved when you installed GdAHome OS, and leaves this home.",
+                "Solo per un pannello perso o rotto. GdAHome resta sopra, e nessuno lo aggiornerà né lo riporterà com'era. La copia di sicurezza resta nella cartella condivisa di Home Assistant.",
+                "Only for a lost or broken panel. GdAHome stays on it, and nobody will update it or put it back. The backup stays in Home Assistant's shared folder.",
               ),
-              due("Rimetti Sonoff", "Put Sonoff back"),
+              due("Togli solo dall'elenco", "Remove from the list only"),
             ).then(function (si) {
-              if (si) fallo(uno, "sonoff");
+              if (si) togliDallElenco(uno, true);
             });
           },
         );
-      }
-      voce(due("Togli dall'elenco", "Remove from the list"), "toglie", function () {
-        chiediConferma(
-          due(
-            "Togliere «" + ilNomeDelPannello(uno) + "»?",
-            "Remove “" + ilNomeDelPannello(uno) + "”?",
-          ),
-          due(
-            "Esce subito da questa casa, come un telefono tolto. GdAHome OS resta sul pannello finché non rimetti Sonoff.",
-            "It leaves this home at once, like a removed phone. GdAHome OS stays on the panel until you put Sonoff back.",
-          ),
-          due("Togli", "Remove"),
-        ).then(function (si) {
-          if (!si) return;
-          chiedi("api/pannelli/" + encodeURIComponent(uno.id), { method: "DELETE" })
-            .then(aggiornaIPannelli)
-            .catch(function (errore) {
-              avvisa("avviso-pannelli", errore.message);
-            });
-        });
-      });
       riga.appendChild(tasti);
       elenco.appendChild(riga);
     });
+  }
+
+  /* Come si torna indietro, per quel pannello: Sonoff sull'NSPanel, il
+   * software di fabbrica su un altro con root, quello del produttore su uno
+   * senza root (riacceso, o reinstallato dalla copia). */
+  function ilRitornoDelPannello(uno) {
+    var nome = ilNomeDelPannello(uno);
+    if (uno.percorso === "leggero")
+      return {
+        voce: due("Rimetti il software del produttore", "Put the maker's software back"),
+        testo: due(
+          "Il software del produttore si riaccende (o si reinstalla dalla copia su Home Assistant), poi si tolgono le app di GdAHome e «" +
+            nome +
+            "» esce da questa casa.",
+          "The maker's software is turned back on (or reinstalled from the copy on Home Assistant), then GdAHome's apps are removed and “" +
+            nome +
+            "” leaves this home.",
+        ),
+        tasto: due("Rimetti e togli", "Put back and remove"),
+      };
+    var sonoff = !uno.famiglia || uno.famiglia === "nspanel";
+    return {
+      voce: sonoff
+        ? due("Rimetti il software Sonoff", "Put the Sonoff software back")
+        : due("Rimetti il software di fabbrica", "Put the factory software back"),
+      testo: due(
+        "«" +
+          nome +
+          "» torna com'era, dalla copia salvata quando hai installato GdAHome OS, ed esce da questa casa.",
+        "“" +
+          nome +
+          "” goes back to how it was, from the copy saved when you installed GdAHome OS, and leaves this home.",
+      ),
+      tasto: due("Rimetti e togli", "Put back and remove"),
+    };
+  }
+
+  function rimettiETogli(uno) {
+    var ritorno = ilRitornoDelPannello(uno);
+    chiediConferma(
+      due(
+        "Riportare «" + ilNomeDelPannello(uno) + "» com'era e toglierlo?",
+        "Put “" + ilNomeDelPannello(uno) + "” back and remove it?",
+      ),
+      ritorno.testo,
+      ritorno.tasto,
+    ).then(function (si) {
+      if (si) fallo(uno, "sonoff");
+    });
+  }
+
+  function togliDallElenco(uno, forza) {
+    chiedi("api/pannelli/" + encodeURIComponent(uno.id) + (forza ? "?forza=1" : ""), {
+      method: "DELETE",
+    })
+      .then(aggiornaIPannelli)
+      .catch(function (errore) {
+        avvisa("avviso-pannelli", errore.message);
+      });
   }
 
   /* L'analisi di un pannello, nella sua scheda: prima il tasto la chiedeva
@@ -2234,9 +2288,31 @@
   function disegnaLaVerifica(detto) {
     var trovato = trova("pannello-trovato");
     trovato.hidden = !detto;
+    /* Cosa succede premendo «Installa», detto per quel pannello: sostituire
+     * il sistema (NSPanel, o un display con root) o spegnere il software del
+     * produttore (senza root, niente riavvii). */
+    var spiega = trova("installa-spiega");
+    if (spiega)
+      spiega.textContent =
+        detto && detto.percorso === "leggero"
+          ? due(
+              "Prima si copia il software del produttore su Home Assistant, poi lo si spegne e GdAHome prende il suo posto. Niente riavvii: lascia il pannello acceso.",
+              "First the maker's software is copied to Home Assistant, then it's turned off and GdAHome takes its place. No restarts: leave the panel on.",
+            )
+          : detto && detto.famiglia && detto.famiglia !== "nspanel"
+            ? due(
+                "Prima si salva il software di fabbrica, poi lo si sostituisce. Il pannello si riavvia un paio di volte: non staccarlo.",
+                "The factory software is saved first, then replaced. The panel restarts a couple of times: don't unplug it.",
+              )
+            : due(
+                "Prima si salva il software Sonoff, poi lo si sostituisce. Il pannello si riavvia un paio di volte: non staccarlo.",
+                "The Sonoff software is saved first, then replaced. The panel restarts a couple of times: don't unplug it.",
+              );
     if (!detto) return;
     trova("trovato-modello").textContent =
-      (MODELLI_DEI_PANNELLI[detto.modello] || due("Pannello sconosciuto", "Unknown panel")) +
+      (MODELLI_DEI_PANNELLI[detto.modello] ||
+        detto.nomeDelModello ||
+        due("Pannello sconosciuto", "Unknown panel")) +
       (detto.schermo ? " · " + detto.schermo : "");
     trova("trovato-dettagli").textContent = [
       detto.android ? "Android " + detto.android : "",
@@ -2437,7 +2513,8 @@
           scegli.appendChild(unDisegno("ic-pannello"));
           var parole = vediPagina.createElement("span");
           var forte = vediPagina.createElement("b");
-          forte.textContent = MODELLI_DEI_PANNELLI[uno.modello] || due("Pannello", "Panel");
+          forte.textContent =
+            MODELLI_DEI_PANNELLI[uno.modello] || uno.nomeDelModello || due("Pannello", "Panel");
           parole.appendChild(forte);
           var dove = vediPagina.createElement("small");
           /* Un pannello con l'ADB di rete acceso che aspetta il «Consenti»:

@@ -1838,7 +1838,13 @@ async function api({
       return;
     }
     if (!azione && metodo === "DELETE") {
-      json(risposta, pannelli.togli(id));
+      const forza = new URL(richiesta.url || "/", "http://x").searchParams.get("forza") === "1";
+      try {
+        json(risposta, pannelli.togli(id, { forza }));
+      } catch (errore) {
+        if (!errore.perUtente) throw errore;
+        male(risposta, 409, errore.message);
+      }
       return;
     }
   }

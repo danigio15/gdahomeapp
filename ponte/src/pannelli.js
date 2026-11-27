@@ -909,8 +909,21 @@ export class Pannelli {
     return { nome: pannello.nome };
   }
 
-  togli(id) {
+  /* Togliere un pannello dall'elenco. Uno che ha GdAHome sopra non si toglie
+   * e basta: resterebbe un pannello col nostro software e nessuno che lo
+   * aggiorna o lo riporta indietro. Prima si rimette il software originale
+   * («sonoff», che a lavoro finito lo toglie da solo). `forza` e' per un
+   * pannello perso — rotto, buttato, mai piu' in rete — e lo dice la console. */
+  togli(id, { forza = false } = {}) {
     const pannello = this._trova(id);
+    if (pannello && pannello.stato !== "sonoff" && !forza) {
+      const e = new Error(
+        "Prima va rimesso il software originale del pannello: usa «Rimetti e togli», che lo fa e poi lo toglie.",
+      );
+      e.perUtente = true;
+      e.causa = "prima_il_software";
+      throw e;
+    }
     if (pannello?.dispositivo) this.dispositivi?.stacca?.(pannello.dispositivo);
     this._rimuovi(id);
     return { tolto: true };
