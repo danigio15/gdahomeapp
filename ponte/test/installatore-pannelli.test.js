@@ -177,17 +177,22 @@ test("aggiornare installa sopra solo i pezzi indietro", async () => {
       }),
     );
     const installati = [];
+    const detti = [];
     let fatto = false;
     const adb = {
       async connetti() {
         return true;
       },
       async stacca() {},
-      async install(_i, apk) {
-        installati.push(apk.split("/").pop());
-        fatto = true;
+      async push(_i, locale, remoto) {
+        if (remoto.endsWith(".apk")) installati.push(locale.split("/").pop());
       },
       async shell(_i, c) {
+        if (c.startsWith("pm install -r ")) {
+          fatto = true;
+          return "Success";
+        }
+        if (c.startsWith("stat -c %s")) return "1";
         if (c.includes("com.gdahome.os")) return "versionCode=620\nversionName=2.0.0";
         if (c.includes("com.gdahome.muro"))
           return fatto
@@ -196,9 +201,18 @@ test("aggiornare installa sopra solo i pezzi indietro", async () => {
         return "";
       },
     };
-    const inst = new Installatore({ adb, cartellaDeiPezzi: dir });
-    const esito = await inst.aggiorna({ indirizzo: "1.2.3.4" });
+    const inst = new Installatore({ adb, cartellaDeiPezzi: dir, passoDellaBarra: 1 });
+    const esito = await inst.aggiorna({
+      indirizzo: "1.2.3.4",
+      avanti: ({ passo, dettaglio, percento }) => detti.push([passo, dettaglio, percento]),
+    });
     assert.deepEqual(installati, ["GdAHome-Muro.apk"]);
+    /* Ogni passo con la sua barra, fino al cento. */
+    assert.ok(
+      detti.some(([p, d, pc]) => p === 0 && /Fatto: l'app GdAHome Muro/.test(d) && pc === 100),
+    );
+    assert.ok(detti.some(([p, d]) => p === 1 && /ultima versione/.test(d)));
+    assert.ok(detti.some(([p, , pc]) => p === 2 && pc === 100));
     assert.deepEqual(esito.aggiornati, ["muro"]);
     assert.equal(esito.app, "1.19.37");
   } finally {
@@ -581,13 +595,20 @@ test("l'analisi chiede tutto, e una domanda che non risponde non ferma le altre"
     async stacca() {},
     async shell(_i, c, opzioni) {
       chiesti.push([c, opzioni?.attesa]);
-      if (c.startsWith("top ")) throw new Error("scaduto");
+      if (c.startsWith("dumpsys cpuinfo")) throw new Error("scaduto");
       if (c.startsWith("getprop ro.product.model")) return "NSPanel Pro\n8.1.0";
       return "";
     },
   };
-  const inst = new Installatore({ adb, cartellaDeiPezzi: tmpdir() });
+  const inst = new Installatore({
+    adb,
+    cartellaDeiPezzi: tmpdir(),
+    indirizzoDiCasa: () => "192.168.1.174",
+  });
   const rapporto = await inst.analisi({ indirizzo: "1.2.3.4" });
+  /* Il tempo verso Home Assistant, per separare la rete dal pannello. */
+  assert.match(rapporto, /== Rete verso Home Assistant ==/);
+  assert.ok(chiesti.some(([c]) => c.startsWith("ping -c 5 -i 0.3 -W 1 192.168.1.174")));
   for (const titolo of [
     "Dispositivo",
     "Processore",
@@ -623,4 +644,25 @@ test("la velocita': processore e scheda video pronti, anche dopo il riavvio; il 
   const r = scriptDelRipristino();
   assert.match(r, /\/system\/etc\/init\/gdahome\.rc/);
   assert.match(r, /webview-command-line/);
+});
+
+test("un pezzo che non si installa dice perche'", async () => {
+  const dir = pezzi();
+  try {
+    const adb = {
+      async push() {},
+      async shell(_i, c) {
+        if (c.startsWith("pm install"))
+          return "Failure [INSTALL_FAILED_UPDATE_INCOMPATIBLE: firma diversa]";
+        return "";
+      },
+    };
+    const inst = new Installatore({ adb, cartellaDeiPezzi: dir, passoDellaBarra: 1 });
+    await assert.rejects(
+      () => inst._installaConLaBarra("1.2.3.4", "GdAHome-OS.apk", { nome: "GdAHome OS" }),
+      /GdAHome OS non si installa \(INSTALL_FAILED_UPDATE_INCOMPATIBLE/,
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

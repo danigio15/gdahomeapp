@@ -58,6 +58,7 @@ export class Pannelli {
     cartellaDeiPezzi = "/app/muro",
     avvia = undefined,
     adesso = () => Date.now(),
+    riprovaDelRifiuto = { volte: 3, pausa: 3_000 },
   } = {}) {
     this.archivio = new Archivio(join(cartella, "pannelli.json"), { pannelli: [] });
     this.adb = adb || new Adb(avvia ? { avvia } : {});
@@ -79,6 +80,8 @@ export class Pannelli {
     /* I lavori in corso, per pannello: non si salvano su disco, vivono quanto
      * dura il lavoro. La console li segue. */
     this.lavori = new Map();
+    /* Quante volte, e ogni quanto, si riprova un pannello che rifiuta. */
+    this.riprovaDelRifiuto = riprovaDelRifiuto;
   }
 
   _premium() {
@@ -256,6 +259,19 @@ export class Pannelli {
       e.perUtente = true;
       throw e;
     }
+    /* Un indirizzo che e' gia' un pannello GdAHome non si installa di nuovo:
+     * lo si dice, invece di farlo ricominciare da capo. */
+    const gia = this.archivio.dati.pannelli.find(
+      (uno) => uno.indirizzo === pulito && uno.stato !== "sonoff",
+    );
+    if (gia) {
+      const e = new Error(
+        `${pulito} e' gia' «${gia.nome || "un pannello"}», con GdAHome OS: lo trovi nell'elenco dei pannelli, coi suoi aggiornamenti.`,
+      );
+      e.perUtente = true;
+      e.causa = "gia_gdahome";
+      throw e;
+    }
     const rotto = await this._serverDiAdb();
     if (rotto) {
       const e = new Error(rotto);
@@ -266,6 +282,17 @@ export class Pannelli {
     let collegamento;
     try {
       collegamento = await this.adb.provaCollegamento(pulito);
+      /* Un rifiuto puo' essere di un attimo — il pannello che riapre le sue
+       * app, adb che si riavvia — e una volta sola non basta per dire
+       * «spento»: si riprova per qualche secondo. */
+      for (
+        let k = 0;
+        k < this.riprovaDelRifiuto.volte && collegamento.causa === "rifiutato";
+        k += 1
+      ) {
+        await new Promise((fatto) => setTimeout(fatto, this.riprovaDelRifiuto.pausa));
+        collegamento = await this.adb.provaCollegamento(pulito);
+      }
     } catch (errore) {
       const e = new Error(messaggioDelDemone(errore));
       e.perUtente = true;
@@ -283,7 +310,7 @@ export class Pannelli {
     if (!collegamento.ok) {
       const e = new Error(
         collegamento.causa === "rifiutato"
-          ? "Il pannello risponde ma l'ADB di rete e' spento (porta 5555 chiusa): la modalita' sviluppatore da sola non basta su tutti i firmware. Nelle opzioni sviluppatore del pannello cerca «ADB di rete» o «Debug senza fili» e accendilo; se non c'e', va acceso una volta con un cavo USB (adb tcpip 5555). Poi riprova."
+          ? `A ${pulito} risponde qualcosa che non accetta l'ADB (porta 5555 chiusa). Prima guarda l'indirizzo: il router puo' aver dato al pannello un indirizzo nuovo, e qui adesso c'e' un altro apparecchio. Lo trovi in eWeLink, nella pagina del pannello, o con «Cerca in rete». Se l'indirizzo e' giusto, e' l'ADB di rete del pannello a essere spento: vedi qui sotto.`
           : "Il pannello non risponde a questo indirizzo. Controlla che sia quello giusto, che il pannello sia acceso e sulla stessa rete.",
       );
       e.perUtente = true;

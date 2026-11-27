@@ -14,6 +14,28 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.43
+
+- **Pannelli a muro, l'aggiornamento con la barra**: «App GdAHome Muro» e
+  «GdAHome OS» restavano su un cerchio che gira per minuti. Ora l'add-on
+  copia il pezzo sul pannello guardando quanto è arrivato — MB, velocità e
+  quanto manca — e poi lo installa; la pulizia dice i secondi, e ogni passo
+  finisce con «Fatto». Se un pezzo non si installa, si legge il perché.
+- **«Controlla il pannello» non dice più «ADB spento» a vuoto**: un rifiuto
+  si riprova per qualche secondo prima di dirlo, e il messaggio dice la
+  prima cosa da guardare, l'indirizzo: il router può aver dato al pannello
+  un indirizzo nuovo, e a quello vecchio adesso c'è un altro apparecchio.
+  Un indirizzo che è già un pannello GdAHome si dice, invece di
+  reinstallarlo.
+- **Il pannello torna a parlare italiano**: nella 1.19.42 GdAHome Muro
+  prendeva la lingua di Android, come il telefono, e un NSPanel esce di
+  fabbrica con Android in inglese: la plancia era passata all'inglese. Sul
+  pannello la lingua è di nuovo quella della casa.
+- **Analisi hardware**: «Chi usa il processore» ora funziona anche su
+  Android 8.1 (`dumpsys cpuinfo`), e c'è il tempo di risposta fra il pannello
+  e Home Assistant, per capire se un comando che tarda è la rete o il
+  pannello. La console mostra la versione vera dell'app del pannello.
+
 ## 1.19.42
 
 - **Pannelli a muro, la copia di sicurezza non riempie più Home Assistant**:

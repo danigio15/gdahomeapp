@@ -142,6 +142,7 @@ jobs:
           versione=$(sed -n 's/^version: "\(.*\)"$/\1/p' ../ponte/config.yaml)
           flutter build apk --release \
             --target lib/main_muro.dart \
+            --build-name="$versione" \
             --build-number="$CORSA" \
             --dart-define=VERSIONE="$versione-$CORSA"
           mkdir -p "$GITHUB_WORKSPACE/app-muro"

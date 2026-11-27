@@ -411,15 +411,26 @@ test("verifica spiega quando l'ADB di rete e' spento (5555 rifiutata)", async ()
   const dir = cartella();
   try {
     const adb = adbFinto({ connetti: false, causa: "rifiutato" });
+    let prove = 0;
+    const prova = adb.provaCollegamento;
+    adb.provaCollegamento = (ind) => {
+      prove += 1;
+      return prova(ind);
+    };
     const pannelli = new Pannelli({
       cartella: dir,
       adb,
       installatore: installatoreFinto(),
       licenze: premium,
+      riprovaDelRifiuto: { volte: 2, pausa: 1 },
     });
     await assert.rejects(
       () => pannelli.verifica("192.168.1.5"),
       (e) => {
+        /* Un rifiuto si riprova prima di dirlo. */
+        assert.equal(prove, 3);
+        /* Prima l'indirizzo, che il router puo' aver cambiato; poi l'ADB. */
+        assert.match(e.message, /indirizzo nuovo/);
         assert.match(e.message, /ADB di rete/);
         assert.equal(e.perUtente, true);
         /* Il codice-macchina arriva fino alla console, che su «rifiutato»
@@ -427,6 +438,52 @@ test("verifica spiega quando l'ADB di rete e' spento (5555 rifiutata)", async ()
         assert.equal(e.causa, "rifiutato");
         return true;
       },
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("verifica: un rifiuto di un attimo non e' «ADB spento»", async () => {
+  const dir = cartella();
+  try {
+    let volta = 0;
+    const adb = adbFinto({ "getprop ro.build.version.release": "8.1.0" });
+    adb.provaCollegamento = async () =>
+      (volta += 1) === 1 ? { ok: false, causa: "rifiutato" } : { ok: true, causa: "" };
+    const pannelli = new Pannelli({
+      cartella: dir,
+      adb,
+      installatore: installatoreFinto(),
+      licenze: premium,
+      riprovaDelRifiuto: { volte: 3, pausa: 1 },
+    });
+    const v = await pannelli.verifica("192.168.1.5");
+    assert.equal(volta, 2);
+    assert.equal(v.indirizzo ?? "192.168.1.5", "192.168.1.5");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("verifica: un indirizzo che e' gia' un pannello GdAHome non si reinstalla", async () => {
+  const dir = cartella();
+  try {
+    const pannelli = new Pannelli({
+      cartella: dir,
+      adb: adbFinto(),
+      installatore: installatoreFinto(),
+      licenze: premium,
+    });
+    pannelli.archivio.dati.pannelli.push({
+      id: "pm_a",
+      indirizzo: "192.168.1.100",
+      nome: "Salone",
+      stato: "pronto",
+    });
+    await assert.rejects(
+      () => pannelli.verifica("192.168.1.100"),
+      (e) => e.causa === "gia_gdahome" && /Salone/.test(e.message),
     );
   } finally {
     rmSync(dir, { recursive: true, force: true });

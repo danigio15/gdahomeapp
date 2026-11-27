@@ -26,6 +26,7 @@ import {
   mkdtempSync,
   readFileSync,
   rmSync,
+  statSync,
   statfsSync,
   writeFileSync,
 } from "node:fs";
@@ -245,6 +246,7 @@ export class Installatore {
     muroPackage = "com.gdahome.muro",
     attesaDelRiavvio = undefined,
     attesaDellAbbinamento = undefined,
+    passoDellaBarra = 2_000,
     indirizzoDiCasa = null,
     copiaDiretta = null,
   } = {}) {
@@ -265,6 +267,8 @@ export class Installatore {
     this.attesaDelRiavvio = attesaDelRiavvio;
     /* Quanto aspettare che il pannello entri nella casa: corto nelle prove. */
     this.attesaDellAbbinamento = attesaDellAbbinamento;
+    /* Ogni quanto la barra di una copia guarda quanto e' arrivato. */
+    this.passoDellaBarra = passoDellaBarra;
     /* L'indirizzo dell'add-on sulla rete di casa, per la copia diretta. */
     this.indirizzoDiCasa = indirizzoDiCasa;
     this.copiaDiretta =
@@ -1033,21 +1037,42 @@ export class Installatore {
       if (!(await this.adb.connetti(indirizzo))) return { errore: "Il pannello non risponde." };
       const prima = await this.versioniSulPannello(indirizzo);
       const quali = this.daAggiornare(prima);
+      /* Ogni passo con la sua barra: «App GdAHome Muro» ferma su un cerchio
+       * che gira per minuti non diceva se andava avanti. */
+      const fase = (passo) => (testo, percento) => avanti({ passo, dettaglio: testo, percento });
       avanti({ passo: 0 });
       if (quali.includes("muro") && this._ceIlPezzo("GdAHome-Muro.apk")) {
-        await this.adb.install(indirizzo, this._pezzo("GdAHome-Muro.apk"), { permessi: true });
+        await this._installaConLaBarra(indirizzo, "GdAHome-Muro.apk", {
+          nome: "l'app GdAHome Muro",
+          permessi: true,
+          dice: fase(0),
+        });
         for (const r of [
           `dumpsys deviceidle whitelist +${this.muroPackage}`,
           `appops set ${this.muroPackage} RUN_IN_BACKGROUND allow`,
         ])
           await this.adb.shell(indirizzo, r, { root: true }).catch(() => {});
-      }
+      } else fase(0)("Gia' all'ultima versione", 100);
       avanti({ passo: 1 });
       if (quali.includes("os") && this._ceIlPezzo("GdAHome-OS.apk"))
-        await this.adb.install(indirizzo, this._pezzo("GdAHome-OS.apk"));
+        await this._installaConLaBarra(indirizzo, "GdAHome-OS.apk", {
+          nome: "GdAHome OS",
+          dice: fase(1),
+        });
+      else fase(1)("Gia' all'ultima versione", 100);
 
-      avanti({ passo: 2, dettaglio: "Tolgo quello che resta di Sonoff…" });
-      const ritocco = await this._ritocca(indirizzo);
+      const ritocco = await this._colTempo(
+        fase(2),
+        "Tolgo quello che resta di Sonoff…",
+        30_000,
+        () => this._ritocca(indirizzo),
+      );
+      fase(2)(
+        ritocco.fatto
+          ? `Fatto${ritocco.tolte?.length ? `: tolte ${ritocco.tolte.length} cose di Sonoff` : ""}`
+          : "Non riuscita: si riprova al prossimo giro",
+        100,
+      );
 
       let abbinato = null;
       let avviso = "";
@@ -1101,6 +1126,83 @@ export class Installatore {
     }
   }
 
+  /* Installa un pezzo con la sua barra vera. Prima lo copia sul pannello —
+   * e intanto guarda quanti byte sono arrivati, cosi' la barra dice MB,
+   * velocita' e quanto manca, non un tempo inventato — poi lo installa da li'
+   * con `pm install`. `adb install` faceva tutto in un colpo e non diceva
+   * niente fino alla fine: su un pannello lento, minuti di cerchio che gira. */
+  async _installaConLaBarra(indirizzo, pezzo, { nome, permessi = false, dice = () => {} }) {
+    const locale = this._pezzo(pezzo);
+    const misura = statSync(locale).size || 1;
+    const remoto = `/data/local/tmp/gda-${pezzo}`;
+    const partito = Date.now();
+    dice(`Copio ${nome} sul pannello (${mostraByte(misura)})…`, 0);
+    let finito = false;
+    const copia = this.adb.push(indirizzo, locale, remoto).finally(() => {
+      finito = true;
+    });
+    /* Quanto e' arrivato: la misura del file sul pannello, ogni due secondi. */
+    const guarda = (async () => {
+      while (!finito) {
+        await dorme(this.passoDellaBarra);
+        if (finito) break;
+        const detto = await this.adb
+          .shell(indirizzo, `stat -c %s ${remoto} 2>/dev/null`, { root: false, attesa: 10_000 })
+          .catch(() => "");
+        const byte = Math.min(misura, Number(String(detto).trim()) || 0);
+        if (!byte || finito) continue;
+        const secondi = Math.max(1, (Date.now() - partito) / 1000);
+        const alSecondo = byte / secondi;
+        const minuti = Math.ceil((misura - byte) / alSecondo / 60);
+        dice(
+          `Copio ${nome}: ${mostraByte(byte)} di ${mostraByte(misura)} · ${(alSecondo / 1024 ** 2)
+            .toFixed(1)
+            .replace(".", ",")} MB/s${minuti > 0 ? ` · mancano ~${minuti} min` : ""}`,
+          Math.round((byte / misura) * 85),
+        );
+      }
+    })();
+    try {
+      await copia;
+    } finally {
+      finito = true;
+      await guarda;
+    }
+    dice(`Installo ${nome}…`, 90);
+    const esito = await this.adb.shell(
+      indirizzo,
+      `pm install -r ${permessi ? "-g " : ""}${remoto}; rm -f ${remoto}`,
+      { root: false, attesa: 5 * 60_000 },
+    );
+    if (!/Success/.test(esito)) {
+      const perche =
+        (/Failure \[([^\]]+)\]/.exec(esito) || [])[1] || String(esito).trim().split("\n")[0];
+      throw new Error(`${nome} non si installa${perche ? ` (${perche})` : ""}.`);
+    }
+    dice(`Fatto: ${nome} aggiornata`, 100);
+  }
+
+  /* Un lavoro che non dice quanto gli manca: la barra va col tempo che passa,
+   * verso il novanta per cento di quanto ci si aspetta, coi secondi scritti.
+   * Si ferma quando il lavoro finisce. */
+  async _colTempo(dice, testo, atteso, lavoro) {
+    const partito = Date.now();
+    const tic = () => {
+      const passati = Date.now() - partito;
+      dice(
+        `${testo} ${Math.round(passati / 1000)} s`,
+        Math.min(90, Math.round((passati / atteso) * 90)),
+      );
+    };
+    tic();
+    const orologio = setInterval(tic, 1000);
+    try {
+      return await lavoro();
+    } finally {
+      clearInterval(orologio);
+    }
+  }
+
   /* Il ritocco sul pannello: torna { fatto, tolte: [ "com.sonoff…", … ] }.
    * Non e' un errore se non riesce: il pannello funziona lo stesso, e si
    * riprova al prossimo giro. */
@@ -1148,7 +1250,9 @@ export class Installatore {
       "Temperatura",
       'for z in /sys/class/thermal/thermal_zone*; do echo "$(cat $z/type 2>/dev/null) $(cat $z/temp 2>/dev/null)"; done',
     );
-    await chiedi("Chi usa il processore", "top -b -n 1 -m 12 2>/dev/null || top -n 1 -m 12");
+    /* `top` di Android 8.1 non prende le opzioni di quello di Linux: chi usa
+     * il processore lo dice `dumpsys cpuinfo`. */
+    await chiedi("Chi usa il processore", "dumpsys cpuinfo | head -n 16");
     await chiedi(
       "Scheda video",
       "dumpsys SurfaceFlinger 2>/dev/null | grep -iE 'GLES|Vendor|Renderer' | head -n 5; getprop ro.hardware.egl; getprop debug.hwui.renderer",
@@ -1174,6 +1278,12 @@ export class Installatore {
       "Rete",
       "ip -4 addr show wlan0 2>/dev/null | grep inet; dumpsys wifi 2>/dev/null | grep -m1 -E 'mWifiInfo'; ip route | head -n 3",
     );
+    /* Quanto ci mette il pannello a raggiungere Home Assistant: un comando
+     * luce che tarda puo' essere la rete (Wi-Fi debole, pacchetti persi) o il
+     * pannello. Il ping lo separa. */
+    const casa = this.indirizzoDiCasa?.() || "";
+    if (casa)
+      await chiedi("Rete verso Home Assistant", `ping -c 5 -i 0.3 -W 1 ${casa} | tail -n 3`, false);
     await chiedi(
       "Abbinamento",
       `ls -la /data/data/${pkg}/files/ 2>/dev/null; cat /data/data/${pkg}/files/${ESITO} 2>/dev/null`,
