@@ -143,7 +143,8 @@ test("installa crea il pannello, segue i passi, e lo lascia pronto", async () =>
   const dir = cartella();
   try {
     const inst = installatoreFinto();
-    const plance = { elenco: () => [{ id: "soggiorno", nome: "Soggiorno" }] };
+    /* La forma vera di `plance.elenco()`: `profilo` e `titolo`. */
+    const plance = { elenco: () => [{ profilo: "soggiorno", titolo: "Soggiorno" }] };
     const pannelli = new Pannelli({ cartella: dir, installatore: inst, licenze: premium, plance });
     const { id } = await pannelli.installa({
       indirizzo: "192.168.1.5",

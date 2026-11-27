@@ -71,3 +71,9 @@ GoogleService-Info.plist
 .impeccable/mocks/
 strumenti/render-mappa/node_modules/
 strumenti/render-mappa/package*.json
+
+# I pezzi di GdAHome OS li costruisce la CI (ponte/muro/LEGGIMI.md): nella
+# repository restano solo l'origine e il leggimi.
+/ponte/muro/*.apk
+/ponte/muro/*.zip
+/ponte/muro/gdaserial-*

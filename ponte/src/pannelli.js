@@ -468,8 +468,9 @@ export class Pannelli {
   }
 
   _nomeDellaPlancia(id) {
-    const una = this.plance?.elenco?.()?.find?.((p) => p.id === id);
-    return una ? una.nome : id;
+    /* L'elenco delle plance le chiama per `profilo` e le mostra col `titolo`. */
+    const una = this.plance?.elenco?.()?.find?.((p) => p.profilo === id);
+    return una ? una.titolo || una.profilo : id;
   }
 
   /* ─── Le azioni su un pannello gia' GdAHome ─── */
