@@ -327,7 +327,10 @@ test("si mappa la sola cartella di Home Assistant, perche' le plance stanno in w
     if (/^\s*#/.test(una)) continue;
     mappe.push(una.trim());
   }
-  assert.deepEqual(mappe, ["- homeassistant_config:rw"]);
+  /* E la cartella condivisa, per la copia di sicurezza dei pannelli a muro
+   * (`share/gdahome-os/`): uno o due giga per pannello, che chi ci abita deve
+   * vedere e poter portare via, fuori dai backup dell'add-on. */
+  assert.deepEqual(mappe, ["- homeassistant_config:rw", "- share:rw"]);
   assert.equal(righe.filter((una) => una === "map:").length, 1);
 });
 

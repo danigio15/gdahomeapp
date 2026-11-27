@@ -43,7 +43,7 @@ name: GdAHome
 #
 # Quello che non cambia: nel negozio «Aggiorna» compare **solo** se questo
 # numero si alza.
-version: "1.19.37"
+version: "1.19.38"
 # L'immagine gia' pronta (la costruisce .github/workflows/immagini-add-on.yml,
 # una per architettura, col numero della versione): Home Assistant la scarica
 # invece di costruirla in casa, e lo scaricamento ha la percentuale.
@@ -162,6 +162,13 @@ homeassistant_api: true
 # mappata, e una prova (`test/manifesto.test.js`) si rompe se se ne aggiunge una.
 map:
   - homeassistant_config:rw
+  # La cartella condivisa, per **una** cosa: la copia di sicurezza di un
+  # pannello a muro prima di installarci GdAHome OS (`share/gdahome-os/`, da
+  # `src/installatore-pannelli.js`). Sono uno o due giga per pannello, e devono
+  # stare dove chi ci abita li vede e li puo' portare via — non dentro l'add-on,
+  # dove finirebbero in ogni backup di Home Assistant. Senza questa riga
+  # l'installazione si fermava su «non puo' scrivere la copia di sicurezza».
+  - share:rw
 
 # La cartella degli add-on locali, `addons`, qui non c'e' piu', e manca
 # apposta.
