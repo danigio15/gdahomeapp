@@ -35,6 +35,7 @@ import { Identita } from "./identita.js";
 import { creaSport } from "./sport.js";
 import { Indirizzi } from "./indirizzi.js";
 import { Licenze } from "./licenze.js";
+import { Pannelli } from "./pannelli.js";
 import { laRicevutaDaFuori } from "./ricevuta-da-fuori.js";
 import { VersioneMinima } from "./versione-minima.js";
 import { UltimeDellApp, ULTIME_DI_SERIE } from "./ultime-dell-app.js";
@@ -400,6 +401,36 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
    * nessuno. Si mette qui e non nel costruttore delle commissioni perche' il
    * Ritorno nasce dopo: gli serve la porta vera, che la sa solo il server. */
   commissioni.ritorno = ritorno;
+
+  /* I pannelli a muro: i Sonoff NSPanel di casa con GdAHome OS. L'add-on li
+   * installa e li abbina da se', via ADB sulla rete di casa. Un pannello
+   * entra nella casa come un telefono (`dispositivi.abbina`), con gli
+   * indirizzi di casa da dare al pannello perche' sappia a chi bussare. */
+  const pannelli = new Pannelli({
+    cartella: opzioni.cartella,
+    licenze,
+    plance,
+    dispositivi,
+    reteDiCasa: { indirizzo: () => ritorno.reteDiCasa()?.mio || "" },
+    abbinaPannello: async ({ nome, utente, plancia: _plancia }) => {
+      const dove = (await ritorno.cosaDire?.()) ?? {};
+      const abb = dispositivi.abbina({
+        nome: nome || "Pannello a muro",
+        sistema: "muro",
+        marca: "Sonoff",
+        modello: "NSPanel Pro",
+        app: opzioni.versione,
+        utente: utente || "",
+      });
+      return {
+        dispositivo: abb.dispositivo.id,
+        segno: abb.segno,
+        chiave: abb.chiave,
+        case: { centralino: dove.centralino || "", indirizzi: dove.indirizzi ?? [] },
+        app: opzioni.versione,
+      };
+    },
+  });
 
   /* Il rapporto al quadro di chi ha fatto l'impianto.
    *
@@ -790,6 +821,8 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     /* Le licenze, per la scheda «Licenza»: com'e' messa la casa, e la
      * casella del codice regalo. */
     licenze,
+    /* I pannelli a muro: la linguetta «Pannelli a muro» e i suoi comandi. */
+    pannelli,
     cartellaDellaConsole: opzioni.console,
     /* Da dove arriva l'ingress del Supervisor: l'unico che puo' bussare alla
      * console. Nelle prove e' `127.0.0.1`; nell'add-on non si cambia. */

@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-EDB7N2ZB.js";
+} from "../../chunk-CY73R234.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -125476,7 +125476,9 @@ function larghezzaDelTesto(nodo4) {
   if (intervallo2) {
     intervallo2.selectNodeContents(nodo4);
     const larga = intervallo2.getBoundingClientRect?.().width;
-    if (Number.isFinite(larga) && larga > 0) return larga;
+    const visto = nodo4.getBoundingClientRect?.().width;
+    const zoom = visto > 0 && nodo4.offsetWidth > 0 ? visto / nodo4.offsetWidth : 1;
+    if (Number.isFinite(larga) && larga > 0) return larga / zoom;
   }
   return nodo4.scrollWidth;
 }

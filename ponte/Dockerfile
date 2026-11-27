@@ -7,7 +7,7 @@ FROM ${BUILD_FROM}
 # E i due programmi del JPEG (`djpeg`, `cjpeg`): rimpicciolire in casa la
 # foto di una telecamera 4K per la notifica, quando Home Assistant la manda
 # intera (`src/rimpicciolisci.js`). Pochi centinaia di KB, niente npm.
-RUN apk add --no-cache nodejs libjpeg-turbo-utils
+RUN apk add --no-cache nodejs libjpeg-turbo-utils android-tools
 
 WORKDIR /app
 COPY src/ /app/src/

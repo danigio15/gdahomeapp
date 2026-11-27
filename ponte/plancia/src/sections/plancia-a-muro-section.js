@@ -5255,7 +5255,14 @@ function larghezzaDelTesto(nodo) {
   if (intervallo) {
     intervallo.selectNodeContents(nodo);
     const larga = intervallo.getBoundingClientRect?.().width;
-    if (Number.isFinite(larga) && larga > 0) return larga;
+    /* Il rettangolo e' in pixel dello schermo, gia' moltiplicati per lo
+     * `zoom` con cui il pannello si adatta (`misura`): sul 15 pollici una
+     * volta e mezza. La larghezza minima del titolo invece e' in pixel della
+     * pagina, e si divide per lo zoom vero del nodo — il suo rettangolo
+     * diviso per la sua larghezza CSS. */
+    const visto = nodo.getBoundingClientRect?.().width;
+    const zoom = visto > 0 && nodo.offsetWidth > 0 ? visto / nodo.offsetWidth : 1;
+    if (Number.isFinite(larga) && larga > 0) return larga / zoom;
   }
   return nodo.scrollWidth;
 }

@@ -2333,3 +2333,292 @@ code {
   font-size: 14px;
   line-height: 1.45;
 }
+
+/* ─── I pannelli a muro ─────────────────────────────────────────────────────
+   La riga di un pannello e' quella dei telefoni; in piu' i passi di un lavoro
+   (installazione, aggiornamento) sotto il nome, e nella pagina del pannello
+   nuovo le verifiche e i campi. */
+.chip.blu {
+  color: var(--acceso);
+  background: var(--acceso-soft);
+}
+
+.elenco .nome b.attesa {
+  color: var(--giallo);
+}
+
+.elenco .nome b.male {
+  color: var(--male);
+}
+
+.riga-pannello .nome {
+  min-width: 0;
+}
+
+.lavoro-passi {
+  list-style: none;
+  margin: 12px 0 2px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.lavoro-passi > li {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  align-items: start;
+  column-gap: 10px;
+  color: var(--terzo);
+}
+
+.lavoro-passi .segno {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--linea-forte);
+}
+
+.lavoro-passi .segno .ic {
+  width: 14px;
+  height: 14px;
+}
+
+.lavoro-passi .parole {
+  display: grid;
+  gap: 1px;
+  line-height: 1.35;
+}
+
+.lavoro-passi .parole b {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.lavoro-passi .parole small {
+  font-size: 12.5px;
+}
+
+.lavoro-passi > li[data-stato="fatto"] {
+  color: var(--tenue);
+}
+
+.lavoro-passi > li[data-stato="fatto"] .segno {
+  border-color: transparent;
+  color: #fff;
+  background: var(--bene);
+}
+
+.lavoro-passi > li[data-stato="adesso"] {
+  color: var(--testo);
+}
+
+.lavoro-passi > li[data-stato="adesso"] .segno {
+  border-color: var(--acceso);
+  border-top-color: transparent;
+  animation: gira-il-segno 0.9s linear infinite;
+}
+
+.lavoro-passi > li[data-stato="male"] {
+  color: var(--male);
+}
+
+.lavoro-passi > li[data-stato="male"] .segno {
+  border-color: transparent;
+  color: var(--male);
+  background: var(--male-soft);
+}
+
+.lavoro-passi .barra {
+  grid-column: 2;
+  height: 6px;
+  margin-top: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--linea);
+}
+
+.lavoro-passi .barra > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--acceso);
+}
+
+@keyframes gira-il-segno {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lavoro-passi > li[data-stato="adesso"] .segno {
+    animation: none;
+    border-top-color: var(--acceso);
+  }
+}
+
+.in-riga {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.campo {
+  min-width: 0;
+  flex: 1 1 200px;
+  max-width: 320px;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid var(--linea-forte);
+  background: var(--carta);
+  color: var(--testo);
+  font: inherit;
+  font-size: 16px;
+}
+
+.campi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 10px 0 8px;
+}
+
+.campi label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tenue);
+}
+
+.campi .campo,
+.campi .scelta {
+  max-width: none;
+  width: 100%;
+}
+
+.trovato {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: var(--r);
+  background: var(--velo);
+  border: 1px solid var(--linea);
+}
+
+.trovato-testa {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.trovato-testa strong {
+  display: block;
+  font-size: 15px;
+}
+
+.trovato-testa span:not(.faccia) {
+  font-size: 13px;
+  color: var(--tenue);
+}
+
+.verifiche {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.verifiche li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.verifiche li .ic {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--bene);
+}
+
+.verifiche li[data-esito="giallo"] .ic {
+  color: var(--giallo);
+}
+
+.verifiche li[data-esito="male"] {
+  color: var(--male);
+}
+
+.verifiche li[data-esito="male"] .ic {
+  color: var(--male);
+}
+
+.avviso.visibile {
+  display: block;
+}
+
+button.al-lavoro {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+/* Il pannello nuovo: quattro tappe una sotto l'altra, anche sullo schermo
+   largo (le due colonne di «Collega l'app» sono fatte per il QR accanto). */
+@media (min-width: 0) {
+  .tappe.in-colonna {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 760px;
+  }
+}
+
+/* I pannelli trovati in rete: uno per riga, si toccano. */
+.trovati-in-rete {
+  list-style: none;
+  margin: 12px 0 4px;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.trovati-in-rete .niente {
+  font-size: 14px;
+  color: var(--tenue);
+}
+
+.scegli-pannello {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 8px 14px;
+  text-align: left;
+}
+
+.scegli-pannello .ic {
+  width: 22px;
+  height: 22px;
+  color: var(--acceso);
+}
+
+.scegli-pannello span {
+  display: grid;
+  line-height: 1.25;
+}
+
+.scegli-pannello small {
+  font-weight: 500;
+  color: var(--tenue);
+}
+
+/* Un pannello al lavoro ha i passi sotto il nome: la faccia e il «⋯»
+   restano in cima, accanto al nome. */
+.elenco > li.riga-pannello.al-lavoro {
+  align-items: flex-start;
+}
