@@ -34,7 +34,7 @@ aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
     copia su Home Assistant e si spegne — launcher, app inutili e aggiunte —
     e gira solo GdAHome. Sullo Shelly la sua app resta accesa per i relè e i
     sensori.
-  Nella console ci sono le istruzioni per accendere l'ADB su ciascuno.
+    Nella console ci sono le istruzioni per accendere l'ADB su ciascuno.
 - **«Togli dall'elenco» riporta prima il pannello com'era**: su un pannello
   con GdAHome rimette il software originale e solo dopo lo toglie. Per un
   pannello perso o rotto c'è «Togli solo dall'elenco», con l'avviso.
