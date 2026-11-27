@@ -1120,6 +1120,10 @@ export class Installatore {
       "App",
       `dumpsys package ${pkg} | grep -m2 -E 'versionName|versionCode'; dumpsys package com.gdahome.os | grep -m2 -E 'versionName|versionCode'; dumpsys package com.google.android.webview | grep -m1 versionName; dumpsys package com.android.webview | grep -m1 versionName`,
     );
+    await chiedi(
+      "Sensori",
+      "dumpsys sensorservice 2>/dev/null | grep -iE -A2 'proximity|light' | head -n 30",
+    );
     await chiedi("Sullo schermo", "dumpsys window | grep -m1 mCurrentFocus");
     await chiedi(
       "Rete",

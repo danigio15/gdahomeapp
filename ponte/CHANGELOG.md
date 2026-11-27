@@ -48,6 +48,11 @@ aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
   Flutter invece della «composizione ibrida», che prima di Android 10 copia
   ogni fotogramma avanti e indietro dalla scheda video e rallentava anche i
   comandi. Le due voci nelle impostazioni dell'app, sul pannello, sono ferme.
+- **Il sensore di prossimità del pannello funziona**: il Sonoff NSPanel Pro
+  dice 1 quando c'è qualcuno e 0 quando non c'è nessuno, il contrario di
+  come fanno gli altri apparecchi Android. L'app lo leggeva alla maniera di
+  Android, e il pannello non si accorgeva mai di chi si avvicinava. L'analisi
+  del pannello ora mostra anche i sensori.
 - **Niente più «Di chi è questo telefono?» sul pannello**: un pannello non è
   un telefono, e a chi appartiene l'ha già detto l'add-on abbinandolo.
 - **«Analisi hardware» mostra il risultato**: prima il tasto la chiedeva e la

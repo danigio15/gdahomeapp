@@ -595,6 +595,7 @@ test("l'analisi chiede tutto, e una domanda che non risponde non ferma le altre"
     "Chi usa il processore",
     "Scheda video",
     "Disegno di GdAHome Muro",
+    "Sensori",
     "Rete",
     "Abbinamento",
     "Animazione d'avvio",
