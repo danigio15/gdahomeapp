@@ -216,7 +216,13 @@
           return {};
         })
         .then(function (corpo) {
-          if (!risposta.ok) throw new Error(laFraseDelNo(corpo));
+          if (!risposta.ok) {
+            var male = new Error(laFraseDelNo(corpo));
+            /* Il codice-macchina, se c'e' (es. "rifiutato"): la pagina lo usa
+             * per spiegare meglio, senza leggere il testo dell'errore. */
+            male.causa = corpo && corpo.causa ? String(corpo.causa) : "";
+            throw male;
+          }
           return corpo;
         });
     });
@@ -1664,6 +1670,16 @@
   var menuDelPannello = "";
   var pannelloNuovo = { verificato: null, id: "" };
   var giroDeiPannelli = null;
+  /* L'ultima ricerca, per il tasto «Riprova» del riquadro eWeLink: o la
+   * scansione della rete, o un indirizzo scritto a mano. */
+  var ultimaRicercaPannello = null;
+
+  /* Mostra o nasconde il riquadro «ADB di rete spento» (guida eWeLink +
+   * Riprova). Compare solo quando serve: la 5555 rifiuta, o la rete e' vuota. */
+  function mostraAiutoAdbRete(mostra) {
+    var dove = trova("aiuto-adb-rete");
+    if (dove) dove.hidden = !mostra;
+  }
 
   var MODELLI_DEI_PANNELLI = {
     86: "NSPanel Pro 86",
@@ -2091,6 +2107,7 @@
 
   function controllaIlPannello() {
     fermaAttesaDellaRete();
+    mostraAiutoAdbRete(false);
     var indirizzo = trova("indirizzo-pannello").value.trim();
     avvisa("avviso-indirizzo", "");
     if (!/^[0-9a-zA-Z.:-]{3,64}$/.test(indirizzo)) {
@@ -2107,6 +2124,7 @@
     tasto.disabled = true;
     tasto.classList.add("al-lavoro");
     pannelloNuovo.verificato = null;
+    ultimaRicercaPannello = { tipo: "indirizzo", indirizzo: indirizzo };
     disegnaLaVerifica(null);
     return chiedi("api/pannelli/verifica", {
       method: "POST",
@@ -2121,6 +2139,9 @@
       })
       .catch(function (errore) {
         avvisa("avviso-indirizzo", errore.message);
+        /* Solo se la 5555 rifiuta: l'ADB di rete e' spento. Allora il riquadro
+         * eWeLink col tasto Riprova; per un indirizzo sbagliato, no. */
+        if (errore.causa === "rifiutato") mostraAiutoAdbRete(true);
       })
       .then(function () {
         tasto.disabled = false;
@@ -2161,6 +2182,8 @@
     tasto.disabled = true;
     tasto.classList.add("al-lavoro");
     avvisa("avviso-indirizzo", "");
+    mostraAiutoAdbRete(false);
+    ultimaRicercaPannello = { tipo: "rete" };
     return chiedi("api/pannelli/rete", { method: "POST", body: "{}" })
       .then(function (detto) {
         var trovati = detto.trovati || [];
@@ -2169,10 +2192,46 @@
         if (!trovati.length) {
           var niente = vediPagina.createElement("li");
           niente.className = "niente";
-          niente.textContent = due(
-            "Nessun pannello con ADB acceso. Controlla la tappa 1, o scrivi l'indirizzo.",
-            "No panel with ADB on. Check step 1, or type the address.",
-          );
+          var doveRete = detto.rete
+            ? detto.rete + ".x"
+            : due("la rete di casa", "the home network");
+          var contattati = detto.contattati || 0;
+          if (detto.senzaRete) {
+            /* Home Assistant non ci ha detto qual e' la rete di casa. */
+            niente.textContent = due(
+              "Non riesco a leggere la rete di casa da Home Assistant. Scrivi l'indirizzo del pannello qui sotto.",
+              "I can't read the home network from Home Assistant. Type the panel's address below.",
+            );
+          } else if (contattati > 0) {
+            /* L'add-on arriva alla rete: il pannello o ha l'ADB di rete spento,
+             * o sta su un'altra sottorete. La guida eWeLink, col tasto Riprova. */
+            niente.textContent = due(
+              "Ho contattato " +
+                contattati +
+                " dispositivi su " +
+                doveRete +
+                ", ma nessuno ha l'ADB di rete aperto.",
+              "I reached " +
+                contattati +
+                " devices on " +
+                doveRete +
+                ", but none has network ADB open.",
+            );
+            lista.appendChild(niente);
+            mostraAiutoAdbRete(true);
+            return;
+          } else {
+            /* Zero risposte su una /24 intera: l'add-on non arriva a quella
+             * rete, o il pannello sta altrove. Non e' l'ADB: e' la rete. */
+            niente.textContent = due(
+              "Non ho raggiunto nessun dispositivo su " +
+                doveRete +
+                ". Il pannello è su questa rete? Potrebbe essere su un'altra (per esempio una rete ospiti, o 192.168.0.x). Prova a scrivere il suo indirizzo qui sotto.",
+              "I didn't reach any device on " +
+                doveRete +
+                ". Is the panel on this network? It might be on another one (a guest network, or 192.168.0.x). Try typing its address below.",
+            );
+          }
           lista.appendChild(niente);
           return;
         }
@@ -2212,12 +2271,21 @@
   trova("indirizzo-pannello").addEventListener("keydown", function (evento) {
     if (evento.key === "Enter") controllaIlPannello();
   });
+  /* «Riprova»: rifà l'ultima ricerca — la scansione, o l'indirizzo scritto —
+   * dopo che l'utente ha acceso l'ADB di rete e riavviato il pannello. */
+  trova("riprova-adb").addEventListener("click", function () {
+    mostraAiutoAdbRete(false);
+    if (ultimaRicercaPannello && ultimaRicercaPannello.tipo === "indirizzo") controllaIlPannello();
+    else cercaInRete();
+  });
   trova("installa-pannello").addEventListener("click", installaIlPannello);
   trova("aggiungi-pannello").addEventListener("click", function () {
     pannelloNuovo = { verificato: null, id: "" };
+    ultimaRicercaPannello = null;
     trova("indirizzo-pannello").value = "";
     trova("nome-pannello").value = "";
     trova("trovati-in-rete").hidden = true;
+    mostraAiutoAdbRete(false);
     disegnaLaVerifica(null);
     disegnaIlNuovoPannello();
   });

@@ -113,20 +113,34 @@ export class Pannelli {
 
   /* Cerca i pannelli con ADB acceso sulla rete di casa. Prova a collegarsi a
    * ogni indirizzo; quelli che rispondono e hanno l'aria di un pannello
-   * tornano nell'elenco. Pochi alla volta, per non riempire la rete. */
+   * tornano nell'elenco. Pochi alla volta, per non riempire la rete.
+   *
+   * Torna anche `contattati` e `rete`, che servono a capire «perche' niente»:
+   *  - `contattati`: quanti indirizzi hanno dato una risposta TCP — collegati,
+   *    o che hanno rifiutato la 5555. Se e' > 0 l'add-on arriva alla rete, e
+   *    un pannello non trovato ha solo l'ADB di rete spento (o sta altrove);
+   *    se e' 0 su una /24 intera, l'add-on non arriva a quella rete.
+   *  - `rete`: la /24 guardata (es. "192.168.1"), per dirlo all'utente: se il
+   *    pannello sta su un'altra sottorete, si vede subito. */
   async rete({ concorrenti = 24 } = {}) {
     if (!(await adbCE(this.adb))) return { trovati: [], adb: false };
     const mio = this.reteDiCasa?.indirizzo?.() || this.reteDiCasa?.mio || "";
     const indirizzi = indirizziDellaRete(mio);
     if (!indirizzi.length) return { trovati: [], adb: true, senzaRete: true };
+    const rete = /^(\d+\.\d+\.\d+)\.\d+$/.exec(mio)?.[1] || "";
     const gia = new Set(this.archivio.dati.pannelli.map((u) => u.indirizzo));
     const trovati = [];
+    let contattati = 0;
     let i = 0;
     const lavoratore = async () => {
       while (i < indirizzi.length) {
         const indirizzo = indirizzi[i++];
         try {
-          if (!(await this.adb.connetti(indirizzo))) continue;
+          const prova = await this.adb.provaCollegamento(indirizzo);
+          /* Una risposta — collegato o «rifiutato» — dice che l'add-on arriva
+           * a quell'indirizzo: la rete e' raggiungibile. */
+          if (prova.ok || prova.causa === "rifiutato") contattati += 1;
+          if (!prova.ok) continue;
           const modello = await this._modelloDi(indirizzo);
           if (modello.pannello)
             trovati.push({ indirizzo, modello: modello.modello, gia: gia.has(indirizzo) });
@@ -138,7 +152,7 @@ export class Pannelli {
     };
     await Promise.all(Array.from({ length: Math.min(concorrenti, indirizzi.length) }, lavoratore));
     trovati.sort((a, b) => a.indirizzo.localeCompare(b.indirizzo, undefined, { numeric: true }));
-    return { trovati, adb: true };
+    return { trovati, adb: true, contattati, rete };
   }
 
   async _modelloDi(indirizzo) {
@@ -183,6 +197,7 @@ export class Pannelli {
           : "Il pannello non risponde a questo indirizzo. Controlla che sia quello giusto, che il pannello sia acceso e sulla stessa rete.",
       );
       e.perUtente = true;
+      e.causa = collegamento.causa;
       throw e;
     }
     const android =

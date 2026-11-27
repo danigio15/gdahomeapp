@@ -809,6 +809,53 @@
                     <ul class="verifiche" id="trovato-verifiche"></ul>
                   </div>
                   <p class="avviso" id="avviso-indirizzo" hidden></p>
+                  <!-- Compare solo quando l'ADB di rete e' spento (la 5555
+                       rifiuta) o la scansione non trova niente: il richiamo
+                       eWeLink e il tasto che riprova da solo. -->
+                  <div class="aiuto-adb" id="aiuto-adb-rete" hidden>
+                    <p class="aiuto-adb-titolo" data-en="The network ADB is off">
+                      L'ADB di rete è spento
+                    </p>
+                    <p
+                      class="nota"
+                      data-en="The panel is on the network, but it's not accepting ADB on port 5555 yet. On the NSPanel, developer mode alone isn't always enough — two quick things fix it:"
+                    >
+                      Il pannello è in rete, ma non accetta ancora l'ADB sulla porta 5555. Sul
+                      NSPanel la sola modalità sviluppatore non sempre basta: due cose veloci lo
+                      sistemano.
+                    </p>
+                    <ol class="guida">
+                      <li
+                        data-en="In eWeLink, open Developer mode and make sure ADB is on (step 1 above), accepting the notice on the panel's screen."
+                      >
+                        In eWeLink, apri <b>«Modalità sviluppatore»</b> e assicurati che
+                        <b>ADB</b> sia acceso (tappa 1 qui sopra), accettando l'avviso sullo schermo
+                        del pannello.
+                      </li>
+                      <li
+                        data-en="Restart the panel (Settings › restart, or power). The network ADB starts at boot: this is what opens port 5555."
+                      >
+                        <b>Riavvia il pannello</b> (Impostazioni › riavvia, o dalla corrente). L'ADB
+                        di rete parte all'avvio: è questo che apre la porta 5555.
+                      </li>
+                      <li data-en="Make sure the panel is on the same Wi‑Fi as Home Assistant.">
+                        Controlla che il pannello sia sullo stesso Wi‑Fi di Home Assistant.
+                      </li>
+                    </ol>
+                    <p
+                      class="nota tenue-piccola"
+                      data-en="Once it's open, GdAHome keeps the network ADB on for good — you do this only the first time."
+                    >
+                      Una volta aperto, GdAHome tiene acceso l'ADB di rete per sempre: lo fai solo
+                      la prima volta.
+                    </p>
+                    <div class="bottoni">
+                      <button id="riprova-adb" type="button" data-render="riprova-adb">
+                        <svg class="ic" aria-hidden="true"><use href="#ic-segnale" /></svg
+                        ><span data-en="Try again">Riprova</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </li>
               <li class="tappa" id="tappa-cosa" data-stato="dopo">

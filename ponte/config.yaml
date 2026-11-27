@@ -43,7 +43,7 @@ name: GdAHome
 #
 # Quello che non cambia: nel negozio «Aggiorna» compare **solo** se questo
 # numero si alza.
-version: "1.19.34"
+version: "1.19.35"
 # L'immagine gia' pronta (la costruisce .github/workflows/immagini-add-on.yml,
 # una per architettura, col numero della versione): Home Assistant la scarica
 # invece di costruirla in casa, e lo scaricamento ha la percentuale.
@@ -65,6 +65,33 @@ arch:
 init: false
 startup: application
 boot: auto
+
+# L'add-on condivide la rete di Home Assistant, invece di stare dietro la rete
+# interna di Docker.
+#
+# Serve a una cosa sola, e importante: i **pannelli a muro**. Per installare
+# GdAHome su un NSPanel l'add-on gli parla via ADB sulla porta 5555 del suo
+# indirizzo sulla rete di casa (`src/pannelli.js`, `src/adb.js`). Di serie un
+# add-on sta su una rete Docker sua (`172.30.x.x`), e il Supervisor la porta
+# fuori verso internet, ma **non sempre verso la rete locale**: dove Home
+# Assistant gira in una VM o un container (per esempio su Proxmox), un
+# `adb connect 192.168.1.x:5555` dall'add-on va in timeout anche se quel
+# pannello, da un'altra macchina della stessa rete, risponde benissimo. Senza
+# questa riga la ricerca non trova niente e l'indirizzo a mano dice «non
+# risponde»: la funzione dei pannelli a muro non parte proprio.
+#
+# E' l'**unico** permesso largo che l'add-on chiede, ed e' solo la rete: non
+# apre il disco, i device, il kernel, gli altri container. Tutto il resto resta
+# blindato — ruolo `default`, nessun altro `host_*`, AppArmor acceso — e una
+# prova (`test/manifesto.test.js`) tiene fermo che l'unico permesso ampio sia
+# questo, con questa ragione. Costa un punto nel punteggio di sicurezza della
+# scheda dell'add-on: e' il prezzo di far arrivare l'add-on ai pannelli di
+# casa, e sta scritto qui perche' si veda.
+#
+# Non si puo' accendere «solo durante la scansione»: in un add-on e' statico,
+# deciso all'avvio del container. O cosi', o i pannelli si installano da una
+# macchina che la rete di casa la vede gia'.
+host_network: true
 
 # La console, dietro l'autenticazione di Home Assistant.
 ingress: true

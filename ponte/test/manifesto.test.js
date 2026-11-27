@@ -270,7 +270,6 @@ test("il ruolo col Supervisor e' quello di serie, e nessun permesso largo e' acc
   for (const chiave of [
     "full_access",
     "docker_api",
-    "host_network",
     "host_pid",
     "host_uts",
     "host_ipc",
@@ -285,6 +284,14 @@ test("il ruolo col Supervisor e' quello di serie, e nessun permesso largo e' acc
   ]) {
     assert.deepEqual(iValoriDi(scritto, chiave), [], `«${chiave}» non serve al ponte`);
   }
+  /* L'unica eccezione, e solo la rete: `host_network` serve ai pannelli a muro
+   * (ADB sulla 5555 della rete di casa), perche' dietro la rete Docker
+   * dell'add-on, dove Home Assistant gira in VM/container, la rete locale non
+   * si raggiunge. E' scritto nel manifesto con la sua ragione; non apre disco,
+   * device ne' kernel. Se si toglie, i pannelli non si installano piu'
+   * dall'add-on: non si cancella questa riga senza riaccendere quella in
+   * `config.yaml`. */
+  assert.deepEqual(iValoriDi(scritto, "host_network"), ["true"]);
   /* AppArmor spento costa un punto e toglie la seconda linea di difesa. */
   assert.ok(!/^apparmor:[ \t]*false/m.test(scritto), "AppArmor non si spegne");
 });

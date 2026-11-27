@@ -2698,6 +2698,40 @@ button.al-lavoro {
   font-weight: 600;
 }
 
+/* Il riquadro «ADB di rete spento»: compare solo quando la 5555 rifiuta o la
+   rete e' vuota. Richiamo eWeLink, poi il tasto che riprova da solo. */
+.aiuto-adb {
+  margin: 14px 0 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--giallo-soft);
+  border: 1px solid var(--linea-forte);
+}
+
+.aiuto-adb-titolo {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--giallo);
+}
+
+.aiuto-adb .nota {
+  margin: 6px 0;
+}
+
+.aiuto-adb .guida {
+  margin: 10px 0 8px;
+}
+
+.aiuto-adb .tenue-piccola {
+  font-size: 13px;
+  color: var(--tenue);
+}
+
+.aiuto-adb .bottoni {
+  margin-top: 6px;
+}
+
 /* «Il pannello è pronto, premi»: il messaggio che riduce tutto a un tasto. */
 .pronto-messaggio {
   margin: 4px 0 12px;

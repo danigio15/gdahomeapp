@@ -263,6 +263,39 @@ test("la scansione della rete trova i pannelli che rispondono", async () => {
   }
 });
 
+test("la scansione dice quanti ne ha contattati e su che rete (per capire «perche' niente»)", async () => {
+  const dir = cartella();
+  try {
+    /* Tutti rispondono «rifiutato»: raggiunti, ma nessuno con l'ADB di rete
+     * aperto. `contattati` alto dice «e' la rete e' a posto, e' il pannello». */
+    const raggiunti = new Pannelli({
+      cartella: dir,
+      adb: adbFinto({ connetti: false, causa: "rifiutato" }),
+      installatore: installatoreFinto(),
+      licenze: premium,
+      reteDiCasa: { indirizzo: () => "192.168.1.174" },
+    });
+    const a = await raggiunti.rete({ concorrenti: 16 });
+    assert.equal(a.trovati.length, 0);
+    assert.equal(a.rete, "192.168.1");
+    assert.equal(a.contattati, 254);
+
+    /* Nessuna risposta su tutta la /24: l'add-on non arriva a quella rete. */
+    const muti = new Pannelli({
+      cartella: dir,
+      adb: adbFinto({ connetti: false, causa: "irraggiungibile" }),
+      installatore: installatoreFinto(),
+      licenze: premium,
+      reteDiCasa: { indirizzo: () => "192.168.1.174" },
+    });
+    const b = await muti.rete({ concorrenti: 16 });
+    assert.equal(b.contattati, 0);
+    assert.equal(b.rete, "192.168.1");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("verifica dice adatto quando root, sistema e spazio ci sono", async () => {
   const dir = cartella();
   try {
@@ -325,6 +358,32 @@ test("verifica spiega quando l'ADB di rete e' spento (5555 rifiutata)", async ()
       (e) => {
         assert.match(e.message, /ADB di rete/);
         assert.equal(e.perUtente, true);
+        /* Il codice-macchina arriva fino alla console, che su «rifiutato»
+         * (e non su un indirizzo sbagliato) mostra la guida eWeLink. */
+        assert.equal(e.causa, "rifiutato");
+        return true;
+      },
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("verifica: un indirizzo muto da' causa «irraggiungibile», non «rifiutato»", async () => {
+  const dir = cartella();
+  try {
+    const adb = adbFinto({ connetti: false, causa: "irraggiungibile" });
+    const pannelli = new Pannelli({
+      cartella: dir,
+      adb,
+      installatore: installatoreFinto(),
+      licenze: premium,
+    });
+    await assert.rejects(
+      () => pannelli.verifica("192.168.1.5"),
+      (e) => {
+        assert.equal(e.causa, "irraggiungibile");
+        assert.doesNotMatch(e.message, /ADB di rete/);
         return true;
       },
     );
