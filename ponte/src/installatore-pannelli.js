@@ -16,7 +16,15 @@
  * segreto della casa passa dalla stessa porta cifrata di sempre, non da una
  * scorciatoia.
  */
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  statfsSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { scappa } from "./adb.js";
@@ -138,8 +146,11 @@ export class Installatore {
     this.copie = cartellaDelleCopie;
     this.abbinaPannello = abbinaPannello;
     this.dispositivi = dispositivi;
-    /* Come si scrive una partizione sul disco: iniettabile per le prove. */
-    this.scriviCopia = scriviCopia;
+    /* Come si scrive una partizione sul disco: in streaming da adb, o un
+     * finto nelle prove. Prima non c'era nessuno: «Questo add-on non puo'
+     * scrivere la copia di sicurezza». */
+    this.scriviCopia =
+      scriviCopia || ((indirizzo, comando, dove) => this.adb.copiaInFile(indirizzo, comando, dove));
     this.muroPackage = muroPackage;
   }
 
@@ -228,9 +239,13 @@ export class Installatore {
     return m ? `${m[1]}x${m[2]}` : "";
   }
 
-  /* Copia ogni partizione in /share/gdahome-os/<pannello>/, col suo md5. */
+  /* La copia di sicurezza: ogni partizione del pannello (tranne i dati
+   * dell'utente e la cache) in /share/gdahome-os/<pannello>-<data>/, nella
+   * cartella condivisa di Home Assistant, dove chi ci abita la vede e la puo'
+   * portare via. Ogni partizione arriva in streaming (`copiaInFile`), e vale
+   * solo se byte e md5 tornano con quelli letti sul pannello. Prima di
+   * cominciare si guarda che su Home Assistant ci sia posto. */
   async _copiaDiSicurezza(indirizzo, nome, avanti) {
-    const dir = join(this.copie, cartellaSicura(nome) + "-" + Date.now());
     let byName = "";
     try {
       byName = (
@@ -254,24 +269,82 @@ export class Installatore {
       return { errore: "Non riesco a elencare le partizioni." };
     }
     if (!nomi.length) return { errore: "Nessuna partizione da copiare." };
-    if (!this.scriviCopia)
-      return { errore: "Questo add-on non puo' scrivere la copia di sicurezza." };
 
+    /* Quanto pesa, partizione per partizione. */
+    const misure = {};
+    let totale = 0;
+    for (const p of nomi) {
+      const detto = await this.adb
+        .shell(indirizzo, `blockdev --getsize64 ${scappa(`${byName}/${p}`)}`, { root: true })
+        .catch(() => "");
+      const n = Number(String(detto).trim());
+      misure[p] = Number.isFinite(n) && n > 0 ? n : 0;
+      totale += misure[p];
+    }
+
+    /* Il posto su Home Assistant, con un margine. */
+    const dir = join(this.copie, `${cartellaSicura(nome)}-${dataPerCartella(new Date())}`);
+    try {
+      mkdirSync(dir, { recursive: true });
+    } catch (errore) {
+      return {
+        errore: `Non riesco a creare la cartella della copia (${this.copie}): ${errore.code || errore.message}.`,
+      };
+    }
+    const liberi = this.spazioLibero(this.copie);
+    if (liberi != null && totale && liberi < totale * 1.05 + 200 * 1024 ** 2) {
+      rmSync(dir, { recursive: true, force: true });
+      return {
+        errore: `Non c'e' posto per la copia di sicurezza su Home Assistant: servono ${inGB(totale)} GB, liberi ${inGB(liberi)} GB.`,
+      };
+    }
+
+    const righe = [];
     for (let i = 0; i < nomi.length; i += 1) {
       const p = nomi[i];
-      avanti(i, nomi.length, p);
+      const sorgente = scappa(`${byName}/${p}`);
+      avanti(i, nomi.length, misure[p] ? `${p} · ${inGB(misure[p])} GB` : p);
       try {
-        const flusso = this.adb.shellBinaria(
+        /* L'impronta sul pannello, poi la copia: devono tornare. */
+        const atteso = String(
+          await this.adb.shell(indirizzo, `md5sum ${sorgente}`, {
+            root: true,
+            attesa: 15 * 60_000,
+          }),
+        )
+          .trim()
+          .split(/\s+/)[0];
+        const { byte, md5 } = await this.scriviCopia(
           indirizzo,
-          `dd if=${scappa(`${byName}/${p}`)} bs=4194304 2>/dev/null`,
+          `dd if=${sorgente} bs=4194304 2>/dev/null`,
+          join(dir, `${p}.img`),
         );
-        await this.scriviCopia(join(dir, `${p}.img`), flusso);
-      } catch (_e) {
-        return { errore: `Copia di ${p} non riuscita.` };
+        if (misure[p] && byte !== misure[p])
+          return { errore: `La copia di ${p} e' incompleta (${byte} byte su ${misure[p]}).` };
+        if (/^[0-9a-f]{32}$/.test(atteso) && md5 !== atteso)
+          return { errore: `La copia di ${p} non torna con l'originale (md5 diverso).` };
+        righe.push(`${md5}  ${p}.img`);
+      } catch (errore) {
+        return { errore: `Copia di ${p} non riuscita: ${errore.message || errore}.` };
       }
     }
+    writeFileSync(join(dir, "MD5SUMS"), `${righe.join("\n")}\n`);
+    writeFileSync(
+      join(dir, "info.json"),
+      `${JSON.stringify({ pannello: nome, indirizzo, quando: new Date().toISOString(), partizioni: misure }, null, 2)}\n`,
+    );
     avanti(nomi.length, nomi.length, "");
     return { dir };
+  }
+
+  /* I byte liberi dove vanno le copie, o null se non si sa. */
+  spazioLibero(dove) {
+    try {
+      const s = statfsSync(dove);
+      return Number(s.bavail) * Number(s.bsize);
+    } catch (_e) {
+      return null;
+    }
   }
 
   /* Installa GdAHome OS: l'app GdAHome Muro, GdAHome OS come app di sistema,
@@ -562,6 +635,16 @@ export class Installatore {
       return { errore: scusa(errore) };
     }
   }
+}
+
+/* «2026-11-27_1542»: si legge, e si ordina da se'. */
+function dataPerCartella(d) {
+  const due = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${due(d.getMonth() + 1)}-${due(d.getDate())}_${due(d.getHours())}${due(d.getMinutes())}`;
+}
+
+function inGB(byte) {
+  return (byte / 1024 ** 3).toFixed(1).replace(".", ",");
 }
 
 function cartellaSicura(nome) {

@@ -278,6 +278,7 @@ export class Pannelli {
     if (spazio.ok) verifiche.push({ esito: "bene", detto: spazio.detto });
     else verifiche.push({ esito: spazio.grave ? "male" : "giallo", detto: spazio.detto });
     if (spazio.grave) adatto = false;
+    verifiche.push(this._spazioPerLaCopia());
 
     const webview = await this._webview(pulito);
     verifiche.push(webview);
@@ -319,17 +320,38 @@ export class Pannelli {
       const liberi = col.map((c) => leggiByte(c)).filter((n) => n != null);
       const gb = liberi.length ? liberi[liberi.length - 1] : null;
       if (gb == null) return { ok: true, detto: "Spazio: non misurato" };
-      const servono = 2 * 1024 * 1024 * 1024;
+      /* Sul pannello vanno solo i pezzi (una ventina di MB) e le app Sonoff
+       * messe da parte: la copia di sicurezza va su Home Assistant. Prima qui
+       * si chiedevano 2 GB, che sul pannello non servono. */
+      const servono = 200 * 1024 * 1024;
       if (gb < servono)
         return {
           ok: false,
           grave: true,
-          detto: `Poco spazio: servono 2 GB, liberi ${mostraByte(gb)}`,
+          detto: `Poco spazio sul pannello: servono 200 MB, liberi ${mostraByte(gb)}`,
         };
-      return { ok: true, detto: `Spazio per la copia: liberi ${mostraByte(gb)}` };
+      return { ok: true, detto: `Spazio sul pannello: liberi ${mostraByte(gb)}` };
     } catch (_e) {
-      return { ok: true, detto: "Spazio: non misurato" };
+      return { ok: true, detto: "Spazio sul pannello: non misurato" };
     }
+  }
+
+  /* Il posto per la copia di sicurezza, su Home Assistant (/share). Quanto
+   * serve davvero si sa solo leggendo le partizioni, all'installazione: qui
+   * si avvisa se e' chiaramente poco. */
+  _spazioPerLaCopia() {
+    const liberi = this.installatore.spazioLibero?.(this.installatore.copie);
+    if (liberi == null)
+      return { esito: "giallo", detto: "Spazio per la copia su Home Assistant: non misurato" };
+    if (liberi < 4 * 1024 ** 3)
+      return {
+        esito: "giallo",
+        detto: `Spazio per la copia su Home Assistant: liberi ${mostraByte(liberi)}, ne servono di solito 2-4 GB`,
+      };
+    return {
+      esito: "bene",
+      detto: `Spazio per la copia su Home Assistant: liberi ${mostraByte(liberi)}`,
+    };
   }
 
   async _webview(indirizzo) {

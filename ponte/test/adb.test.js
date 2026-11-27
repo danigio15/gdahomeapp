@@ -239,3 +239,36 @@ test("porta aperta ma muta: adb dice «failed to connect» e lo tiene «offline�
     causa: "irraggiungibile",
   });
 });
+
+test("copiaInFile scrive l'uscita man mano, e ne torna byte e md5", async () => {
+  const { mkdtempSync, readFileSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { createHash } = await import("node:crypto");
+  const dir = mkdtempSync(join(tmpdir(), "copia-"));
+  try {
+    const pezzi = [Buffer.alloc(70_000, 1), Buffer.alloc(30_000, 2)];
+    const avvia = () => {
+      const p = new EventEmitter();
+      p.stdout = new EventEmitter();
+      p.stdout.pause = () => {};
+      p.stdout.resume = () => {};
+      p.stderr = new EventEmitter();
+      p.kill = () => {};
+      queueMicrotask(() => {
+        for (const x of pezzi) p.stdout.emit("data", x);
+        p.emit("close", 0);
+      });
+      return p;
+    };
+    const adb = new Adb({ avvia, chiave: null });
+    const dove = join(dir, "system.img");
+    const esito = await adb.copiaInFile("1.2.3.4", "dd if=/dev/block/by-name/system", dove);
+    const tutto = Buffer.concat(pezzi);
+    assert.equal(esito.byte, tutto.length);
+    assert.equal(esito.md5, createHash("md5").update(tutto).digest("hex"));
+    assert.deepEqual(readFileSync(dove), tutto);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

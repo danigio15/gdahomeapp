@@ -21,7 +21,8 @@
  * `adb`, gli danno un finto che risponde quello che serve a provare.
  */
 import { spawn } from "node:child_process";
-import { mkdirSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { createWriteStream, mkdirSync } from "node:fs";
 import { join } from "node:path";
 
 /* Dove tenere la chiave di ADB, cosi' non ne nasce una nuova a ogni comando
@@ -309,9 +310,83 @@ export class Adb {
     return this.comando(["-s", dev, "exec-out", riga], { attesa, binario });
   }
 
-  /* L'uscita binaria di un comando root (per `dd` della copia di sicurezza). */
+  /* L'uscita binaria di un comando root, tutta in memoria: solo per cose
+   * piccole. Una partizione si copia con `copiaInFile`. */
   shellBinaria(indirizzo, comando, opzioni = {}) {
     return this.shell(indirizzo, comando, { ...opzioni, binario: true, root: true });
+  }
+
+  /* Lancia un comando root sul pannello e ne scrive l'uscita in un file **man
+   * mano che arriva**, senza tenerla in memoria: una partizione di sistema e'
+   * un giga o due. Torna { byte, md5 } calcolati su quello che e' arrivato.
+   * Prima `shellBinaria` raccoglieva tutto in memoria con un minuto di tempo:
+   * con una partizione vera l'add-on sarebbe finito senza memoria o a meta'. */
+  copiaInFile(indirizzo, comando, dove, { attesa = ATTESE.pull } = {}) {
+    this._preparaLaChiave();
+    return new Promise((risolvi, rifiuta) => {
+      const ambiente = { ...process.env };
+      if (this.chiave) ambiente.HOME = this.chiave;
+      let proc;
+      try {
+        proc = this.avvia(
+          this.programma,
+          ["-s", this._dev(indirizzo), "exec-out", `su -c ${scappa(comando)}`],
+          { stdio: ["ignore", "pipe", "pipe"], env: ambiente },
+        );
+      } catch (errore) {
+        rifiuta(new ErroreAdb(`adb non si avvia: ${errore.message}`, { causa: "niente_adb" }));
+        return;
+      }
+      const file = createWriteStream(dove);
+      const impronta = createHash("md5");
+      let byte = 0;
+      let finito = false;
+      const errori = [];
+      const fine = (errore, esito) => {
+        if (finito) return;
+        finito = true;
+        clearTimeout(scade);
+        if (errore) {
+          try {
+            proc.kill?.("SIGKILL");
+          } catch (_e) {
+            /* Gia' morto. */
+          }
+          file.destroy();
+          rifiuta(errore);
+        } else risolvi(esito);
+      };
+      const scade = setTimeout(
+        () => fine(new ErroreAdb("la copia ci ha messo troppo", { causa: "tempo" })),
+        attesa,
+      );
+      proc.on("error", (errore) => fine(new ErroreAdb(`adb: ${errore.message}`)));
+      proc.stderr?.on?.("data", (p) => errori.push(p));
+      proc.stdout.on("data", (pezzo) => {
+        byte += pezzo.length;
+        impronta.update(pezzo);
+        /* Se il disco non tiene il passo, si aspetta: niente in memoria. */
+        if (!file.write(pezzo)) {
+          proc.stdout.pause();
+          file.once("drain", () => proc.stdout.resume());
+        }
+      });
+      file.on("error", (errore) =>
+        fine(
+          new ErroreAdb(`non riesco a scrivere ${dove}: ${errore.message}`, { causa: "spazio" }),
+        ),
+      );
+      proc.on("close", (codice) => {
+        const testo = Buffer.concat(errori).toString("utf8");
+        if (codice !== 0)
+          return fine(
+            new ErroreAdb(testo.trim().split("\n")[0] || `adb e' uscito con ${codice}`, {
+              uscita: testo,
+            }),
+          );
+        file.end(() => fine(null, { byte, md5: impronta.digest("hex") }));
+      });
+    });
   }
 
   push(indirizzo, daLocale, aRemoto) {

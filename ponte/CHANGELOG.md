@@ -14,6 +14,19 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.38
+
+- **Pannelli a muro, la copia di sicurezza si fa davvero**: l'installazione si
+  fermava su «Questo add-on non può scrivere la copia di sicurezza» (prima di
+  toccare il pannello). Ora ogni partizione arriva in streaming nella cartella
+  condivisa di Home Assistant, in `gdahome-os/<pannello>-<data>/`, e vale solo
+  se byte e impronta MD5 tornano con quelli del pannello; accanto ci sono
+  `MD5SUMS` e `info.json`. Prima di cominciare si controlla che su Home
+  Assistant ci sia posto. L'add-on ora vede la cartella condivisa (`share`).
+- **La verifica guarda lo spazio giusto**: chiedeva 2 GB liberi sul pannello,
+  dove non servono; ora chiede 200 MB sul pannello e mostra lo spazio per la
+  copia su Home Assistant.
+
 ## 1.19.37
 
 - **Pannelli a muro, l'installazione arriva in fondo**: GdAHome OS e l'app

@@ -202,3 +202,84 @@ test("aggiornare installa sopra solo i pezzi indietro", async () => {
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+/* Un pannello finto per la copia di sicurezza: due partizioni con la loro
+ * misura e il loro md5, e uno scrittore che «copia» i byte che gli si dice. */
+function pannelloDaCopiare({ md5Pannello = "a".repeat(32), byteCopiati = 1000 } = {}) {
+  return {
+    async shell(_i, c) {
+      if (c.includes("by-name; do")) return "/dev/block/by-name\n";
+      if (c.startsWith("ls ")) return "boot\nsystem\nuserdata\ncache\n";
+      if (c.startsWith("blockdev")) return "1000";
+      if (c.startsWith("md5sum")) return `${md5Pannello}  /dev/block/by-name/x`;
+      return "";
+    },
+  };
+}
+
+test("la copia di sicurezza salva ogni partizione (non i dati), e scrive MD5SUMS", async () => {
+  const copie = mkdtempSync(join(tmpdir(), "copie-"));
+  try {
+    const scritte = [];
+    const inst = new Installatore({
+      adb: pannelloDaCopiare(),
+      cartellaDelleCopie: copie,
+      scriviCopia: async (_i, comando, dove) => {
+        scritte.push([comando, dove.split("/").pop()]);
+        return { byte: 1000, md5: "a".repeat(32) };
+      },
+    });
+    const esito = await inst._copiaDiSicurezza("1.2.3.4", "Salone", () => {});
+    assert.equal(esito.errore, undefined);
+    assert.deepEqual(
+      scritte.map(([, f]) => f),
+      ["boot.img", "system.img"],
+    );
+    assert.match(scritte[0][0], /^dd if='\/dev\/block\/by-name\/boot' bs=4194304/);
+    assert.match(readFileSync(join(esito.dir, "MD5SUMS"), "utf8"), /a{32} {2}system\.img/);
+    assert.match(esito.dir, /Salone-\d{4}-\d{2}-\d{2}_\d{4}$/);
+  } finally {
+    rmSync(copie, { recursive: true, force: true });
+  }
+});
+
+test("la copia si ferma se l'md5 non torna o se e' incompleta", async () => {
+  const copie = mkdtempSync(join(tmpdir(), "copie-"));
+  try {
+    const diverso = new Installatore({
+      adb: pannelloDaCopiare(),
+      cartellaDelleCopie: copie,
+      scriviCopia: async () => ({ byte: 1000, md5: "b".repeat(32) }),
+    });
+    assert.match((await diverso._copiaDiSicurezza("1.2.3.4", "x", () => {})).errore, /md5 diverso/);
+    const corta = new Installatore({
+      adb: pannelloDaCopiare(),
+      cartellaDelleCopie: copie,
+      scriviCopia: async () => ({ byte: 400, md5: "a".repeat(32) }),
+    });
+    assert.match((await corta._copiaDiSicurezza("1.2.3.4", "x", () => {})).errore, /incompleta/);
+  } finally {
+    rmSync(copie, { recursive: true, force: true });
+  }
+});
+
+test("senza posto su Home Assistant la copia non comincia, e lo dice coi numeri", async () => {
+  const copie = mkdtempSync(join(tmpdir(), "copie-"));
+  try {
+    let scritte = 0;
+    const inst = new Installatore({
+      adb: pannelloDaCopiare(),
+      cartellaDelleCopie: copie,
+      scriviCopia: async () => {
+        scritte += 1;
+        return { byte: 1000, md5: "a".repeat(32) };
+      },
+    });
+    inst.spazioLibero = () => 1000;
+    const esito = await inst._copiaDiSicurezza("1.2.3.4", "x", () => {});
+    assert.match(esito.errore, /Non c'e' posto per la copia di sicurezza/);
+    assert.equal(scritte, 0);
+  } finally {
+    rmSync(copie, { recursive: true, force: true });
+  }
+});
