@@ -14,6 +14,15 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.34
+
+- **Pannelli a muro**: la ricerca in rete ora trova davvero i pannelli (prima
+  cercava su un elenco vuoto e non trovava niente). E quando si mette
+  l'indirizzo a mano, l'add-on distingue i casi: se il pannello **rifiuta la
+  porta 5555** dice che l'ADB di rete è spento — su certi firmware la sola
+  modalità sviluppatore non basta, e l'ADB di rete va acceso dalle opzioni
+  sviluppatore («Debug senza fili») o una volta con un cavo USB.
+
 ## 1.19.33
 
 - **Plancia a muro sul NSPanel da 4 pollici**: il nome della stanza resta

@@ -30,6 +30,10 @@ function adbFinto(tabella = {}) {
       chiamate.push(["connetti", ind]);
       return tabella[`connetti ${ind}`] ?? tabella.connetti ?? true;
     },
+    async provaCollegamento(ind) {
+      const ok = tabella[`connetti ${ind}`] ?? tabella.connetti ?? true;
+      return { ok, causa: ok ? "" : (tabella.causa ?? "irraggiungibile") };
+    },
     async stacca() {},
     async getprop(ind, nome) {
       return rispondi(`getprop ${nome}`) ?? "";
@@ -301,6 +305,29 @@ test("verifica dice NON adatto senza root", async () => {
     });
     const v = await pannelli.verifica("192.168.1.5");
     assert.equal(v.adatto, false);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("verifica spiega quando l'ADB di rete e' spento (5555 rifiutata)", async () => {
+  const dir = cartella();
+  try {
+    const adb = adbFinto({ connetti: false, causa: "rifiutato" });
+    const pannelli = new Pannelli({
+      cartella: dir,
+      adb,
+      installatore: installatoreFinto(),
+      licenze: premium,
+    });
+    await assert.rejects(
+      () => pannelli.verifica("192.168.1.5"),
+      (e) => {
+        assert.match(e.message, /ADB di rete/);
+        assert.equal(e.perUtente, true);
+        return true;
+      },
+    );
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
