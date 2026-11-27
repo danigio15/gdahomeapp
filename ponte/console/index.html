@@ -639,10 +639,10 @@
               <div>
                 <h2 data-en="Wall panels">I pannelli a muro</h2>
                 <p
-                  data-en="The Sonoff NSPanel Pro panels of this home, with GdAHome OS. Each one shows its own wall dashboard."
+                  data-en="The wall panels of this home — Sonoff NSPanel Pro, Shelly Wall Display or any Android display — with GdAHome OS. Each one shows its own wall dashboard."
                 >
-                  I Sonoff NSPanel Pro di questa casa, con GdAHome OS. Ognuno mostra la sua plancia
-                  a muro.
+                  I pannelli a muro di questa casa — Sonoff NSPanel Pro, Shelly Wall Display o
+                  qualunque display Android — con GdAHome OS. Ognuno mostra la sua plancia a muro.
                 </p>
               </div>
               <button type="button" data-vai="nuovo-pannello" id="aggiungi-pannello">
@@ -716,10 +716,10 @@
           <div class="capo-sezione">
             <h2 data-en="Add a wall panel">Aggiungi un pannello a muro</h2>
             <p
-              data-en="A Sonoff NSPanel Pro (86 or 120) becomes a GdAHome panel. It takes about ten minutes, and you don't need a computer."
+              data-en="A Sonoff NSPanel Pro, a Shelly Wall Display or an Android display becomes a GdAHome panel. It takes about ten minutes, and you don't need a computer."
             >
-              Un Sonoff NSPanel Pro (86 o 120) diventa un pannello GdAHome. Ci vogliono una decina
-              di minuti, e non serve un computer.
+              Un Sonoff NSPanel Pro, uno Shelly Wall Display o un display Android diventa un
+              pannello GdAHome. Ci vogliono una decina di minuti, e non serve un computer.
             </p>
           </div>
 
@@ -771,6 +771,59 @@
                     Sonoff avvisa che accendere ADB non si annulla: il pannello non riceverà più gli
                     aggiornamenti Sonoff (ci pensa GdAHome).
                   </p>
+                  <!-- Gli altri pannelli: l'ADB di rete si accende in un altro modo. -->
+                  <details class="altro-pannello">
+                    <summary data-en="A Shelly Wall Display?">Uno Shelly Wall Display?</summary>
+                    <ol class="guida">
+                      <li data-en="On the display, open Settings › General › About device.">
+                        Sul display apri <b>Impostazioni › Generali › Info dispositivo</b>.
+                      </li>
+                      <li
+                        data-en="Tap the firmware version (F) and the hardware revision (H) in this order: F H F F H F H H. ADB on the network turns on."
+                      >
+                        Tocca la versione del firmware (F) e la revisione hardware (H) in
+                        quest'ordine: <b>F H F F H F H H</b>. Si accende l'ADB di rete.
+                      </li>
+                    </ol>
+                    <p
+                      class="nota tenue-piccola"
+                      data-en="Without root the Shelly app stays on, hidden: it's what drives the relays and reads the sensors."
+                    >
+                      Senza root l'app Shelly resta accesa, nascosta: è lei che comanda i relè e
+                      legge i sensori.
+                    </p>
+                  </details>
+                  <details class="altro-pannello">
+                    <summary data-en="Another Android display?">Un altro display Android?</summary>
+                    <ol class="guida">
+                      <li
+                        data-en="Settings › About › tap “Build number” 7 times: “Developer options” appears."
+                      >
+                        <b>Impostazioni › Info</b> › tocca 7 volte <b>«Numero build»</b>: compaiono
+                        le <b>«Opzioni sviluppatore»</b>.
+                      </li>
+                      <li
+                        data-en="In Developer options turn on “USB debugging” and, if there is one, “Network ADB” (or “Wireless debugging” on port 5555)."
+                      >
+                        Nelle opzioni sviluppatore accendi <b>«Debug USB»</b> e, se c'è,
+                        <b>«ADB di rete»</b> (o «Debug wireless» sulla porta 5555).
+                      </li>
+                      <li
+                        data-en="If network ADB isn't there: once, with a USB cable from a computer, run adb tcpip 5555."
+                      >
+                        Se l'ADB di rete non c'è: una volta, col cavo USB da un computer,
+                        <code>adb tcpip 5555</code>.
+                      </li>
+                    </ol>
+                    <p
+                      class="nota tenue-piccola"
+                      data-en="With root GdAHome OS goes into the system, after a backup copy; without root the maker's software is copied to Home Assistant and turned off. Either way you can always go back."
+                    >
+                      Con root GdAHome OS entra nel sistema, dopo la copia di sicurezza; senza root
+                      il software del produttore si copia su Home Assistant e si spegne. In tutti e
+                      due i casi si torna sempre indietro.
+                    </p>
+                  </details>
                   <p
                     class="fatto-adb"
                     data-en="Done? Leave it on — GdAHome finds the panel by itself, below."
@@ -987,10 +1040,10 @@
           </section>
           <p
             class="nota-fondo"
-            data-en="The copy of the Sonoff software goes in the shared folder of Home Assistant, in gdahome-os."
+            data-en="The copy of the panel's original software goes in the shared folder of Home Assistant, in gdahome-os."
           >
-            La copia del software Sonoff va nella cartella condivisa di Home Assistant, in
-            «gdahome-os».
+            La copia del software originale del pannello va nella cartella condivisa di Home
+            Assistant, in «gdahome-os».
           </p>
         </section>
 

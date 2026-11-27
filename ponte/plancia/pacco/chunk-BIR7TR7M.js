@@ -6202,8 +6202,10 @@ function quandoSiCambiaPagina(callback) {
   return true;
 }
 var SEGNO_DEL_PARCHEGGIO = "__DASHBOARDMODERN_PARCHEGGIATA__";
+var MURO_ACCESO = "dm-muro-acceso";
 function planciaVisibile(documento = doc) {
   if (root2[SEGNO_DEL_PARCHEGGIO] === true) return false;
+  if (documento?.documentElement?.classList?.contains?.(MURO_ACCESO)) return false;
   return documento?.visibilityState !== "hidden";
 }
 function paginaVisibile(pageId, documento = doc) {

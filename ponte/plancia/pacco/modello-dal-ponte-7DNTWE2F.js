@@ -1,6 +1,6 @@
 import {
   chiediAHomeAssistant
-} from "./chunk-GT4H4BIJ.js";
+} from "./chunk-BIR7TR7M.js";
 
 // src/sections/casa-3d/modello-dal-ponte.js
 var PEZZO_IN_SALITA = 512 * 1024;

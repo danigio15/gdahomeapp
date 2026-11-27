@@ -227,6 +227,17 @@
         <meta-data
             android:name="androidx.car.app.minCarApiLevel"
             android:value="1" />
+        <!-- Il foglietto dell'abbinamento sui pannelli senza root: lo manda
+             solo l'ADB (`IlFoglietto.kt`). DUMP ce l'ha la shell, non le app:
+             nessun'altra app puo' mandare un foglietto. -->
+        <receiver
+            android:name=".IlFoglietto"
+            android:exported="true"
+            android:permission="android.permission.DUMP">
+            <intent-filter>
+                <action android:name="com.gdahome.FOGLIETTO" />
+            </intent-filter>
+        </receiver>
     </application>
 
     <!-- Qui **non** c'e' `android.hardware.type.automotive`, e non e' una

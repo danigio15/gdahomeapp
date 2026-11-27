@@ -797,9 +797,17 @@ export function quandoSiCambiaPagina(callback) {
  * `src/legacy/host.js` sulla finestra, ed e' un patto fra due programmi come
  * `__DASHBOARDMODERN_HOSTED__`: il nome sta scritto in tutti e due i posti. */
 const SEGNO_DEL_PARCHEGGIO = "__DASHBOARDMODERN_PARCHEGGIATA__";
+/* La classe che il pannello a muro mette sulla pagina finche' la copre. */
+export const MURO_ACCESO = "dm-muro-acceso";
 
 export function planciaVisibile(documento = doc) {
   if (root[SEGNO_DEL_PARCHEGGIO] === true) return false;
+  /* Il pannello a muro copre la plancia tutta (`plancia-a-muro-section.js`):
+   * sotto non la vede nessuno. Ridisegnarla a ogni mazzetto di stati — i
+   * riquadri della Home, l'assistente, le persone, il guscio — su un pannello
+   * da quattro core lenti voleva dire un core intero sempre acceso, e i tocchi
+   * sul muro in coda dietro a quel lavoro. Tolto il muro, si ridisegna. */
+  if (documento?.documentElement?.classList?.contains?.(MURO_ACCESO)) return false;
   return documento?.visibilityState !== "hidden";
 }
 

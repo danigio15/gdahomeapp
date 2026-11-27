@@ -333,6 +333,14 @@ export class Pannelli {
       e.causa = collegamento.causa;
       throw e;
     }
+    /* Che pannello e': un NSPanel va per la strada completa (root, sistema,
+     * copia di sicurezza); uno Shelly o un altro display Android per quella
+     * leggera, che non tocca il sistema. */
+    const chi =
+      typeof this.installatore.riconosci === "function"
+        ? await this.installatore.riconosci(pulito).catch(() => null)
+        : null;
+    if (chi?.percorso === "leggero") return this._verificaLeggera(pulito, chi);
     const android =
       (await this.adb.getprop(pulito, "ro.build.version.release").catch(() => "")) || "";
     const schermo = await this._schermo(pulito).catch(() => "");
@@ -378,6 +386,58 @@ export class Pannelli {
       adatto,
       nome: "",
       verifiche,
+      famiglia: "nspanel",
+      percorso: "completo",
+      nomeDelModello: modello ? `NSPanel Pro ${modello}` : "NSPanel Pro",
+    };
+  }
+
+  /* La verifica di un pannello leggero (Shelly, display Android): ADB basta,
+   * root non serve; Android 8 o piu' nuovo (l'app GdAHome Muro), un po' di
+   * posto per le due app, una WebView recente. Niente copia di sicurezza. */
+  async _verificaLeggera(pulito, chi) {
+    const verifiche = [{ esito: "bene", detto: "ADB acceso: per questo pannello non serve root" }];
+    let adatto = true;
+    if (Number.parseInt(chi.android, 10) >= 8)
+      verifiche.push({ esito: "bene", detto: `Android ${chi.android}` });
+    else {
+      verifiche.push({
+        esito: "male",
+        detto: `Android ${chi.android || "?"}: GdAHome Muro chiede Android 8 o piu' nuovo`,
+      });
+      adatto = false;
+    }
+    const spazio = await this._spazio(pulito, { root: false });
+    verifiche.push({
+      esito: spazio.ok ? "bene" : spazio.grave ? "male" : "giallo",
+      detto: spazio.detto,
+    });
+    if (spazio.grave) adatto = false;
+    verifiche.push(await this._webview(pulito));
+    verifiche.push({
+      esito: "bene",
+      detto:
+        "Senza root: il software del produttore si copia su Home Assistant e si spegne, e gira solo GdAHome. Per tornare indietro si riaccende",
+    });
+    verifiche.push(this._spazioPerLaCopia());
+    if (chi.famiglia === "shelly")
+      verifiche.push({
+        esito: "giallo",
+        detto:
+          "Sullo Shelly l'app Shelly resta accesa: e' lei che comanda i rele' e legge i sensori, e senza root non la sostituisce nessuno",
+      });
+    await this.adb.stacca(pulito);
+    return {
+      indirizzo: pulito,
+      modello: "",
+      schermo: chi.schermo || "",
+      android: chi.android || "",
+      adatto,
+      nome: "",
+      verifiche,
+      famiglia: chi.famiglia,
+      percorso: "leggero",
+      nomeDelModello: chi.nome || "Pannello Android",
     };
   }
 
@@ -394,9 +454,9 @@ export class Pannelli {
     }
   }
 
-  async _spazio(indirizzo) {
+  async _spazio(indirizzo, { root = true } = {}) {
     try {
-      const detto = await this.adb.shell(indirizzo, "df /data | tail -n1", { root: true });
+      const detto = await this.adb.shell(indirizzo, "df /data | tail -n1", { root });
       const col = detto.trim().split(/\s+/);
       /* df: … Avail … ; o in blocchi, o con la G/M. Si prende il penultimo o
        * terz'ultimo numero come «disponibile». */
@@ -526,15 +586,36 @@ export class Pannelli {
     if (plancia) pannello.plancia = this._nomeDellaPlancia(plancia);
     if (utente) pannello.utente = utente;
     pannello.planciaId = plancia || pannello.planciaId;
+    /* La strada: completa (NSPanel) o leggera (Shelly, display Android). Si
+     * guarda il pannello, non quello che dice la console. */
+    const chi =
+      typeof this.installatore.riconosci === "function" &&
+      (await this.adb.connetti?.(pulito).catch(() => false))
+        ? await this.installatore.riconosci(pulito).catch(() => null)
+        : null;
+    if (chi) {
+      pannello.percorso = chi.percorso;
+      pannello.famiglia = chi.famiglia;
+      pannello.nomeDelModello = chi.nome;
+    }
     this._salva();
 
-    const passi = this._lavoro(pannello.id, "Copia di sicurezza in corso…", [
-      { nome: "Verifica", dettaglio: "" },
-      { nome: "Copia di sicurezza", dettaglio: "" },
-      { nome: "Installazione", dettaglio: "GdAHome OS, app GdAHome Muro, animazione d'avvio" },
-      { nome: "Abbinamento", dettaglio: "con la casa" },
-      { nome: "Riavvio", dettaglio: "il pannello si accende con GdAHome" },
-    ]);
+    const leggero = pannello.percorso === "leggero";
+    const passi = leggero
+      ? this._lavoro(pannello.id, "Installazione in corso…", [
+          { nome: "Verifica", dettaglio: "" },
+          { nome: "Copia del software", dettaglio: "le app del produttore, su Home Assistant" },
+          { nome: "Installazione", dettaglio: "GdAHome, e il software del produttore spento" },
+          { nome: "Abbinamento", dettaglio: "con la casa" },
+          { nome: "Avvio", dettaglio: "il pannello apre GdAHome" },
+        ])
+      : this._lavoro(pannello.id, "Copia di sicurezza in corso…", [
+          { nome: "Verifica", dettaglio: "" },
+          { nome: "Copia di sicurezza", dettaglio: "" },
+          { nome: "Installazione", dettaglio: "GdAHome OS, app GdAHome Muro, animazione d'avvio" },
+          { nome: "Abbinamento", dettaglio: "con la casa" },
+          { nome: "Riavvio", dettaglio: "il pannello si accende con GdAHome" },
+        ]);
 
     /* Il lavoro gira da solo: non si aspetta che finisca per rispondere alla
      * console. Gli errori finiscono nel lavoro, che la console mostra. */
@@ -546,7 +627,8 @@ export class Pannelli {
   }
 
   async _esegui(pannello, passi) {
-    const esito = await this.installatore.installa({
+    const leggero = pannello.percorso === "leggero";
+    const esito = await this.installatore[leggero ? "installaLeggero" : "installa"]({
       indirizzo: pannello.indirizzo,
       planciaId: pannello.planciaId,
       utente: pannello.utente,
@@ -555,6 +637,11 @@ export class Pannelli {
     });
     if (esito.errore) {
       passi.male(esito.passoRotto ?? 0, esito.errore);
+      /* Anche a meta' strada: cosa e' stato spento e dove sta la copia, per
+       * poter tornare indietro. */
+      if (esito.casaDiPrima) pannello.casaDiPrima = esito.casaDiPrima;
+      if (esito.spente) pannello.spente = esito.spente;
+      if (esito.copia) pannello.copia = esito.copia;
       pannello.stato = "errore";
       pannello.errore = esito.errore;
       this._salva();
@@ -569,6 +656,10 @@ export class Pannelli {
     pannello.schermo = esito.schermo || pannello.schermo;
     pannello.dispositivo = esito.dispositivo || pannello.dispositivo;
     pannello.ritocco = esito.ritocco ?? pannello.ritocco;
+    if (esito.casaDiPrima) pannello.casaDiPrima = esito.casaDiPrima;
+    if (esito.spente) pannello.spente = esito.spente;
+    if (esito.copia) pannello.copia = esito.copia;
+    if (esito.nomeDelModello) pannello.nomeDelModello = esito.nomeDelModello;
     if (esito.abbinatoIl) pannello.abbinatoIl = esito.abbinatoIl;
     pannello.errore = "";
     pannello.vistoIl = this.adesso();
@@ -651,22 +742,26 @@ export class Pannelli {
   _daSistemare(pannello, sul, pezzi) {
     return (
       this.installatore.daAggiornare(sul, pezzi).length > 0 ||
-      (Number(pannello.ritocco) || 0) < RITOCCO ||
+      (pannello.percorso !== "leggero" && (Number(pannello.ritocco) || 0) < RITOCCO) ||
       this._abbinato(pannello) === false
     );
   }
 
   async _aggiorna(pannello) {
     const riabbina = this._abbinato(pannello) === false;
+    const leggero = pannello.percorso === "leggero";
     const passi = this._lavoro(pannello.id, "Aggiornamento…", [
       "App GdAHome Muro",
       "GdAHome OS",
-      { nome: "Pulizia", dettaglio: "quello che resta di Sonoff" },
+      leggero
+        ? { nome: "Impostazioni", dettaglio: "schermata home e schermo acceso" }
+        : { nome: "Pulizia", dettaglio: "quello che resta di Sonoff" },
       ...(riabbina ? [{ nome: "Abbinamento", dettaglio: "con la casa" }] : []),
     ]);
     const finito = this.installatore
       .aggiorna({
         indirizzo: pannello.indirizzo,
+        percorso: pannello.percorso || "completo",
         avanti: ({ passo, dettaglio, percento }) => passi.passo(passo, dettaglio, percento),
         abbina: riabbina
           ? {
@@ -757,6 +852,7 @@ export class Pannelli {
   }
 
   async _sonoff(pannello) {
+    if (pannello.percorso === "leggero") return this._togliGdAHome(pannello);
     const passi = this._lavoro(pannello.id, "Rimetto il software Sonoff…", [
       "Ripristino",
       "Riavvio",
@@ -766,6 +862,31 @@ export class Pannelli {
       .then((esito) => {
         if (esito.errore) return passi.male(0, esito.errore);
         /* Rimesso Sonoff, il pannello esce dalla casa come un telefono tolto. */
+        if (pannello.dispositivo) this.dispositivi?.stacca?.(pannello.dispositivo);
+        this._rimuovi(pannello.id);
+        passi.finito();
+      })
+      .catch((e) => passi.male(0, messaggioDi(e)));
+    return { avviato: true };
+  }
+
+  /* Un pannello leggero torna com'era: la home di prima e le due app tolte.
+   * Poi esce dalla casa come un telefono tolto. */
+  async _togliGdAHome(pannello) {
+    const passi = this._lavoro(pannello.id, "Rimetto il software del produttore…", [
+      "Software del produttore",
+      "App di GdAHome",
+    ]);
+    this.installatore
+      .togliGdAHome({
+        indirizzo: pannello.indirizzo,
+        casaDiPrima: pannello.casaDiPrima || "",
+        spente: pannello.spente || [],
+        copia: pannello.copia || "",
+        avanti: ({ passo, dettaglio }) => passi.passo(passo, dettaglio),
+      })
+      .then((esito) => {
+        if (esito.errore) return passi.male(0, esito.errore);
         if (pannello.dispositivo) this.dispositivi?.stacca?.(pannello.dispositivo);
         this._rimuovi(pannello.id);
         passi.finito();
@@ -788,8 +909,21 @@ export class Pannelli {
     return { nome: pannello.nome };
   }
 
-  togli(id) {
+  /* Togliere un pannello dall'elenco. Uno che ha GdAHome sopra non si toglie
+   * e basta: resterebbe un pannello col nostro software e nessuno che lo
+   * aggiorna o lo riporta indietro. Prima si rimette il software originale
+   * («sonoff», che a lavoro finito lo toglie da solo). `forza` e' per un
+   * pannello perso — rotto, buttato, mai piu' in rete — e lo dice la console. */
+  togli(id, { forza = false } = {}) {
     const pannello = this._trova(id);
+    if (pannello && pannello.stato !== "sonoff" && !forza) {
+      const e = new Error(
+        "Prima va rimesso il software originale del pannello: usa «Rimetti e togli», che lo fa e poi lo toglie.",
+      );
+      e.perUtente = true;
+      e.causa = "prima_il_software";
+      throw e;
+    }
     if (pannello?.dispositivo) this.dispositivi?.stacca?.(pannello.dispositivo);
     this._rimuovi(id);
     return { tolto: true };

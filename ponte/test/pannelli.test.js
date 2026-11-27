@@ -789,3 +789,74 @@ test("l'analisi dice da che strada il pannello parla con la casa", async () => {
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("togliere un pannello con GdAHome sopra: prima il software originale, o «forza» per uno perso", () => {
+  const dir = cartella();
+  try {
+    const staccati = [];
+    const pannelli = new Pannelli({
+      cartella: dir,
+      adb: adbFinto(),
+      installatore: installatoreFinto(),
+      licenze: premium,
+      dispositivi: { stacca: (id) => staccati.push(id) },
+    });
+    pannelli.archivio.dati.pannelli.push(
+      { id: "pm_a", indirizzo: "10.0.0.1", stato: "pronto", dispositivo: "dm_a" },
+      { id: "pm_b", indirizzo: "10.0.0.2", stato: "sonoff" },
+      { id: "pm_c", indirizzo: "10.0.0.3", stato: "errore", dispositivo: "dm_c" },
+    );
+    assert.throws(
+      () => pannelli.togli("pm_a"),
+      (e) => e.causa === "prima_il_software",
+    );
+    assert.throws(
+      () => pannelli.togli("pm_c"),
+      (e) => e.causa === "prima_il_software",
+    );
+    /* Uno mai installato esce e basta. */
+    assert.deepEqual(pannelli.togli("pm_b"), { tolto: true });
+    /* Un pannello perso: forzato, esce dalla casa e dall'elenco. */
+    assert.deepEqual(pannelli.togli("pm_a", { forza: true }), { tolto: true });
+    assert.deepEqual(staccati, ["dm_a"]);
+    assert.deepEqual(
+      pannelli.archivio.dati.pannelli.map((p) => p.id),
+      ["pm_c"],
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("verifica di un display senza root: niente root richiesto, copia del software del produttore", async () => {
+  const dir = cartella();
+  try {
+    const installatore = {
+      ...installatoreFinto(),
+      riconosci: async () => ({
+        famiglia: "shelly",
+        percorso: "leggero",
+        nome: "Shelly Wall Display",
+        schermo: "480x480",
+        android: "8.1.0",
+      }),
+    };
+    const pannelli = new Pannelli({
+      cartella: dir,
+      adb: adbFinto({ root: "1" }),
+      installatore,
+      licenze: premium,
+    });
+    const v = await pannelli.verifica("192.168.1.30");
+    assert.equal(v.percorso, "leggero");
+    assert.equal(v.adatto, true);
+    assert.equal(v.nomeDelModello, "Shelly Wall Display");
+    const detti = v.verifiche.map((x) => x.detto).join("\n");
+    assert.match(detti, /non serve root/);
+    assert.match(detti, /si copia su Home Assistant e si spegne/);
+    assert.match(detti, /app Shelly resta accesa/);
+    assert.doesNotMatch(detti, /Manca l'accesso root/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

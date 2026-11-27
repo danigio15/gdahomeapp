@@ -214,14 +214,26 @@ class MainActivity : FlutterFragmentActivity() {
     private var canaleDellaFinestra: MethodChannel? = null
 
     /* Il sensore di prossimita' che dice 1 per «qualcuno» e 0 per «nessuno»:
-     * quello del Sonoff NSPanel Pro, dove gira GdAHome Muro. */
+     * quello del Sonoff NSPanel Pro. Il suo Build.MODEL e' quello della
+     * scheda («px30_evb»), non dice NSPanel: lo dice GdAHome OS, che entra nel
+     * sistema solo sull'NSPanel e scrive `ro.gdahome.os` nel build.prop. Prima
+     * valeva per tutta GdAHome Muro, e su uno Shelly o un altro display avrebbe
+     * letto il sensore al rovescio. */
     private val prossimitaAlContrario: Boolean by lazy {
-        packageName == "com.gdahome.muro" ||
+        proprieta("ro.gdahome.os").isNotEmpty() ||
             listOf(Build.MANUFACTURER, Build.MODEL, Build.PRODUCT, Build.DEVICE).any { nome ->
                 nome.orEmpty().contains("nspanel", ignoreCase = true) ||
                     nome.orEmpty().contains("sonoff", ignoreCase = true)
             }
     }
+    /* Una proprieta' di sistema (`getprop`), "" se non c'e' o non si legge. */
+    private fun proprieta(nome: String): String =
+        try {
+            Runtime.getRuntime().exec(arrayOf("getprop", nome)).inputStream.bufferedReader().use { it.readText().trim() }
+        } catch (_: Exception) {
+            ""
+        }
+
     private var sensoriVoluti: Set<String> = emptySet()
     private var sensoriInAscolto = false
     private var vicinoDetto: Boolean? = null
