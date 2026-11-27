@@ -17,8 +17,10 @@
  * scorciatoia.
  */
 import { createHash } from "node:crypto";
+import { createGzip } from "node:zlib";
 import {
   createReadStream,
+  createWriteStream,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -39,6 +41,10 @@ export const CARTELLA_DELLE_COPIE = "/share/gdahome-os";
 function animazione(modello) {
   return modello === "120" ? "bootanimation-120.zip" : "bootanimation-86.zip";
 }
+
+/* Le partizioni che si salvano prima di installare: quella di sistema, che
+ * e' l'unica che l'installazione modifica. */
+export const DA_SALVARE = /^system(_[ab])?$/i;
 
 /* Le app che non si toccano MAI: senza, Android o GdAHome non funzionano.
  * Lo stesso elenco di `gdahome-os.sh` (KEEP_RE), gia' provato sui pannelli. */
@@ -284,11 +290,14 @@ export class Installatore {
       nomi = (await this.adb.shell(indirizzo, `ls ${scappa(byName)}`, { root: true }))
         .split(/\s+/)
         .filter(Boolean)
-        .filter((p) => !/^(userdata|cache)$/.test(p));
+        /* Solo quella che l'installazione modifica: `system` (o system_a /
+         * system_b). Le altre non si toccano, e copiarle riempiva la
+         * cartella di Home Assistant di giga che non servono a niente. */
+        .filter((p) => DA_SALVARE.test(p));
     } catch (_e) {
       return { errore: "Non riesco a elencare le partizioni." };
     }
-    if (!nomi.length) return { errore: "Nessuna partizione da copiare." };
+    if (!nomi.length) return { errore: "Non trovo la partizione di sistema del pannello." };
 
     /* Quanto pesa, partizione per partizione. */
     const misure = {};
@@ -353,7 +362,8 @@ export class Installatore {
         const partito = Date.now();
         const esito = await this._copiaUnaPartizione(indirizzo, {
           sorgente,
-          dove: join(dir, `${p}.img`),
+          /* Compressa: lo spazio vuoto dell'immagine non occupa posto. */
+          dove: join(dir, `${p}.img.gz`),
           misura: misure[p],
           atteso: /^[0-9a-f]{32}$/.test(atteso) ? atteso : "",
           avanzamento: (byte) => {
@@ -379,10 +389,12 @@ export class Installatore {
         return { errore: `Copia di ${p} non riuscita: ${errore.message || errore}.` };
       }
     }
+    /* Le impronte sono quelle delle immagini com'erano sul pannello: si
+     * verificano dopo averle scompattate (`gunzip -k system.img.gz`). */
     writeFileSync(join(dir, "MD5SUMS"), `${righe.join("\n")}\n`);
     writeFileSync(
       join(dir, "info.json"),
-      `${JSON.stringify({ pannello: nome, indirizzo, quando: new Date().toISOString(), partizioni: misure }, null, 2)}\n`,
+      `${JSON.stringify({ pannello: nome, indirizzo, quando: new Date().toISOString(), partizioni: misure, compressa: "gzip" }, null, 2)}\n`,
     );
     avanti(nomi.length, nomi.length, "");
     return { dir };
@@ -416,7 +428,7 @@ export class Installatore {
         indirizzo,
         `{ dd if=${sorgente} bs=4194304; dd if=/dev/zero bs=1048576 count=1; } 2>/dev/null`,
         dove,
-        { verso, nc, limite: misura, avanzamento },
+        { verso, nc, limite: misura, avanzamento, comprimi: true },
       ).catch((e) => ({ errore: e.message || String(e), causa: e.causa }));
       if (!diretta.errore && buona(diretta)) return { md5: diretta.md5 };
       if (diretta.causa === "diretta") this._senzaDiretta = true;
@@ -428,6 +440,7 @@ export class Installatore {
         : `dd if=${sorgente} bs=4194304 2>/dev/null`;
       ultimo = await this.scriviCopia(indirizzo, comando, dove, {
         limite: misura || 0,
+        comprimi: true,
         avanzamento,
       }).catch((e) => ({ errore: e.message || String(e) }));
       if (!ultimo.errore && buona(ultimo)) return { md5: ultimo.md5 };
@@ -443,8 +456,12 @@ export class Installatore {
           `dd if=${sorgente} of=${tmp} bs=4194304 2>/dev/null && chmod 644 ${tmp}`,
           { root: true, attesa: 30 * 60_000 },
         );
-        await this.adb.pull(indirizzo, tmp, dove);
-        const copia = await impronta(dove);
+        /* Si scarica com'e', si misura, poi si comprime e il grezzo va via. */
+        const grezzo = `${dove}.grezzo`;
+        await this.adb.pull(indirizzo, tmp, grezzo);
+        const copia = await impronta(grezzo);
+        await comprimiIlFile(grezzo, dove);
+        rmSync(grezzo, { force: true });
         if (buona(copia)) return { md5: copia.md5 };
         ultimo = copia;
       } catch (errore) {
@@ -861,6 +878,18 @@ function mostraByte(n) {
   if (n >= 1024 ** 3) return `${(n / 1024 ** 3).toFixed(1).replace(".", ",")} GB`;
   if (n >= 1024 ** 2) return `${Math.round(n / 1024 ** 2)} MB`;
   return `${Math.max(1, Math.round(n / 1024))} KB`;
+}
+
+/* Comprime un file in un altro, a pezzi. */
+function comprimiIlFile(da, a) {
+  return new Promise((risolvi, rifiuta) => {
+    const fuori = createWriteStream(a);
+    fuori.on("finish", risolvi).on("error", rifiuta);
+    createReadStream(da)
+      .on("error", rifiuta)
+      .pipe(createGzip({ level: 6 }))
+      .pipe(fuori);
+  });
 }
 
 /* Byte e md5 di un file su disco, letto a pezzi. */

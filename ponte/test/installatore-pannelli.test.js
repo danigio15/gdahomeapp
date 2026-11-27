@@ -217,7 +217,7 @@ function pannelloDaCopiare({ md5Pannello = "a".repeat(32), byteCopiati = 1000 } 
   };
 }
 
-test("la copia di sicurezza salva ogni partizione (non i dati), e scrive MD5SUMS", async () => {
+test("la copia di sicurezza salva solo la partizione di sistema, compressa, e scrive MD5SUMS", async () => {
   const copie = mkdtempSync(join(tmpdir(), "copie-"));
   try {
     const scritte = [];
@@ -233,12 +233,12 @@ test("la copia di sicurezza salva ogni partizione (non i dati), e scrive MD5SUMS
     assert.equal(esito.errore, undefined);
     assert.deepEqual(
       scritte.map(([, f]) => f),
-      ["boot.img", "system.img"],
+      ["system.img.gz"],
     );
     /* Dopo i dati, 1 MB di zeri: se exec-out perde la fine, perde quelli. */
     assert.match(
       scritte[0][0],
-      /^\{ dd if='\/dev\/block\/by-name\/boot' bs=4194304; dd if=\/dev\/zero bs=1048576 count=1; \}/,
+      /^\{ dd if='\/dev\/block\/by-name\/system' bs=4194304; dd if=\/dev\/zero bs=1048576 count=1; \}/,
     );
     assert.match(readFileSync(join(esito.dir, "MD5SUMS"), "utf8"), /a{32} {2}system\.img/);
     assert.match(esito.dir, /Salone-\d{4}-\d{2}-\d{2}_\d{4}$/);
@@ -326,7 +326,7 @@ test("una copia troncata si riprova, e se non basta si scarica con adb pull", as
     });
     const esito = await pianoB._copiaDiSicurezza("1.2.3.4", "y", () => {});
     assert.equal(esito.errore, undefined);
-    assert.deepEqual(tirati, ["/data/local/tmp/gda-copia.img", "/data/local/tmp/gda-copia.img"]);
+    assert.deepEqual(tirati, ["/data/local/tmp/gda-copia.img"]);
   } finally {
     rmSync(copie, { recursive: true, force: true });
   }
@@ -422,8 +422,8 @@ test("la copia prova prima la diretta; se il pannello non si collega torna ad ad
     const esito = await inst._copiaDiSicurezza("1.2.3.4", "x", () => {});
     assert.equal(esito.errore, undefined);
     /* Provata una volta, sulla prima partizione; poi solo adb. */
-    assert.deepEqual(dirette, [["boot.img", "192.168.1.174", "/system/bin/nc"]]);
-    assert.deepEqual(viaAdb, ["boot.img", "system.img"]);
+    assert.deepEqual(dirette, [["system.img.gz", "192.168.1.174", "/system/bin/nc"]]);
+    assert.deepEqual(viaAdb, ["system.img.gz"]);
   } finally {
     rmSync(copie, { recursive: true, force: true });
   }

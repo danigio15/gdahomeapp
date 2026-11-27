@@ -24,6 +24,7 @@ import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { createWriteStream, mkdirSync, readFileSync, readdirSync } from "node:fs";
 import { createServer } from "node:net";
+import { createGzip } from "node:zlib";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -34,6 +35,33 @@ export const CARTELLA_DELLA_CHIAVE = "/data/adb";
 /* La porta del server di adb dell'add-on: non la 5037 di serie, che con
  * `host_network` e' quella di tutta la macchina (vedi `_ambiente`). */
 export const PORTA_DEL_SERVER = 5137;
+
+/* Il file dove va una copia: com'e', o compresso al volo (gzip) se
+ * `comprimi`. Si usa come uno stream scrivibile qualunque; `end(fatto)`
+ * chiama `fatto` quando il file su disco e' chiuso. L'impronta la fa chi
+ * scrive, sui dati com'erano: la compressione non la cambia. */
+export function apriIlFile(dove, comprimi) {
+  const file = createWriteStream(dove);
+  if (!comprimi) return file;
+  const gz = createGzip({ level: 6 });
+  gz.pipe(file);
+  file.on("error", (e) => gz.emit("error", e));
+  const chiudi = gz.end.bind(gz);
+  gz.end = (fatto) => {
+    file.once("finish", () => fatto?.());
+    chiudi();
+    return gz;
+  };
+  /* Node chiude da se' lo stream compresso quando ha finito: in quel momento
+   * il file su disco sta ancora scrivendo gli ultimi byte, e non va toccato.
+   * Lo si chiude solo per un errore, o se si interrompe prima della fine. */
+  const distruggi = gz.destroy.bind(gz);
+  gz.destroy = (e) => {
+    if (e || !gz.writableEnded) file.destroy();
+    return distruggi(e);
+  };
+  return gz;
+}
 
 /* L'ultima riga d'errore del registro del server di adb (/tmp/adb.<uid>.log),
  * o "": e' li' che adb scrive perche' non e' partito. */
@@ -377,7 +405,13 @@ export class Adb {
     indirizzo,
     comando,
     dove,
-    { attesa = ATTESE.pull, limite = 0, fermo = this.fermoDellaCopia, avanzamento = null } = {},
+    {
+      attesa = ATTESE.pull,
+      limite = 0,
+      fermo = this.fermoDellaCopia,
+      avanzamento = null,
+      comprimi = false,
+    } = {},
   ) {
     this._preparaLaChiave();
     return new Promise((risolvi, rifiuta) => {
@@ -393,7 +427,7 @@ export class Adb {
         rifiuta(new ErroreAdb(`adb non si avvia: ${errore.message}`, { causa: "niente_adb" }));
         return;
       }
-      const file = createWriteStream(dove);
+      const file = apriIlFile(dove, comprimi);
       const impronta = createHash("md5");
       let byte = 0;
       let finito = false;
@@ -504,6 +538,7 @@ export class Adb {
       fermo = this.fermoDellaCopia,
       attesa = ATTESE.pull,
       attesaDelCollegamento = 20_000,
+      comprimi = false,
     } = {},
   ) {
     return new Promise((risolvi, rifiuta) => {
@@ -568,7 +603,7 @@ export class Adb {
         presa = s;
         clearTimeout(nessuno);
         ultimoDato = Date.now();
-        file = createWriteStream(dove);
+        file = apriIlFile(dove, comprimi);
         file.on("error", (e) =>
           fine(new ErroreAdb(`non riesco a scrivere ${dove}: ${e.message}`, { causa: "spazio" })),
         );

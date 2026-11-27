@@ -14,6 +14,16 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.42
+
+- **Pannelli a muro, la copia di sicurezza non riempie più Home Assistant**:
+  si salvavano tutte le partizioni del pannello, circa 3,5 GB, anche quelle
+  che l'installazione non tocca. Ora si salva solo quella di sistema, l'unica
+  che si modifica e l'unica che serve per recuperare un pannello che non si
+  accende più; e la si salva compressa (`system.img.gz`), così lo spazio vuoto
+  dell'immagine non occupa posto. L'impronta MD5 resta quella dell'immagine
+  com'era sul pannello.
+
 ## 1.19.41
 
 - **Pannelli a muro, la copia di sicurezza veloce**: andava a 0,3 MB/s. Non
