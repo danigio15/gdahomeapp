@@ -10,6 +10,7 @@ import {
   scriptDiSistema,
   scriptDelRipristino,
   scriptDelRitocco,
+  RITOCCO,
   DA_SALVARE,
   DI_SONOFF,
 } from "../src/installatore-pannelli.js";
@@ -558,7 +559,7 @@ test("riabbinare in un aggiornamento: stesso posto, nuovo foglietto, app riapert
       abbina: { dispositivo: "dm_1", nome: "Cucina", utente: "u", planciaId: "muro" },
     });
     assert.equal(esito.errore, undefined);
-    assert.equal(esito.ritocco, 1);
+    assert.equal(esito.ritocco, RITOCCO);
     assert.deepEqual(esito.tolte, ["animazione Sonoff (/oem)"]);
     assert.equal(esito.abbinato, true);
     assert.equal(chiesto[0].sostituisce, "dm_1");
@@ -605,4 +606,21 @@ test("l'analisi chiede tutto, e una domanda che non risponde non ferma le altre"
   assert.match(rapporto, /NSPanel Pro/);
   assert.match(rapporto, /== Chi usa il processore ==\n\? scaduto/);
   assert.ok(chiesti.every(([, attesa]) => attesa === 20_000));
+});
+
+test("la velocita': processore e scheda video pronti, anche dopo il riavvio; il ripristino la toglie", () => {
+  for (const s of [scriptDiSistema(), scriptDelRitocco()]) {
+    /* I percorsi si cercano sul pannello. */
+    assert.match(s, /scaling_available_frequencies/);
+    assert.match(s, /\/sys\/class\/devfreq\/\*/);
+    /* Scritto per init, che lo rilegge a ogni accensione. */
+    assert.match(s, /RC=\/system\/etc\/init\/gdahome\.rc/);
+    assert.match(s, /on property:sys\.boot_completed=1/);
+    assert.match(s, /VELOCE cpu/);
+    /* Prima di richiudere /system in sola lettura. */
+    assert.ok(s.indexOf("gdahome.rc") < s.lastIndexOf("mount -o ro,remount /system"));
+  }
+  const r = scriptDelRipristino();
+  assert.match(r, /\/system\/etc\/init\/gdahome\.rc/);
+  assert.match(r, /webview-command-line/);
 });

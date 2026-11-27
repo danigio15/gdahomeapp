@@ -12,6 +12,7 @@ import {
   indirizzoPulito,
   leggiByte,
 } from "../src/pannelli.js";
+import { RITOCCO } from "../src/installatore-pannelli.js";
 
 function cartella() {
   return mkdtempSync(join(tmpdir(), "pannelli-"));
@@ -468,7 +469,13 @@ test("il giro degli aggiornamenti aggiorna da solo i pannelli indietro, e salta 
       daAggiornare: (sul, p) => (sul.muro.codice < p.muro.codice ? ["muro"] : []),
       async aggiorna({ indirizzo }) {
         aggiornati.push(indirizzo);
-        return { app: "1.19.37", os: "2.0.0", versioni: pezzi, aggiornati: ["muro"], ritocco: 1 };
+        return {
+          app: "1.19.37",
+          os: "2.0.0",
+          versioni: pezzi,
+          aggiornati: ["muro"],
+          ritocco: RITOCCO,
+        };
       },
     };
     const adb = {
@@ -512,12 +519,12 @@ test("un pannello mai entrato nella casa si riabbina da solo; uno gia' dentro no
         return abbina
           ? {
               versioni: pezzi,
-              ritocco: 1,
+              ritocco: RITOCCO,
               abbinato: true,
               dispositivo: abbina.dispositivo,
               abbinatoIl: 5000,
             }
-          : { versioni: pezzi, ritocco: 1 };
+          : { versioni: pezzi, ritocco: RITOCCO };
       },
     };
     const adb = {
@@ -548,14 +555,14 @@ test("un pannello mai entrato nella casa si riabbina da solo; uno gia' dentro no
         dispositivo: "dm_muto",
         nome: "Cucina",
         planciaId: "muro",
-        ritocco: 1,
+        ritocco: RITOCCO,
       },
       {
         id: "pm_b",
         indirizzo: "192.168.1.120",
         stato: "pronto",
         dispositivo: "dm_vivo",
-        ritocco: 1,
+        ritocco: RITOCCO,
       },
     );
     const esito = await pannelli.controllaGliAggiornamenti();
@@ -584,7 +591,7 @@ test("un pannello installato prima del ritocco lo rifa' al giro, anche coi pezzi
       daAggiornare: () => [],
       async aggiorna() {
         chiamato += 1;
-        return { versioni: pezzi, ritocco: 1 };
+        return { versioni: pezzi, ritocco: RITOCCO };
       },
     };
     const adb = { provaCollegamento: async () => ({ ok: true }) };
@@ -592,7 +599,7 @@ test("un pannello installato prima del ritocco lo rifa' al giro, anche coi pezzi
     pannelli.archivio.dati.pannelli.push({ id: "pm_a", indirizzo: "10.0.0.5", stato: "pronto" });
     await pannelli.controllaGliAggiornamenti();
     assert.equal(chiamato, 1);
-    assert.equal(pannelli.archivio.dati.pannelli[0].ritocco, 1);
+    assert.equal(pannelli.archivio.dati.pannelli[0].ritocco, RITOCCO);
     /* Al giro dopo non c'e' piu' niente da fare. */
     await pannelli.controllaGliAggiornamenti();
     assert.equal(chiamato, 1);

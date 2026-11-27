@@ -118,6 +118,44 @@ function righeDellaPulizia() {
   ];
 }
 
+/* La velocita'. Un PX30 lascia il processore e la scheda video al minimo
+ * finche' non c'e' lavoro, e ci mette qualche decimo a salire: il primo tocco
+ * e il primo scorrimento lo pagano, ed e' lo «scatto» che si sente. Qui:
+ *  - il processore non scende sotto due terzi della sua frequenza;
+ *  - la scheda video sta alla sua frequenza piena (governatore `performance`);
+ * scritto subito, e scritto in `/system/etc/init/gdahome.rc`, che `init`
+ * rilegge a ogni accensione — senza, al riavvio tornerebbe tutto com'era.
+ * I percorsi si cercano sul pannello, non si indovinano. Il ripristino toglie
+ * il file. Stampa «VELOCE cpu <min> gpu <governatore> <dove>». */
+function righeDellaVelocita() {
+  return [
+    "RC=/system/etc/init/gdahome.rc",
+    "CPU=''; for p in /sys/devices/system/cpu/cpufreq/policy0 /sys/devices/system/cpu/cpu0/cpufreq; do [ -f $p/scaling_available_frequencies ] && { CPU=$p; break; }; done",
+    "MIN=''",
+    'if [ -n "$CPU" ]; then',
+    "  set -- $(tr ' ' '\\n' < $CPU/scaling_available_frequencies | grep -E '^[0-9]+$' | sort -n)",
+    "  n=$#; k=$(( (n * 2 + 2) / 3 )); [ $k -lt 1 ] && k=1",
+    '  i=0; for f in "$@"; do i=$((i + 1)); [ $i -eq $k ] && MIN=$f; done',
+    "fi",
+    "GPU=''; for d in /sys/class/devfreq/*; do case \"$(basename $d)\" in *gpu*) GPU=$d ;; esac; done",
+    "GOV=''; [ -n \"$GPU\" ] && grep -qw performance $GPU/available_governors 2>/dev/null && GOV=performance",
+    "{",
+    "  echo '# GdAHome OS: il pannello sempre pronto (installatore-pannelli.js)'",
+    "  echo 'on property:sys.boot_completed=1'",
+    '  [ -n "$MIN" ] && echo "    write $CPU/scaling_min_freq $MIN"',
+    '  [ -n "$GOV" ] && echo "    write $GPU/governor $GOV"',
+    "} > $RC",
+    "chmod 644 $RC; chcon u:object_r:system_file:s0 $RC 2>/dev/null || true",
+    '[ -n "$MIN" ] && echo $MIN > $CPU/scaling_min_freq 2>/dev/null',
+    '[ -n "$GOV" ] && echo $GOV > $GPU/governor 2>/dev/null',
+    /* La WebView: rasterizzazione sulla scheda video anche dove il driver e'
+     * nella lista nera di Chromium. La legge solo dove Android lo permette
+     * (un sistema di debug); altrove non fa niente. */
+    "echo '_ --ignore-gpu-blocklist --enable-gpu-rasterization --enable-zero-copy' > /data/local/tmp/webview-command-line; chmod 644 /data/local/tmp/webview-command-line",
+    'echo "VELOCE cpu ${MIN:-?} gpu ${GOV:-?} ${GPU:-}"',
+  ];
+}
+
 const INTESTAZIONE = () => [
   "TMP=/data/local/tmp",
   "R=/system/gdahome-removed",
@@ -149,22 +187,25 @@ export function scriptDiSistema() {
     /* L'ADB di rete per sempre: senza le app Sonoff nessuno lo riaccenderebbe. */
     'grep -q "^ro.gdahome.os=" /system/build.prop || printf "\\n# GdAHome OS\\nro.gdahome.os=2\\npersist.sys.gdahome=1\\nservice.adb.tcp.port=5555\\n" >> /system/build.prop',
     "setprop persist.adb.tcp.port 5555",
+    ...righeDellaVelocita(),
     ...CHIUDI_IN_SCRITTURA,
     "rm -f $TMP/GdAHome-OS.apk $TMP/bootanimation.zip $TMP/gdaserial",
     "echo GDA_OK",
   ].join("\n");
 }
 
-/* Il ritocco: la sola pulizia, su un pannello gia' GdAHome. Serve ai pannelli
+/* Il ritocco: la pulizia e la velocita', su un pannello gia' GdAHome. Serve ai pannelli
  * installati prima che si sapesse di /oem — l'animazione Sonoff restava li' —
  * e gira a ogni aggiornamento: se non c'e' niente da togliere, non fa niente.
  * Quando cambia cosa toglie, si alza RITOCCO e i pannelli lo rifanno. */
-export const RITOCCO = 1;
+/* 1: /oem. 2: la velocita' (processore, scheda video, WebView). */
+export const RITOCCO = 2;
 export function scriptDelRitocco() {
   return [
     ...INTESTAZIONE(),
     ...APRI_IN_SCRITTURA,
     ...righeDellaPulizia(),
+    ...righeDellaVelocita(),
     ...CHIUDI_IN_SCRITTURA,
     "echo GDA_OK",
   ].join("\n");
@@ -184,7 +225,8 @@ export function scriptDelRipristino() {
     "  [ -f $R/build.prop.orig ] && cp -p $R/build.prop.orig /system/build.prop",
     "  rm -rf $R",
     "fi",
-    "rm -rf /system/app/GdAHomeOS /system/bin/gdaserial",
+    "rm -rf /system/app/GdAHomeOS /system/bin/gdaserial /system/etc/init/gdahome.rc",
+    "rm -f /data/local/tmp/webview-command-line",
     ...CHIUDI_IN_SCRITTURA,
     '[ -f $D/manifest.txt ] && while read -r pkg; do [ -f $D/$pkg.apk ] && pm install -r $D/$pkg.apk >/dev/null 2>&1 && echo "RIMESSA $pkg"; done < $D/manifest.txt',
     "rm -rf $D",
@@ -684,8 +726,11 @@ export class Installatore {
       "settings put global stay_on_while_plugged_in 7",
       "settings put secure screensaver_enabled 0",
       "settings put global policy_control immersive.full=*",
-      "settings put global window_animation_scale 0.5",
-      "settings put global transition_animation_scale 0.5",
+      /* Una sola app a tutto schermo: le transizioni fra finestre non
+       * servono, e su questo chip costano fotogrammi. Le animazioni dentro
+       * le app (animator) restano, piu' corte. */
+      "settings put global window_animation_scale 0",
+      "settings put global transition_animation_scale 0",
       "settings put global animator_duration_scale 0.5",
       "settings put global wifi_scan_always_enabled 0",
       "settings put global ble_scan_always_enabled 0",

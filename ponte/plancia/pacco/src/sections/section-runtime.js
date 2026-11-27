@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-OE37IAOT.js";
+} from "../../chunk-Z26LYFNW.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -122096,6 +122096,9 @@ var state121 = root[KEY125] ||= {
   finestra: null,
   uscito: false,
   trascina: null,
+  /* Il dito posato su una luce dimmerabile, prima di sapere se e' un tocco
+   * o un trascinamento (`muoviLaLuce`). */
+  gesto: null,
   inAttesa: {},
   pressione: null,
   swipe: null,
@@ -122910,12 +122913,12 @@ function cardLuce(c, i) {
     comandi: dimmer ? `<div class="mu-bar dm-rq-barra" data-mu-cursore="luce" data-mu-entita="${esc(id)}" aria-label="${esc(t("Luminosità", "Brightness"))}"><i style="width:${on ? pct4 : 0}%"></i>${on ? `<u style="left:${pct4}%"></u>` : ""}</div>` : ""
   });
   if (conImmagine2) return conImmagine2;
-  return `<div class="mu-carta mu-card mu-fam mu-luce ${on ? "mu-accesa" : ""}" style="--acc:${ACCENTI.luce}" data-mu-card="${i}" data-mu-entita="${esc(id)}">
-    <div class="mu-riga1"><span class="mu-disco ${on ? "on" : ""}">${bulbo(on ? "#1f2937" : "var(--text-dim)")}</span><span class="mu-stato ${on ? "" : "spento"}">${esc(manca ? t("Non trovata", "Not found") : on ? dimmer ? `${t("Accesa", "On")} · ${pct4}%` : t("Accesa", "On") : t("Spenta", "Off"))}</span>
-      <button type="button" class="mu-inter ${on ? "on" : ""}" data-mu-fa="interruttore" data-mu-entita="${esc(id)}" aria-pressed="${on}" aria-label="${esc(nomeDi9(id, c.nome))}"><i></i></button></div>
-    <div class="mu-osw mu-fam-nome mu-n">${esc(nomeDi9(id, c.nome))}</div>
-    ${dimmer ? `<div class="mu-giu"><div class="mu-giu-et"><span class="mu-et">${esc(t("Luminosità", "Brightness"))} <span class="mu-tag">DIMMER</span></span><span class="mu-stato ${on ? "" : "spento"}">${on ? `${pct4}%` : "—"}</span></div>
-      <div class="mu-bar" data-mu-cursore="luce" data-mu-entita="${esc(id)}"><i style="width:${pct4}%"></i>${on ? `<u style="left:${pct4}%"></u>` : ""}</div></div>` : ""}</div>`;
+  const riempi = on ? dimmer ? pct4 : 100 : 0;
+  const parola2 = manca ? t("Non trovata", "Not found") : on ? dimmer ? `${t("Accesa", "On")} · ${pct4}%` : t("Accesa", "On") : t("Spenta", "Off");
+  return `<div class="mu-carta mu-card mu-luce mu-luce-a ${on ? "mu-luce-on" : ""} ${dimmer ? "mu-dimmer" : ""} " style="--acc:${ACCENTI.luce};--p:${riempi}" data-mu-card="${i}" data-mu-entita="${esc(id)}" role="button" tabindex="0" aria-pressed="${on}" aria-label="${esc(`${nomeDi9(id, c.nome)}, ${parola2}`)}">
+    <i class="mu-luce-riempi" aria-hidden="true"></i>
+    <div class="mu-luce-su"><span class="mu-luce-ic">${bulbo("currentColor")}</span>${dimmer && on ? `<b class="mu-luce-pct" data-mu-luce-pct>${pct4}<small>%</small></b>` : ""}</div>
+    <div class="mu-luce-giu"><div class="mu-osw mu-fam-nome mu-n">${esc(nomeDi9(id, c.nome))}</div><div class="mu-luce-st" data-mu-luce-st>${esc(parola2)}</div></div></div>`;
 }
 var INVIATO_PER = 2e3;
 var accesoDeiDueTasti = (id) => typeof state121.inAttesa[id]?.acceso === "boolean" ? state121.inAttesa[id].acceso : accesoVero(id) || ["home", "unlocked", "playing"].includes(String(stato2(id)?.state));
@@ -125861,8 +125864,7 @@ function onClick31(event) {
       return;
     }
     if (entita4 && dominio3(entita4) === "light") {
-      if (state121.compatto) alterna(entita4, "light", "toggle");
-      else apriFinestra({ tipo: "luce", entita: entita4 });
+      alterna(entita4, "light", "toggle");
     } else if (entita4 && bersaglio.querySelector?.('[data-mu-fa="interruttore"]'))
       comanda2(dominio3(entita4), "toggle", { entity_id: entita4 });
     else if (entita4 && dominio3(entita4) === "climate")
@@ -126235,7 +126237,24 @@ function onPointerDown2(event) {
     return;
   }
   const carta = event.target?.closest?.('[data-mu-card][data-mu-entita^="light."]');
-  if (state121.compatto && carta) {
+  state121.gesto = null;
+  if (carta?.classList?.contains("mu-dimmer")) {
+    const id = carta.dataset.muEntita;
+    state121.gesto = {
+      luce: true,
+      carta,
+      id,
+      x0: event.clientX,
+      y0: event.clientY,
+      p0: acceso4(id) ? luminosita(id) : 0,
+      /* In una griglia che scorre il su e giu' e' dello scorrimento: li' la
+       * luminosita' si regola da sinistra a destra. */
+      verticale: !carta.closest?.(".mu-scorre"),
+      attivo: false,
+      ultimo: 0
+    };
+  }
+  if (carta) {
     root.clearTimeout?.(state121.pressione);
     state121.pressione = root.setTimeout?.(() => {
       state121.pressione = null;
@@ -126301,9 +126320,48 @@ function muoviIlFader(t2, event) {
   if (scritta) scritta.textContent = testoDelCanale(t2.lettura, p);
   if (Date.now() - t2.ultimo >= FADER_OGNI) mandaIlFader(t2, p);
 }
+var LUCE_OGNI = 400;
+function luminositaDalGesto({ p0, d, misura: misura9 }) {
+  return Math.max(1, Math.min(100, Math.round(p0 + d / (misura9 || 1) * 100)));
+}
+function muoviLaLuce(g, event) {
+  const d = g.verticale ? g.y0 - event.clientY : event.clientX - g.x0;
+  if (!g.attivo) {
+    if (Math.abs(d) < 10) return;
+    g.attivo = true;
+    root.clearTimeout?.(state121.pressione);
+    state121.pressione = null;
+    state121.tenuto = true;
+    state121.trascina = g;
+    g.carta.classList.add("mu-trascina");
+    g.carta.setPointerCapture?.(event.pointerId);
+  }
+  const r = g.carta.getBoundingClientRect();
+  const p = luminositaDalGesto({ p0: g.p0, d, misura: g.verticale ? r.height : r.width });
+  if (p === g.valore) return;
+  g.valore = p;
+  g.carta.style.setProperty("--p", String(p));
+  g.carta.classList.add("mu-luce-on");
+  const pct4 = g.carta.querySelector("[data-mu-luce-pct]");
+  if (pct4?.firstChild) pct4.firstChild.nodeValue = String(p);
+  const st = g.carta.querySelector("[data-mu-luce-st]");
+  if (st) st.textContent = `${t("Accesa", "On")} · ${p}%`;
+  if (Date.now() - g.ultimo >= LUCE_OGNI) {
+    g.ultimo = Date.now();
+    comanda2("light", "turn_on", { entity_id: g.id, brightness_pct: p });
+  }
+}
 function onPointerMove2(event) {
+  if (state121.gesto && !state121.gesto.attivo) {
+    muoviLaLuce(state121.gesto, event);
+    return;
+  }
   const t2 = state121.trascina;
   if (!t2) return;
+  if (t2.luce) {
+    muoviLaLuce(t2, event);
+    return;
+  }
   if (t2.fader) {
     muoviIlFader(t2, event);
     return;
@@ -126320,6 +126378,19 @@ function onPointerMove2(event) {
 function onPointerUp2(event) {
   root.clearTimeout?.(state121.pressione);
   state121.pressione = null;
+  const g = state121.gesto;
+  state121.gesto = null;
+  if (g?.attivo) {
+    state121.trascina = null;
+    g.carta.classList.remove("mu-trascina");
+    if (g.valore) {
+      attendi(g.id, "acceso", true);
+      attendi(g.id, "luminosita", g.valore);
+      comanda2("light", "turn_on", { entity_id: g.id, brightness_pct: g.valore });
+    }
+    disegna9();
+    return;
+  }
   const t2 = state121.trascina;
   if (t2?.fader) {
     state121.trascina = null;
@@ -127679,6 +127750,26 @@ ${MURO} .mu-card.mu-fam>.mu-giu{margin-top:12px}
 ${MURO} .mu-card.mu-fam>.mu-giu .mu-giu-et{margin-bottom:4px;align-items:center}
 ${MURO} .mu-card.mu-fam>.mu-bar{margin-top:12px;flex:none}
 ${MURO} .mu-card.mu-fam>.mu-seg{margin-top:12px}
+${MURO} .mu-luce-a{position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+${MURO} .mu-luce-a.mu-dimmer{touch-action:none}
+${MURO} .mu-scorre>.mu-luce-a.mu-dimmer{touch-action:pan-y}
+${MURO} .mu-luce-a .mu-luce-riempi{position:absolute;inset:0;transform-origin:50% 100%;transform:scaleY(calc((28 + var(--p,0) * .72) / 100));background:linear-gradient(180deg,#fcd34d,#f59e0b);pointer-events:none;will-change:transform}
+${MURO} .mu-luce-a:not(.mu-trascina) .mu-luce-riempi{transition:transform .16s ease-out}
+${MURO} .mu-luce-a:not(.mu-luce-on) .mu-luce-riempi{transform:scaleY(0)}
+${MURO} .mu-luce-a>div{position:relative}
+${MURO} .mu-luce-su{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+${MURO} .mu-luce-ic{--c:clamp(34px,min(30cqh,22cqw),56px);width:var(--c);height:var(--c);border-radius:calc(var(--c)*.32);display:grid;place-items:center;flex:none;color:var(--text-dim);background:color-mix(in srgb,var(--text) 6%,var(--card-bg))}
+${MURO} .mu-luce-ic svg{width:55%;height:55%}
+${MURO} .mu-luce-pct{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:clamp(22px,min(22cqh,15cqw),40px);line-height:1;color:#92400e;background:#fff7e6;box-shadow:inset 0 0 0 1.5px #fbbf24;border-radius:12px;padding:5px 10px 6px}
+${MURO} .mu-luce-pct small{font-size:.45em;margin-left:2px}
+${MURO} .mu-luce-giu{min-width:0}
+${MURO} .mu-luce-a .mu-fam-nome.mu-osw{display:block;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15}
+${MURO} .mu-luce-st{font-size:clamp(11px,9cqh,14px);font-weight:600;color:var(--text-dim);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-luce-a.mu-luce-on{background:var(--card-bg);box-shadow:none}
+${MURO} .mu-luce-a.mu-luce-on .mu-luce-ic{background:#fff7e6;color:#d97706;box-shadow:inset 0 0 0 1.5px #fbbf24}
+${MURO} .mu-luce-a.mu-luce-on .mu-fam-nome{color:#3b2300}
+${MURO} .mu-luce-a.mu-luce-on .mu-luce-st{color:#6b4200}
+${MURO} .mu-luce-a:active{transform:scale(.985)}
 ${MURO} .mu-verbo{display:inline-flex;align-items:center;height:40px;padding:0 16px;border-radius:999px;font-weight:800;font-size:15px;white-space:nowrap;
   background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 12%,transparent)}
 ${MURO} .mu-card.mu-fam .mu-riga1>.mu-varco-tasto{width:auto;height:48px;padding:0 22px;border-radius:16px;font-size:17px}

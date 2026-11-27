@@ -53,6 +53,20 @@ aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
   come fanno gli altri apparecchi Android. L'app lo leggeva alla maniera di
   Android, e il pannello non si accorgeva mai di chi si avvicinava. L'analisi
   del pannello ora mostra anche i sensori.
+- **Il pulsante luce nuovo sulla plancia a muro**: la tessera intera è il
+  pulsante. Un tocco accende e spegne, il dito tenuto apre la finestra della
+  luce. Accesa si riempie d'ambra; una luce dimmerabile si riempie con la
+  sua luminosità, scritta in grande, e trascinando il dito sulla tessera la
+  si regola (su e giù, o da sinistra a destra nelle pagine che scorrono).
+  Niente più interruttore piccolo nell'angolo.
+- **Il pannello ancora più svelto**: il processore non scende più sotto due
+  terzi della sua frequenza e la scheda video sta alla sua velocità piena,
+  così il primo tocco e il primo scorrimento non aspettano che il chip si
+  svegli; le transizioni fra finestre di Android sono spente; la WebView
+  disegna sulla scheda video anche dove Chromium non lo farebbe. Resta dopo
+  il riavvio, i pannelli già installati lo ricevono da soli al giro degli
+  aggiornamenti, e «Rimetti Sonoff» lo toglie. GdAHome OS non tiene più
+  accesi i sensori né il suo giro ogni due secondi quando nessuno li usa.
 - **Niente più «Di chi è questo telefono?» sul pannello**: un pannello non è
   un telefono, e a chi appartiene l'ha già detto l'add-on abbinandolo.
 - **«Analisi hardware» mostra il risultato**: prima il tasto la chiedeva e la
