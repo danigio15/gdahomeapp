@@ -305,3 +305,39 @@ test("copiaInFile con un limite tiene solo i primi byte, e la coda la conta e ba
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("una copia che si ferma la chiude il guardiano, e l'avanzamento si sente", async () => {
+  const { mkdtempSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const dir = mkdtempSync(join(tmpdir(), "copia-"));
+  try {
+    let ucciso = false;
+    const avvia = () => {
+      const p = new EventEmitter();
+      p.stdout = new EventEmitter();
+      p.stdout.pause = () => {};
+      p.stdout.resume = () => {};
+      p.stderr = new EventEmitter();
+      p.kill = () => {
+        ucciso = true;
+      };
+      /* Un pezzo, poi piu' niente: il pannello si e' fermato. */
+      queueMicrotask(() => p.stdout.emit("data", Buffer.alloc(1000, 1)));
+      return p;
+    };
+    const visti = [];
+    const adb = new Adb({ avvia, chiave: null, fermoDellaCopia: 150 });
+    await assert.rejects(
+      () =>
+        adb.copiaInFile("1.2.3.4", "dd", join(dir, "x.img"), {
+          avanzamento: (b) => visti.push(b),
+        }),
+      (e) => e.causa === "fermo",
+    );
+    assert.equal(ucciso, true);
+    assert.deepEqual(visti, [1000]);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

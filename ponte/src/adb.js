@@ -93,11 +93,14 @@ export class Adb {
     avvia = spawn,
     chiave = CARTELLA_DELLA_CHIAVE,
     registro = null,
+    fermoDellaCopia = 90_000,
   } = {}) {
     this.programma = programma;
     this.avvia = avvia;
     this.chiave = chiave;
     this.registro = registro;
+    /* Dopo quanto silenzio una copia e' «ferma». */
+    this.fermoDellaCopia = fermoDellaCopia;
   }
 
   /* Avvia `adb <argomenti>` e torna { codice, fuori } quando finisce, o lancia
@@ -321,7 +324,12 @@ export class Adb {
    * un giga o due. Torna { byte, md5 } calcolati su quello che e' arrivato.
    * Prima `shellBinaria` raccoglieva tutto in memoria con un minuto di tempo:
    * con una partizione vera l'add-on sarebbe finito senza memoria o a meta'. */
-  copiaInFile(indirizzo, comando, dove, { attesa = ATTESE.pull, limite = 0 } = {}) {
+  copiaInFile(
+    indirizzo,
+    comando,
+    dove,
+    { attesa = ATTESE.pull, limite = 0, fermo = this.fermoDellaCopia, avanzamento = null } = {},
+  ) {
     this._preparaLaChiave();
     return new Promise((risolvi, rifiuta) => {
       const ambiente = { ...process.env };
@@ -346,6 +354,7 @@ export class Adb {
         if (finito) return;
         finito = true;
         clearTimeout(scade);
+        clearInterval(guardia);
         if (errore) {
           try {
             proc.kill?.("SIGKILL");
@@ -360,6 +369,22 @@ export class Adb {
         () => fine(new ErroreAdb("la copia ci ha messo troppo", { causa: "tempo" })),
         attesa,
       );
+      /* Il guardiano: se non arriva niente per `fermo` ms, la copia e' ferma e
+       * la si chiude subito — chi chiama riprova, o passa al piano B — invece
+       * di aspettare la mezz'ora del tempo massimo. */
+      let ultimoDato = Date.now();
+      const guardia = setInterval(
+        () => {
+          if (Date.now() - ultimoDato > fermo)
+            fine(
+              new ErroreAdb(`nessun dato da ${Math.round(fermo / 1000)} secondi`, {
+                causa: "fermo",
+              }),
+            );
+        },
+        Math.min(5_000, Math.max(50, fermo / 3)),
+      );
+      let detto = 0;
       proc.on("error", (errore) => fine(new ErroreAdb(`adb: ${errore.message}`)));
       proc.stderr?.on?.("data", (p) => errori.push(p));
       /* `limite`: si scrivono solo i primi `limite` byte, e su quelli si fa
@@ -369,6 +394,12 @@ export class Adb {
       let scritti = 0;
       proc.stdout.on("data", (tutto) => {
         byte += tutto.length;
+        ultimoDato = Date.now();
+        /* Quanto e' arrivato, ogni mezzo secondo al massimo. */
+        if (avanzamento && Date.now() - detto > 500) {
+          detto = Date.now();
+          avanzamento(Math.min(byte, limite || byte));
+        }
         let pezzo = tutto;
         if (limite) {
           const resta = limite - scritti;

@@ -122,7 +122,22 @@ export class Pannelli {
    *    se e' 0 su una /24 intera, l'add-on non arriva a quella rete.
    *  - `rete`: la /24 guardata (es. "192.168.1"), per dirlo all'utente: se il
    *    pannello sta su un'altra sottorete, si vede subito. */
-  async rete({ concorrenti = 24 } = {}) {
+  rete(opzioni = {}) {
+    /* Una ricerca alla volta: chi chiede mentre una e' in corso riceve quella.
+     * Prima la console ne faceva partire una ogni 4 secondi, e una dura fino a
+     * un minuto: dieci ricerche insieme, centinaia di connessioni sullo stesso
+     * adb che intanto copiava un pannello («500 di 254»). */
+    if (this._ricercaInCorso) return this._ricercaInCorso;
+    /* E nessuna ricerca mentre si lavora su un pannello: adb serve a lui. */
+    if ([...this.lavori.values()].some((l) => !l.finito))
+      return Promise.resolve({ trovati: [], adb: true, occupato: true });
+    this._ricercaInCorso = this._cercaInRete(opzioni).finally(() => {
+      this._ricercaInCorso = null;
+    });
+    return this._ricercaInCorso;
+  }
+
+  async _cercaInRete({ concorrenti = 24 } = {}) {
     if (!(await adbCE(this.adb))) return { trovati: [], adb: false };
     /* Il server di adb, una volta, prima di tutto: se non parte, la ricerca
      * non ha senso e la ragione va detta (prima diceva «nessun dispositivo»). */
@@ -138,7 +153,9 @@ export class Pannelli {
     let i = 0;
     /* A che punto e': la console lo chiede mentre la ricerca va avanti
      * (`statoDellaRicerca`), cosi' si vede che sta cercando davvero. */
-    this.ricerca = { fatti: 0, totale: indirizzi.length, trovati, rete, inCorso: true };
+    /* Il suo stato, di questa ricerca e basta. */
+    const stato = { fatti: 0, totale: indirizzi.length, trovati, rete, inCorso: true };
+    this.ricerca = stato;
     const lavoratore = async () => {
       while (i < indirizzi.length) {
         const indirizzo = indirizzi[i++];
@@ -163,13 +180,13 @@ export class Pannelli {
         } catch (_e) {
           /* Un indirizzo che non risponde non ferma la scansione. */
         } finally {
-          this.ricerca.fatti += 1;
+          stato.fatti += 1;
         }
       }
     };
     await Promise.all(Array.from({ length: Math.min(concorrenti, indirizzi.length) }, lavoratore));
     trovati.sort((a, b) => a.indirizzo.localeCompare(b.indirizzo, undefined, { numeric: true }));
-    this.ricerca.inCorso = false;
+    stato.inCorso = false;
     return { trovati, adb: true, contattati, rete };
   }
 
@@ -179,7 +196,7 @@ export class Pannelli {
     if (!r) return { inCorso: false, fatti: 0, totale: 0, trovati: 0, rete: "" };
     return {
       inCorso: r.inCorso,
-      fatti: r.fatti,
+      fatti: Math.min(r.fatti, r.totale),
       totale: r.totale,
       trovati: r.trovati.length,
       rete: r.rete,

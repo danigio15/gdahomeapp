@@ -274,10 +274,15 @@
     fermaAttesaDellaRete();
     var attesa = trova("attesa-rete");
     if (attesa) attesa.hidden = false;
+    /* Un giro dopo l'altro: il prossimo parte 4 secondi dopo la FINE di
+     * quello prima. Prima ne partiva uno ogni 4 secondi comunque, e una
+     * ricerca dura fino a un minuto: si sovrapponevano a decine. */
+    var questa = { prossimo: null };
+    attesaDellaRete = questa;
     var giro = function () {
       chiedi("api/pannelli/rete", { method: "POST", body: "{}" })
         .then(function (detto) {
-          if (!attesaDellaRete) return;
+          if (attesaDellaRete !== questa) return;
           var nuovo = (detto.trovati || []).find(function (uno) {
             return !uno.gia;
           });
@@ -287,15 +292,17 @@
             controllaIlPannello();
           }
         })
-        .catch(function () {});
+        .catch(function () {})
+        .then(function () {
+          if (attesaDellaRete === questa) questa.prossimo = setTimeout(giro, 4000);
+        });
     };
     giro();
-    attesaDellaRete = setInterval(giro, 4000);
   }
 
   function fermaAttesaDellaRete() {
     if (attesaDellaRete) {
-      clearInterval(attesaDellaRete);
+      clearTimeout(attesaDellaRete.prossimo);
       attesaDellaRete = null;
     }
     var attesa = trova("attesa-rete");

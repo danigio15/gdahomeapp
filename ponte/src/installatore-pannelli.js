@@ -203,11 +203,11 @@ export class Installatore {
       const copia = await this._copiaDiSicurezza(
         indirizzo,
         nome || indirizzo,
-        (fatte, tutte, quale) =>
+        (fatte, tutte, quale, percento) =>
           avanti({
             passo: 1,
-            dettaglio: quale ? `${quale} (${fatte}/${tutte})` : `fatta: ${tutte} partizioni`,
-            percento: Math.round((fatte / tutte) * 100),
+            dettaglio: quale ? `${quale} (${fatte + 1}/${tutte})` : `fatta: ${tutte} partizioni`,
+            percento: percento ?? Math.round((fatte / tutte) * 100),
           }),
       );
       if (copia.errore) return { errore: copia.errore, passoRotto: 1 };
@@ -316,9 +316,19 @@ export class Installatore {
     }
 
     const righe = [];
+    let copiati = 0;
     for (let i = 0; i < nomi.length; i += 1) {
       const p = nomi[i];
-      avanti(i, nomi.length, misure[p] ? `${p} · ${mostraByte(misure[p])}` : p);
+      /* La barra segue i byte copiati in tutto, non le partizioni: una di
+       * pochi KB e una di un giga non pesano uguale. */
+      const percento = (fattiOra) =>
+        totale ? Math.round(((copiati + fattiOra) / totale) * 100) : undefined;
+      avanti(
+        i,
+        nomi.length,
+        misure[p] ? `${p} · ${mostraByte(misure[p])} · calcolo l'impronta sul pannello…` : p,
+        percento(0),
+      );
       try {
         const sorgente = scappa(`${byName}/${p}`);
         /* L'impronta sul pannello: la copia deve tornare con questa. */
@@ -330,13 +340,25 @@ export class Installatore {
         )
           .trim()
           .split(/\s+/)[0];
+        const partito = Date.now();
         const esito = await this._copiaUnaPartizione(indirizzo, {
           sorgente,
           dove: join(dir, `${p}.img`),
           misura: misure[p],
           atteso: /^[0-9a-f]{32}$/.test(atteso) ? atteso : "",
+          avanzamento: (byte) => {
+            const secondi = Math.max(1, (Date.now() - partito) / 1000);
+            const velocita = `${(byte / 1024 ** 2 / secondi).toFixed(1).replace(".", ",")} MB/s`;
+            avanti(
+              i,
+              nomi.length,
+              `${p} · ${mostraByte(byte)} di ${mostraByte(misure[p] || byte)} · ${velocita}`,
+              percento(byte),
+            );
+          },
         });
         if (esito.errore) return { errore: `Copia di ${p}: ${esito.errore}` };
+        copiati += misure[p] || 0;
         righe.push(`${esito.md5}  ${p}.img`);
       } catch (errore) {
         return { errore: `Copia di ${p} non riuscita: ${errore.message || errore}.` };
@@ -357,7 +379,7 @@ export class Installatore {
    * gli zeri e non i dati; si tengono esattamente `misura` byte. Se non torna
    * ancora, il piano B: la partizione in un file sul pannello, scaricata con
    * `adb pull`, che conta i byte uno per uno. Torna { md5 } o { errore }. */
-  async _copiaUnaPartizione(indirizzo, { sorgente, dove, misura, atteso }) {
+  async _copiaUnaPartizione(indirizzo, { sorgente, dove, misura, atteso, avanzamento = null }) {
     /* Senza ne' la misura ne' l'impronta del pannello non si saprebbe se la
      * copia e' buona: una copia vuota passerebbe per buona. Meglio fermarsi
      * prima di toccare il pannello che avere un paracadute vuoto. */
@@ -372,9 +394,10 @@ export class Installatore {
       const comando = misura
         ? `{ dd if=${sorgente} bs=4194304; dd if=/dev/zero bs=1048576 count=1; } 2>/dev/null`
         : `dd if=${sorgente} bs=4194304 2>/dev/null`;
-      ultimo = await this.scriviCopia(indirizzo, comando, dove, { limite: misura || 0 }).catch(
-        (e) => ({ errore: e.message || String(e) }),
-      );
+      ultimo = await this.scriviCopia(indirizzo, comando, dove, {
+        limite: misura || 0,
+        avanzamento,
+      }).catch((e) => ({ errore: e.message || String(e) }));
       if (!ultimo.errore && buona(ultimo)) return { md5: ultimo.md5 };
     }
 
