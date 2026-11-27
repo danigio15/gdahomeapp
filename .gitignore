@@ -77,3 +77,4 @@ strumenti/render-mappa/package*.json
 /ponte/muro/*.apk
 /ponte/muro/*.zip
 /ponte/muro/gdaserial-*
+/ponte/muro/versioni.json

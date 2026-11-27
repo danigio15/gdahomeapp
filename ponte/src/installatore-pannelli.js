@@ -16,7 +16,7 @@
  * segreto della casa passa dalla stessa porta cifrata di sempre, non da una
  * scorciatoia.
  */
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { scappa } from "./adb.js";
@@ -211,7 +211,8 @@ export class Installatore {
 
       return {
         os: inst.os,
-        app: abb.app,
+        app: inst.versioni?.muro?.nome || abb.app,
+        versioni: inst.versioni || null,
         modello,
         schermo,
         dispositivo: abb.dispositivo,
@@ -320,7 +321,8 @@ export class Installatore {
         })
         .catch(() => {});
       await this._impostazioni(indirizzo);
-      return { os: "2.0.0", tolte };
+      const pezzi = this.versioniDeiPezzi();
+      return { os: pezzi?.os?.nome || "2.0.0", versioni: pezzi, tolte };
     } catch (errore) {
       return { errore: scusa(errore) };
     }
@@ -430,17 +432,76 @@ export class Installatore {
     return this._riavvia(indirizzo).then(() => ({ fatto: true }));
   }
 
-  async aggiorna({ indirizzo, avanti }) {
+  /* Le versioni dei pezzi che l'add-on ha con se', scritte dalla CI accanto
+   * agli APK (`versioni.json`): { os: {codice, nome}, muro: {codice, nome} }.
+   * Null se il file non c'e' (un add-on costruito a mano). */
+  versioniDeiPezzi() {
+    try {
+      const v = JSON.parse(readFileSync(this._pezzo("versioni.json"), "utf8"));
+      return { os: v["com.gdahome.os"] || null, muro: v[this.muroPackage] || null };
+    } catch (_e) {
+      return null;
+    }
+  }
+
+  /* Le versioni installate sul pannello, da `dumpsys package`. Un pezzo che
+   * non c'e' torna null. */
+  async versioniSulPannello(indirizzo) {
+    const leggi = async (pkg) => {
+      const detto = await this.adb
+        .shell(indirizzo, `dumpsys package ${pkg} | grep -m2 -E 'versionCode=|versionName='`, {
+          root: false,
+        })
+        .catch(() => "");
+      const codice = Number((/versionCode=(\d+)/.exec(detto) || [])[1]);
+      const nome = (/versionName=(\S+)/.exec(detto) || [])[1] || "";
+      return Number.isFinite(codice) && codice > 0 ? { codice, nome } : null;
+    };
+    return { os: await leggi("com.gdahome.os"), muro: await leggi(this.muroPackage) };
+  }
+
+  /* Cosa c'e' da aggiornare: ogni pezzo dell'add-on piu' nuovo di quello sul
+   * pannello (o che sul pannello manca). Mai indietro: un numero piu' basso
+   * non si installa. */
+  daAggiornare(sulPannello, pezzi = this.versioniDeiPezzi()) {
+    if (!pezzi) return [];
+    const quali = [];
+    for (const chi of ["muro", "os"]) {
+      const nuovo = pezzi[chi];
+      const ce = sulPannello?.[chi];
+      if (nuovo && (!ce || nuovo.codice > ce.codice)) quali.push(chi);
+    }
+    return quali;
+  }
+
+  /* Aggiorna quello che e' indietro, installando sopra: la firma e' la
+   * stessa, quindi restano dati, abbinamento e impostazioni. Prima l'app,
+   * poi GdAHome OS, che la riapre da solo. */
+  async aggiorna({ indirizzo, avanti = () => {} }) {
     try {
       if (!(await this.adb.connetti(indirizzo))) return { errore: "Il pannello non risponde." };
+      const prima = await this.versioniSulPannello(indirizzo);
+      const quali = this.daAggiornare(prima);
       avanti({ passo: 0 });
-      if (this._ceIlPezzo("GdAHome-Muro.apk"))
+      if (quali.includes("muro") && this._ceIlPezzo("GdAHome-Muro.apk")) {
         await this.adb.install(indirizzo, this._pezzo("GdAHome-Muro.apk"), { permessi: true });
+        for (const r of [
+          `dumpsys deviceidle whitelist +${this.muroPackage}`,
+          `appops set ${this.muroPackage} RUN_IN_BACKGROUND allow`,
+        ])
+          await this.adb.shell(indirizzo, r, { root: true }).catch(() => {});
+      }
       avanti({ passo: 1 });
-      if (this._ceIlPezzo("GdAHome-OS.apk"))
+      if (quali.includes("os") && this._ceIlPezzo("GdAHome-OS.apk"))
         await this.adb.install(indirizzo, this._pezzo("GdAHome-OS.apk"));
+      const dopo = await this.versioniSulPannello(indirizzo);
       await this.adb.stacca(indirizzo);
-      return { app: "", os: "" };
+      return {
+        app: dopo.muro?.nome || "",
+        os: dopo.os?.nome || "",
+        versioni: dopo,
+        aggiornati: quali,
+      };
     } catch (errore) {
       return { errore: scusa(errore) };
     }

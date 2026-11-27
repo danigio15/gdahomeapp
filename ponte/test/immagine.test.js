@@ -90,6 +90,8 @@ test("i pezzi di GdAHome OS entrano nell'immagine, e la CI li costruisce", () =>
   const flusso = readFileSync(qui("../../.github/workflows/immagini-add-on.yml"), "utf8");
   for (const pezzo of [
     "GdAHome-OS.apk",
+    "GdAHome-Muro.apk",
+    "versioni.json",
     "gdaserial-arm64-v8a",
     "bootanimation-86.zip",
     "bootanimation-120.zip",

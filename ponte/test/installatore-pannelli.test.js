@@ -118,3 +118,87 @@ test("rimettere Sonoff rimette anche le app che stavano in /data", async () => {
   assert.ok(adb.mandati["/data/local/tmp/gda-ripristino.sh"].includes("RIMESSA"));
   assert.ok(adb.fatti.some(([, x]) => x === "pm uninstall com.gdahome.os"));
 });
+
+test("aggiornare: si installa solo quello che e' indietro, mai un numero piu' basso", () => {
+  const inst = new Installatore({ adb: {}, cartellaDeiPezzi: tmpdir() });
+  const pezzi = { os: { codice: 620, nome: "2.0.0" }, muro: { codice: 621, nome: "1.19.37" } };
+  assert.deepEqual(inst.daAggiornare({ os: { codice: 616 }, muro: { codice: 621 } }, pezzi), [
+    "os",
+  ]);
+  assert.deepEqual(inst.daAggiornare({ os: { codice: 700 }, muro: { codice: 700 } }, pezzi), []);
+  /* Un pezzo che sul pannello manca si rimette. */
+  assert.deepEqual(inst.daAggiornare({ os: { codice: 620 }, muro: null }, pezzi), ["muro"]);
+  /* Senza versioni.json non si tocca niente. */
+  assert.deepEqual(inst.daAggiornare({ os: null, muro: null }, null), []);
+});
+
+test("le versioni si leggono da versioni.json e da dumpsys del pannello", async () => {
+  const dir = pezzi();
+  try {
+    writeFileSync(
+      join(dir, "versioni.json"),
+      JSON.stringify({
+        "com.gdahome.os": { codice: 620, nome: "2.0.0" },
+        "com.gdahome.muro": { codice: 621, nome: "1.19.37" },
+      }),
+    );
+    const adb = {
+      async shell(_i, c) {
+        if (c.includes("com.gdahome.os"))
+          return "    versionCode=616 minSdk=26 targetSdk=34\n    versionName=2.0.0";
+        return "";
+      },
+    };
+    const inst = new Installatore({ adb, cartellaDeiPezzi: dir });
+    assert.deepEqual(inst.versioniDeiPezzi(), {
+      os: { codice: 620, nome: "2.0.0" },
+      muro: { codice: 621, nome: "1.19.37" },
+    });
+    assert.deepEqual(await inst.versioniSulPannello("1.2.3.4"), {
+      os: { codice: 616, nome: "2.0.0" },
+      muro: null,
+    });
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("aggiornare installa sopra solo i pezzi indietro", async () => {
+  const dir = pezzi();
+  try {
+    writeFileSync(
+      join(dir, "versioni.json"),
+      JSON.stringify({
+        "com.gdahome.os": { codice: 620, nome: "2.0.0" },
+        "com.gdahome.muro": { codice: 621, nome: "1.19.37" },
+      }),
+    );
+    const installati = [];
+    let fatto = false;
+    const adb = {
+      async connetti() {
+        return true;
+      },
+      async stacca() {},
+      async install(_i, apk) {
+        installati.push(apk.split("/").pop());
+        fatto = true;
+      },
+      async shell(_i, c) {
+        if (c.includes("com.gdahome.os")) return "versionCode=620\nversionName=2.0.0";
+        if (c.includes("com.gdahome.muro"))
+          return fatto
+            ? "versionCode=621\nversionName=1.19.37"
+            : "versionCode=500\nversionName=1.19.30";
+        return "";
+      },
+    };
+    const inst = new Installatore({ adb, cartellaDeiPezzi: dir });
+    const esito = await inst.aggiorna({ indirizzo: "1.2.3.4" });
+    assert.deepEqual(installati, ["GdAHome-Muro.apk"]);
+    assert.deepEqual(esito.aggiornati, ["muro"]);
+    assert.equal(esito.app, "1.19.37");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
