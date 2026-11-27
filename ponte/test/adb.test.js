@@ -341,3 +341,64 @@ test("una copia che si ferma la chiude il guardiano, e l'avanzamento si sente", 
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("copia diretta: il pannello manda i dati su una connessione sua, non da adb", async () => {
+  const { mkdtempSync, readFileSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { connect } = await import("node:net");
+  const dir = mkdtempSync(join(tmpdir(), "diretta-"));
+  try {
+    const dati = Buffer.alloc(300_000, 5);
+    const coda = Buffer.alloc(50_000, 0);
+    let comando = "";
+    /* Un adb finto che fa come il pannello: legge «| nc IP PORTA» dalla
+     * riga, si collega e manda dati e coda. */
+    const avvia = (_p, argomenti) => {
+      comando = argomenti.at(-1);
+      const [, ip, porta] = /\| (?:\S+ )*?nc (\S+) (\d+)'$/.exec(comando);
+      const p = new EventEmitter();
+      p.kill = () => {};
+      const s = connect(Number(porta), ip, () => {
+        s.write(dati);
+        s.end(coda);
+      });
+      s.on("error", () => {});
+      return p;
+    };
+    const adb = new Adb({ avvia, chiave: null });
+    const dove = join(dir, "system.img");
+    const visti = [];
+    const esito = await adb.copiaDiretta("1.2.3.4", "dd if=/dev/block/by-name/system", dove, {
+      verso: "127.0.0.1",
+      limite: dati.length,
+      avanzamento: (b) => visti.push(b),
+    });
+    assert.match(comando, /^su -c 'dd if=\/dev\/block\/by-name\/system \| nc 127\.0\.0\.1 \d+'$/);
+    assert.equal(esito.byte, dati.length);
+    assert.deepEqual(readFileSync(dove), dati);
+    /* Il pannello che non si collega: causa «diretta», si torna ad adb. */
+    const muto = new Adb({
+      avvia: () => Object.assign(new EventEmitter(), { kill() {} }),
+      chiave: null,
+    });
+    await assert.rejects(
+      () =>
+        muto.copiaDiretta("1.2.3.4", "dd", join(dir, "x.img"), {
+          verso: "127.0.0.1",
+          limite: 10,
+          attesaDelCollegamento: 100,
+        }),
+      (e) => e.causa === "diretta",
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("adb usa un server su una porta sua, non la 5037 della macchina", () => {
+  const adb = new Adb({ chiave: "/tmp/x" });
+  const env = adb._ambiente();
+  assert.equal(env.ANDROID_ADB_SERVER_PORT, "5137");
+  assert.equal(env.HOME, "/tmp/x");
+});

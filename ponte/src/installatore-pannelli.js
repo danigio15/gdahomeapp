@@ -143,6 +143,8 @@ export class Installatore {
     scriviCopia = null,
     muroPackage = "com.gdahome.muro",
     attesaDelRiavvio = undefined,
+    indirizzoDiCasa = null,
+    copiaDiretta = null,
   } = {}) {
     this.adb = adb;
     this.pezzi = cartellaDeiPezzi;
@@ -159,6 +161,14 @@ export class Installatore {
     this.muroPackage = muroPackage;
     /* Quanto aspettare il pannello dopo il riavvio: corto nelle prove. */
     this.attesaDelRiavvio = attesaDelRiavvio;
+    /* L'indirizzo dell'add-on sulla rete di casa, per la copia diretta. */
+    this.indirizzoDiCasa = indirizzoDiCasa;
+    this.copiaDiretta =
+      copiaDiretta ||
+      ((indirizzo, comando, dove, opzioni) =>
+        typeof this.adb.copiaDiretta === "function"
+          ? this.adb.copiaDiretta(indirizzo, comando, dove, opzioni)
+          : Promise.reject(Object.assign(new Error("niente copia diretta"), { causa: "diretta" })));
   }
 
   _pezzo(nome) {
@@ -348,11 +358,16 @@ export class Installatore {
           atteso: /^[0-9a-f]{32}$/.test(atteso) ? atteso : "",
           avanzamento: (byte) => {
             const secondi = Math.max(1, (Date.now() - partito) / 1000);
-            const velocita = `${(byte / 1024 ** 2 / secondi).toFixed(1).replace(".", ",")} MB/s`;
+            const alSecondo = byte / secondi;
+            const velocita = `${(alSecondo / 1024 ** 2).toFixed(1).replace(".", ",")} MB/s`;
+            /* Quanto manca a tutta la copia, alla velocita' di adesso. */
+            const restano = Math.max(0, totale - copiati - byte);
+            const minuti = alSecondo > 0 ? Math.ceil(restano / alSecondo / 60) : 0;
+            const manca = minuti > 0 ? ` · mancano ~${minuti} min` : "";
             avanti(
               i,
               nomi.length,
-              `${p} · ${mostraByte(byte)} di ${mostraByte(misure[p] || byte)} · ${velocita}`,
+              `${p} · ${mostraByte(byte)} di ${mostraByte(misure[p] || byte)} · ${velocita}${manca}`,
               percento(byte),
             );
           },
@@ -390,6 +405,23 @@ export class Installatore {
     const buona = ({ byte, md5 }) =>
       byte > 0 && (!misura || byte === misura) && (!atteso || md5 === atteso);
     let ultimo = null;
+
+    /* Prima la copia diretta (connessione di rete, non adb): e' la veloce.
+     * Se il pannello non riesce a collegarsi — niente `nc`, o la rete non
+     * lascia — lo si ricorda e non la si riprova sulle partizioni dopo. */
+    const verso = this.indirizzoDiCasa?.() || "";
+    const nc = misura && verso && !this._senzaDiretta ? await this._ncDelPannello(indirizzo) : "";
+    if (nc) {
+      const diretta = await this.copiaDiretta(
+        indirizzo,
+        `{ dd if=${sorgente} bs=4194304; dd if=/dev/zero bs=1048576 count=1; } 2>/dev/null`,
+        dove,
+        { verso, nc, limite: misura, avanzamento },
+      ).catch((e) => ({ errore: e.message || String(e), causa: e.causa }));
+      if (!diretta.errore && buona(diretta)) return { md5: diretta.md5 };
+      if (diretta.causa === "diretta") this._senzaDiretta = true;
+      ultimo = diretta;
+    }
     for (let tentativo = 0; tentativo < 2; tentativo += 1) {
       const comando = misura
         ? `{ dd if=${sorgente} bs=4194304; dd if=/dev/zero bs=1048576 count=1; } 2>/dev/null`
@@ -425,6 +457,19 @@ export class Installatore {
     if (misura && ultimo && ultimo.byte !== misura)
       return { errore: `e' incompleta (${ultimo.byte} byte su ${misura}).` };
     return { errore: "non torna con l'originale (md5 diverso)." };
+  }
+
+  /* Il `nc` del pannello, chiesto una volta per pannello. */
+  async _ncDelPannello(indirizzo) {
+    this._nc ??= new Map();
+    if (!this._nc.has(indirizzo)) {
+      const nc =
+        typeof this.adb.ncSulPannello === "function"
+          ? await this.adb.ncSulPannello(indirizzo).catch(() => "")
+          : "";
+      this._nc.set(indirizzo, nc);
+    }
+    return this._nc.get(indirizzo);
   }
 
   /* I byte liberi in /data sul pannello, o null. */
