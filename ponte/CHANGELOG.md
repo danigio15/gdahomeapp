@@ -14,6 +14,33 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.44
+
+- **Il pannello molto più svelto: la plancia non lavora più sotto il muro.**
+  L'analisi del pannello ha mostrato la plancia che usava più di un core
+  intero: sotto il muro, che non la lascia vedere, la plancia principale si
+  ridisegnava a ogni aggiornamento di Home Assistant (i riquadri della Home,
+  le persone, l'assistente). Ora si ferma finché il muro la copre, e riparte
+  quando il muro si toglie. La rete era a posto: dentro casa, 23 ms.
+- **Pulizia totale**: sul pannello resta solo quello che serve ad Android e a
+  GdAHome. Anche le app aggiunte a mano (come quella di Home Assistant,
+  trovata su un pannello) si salvano e si tolgono; «Rimetti» le riporta. I
+  pannelli già installati si puliscono da soli al giro degli aggiornamenti.
+- **Non solo NSPanel: Shelly Wall Display e display Android.** L'add-on
+  riconosce il pannello e sceglie la strada:
+  - con root e il sistema scrivibile, come sull'NSPanel: copia di
+    sicurezza, software di fabbrica messo da parte, GdAHome OS nel sistema;
+  - senza root (lo Shelly, tanti tablet): il software del produttore si
+    copia su Home Assistant e si spegne — launcher, app inutili e aggiunte —
+    e gira solo GdAHome. Sullo Shelly la sua app resta accesa per i relè e i
+    sensori.
+  Nella console ci sono le istruzioni per accendere l'ADB su ciascuno.
+- **«Togli dall'elenco» riporta prima il pannello com'era**: su un pannello
+  con GdAHome rimette il software originale e solo dopo lo toglie. Per un
+  pannello perso o rotto c'è «Togli solo dall'elenco», con l'avviso.
+- **La prossimità al contrario vale solo sull'NSPanel**: su uno Shelly o un
+  altro display il sensore si legge come vuole Android.
+
 ## 1.19.43
 
 - **Pannelli a muro, l'aggiornamento con la barra**: «App GdAHome Muro» e
