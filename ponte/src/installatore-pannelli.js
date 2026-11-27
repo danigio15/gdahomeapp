@@ -25,6 +25,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
   rmSync,
   statSync,
   statfsSync,
@@ -51,6 +52,48 @@ function animazione(modello) {
 const FOGLIETTO = "abbinamento.json";
 const ESITO = "abbinamento.esito";
 const ROVINATO = "abbinamento.rovinato";
+
+/* Che pannello e'. Tre famiglie, due strade:
+ *  - «nspanel», il Sonoff NSPanel Pro: GdAHome OS **completo**, nel sistema
+ *    (root), con la copia di sicurezza prima;
+ *  - «shelly», lo Shelly Wall Display, e «android», qualunque altro display
+ *    Android con l'ADB di rete: GdAHome **leggero**. Due app installate come
+ *    app qualunque, GdAHome OS come schermata home; il sistema non si tocca,
+ *    non serve root, non serve copia, e si torna com'era con un tasto.
+ * L'NSPanel si riconosce dalle sue due misure di schermo — il suo
+ * ro.product.model e' «px30_evb», quello della scheda — o dal nome. */
+export function famigliaDelPannello({
+  produttore = "",
+  marca = "",
+  modello = "",
+  pacchetti = "",
+  gdahomeOs = "",
+} = {}) {
+  const tutto = `${produttore} ${marca} ${modello}`.toLowerCase();
+  if (/shelly/.test(tutto)) return "shelly";
+  /* L'NSPanel si riconosce dal suo software — le app Sonoff/eWeLink — o da
+   * GdAHome OS completo gia' installato (`ro.gdahome.os` nel build.prop).
+   * Non dallo schermo: 480x480 ce l'hanno anche lo Shelly da 4" e tanti
+   * display cinesi. */
+  if (String(gdahomeOs).trim()) return "nspanel";
+  if (/sonoff|nspanel|ewelink|coolkit/i.test(`${tutto} ${pacchetti}`)) return "nspanel";
+  return "android";
+}
+/* La strada non la decide la marca, la decide il pannello: con root e il
+ * sistema scrivibile GdAHome OS va **nel sistema** (completo), come sull'NSPanel;
+ * senza, si fa tutto quello che Android permette senza root (leggero). */
+export const percorsoDelPannello = ({ root, scrivibile }) =>
+  root && scrivibile ? "completo" : "leggero";
+
+/* Come si chiama, da mostrare: «Shelly Wall Display», «Lenovo M10». */
+export function nomeDelModello({ produttore = "", marca = "", modello = "" } = {}) {
+  const pulito = (t) => String(t || "").trim();
+  const m = pulito(modello);
+  const chi = pulito(marca) || pulito(produttore);
+  if (!m) return chi;
+  if (!chi || m.toLowerCase().includes(chi.toLowerCase())) return m;
+  return `${chi.charAt(0).toUpperCase()}${chi.slice(1)} ${m}`;
+}
 
 export const DA_SALVARE = /^(system|oem)(_[ab])?$/i;
 
@@ -99,6 +142,10 @@ function righeDellaPulizia() {
     '  if echo "$minuscolo" | grep -Eq "$SONOFF"; then perche=Sonoff',
     '  elif [ "$pkg" = "$CASA" ] && [ "$pkg" != com.gdahome.os ]; then perche=Sonoff',
     '  elif echo "$pkg" | grep -Eq "$SUPERFLUE"; then perche=superflua',
+    /* Tutto quello che qualcuno ha aggiunto (un'app in /data che non e' di
+     * Android ne' di GdAHome, come l'app di Home Assistant): sul pannello gira
+     * solo GdAHome. Si salva in $D e si toglie, come le altre. */
+    '  elif case "$apk" in /data/*) true ;; *) false ;; esac && ! echo "$pkg" | grep -Eqi "webview"; then perche=aggiunta',
     "  else continue; fi",
     '  case "$apk" in',
     "    /data/*)",
@@ -199,8 +246,9 @@ export function scriptDiSistema() {
  * installati prima che si sapesse di /oem — l'animazione Sonoff restava li' —
  * e gira a ogni aggiornamento: se non c'e' niente da togliere, non fa niente.
  * Quando cambia cosa toglie, si alza RITOCCO e i pannelli lo rifanno. */
-/* 1: /oem. 2: la velocita' (processore, scheda video, WebView). */
-export const RITOCCO = 2;
+/* 1: /oem. 2: la velocita' (processore, scheda video, WebView). 3: la
+ * pulizia totale (le app aggiunte, come quella di Home Assistant). */
+export const RITOCCO = 3;
 export function scriptDelRitocco() {
   return [
     ...INTESTAZIONE(),
@@ -309,7 +357,12 @@ export class Installatore {
       if ((await this.adb.root(indirizzo)) !== "0")
         return { errore: "Il pannello non e' sbloccato (root).", passoRotto: 0 };
       const schermo = (await this._schermo(indirizzo)) || "";
-      const modello = schermo === "480x480" ? "86" : schermo ? "120" : "";
+      /* Un NSPanel e' un 86 o un 120; un altro display con root va per la
+       * stessa strada, ma senza il nome e senza l'animazione d'avvio del
+       * Sonoff, che ha le misure di quei due schermi. */
+      const famiglia = (await this.riconosci(indirizzo).catch(() => null))?.famiglia || "nspanel";
+      const modello =
+        famiglia !== "nspanel" ? "" : schermo === "480x480" ? "86" : schermo ? "120" : "";
       const android = await this.adb.getprop(indirizzo, "ro.build.version.release").catch(() => "");
       avanti({
         passo: 0,
@@ -379,6 +432,325 @@ export class Installatore {
         schermo,
         dispositivo: abb.dispositivo,
       };
+    } catch (errore) {
+      return { errore: scusa(errore) };
+    }
+  }
+
+  /* Che pannello c'e' a questo indirizzo: famiglia, strada, nome, schermo,
+   * Android, root. Senza root si puo' fare tutto questo. */
+  async riconosci(indirizzo) {
+    const leggi = (nome) => this.adb.getprop(indirizzo, nome).catch(() => "");
+    const produttore = await leggi("ro.product.manufacturer");
+    const marca = await leggi("ro.product.brand");
+    const modello = await leggi("ro.product.model");
+    const android = await leggi("ro.build.version.release");
+    const schermo = (await this._schermo(indirizzo)) || "";
+    const gdahomeOs = await leggi("ro.gdahome.os");
+    const pacchetti = String(
+      await this.adb
+        .shell(indirizzo, "pm list packages | grep -iE 'ewelink|sonoff|coolkit' | head -n 3", {
+          root: false,
+        })
+        .catch(() => ""),
+    );
+    const famiglia = famigliaDelPannello({ produttore, marca, modello, pacchetti, gdahomeOs });
+    const root = (await this.adb.root?.(indirizzo).catch(() => "")) === "0";
+    const scrivibile = root && (await this._sistemaScrivibile(indirizzo));
+    return {
+      famiglia,
+      root,
+      scrivibile,
+      percorso: percorsoDelPannello({ root, scrivibile }),
+      nome:
+        famiglia === "shelly"
+          ? "Shelly Wall Display"
+          : nomeDelModello({ produttore, marca, modello }),
+      schermo,
+      android,
+    };
+  }
+
+  /* /system si puo' scrivere? No con dm-verity (il sistema montato da un
+   * /dev/block/dm-…): li' GdAHome OS nel sistema non ci va. */
+  async _sistemaScrivibile(indirizzo) {
+    const detto = await this.adb
+      .shell(indirizzo, "mount | grep -E ' /system | / ' | head -n1", { root: true })
+      .catch(() => "");
+    /* Come la verifica di sempre (`pannelli.js`, gia' provata sui pannelli):
+     * scrivibile e' tutto quello che non e' dm-verity. */
+    return !/\/dev\/block\/dm-/.test(String(detto));
+  }
+
+  /* Le app da spegnere su un pannello senza root: il launcher del produttore
+   * — la sua interfaccia, il «secondo sistema» — e le app inutili a muro.
+   * Mai quelle di base di Android (DA_TENERE), mai la WebView ne' i servizi
+   * Google, mai GdAHome. Sullo Shelly la sua app resta accesa: e' lei che
+   * comanda i rele' e legge i sensori, e senza root nessun altro puo'. */
+  async _daSpegnere(indirizzo, { famiglia, casaDiPrima }) {
+    const elenco = String(
+      await this.adb.shell(indirizzo, "pm list packages -e", { root: false }).catch(() => ""),
+    )
+      .split("\n")
+      .map((r) => r.replace(/^package:/, "").trim())
+      .filter(Boolean);
+    const tenere = new RegExp(DA_TENERE);
+    const superflue = new RegExp(SUPERFLUE);
+    const casa = String(casaDiPrima || "").split("/")[0];
+    /* Le app aggiunte da qualcuno (`-3`): si spengono anche quelle. */
+    const aggiunte = new Set(
+      String(
+        await this.adb.shell(indirizzo, "pm list packages -3 -e", { root: false }).catch(() => ""),
+      )
+        .split("\n")
+        .map((r) => r.replace(/^package:/, "").trim())
+        .filter(Boolean),
+    );
+    return elenco.filter((pkg) => {
+      if (tenere.test(pkg) || /^com\.gdahome\./.test(pkg)) return false;
+      if (/^com\.google\.android\.(gms|gsf)$|webview/i.test(pkg)) return false;
+      if (famiglia === "shelly" && /shelly/i.test(pkg)) return false;
+      return pkg === casa || superflue.test(pkg) || aggiunte.has(pkg);
+    });
+  }
+
+  /* La copia del software di un pannello senza root: gli APK delle app che si
+   * spengono, su Home Assistant (/share/gdahome-os/<pannello>-<data>/app/),
+   * con un elenco. Se un giorno una non si riaccende, si reinstalla da qui. */
+  async _copiaDelleApp(indirizzo, nome, quali, dice = () => {}) {
+    const dir = join(this.copie, `${cartellaSicura(nome)}-${dataPerCartella(new Date())}`, "app");
+    mkdirSync(dir, { recursive: true });
+    const elenco = [];
+    for (let k = 0; k < quali.length; k += 1) {
+      const pkg = quali[k];
+      dice(`Copio ${pkg} (${k + 1}/${quali.length})…`, Math.round((k / quali.length) * 100));
+      const percorsi = String(
+        await this.adb.shell(indirizzo, `pm path ${pkg}`, { root: false }).catch(() => ""),
+      )
+        .split("\n")
+        .map((r) => r.replace(/^package:/, "").trim())
+        .filter((r) => r.endsWith(".apk"));
+      const sua = join(dir, pkg);
+      mkdirSync(sua, { recursive: true });
+      const presi = [];
+      for (const remoto of percorsi) {
+        const locale = join(sua, remoto.split("/").pop());
+        try {
+          await this.adb.pull(indirizzo, remoto, locale);
+          presi.push(remoto.split("/").pop());
+        } catch (_e) {
+          /* Un APK che senza root non si legge: l'app resta spenta, e si
+           * riaccende lo stesso. */
+        }
+      }
+      elenco.push({ pkg, apk: presi });
+    }
+    writeFileSync(join(dir, "app.json"), `${JSON.stringify(elenco, null, 2)}\n`);
+    return { dir, elenco };
+  }
+
+  /* GdAHome leggero: per lo Shelly Wall Display e per ogni display Android.
+   *
+   * Niente root, niente partizioni, niente copia di sicurezza: si installano
+   * GdAHome Muro e GdAHome OS come app qualunque, GdAHome OS diventa la
+   * schermata home, lo schermo resta acceso, e il pannello entra nella casa.
+   * Le app del produttore restano tutte: sullo Shelly i rele' e i sensori li
+   * tiene la sua app, e resta li'. Tornare com'era (`togliGdAHome`) vuol dire
+   * rimettere la home di prima e togliere le due app.
+   *
+   * Passi: 0 verifica, 1 installazione, 2 abbinamento, 3 avvio. */
+  async installaLeggero({ indirizzo, planciaId, utente, nome, avanti }) {
+    const fase = (passo) => (testo, percento) => avanti({ passo, dettaglio: testo, percento });
+    try {
+      for (const p of ["GdAHome-OS.apk", "GdAHome-Muro.apk"])
+        if (!this._ceIlPezzo(p))
+          return {
+            errore: "Mancano i pezzi di GdAHome in questo add-on: aggiornalo.",
+            passoRotto: 2,
+          };
+      /* La copia va su Home Assistant: senza dove scriverla, non si comincia. */
+      try {
+        mkdirSync(this.copie, { recursive: true });
+      } catch (errore) {
+        return {
+          errore: `Non riesco a creare la cartella della copia (${this.copie}): ${errore.code || errore.message}.`,
+          passoRotto: 1,
+        };
+      }
+
+      // 0. Verifica
+      fase(0)("Mi collego al pannello…", 10);
+      if (!(await this.adb.connetti(indirizzo)))
+        return { errore: "Il pannello non risponde piu'.", passoRotto: 0 };
+      const chi = await this.riconosci(indirizzo);
+      if (Number.parseInt(chi.android, 10) < 8)
+        return {
+          errore: `Serve Android 8 o piu' nuovo: questo ha Android ${chi.android}.`,
+          passoRotto: 0,
+        };
+      fase(0)(`${chi.nome || "Pannello Android"} · Android ${chi.android}`, 100);
+
+      // 1. La copia del software del produttore
+      /* La home di prima, per tornarci: l'ultima riga di resolve-activity. */
+      const casaDiPrima =
+        String(
+          await this.adb
+            .shell(
+              indirizzo,
+              "cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME",
+              { root: false },
+            )
+            .catch(() => ""),
+        )
+          .trim()
+          .split("\n")
+          .pop()
+          ?.trim() || "";
+      const spente = await this._daSpegnere(indirizzo, { famiglia: chi.famiglia, casaDiPrima });
+      const copia = await this._copiaDelleApp(indirizzo, nome || indirizzo, spente, fase(1));
+      fase(1)(`Fatto: copiate ${spente.length} app del produttore su Home Assistant`, 100);
+
+      // 2. Installazione
+      await this._installaConLaBarra(indirizzo, "GdAHome-Muro.apk", {
+        nome: "l'app GdAHome Muro",
+        permessi: true,
+        dice: (t, pc) => fase(2)(t, Math.round((pc ?? 0) * 0.45)),
+      });
+      await this._installaConLaBarra(indirizzo, "GdAHome-OS.apk", {
+        nome: "GdAHome OS",
+        dice: (t, pc) => fase(2)(t, 45 + Math.round((pc ?? 0) * 0.45)),
+      });
+      fase(2)("GdAHome OS diventa la schermata home, lo schermo resta acceso…", 92);
+      await this._impostazioniLeggere(indirizzo);
+      /* Il software del produttore si spegne solo adesso, con GdAHome gia'
+       * home: il pannello non resta mai senza una schermata. */
+      for (const pkg of spente)
+        await this.adb
+          .shell(indirizzo, `pm disable-user --user 0 ${pkg}`, { root: false })
+          .catch(() => {});
+      fase(2)(`Fatto: GdAHome e' installato, ${spente.length} app del produttore spente`, 100);
+
+      // 3. Abbinamento
+      const abb = await this._abbina(indirizzo, { nome, utente, planciaId, viaApp: true }, fase(3));
+      if (abb.errore)
+        return { errore: abb.errore, passoRotto: 3, casaDiPrima, spente, copia: copia.dir };
+      fase(3)("Fatto: il foglietto e' arrivato all'app", 100);
+
+      // 4. Avvio
+      fase(4)("Apro GdAHome…", 30);
+      await this._riapriIlMuro(indirizzo);
+      await this.adb
+        .shell(indirizzo, "am start -n com.gdahome.os/.ui.AvvioActivity", { root: false })
+        .catch(() => {});
+      const entrato = await this._controllaLAbbinamento(indirizzo, {
+        dispositivo: abb.dispositivo,
+        dal: abb.dal,
+        ...this.attesaDellAbbinamento,
+        dice: fase(4),
+      });
+      if (entrato.abbinato) fase(4)("Fatto: GdAHome e' sul pannello, nella casa", 100);
+      const versioni = await this.versioniSulPannello(indirizzo);
+      await this.adb.stacca(indirizzo);
+      return {
+        os: versioni.os?.nome || "",
+        app: versioni.muro?.nome || abb.app,
+        versioni,
+        modello: "",
+        nomeDelModello: chi.nome,
+        famiglia: chi.famiglia,
+        percorso: "leggero",
+        schermo: chi.schermo,
+        casaDiPrima,
+        spente,
+        copia: copia.dir,
+        dispositivo: abb.dispositivo,
+        abbinato: entrato.abbinato,
+        abbinatoIl: abb.dal,
+        ritocco: RITOCCO,
+        ...(entrato.abbinato ? {} : { avviso: entrato.errore, passoRotto: 3 }),
+      };
+    } catch (errore) {
+      return { errore: scusa(errore) };
+    }
+  }
+
+  /* Le impostazioni del muro che si possono dare senza root: la home, lo
+   * schermo sempre acceso (lo spegne e lo riaccende la plancia), niente
+   * salvaschermo, animazioni corte, e le due app mai fermate dal risparmio. */
+  async _impostazioniLeggere(indirizzo) {
+    const righe = [
+      "cmd package set-home-activity com.gdahome.os/.ui.AvvioActivity",
+      "settings put system screen_off_timeout 2147483647",
+      "settings put global stay_on_while_plugged_in 7",
+      "settings put secure screensaver_enabled 0",
+      "settings put global window_animation_scale 0",
+      "settings put global transition_animation_scale 0",
+      "settings put global animator_duration_scale 0.5",
+      "dumpsys deviceidle whitelist +com.gdahome.os",
+      `dumpsys deviceidle whitelist +${this.muroPackage}`,
+      "appops set com.gdahome.os WRITE_SETTINGS allow",
+      `appops set ${this.muroPackage} RUN_IN_BACKGROUND allow`,
+    ];
+    for (const r of righe) await this.adb.shell(indirizzo, r, { root: false }).catch(() => {});
+  }
+
+  /* Togliere GdAHome leggero: la home di prima, lo schermo che si spegne da
+   * solo, e le due app tolte. Il pannello torna com'era: niente da
+   * ripristinare, perche' niente era stato tolto. */
+  async togliGdAHome({ indirizzo, casaDiPrima = "", spente = [], copia = "", avanti = () => {} }) {
+    try {
+      if (!(await this.adb.connetti(indirizzo))) return { errore: "Il pannello non risponde." };
+      /* 1. Il software del produttore torna acceso: se un'app non c'e' piu',
+       * la si reinstalla dalla copia su Home Assistant. */
+      avanti({ passo: 0, dettaglio: "Riaccendo il software del produttore…" });
+      const nonTornate = [];
+      for (const pkg of spente) {
+        if (!/^[\w.]+$/.test(pkg)) continue;
+        const ce = String(
+          await this.adb.shell(indirizzo, `pm path ${pkg}`, { root: false }).catch(() => ""),
+        ).includes("package:");
+        if (!ce) {
+          const apk = join(copia, pkg);
+          const elenco = existsSync(apk) ? readdirSync(apk).filter((f) => f.endsWith(".apk")) : [];
+          if (elenco.length === 1)
+            await this.adb.install(indirizzo, join(apk, elenco[0])).catch(() => {});
+          else if (elenco.length > 1)
+            await this.adb
+              .comando?.([
+                "-s",
+                this.adb._dev?.(indirizzo) ?? indirizzo,
+                "install-multiple",
+                "-r",
+                ...elenco.map((f) => join(apk, f)),
+              ])
+              .catch(() => {});
+        }
+        const detto = await this.adb
+          .shell(indirizzo, `pm enable ${pkg}`, { root: false })
+          .catch(() => "");
+        if (!/enabled/.test(String(detto))) nonTornate.push(pkg);
+      }
+      if (/^[\w.]+\/[\w.$]+$/.test(casaDiPrima))
+        await this.adb
+          .shell(indirizzo, `cmd package set-home-activity ${casaDiPrima}`, { root: false })
+          .catch(() => {});
+      for (const r of [
+        "settings put system screen_off_timeout 60000",
+        "settings put global window_animation_scale 1",
+        "settings put global transition_animation_scale 1",
+        "settings put global animator_duration_scale 1",
+      ])
+        await this.adb.shell(indirizzo, r, { root: false }).catch(() => {});
+      if (nonTornate.length)
+        return {
+          errore: `Non si sono riaccese: ${nonTornate.join(", ")}. GdAHome resta, cosi' il pannello non rimane senza schermata: riprova.`,
+        };
+      /* 2. Solo adesso, col produttore tornato, si tolgono le app di GdAHome. */
+      avanti({ passo: 1, dettaglio: "Tolgo le app di GdAHome…" });
+      for (const pkg of [this.muroPackage, "com.gdahome.os"])
+        await this.adb.shell(indirizzo, `pm uninstall ${pkg}`, { root: false }).catch(() => {});
+      await this.adb.stacca(indirizzo);
+      return { fatto: true };
     } catch (errore) {
       return { errore: scusa(errore) };
     }
@@ -667,9 +1039,9 @@ export class Installatore {
       /* I pezzi di sistema. */
       a(2, "Copio GdAHome OS sul pannello…");
       await this.adb.push(indirizzo, this._pezzo(osApk), `${tmp}/GdAHome-OS.apk`);
-      const anim = animazione(modello);
+      const anim = modello ? animazione(modello) : "";
       a(3, "Copio l'animazione d'avvio…");
-      if (this._ceIlPezzo(anim))
+      if (anim && this._ceIlPezzo(anim))
         await this.adb.push(indirizzo, this._pezzo(anim), `${tmp}/bootanimation.zip`);
       const serial = "gdaserial-arm64-v8a";
       a(4, "Copio il ponte Zigbee…");
@@ -754,7 +1126,11 @@ export class Installatore {
 
   /* Fa entrare il pannello nella casa come un telefono abbinato, e scrive sul
    * pannello il foglietto che GdAHome Muro legge al primo avvio. */
-  async _abbina(indirizzo, { nome, utente, planciaId, sostituisce = "" }, dice = () => {}) {
+  async _abbina(
+    indirizzo,
+    { nome, utente, planciaId, sostituisce = "", viaApp = false },
+    dice = () => {},
+  ) {
     if (!this.abbinaPannello) return { errore: "Questo add-on non sa abbinare i pannelli." };
     dice("Creo il pannello nella casa, come un telefono abbinato… (1/2)", 0);
     let abb;
@@ -795,6 +1171,28 @@ export class Installatore {
      * cosi' l'app lo legge come un suo file qualunque (`avvio_muro.dart`). */
     const pkg = this.muroPackage;
     const dir = `/data/data/${pkg}/files`;
+    /* Senza root (GdAHome leggero) la cartella dell'app non si raggiunge: il
+     * foglietto lo consegna l'app stessa, con un messaggio che solo l'ADB puo'
+     * mandarle (`IlFoglietto.kt`, protetto da DUMP, un permesso che le app
+     * non hanno). In base64: nel comando non ci sono virgolette da sbagliare. */
+    if (viaApp) {
+      try {
+        dice("Mando il foglietto all'app GdAHome Muro… (2/2)", 50);
+        const detto = await this.adb.shell(
+          indirizzo,
+          `am broadcast -f 0x20 -n ${pkg}/com.gdahome.gdahome.IlFoglietto -a com.gdahome.FOGLIETTO --es foglietto ${Buffer.from(foglietto).toString("base64")}`,
+          { root: false },
+        );
+        if (!/result=-1\b/.test(String(detto)))
+          return {
+            errore:
+              "L'app GdAHome Muro non ha preso il foglietto: aggiorna l'add-on, l'app sul pannello e' di prima.",
+          };
+      } catch (errore) {
+        return { errore: scusa(errore) };
+      }
+      return { dispositivo: abb.dispositivo, app: abb.app || "", dal };
+    }
     try {
       /* L'uid dell'app, da dumpsys: "userId=10234". */
       const detto = await this.adb.shell(indirizzo, `dumpsys package ${pkg} | grep -m1 userId=`, {
@@ -906,11 +1304,13 @@ export class Installatore {
 
   /* Chiude e riapre GdAHome Muro, che al riavvio legge il foglietto. */
   async _riapriIlMuro(indirizzo) {
+    /* Senza root: l'utente dell'ADB puo' fermare e aprire un'app, e su un
+     * display senza root `su` non c'e'. */
     for (const r of [
       `am force-stop ${this.muroPackage}`,
       `monkey -p ${this.muroPackage} -c android.intent.category.LAUNCHER 1`,
     ])
-      await this.adb.shell(indirizzo, r, { root: true }).catch(() => {});
+      await this.adb.shell(indirizzo, r, { root: false }).catch(() => {});
   }
 
   async _riavvia(indirizzo) {
@@ -1032,7 +1432,7 @@ export class Installatore {
    * pannello non e' mai entrato nella casa (`abbina`) lo si riabbina: nuovo
    * foglietto, GdAHome Muro riaperto, e si guarda che entri davvero.
    * Passi: 0 app, 1 GdAHome OS, 2 ritocco, 3 abbinamento. */
-  async aggiorna({ indirizzo, avanti = () => {}, abbina = null }) {
+  async aggiorna({ indirizzo, avanti = () => {}, abbina = null, percorso = "completo" }) {
     try {
       if (!(await this.adb.connetti(indirizzo))) return { errore: "Il pannello non risponde." };
       const prima = await this.versioniSulPannello(indirizzo);
@@ -1061,12 +1461,15 @@ export class Installatore {
         });
       else fase(1)("Gia' all'ultima versione", 100);
 
-      const ritocco = await this._colTempo(
-        fase(2),
-        "Tolgo quello che resta di Sonoff…",
-        30_000,
-        () => this._ritocca(indirizzo),
-      );
+      /* Il ritocco e' del sistema: su un pannello leggero non c'e' niente da
+       * ritoccare, e senza root non si potrebbe. Li' si rimettono le sue
+       * impostazioni (home, schermo acceso), che un utente puo' aver cambiato. */
+      const ritocco =
+        percorso === "leggero"
+          ? await this._impostazioniLeggere(indirizzo).then(() => ({ fatto: true, tolte: [] }))
+          : await this._colTempo(fase(2), "Tolgo quello che resta di Sonoff…", 30_000, () =>
+              this._ritocca(indirizzo),
+            );
       fase(2)(
         ritocco.fatto
           ? `Fatto${ritocco.tolte?.length ? `: tolte ${ritocco.tolte.length} cose di Sonoff` : ""}`
@@ -1087,6 +1490,7 @@ export class Installatore {
             utente: abbina.utente,
             planciaId: abbina.planciaId,
             sostituisce: abbina.dispositivo || "",
+            viaApp: percorso === "leggero",
           },
           fase,
         );
@@ -1098,6 +1502,10 @@ export class Installatore {
           abbinatoIl = abb.dal;
           /* GdAHome Muro e' gia' aperto: lo si riapre, cosi' legge il foglietto. */
           await this._riapriIlMuro(indirizzo);
+          if (percorso === "leggero")
+            await this.adb
+              .shell(indirizzo, "am start -n com.gdahome.os/.ui.AvvioActivity", { root: false })
+              .catch(() => {});
           const entrato = await this._controllaLAbbinamento(indirizzo, {
             dispositivo: abb.dispositivo,
             dal: abb.dal,

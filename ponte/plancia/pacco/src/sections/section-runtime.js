@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-VTEHR34I.js";
+} from "../../chunk-LHGM4VNC.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -630,7 +630,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-GT4H4BIJ.js";
+} from "../../chunk-BIR7TR7M.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -61864,6 +61864,7 @@ function liberaLaFila(fila2) {
   state52.firma = "";
 }
 function sistemaIlPostoAccanto() {
+  if (!planciaVisibile()) return false;
   const fila2 = doc?.querySelector?.("#dm-people .dm-people-fila");
   if (!fila2) return false;
   osservaLaFila(fila2);
@@ -125450,7 +125451,12 @@ function togliLaTela() {
   diciAlloSchermo("muro", false);
   fermaIlBattito();
   doc?.getElementById(ID2)?.remove();
+  const copriva = doc?.documentElement?.classList?.contains?.("dm-muro-acceso");
   doc?.documentElement?.classList?.remove("dm-muro-acceso", "dm-muro-chiaro");
+  if (copriva) {
+    doc?.dispatchEvent?.(new root.Event("visibilitychange"));
+    root.dispatchEvent?.(new root.CustomEvent("dashboardmodern:states-ready", { detail: {} }));
+  }
 }
 function eLeggero() {
   return Boolean(state121.compatto || doc?.getElementById?.("gdahome-leggera"));
@@ -153663,6 +153669,7 @@ function schedule38() {
   if (state162.frame) return;
   state162.frame = root.requestAnimationFrame?.(() => {
     state162.frame = 0;
+    if (!planciaVisibile()) return;
     renderPeopleSection();
     syncPeopleClock();
   }) || 0;
@@ -177486,7 +177493,7 @@ async function correggi() {
   S.lavoro = t("Scarico il modello… 0%", "Downloading the model… 0%");
   disegna17();
   try {
-    const { scaricaIlModello } = await import("../../modello-dal-ponte-DM5Q5B2U.js");
+    const { scaricaIlModello } = await import("../../modello-dal-ponte-7DNTWE2F.js");
     const byte = await scaricaIlModello(m, {
       quandoAvanza: (fatti, tutti) => {
         const pct4 = Math.round(fatti / Math.max(1, tutti) * 100);
@@ -177521,7 +177528,7 @@ async function usa() {
     S.lavoro = t("Caricamento… 0%", "Uploading… 0%");
     disegna17();
     try {
-      const { caricaIlModello } = await import("../../modello-dal-ponte-DM5Q5B2U.js");
+      const { caricaIlModello } = await import("../../modello-dal-ponte-7DNTWE2F.js");
       const fatto2 = await caricaIlModello(S.file.byte, {
         profilo: profilo3(),
         quandoAvanza: (fatti, tutti) => {
@@ -177545,7 +177552,7 @@ async function usa() {
     modello: { ...dati, ...S.imp, triangoli: S.triangoli, attivo: true }
   });
   if (prima && prima.id !== dati.id) {
-    const { togliIlModello } = await import("../../modello-dal-ponte-DM5Q5B2U.js");
+    const { togliIlModello } = await import("../../modello-dal-ponte-7DNTWE2F.js");
     togliIlModello(prima.id, { profilo: profilo3() });
   }
   chiudi4();
@@ -177562,7 +177569,7 @@ async function togli4() {
   );
   if (ok === false) return;
   scrivi6({ ...casaSalvata(), modello: null });
-  const { togliIlModello } = await import("../../modello-dal-ponte-DM5Q5B2U.js");
+  const { togliIlModello } = await import("../../modello-dal-ponte-7DNTWE2F.js");
   togliIlModello(m.id, { profilo: profilo3() });
   chiudi4();
 }
@@ -178332,7 +178339,7 @@ async function avviaIlModello(admin) {
   try {
     const [{ THREE, caricatori, scena: scena2 }, { scaricaIlModello }] = await Promise.all([
       caricaIlMotore(),
-      import("../../modello-dal-ponte-DM5Q5B2U.js")
+      import("../../modello-dal-ponte-7DNTWE2F.js")
     ]);
     const byte = await scaricaIlModello(m, {
       quandoAvanza: (fatti, tutti) => {

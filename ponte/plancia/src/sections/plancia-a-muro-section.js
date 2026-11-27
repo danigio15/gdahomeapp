@@ -5204,7 +5204,14 @@ function togliLaTela() {
   diciAlloSchermo("muro", false);
   fermaIlBattito();
   doc?.getElementById(ID)?.remove();
+  const copriva = doc?.documentElement?.classList?.contains?.("dm-muro-acceso");
   doc?.documentElement?.classList?.remove("dm-muro-acceso", "dm-muro-chiaro");
+  /* Sotto il muro la plancia non si ridisegnava (`planciaVisibile`): tolto il
+   * muro, le si dice di guardare di nuovo, come quando torna in primo piano. */
+  if (copriva) {
+    doc?.dispatchEvent?.(new root.Event("visibilitychange"));
+    root.dispatchEvent?.(new root.CustomEvent("dashboardmodern:states-ready", { detail: {} }));
+  }
 }
 
 /* Il pannello leggero: lo schermo piccolo, o la «Plancia leggera» dell'app,

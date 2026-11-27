@@ -666,3 +666,214 @@ test("un pezzo che non si installa dice perche'", async () => {
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("che pannello e': NSPanel dallo schermo, Shelly dal nome, il resto e' un display Android", async () => {
+  const { famigliaDelPannello, percorsoDelPannello, nomeDelModello } =
+    await import("../src/installatore-pannelli.js");
+  /* L'NSPanel dal suo software, non dallo schermo. */
+  assert.equal(
+    famigliaDelPannello({ modello: "px30_evb", pacchetti: "package:com.eWeLinkNSPro.dev" }),
+    "nspanel",
+  );
+  assert.equal(famigliaDelPannello({ modello: "px30_evb", gdahomeOs: "2" }), "nspanel");
+  /* Un display cinese sulla stessa scheda, senza Sonoff: non e' un NSPanel. */
+  assert.equal(famigliaDelPannello({ modello: "px30_evb" }), "android");
+  assert.equal(famigliaDelPannello({ produttore: "Shelly", modello: "SAWD-0A1XX10EU1" }), "shelly");
+  assert.equal(famigliaDelPannello({ marca: "rockchip", modello: "rk3566" }), "android");
+
+  /* La strada la decide il pannello: root e sistema scrivibile. */
+  assert.equal(percorsoDelPannello({ root: true, scrivibile: true }), "completo");
+  assert.equal(percorsoDelPannello({ root: true, scrivibile: false }), "leggero");
+  assert.equal(percorsoDelPannello({ root: false, scrivibile: false }), "leggero");
+  assert.equal(nomeDelModello({ marca: "lenovo", modello: "TB-X606F" }), "Lenovo TB-X606F");
+  assert.equal(nomeDelModello({ marca: "Samsung", modello: "Samsung SM-T500" }), "Samsung SM-T500");
+});
+
+/* Un display Android finto, senza root: ricorda i comandi, risponde come
+ * risponderebbe Android. */
+function displayAndroid({ broadcast = "Broadcast completed: result=-1" } = {}) {
+  const fatti = [];
+  const prop = {
+    "ro.product.manufacturer": "Shelly",
+    "ro.product.brand": "Shelly",
+    "ro.product.model": "SAWD-0A1XX10EU1",
+    "ro.build.version.release": "8.1.0",
+  };
+  return {
+    fatti,
+    async connetti() {
+      return true;
+    },
+    async stacca() {},
+    async push() {},
+    tirati: [],
+    async pull(_i, remoto, locale) {
+      this.tirati.push(remoto);
+      writeFileSync(locale, "apk");
+    },
+    async getprop(_i, nome) {
+      return prop[nome] ?? "";
+    },
+    async shell(_i, c, opzioni = {}) {
+      fatti.push([c, opzioni.root === true]);
+      if (c === "wm size") return "Physical size: 480x480";
+      if (c.startsWith("cmd package resolve-activity"))
+        return "priority=0 preferredOrder=0\ncom.shelly.launcher/.MainActivity";
+      if (c.startsWith("pm install")) return "Success";
+      if (c.startsWith("am broadcast")) return broadcast;
+      if (c === "pm list packages -e")
+        return [
+          "com.android.settings",
+          "com.android.systemui",
+          "com.shelly.launcher",
+          "com.android.browser",
+          "io.homeassistant.companion.android.minimal",
+          "com.google.android.webview",
+        ]
+          .map((p) => `package:${p}`)
+          .join("\n");
+      if (c === "pm list packages -3 -e")
+        return "package:io.homeassistant.companion.android.minimal";
+      if (c.startsWith("pm path ")) return `package:/system/app/x/${c.slice(8)}.apk`;
+      if (c.startsWith("pm enable ")) return `Package ${c.slice(10)} new state: enabled`;
+      if (c.startsWith("dumpsys package")) return "versionCode=700 versionName=1.19.44";
+      return "";
+    },
+  };
+}
+
+test("GdAHome leggero: due app, la home, lo schermo, il foglietto dall'app — mai root", async () => {
+  const dir = pezzi();
+  try {
+    const adb = displayAndroid();
+    let visto = 1;
+    const detti = [];
+    const inst = new Installatore({
+      adb,
+      cartellaDeiPezzi: dir,
+      cartellaDelleCopie: join(dir, "copie"),
+      passoDellaBarra: 1,
+      dispositivi: { elenco: () => [{ id: "dm_1", natoIl: 1, vistoIl: visto }] },
+      abbinaPannello: async () => {
+        visto = Date.now() + 5000;
+        return { dispositivo: "dm_1", segno: "s", chiave: "k", case: { indirizzi: ["h:8098"] } };
+      },
+      attesaDellAbbinamento: { attesa: 300, pausa: 5 },
+    });
+    const esito = await inst.installaLeggero({
+      indirizzo: "1.2.3.4",
+      planciaId: "muro",
+      utente: "u",
+      nome: "Cucina",
+      avanti: ({ passo, dettaglio }) => detti.push([passo, dettaglio]),
+    });
+    assert.equal(esito.errore, undefined);
+    assert.equal(esito.percorso, "leggero");
+    assert.equal(esito.famiglia, "shelly");
+    assert.equal(esito.casaDiPrima, "com.shelly.launcher/.MainActivity");
+    assert.equal(esito.abbinato, true);
+    const comandi = adb.fatti.map(([c]) => c);
+    /* Mai root, mai partizioni, mai copia. */
+    /* Mai root, se non per leggere l'esito (che senza root non c'e'). */
+    assert.ok(
+      adb.fatti.every(([c, root]) => !root || c.startsWith("cat /data/data/com.gdahome.muro")),
+    );
+    assert.ok(!comandi.some((c) => /remount|\/system|dd if=|md5sum/.test(c)));
+    assert.ok(comandi.includes("cmd package set-home-activity com.gdahome.os/.ui.AvvioActivity"));
+    /* Il foglietto va all'app col broadcast protetto, in base64. */
+    const b = comandi.find((c) => c.startsWith("am broadcast"));
+    assert.match(
+      b,
+      /-f 0x20 -n com\.gdahome\.muro\/com\.gdahome\.gdahome\.IlFoglietto -a com\.gdahome\.FOGLIETTO --es foglietto [A-Za-z0-9+/=]+$/,
+    );
+    const foglietto = JSON.parse(Buffer.from(b.split(" ").pop(), "base64").toString());
+    assert.equal(foglietto.dispositivo, "dm_1");
+    assert.equal(foglietto.plancia, "muro");
+    assert.ok(detti.some(([p, d]) => p === 4 && /nella casa/.test(d)));
+    /* Il software del produttore: copiato, poi spento. Lo Shelly tiene la
+     * sua app (rele', sensori); il launcher che non e' Shelly, il browser e
+     * l'app aggiunta si spengono. Android e la WebView mai. */
+    assert.deepEqual(esito.spente.sort(), [
+      "com.android.browser",
+      "io.homeassistant.companion.android.minimal",
+    ]);
+    assert.ok(readFileSync(join(esito.copia, "app.json"), "utf8").includes("com.android.browser"));
+    assert.ok(comandi.includes("pm disable-user --user 0 com.android.browser"));
+    assert.ok(!comandi.some((c) => /disable-user .*(shelly|settings|systemui|webview)/.test(c)));
+    /* Spento solo dopo che GdAHome e' la home. */
+    assert.ok(
+      comandi.indexOf("cmd package set-home-activity com.gdahome.os/.ui.AvvioActivity") <
+        comandi.indexOf("pm disable-user --user 0 com.android.browser"),
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("GdAHome leggero: un'app di prima che non prende il foglietto lo dice", async () => {
+  const dir = pezzi();
+  try {
+    const inst = new Installatore({
+      adb: displayAndroid({ broadcast: "Broadcast completed: result=0" }),
+      cartellaDeiPezzi: dir,
+      cartellaDelleCopie: join(dir, "copie"),
+      passoDellaBarra: 1,
+      abbinaPannello: async () => ({
+        dispositivo: "dm_1",
+        segno: "s",
+        chiave: "k",
+        case: { indirizzi: ["h:8098"] },
+      }),
+    });
+    const esito = await inst.installaLeggero({ indirizzo: "1.2.3.4", avanti: () => {} });
+    assert.equal(esito.passoRotto, 3);
+    assert.match(esito.errore, /non ha preso il foglietto/);
+    /* Anche fermi qui, si sa cosa e' spento: per poter tornare indietro. */
+    assert.ok(esito.spente.length > 0);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("togliere GdAHome leggero: la home di prima, lo schermo di prima, le due app tolte", async () => {
+  const adb = displayAndroid();
+  const inst = new Installatore({ adb, cartellaDeiPezzi: tmpdir() });
+  const esito = await inst.togliGdAHome({
+    indirizzo: "1.2.3.4",
+    casaDiPrima: "com.shelly.launcher/.MainActivity",
+    spente: ["com.android.browser"],
+  });
+  assert.deepEqual(esito, { fatto: true });
+  const comandi = adb.fatti.map(([c]) => c);
+  /* Prima il software del produttore torna acceso, poi si toglie GdAHome. */
+  assert.ok(
+    comandi.indexOf("pm enable com.android.browser") <
+      comandi.indexOf("pm uninstall com.gdahome.os"),
+  );
+  assert.ok(comandi.includes("cmd package set-home-activity com.shelly.launcher/.MainActivity"));
+  assert.ok(comandi.includes("pm uninstall com.gdahome.muro"));
+  assert.ok(comandi.includes("pm uninstall com.gdahome.os"));
+  /* Una home di prima scritta male non finisce in un comando. */
+  const altro = displayAndroid();
+  await new Installatore({ adb: altro, cartellaDeiPezzi: tmpdir() }).togliGdAHome({
+    indirizzo: "1.2.3.4",
+    casaDiPrima: "x; rm -rf /",
+  });
+  assert.ok(!altro.fatti.some(([c]) => c.includes("rm -rf")));
+});
+
+test("aggiornare un pannello leggero non fa il ritocco di sistema", async () => {
+  const dir = pezzi();
+  try {
+    const adb = displayAndroid();
+    const inst = new Installatore({ adb, cartellaDeiPezzi: dir, passoDellaBarra: 1 });
+    const esito = await inst.aggiorna({ indirizzo: "1.2.3.4", percorso: "leggero" });
+    assert.equal(esito.errore, undefined);
+    assert.equal(esito.ritocco, RITOCCO);
+    const comandi = adb.fatti.map(([c]) => c);
+    assert.ok(!comandi.some((c) => c.includes("gda-ritocco.sh")));
+    assert.ok(comandi.includes("cmd package set-home-activity com.gdahome.os/.ui.AvvioActivity"));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

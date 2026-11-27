@@ -32,6 +32,7 @@ import {
   root,
   t,
   senzaCadere,
+  planciaVisibile,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_PEOPLE__";
@@ -509,6 +510,8 @@ function schedule() {
   state.frame =
     root.requestAnimationFrame?.(() => {
       state.frame = 0;
+      /* Nessuno la guarda (il muro la copre, o la plancia e' nascosta). */
+      if (!planciaVisibile()) return;
       renderPeopleSection();
       syncPeopleClock();
     }) || 0;

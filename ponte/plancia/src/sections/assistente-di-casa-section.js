@@ -90,6 +90,7 @@ import {
   t,
   writeJsonIfChanged,
   senzaCadere,
+  planciaVisibile,
 } from "./shared.js";
 
 const KEY = "__DASHBOARDMODERN_ASSISTENTE_DI_CASA__";
@@ -642,6 +643,9 @@ function liberaLaFila(fila) {
  * riscrive solo quando cambia, cosi' un tocco a meta' non va perso.
  */
 export function sistemaIlPostoAccanto() {
+  /* Sotto il muro, o con la plancia nascosta, la fila non si misura: le sue
+   * misure (`scrollWidth`) costringono il browser a ricalcolare la pagina. */
+  if (!planciaVisibile()) return false;
   const fila = doc?.querySelector?.("#dm-people .dm-people-fila");
   if (!fila) return false;
   osservaLaFila(fila);
