@@ -14,6 +14,17 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.33
+
+- **Plancia a muro sul NSPanel da 4 pollici**: il nome della stanza resta
+  intero («SOGGIORNO», non più «SOGGIOR…») e l'ora si legge tutta. Il nome
+  veniva misurato prima che arrivasse il suo carattere, e con un pixel in
+  meno; adesso la testa si rimisura appena arrivano i caratteri, e se serve
+  le linguette si stringono ancora un po'.
+- **Plancia a muro sul NSPanel 120 e sugli schermi verticali stretti**: i
+  riquadri crescono fino a riempire la pagina, senza il buco vuoto in fondo.
+  Sul telefono crescono al massimo di due quinti, così non tornano enormi.
+
 ## 1.19.32
 
 - **Allarme, il codice**: nel tastierino della plancia i pallini seguono le

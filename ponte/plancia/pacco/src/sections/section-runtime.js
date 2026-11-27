@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-UDIQHY3F.js";
+} from "../../chunk-EDB7N2ZB.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -123517,7 +123517,8 @@ function griglia2(pagina3, carte, quante3 = carte.length) {
   const base = (state121.verso === "verticale" ? 800 : 1280) / g.colonne;
   const fitta = !state121.compatto && base < CARD_STRETTA ? " mu-fitta" : "";
   const adatta2 = forma2.adatta ? ` mu-adatta${state121.compatto && g.colonne * g.righe <= 2 ? " mu-ampia" : ""}` : "";
-  const stile9 = `--mu-col:${g.colonne};--mu-righe:${g.righe}${forma2.adatta ? `;--mu-larga:${forma2.larga}` : ""}`;
+  const vere = Math.max(1, Math.ceil(quante3 / g.colonne));
+  const stile9 = `--mu-col:${g.colonne};--mu-righe:${g.righe};--mu-righe-vere:${vere}${forma2.adatta ? `;--mu-larga:${forma2.larga}` : ""}`;
   return `<div class="mu-g6${scorre}${fitta}${adatta2}" style="${stile9}">${carte.join("")}</div>`;
 }
 function paginaScene(pagina3) {
@@ -125468,8 +125469,17 @@ function misura5(nodo4, muro) {
   if (dentro3.style.width !== largo) dentro3.style.width = largo;
   if (dentro3.style.height !== alto) dentro3.style.height = alto;
 }
-var GRADINI_DELLE_LINGUETTE = ["", "mu-molte", "mu-icone"];
+var GRADINI_DELLE_LINGUETTE = ["", "mu-molte", "mu-icone", "mu-minime"];
 var linguette3 = { chiave: "", gradino: "", minimo: "" };
+function larghezzaDelTesto(nodo4) {
+  const intervallo2 = doc.createRange?.();
+  if (intervallo2) {
+    intervallo2.selectNodeContents(nodo4);
+    const larga = intervallo2.getBoundingClientRect?.().width;
+    if (Number.isFinite(larga) && larga > 0) return larga;
+  }
+  return nodo4.scrollWidth;
+}
 function adattaLeLinguette(nodo4) {
   const fila2 = nodo4.querySelector(".mu-testa .mu-pagine");
   if (!fila2) return;
@@ -125490,12 +125500,14 @@ function adattaLeLinguette(nodo4) {
     if (titolo3 && linguette3.minimo) titolo3.style.setProperty("--mu-tit-min", linguette3.minimo);
     for (const g of GRADINI_DELLE_LINGUETTE)
       if (g) classeSeCambia(fila2, g, g === linguette3.gradino);
+    classeSeCambia(testa2, "mu-stretta", linguette3.gradino === "mu-minime");
     return;
   }
   linguette3.minimo = "";
   if (nome) {
     const massimo = Number.parseFloat(getComputedStyle(nome).maxWidth);
-    const pieno = Number.isFinite(massimo) ? Math.min(nome.scrollWidth, massimo) : nome.scrollWidth;
+    const testo5 = larghezzaDelTesto(nome);
+    const pieno = Number.isFinite(massimo) ? Math.min(testo5, massimo) : testo5;
     linguette3.minimo = `${Math.ceil(pieno)}px`;
     titolo3.style.setProperty("--mu-tit-min", linguette3.minimo);
   }
@@ -125503,6 +125515,7 @@ function adattaLeLinguette(nodo4) {
   for (const gradino2 of GRADINI_DELLE_LINGUETTE) {
     fila2.classList.remove(...GRADINI_DELLE_LINGUETTE.filter(Boolean));
     if (gradino2) fila2.classList.add(gradino2);
+    classeSeCambia(testa2, "mu-stretta", gradino2 === "mu-minime");
     linguette3.gradino = gradino2;
     if (testa2.scrollWidth <= testa2.clientWidth + 1) return;
   }
@@ -126785,7 +126798,11 @@ ${MURO} .mu-pill b{font-size:20px;font-weight:800;display:block;line-height:1}
 ${MURO} .mu-pill .mu-et{font-size:10.5px}
 ${MURO} .mu-g6{--mu-col:3;--mu-righe:2;--mu-gap:16px;--mu-alto:150px;display:grid;grid-template-columns:repeat(var(--mu-col),minmax(0,1fr));grid-template-rows:repeat(var(--mu-righe),minmax(0,1fr));gap:var(--mu-gap);min-height:0}
 ${MURO} .mu-g6.mu-scorre{grid-template-rows:none;grid-auto-rows:calc((100% - var(--mu-gap) * (var(--mu-righe) - 1)) / var(--mu-righe));overflow-y:auto;scroll-snap-type:y proximity;overscroll-behavior:contain;scrollbar-width:none}
-${MURO} .mu-pagine.mu-molte button:not(.si) span,${MURO} .mu-pagine.mu-icone button span{display:none}
+${MURO} .mu-pagine.mu-molte button:not(.si) span,${MURO} .mu-pagine.mu-icone button span,${MURO} .mu-pagine.mu-minime button span{display:none}
+${MURO} .mu-pagine.mu-minime{gap:1px;padding:2px}
+${MURO} .mu-pagine.mu-minime button{padding:6px 5px}
+${MURO} .mu-pagine.mu-minime+.mu-ora,${MURO}[data-compatto="1"] .mu-pagine.mu-minime+.mu-ora{margin-left:4px}
+${MURO} .mu-testa.mu-stretta,${MURO}[data-compatto="1"] .mu-testa.mu-stretta{gap:5px;padding-left:10px;padding-right:10px}
 ${MURO} .mu-pag-musica{grid-template-rows:auto 1fr}
 ${MURO} .mu-radio-griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;
   max-height:60vh;overflow:auto;padding:2px}
@@ -127128,8 +127145,15 @@ ${MURO}.mu-anteprima[data-verso="verticale"]{width:800px;height:1280px}
 ${MURO}.mu-anteprima .mu-pagina{height:100%}
 ${MURO} .mu-g6.mu-scorre>*{scroll-snap-align:start}
 /* Sul telefono i riquadri non si allungano a riempire lo schermo: «li trovo
-   troppo grandi». Hanno un'altezza loro, e la pagina scorre se servono. */
-${MURO}[data-compatto="1"][data-verso="verticale"] .mu-g6{grid-template-rows:none!important;grid-auto-rows:var(--mu-alto,150px)!important;align-content:start;overflow-y:auto;scrollbar-width:none}
+   troppo grandi». Hanno un'altezza loro, e la pagina scorre se servono.
+
+   Ma «sul NSPanel 120 sotto resta un buco vuoto»: lo schermo verticale da
+   4,7" ha la misura di un telefono, e sei riquadri da 150 ne lasciavano un
+   quinto vuoto. Le righe allora crescono fino a riempire la pagina, ma al
+   massimo di due quinti: abbastanza per chiudere il buco di un pannello,
+   troppo poco per tornare ai riquadri enormi sul telefono. Quando i riquadri
+   sono piu' di quelli che stanno, restano da 150 e la pagina scorre. */
+${MURO}[data-compatto="1"][data-verso="verticale"] .mu-g6{grid-template-rows:none!important;grid-auto-rows:clamp(var(--mu-alto,150px),calc((100% - var(--mu-gap) * (var(--mu-righe-vere,1) - 1)) / var(--mu-righe-vere,1)),calc(var(--mu-alto,150px) * 1.4))!important;align-content:start;overflow-y:auto;scrollbar-width:none}
 /* Meno riquadri dei posti (\`grigliaPerQuanti\`): la griglia ha gia' la forma
    di quelli che ci sono, e l'ultimo di una riga corta si allarga fino in
    fondo. Sul telefono le righe partono dalla loro altezza e crescono fino a
@@ -128105,6 +128129,9 @@ function installPlanciaAMuro() {
   root.addEventListener?.("dashboardmodern:state-changed", quandoCambia);
   root.addEventListener?.(EVENTO_DEL_MURO, quandoCambia);
   root.addEventListener?.("resize", () => disegna9());
+  doc.fonts?.addEventListener?.("loadingdone", () => {
+    if (state121.muro?.attiva) disegna9();
+  });
   root.addEventListener?.("gdahome:schermo", (event) => {
     const detto3 = event?.detail || {};
     if ("prossimita" in detto3 || "luce" in detto3) disegna9();
