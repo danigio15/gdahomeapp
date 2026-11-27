@@ -105,3 +105,23 @@ test("root torna la stringa di id -u, o vuoto se non va", async () => {
   const no = new Adb({ avvia: finto({ errore: "no su", codice: 1 }).avvia, chiave: null });
   assert.equal(await no.root("1.2.3.4"), "");
 });
+
+test("provaCollegamento distingue rifiutato da irraggiungibile", async () => {
+  const rifiuta = new Adb({
+    avvia: finto({ errore: "failed to connect to '1.2.3.4:5555': Connection refused", codice: 1 })
+      .avvia,
+    chiave: null,
+  });
+  assert.deepEqual(await rifiuta.provaCollegamento("1.2.3.4"), { ok: false, causa: "rifiutato" });
+  const muto = new Adb({
+    avvia: finto({ errore: "failed to connect to '1.2.3.4:5555': Operation timed out", codice: 1 })
+      .avvia,
+    chiave: null,
+  });
+  assert.deepEqual(await muto.provaCollegamento("1.2.3.4"), {
+    ok: false,
+    causa: "irraggiungibile",
+  });
+  const ok = new Adb({ avvia: finto({ fuori: "connected to 1.2.3.4:5555" }).avvia, chiave: null });
+  assert.deepEqual(await ok.provaCollegamento("1.2.3.4"), { ok: true, causa: "" });
+});

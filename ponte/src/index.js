@@ -411,7 +411,16 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     licenze,
     plance,
     dispositivi,
-    reteDiCasa: { indirizzo: () => ritorno.reteDiCasa()?.mio || "" },
+    reteDiCasa: {
+      /* L'indirizzo IPv4 di casa di questo add-on, da cui `pannelli.js` ricava
+       * la rete da cercare. `laReteDiCasa` (`da-casa.js`) torna { reti, … },
+       * non `{ mio }`: la prima rete IPv4 privata e' quella di casa. */
+      indirizzo: () => {
+        const reti = ritorno.reteDiCasa()?.reti ?? [];
+        const v4 = reti.find((r) => typeof r?.ip === "string" && r.ip.includes("."));
+        return v4?.ip || "";
+      },
+    },
     abbinaPannello: async ({ nome, utente, plancia: _plancia }) => {
       const dove = (await ritorno.cosaDire?.()) ?? {};
       const abb = dispositivi.abbina({

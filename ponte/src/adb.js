@@ -172,13 +172,29 @@ export class Adb {
   /* Si collega al pannello. Torna true se risponde, false se rifiuta o non
    * c'e'; lancia solo se `adb` stesso manca. */
   async connetti(indirizzo) {
+    return (await this.provaCollegamento(indirizzo)).ok;
+  }
+
+  /* Come `connetti`, ma dice **perche'** non e' andata, cosi' la console puo'
+   * spiegarlo:
+   *  - "rifiutato": il pannello risponde ma chiude la 5555 — l'ADB di rete non
+   *    e' attivo (succede anche con la modalita' sviluppatore accesa: su certi
+   *    firmware l'ADB di rete si accende una volta con un cavo USB);
+   *  - "irraggiungibile": nessuna risposta — indirizzo sbagliato, pannello
+   *    spento, o l'add-on non arriva a quella rete;
+   *  - "" quando e' andata. Lancia solo se `adb` stesso manca. */
+  async provaCollegamento(indirizzo) {
     const dev = this._dev(indirizzo);
     try {
       const detto = await this.comando(["connect", dev], { attesa: ATTESE.svelto });
-      return /connected to|already connected/i.test(detto);
+      if (/connected to|already connected/i.test(detto)) return { ok: true, causa: "" };
+      return { ok: false, causa: perche(detto) || "irraggiungibile" };
     } catch (errore) {
       if (errore.causa === "niente_adb") throw errore;
-      return false;
+      /* "connection refused" = la 5555 e' chiusa: ADB di rete spento.
+       * Il resto (timeout, host irraggiungibile) = non si arriva. */
+      const rifiutato = /refus/i.test(errore.uscita || errore.message || "");
+      return { ok: false, causa: rifiutato ? "rifiutato" : "irraggiungibile" };
     }
   }
 

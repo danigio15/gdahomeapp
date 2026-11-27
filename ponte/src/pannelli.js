@@ -175,9 +175,12 @@ export class Pannelli {
       e.perUtente = true;
       throw e;
     }
-    if (!(await this.adb.connetti(pulito))) {
+    const collegamento = await this.adb.provaCollegamento(pulito);
+    if (!collegamento.ok) {
       const e = new Error(
-        "Il pannello non risponde. Controlla l'indirizzo e che ADB sia acceso (tappa 1).",
+        collegamento.causa === "rifiutato"
+          ? "Il pannello risponde ma l'ADB di rete e' spento (porta 5555 chiusa): la modalita' sviluppatore da sola non basta su tutti i firmware. Nelle opzioni sviluppatore del pannello cerca «ADB di rete» o «Debug senza fili» e accendilo; se non c'e', va acceso una volta con un cavo USB (adb tcpip 5555). Poi riprova."
+          : "Il pannello non risponde a questo indirizzo. Controlla che sia quello giusto, che il pannello sia acceso e sulla stessa rete.",
       );
       e.perUtente = true;
       throw e;
