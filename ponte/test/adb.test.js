@@ -402,3 +402,25 @@ test("adb usa un server su una porta sua, non la 5037 della macchina", () => {
   assert.equal(env.ANDROID_ADB_SERVER_PORT, "5137");
   assert.equal(env.HOME, "/tmp/x");
 });
+
+test("apriIlFile comprime al volo, e scompattato e' identico", async () => {
+  const { mkdtempSync, readFileSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { gunzipSync } = await import("node:zlib");
+  const { apriIlFile } = await import("../src/adb.js");
+  const dir = mkdtempSync(join(tmpdir(), "gz-"));
+  try {
+    const dati = Buffer.concat([Buffer.alloc(200_000, 3), Buffer.alloc(800_000, 0)]);
+    const dove = join(dir, "system.img.gz");
+    const f = apriIlFile(dove, true);
+    f.write(dati.subarray(0, 400_000));
+    f.write(dati.subarray(400_000));
+    await new Promise((r) => f.end(r));
+    const compresso = readFileSync(dove);
+    assert.ok(compresso.length < dati.length / 10, "lo spazio vuoto non occupa posto");
+    assert.deepEqual(gunzipSync(compresso), dati);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

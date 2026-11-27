@@ -12,6 +12,7 @@ import {
   indirizzoPulito,
   leggiByte,
 } from "../src/pannelli.js";
+import { RITOCCO } from "../src/installatore-pannelli.js";
 
 function cartella() {
   return mkdtempSync(join(tmpdir(), "pannelli-"));
@@ -468,7 +469,13 @@ test("il giro degli aggiornamenti aggiorna da solo i pannelli indietro, e salta 
       daAggiornare: (sul, p) => (sul.muro.codice < p.muro.codice ? ["muro"] : []),
       async aggiorna({ indirizzo }) {
         aggiornati.push(indirizzo);
-        return { app: "1.19.37", os: "2.0.0", versioni: pezzi, aggiornati: ["muro"] };
+        return {
+          app: "1.19.37",
+          os: "2.0.0",
+          versioni: pezzi,
+          aggiornati: ["muro"],
+          ritocco: RITOCCO,
+        };
       },
     };
     const adb = {
@@ -491,6 +498,111 @@ test("il giro degli aggiornamenti aggiorna da solo i pannelli indietro, e salta 
     assert.equal(a.app, "1.19.37");
     assert.equal(a.aggiornabile, false);
     assert.equal(b.acceso, false);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("un pannello mai entrato nella casa si riabbina da solo; uno gia' dentro no", async () => {
+  const dir = cartella();
+  try {
+    const chiesti = [];
+    const pezzi = { os: { codice: 620, nome: "2.0.0" }, muro: { codice: 621, nome: "1.19.37" } };
+    const installatore = {
+      versioniDeiPezzi: () => pezzi,
+      async versioniSulPannello() {
+        return pezzi;
+      },
+      daAggiornare: () => [],
+      async aggiorna({ indirizzo, abbina }) {
+        chiesti.push([indirizzo, abbina]);
+        return abbina
+          ? {
+              versioni: pezzi,
+              ritocco: RITOCCO,
+              abbinato: true,
+              dispositivo: abbina.dispositivo,
+              abbinatoIl: 5000,
+            }
+          : { versioni: pezzi, ritocco: RITOCCO };
+      },
+    };
+    const adb = {
+      async provaCollegamento() {
+        return { ok: true, causa: "" };
+      },
+    };
+    /* dm_muto: abbinato all'installazione e mai piu' visto; dm_vivo: si e'
+     * collegato dopo. */
+    const dispositivi = {
+      elenco: () => [
+        { id: "dm_muto", natoIl: 1000, vistoIl: 1000 },
+        { id: "dm_vivo", natoIl: 1000, vistoIl: 4000 },
+      ],
+    };
+    const pannelli = new Pannelli({
+      cartella: dir,
+      adb,
+      installatore,
+      licenze: premium,
+      dispositivi,
+    });
+    pannelli.archivio.dati.pannelli.push(
+      {
+        id: "pm_a",
+        indirizzo: "192.168.1.100",
+        stato: "pronto",
+        dispositivo: "dm_muto",
+        nome: "Cucina",
+        planciaId: "muro",
+        ritocco: RITOCCO,
+      },
+      {
+        id: "pm_b",
+        indirizzo: "192.168.1.120",
+        stato: "pronto",
+        dispositivo: "dm_vivo",
+        ritocco: RITOCCO,
+      },
+    );
+    const esito = await pannelli.controllaGliAggiornamenti();
+    assert.deepEqual(esito, { controllati: 2, aggiornati: 1 });
+    assert.equal(chiesti.length, 1);
+    assert.equal(chiesti[0][0], "192.168.1.100");
+    assert.equal(chiesti[0][1].dispositivo, "dm_muto");
+    assert.equal(chiesti[0][1].planciaId, "muro");
+    const [a] = pannelli.archivio.dati.pannelli;
+    assert.equal(a.abbinatoIl, 5000);
+    assert.equal(a.aggiornabile, false);
+    assert.equal(a.avviso, "");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("un pannello installato prima del ritocco lo rifa' al giro, anche coi pezzi gia' giusti", async () => {
+  const dir = cartella();
+  try {
+    let chiamato = 0;
+    const pezzi = { os: { codice: 620 }, muro: { codice: 621 } };
+    const installatore = {
+      versioniDeiPezzi: () => pezzi,
+      versioniSulPannello: async () => pezzi,
+      daAggiornare: () => [],
+      async aggiorna() {
+        chiamato += 1;
+        return { versioni: pezzi, ritocco: RITOCCO };
+      },
+    };
+    const adb = { provaCollegamento: async () => ({ ok: true }) };
+    const pannelli = new Pannelli({ cartella: dir, adb, installatore, licenze: premium });
+    pannelli.archivio.dati.pannelli.push({ id: "pm_a", indirizzo: "10.0.0.5", stato: "pronto" });
+    await pannelli.controllaGliAggiornamenti();
+    assert.equal(chiamato, 1);
+    assert.equal(pannelli.archivio.dati.pannelli[0].ritocco, RITOCCO);
+    /* Al giro dopo non c'e' piu' niente da fare. */
+    await pannelli.controllaGliAggiornamenti();
+    assert.equal(chiamato, 1);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

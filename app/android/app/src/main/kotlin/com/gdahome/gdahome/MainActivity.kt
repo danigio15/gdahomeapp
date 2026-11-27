@@ -212,6 +212,16 @@ class MainActivity : FlutterFragmentActivity() {
      * Le parole («buio», «c'e'») le sceglie Dart: qui solo i numeri.
      */
     private var canaleDellaFinestra: MethodChannel? = null
+
+    /* Il sensore di prossimita' che dice 1 per «qualcuno» e 0 per «nessuno»:
+     * quello del Sonoff NSPanel Pro, dove gira GdAHome Muro. */
+    private val prossimitaAlContrario: Boolean by lazy {
+        packageName == "com.gdahome.muro" ||
+            listOf(Build.MANUFACTURER, Build.MODEL, Build.PRODUCT, Build.DEVICE).any { nome ->
+                nome.orEmpty().contains("nspanel", ignoreCase = true) ||
+                    nome.orEmpty().contains("sonoff", ignoreCase = true)
+            }
+    }
     private var sensoriVoluti: Set<String> = emptySet()
     private var sensoriInAscolto = false
     private var vicinoDetto: Boolean? = null
@@ -223,9 +233,17 @@ class MainActivity : FlutterFragmentActivity() {
             when (evento.sensor.type) {
                 Sensor.TYPE_PROXIMITY -> {
                     /* Molti sensori dicono solo «vicino» (0) o «lontano» (il
-                     * massimo): vicino e' sotto il massimo, e sotto i 5 cm. */
-                    val massimo = evento.sensor.maximumRange
-                    val vicino = evento.values[0] < minOf(massimo, 5f)
+                     * massimo): vicino e' sotto il massimo, e sotto i 5 cm.
+                     * Il Sonoff NSPanel Pro no: dice 1 quando c'e' qualcuno e
+                     * 0 quando non c'e' nessuno, il contrario di Android. Con
+                     * la regola di Android il pannello si sentiva sempre
+                     * «vicino» (o mai), e la prossimita' non faceva niente. */
+                    val valore = evento.values[0]
+                    val vicino = if (prossimitaAlContrario) {
+                        valore > 0f
+                    } else {
+                        valore < minOf(evento.sensor.maximumRange, 5f)
+                    }
                     if (vicino == vicinoDetto) return
                     vicinoDetto = vicino
                     canale.invokeMethod("sensore", mapOf("tipo" to "prossimita", "vicino" to vicino))

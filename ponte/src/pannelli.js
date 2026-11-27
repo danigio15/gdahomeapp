@@ -18,7 +18,7 @@
  */
 import { Archivio } from "./archivio.js";
 import { Adb, adbCE } from "./adb.js";
-import { Installatore } from "./installatore-pannelli.js";
+import { Installatore, RITOCCO } from "./installatore-pannelli.js";
 import { join } from "node:path";
 
 /* Riconosce il modello dal numero dei punti dello schermo. */
@@ -521,9 +521,24 @@ export class Pannelli {
     if (esito.versioni) pannello.versioni = esito.versioni;
     pannello.schermo = esito.schermo || pannello.schermo;
     pannello.dispositivo = esito.dispositivo || pannello.dispositivo;
+    pannello.ritocco = esito.ritocco ?? pannello.ritocco;
+    if (esito.abbinatoIl) pannello.abbinatoIl = esito.abbinatoIl;
     pannello.errore = "";
     pannello.vistoIl = this.adesso();
+    /* Installato, ma non entrato nella casa: si dice, e il giro degli
+     * aggiornamenti riprova l'abbinamento da solo. */
+    pannello.avviso = esito.avviso || "";
+    if (esito.avviso) pannello.aggiornabile = true;
     this._salva();
+    if (esito.avviso) {
+      /* GdAHome OS e' a posto: i passi sono fatti, tranne l'abbinamento,
+       * che dice cosa succede adesso. */
+      const rotto = esito.passoRotto ?? 3;
+      passi.oggetto.passi.forEach((p) => (p.stato = "fatto"));
+      if (passi.oggetto.passi[rotto])
+        passi.oggetto.passi[rotto].dettaglio = "non e' entrato nella casa: riprovo da solo";
+      return void passi.male(rotto, esito.avviso);
+    }
     passi.finito();
     /* Il lavoro finito resta un attimo a schermo, poi sparisce dal prossimo
      * elenco: la riga torna quella normale, accesa. */
@@ -557,18 +572,62 @@ export class Pannelli {
     throw e;
   }
 
+  /* Il pannello e' entrato nella casa? Il suo dispositivo si e' fatto vedere
+   * dopo l'abbinamento. `null` se non si puo' sapere: senza casa da guardare,
+   * o un dispositivo che non c'e' piu' — tolto a mano dalla console, e allora
+   * non lo si rimette dentro di nascosto. */
+  _abbinato(pannello) {
+    if (!pannello.dispositivo || typeof this.dispositivi?.elenco !== "function") return null;
+    const uno = this.dispositivi.elenco().find((d) => d.id === pannello.dispositivo);
+    if (!uno) return null;
+    const dal = Number(pannello.abbinatoIl) || Number(uno.natoIl) || 0;
+    return Number(uno.vistoIl) > dal;
+  }
+
+  /* C'e' da fare qualcosa sul pannello? Pezzi piu' nuovi, il ritocco di
+   * Sonoff da rifare, o un abbinamento mai arrivato. */
+  _daSistemare(pannello, sul, pezzi) {
+    return (
+      this.installatore.daAggiornare(sul, pezzi).length > 0 ||
+      (Number(pannello.ritocco) || 0) < RITOCCO ||
+      this._abbinato(pannello) === false
+    );
+  }
+
   async _aggiorna(pannello) {
-    const passi = this._lavoro(pannello.id, "Aggiornamento…", ["App GdAHome Muro", "GdAHome OS"]);
+    const riabbina = this._abbinato(pannello) === false;
+    const passi = this._lavoro(pannello.id, "Aggiornamento…", [
+      "App GdAHome Muro",
+      "GdAHome OS",
+      { nome: "Pulizia", dettaglio: "quello che resta di Sonoff" },
+      ...(riabbina ? [{ nome: "Abbinamento", dettaglio: "con la casa" }] : []),
+    ]);
     const finito = this.installatore
-      .aggiorna({ indirizzo: pannello.indirizzo, avanti: ({ passo }) => passi.passo(passo) })
+      .aggiorna({
+        indirizzo: pannello.indirizzo,
+        avanti: ({ passo, dettaglio, percento }) => passi.passo(passo, dettaglio, percento),
+        abbina: riabbina
+          ? {
+              dispositivo: pannello.dispositivo,
+              nome: pannello.nome,
+              utente: pannello.utente,
+              planciaId: pannello.planciaId,
+            }
+          : null,
+      })
       .then((esito) => {
         if (esito.errore) return passi.male(0, esito.errore);
         pannello.app = esito.app || pannello.app;
         pannello.os = esito.os || pannello.os;
         if (esito.versioni) pannello.versioni = esito.versioni;
-        pannello.aggiornabile = false;
+        if (esito.ritocco) pannello.ritocco = esito.ritocco;
+        if (esito.dispositivo) pannello.dispositivo = esito.dispositivo;
+        if (esito.abbinatoIl) pannello.abbinatoIl = esito.abbinatoIl;
+        pannello.avviso = esito.avviso || "";
+        pannello.aggiornabile = Boolean(esito.avviso) || !esito.ritocco;
         pannello.aggiornatoIl = this.adesso();
         this._salva();
+        if (esito.avviso) return void passi.male(3, esito.avviso);
         passi.finito();
         setTimeout(() => this.lavori.delete(pannello.id), 5000).unref?.();
       })
@@ -600,7 +659,7 @@ export class Pannelli {
       pannello.versioni = sul;
       if (sul.os?.nome) pannello.os = sul.os.nome;
       if (sul.muro?.nome) pannello.app = sul.muro.nome;
-      pannello.aggiornabile = this.installatore.daAggiornare(sul, pezzi).length > 0;
+      pannello.aggiornabile = this._daSistemare(pannello, sul, pezzi);
       if (pannello.aggiornabile && installaDaSolo) {
         const { finito } = await this._aggiorna(pannello);
         await finito;

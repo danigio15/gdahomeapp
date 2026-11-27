@@ -255,6 +255,9 @@ const state = (root[KEY] ||= {
   finestra: null,
   uscito: false,
   trascina: null,
+  /* Il dito posato su una luce dimmerabile, prima di sapere se e' un tocco
+   * o un trascinamento (`muoviLaLuce`). */
+  gesto: null,
   inAttesa: {},
   pressione: null,
   swipe: null,
@@ -1425,20 +1428,26 @@ function cardLuce(c, i) {
       : "",
   });
   if (conImmagine) return conImmagine;
-  /* La luce nella forma della famiglia (`tessera`): il disco e lo stato in
-   * alto, l'interruttore in alto a destra, il nome grande in fondo. La barra
-   * della luminosita' viene sotto il nome, e se la casella e' bassa se ne va
-   * prima del nome (`@container` negli stili). */
-  return `<div class="mu-carta mu-card mu-fam mu-luce ${on ? "mu-accesa" : ""}" style="--acc:${ACCENTI.luce}" data-mu-card="${i}" data-mu-entita="${esc(id)}">
-    <div class="mu-riga1"><span class="mu-disco ${on ? "on" : ""}">${bulbo(on ? "#1f2937" : "var(--text-dim)")}</span><span class="mu-stato ${on ? "" : "spento"}">${esc(manca ? t("Non trovata", "Not found") : on ? (dimmer ? `${t("Accesa", "On")} · ${pct}%` : t("Accesa", "On")) : t("Spenta", "Off"))}</span>
-      <button type="button" class="mu-inter ${on ? "on" : ""}" data-mu-fa="interruttore" data-mu-entita="${esc(id)}" aria-pressed="${on}" aria-label="${esc(nomeDi(id, c.nome))}"><i></i></button></div>
-    <div class="mu-osw mu-fam-nome mu-n">${esc(nomeDi(id, c.nome))}</div>
-    ${
-      dimmer
-        ? `<div class="mu-giu"><div class="mu-giu-et"><span class="mu-et">${esc(t("Luminosità", "Brightness"))} <span class="mu-tag">DIMMER</span></span><span class="mu-stato ${on ? "" : "spento"}">${on ? `${pct}%` : "—"}</span></div>
-      <div class="mu-bar" data-mu-cursore="luce" data-mu-entita="${esc(id)}"><i style="width:${pct}%"></i>${on ? `<u style="left:${pct}%"></u>` : ""}</div></div>`
-        : ""
-    }</div>`;
+  /* «Tutta tasto»: la tessera intera e' il pulsante. Accesa si riempie
+   * d'ambra; il tocco accende e spegne, il dito tenuto apre la finestra.
+   * Una luce dimmerabile si riempie con la sua luminosita' — il riempimento
+   * parte sempre da sotto il nome, che cosi' si legge su ogni tema anche
+   * all'1%, e arriva in cima al 100%: il numero esatto e' scritto — e trascinando
+   * il dito sulla tessera la si regola (`gestoDellaLuce`). Niente
+   * interruttore piccolo in un angolo: il tocco giusto e' tutta la tessera.
+   * Niente vetri e niente ombre sfocate: sul pannello costano fotogrammi. */
+  const riempi = on ? (dimmer ? pct : 100) : 0;
+  const parola = manca
+    ? t("Non trovata", "Not found")
+    : on
+      ? dimmer
+        ? `${t("Accesa", "On")} · ${pct}%`
+        : t("Accesa", "On")
+      : t("Spenta", "Off");
+  return `<div class="mu-carta mu-card mu-luce mu-luce-a ${on ? "mu-luce-on" : ""} ${dimmer ? "mu-dimmer" : ""} " style="--acc:${ACCENTI.luce};--p:${riempi}" data-mu-card="${i}" data-mu-entita="${esc(id)}" role="button" tabindex="0" aria-pressed="${on}" aria-label="${esc(`${nomeDi(id, c.nome)}, ${parola}`)}">
+    <i class="mu-luce-riempi" aria-hidden="true"></i>
+    <div class="mu-luce-su"><span class="mu-luce-ic">${bulbo("currentColor")}</span>${dimmer && on ? `<b class="mu-luce-pct" data-mu-luce-pct>${pct}<small>%</small></b>` : ""}</div>
+    <div class="mu-luce-giu"><div class="mu-osw mu-fam-nome mu-n">${esc(nomeDi(id, c.nome))}</div><div class="mu-luce-st" data-mu-luce-st>${esc(parola)}</div></div></div>`;
 }
 
 /* ── il riquadro dei due tasti ───────────────────────────────────────────
@@ -5738,8 +5747,9 @@ function onClick(event) {
       return;
     }
     if (entita && dominio(entita) === "light") {
-      if (state.compatto) alterna(entita, "light", "toggle");
-      else apriFinestra({ tipo: "luce", entita });
+      /* «Tutta tasto»: il tocco accende e spegne, su ogni pannello. La
+       * finestra della luce si apre col dito tenuto (`onPointerDown`). */
+      alterna(entita, "light", "toggle");
     } else if (entita && bersaglio.querySelector?.('[data-mu-fa="interruttore"]'))
       /* Una presa nella card della luce: non ha una finestra sua, il tocco
        * la accende e la spegne. */
@@ -6157,9 +6167,30 @@ function onPointerDown(event) {
     onPointerMove(event);
     return;
   }
-  /* Sul pannello piccolo, il dito tenuto su una luce apre la sua finestra. */
+  /* La luce «tutta tasto»: il tocco la accende e la spegne (`onClick`), il
+   * dito tenuto apre la sua finestra, e su una dimmerabile il dito che
+   * scorre ne regola la luminosita' (`muoviLaLuce`). Prima solo il pannello
+   * piccolo apriva la finestra col dito tenuto; adesso tutti, perche' il
+   * tocco e' diventato l'interruttore. */
   const carta = event.target?.closest?.('[data-mu-card][data-mu-entita^="light."]');
-  if (state.compatto && carta) {
+  state.gesto = null;
+  if (carta?.classList?.contains("mu-dimmer")) {
+    const id = carta.dataset.muEntita;
+    state.gesto = {
+      luce: true,
+      carta,
+      id,
+      x0: event.clientX,
+      y0: event.clientY,
+      p0: acceso(id) ? luminosita(id) : 0,
+      /* In una griglia che scorre il su e giu' e' dello scorrimento: li' la
+       * luminosita' si regola da sinistra a destra. */
+      verticale: !carta.closest?.(".mu-scorre"),
+      attivo: false,
+      ultimo: 0,
+    };
+  }
+  if (carta) {
     root.clearTimeout?.(state.pressione);
     state.pressione = root.setTimeout?.(() => {
       state.pressione = null;
@@ -6256,9 +6287,57 @@ function muoviIlFader(t, event) {
   if (Date.now() - t.ultimo >= FADER_OGNI) mandaIlFader(t, p);
 }
 
+/* Il dito che scorre su una luce dimmerabile: sotto i dieci punti e' ancora
+ * un tocco; oltre, e' la luminosita'. Parte da quella che c'e' — il dito non
+ * fa saltare la luce dove si e' posato — e la tessera si riempie mentre il
+ * dito va. Il comando parte al piu' due volte e mezzo al secondo, e l'ultimo
+ * al dito alzato: chi regola vede la luce cambiare, senza riempire la rete. */
+const LUCE_OGNI = 400;
+export function luminositaDalGesto({ p0, d, misura }) {
+  return Math.max(1, Math.min(100, Math.round(p0 + (d / (misura || 1)) * 100)));
+}
+
+function muoviLaLuce(g, event) {
+  const d = g.verticale ? g.y0 - event.clientY : event.clientX - g.x0;
+  if (!g.attivo) {
+    if (Math.abs(d) < 10) return;
+    g.attivo = true;
+    /* Non e' piu' un tocco ne' un dito tenuto: il clic che segue non spegne,
+     * la finestra non si apre, e il pannello non si ridisegna sotto il dito. */
+    root.clearTimeout?.(state.pressione);
+    state.pressione = null;
+    state.tenuto = true;
+    state.trascina = g;
+    g.carta.classList.add("mu-trascina");
+    g.carta.setPointerCapture?.(event.pointerId);
+  }
+  const r = g.carta.getBoundingClientRect();
+  const p = luminositaDalGesto({ p0: g.p0, d, misura: g.verticale ? r.height : r.width });
+  if (p === g.valore) return;
+  g.valore = p;
+  g.carta.style.setProperty("--p", String(p));
+  g.carta.classList.add("mu-luce-on");
+  const pct = g.carta.querySelector("[data-mu-luce-pct]");
+  if (pct?.firstChild) pct.firstChild.nodeValue = String(p);
+  const st = g.carta.querySelector("[data-mu-luce-st]");
+  if (st) st.textContent = `${t("Accesa", "On")} · ${p}%`;
+  if (Date.now() - g.ultimo >= LUCE_OGNI) {
+    g.ultimo = Date.now();
+    comanda("light", "turn_on", { entity_id: g.id, brightness_pct: p });
+  }
+}
+
 function onPointerMove(event) {
+  if (state.gesto && !state.gesto.attivo) {
+    muoviLaLuce(state.gesto, event);
+    return;
+  }
   const t = state.trascina;
   if (!t) return;
+  if (t.luce) {
+    muoviLaLuce(t, event);
+    return;
+  }
   if (t.fader) {
     muoviIlFader(t, event);
     return;
@@ -6276,6 +6355,19 @@ function onPointerMove(event) {
 function onPointerUp(event) {
   root.clearTimeout?.(state.pressione);
   state.pressione = null;
+  const g = state.gesto;
+  state.gesto = null;
+  if (g?.attivo) {
+    state.trascina = null;
+    g.carta.classList.remove("mu-trascina");
+    if (g.valore) {
+      attendi(g.id, "acceso", true);
+      attendi(g.id, "luminosita", g.valore);
+      comanda("light", "turn_on", { entity_id: g.id, brightness_pct: g.valore });
+    }
+    disegna();
+    return;
+  }
   const t = state.trascina;
   if (t?.fader) {
     state.trascina = null;
@@ -7802,6 +7894,26 @@ ${MURO} .mu-card.mu-fam>.mu-giu{margin-top:12px}
 ${MURO} .mu-card.mu-fam>.mu-giu .mu-giu-et{margin-bottom:4px;align-items:center}
 ${MURO} .mu-card.mu-fam>.mu-bar{margin-top:12px;flex:none}
 ${MURO} .mu-card.mu-fam>.mu-seg{margin-top:12px}
+${MURO} .mu-luce-a{position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+${MURO} .mu-luce-a.mu-dimmer{touch-action:none}
+${MURO} .mu-scorre>.mu-luce-a.mu-dimmer{touch-action:pan-y}
+${MURO} .mu-luce-a .mu-luce-riempi{position:absolute;inset:0;transform-origin:50% 100%;transform:scaleY(calc((28 + var(--p,0) * .72) / 100));background:linear-gradient(180deg,#fcd34d,#f59e0b);pointer-events:none;will-change:transform}
+${MURO} .mu-luce-a:not(.mu-trascina) .mu-luce-riempi{transition:transform .16s ease-out}
+${MURO} .mu-luce-a:not(.mu-luce-on) .mu-luce-riempi{transform:scaleY(0)}
+${MURO} .mu-luce-a>div{position:relative}
+${MURO} .mu-luce-su{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+${MURO} .mu-luce-ic{--c:clamp(34px,min(30cqh,22cqw),56px);width:var(--c);height:var(--c);border-radius:calc(var(--c)*.32);display:grid;place-items:center;flex:none;color:var(--text-dim);background:color-mix(in srgb,var(--text) 6%,var(--card-bg))}
+${MURO} .mu-luce-ic svg{width:55%;height:55%}
+${MURO} .mu-luce-pct{font-family:Oswald,Inter,sans-serif;font-weight:500;font-size:clamp(22px,min(22cqh,15cqw),40px);line-height:1;color:#92400e;background:#fff7e6;box-shadow:inset 0 0 0 1.5px #fbbf24;border-radius:12px;padding:5px 10px 6px}
+${MURO} .mu-luce-pct small{font-size:.45em;margin-left:2px}
+${MURO} .mu-luce-giu{min-width:0}
+${MURO} .mu-luce-a .mu-fam-nome.mu-osw{display:block;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15}
+${MURO} .mu-luce-st{font-size:clamp(11px,9cqh,14px);font-weight:600;color:var(--text-dim);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${MURO} .mu-luce-a.mu-luce-on{background:var(--card-bg);box-shadow:none}
+${MURO} .mu-luce-a.mu-luce-on .mu-luce-ic{background:#fff7e6;color:#d97706;box-shadow:inset 0 0 0 1.5px #fbbf24}
+${MURO} .mu-luce-a.mu-luce-on .mu-fam-nome{color:#3b2300}
+${MURO} .mu-luce-a.mu-luce-on .mu-luce-st{color:#6b4200}
+${MURO} .mu-luce-a:active{transform:scale(.985)}
 ${MURO} .mu-verbo{display:inline-flex;align-items:center;height:40px;padding:0 16px;border-radius:999px;font-weight:800;font-size:15px;white-space:nowrap;
   background:color-mix(in srgb,var(--text) 5%,var(--card-bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 12%,transparent)}
 ${MURO} .mu-card.mu-fam .mu-riga1>.mu-varco-tasto{width:auto;height:48px;padding:0 22px;border-radius:16px;font-size:17px}

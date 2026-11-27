@@ -21,6 +21,7 @@ library;
 import 'dart:async';
 
 import '../licenza/licenza.dart';
+import '../muro/sul_muro.dart';
 import '../notifiche/notifiche.dart';
 import '../licenza/ricevuta_da_fuori.dart';
 import '../parole.dart';
@@ -827,7 +828,9 @@ class Collegamento {
   Future<void> _presentati(Filo filo) async {
     final casa = _casa;
     if (casa == null) return;
-    if (!_chiestoDiChiE) {
+    /* Un pannello a muro non e' un telefono: non ha un padrone a cui
+     * chiederlo, e di chi e' l'ha gia' detto l'add-on abbinandolo. */
+    if (!_chiestoDiChiE && !sulMuro) {
       _chiestoDiChiE = true;
       try {
         if (!await archivio.proprietarioDetto()) {

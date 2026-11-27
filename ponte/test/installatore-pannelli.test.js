@@ -9,6 +9,9 @@ import {
   Installatore,
   scriptDiSistema,
   scriptDelRipristino,
+  scriptDelRitocco,
+  RITOCCO,
+  DA_SALVARE,
   DI_SONOFF,
 } from "../src/installatore-pannelli.js";
 
@@ -217,7 +220,7 @@ function pannelloDaCopiare({ md5Pannello = "a".repeat(32), byteCopiati = 1000 } 
   };
 }
 
-test("la copia di sicurezza salva ogni partizione (non i dati), e scrive MD5SUMS", async () => {
+test("la copia di sicurezza salva solo la partizione di sistema, compressa, e scrive MD5SUMS", async () => {
   const copie = mkdtempSync(join(tmpdir(), "copie-"));
   try {
     const scritte = [];
@@ -233,12 +236,12 @@ test("la copia di sicurezza salva ogni partizione (non i dati), e scrive MD5SUMS
     assert.equal(esito.errore, undefined);
     assert.deepEqual(
       scritte.map(([, f]) => f),
-      ["boot.img", "system.img"],
+      ["system.img.gz"],
     );
     /* Dopo i dati, 1 MB di zeri: se exec-out perde la fine, perde quelli. */
     assert.match(
       scritte[0][0],
-      /^\{ dd if='\/dev\/block\/by-name\/boot' bs=4194304; dd if=\/dev\/zero bs=1048576 count=1; \}/,
+      /^\{ dd if='\/dev\/block\/by-name\/system' bs=4194304; dd if=\/dev\/zero bs=1048576 count=1; \}/,
     );
     assert.match(readFileSync(join(esito.dir, "MD5SUMS"), "utf8"), /a{32} {2}system\.img/);
     assert.match(esito.dir, /Salone-\d{4}-\d{2}-\d{2}_\d{4}$/);
@@ -326,7 +329,7 @@ test("una copia troncata si riprova, e se non basta si scarica con adb pull", as
     });
     const esito = await pianoB._copiaDiSicurezza("1.2.3.4", "y", () => {});
     assert.equal(esito.errore, undefined);
-    assert.deepEqual(tirati, ["/data/local/tmp/gda-copia.img", "/data/local/tmp/gda-copia.img"]);
+    assert.deepEqual(tirati, ["/data/local/tmp/gda-copia.img"]);
   } finally {
     rmSync(copie, { recursive: true, force: true });
   }
@@ -422,9 +425,202 @@ test("la copia prova prima la diretta; se il pannello non si collega torna ad ad
     const esito = await inst._copiaDiSicurezza("1.2.3.4", "x", () => {});
     assert.equal(esito.errore, undefined);
     /* Provata una volta, sulla prima partizione; poi solo adb. */
-    assert.deepEqual(dirette, [["boot.img", "192.168.1.174", "/system/bin/nc"]]);
-    assert.deepEqual(viaAdb, ["boot.img", "system.img"]);
+    assert.deepEqual(dirette, [["system.img.gz", "192.168.1.174", "/system/bin/nc"]]);
+    assert.deepEqual(viaAdb, ["system.img.gz"]);
   } finally {
     rmSync(copie, { recursive: true, force: true });
   }
+});
+
+test("l'animazione Sonoff di /oem si mette da parte, e il ripristino la rimette", () => {
+  for (const s of [scriptDiSistema(), scriptDelRitocco()]) {
+    /* /oem si apre in scrittura solo se si puo', e si richiude. */
+    assert.match(s, /mount -o rw,remount \/oem/);
+    assert.match(s, /mount -o ro,remount \/oem/);
+    assert.match(s, /mv \/oem\/media\/bootanimation\.zip \$R\/oem-bootanimation\.zip\.orig/);
+    /* Le app Sonoff in /oem si tolgono solo con /oem scrivibile. */
+    assert.match(s, /\/oem\/\*\) \[ \$OEM = 1 \]/);
+    assert.match(s, /echo GDA_OK$/);
+  }
+  /* Il ritocco non tocca GdAHome OS ne' il build.prop dell'ADB. */
+  assert.doesNotMatch(scriptDelRitocco(), /GdAHome-OS\.apk|persist\.adb\.tcp\.port/);
+  const r = scriptDelRipristino();
+  assert.match(r, /mv \$R\/oem-bootanimation\.zip\.orig \/oem\/media\/bootanimation\.zip/);
+  /* Rimette l'animazione PRIMA di cancellare la cartella delle cose tolte. */
+  assert.ok(r.indexOf("oem-bootanimation") < r.indexOf("rm -rf $R"));
+  /* La copia di sicurezza prende anche oem, che ora si modifica. */
+  assert.ok(DA_SALVARE.test("oem") && DA_SALVARE.test("system_a") && !DA_SALVARE.test("userdata"));
+});
+
+/* Un pannello finto per il controllo dell'abbinamento: dice l'esito che gli
+ * si da', e ricorda i comandi. */
+function pannelloCheAbbina(esito = () => "") {
+  const fatti = [];
+  return {
+    fatti,
+    async shell(_i, c) {
+      fatti.push(c);
+      if (c.startsWith("cat /data/data/com.gdahome.muro/files/abbinamento.esito")) return esito();
+      return "";
+    },
+  };
+}
+
+test("dopo il riavvio si guarda che il pannello sia entrato nella casa davvero", async () => {
+  let visto = 0;
+  const dispositivi = { elenco: () => [{ id: "dm_1", natoIl: 10, vistoIl: visto }] };
+  const adb = pannelloCheAbbina(() => {
+    visto = 99;
+    return "OK dm_1\n";
+  });
+  const inst = new Installatore({ adb, cartellaDeiPezzi: tmpdir(), dispositivi });
+  const esito = await inst._controllaLAbbinamento("1.2.3.4", {
+    dispositivo: "dm_1",
+    dal: 50,
+    attesa: 500,
+    pausa: 5,
+  });
+  assert.deepEqual(esito, { abbinato: true });
+});
+
+test("se GdAHome Muro scrive ERRORE, il perche' arriva alla console", async () => {
+  const adb = pannelloCheAbbina(() => "ERRORE casa: keystore rotto\nGDA_FOGLIETTO\n");
+  const inst = new Installatore({
+    adb,
+    cartellaDeiPezzi: tmpdir(),
+    dispositivi: { elenco: () => [{ id: "dm_1", natoIl: 10, vistoIl: 10 }] },
+  });
+  const esito = await inst._controllaLAbbinamento("1.2.3.4", {
+    dispositivo: "dm_1",
+    dal: 50,
+    attesa: 500,
+    pausa: 5,
+  });
+  assert.equal(esito.abbinato, false);
+  assert.match(esito.errore, /keystore rotto/);
+});
+
+test("se GdAHome Muro non legge il foglietto, lo si riapre; poi lo si dice", async () => {
+  const adb = pannelloCheAbbina(() => "GDA_FOGLIETTO\n");
+  const inst = new Installatore({
+    adb,
+    cartellaDeiPezzi: tmpdir(),
+    dispositivi: { elenco: () => [{ id: "dm_1", natoIl: 10, vistoIl: 10 }] },
+  });
+  const esito = await inst._controllaLAbbinamento("1.2.3.4", {
+    dispositivo: "dm_1",
+    dal: 50,
+    attesa: 90,
+    pausa: 5,
+  });
+  assert.equal(esito.abbinato, false);
+  assert.match(esito.errore, /non ha letto il foglietto/);
+  assert.ok(adb.fatti.includes("am force-stop com.gdahome.muro"));
+  assert.ok(adb.fatti.some((c) => c.startsWith("monkey -p com.gdahome.muro")));
+});
+
+test("riabbinare in un aggiornamento: stesso posto, nuovo foglietto, app riaperta", async () => {
+  const dir = pezzi();
+  try {
+    const fatti = [];
+    const chiesto = [];
+    let visto = 10;
+    const adb = {
+      async connetti() {
+        return true;
+      },
+      async stacca() {},
+      async install() {},
+      async push() {},
+      async shell(_i, c) {
+        fatti.push(c);
+        if (c.startsWith("dumpsys package com.gdahome.muro | grep -m1 userId="))
+          return "userId=10087";
+        if (c.includes("[ -s /data/data/com.gdahome.muro/files/abbinamento.json ]"))
+          return "GDA_OK";
+        if (c.startsWith("sh /data/local/tmp/gda-ritocco.sh"))
+          return "TOLTA animazione Sonoff (/oem)\nGDA_OK";
+        if (c.startsWith("monkey")) visto = Date.now() + 1000;
+        return "";
+      },
+    };
+    const inst = new Installatore({
+      adb,
+      cartellaDeiPezzi: dir,
+      dispositivi: { elenco: () => [{ id: "dm_1", natoIl: 10, vistoIl: visto }] },
+      abbinaPannello: async (detto) => {
+        chiesto.push(detto);
+        return { dispositivo: "dm_1", segno: "s", chiave: "k", case: { indirizzi: ["h:8098"] } };
+      },
+      attesaDellAbbinamento: { attesa: 500, pausa: 5 },
+    });
+    const esito = await inst.aggiorna({
+      indirizzo: "1.2.3.4",
+      abbina: { dispositivo: "dm_1", nome: "Cucina", utente: "u", planciaId: "muro" },
+    });
+    assert.equal(esito.errore, undefined);
+    assert.equal(esito.ritocco, RITOCCO);
+    assert.deepEqual(esito.tolte, ["animazione Sonoff (/oem)"]);
+    assert.equal(esito.abbinato, true);
+    assert.equal(chiesto[0].sostituisce, "dm_1");
+    /* L'esito vecchio si toglie prima di scrivere il foglietto nuovo. */
+    assert.ok(
+      fatti.some((c) => c.includes("rm -f /data/data/com.gdahome.muro/files/abbinamento.esito")),
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("l'analisi chiede tutto, e una domanda che non risponde non ferma le altre", async () => {
+  const chiesti = [];
+  const adb = {
+    async connetti() {
+      return true;
+    },
+    async stacca() {},
+    async shell(_i, c, opzioni) {
+      chiesti.push([c, opzioni?.attesa]);
+      if (c.startsWith("top ")) throw new Error("scaduto");
+      if (c.startsWith("getprop ro.product.model")) return "NSPanel Pro\n8.1.0";
+      return "";
+    },
+  };
+  const inst = new Installatore({ adb, cartellaDeiPezzi: tmpdir() });
+  const rapporto = await inst.analisi({ indirizzo: "1.2.3.4" });
+  for (const titolo of [
+    "Dispositivo",
+    "Processore",
+    "Memoria",
+    "Temperatura",
+    "Chi usa il processore",
+    "Scheda video",
+    "Disegno di GdAHome Muro",
+    "Sensori",
+    "Rete",
+    "Abbinamento",
+    "Animazione d'avvio",
+    "Registro di GdAHome Muro",
+  ])
+    assert.match(rapporto, new RegExp(`== ${titolo} ==`));
+  assert.match(rapporto, /NSPanel Pro/);
+  assert.match(rapporto, /== Chi usa il processore ==\n\? scaduto/);
+  assert.ok(chiesti.every(([, attesa]) => attesa === 20_000));
+});
+
+test("la velocita': processore e scheda video pronti, anche dopo il riavvio; il ripristino la toglie", () => {
+  for (const s of [scriptDiSistema(), scriptDelRitocco()]) {
+    /* I percorsi si cercano sul pannello. */
+    assert.match(s, /scaling_available_frequencies/);
+    assert.match(s, /\/sys\/class\/devfreq\/\*/);
+    /* Scritto per init, che lo rilegge a ogni accensione. */
+    assert.match(s, /RC=\/system\/etc\/init\/gdahome\.rc/);
+    assert.match(s, /on property:sys\.boot_completed=1/);
+    assert.match(s, /VELOCE cpu/);
+    /* Prima di richiudere /system in sola lettura. */
+    assert.ok(s.indexOf("gdahome.rc") < s.lastIndexOf("mount -o ro,remount /system"));
+  }
+  const r = scriptDelRipristino();
+  assert.match(r, /\/system\/etc\/init\/gdahome\.rc/);
+  assert.match(r, /webview-command-line/);
 });

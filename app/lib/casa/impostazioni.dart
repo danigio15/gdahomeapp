@@ -14,8 +14,11 @@ class Impostazioni {
   Impostazioni({
     required bool sulTelefono,
     required bool android,
+    bool pannelloAMuro = false,
     Dispensa? dispensa,
   }) : _dispensa = dispensa ?? dispensaDiQuestoSistema(),
+       // ignore: prefer_initializing_formals
+       _pannelloAMuro = pannelloAMuro,
        /* Spenta di serie, su tutto: vedi [planciaLeggera]. */
        _planciaLeggera = false,
        _composizioneIbrida = android,
@@ -24,6 +27,11 @@ class Impostazioni {
        _android = android;
 
   final Dispensa _dispensa;
+
+  /// Sul pannello a muro (GdAHome Muro) i due interruttori che pesano sulla
+  /// plancia stanno fermi sul modo piu' leggero, qualunque cosa ci sia
+  /// scritta: un NSPanel Pro ha Android 8.1 e un chip grafico piccolo.
+  final bool _pannelloAMuro;
   final bool _sulTelefono;
   final bool _android;
   final _cambiamenti = StreamController<void>.broadcast();
@@ -56,12 +64,24 @@ class Impostazioni {
   /// disegnata, animazioni comprese, e l'app deve reggerla cosi'. E' un
   /// interruttore per un telefono che proprio non ce la fa, e lo si accende
   /// a mano da «Come va l'app», sapendo che la plancia cambia aspetto.
-  bool get planciaLeggera => _planciaLeggera;
+  ///
+  /// Sul pannello a muro e' sempre accesa: i vetri sfocati e le animazioni
+  /// continue erano quello che lo faceva andare a scatti.
+  bool get planciaLeggera => _pannelloAMuro || _planciaLeggera;
 
   /// Su Android: il riquadro della plancia disegnato dal sistema per conto
   /// suo (composizione ibrida) invece che ridisegnato da Flutter a ogni
   /// fotogramma. Una plancia che si muove sempre pesa meno cosi'.
-  bool get composizioneIbrida => _composizioneIbrida && _android;
+  ///
+  /// Sul pannello a muro e' sempre spenta: prima di Android 10 la
+  /// composizione ibrida copia ogni fotogramma dalla scheda video alla
+  /// memoria e ritorno, e tiene occupato il filo da cui passano anche i
+  /// comandi. Il riquadro disegnato da Flutter (`tessitura`) costa meno.
+  bool get composizioneIbrida =>
+      !_pannelloAMuro && _composizioneIbrida && _android;
+
+  /// Vero su GdAHome Muro: i due interruttori qui sopra non si cambiano.
+  bool get pannelloAMuro => _pannelloAMuro;
 
   /// Il volto e l'impronta davanti all'app: cosa e' acceso.
   IlLucchetto get lucchetto => _lucchetto;

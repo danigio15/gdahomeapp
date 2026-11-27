@@ -14,6 +14,67 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.42
+
+- **Pannelli a muro, la copia di sicurezza non riempie più Home Assistant**:
+  si salvavano tutte le partizioni del pannello, circa 3,5 GB, anche quelle
+  che l'installazione non tocca. Ora si salva solo quella di sistema, l'unica
+  che si modifica e l'unica che serve per recuperare un pannello che non si
+  accende più; e la si salva compressa (`system.img.gz`), così lo spazio vuoto
+  dell'immagine non occupa posto. L'impronta MD5 resta quella dell'immagine
+  com'era sul pannello.
+- **Pannelli a muro, all'avvio GdAHome e non più Sonoff**: Sonoff tiene la
+  sua animazione d'avvio nella partizione `oem`, che Android 8.1 guarda prima
+  di quella di sistema, dove si metteva la nostra. Ora l'installazione apre
+  anche `oem`, mette da parte la loro animazione e toglie le app Sonoff che
+  stavano lì. «Rimetti Sonoff» rimette tutto, e la copia di sicurezza ora
+  comprende anche `oem` (quasi vuota: compressa occupa poco).
+- **Pannelli a muro, l'abbinamento si controlla davvero**: l'installazione
+  diceva «fatto» appena il foglietto era sul pannello. Se GdAHome Muro non
+  riusciva a leggerlo, il pannello chiedeva il codice e nessuno sapeva
+  perché. Ora l'app scrive com'è andata, e dopo il riavvio l'add-on aspetta
+  che il pannello entri nella casa. Se non entra lo dice col perché, e se
+  l'app non si è aperta la riapre.
+- **I pannelli già installati si sistemano da soli**: al giro degli
+  aggiornamenti (due minuti dopo l'avvio dell'add-on, poi ogni sei ore) un
+  pannello installato prima toglie quello che resta di Sonoff. Se non è mai
+  entrato nella casa, si riabbina nel suo stesso posto. Non serve
+  reinstallare niente. Nella console c'è anche il tasto «Riprova
+  l'abbinamento».
+- **Ogni passo dell'installazione dice a che punto è**, con la sua barra.
+- **Il pannello più veloce**: GdAHome Muro usava le impostazioni di un
+  telefono di oggi. Sul pannello ora la plancia è sempre leggera, senza vetri
+  sfocati e senza animazioni continue. Il riquadro della plancia lo disegna
+  Flutter invece della «composizione ibrida», che prima di Android 10 copia
+  ogni fotogramma avanti e indietro dalla scheda video e rallentava anche i
+  comandi. Le due voci nelle impostazioni dell'app, sul pannello, sono ferme.
+- **Il sensore di prossimità del pannello funziona**: il Sonoff NSPanel Pro
+  dice 1 quando c'è qualcuno e 0 quando non c'è nessuno, il contrario di
+  come fanno gli altri apparecchi Android. L'app lo leggeva alla maniera di
+  Android, e il pannello non si accorgeva mai di chi si avvicinava. L'analisi
+  del pannello ora mostra anche i sensori.
+- **Il pulsante luce nuovo sulla plancia a muro**: la tessera intera è il
+  pulsante. Un tocco accende e spegne, il dito tenuto apre la finestra della
+  luce. Accesa si riempie d'ambra; una luce dimmerabile si riempie con la
+  sua luminosità, scritta in grande, e trascinando il dito sulla tessera la
+  si regola (su e giù, o da sinistra a destra nelle pagine che scorrono).
+  Niente più interruttore piccolo nell'angolo.
+- **Il pannello ancora più svelto**: il processore non scende più sotto due
+  terzi della sua frequenza e la scheda video sta alla sua velocità piena,
+  così il primo tocco e il primo scorrimento non aspettano che il chip si
+  svegli; le transizioni fra finestre di Android sono spente; la WebView
+  disegna sulla scheda video anche dove Chromium non lo farebbe. Resta dopo
+  il riavvio, i pannelli già installati lo ricevono da soli al giro degli
+  aggiornamenti, e «Rimetti Sonoff» lo toglie. GdAHome OS non tiene più
+  accesi i sensori né il suo giro ogni due secondi quando nessuno li usa.
+- **Niente più «Di chi è questo telefono?» sul pannello**: un pannello non è
+  un telefono, e a chi appartiene l'ha già detto l'add-on abbinandolo.
+- **«Analisi hardware» mostra il risultato**: prima il tasto la chiedeva e la
+  risposta non compariva da nessuna parte. Ora si apre una scheda con
+  processore, memoria, temperatura, chi usa il processore, quanti fotogrammi
+  vanno a scatti, rete, abbinamento e animazione d'avvio, col tasto «Copia».
+  «Riavvia» dice che il pannello si sta riavviando.
+
 ## 1.19.41
 
 - **Pannelli a muro, la copia di sicurezza veloce**: andava a 0,3 MB/s. Non

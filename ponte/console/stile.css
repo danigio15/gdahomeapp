@@ -2015,6 +2015,21 @@ code {
 
 /* ─── La domanda prima di togliere ───────────────────────────────────────── */
 
+/* Il testo dell'analisi di un pannello: va copiato com'e', quindi a spazi
+ * fissi, e scorre da se' invece di allungare la pagina. */
+.testo-analisi {
+  max-height: 60vh;
+  overflow: auto;
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid var(--bordo);
+  border-radius: var(--r-piccolo, 8px);
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .conferma {
   width: min(420px, calc(100% - 32px));
   padding: 24px;

@@ -10,18 +10,37 @@
 /// e lo schermo a muro sono quelli dell'app, provati. Qui cambia solo come si
 /// parte — dal foglietto invece che dal QR — e l'identita' dell'app
 /// (`com.gdahome.muro`), cosi' un pannello e il telefono di casa non si pestano
-/// i piedi.
+/// i piedi. E quello che un pannello non e': un telefono (`sul_muro.dart`).
 library;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
+import 'casa/impostazioni.dart';
 import 'main.dart';
 import 'muro/avvio_muro.dart';
+import 'muro/sul_muro.dart';
+import 'parole.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  sulMuro = true;
+  /* La lingua, come `main.dart`: la decide il pannello. */
+  laLingua = linguaPer([
+    for (final quale in WidgetsBinding.instance.platformDispatcher.locales)
+      quale.languageCode,
+  ]);
   /* Prima di disegnare: se c'e' il foglietto dell'add-on, si entra nella casa.
    * Poi l'app parte come sempre, e trova la casa gia' pronta. */
   await provvediDalFoglietto();
-  runApp(const AppDiCasa());
+  /* Le impostazioni prima del primo disegno, come `main.dart`, e col modo
+   * leggero del pannello: la plancia si apre gia' leggera, non dalla
+   * seconda pagina in poi. */
+  final impostazioni = Impostazioni(
+    sulTelefono: true,
+    android: defaultTargetPlatform == TargetPlatform.android,
+    pannelloAMuro: true,
+  );
+  await impostazioni.carica();
+  runApp(AppDiCasa(impostazioni: impostazioni));
 }
