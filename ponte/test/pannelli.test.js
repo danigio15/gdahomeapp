@@ -490,6 +490,30 @@ test("verifica: un indirizzo che e' gia' un pannello GdAHome non si reinstalla",
   }
 });
 
+test("verifica: una cifra sbagliata fuori dalla rete di casa si dice, col probabile giusto", async () => {
+  const dir = cartella();
+  try {
+    const pannelli = new Pannelli({
+      cartella: dir,
+      adb: adbFinto({ connetti: false, causa: "irraggiungibile" }),
+      installatore: installatoreFinto(),
+      licenze: premium,
+      reteDiCasa: { indirizzo: () => "192.168.1.174" },
+    });
+    await assert.rejects(
+      () => pannelli.verifica("192.198.1.120"),
+      (e) => /forse volevi 192\.168\.1\.120/.test(e.message) && e.causa === "irraggiungibile",
+    );
+    /* Nella rete di casa resta il messaggio di sempre. */
+    await assert.rejects(
+      () => pannelli.verifica("192.168.1.121"),
+      (e) => /non risponde a questo indirizzo/.test(e.message),
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("verifica: un indirizzo muto da' causa «irraggiungibile», non «rifiutato»", async () => {
   const dir = cartella();
   try {

@@ -27,6 +27,9 @@ aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
   un indirizzo nuovo, e a quello vecchio adesso c'è un altro apparecchio.
   Un indirizzo che è già un pannello GdAHome si dice, invece di
   reinstallarlo.
+- **Una cifra sbagliata nell'indirizzo si vede**: «192.198.1.120» al posto
+  di «192.168.1.120» diceva solo «non risponde». Ora la console dice che
+  l'indirizzo è fuori dalla rete di casa e propone quello probabile.
 - **Il pannello torna a parlare italiano**: nella 1.19.42 GdAHome Muro
   prendeva la lingua di Android, come il telefono, e un NSPanel esce di
   fabbrica con Android in inglese: la plancia era passata all'inglese. Sul

@@ -246,6 +246,18 @@ export class Pannelli {
 
   /* Guarda un pannello: che modello e', se e' sbloccato, se c'e' spazio per la
    * copia, com'e' la WebView. Dice se si puo' installare (`adatto`). */
+  /* Un indirizzo fuori dalla rete di casa e' quasi sempre una cifra sbagliata
+   * («192.198.1.120» per «192.168.1.120»): lo si dice, col probabile giusto
+   * — la rete di casa con l'ultimo numero scritto. `""` se e' nella rete, o
+   * se la rete non si sa. */
+  _fuoriDallaRete(indirizzo) {
+    const casa = this.reteDiCasa?.indirizzo?.() || "";
+    const rete = casa.split(".").slice(0, 3).join(".");
+    const scritto = String(indirizzo).split(":")[0].split(".");
+    if (!rete || scritto.length !== 4 || scritto.slice(0, 3).join(".") === rete) return "";
+    return `${scritto.join(".")} non e' nella rete di casa (${rete}.x): forse volevi ${rete}.${scritto[3]}? Controlla le cifre e riprova.`;
+  }
+
   async verifica(indirizzo) {
     if (!(await adbCE(this.adb)))
       return {
@@ -311,7 +323,8 @@ export class Pannelli {
       const e = new Error(
         collegamento.causa === "rifiutato"
           ? `A ${pulito} risponde qualcosa che non accetta l'ADB (porta 5555 chiusa). Prima guarda l'indirizzo: il router puo' aver dato al pannello un indirizzo nuovo, e qui adesso c'e' un altro apparecchio. Lo trovi in eWeLink, nella pagina del pannello, o con «Cerca in rete». Se l'indirizzo e' giusto, e' l'ADB di rete del pannello a essere spento: vedi qui sotto.`
-          : "Il pannello non risponde a questo indirizzo. Controlla che sia quello giusto, che il pannello sia acceso e sulla stessa rete.",
+          : this._fuoriDallaRete(pulito) ||
+              "Il pannello non risponde a questo indirizzo. Controlla che sia quello giusto, che il pannello sia acceso e sulla stessa rete.",
       );
       e.perUtente = true;
       e.causa = collegamento.causa;
