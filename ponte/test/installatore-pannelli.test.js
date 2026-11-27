@@ -235,7 +235,11 @@ test("la copia di sicurezza salva ogni partizione (non i dati), e scrive MD5SUMS
       scritte.map(([, f]) => f),
       ["boot.img", "system.img"],
     );
-    assert.match(scritte[0][0], /^dd if='\/dev\/block\/by-name\/boot' bs=4194304/);
+    /* Dopo i dati, 1 MB di zeri: se exec-out perde la fine, perde quelli. */
+    assert.match(
+      scritte[0][0],
+      /^\{ dd if='\/dev\/block\/by-name\/boot' bs=4194304; dd if=\/dev\/zero bs=1048576 count=1; \}/,
+    );
     assert.match(readFileSync(join(esito.dir, "MD5SUMS"), "utf8"), /a{32} {2}system\.img/);
     assert.match(esito.dir, /Salone-\d{4}-\d{2}-\d{2}_\d{4}$/);
   } finally {
@@ -282,4 +286,115 @@ test("senza posto su Home Assistant la copia non comincia, e lo dice coi numeri"
   } finally {
     rmSync(copie, { recursive: true, force: true });
   }
+});
+
+test("una copia troncata si riprova, e se non basta si scarica con adb pull", async () => {
+  const copie = mkdtempSync(join(tmpdir(), "copie-"));
+  try {
+    /* Prima volta corta (come STSN sul 120), seconda buona. */
+    let volte = 0;
+    const riprova = new Installatore({
+      adb: pannelloDaCopiare(),
+      cartellaDelleCopie: copie,
+      scriviCopia: async () => {
+        volte += 1;
+        return volte === 1
+          ? { byte: 990, md5: "x".repeat(32) }
+          : { byte: 1000, md5: "a".repeat(32) };
+      },
+    });
+    assert.equal((await riprova._copiaDiSicurezza("1.2.3.4", "x", () => {})).errore, undefined);
+
+    /* Sempre corta: piano B, la partizione in un file sul pannello e pull. */
+    const contenuto = Buffer.alloc(1000, 7);
+    const md5 = (await import("node:crypto")).createHash("md5").update(contenuto).digest("hex");
+    const tirati = [];
+    const adb = pannelloDaCopiare({ md5Pannello: md5 });
+    const shellDiPrima = adb.shell;
+    adb.shell = async (i, c) =>
+      c.startsWith("df -k /data")
+        ? "/dev/x 28000000 1000000 26000000 4% /data"
+        : shellDiPrima(i, c);
+    adb.pull = async (_i, remoto, locale) => {
+      tirati.push(remoto);
+      writeFileSync(locale, contenuto);
+    };
+    const pianoB = new Installatore({
+      adb,
+      cartellaDelleCopie: copie,
+      scriviCopia: async () => ({ byte: 990, md5: "x".repeat(32) }),
+    });
+    const esito = await pianoB._copiaDiSicurezza("1.2.3.4", "y", () => {});
+    assert.equal(esito.errore, undefined);
+    assert.deepEqual(tirati, ["/data/local/tmp/gda-copia.img", "/data/local/tmp/gda-copia.img"]);
+  } finally {
+    rmSync(copie, { recursive: true, force: true });
+  }
+});
+
+test("dopo il riavvio si aspetta il pannello e si guarda che GdAHome OS ci sia", async () => {
+  const fatti = [];
+  let giri = 0;
+  const adb = (osCe) => ({
+    async connetti() {
+      giri += 1;
+      return giri > 1;
+    },
+    async shell(_i, c) {
+      fatti.push(c);
+      if (c === "getprop sys.boot_completed") return "1";
+      if (c === "pm path com.gdahome.os")
+        return osCe ? "package:/system/app/GdAHomeOS/GdAHomeOS.apk" : "";
+      return "";
+    },
+  });
+  const buono = new Installatore({ adb: adb(true), cartellaDeiPezzi: tmpdir() });
+  assert.deepEqual(await buono._dopoIlRiavvio("1.2.3.4", { attesa: 400, pausa: 10 }), {
+    fatto: true,
+  });
+  assert.ok(fatti.includes("cmd package set-home-activity com.gdahome.os/.ui.AvvioActivity"));
+  assert.ok(fatti.includes("appops set com.gdahome.os WRITE_SETTINGS allow"));
+  giri = 0;
+  const senza = new Installatore({ adb: adb(false), cartellaDeiPezzi: tmpdir() });
+  assert.match(
+    (await senza._dopoIlRiavvio("1.2.3.4", { attesa: 400, pausa: 10 })).errore,
+    /GdAHome OS non risulta/,
+  );
+});
+
+test("il foglietto arriva come file, e cartella e file sono dell'app", async () => {
+  const fatti = [];
+  const mandati = {};
+  const adb = {
+    async push(_i, locale, remoto) {
+      mandati[remoto] = readFileSync(locale, "utf8");
+    },
+    async shell(_i, c) {
+      fatti.push(c);
+      if (c.startsWith("dumpsys package com.gdahome.muro")) return "    userId=10087";
+      if (c.includes("abbinamento.json")) return "GDA_OK";
+      return "";
+    },
+  };
+  const inst = new Installatore({
+    adb,
+    cartellaDeiPezzi: tmpdir(),
+    abbinaPannello: async () => ({
+      dispositivo: "dm_1",
+      segno: "s",
+      chiave: "k",
+      case: { centralino: "wss://c", casa: "h", indirizzi: ["192.168.1.174:8098"] },
+    }),
+  });
+  const esito = await inst._abbina("1.2.3.4", { nome: "Salone", utente: "u", planciaId: "muro" });
+  assert.equal(esito.errore, undefined);
+  const foglietto = JSON.parse(mandati["/data/local/tmp/gda-abbinamento.json"]);
+  assert.equal(foglietto.chiave, "k");
+  assert.deepEqual(foglietto.case.indirizzi, ["192.168.1.174:8098"]);
+  const intesta = fatti.find((c) => c.includes("chown"));
+  assert.match(
+    intesta,
+    /chown 10087:10087 \/data\/data\/com\.gdahome\.muro\/files \/data\/data\/com\.gdahome\.muro\/files\/abbinamento\.json/,
+  );
+  assert.match(intesta, /restorecon -R \/data\/data\/com\.gdahome\.muro/);
 });

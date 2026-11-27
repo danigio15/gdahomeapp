@@ -1757,6 +1757,10 @@ async function api({
     );
     return;
   }
+  if (via === "/api/pannelli/rete" && metodo === "GET") {
+    json(risposta, pannelli ? pannelli.statoDellaRicerca() : { inCorso: false });
+    return;
+  }
   if (via === "/api/pannelli/rete" && metodo === "POST") {
     if (!pannelli) return void json(risposta, { trovati: [], adb: false });
     try {

@@ -1678,10 +1678,19 @@
    * Riprova). Compare solo quando serve: la 5555 rifiuta, o la rete e' vuota. */
   /* La riga «sto lavorando» sotto i tasti della tappa 2: girello e cosa si sta
    * facendo. Vuota la nasconde. */
-  function lavoroPannello(testo) {
+  /* Il riquadro «sto lavorando» della tappa 2: cosa si fa, una barra (piena
+   * fino a `percento`, o che scorre se non si sa), e una riga di dettaglio.
+   * Senza testo si nasconde. */
+  function lavoroPannello(testo, dettaglio, percento) {
     var riga = trova("lavoro-pannello");
     if (!riga) return;
     trova("lavoro-pannello-testo").textContent = testo || "";
+    trova("lavoro-pannello-dettaglio").textContent = dettaglio || "";
+    var barra = trova("lavoro-pannello-barra");
+    var dentro = barra.firstElementChild;
+    var noto = typeof percento === "number" && percento >= 0;
+    barra.classList.toggle("scorre", !noto);
+    dentro.style.width = noto ? Math.max(3, Math.min(100, percento)) + "%" : "";
     riga.hidden = !testo;
   }
 
@@ -2142,13 +2151,10 @@
     ultimaRicercaPannello = { tipo: "indirizzo", indirizzo: indirizzo };
     disegnaLaVerifica(null);
     lavoroPannello(
+      due("Sto controllando il pannello " + indirizzo, "Checking the panel " + indirizzo),
       due(
-        "Controllo il pannello a " +
-          indirizzo +
-          ": mi collego, guardo modello, accesso, spazio e WebView. Ci vogliono una decina di secondi.",
-        "Checking the panel at " +
-          indirizzo +
-          ": connecting, then model, access, space and WebView. It takes about ten seconds.",
+        "Mi collego, poi guardo modello, accesso, spazio e WebView. Ci vogliono una decina di secondi.",
+        "Connecting, then model, access, space and WebView. It takes about ten seconds.",
       ),
     );
     return chiedi("api/pannelli/verifica", {
@@ -2211,12 +2217,32 @@
     mostraAiutoAdbRete(false);
     ultimaRicercaPannello = { tipo: "rete" };
     lista.hidden = true;
+    var etichetta = tasto.querySelector("span");
+    var primaEtichetta = etichetta ? etichetta.textContent : "";
+    if (etichetta) etichetta.textContent = due("Sto cercando…", "Searching…");
     lavoroPannello(
-      due(
-        "Cerco i pannelli su tutta la rete di casa (254 indirizzi, pochi alla volta). Può volerci fino a un minuto.",
-        "Looking for panels across the home network (254 addresses, a few at a time). It can take up to a minute.",
-      ),
+      due("Sto cercando i pannelli sulla rete di casa", "Searching the home network for panels"),
+      due("Comincio…", "Starting…"),
     );
+    /* Mentre la ricerca va, si chiede al ponte a che punto e'. */
+    var aCheVa = setInterval(function () {
+      chiedi("api/pannelli/rete")
+        .then(function (r) {
+          if (!r || !r.inCorso || !r.totale) return;
+          lavoroPannello(
+            due(
+              "Sto cercando i pannelli su " + (r.rete ? r.rete + ".x" : "rete di casa"),
+              "Searching for panels on " + (r.rete ? r.rete + ".x" : "the home network"),
+            ),
+            due(
+              r.fatti + " di " + r.totale + " indirizzi controllati · trovati " + r.trovati,
+              r.fatti + " of " + r.totale + " addresses checked · " + r.trovati + " found",
+            ),
+            Math.round((r.fatti / r.totale) * 100),
+          );
+        })
+        .catch(function () {});
+    }, 700);
     return chiedi("api/pannelli/rete", { method: "POST", body: "{}" })
       .then(function (detto) {
         var trovati = detto.trovati || [];
@@ -2312,6 +2338,8 @@
         avvisa("avviso-indirizzo", errore.message);
       })
       .then(function () {
+        clearInterval(aCheVa);
+        if (etichetta) etichetta.textContent = primaEtichetta;
         lavoroPannello("");
         tasto.disabled = false;
         tasto.classList.remove("al-lavoro");

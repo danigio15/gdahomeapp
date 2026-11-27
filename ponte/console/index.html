@@ -784,10 +784,14 @@
                   <ul class="trovati-in-rete" id="trovati-in-rete" hidden></ul>
                   <!-- Cosa sta facendo l'add-on mentre cerca o controlla: un
                        tasto che si spegne da solo non diceva niente. -->
-                  <p class="attesa-rete" id="lavoro-pannello" hidden>
-                    <span class="girello" aria-hidden="true"></span
-                    ><span id="lavoro-pannello-testo" role="status" aria-live="polite"></span>
-                  </p>
+                  <div class="lavoro-pannello" id="lavoro-pannello" hidden>
+                    <p class="lavoro-pannello-riga">
+                      <span class="girello" aria-hidden="true"></span
+                      ><b id="lavoro-pannello-testo" role="status" aria-live="polite"></b>
+                    </p>
+                    <div class="barra-avanti" id="lavoro-pannello-barra"><span></span></div>
+                    <small id="lavoro-pannello-dettaglio"></small>
+                  </div>
                   <div class="in-riga">
                     <input
                       id="indirizzo-pannello"
