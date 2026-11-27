@@ -14,6 +14,22 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.35
+
+- **Pannelli a muro, ora l'add-on arriva ai pannelli**: dove Home Assistant
+  gira in una VM o un container (per esempio su Proxmox), l'add-on stava dietro
+  la rete interna di Docker e non raggiungeva la rete di casa: la ricerca non
+  trovava niente e l'indirizzo a mano diceva «non risponde», anche con l'ADB
+  acceso sul pannello. Ora l'add-on condivide la rete di Home Assistant
+  (`host_network`) e vede i pannelli come li vede ogni altra macchina di casa.
+  È l'unico permesso ampio, ed è solo la rete: disco, device e kernel restano
+  blindati come prima.
+- **Quando non trova il pannello, dice perché**: se la porta 5555 rifiuta
+  (ADB di rete spento) compare la guida eWeLink — accendi l'ADB, e soprattutto
+  **riavvia il pannello** — con un tasto «Riprova» che riprova da solo. E la
+  ricerca dice quanti dispositivi ha contattato e su che rete, così si capisce
+  se è il pannello o la rete.
+
 ## 1.19.34
 
 - **Pannelli a muro**: la ricerca in rete ora trova davvero i pannelli (prima
