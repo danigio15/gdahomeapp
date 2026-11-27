@@ -495,3 +495,33 @@ test("il giro degli aggiornamenti aggiorna da solo i pannelli indietro, e salta 
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("la ricerca dice a che punto e', mentre va", async () => {
+  const dir = cartella();
+  try {
+    let visto = null;
+    let pannelli;
+    const adb = {
+      async provaCollegamento(ind) {
+        if (ind === "10.0.0.100") visto = pannelli.statoDellaRicerca();
+        return { ok: false, causa: "rifiutato" };
+      },
+    };
+    pannelli = new Pannelli({
+      cartella: dir,
+      adb,
+      installatore: installatoreFinto(),
+      licenze: premium,
+      reteDiCasa: { indirizzo: () => "10.0.0.2" },
+    });
+    pannelli.adb.comando = async () => "";
+    await pannelli.rete({ concorrenti: 1 });
+    assert.equal(visto.inCorso, true);
+    assert.equal(visto.totale, 254);
+    assert.equal(visto.fatti, 99);
+    assert.equal(visto.rete, "10.0.0");
+    assert.equal(pannelli.statoDellaRicerca().inCorso, false);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

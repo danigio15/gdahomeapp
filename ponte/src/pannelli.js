@@ -136,6 +136,9 @@ export class Pannelli {
     const trovati = [];
     let contattati = 0;
     let i = 0;
+    /* A che punto e': la console lo chiede mentre la ricerca va avanti
+     * (`statoDellaRicerca`), cosi' si vede che sta cercando davvero. */
+    this.ricerca = { fatti: 0, totale: indirizzi.length, trovati, rete, inCorso: true };
     const lavoratore = async () => {
       while (i < indirizzi.length) {
         const indirizzo = indirizzi[i++];
@@ -159,12 +162,28 @@ export class Pannelli {
           await this.adb.stacca(indirizzo);
         } catch (_e) {
           /* Un indirizzo che non risponde non ferma la scansione. */
+        } finally {
+          this.ricerca.fatti += 1;
         }
       }
     };
     await Promise.all(Array.from({ length: Math.min(concorrenti, indirizzi.length) }, lavoratore));
     trovati.sort((a, b) => a.indirizzo.localeCompare(b.indirizzo, undefined, { numeric: true }));
+    this.ricerca.inCorso = false;
     return { trovati, adb: true, contattati, rete };
+  }
+
+  /* A che punto e' la ricerca in corso: { inCorso, fatti, totale, trovati, rete }. */
+  statoDellaRicerca() {
+    const r = this.ricerca;
+    if (!r) return { inCorso: false, fatti: 0, totale: 0, trovati: 0, rete: "" };
+    return {
+      inCorso: r.inCorso,
+      fatti: r.fatti,
+      totale: r.totale,
+      trovati: r.trovati.length,
+      rete: r.rete,
+    };
   }
 
   /* Fa partire il server di adb. Torna "" se e' su, o la frase da mostrare se

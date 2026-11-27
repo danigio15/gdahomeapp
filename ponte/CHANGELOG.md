@@ -14,6 +14,31 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.39
+
+- **Pannelli a muro, la copia di sicurezza regge su un pannello vero**: sul
+  NSPanel la fine dell'uscita a volte si perde («STSN incompleta, 257514 byte
+  su 262144»). Ora dopo ogni partizione arriva una coda di riempimento che si
+  perde al posto dei dati; se non basta si riprova, e poi si copia la
+  partizione in un file sul pannello e la si scarica con `adb pull`. Una copia
+  vale solo se dimensione o impronta del pannello la confermano: mai più copie
+  vuote prese per buone.
+- **L'installazione arriva in fondo davvero**: il foglietto dell'abbinamento
+  arriva come file e la cartella dell'app GdAHome Muro resta dell'app; dopo il
+  riavvio l'add-on aspetta il pannello, rende GdAHome OS la schermata home e
+  controlla che ci sia. Al pannello arriva anche l'indirizzo per entrare da
+  fuori casa.
+- **La ricerca si vede**: un riquadro con la barra che si riempie e «120 di
+  254 indirizzi controllati · trovati 1»; anche il controllo del pannello ha
+  il suo riquadro.
+- **Lo spazio per la copia su Home Assistant si misura** anche prima della
+  prima copia (diceva «non misurato»).
+
+Provato per intero su un pannello simulato con adb vero, che perde la fine
+dell'uscita come il 120: verifica, copia (identica all'originale), rimozione
+di Sonoff, installazione, abbinamento, riavvio, «Rimetti Sonoff» e
+aggiornamenti.
+
 ## 1.19.38
 
 - **Pannelli a muro, la copia di sicurezza si fa davvero**: l'installazione si

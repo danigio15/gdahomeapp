@@ -2634,6 +2634,74 @@ button.al-lavoro {
   color: var(--tenue);
 }
 
+/* «Sto cercando / sto controllando»: un riquadro che si vede, con una barra
+   che si riempie (o che scorre, quando non si sa quanto manca). */
+.lavoro-pannello {
+  margin: 14px 0 6px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--acceso-soft);
+  border: 1px solid var(--linea-forte);
+}
+
+.lavoro-pannello-riga {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 15px;
+  color: var(--acceso-forte);
+}
+
+.lavoro-pannello small {
+  display: block;
+  margin-top: 8px;
+  font-size: 13.5px;
+  color: var(--tenue);
+}
+
+.barra-avanti {
+  position: relative;
+  height: 6px;
+  margin-top: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--linea-forte);
+}
+
+.barra-avanti > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  border-radius: inherit;
+  background: var(--acceso);
+  transition: width 0.4s ease;
+}
+
+/* Senza percentuale la barra scorre: «sto lavorando, non so quanto manca». */
+.barra-avanti.scorre > span {
+  width: 35%;
+  animation: barra-scorre 1.3s ease-in-out infinite;
+}
+
+@keyframes barra-scorre {
+  from {
+    left: -35%;
+  }
+  to {
+    left: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .barra-avanti.scorre > span {
+    animation: none;
+    left: 0;
+    width: 100%;
+    opacity: 0.5;
+  }
+}
+
 .girello {
   width: 16px;
   height: 16px;

@@ -321,7 +321,7 @@ export class Adb {
    * un giga o due. Torna { byte, md5 } calcolati su quello che e' arrivato.
    * Prima `shellBinaria` raccoglieva tutto in memoria con un minuto di tempo:
    * con una partizione vera l'add-on sarebbe finito senza memoria o a meta'. */
-  copiaInFile(indirizzo, comando, dove, { attesa = ATTESE.pull } = {}) {
+  copiaInFile(indirizzo, comando, dove, { attesa = ATTESE.pull, limite = 0 } = {}) {
     this._preparaLaChiave();
     return new Promise((risolvi, rifiuta) => {
       const ambiente = { ...process.env };
@@ -362,8 +362,20 @@ export class Adb {
       );
       proc.on("error", (errore) => fine(new ErroreAdb(`adb: ${errore.message}`)));
       proc.stderr?.on?.("data", (p) => errori.push(p));
-      proc.stdout.on("data", (pezzo) => {
-        byte += pezzo.length;
+      /* `limite`: si scrivono solo i primi `limite` byte, e su quelli si fa
+       * l'impronta; quello che arriva dopo (la coda di riempimento) si conta e
+       * basta. Su certi pannelli `exec-out` perde la fine dell'uscita quando
+       * il comando finisce: la coda e' li' per farsi perdere al posto dei dati. */
+      let scritti = 0;
+      proc.stdout.on("data", (tutto) => {
+        byte += tutto.length;
+        let pezzo = tutto;
+        if (limite) {
+          const resta = limite - scritti;
+          if (resta <= 0) return;
+          if (pezzo.length > resta) pezzo = pezzo.subarray(0, resta);
+        }
+        scritti += pezzo.length;
         impronta.update(pezzo);
         /* Se il disco non tiene il passo, si aspetta: niente in memoria. */
         if (!file.write(pezzo)) {
@@ -384,8 +396,16 @@ export class Adb {
               uscita: testo,
             }),
           );
-        file.end(() => fine(null, { byte, md5: impronta.digest("hex") }));
+        file.end(() => fine(null, { byte: scritti, ricevuti: byte, md5: impronta.digest("hex") }));
       });
+    });
+  }
+
+  /* Scarica un file dal pannello col protocollo di adb, che conta i byte: il
+   * piano B della copia di sicurezza quando `exec-out` perde dei pezzi. */
+  pull(indirizzo, daRemoto, aLocale) {
+    return this.comando(["-s", this._dev(indirizzo), "pull", daRemoto, aLocale], {
+      attesa: ATTESE.pull,
     });
   }
 

@@ -272,3 +272,36 @@ test("copiaInFile scrive l'uscita man mano, e ne torna byte e md5", async () => 
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("copiaInFile con un limite tiene solo i primi byte, e la coda la conta e basta", async () => {
+  const { mkdtempSync, readFileSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const dir = mkdtempSync(join(tmpdir(), "copia-"));
+  try {
+    const dati = Buffer.alloc(5000, 9);
+    const coda = Buffer.alloc(3000, 0);
+    const avvia = () => {
+      const p = new EventEmitter();
+      p.stdout = new EventEmitter();
+      p.stdout.pause = () => {};
+      p.stdout.resume = () => {};
+      p.stderr = new EventEmitter();
+      p.kill = () => {};
+      queueMicrotask(() => {
+        p.stdout.emit("data", Buffer.concat([dati.subarray(0, 4000)]));
+        p.stdout.emit("data", Buffer.concat([dati.subarray(4000), coda]));
+        p.emit("close", 0);
+      });
+      return p;
+    };
+    const adb = new Adb({ avvia, chiave: null });
+    const dove = join(dir, "p.img");
+    const esito = await adb.copiaInFile("1.2.3.4", "x", dove, { limite: 5000 });
+    assert.equal(esito.byte, 5000);
+    assert.equal(esito.ricevuti, 8000);
+    assert.deepEqual(readFileSync(dove), dati);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

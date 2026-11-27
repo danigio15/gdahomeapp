@@ -435,7 +435,21 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
         dispositivo: abb.dispositivo.id,
         segno: abb.segno,
         chiave: abb.chiave,
-        case: { centralino: dove.centralino || "", indirizzi: dove.indirizzi ?? [] },
+        /* `casa` serve al pannello per entrare dal centralino; senza
+         * indirizzi l'app scarterebbe il foglietto, quindi se il Supervisor
+         * non li dice si mette quello della rete di casa con la porta. */
+        case: {
+          centralino: dove.centralino || "",
+          casa: dove.casa || "",
+          indirizzi: dove.indirizzi?.length
+            ? dove.indirizzi
+            : (() => {
+                const v4 = (ritorno.reteDiCasa()?.reti ?? []).find(
+                  (r) => typeof r?.ip === "string" && r.ip.includes("."),
+                );
+                return v4?.ip ? [`${v4.ip}:${opzioni.portaDellApp}`] : [];
+              })(),
+        },
         app: opzioni.versione,
       };
     },

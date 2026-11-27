@@ -16,7 +16,9 @@
  * segreto della casa passa dalla stessa porta cifrata di sempre, non da una
  * scorciatoia.
  */
+import { createHash } from "node:crypto";
 import {
+  createReadStream,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -140,6 +142,7 @@ export class Installatore {
     dispositivi = null,
     scriviCopia = null,
     muroPackage = "com.gdahome.muro",
+    attesaDelRiavvio = undefined,
   } = {}) {
     this.adb = adb;
     this.pezzi = cartellaDeiPezzi;
@@ -150,8 +153,12 @@ export class Installatore {
      * finto nelle prove. Prima non c'era nessuno: «Questo add-on non puo'
      * scrivere la copia di sicurezza». */
     this.scriviCopia =
-      scriviCopia || ((indirizzo, comando, dove) => this.adb.copiaInFile(indirizzo, comando, dove));
+      scriviCopia ||
+      ((indirizzo, comando, dove, opzioni) =>
+        this.adb.copiaInFile(indirizzo, comando, dove, opzioni));
     this.muroPackage = muroPackage;
+    /* Quanto aspettare il pannello dopo il riavvio: corto nelle prove. */
+    this.attesaDelRiavvio = attesaDelRiavvio;
   }
 
   _pezzo(nome) {
@@ -199,7 +206,7 @@ export class Installatore {
         (fatte, tutte, quale) =>
           avanti({
             passo: 1,
-            dettaglio: `${quale} (${fatte}/${tutte})`,
+            dettaglio: quale ? `${quale} (${fatte}/${tutte})` : `fatta: ${tutte} partizioni`,
             percento: Math.round((fatte / tutte) * 100),
           }),
       );
@@ -215,9 +222,12 @@ export class Installatore {
       const abb = await this._abbina(indirizzo, { nome, utente, planciaId });
       if (abb.errore) return { errore: abb.errore, passoRotto: 3 };
 
-      // 5. Riavvio
-      avanti({ passo: 4, dettaglio: "" });
+      // 5. Riavvio, e GdAHome OS che parte davvero
+      avanti({ passo: 4, dettaglio: "Il pannello si riavvia…" });
       await this._riavvia(indirizzo);
+      avanti({ passo: 4, dettaglio: "Aspetto che il pannello torni…" });
+      const dopo = await this._dopoIlRiavvio(indirizzo, this.attesaDelRiavvio);
+      if (dopo.errore) return { errore: dopo.errore, passoRotto: 4 };
       await this.adb.stacca(indirizzo);
 
       return {
@@ -274,8 +284,14 @@ export class Installatore {
     const misure = {};
     let totale = 0;
     for (const p of nomi) {
+      /* blockdev, e se non c'e' la misura dal kernel (settori da 512 byte). */
+      const via = scappa(`${byName}/${p}`);
       const detto = await this.adb
-        .shell(indirizzo, `blockdev --getsize64 ${scappa(`${byName}/${p}`)}`, { root: true })
+        .shell(
+          indirizzo,
+          `blockdev --getsize64 ${via} 2>/dev/null || echo $(( $(cat /sys/class/block/$(basename $(readlink -f ${via}))/size) * 512 ))`,
+          { root: true },
+        )
         .catch(() => "");
       const n = Number(String(detto).trim());
       misure[p] = Number.isFinite(n) && n > 0 ? n : 0;
@@ -302,10 +318,10 @@ export class Installatore {
     const righe = [];
     for (let i = 0; i < nomi.length; i += 1) {
       const p = nomi[i];
-      const sorgente = scappa(`${byName}/${p}`);
-      avanti(i, nomi.length, misure[p] ? `${p} · ${inGB(misure[p])} GB` : p);
+      avanti(i, nomi.length, misure[p] ? `${p} · ${mostraByte(misure[p])}` : p);
       try {
-        /* L'impronta sul pannello, poi la copia: devono tornare. */
+        const sorgente = scappa(`${byName}/${p}`);
+        /* L'impronta sul pannello: la copia deve tornare con questa. */
         const atteso = String(
           await this.adb.shell(indirizzo, `md5sum ${sorgente}`, {
             root: true,
@@ -314,16 +330,14 @@ export class Installatore {
         )
           .trim()
           .split(/\s+/)[0];
-        const { byte, md5 } = await this.scriviCopia(
-          indirizzo,
-          `dd if=${sorgente} bs=4194304 2>/dev/null`,
-          join(dir, `${p}.img`),
-        );
-        if (misure[p] && byte !== misure[p])
-          return { errore: `La copia di ${p} e' incompleta (${byte} byte su ${misure[p]}).` };
-        if (/^[0-9a-f]{32}$/.test(atteso) && md5 !== atteso)
-          return { errore: `La copia di ${p} non torna con l'originale (md5 diverso).` };
-        righe.push(`${md5}  ${p}.img`);
+        const esito = await this._copiaUnaPartizione(indirizzo, {
+          sorgente,
+          dove: join(dir, `${p}.img`),
+          misura: misure[p],
+          atteso: /^[0-9a-f]{32}$/.test(atteso) ? atteso : "",
+        });
+        if (esito.errore) return { errore: `Copia di ${p}: ${esito.errore}` };
+        righe.push(`${esito.md5}  ${p}.img`);
       } catch (errore) {
         return { errore: `Copia di ${p} non riuscita: ${errore.message || errore}.` };
       }
@@ -337,14 +351,89 @@ export class Installatore {
     return { dir };
   }
 
+  /* Una partizione, con le sue prove. Prima in streaming, due volte: dopo i
+   * dati il pannello manda 1 MB di zeri, cosi' se `exec-out` perde la fine
+   * (succede, su Android 8: «STSN incompleta, 257514 byte su 262144») perde
+   * gli zeri e non i dati; si tengono esattamente `misura` byte. Se non torna
+   * ancora, il piano B: la partizione in un file sul pannello, scaricata con
+   * `adb pull`, che conta i byte uno per uno. Torna { md5 } o { errore }. */
+  async _copiaUnaPartizione(indirizzo, { sorgente, dove, misura, atteso }) {
+    /* Senza ne' la misura ne' l'impronta del pannello non si saprebbe se la
+     * copia e' buona: una copia vuota passerebbe per buona. Meglio fermarsi
+     * prima di toccare il pannello che avere un paracadute vuoto. */
+    if (!misura && !atteso)
+      return {
+        errore: "non riesco a misurare la partizione sul pannello (ne' dimensione ne' impronta).",
+      };
+    const buona = ({ byte, md5 }) =>
+      byte > 0 && (!misura || byte === misura) && (!atteso || md5 === atteso);
+    let ultimo = null;
+    for (let tentativo = 0; tentativo < 2; tentativo += 1) {
+      const comando = misura
+        ? `{ dd if=${sorgente} bs=4194304; dd if=/dev/zero bs=1048576 count=1; } 2>/dev/null`
+        : `dd if=${sorgente} bs=4194304 2>/dev/null`;
+      ultimo = await this.scriviCopia(indirizzo, comando, dove, { limite: misura || 0 }).catch(
+        (e) => ({ errore: e.message || String(e) }),
+      );
+      if (!ultimo.errore && buona(ultimo)) return { md5: ultimo.md5 };
+    }
+
+    /* Il piano B, se sul pannello c'e' posto per la partizione intera. */
+    const liberi = await this._liberiSulPannello(indirizzo);
+    if (misura && liberi != null && liberi > misura + 200 * 1024 ** 2) {
+      const tmp = "/data/local/tmp/gda-copia.img";
+      try {
+        await this.adb.shell(
+          indirizzo,
+          `dd if=${sorgente} of=${tmp} bs=4194304 2>/dev/null && chmod 644 ${tmp}`,
+          { root: true, attesa: 30 * 60_000 },
+        );
+        await this.adb.pull(indirizzo, tmp, dove);
+        const copia = await impronta(dove);
+        if (buona(copia)) return { md5: copia.md5 };
+        ultimo = copia;
+      } catch (errore) {
+        ultimo = { errore: errore.message || String(errore) };
+      } finally {
+        await this.adb.shell(indirizzo, `rm -f ${tmp}`, { root: true }).catch(() => {});
+      }
+    }
+    if (ultimo?.errore) return { errore: `non riuscita (${ultimo.errore}).` };
+    if (misura && ultimo && ultimo.byte !== misura)
+      return { errore: `e' incompleta (${ultimo.byte} byte su ${misura}).` };
+    return { errore: "non torna con l'originale (md5 diverso)." };
+  }
+
+  /* I byte liberi in /data sul pannello, o null. */
+  async _liberiSulPannello(indirizzo) {
+    const detto = await this.adb
+      .shell(indirizzo, "df -k /data | tail -n1", { root: true })
+      .catch(() => "");
+    const numeri = String(detto)
+      .trim()
+      .split(/\s+/)
+      .filter((c) => /^\d+$/.test(c))
+      .map(Number);
+    /* blocchi, usati, liberi: il terzo numero, in KB. */
+    return numeri.length >= 3 ? numeri[2] * 1024 : null;
+  }
+
   /* I byte liberi dove vanno le copie, o null se non si sa. */
   spazioLibero(dove) {
-    try {
-      const s = statfsSync(dove);
-      return Number(s.bavail) * Number(s.bsize);
-    } catch (_e) {
-      return null;
+    /* La cartella delle copie nasce alla prima copia: prima si misura quella
+     * esistente piu' vicina (/share). Prima diceva «non misurato». */
+    let qui = dove;
+    for (let i = 0; i < 8 && qui; i += 1) {
+      try {
+        const s = statfsSync(qui);
+        return Number(s.bavail) * Number(s.bsize);
+      } catch (_e) {
+        const su = dirname(qui);
+        if (su === qui) break;
+        qui = su;
+      }
     }
+    return null;
   }
 
   /* Installa GdAHome OS: l'app GdAHome Muro, GdAHome OS come app di sistema,
@@ -478,17 +567,28 @@ export class Installatore {
       });
       const uid = (/userId=(\d+)/.exec(detto) || [])[1];
       if (!uid) return { errore: "L'app GdAHome Muro non risulta installata." };
-      await this.adb.shell(indirizzo, `mkdir -p ${dir}`, { root: true });
-      await this.adb.shell(
+      /* Il foglietto va sul pannello come file (con `adb push`), non come
+       * testo su piu' righe dentro `su -c`: e' fragile. Poi da root lo si
+       * mette nella cartella dell'app, e **cartella e file** si intestano
+       * all'app: una cartella `files` creata da root resterebbe di root, e
+       * l'app non ci potrebbe piu' scrivere niente. */
+      await this._mandaLoScript(indirizzo, "/data/local/tmp/gda-abbinamento.json", foglietto);
+      const base = `/data/data/${pkg}`;
+      const esito = await this.adb.shell(
         indirizzo,
-        `cat > ${dir}/abbinamento.json <<'GDAJSON'\n${foglietto}\nGDAJSON`,
+        [
+          `mkdir -p ${dir}`,
+          `cp /data/local/tmp/gda-abbinamento.json ${dir}/abbinamento.json`,
+          `rm -f /data/local/tmp/gda-abbinamento.json`,
+          `chown ${uid}:${uid} ${dir} ${dir}/abbinamento.json`,
+          `chmod 771 ${dir}; chmod 600 ${dir}/abbinamento.json`,
+          `restorecon -R ${base} 2>/dev/null || chcon -R u:object_r:app_data_file:s0:c512,c768 ${dir} 2>/dev/null`,
+          `[ -s ${dir}/abbinamento.json ] && echo GDA_OK`,
+        ].join("; "),
         { root: true },
       );
-      await this.adb.shell(
-        indirizzo,
-        `chown ${uid}:${uid} ${dir}/abbinamento.json; chmod 600 ${dir}/abbinamento.json; restorecon ${dir}/abbinamento.json 2>/dev/null || chcon u:object_r:app_data_file:s0:c512,c768 ${dir}/abbinamento.json 2>/dev/null || true`,
-        { root: true },
-      );
+      if (!/GDA_OK/.test(esito))
+        return { errore: "Il foglietto dell'abbinamento non e' arrivato sul pannello." };
     } catch (errore) {
       return { errore: scusa(errore) };
     }
@@ -499,6 +599,49 @@ export class Installatore {
     await this.adb
       .shell(indirizzo, "svc power reboot || reboot", { root: true, attesa: 15_000 })
       .catch(() => {});
+  }
+
+  /* Dopo il riavvio: si aspetta che il pannello torni e finisca di partire,
+   * poi si fa quello che prima del riavvio non si poteva — GdAHome OS diventa
+   * un'app solo al riavvio, quindi solo adesso Android accetta la schermata
+   * home, i permessi e il risparmio energetico per lui — e si guarda che sia
+   * davvero li'. Come `gdahome-os.sh install` dopo `aspetta_avvio`. */
+  async _dopoIlRiavvio(indirizzo, { attesa = 5 * 60_000, pausa = 5_000 } = {}) {
+    const fino = Date.now() + attesa;
+    /* Il pannello ci mette un po' a spegnersi: non lo si prende mentre va giu'. */
+    await dorme(Math.min(20_000, attesa / 4));
+    let pronto = false;
+    while (Date.now() < fino) {
+      const ok = await this.adb.connetti(indirizzo).catch(() => false);
+      if (ok) {
+        const avviato = await this.adb
+          .shell(indirizzo, "getprop sys.boot_completed", { root: false })
+          .catch(() => "");
+        if (String(avviato).trim() === "1") {
+          pronto = true;
+          break;
+        }
+      }
+      await dorme(pausa);
+    }
+    if (!pronto)
+      return {
+        errore:
+          "Il pannello non e' tornato dopo il riavvio. Aspetta qualche minuto: se non si accende con GdAHome, usa «Rimetti Sonoff» o la copia di sicurezza.",
+      };
+    for (const r of [
+      "cmd package set-home-activity com.gdahome.os/.ui.AvvioActivity",
+      "appops set com.gdahome.os WRITE_SETTINGS allow",
+      "dumpsys deviceidle whitelist +com.gdahome.os",
+      "am start -n com.gdahome.os/.ui.AvvioActivity",
+    ])
+      await this.adb.shell(indirizzo, r, { root: true }).catch(() => {});
+    const dove = await this.adb
+      .shell(indirizzo, "pm path com.gdahome.os", { root: false })
+      .catch(() => "");
+    if (!/GdAHomeOS/.test(dove))
+      return { errore: "Dopo il riavvio GdAHome OS non risulta installato nel sistema." };
+    return { fatto: true };
   }
 
   riavvia({ indirizzo }) {
@@ -641,6 +784,30 @@ export class Installatore {
 function dataPerCartella(d) {
   const due = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${due(d.getMonth() + 1)}-${due(d.getDate())}_${due(d.getHours())}${due(d.getMinutes())}`;
+}
+
+const dorme = (ms) => new Promise((fatto) => setTimeout(fatto, ms));
+
+/* «256 KB», «48 MB», «1,4 GB». */
+function mostraByte(n) {
+  if (n >= 1024 ** 3) return `${(n / 1024 ** 3).toFixed(1).replace(".", ",")} GB`;
+  if (n >= 1024 ** 2) return `${Math.round(n / 1024 ** 2)} MB`;
+  return `${Math.max(1, Math.round(n / 1024))} KB`;
+}
+
+/* Byte e md5 di un file su disco, letto a pezzi. */
+function impronta(file) {
+  return new Promise((risolvi, rifiuta) => {
+    const h = createHash("md5");
+    let byte = 0;
+    createReadStream(file)
+      .on("data", (p) => {
+        byte += p.length;
+        h.update(p);
+      })
+      .on("error", rifiuta)
+      .on("end", () => risolvi({ byte, md5: h.digest("hex") }));
+  });
 }
 
 function inGB(byte) {
