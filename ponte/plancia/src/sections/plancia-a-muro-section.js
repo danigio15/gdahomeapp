@@ -2430,7 +2430,10 @@ function griglia(pagina, carte, quante = carte.length) {
   const adatta = forma.adatta
     ? ` mu-adatta${state.compatto && g.colonne * g.righe <= 2 ? " mu-ampia" : ""}`
     : "";
-  const stile = `--mu-col:${g.colonne};--mu-righe:${g.righe}${forma.adatta ? `;--mu-larga:${forma.larga}` : ""}`;
+  /* Le righe che i riquadri occupano davvero: col pannello verticale stretto
+   * crescono fino a riempire la pagina (vedi `--mu-righe-vere` nel foglio). */
+  const vere = Math.max(1, Math.ceil(quante / g.colonne));
+  const stile = `--mu-col:${g.colonne};--mu-righe:${g.righe};--mu-righe-vere:${vere}${forma.adatta ? `;--mu-larga:${forma.larga}` : ""}`;
   return `<div class="mu-g6${scorre}${fitta}${adatta}" style="${stile}">${carte.join("")}</div>`;
 }
 
@@ -5225,18 +5228,37 @@ function misura(nodo, muro) {
  *
  * «Sfrutta al massimo lo spazio che c'e' a sinistra: da un 4 pollici a un 15
  * gli spazi aumentano di tanto. Mantieni il nome scritto fin dove possibile,
- * poi diventano icone.» Tre gradini, dal piu' largo: tutti i nomi; il nome
- * solo della pagina aperta (`mu-molte`); solo i disegni (`mu-icone`). Si
+ * poi diventano icone.» Quattro gradini, dal piu' largo: tutti i nomi; il
+ * nome solo della pagina aperta (`mu-molte`); solo i disegni (`mu-icone`);
+ * i disegni stretti uno all'altro (`mu-minime`), per il NSPanel da 4 pollici
+ * dove il nome intero della stanza e l'ora piena non ci stavano. Si
  * prova dal primo e ci si ferma al primo che ci sta: la fila si stringe nello
  * spazio fra il titolo e l'ora, e se il contenuto e' piu' largo di lei non ci
  * sta. */
-const GRADINI_DELLE_LINGUETTE = ["", "mu-molte", "mu-icone"];
+const GRADINI_DELLE_LINGUETTE = ["", "mu-molte", "mu-icone", "mu-minime"];
 /* L'ultima misura, e di cosa. Misurare vuol dire far ricalcolare al browser
  * la pagina intera, fino a tre volte: su un pannello da quattro pollici era
  * un pezzo grosso di ogni ridisegno, e a ogni giro — l'ora che cambia, una
  * luce — la testa e' la stessa di prima. Se lo e', si rimette quello che si
  * era misurato, senza chiedere niente al browser. */
 const linguette = { chiave: "", gradino: "", minimo: "" };
+/* Quanto e' largo davvero il nome della pagina, decimali compresi.
+ *
+ * «Sul NSPanel da 4 pollici il titolo resta "SOGGIOR…".» Si misurava con
+ * `scrollWidth`, che e' un intero e che su un titolo gia' stretto dice quanto
+ * e' largo il riquadro, non il testo: «Soggiorno» in Oswald fa 116,7 pixel e
+ * il titolo ne riceveva 102, coi puntini. Il testo misurato col suo
+ * rettangolo e' quello intero, decimali compresi, e si arrotonda in su. Dove
+ * il rettangolo non c'e' (una pagina senza `Range`) resta la misura di prima. */
+function larghezzaDelTesto(nodo) {
+  const intervallo = doc.createRange?.();
+  if (intervallo) {
+    intervallo.selectNodeContents(nodo);
+    const larga = intervallo.getBoundingClientRect?.().width;
+    if (Number.isFinite(larga) && larga > 0) return larga;
+  }
+  return nodo.scrollWidth;
+}
 function adattaLeLinguette(nodo) {
   const fila = nodo.querySelector(".mu-testa .mu-pagine");
   if (!fila) return;
@@ -5259,12 +5281,14 @@ function adattaLeLinguette(nodo) {
     if (titolo && linguette.minimo) titolo.style.setProperty("--mu-tit-min", linguette.minimo);
     for (const g of GRADINI_DELLE_LINGUETTE)
       if (g) classeSeCambia(fila, g, g === linguette.gradino);
+    classeSeCambia(testa, "mu-stretta", linguette.gradino === "mu-minime");
     return;
   }
   linguette.minimo = "";
   if (nome) {
     const massimo = Number.parseFloat(getComputedStyle(nome).maxWidth);
-    const pieno = Number.isFinite(massimo) ? Math.min(nome.scrollWidth, massimo) : nome.scrollWidth;
+    const testo = larghezzaDelTesto(nome);
+    const pieno = Number.isFinite(massimo) ? Math.min(testo, massimo) : testo;
     linguette.minimo = `${Math.ceil(pieno)}px`;
     titolo.style.setProperty("--mu-tit-min", linguette.minimo);
   }
@@ -5272,6 +5296,8 @@ function adattaLeLinguette(nodo) {
   for (const gradino of GRADINI_DELLE_LINGUETTE) {
     fila.classList.remove(...GRADINI_DELLE_LINGUETTE.filter(Boolean));
     if (gradino) fila.classList.add(gradino);
+    /* All'ultimo gradino si stringono anche gli spazi della testa. */
+    classeSeCambia(testa, "mu-stretta", gradino === "mu-minime");
     linguette.gradino = gradino;
     if (testa.scrollWidth <= testa.clientWidth + 1) return;
   }
@@ -6890,7 +6916,11 @@ ${MURO} .mu-pill b{font-size:20px;font-weight:800;display:block;line-height:1}
 ${MURO} .mu-pill .mu-et{font-size:10.5px}
 ${MURO} .mu-g6{--mu-col:3;--mu-righe:2;--mu-gap:16px;--mu-alto:150px;display:grid;grid-template-columns:repeat(var(--mu-col),minmax(0,1fr));grid-template-rows:repeat(var(--mu-righe),minmax(0,1fr));gap:var(--mu-gap);min-height:0}
 ${MURO} .mu-g6.mu-scorre{grid-template-rows:none;grid-auto-rows:calc((100% - var(--mu-gap) * (var(--mu-righe) - 1)) / var(--mu-righe));overflow-y:auto;scroll-snap-type:y proximity;overscroll-behavior:contain;scrollbar-width:none}
-${MURO} .mu-pagine.mu-molte button:not(.si) span,${MURO} .mu-pagine.mu-icone button span{display:none}
+${MURO} .mu-pagine.mu-molte button:not(.si) span,${MURO} .mu-pagine.mu-icone button span,${MURO} .mu-pagine.mu-minime button span{display:none}
+${MURO} .mu-pagine.mu-minime{gap:1px;padding:2px}
+${MURO} .mu-pagine.mu-minime button{padding:6px 5px}
+${MURO} .mu-pagine.mu-minime+.mu-ora,${MURO}[data-compatto="1"] .mu-pagine.mu-minime+.mu-ora{margin-left:4px}
+${MURO} .mu-testa.mu-stretta,${MURO}[data-compatto="1"] .mu-testa.mu-stretta{gap:5px;padding-left:10px;padding-right:10px}
 ${MURO} .mu-pag-musica{grid-template-rows:auto 1fr}
 ${MURO} .mu-radio-griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;
   max-height:60vh;overflow:auto;padding:2px}
@@ -7233,8 +7263,15 @@ ${MURO}.mu-anteprima[data-verso="verticale"]{width:800px;height:1280px}
 ${MURO}.mu-anteprima .mu-pagina{height:100%}
 ${MURO} .mu-g6.mu-scorre>*{scroll-snap-align:start}
 /* Sul telefono i riquadri non si allungano a riempire lo schermo: «li trovo
-   troppo grandi». Hanno un'altezza loro, e la pagina scorre se servono. */
-${MURO}[data-compatto="1"][data-verso="verticale"] .mu-g6{grid-template-rows:none!important;grid-auto-rows:var(--mu-alto,150px)!important;align-content:start;overflow-y:auto;scrollbar-width:none}
+   troppo grandi». Hanno un'altezza loro, e la pagina scorre se servono.
+
+   Ma «sul NSPanel 120 sotto resta un buco vuoto»: lo schermo verticale da
+   4,7" ha la misura di un telefono, e sei riquadri da 150 ne lasciavano un
+   quinto vuoto. Le righe allora crescono fino a riempire la pagina, ma al
+   massimo di due quinti: abbastanza per chiudere il buco di un pannello,
+   troppo poco per tornare ai riquadri enormi sul telefono. Quando i riquadri
+   sono piu' di quelli che stanno, restano da 150 e la pagina scorre. */
+${MURO}[data-compatto="1"][data-verso="verticale"] .mu-g6{grid-template-rows:none!important;grid-auto-rows:clamp(var(--mu-alto,150px),calc((100% - var(--mu-gap) * (var(--mu-righe-vere,1) - 1)) / var(--mu-righe-vere,1)),calc(var(--mu-alto,150px) * 1.4))!important;align-content:start;overflow-y:auto;scrollbar-width:none}
 /* Meno riquadri dei posti (\`grigliaPerQuanti\`): la griglia ha gia' la forma
    di quelli che ci sono, e l'ultimo di una riga corta si allarga fino in
    fondo. Sul telefono le righe partono dalla loro altezza e crescono fino a
@@ -8232,6 +8269,13 @@ export function installPlanciaAMuro() {
   /* Col pannello acceso, quello che mostra arriva prima qui, da solo. */
   root.addEventListener?.(EVENTO_DEL_MURO, quandoCambia);
   root.addEventListener?.("resize", () => disegna());
+  /* I caratteri arrivano dopo la pagina: il titolo misurato col carattere di
+   * riserva e' piu' stretto di quello in Oswald, e la testa resterebbe con le
+   * misure sbagliate fino al prossimo ridisegno — su un pannello fermo, anche
+   * dei minuti, col nome tagliato. Arrivati i caratteri si ridisegna. */
+  doc.fonts?.addEventListener?.("loadingdone", () => {
+    if (state.muro?.attiva) disegna();
+  });
   /* Quello che dicono i sensori del tablet, dall'app (`lo_schermo.dart`):
    * qualcuno vicino allo schermo, o la stanza che si fa buia. */
   root.addEventListener?.("gdahome:schermo", (event) => {
