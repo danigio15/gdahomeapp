@@ -755,3 +755,37 @@ test("una ricerca alla volta, e nessuna mentre si lavora su un pannello", async 
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("l'analisi dice da che strada il pannello parla con la casa", async () => {
+  const dir = cartella();
+  try {
+    const installatore = {
+      ...installatoreFinto(),
+      analisi: async () => "== Dispositivo ==\nNSPanel",
+    };
+    const fili = {
+      dm_casa: [{ da: "192.168.1.100", daCasa: true, vistoSecondiFa: 2 }],
+      dm_fuori: [{ da: "centralino", daCasa: false, vistoSecondiFa: 1 }],
+    };
+    const pannelli = new Pannelli({
+      cartella: dir,
+      adb: adbFinto(),
+      installatore,
+      licenze: premium,
+      collegamenti: (id) => fili[id] || [],
+    });
+    pannelli.archivio.dati.pannelli.push(
+      { id: "pm_a", indirizzo: "192.168.1.100", stato: "pronto", dispositivo: "dm_casa" },
+      { id: "pm_b", indirizzo: "192.168.1.101", stato: "pronto", dispositivo: "dm_fuori" },
+      { id: "pm_c", indirizzo: "192.168.1.102", stato: "pronto", dispositivo: "dm_spento" },
+    );
+    const a = await pannelli.azione("pm_a", "analisi");
+    assert.match(a.rapporto, /== Collegamento con la casa ==\ndentro casa · da 192\.168\.1\.100/);
+    const b = await pannelli.azione("pm_b", "analisi");
+    assert.match(b.rapporto, /da fuori \(centralino\)/);
+    const c = await pannelli.azione("pm_c", "analisi");
+    assert.match(c.rapporto, /non collegato adesso/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

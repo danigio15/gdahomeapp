@@ -411,6 +411,7 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
     licenze,
     plance,
     dispositivi,
+    collegamenti: (id) => ponte.comeECollegato(id),
     reteDiCasa: {
       /* L'indirizzo IPv4 di casa di questo add-on, da cui `pannelli.js` ricava
        * la rete da cercare. `laReteDiCasa` (`da-casa.js`) torna { reti, … },

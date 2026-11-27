@@ -27,6 +27,11 @@ aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
   un indirizzo nuovo, e a quello vecchio adesso c'è un altro apparecchio.
   Un indirizzo che è già un pannello GdAHome si dice, invece di
   reinstallarlo.
+- **La verifica non chiede più 2-4 GB per la copia**: era rimasto il conto
+  di quando si copiavano tutte le partizioni. Ora si salvano solo system e
+  oem, compresse: poche centinaia di MB, e fino a ~2 GB solo mentre si copia.
+- **L'analisi dice da che strada il pannello parla con la casa**: dentro
+  casa, o da fuori passando dal centralino (che allunga ogni comando).
 - **Una cifra sbagliata nell'indirizzo si vede**: «192.198.1.120» al posto
   di «192.168.1.120» diceva solo «non risponde». Ora la console dice che
   l'indirizzo è fuori dalla rete di casa e propone quello probabile.

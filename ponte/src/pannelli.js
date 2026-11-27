@@ -59,6 +59,7 @@ export class Pannelli {
     avvia = undefined,
     adesso = () => Date.now(),
     riprovaDelRifiuto = { volte: 3, pausa: 3_000 },
+    collegamenti = null,
   } = {}) {
     this.archivio = new Archivio(join(cartella, "pannelli.json"), { pannelli: [] });
     this.adb = adb || new Adb(avvia ? { avvia } : {});
@@ -82,6 +83,8 @@ export class Pannelli {
     this.lavori = new Map();
     /* Quante volte, e ogni quanto, si riprova un pannello che rifiuta. */
     this.riprovaDelRifiuto = riprovaDelRifiuto;
+    /* Da dove e' collegato un dispositivo (`Ponte.comeECollegato`). */
+    this.collegamenti = collegamenti;
   }
 
   _premium() {
@@ -426,14 +429,18 @@ export class Pannelli {
     const liberi = this.installatore.spazioLibero?.(this.installatore.copie);
     if (liberi == null)
       return { esito: "giallo", detto: "Spazio per la copia su Home Assistant: non misurato" };
-    if (liberi < 4 * 1024 ** 3)
+    /* Si salvano solo system e oem (`DA_SALVARE`), compresse: finita la copia
+     * restano poche centinaia di MB. Mentre si copia, per stare larghi, si
+     * chiede il posto delle partizioni intere: su un NSPanel fino a ~2 GB.
+     * Prima qui c'era «ne servono 2-4 GB», di quando si copiava tutto. */
+    if (liberi < 2 * 1024 ** 3)
       return {
         esito: "giallo",
-        detto: `Spazio per la copia su Home Assistant: liberi ${mostraByte(liberi)}, ne servono di solito 2-4 GB`,
+        detto: `Spazio per la copia su Home Assistant: liberi ${mostraByte(liberi)}; durante la copia ne servono fino a ~2 GB (poi, compressa, poche centinaia di MB)`,
       };
     return {
       esito: "bene",
-      detto: `Spazio per la copia su Home Assistant: liberi ${mostraByte(liberi)}`,
+      detto: `Spazio per la copia su Home Assistant: liberi ${mostraByte(liberi)} (la copia, compressa, ne occupa poche centinaia di MB)`,
     };
   }
 
@@ -612,6 +619,21 @@ export class Pannelli {
     throw e;
   }
 
+  /* Da che strada parla con la casa: dentro casa, o dal centralino (da
+   * internet, che allunga ogni comando). Detto in chiaro per l'analisi. */
+  _comeECollegato(pannello) {
+    if (!pannello.dispositivo) return "nessun dispositivo abbinato";
+    if (typeof this.collegamenti !== "function") return "(non si sa)";
+    const fili = this.collegamenti(pannello.dispositivo) || [];
+    if (!fili.length) return "non collegato adesso";
+    return fili
+      .map(
+        (f) =>
+          `${f.daCasa ? "dentro casa" : "da fuori (centralino)"} · da ${f.da} · ultimo segno ${f.vistoSecondiFa} s fa`,
+      )
+      .join("\n");
+  }
+
   /* Il pannello e' entrato nella casa? Il suo dispositivo si e' fatto vedere
    * dopo l'abbinamento. `null` se non si puo' sapere: senza casa da guardare,
    * o un dispositivo che non c'e' piu' — tolto a mano dalla console, e allora
@@ -727,7 +749,8 @@ export class Pannelli {
   }
 
   async _analisi(pannello) {
-    const rapporto = await this.installatore.analisi({ indirizzo: pannello.indirizzo });
+    let rapporto = await this.installatore.analisi({ indirizzo: pannello.indirizzo });
+    rapporto += `\n\n== Collegamento con la casa ==\n${this._comeECollegato(pannello)}`;
     pannello.analisi = { quando: this.adesso() };
     this._salva();
     return { rapporto };
