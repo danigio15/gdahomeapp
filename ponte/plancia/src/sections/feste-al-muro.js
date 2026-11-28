@@ -65,7 +65,11 @@ import { clean, doc, esc, root, t } from "./shared.js";
 const KEY = "__DASHBOARDMODERN_FESTE_AL_MURO__";
 const state = (root[KEY] ||= { giro: null, scena: "", misura: "", motore: null });
 
-const menoMovimento = () => Boolean(root.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
+/* Ferma anche con la «Plancia leggera» del pannello a muro: vedi
+ * `il-riposo-vivo-al-muro.js`. */
+const menoMovimento = () =>
+  Boolean(root.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) ||
+  Boolean(doc?.getElementById?.("gdahome-leggera"));
 
 /** Quale scena delle feste va sul riposo adesso, o `""`. */
 export function scenaDelleFeste(adesso = new Date()) {

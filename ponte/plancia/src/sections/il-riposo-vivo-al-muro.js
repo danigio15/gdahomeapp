@@ -44,7 +44,13 @@ const state = (root[KEY] ||= {
   ogni: 60,
 });
 
-const menoMovimento = () => Boolean(root.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
+/* Fermo anche con la «Plancia leggera» dell'app, che mette il suo foglio di
+ * stile nella pagina: e' quella del pannello a muro, quattro core lenti
+ * accesi giorno e notte, dove un cielo che si muove era lavoro di ogni
+ * secondo per uno schermo che quasi nessuno guarda. */
+const menoMovimento = () =>
+  Boolean(root.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) ||
+  Boolean(doc?.getElementById?.("gdahome-leggera"));
 
 const maiuscola = (testo) => {
   const s = clean(testo);
@@ -492,23 +498,35 @@ export class CieloCheSiMuove {
 function giraAdagio(fotogramma, { fps = 5, finestra = root, fermo = false } = {}) {
   const documento = finestra.document;
   let richiesta = 0;
+  let attesa = 0;
   let prima = 0;
   let spento = false;
   const intervallo = 1000 / Math.max(1, fps);
+  /* Fra un fotogramma e l'altro si dorme (`setTimeout`), e solo per disegnare
+   * si chiede il fotogramma al browser. Prima lo si chiedeva sessanta volte
+   * al secondo per disegnarne cinque: il browser si svegliava lo stesso a
+   * ogni giro, e su un pannello lento quel risveglio costa. */
   const giro = (adesso) => {
     richiesta = 0;
     if (spento || documento?.hidden) return;
     const dt = prima ? adesso - prima : intervallo;
-    if (dt >= intervallo - 4) {
-      prima = adesso;
-      fotogramma(Math.min(dt, 400) / 1000);
-    }
-    richiesta = finestra.requestAnimationFrame?.(giro) || 0;
+    prima = adesso;
+    fotogramma(Math.min(dt, 400) / 1000);
+    prossimo();
+  };
+  const prossimo = () => {
+    if (spento || attesa || richiesta) return;
+    attesa =
+      finestra.setTimeout?.(() => {
+        attesa = 0;
+        if (spento || documento?.hidden) return;
+        richiesta = finestra.requestAnimationFrame?.(giro) || 0;
+      }, intervallo) || 0;
   };
   const riparti = () => {
-    if (spento || richiesta || documento?.hidden || fermo) return;
+    if (spento || richiesta || attesa || documento?.hidden || fermo) return;
     prima = 0;
-    richiesta = finestra.requestAnimationFrame?.(giro) || 0;
+    prossimo();
   };
   fotogramma(0);
   if (!fermo) riparti();
@@ -517,7 +535,9 @@ function giraAdagio(fotogramma, { fps = 5, finestra = root, fermo = false } = {}
     ferma() {
       spento = true;
       if (richiesta) finestra.cancelAnimationFrame?.(richiesta);
+      if (attesa) finestra.clearTimeout?.(attesa);
       richiesta = 0;
+      attesa = 0;
       documento?.removeEventListener?.("visibilitychange", riparti);
     },
   };

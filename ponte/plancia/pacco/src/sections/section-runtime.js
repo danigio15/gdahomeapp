@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-GUZMPWFE.js";
+} from "../../chunk-QNKY7NHY.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -118305,7 +118305,7 @@ ${muro}[data-compatto="1"] .mu-luci-fascia.testo-scuro>.mu-luci-scena::after{bac
 // src/sections/feste-al-muro.js
 var KEY120 = "__DASHBOARDMODERN_FESTE_AL_MURO__";
 var state116 = root[KEY120] ||= { giro: null, scena: "", misura: "", motore: null };
-var menoMovimento3 = () => Boolean(root.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
+var menoMovimento3 = () => Boolean(root.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) || Boolean(doc?.getElementById?.("gdahome-leggera"));
 function scenaDelleFeste(adesso2 = /* @__PURE__ */ new Date()) {
   return momentoDelMuro(adesso2) || "";
 }
@@ -118831,7 +118831,7 @@ var state118 = root[KEY122] ||= {
   fotoDaMostrare: [],
   ogni: 60
 };
-var menoMovimento4 = () => Boolean(root.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
+var menoMovimento4 = () => Boolean(root.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) || Boolean(doc?.getElementById?.("gdahome-leggera"));
 var maiuscola4 = (testo5) => {
   const s = clean(testo5);
   return s ? s[0].toLocaleUpperCase() + s.slice(1) : "";
@@ -119206,6 +119206,7 @@ var CieloCheSiMuove = class {
 function giraAdagio(fotogramma2, { fps = 5, finestra: finestra7 = root, fermo = false } = {}) {
   const documento = finestra7.document;
   let richiesta = 0;
+  let attesa = 0;
   let prima = 0;
   let spento = false;
   const intervallo2 = 1e3 / Math.max(1, fps);
@@ -119213,16 +119214,22 @@ function giraAdagio(fotogramma2, { fps = 5, finestra: finestra7 = root, fermo = 
     richiesta = 0;
     if (spento || documento?.hidden) return;
     const dt = prima ? adesso2 - prima : intervallo2;
-    if (dt >= intervallo2 - 4) {
-      prima = adesso2;
-      fotogramma2(Math.min(dt, 400) / 1e3);
-    }
-    richiesta = finestra7.requestAnimationFrame?.(giro) || 0;
+    prima = adesso2;
+    fotogramma2(Math.min(dt, 400) / 1e3);
+    prossimo();
+  };
+  const prossimo = () => {
+    if (spento || attesa || richiesta) return;
+    attesa = finestra7.setTimeout?.(() => {
+      attesa = 0;
+      if (spento || documento?.hidden) return;
+      richiesta = finestra7.requestAnimationFrame?.(giro) || 0;
+    }, intervallo2) || 0;
   };
   const riparti2 = () => {
-    if (spento || richiesta || documento?.hidden || fermo) return;
+    if (spento || richiesta || attesa || documento?.hidden || fermo) return;
     prima = 0;
-    richiesta = finestra7.requestAnimationFrame?.(giro) || 0;
+    prossimo();
   };
   fotogramma2(0);
   if (!fermo) riparti2();
@@ -119231,7 +119238,9 @@ function giraAdagio(fotogramma2, { fps = 5, finestra: finestra7 = root, fermo = 
     ferma() {
       spento = true;
       if (richiesta) finestra7.cancelAnimationFrame?.(richiesta);
+      if (attesa) finestra7.clearTimeout?.(attesa);
       richiesta = 0;
+      attesa = 0;
       documento?.removeEventListener?.("visibilitychange", riparti2);
     }
   };

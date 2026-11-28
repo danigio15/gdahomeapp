@@ -769,6 +769,8 @@ export class Installatore {
    * solo se byte e md5 tornano con quelli letti sul pannello. Prima di
    * cominciare si guarda che su Home Assistant ci sia posto. */
   async _copiaDiSicurezza(indirizzo, nome, avanti) {
+    /* Una copia nuova riprova la diretta, anche se l'ultima volta non e' andata. */
+    this._senzaDiretta?.delete(indirizzo);
     let byName = "";
     try {
       byName = (
@@ -863,7 +865,7 @@ export class Installatore {
           dove: join(dir, `${p}.img.gz`),
           misura: misure[p],
           atteso: /^[0-9a-f]{32}$/.test(atteso) ? atteso : "",
-          avanzamento: (byte) => {
+          avanzamento: (byte, modo = "") => {
             const secondi = Math.max(1, (Date.now() - partito) / 1000);
             const alSecondo = byte / secondi;
             const velocita = `${(alSecondo / 1024 ** 2).toFixed(1).replace(".", ",")} MB/s`;
@@ -874,7 +876,7 @@ export class Installatore {
             avanti(
               i,
               nomi.length,
-              `${p} · ${mostraByte(byte)} di ${mostraByte(misure[p] || byte)} · ${velocita}${manca}`,
+              `${p} · ${mostraByte(byte)} di ${mostraByte(misure[p] || byte)} · ${velocita}${modo ? ` ${modo}` : ""}${manca}`,
               percento(byte),
             );
           },
@@ -917,18 +919,31 @@ export class Installatore {
 
     /* Prima la copia diretta (connessione di rete, non adb): e' la veloce.
      * Se il pannello non riesce a collegarsi — niente `nc`, o la rete non
-     * lascia — lo si ricorda e non la si riprova sulle partizioni dopo. */
+     * lascia — lo si ricorda **per quel pannello e per quella copia**, e non
+     * la si riprova sulle partizioni dopo. Prima lo si ricordava per tutti i
+     * pannelli e per sempre: un inciampo solo, e ogni copia dopo andava col
+     * vecchio adb a 0,4 MB/s. */
     const verso = this.indirizzoDiCasa?.() || "";
-    const nc = misura && verso && !this._senzaDiretta ? await this._ncDelPannello(indirizzo) : "";
+    this._senzaDiretta ??= new Set();
+    const nc =
+      misura && verso && !this._senzaDiretta.has(indirizzo)
+        ? await this._ncDelPannello(indirizzo)
+        : "";
     if (nc) {
       const diretta = await this.copiaDiretta(
         indirizzo,
         `{ dd if=${sorgente} bs=4194304; dd if=/dev/zero bs=1048576 count=1; } 2>/dev/null`,
         dove,
-        { verso, nc, limite: misura, avanzamento, comprimi: true },
+        {
+          verso,
+          nc,
+          limite: misura,
+          avanzamento: avanzamento && ((b) => avanzamento(b, "diretta")),
+          comprimi: true,
+        },
       ).catch((e) => ({ errore: e.message || String(e), causa: e.causa }));
       if (!diretta.errore && buona(diretta)) return { md5: diretta.md5 };
-      if (diretta.causa === "diretta") this._senzaDiretta = true;
+      if (diretta.causa === "diretta") this._senzaDiretta.add(indirizzo);
       ultimo = diretta;
     }
     for (let tentativo = 0; tentativo < 2; tentativo += 1) {
@@ -938,7 +953,7 @@ export class Installatore {
       ultimo = await this.scriviCopia(indirizzo, comando, dove, {
         limite: misura || 0,
         comprimi: true,
-        avanzamento,
+        avanzamento: avanzamento && ((b) => avanzamento(b, "via adb")),
       }).catch((e) => ({ errore: e.message || String(e) }));
       if (!ultimo.errore && buona(ultimo)) return { md5: ultimo.md5 };
     }
@@ -973,17 +988,18 @@ export class Installatore {
     return { errore: "non torna con l'originale (md5 diverso)." };
   }
 
-  /* Il `nc` del pannello, chiesto una volta per pannello. */
+  /* Il `nc` del pannello, chiesto una volta per pannello. Si ricorda solo
+   * quando c'e': un «niente» puo' essere un pannello occupato che non ha
+   * risposto, e ricordato voleva dire niente copia diretta per sempre. */
   async _ncDelPannello(indirizzo) {
     this._nc ??= new Map();
-    if (!this._nc.has(indirizzo)) {
-      const nc =
-        typeof this.adb.ncSulPannello === "function"
-          ? await this.adb.ncSulPannello(indirizzo).catch(() => "")
-          : "";
-      this._nc.set(indirizzo, nc);
-    }
-    return this._nc.get(indirizzo);
+    if (this._nc.has(indirizzo)) return this._nc.get(indirizzo);
+    const nc =
+      typeof this.adb.ncSulPannello === "function"
+        ? await this.adb.ncSulPannello(indirizzo).catch(() => "")
+        : "";
+    if (nc) this._nc.set(indirizzo, nc);
+    return nc;
   }
 
   /* I byte liberi in /data sul pannello, o null. */
@@ -1545,6 +1561,11 @@ export class Installatore {
     const remoto = `/data/local/tmp/gda-${pezzo}`;
     const partito = Date.now();
     dice(`Copio ${nome} sul pannello (${mostraByte(misura)})…`, 0);
+    /* Prima la strada diretta (rete, non adb), come la copia di sicurezza ma
+     * nel verso opposto: a 0,8 MB/s un'app da 100 MB erano due minuti. */
+    if (await this._mandaDiretto(indirizzo, locale, remoto, misura, nome, dice, partito)) {
+      return this._installaDaQui(indirizzo, remoto, { nome, permessi, dice });
+    }
     let finito = false;
     const copia = this.adb.push(indirizzo, locale, remoto).finally(() => {
       finito = true;
@@ -1565,7 +1586,7 @@ export class Installatore {
         dice(
           `Copio ${nome}: ${mostraByte(byte)} di ${mostraByte(misura)} · ${(alSecondo / 1024 ** 2)
             .toFixed(1)
-            .replace(".", ",")} MB/s${minuti > 0 ? ` · mancano ~${minuti} min` : ""}`,
+            .replace(".", ",")} MB/s via adb${minuti > 0 ? ` · mancano ~${minuti} min` : ""}`,
           Math.round((byte / misura) * 85),
         );
       }
@@ -1576,6 +1597,53 @@ export class Installatore {
       finito = true;
       await guarda;
     }
+    return this._installaDaQui(indirizzo, remoto, { nome, permessi, dice });
+  }
+
+  /* Manda un pezzo per la strada diretta e guarda che sul pannello sia
+   * arrivato intero. `true` se e' andata; `false` se non si puo' (niente
+   * `nc`, niente indirizzo di casa, il pannello non si collega), e allora si
+   * va con adb. Come la copia, se non va la si lascia stare per quel pannello. */
+  async _mandaDiretto(indirizzo, locale, remoto, misura, nome, dice, partito) {
+    const verso = this.indirizzoDiCasa?.() || "";
+    this._senzaDiretta ??= new Set();
+    if (!verso || typeof this.adb.mandaDiretto !== "function") return false;
+    if (this._senzaDiretta.has(indirizzo)) return false;
+    const nc = await this._ncDelPannello(indirizzo);
+    if (!nc) return false;
+    try {
+      await this.adb.mandaDiretto(indirizzo, locale, remoto, {
+        verso,
+        nc,
+        avanzamento: (byte) => {
+          const secondi = Math.max(1, (Date.now() - partito) / 1000);
+          const alSecondo = byte / secondi;
+          const minuti = Math.ceil((misura - byte) / alSecondo / 60);
+          dice(
+            `Copio ${nome}: ${mostraByte(byte)} di ${mostraByte(misura)} · ${(alSecondo / 1024 ** 2)
+              .toFixed(1)
+              .replace(".", ",")} MB/s diretta${minuti > 0 ? ` · mancano ~${minuti} min` : ""}`,
+            Math.round((byte / misura) * 85),
+          );
+        },
+      });
+      /* Intero sul pannello? `nc` finisce di scrivere da se': si guarda. */
+      for (let k = 0; k < 20; k += 1) {
+        const detto = await this.adb
+          .shell(indirizzo, `stat -c %s ${remoto} 2>/dev/null`, { root: false, attesa: 10_000 })
+          .catch(() => "");
+        if (Number(String(detto).trim()) === misura) return true;
+        await dorme(this.passoDellaBarra / 2);
+      }
+      return false;
+    } catch (errore) {
+      if (errore?.causa === "diretta") this._senzaDiretta.add(indirizzo);
+      return false;
+    }
+  }
+
+  /* Installa da /data/local/tmp quello che c'e' gia' sul pannello. */
+  async _installaDaQui(indirizzo, remoto, { nome, permessi = false, dice = () => {} }) {
     dice(`Installo ${nome}…`, 90);
     const esito = await this.adb.shell(
       indirizzo,
