@@ -16,6 +16,10 @@ aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
 ## 1.19.52
 
+- **L'analisi elenca le app rimaste e le partizioni**: le app che non sono
+  di Android, col posto dove stanno, e chi è amministratore del dispositivo
+  (sul Corridoio era rimasta «NSPanelTools»); e le partizioni, per il logo
+  SONOFF che compare all'accensione prima di Android.
 - **L'analisi guarda dentro la plancia**: «La plancia al microscopio» — per
   otto secondi, sul pannello vero, quanto il filo della pagina è occupato
   (script, stili, impaginazione) e le funzioni che si prendono il tempo.

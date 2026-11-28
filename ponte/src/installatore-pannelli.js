@@ -2380,6 +2380,20 @@ export class Installatore {
       "dumpsys sensorservice 2>/dev/null | grep -iE -A2 'proximity|light' | head -n 30",
     );
     await chiedi("Sullo schermo", "dumpsys window | grep -m1 mCurrentFocus");
+    /* Le app che non sono di Android, col posto dove stanno: una rimasta
+     * dopo la pulizia («NSPanelTools» sul Corridoio) si vede qui, col suo
+     * nome vero. E chi e' amministratore del dispositivo: Android non lo
+     * lascia disinstallare. */
+    await chiedi(
+      "App sul pannello",
+      "pm list packages -f 2>/dev/null | sed 's/^package://' | grep -v -E '=(android|com\\.android\\.[a-z.]*)$' | sort; echo '-- amministratori:'; dumpsys device_policy 2>/dev/null | grep -E 'admin=|ComponentInfo' | head -n 5",
+    );
+    /* Le partizioni: il logo dell'accensione sta in una sua (logo, resource
+     * o uboot sui Rockchip), prima di Android. */
+    await chiedi(
+      "Partizioni",
+      "ls -l /dev/block/by-name/ /dev/block/platform/*/by-name/ 2>/dev/null | sed 's/.* \\([^ ]* -> .*\\)/\\1/' | grep -- '->' | head -n 40",
+    );
     await chiedi(
       "Rete",
       "ip -4 addr show wlan0 2>/dev/null | grep inet; dumpsys wifi 2>/dev/null | grep -m1 -E 'mWifiInfo'; ip route | head -n 3",
