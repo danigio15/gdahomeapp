@@ -2000,6 +2000,12 @@ export class Installatore {
         .catch((e) => `? ${e.message}`);
       righe.push(`== ${titolo} ==\n${String(detto).trim() || "(niente)"}`);
     };
+    /* Prima di tutto, mentre chi ha chiesto l'analisi usa il pannello: dove
+     * va il processore, filo per filo, in otto secondi. `dumpsys cpuinfo`
+     * dice «GdAHome Muro 44%», ma non se e' Flutter che ridisegna la plancia
+     * (raster), la casa che arriva (ui, il Dart) o Android (main): sono tre
+     * strade diverse per renderlo piu' svelto. Lo stesso per la WebView. */
+    await chiedi("Fili al lavoro (8 secondi)", filiAlLavoro(pkg, 8), true);
     await chiedi(
       "Dispositivo",
       "getprop ro.product.model; getprop ro.build.version.release; getprop ro.board.platform; getprop ro.hardware; uptime",
@@ -2100,6 +2106,24 @@ export class Installatore {
       return { errore: scusa(errore) };
     }
   }
+}
+
+/* Lo script dei fili: per GdAHome Muro e per la WebView (il suo processo
+ * «sandboxed»), quanto ha lavorato ogni filo in `secondi`, in percento di un
+ * nucleo, i piu' occupati in cima. Dai tempi di /proc (utime+stime, in
+ * centesimi di secondo), letti due volte. */
+export function filiAlLavoro(pkg, secondi = 8) {
+  const pid = `$(pidof ${pkg}) $(pgrep -f sandboxed_process 2>/dev/null)`;
+  /* Senza awk, che su Android 8 puo' mancare: i campi di /proc/…/stat dopo il
+   * nome (che puo' avere spazi), con `set --`. */
+  return [
+    `T=/data/local/tmp/gda-fili`,
+    `cpu(){ set -- $(sed 's/^.*) //' $1 2>/dev/null); echo $(( \${12:-0} + \${13:-0} )); }`,
+    `: > $T; for p in ${pid}; do for t in /proc/$p/task/*; do echo "$p/\${t##*/} $(cpu $t/stat)" >> $T; done; done`,
+    `sleep ${secondi}`,
+    `for p in ${pid}; do echo "-- $(tr '\\0' ' ' < /proc/$p/cmdline 2>/dev/null | cut -c1-60)"; for t in /proc/$p/task/*; do a=$(cpu $t/stat); b=$(grep "^$p/\${t##*/} " $T | cut -d' ' -f2); d=$(( a - \${b:-$a} )); [ $d -gt 0 ] && echo "$(( d * 100 / ${secondi * 100} ))% $(cat $t/comm 2>/dev/null)"; done | sort -rn | head -n 10; done`,
+    `rm -f $T`,
+  ].join("\n");
 }
 
 /* «2026-11-27_1542»: si legge, e si ordina da se'. */
