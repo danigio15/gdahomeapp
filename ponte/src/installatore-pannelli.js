@@ -961,10 +961,15 @@ export class Installatore {
             );
           },
         });
-        if (esito.errore) return { errore: `Copia di ${p}: ${esito.errore}` };
+        if (esito.errore) {
+          /* Una copia a meta' non serve a niente: non resta su /share. */
+          rmSync(dir, { recursive: true, force: true });
+          return { errore: `Copia di ${p}: ${esito.errore}` };
+        }
         copiati += misure[p] || 0;
         righe.push(`${esito.md5}  ${p}.img`);
       } catch (errore) {
+        rmSync(dir, { recursive: true, force: true });
         return { errore: `Copia di ${p} non riuscita: ${errore.message || errore}.` };
       }
     }
@@ -1077,6 +1082,19 @@ export class Installatore {
       fatti += misure[p];
     }
     return { foto: { cartella, partizioni: misure, quando: new Date().toISOString() } };
+  }
+
+  /* Ferma la copia in viaggio: si chiude chi legge la fotografia sul
+   * pannello, e la copia finisce lì (non arrivata). Serve quando sul
+   * pannello c'e' da lavorare: la linea e' una sola. */
+  async fermaLaCopia(indirizzo) {
+    /* Solo chi la legge (`dd if=…`), non chi la scrive; e la parentesi
+     * quadra fa si' che il comando non trovi se stesso. */
+    const chi = `if=${FOTO.replace(/a$/, "[a]")}`;
+    await this.adb.shell(indirizzo, `pkill -f '${chi}' 2>/dev/null; true`, {
+      root: true,
+      attesa: 15_000,
+    });
   }
 
   /* Il viaggio in sottofondo: la fotografia sul pannello va su Home
