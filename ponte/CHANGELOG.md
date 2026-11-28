@@ -14,6 +14,16 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.55
+
+- **Sul pannello a muro niente tasto dell'assistente.** Il cerchio blu in
+  basso a destra galleggiava sopra le luci: sul pannello non c'è più.
+- **Le feste costano meno al pannello.** Se è il periodo delle feste la
+  plancia se lo chiedeva di continuo — per ogni disegno, per ogni luce, per
+  la luce dello schermo — e dal microscopio era diventata la prima funzione
+  del Salone. Ora la risposta vale per il minuto in cui è stata data (a
+  mezzanotte cambia comunque).
+
 ## 1.19.54
 
 - **Sul pannello a muro la Salute e Strava non ci sono più, nemmeno dentro la

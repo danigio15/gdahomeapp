@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-VDS4NVN7.js";
+} from "../../chunk-KKLIE7KF.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -110600,6 +110600,7 @@ function configurazione12() {
   return normalizzaAssist(readJson(CHIAVE_ASSIST, {}));
 }
 function acceso3() {
+  if (sulPannelloAMuro()) return false;
   return assistAcceso(readJson("cd_sections", {}), readJson(CHIAVE_ASSIST, {}));
 }
 function motoreDellaVoce() {
@@ -114756,9 +114757,17 @@ var comeData = (data) => {
   const d = data instanceof Date ? data : new Date(data ?? Date.now());
   return Number.isFinite(d.getTime()) ? d : null;
 };
+var finestraRicordata = { minuto: Number.NaN, finestra: null };
 function finestraDelleFeste(data = /* @__PURE__ */ new Date()) {
   const d = comeData(data);
   if (!d) return null;
+  const minuto = Math.floor(d.getTime() / 6e4);
+  if (minuto === finestraRicordata.minuto) return finestraRicordata.finestra;
+  const finestra7 = calcolaLaFinestra(d);
+  finestraRicordata = { minuto, finestra: finestra7 };
+  return finestra7;
+}
+function calcolaLaFinestra(d) {
   const anno = d.getFullYear();
   const mese = d.getMonth();
   const giorno3 = d.getDate();

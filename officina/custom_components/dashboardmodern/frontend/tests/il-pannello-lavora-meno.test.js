@@ -57,3 +57,20 @@ test("dentro GdAHome Muro la Salute e Strava non ci sono, e non si cercano", asy
     delete globalThis.__GDAHOME_MURO__;
   }
 });
+
+test("la finestra delle feste si ricorda nello stesso minuto, e cambia a mezzanotte", async () => {
+  const { finestraDelleFeste } = await import("../src/core/feste.js");
+  const prima = finestraDelleFeste(new Date(2026, 11, 7, 23, 59, 10));
+  assert.equal(prima, null);
+  assert.equal(finestraDelleFeste(new Date(2026, 11, 7, 23, 59, 50)), null);
+  const dopo = finestraDelleFeste(new Date(2026, 11, 8, 0, 0, 5));
+  assert.ok(dopo, "l'8 dicembre e' festa");
+  assert.equal(finestraDelleFeste(new Date(2026, 11, 8, 0, 0, 40)), dopo);
+  assert.equal(finestraDelleFeste(new Date(2027, 0, 7, 0, 0, 1)), null);
+});
+
+test("sul pannello a muro il tasto di Assist non c'e'", async () => {
+  const assist = await read("../src/sections/assist-section.js");
+  const acceso = assist.slice(assist.indexOf("function acceso()"));
+  assert.match(acceso.slice(0, 400), /if \(sulPannelloAMuro\(\)\) return false;/);
+});

@@ -38,6 +38,7 @@ import {
   installStyle,
   readJson,
   root,
+  sulPannelloAMuro,
   t,
   wrapFunction,
 } from "./shared.js";
@@ -62,6 +63,9 @@ function configurazione() {
 
 /** Se Assist e' acceso, secondo l'elenco delle sezioni. */
 function acceso() {
+  /* Sul pannello a muro il tasto di Assist non c'e': galleggiava sopra le
+   * luci, in un angolo dove il dito va a toccare altro. */
+  if (sulPannelloAMuro()) return false;
   return assistAcceso(readJson("cd_sections", {}), readJson(CHIAVE_ASSIST, {}));
 }
 
