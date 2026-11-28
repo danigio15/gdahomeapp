@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- GdAHome Muro, l'app del pannello (GDAHOME_APP_ID=com.gdahome.muro).
+
+     Si aggiunge al manifesto di sempre e toglie quello che sul muro non c'e':
+     Android Auto, l'orologio, i permessi della salute. Le classi di quei
+     servizi non ci sono nemmeno (stanno in `src/telefono`), e dichiararli
+     vorrebbe dire servizi che puntano al vuoto. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.health.READ_STEPS" tools:node="remove" />
+    <uses-permission android:name="android.permission.health.READ_HEART_RATE" tools:node="remove" />
+    <uses-permission android:name="android.permission.health.READ_RESTING_HEART_RATE" tools:node="remove" />
+    <uses-permission android:name="android.permission.health.READ_WEIGHT" tools:node="remove" />
+    <uses-permission android:name="android.permission.health.READ_BODY_FAT" tools:node="remove" />
+    <uses-permission android:name="android.permission.health.READ_BLOOD_PRESSURE" tools:node="remove" />
+    <uses-permission android:name="android.permission.health.READ_OXYGEN_SATURATION" tools:node="remove" />
+    <uses-permission android:name="android.permission.health.READ_SLEEP" tools:node="remove" />
+    <uses-permission android:name="android.permission.health.READ_ACTIVE_CALORIES_BURNED" tools:node="remove" />
+    <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED" tools:node="remove" />
+    <uses-permission android:name="android.permission.health.READ_DISTANCE" tools:node="remove" />
+    <uses-permission android:name="android.permission.health.READ_FLOORS_CLIMBED" tools:node="remove" />
+    <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND" tools:node="remove" />
+
+    <application>
+        <service
+            android:name="com.gdahome.gdahome.auto.GdahomeCarAppService"
+            tools:node="remove" />
+        <service
+            android:name="com.gdahome.gdahome.orologio.OrologioInAscolto"
+            tools:node="remove" />
+        <activity-alias
+            android:name="ViewPermissionUsageActivity"
+            tools:node="remove" />
+        <meta-data
+            android:name="com.google.android.gms.car.application"
+            tools:node="remove" />
+        <meta-data
+            android:name="androidx.car.app.minCarApiLevel"
+            tools:node="remove" />
+    </application>
+</manifest>
