@@ -34,7 +34,7 @@ import {
   stepReporter,
   stradaAppenaCaduta,
   strategieDellaTelecamera
-} from "../chunk-3GC2HOVZ.js";
+} from "../chunk-VDS4NVN7.js";
 import {
   IMPIANTO_SCELTO_KEY,
   SCHEMA_VERSION,
@@ -47,7 +47,7 @@ import {
   pick,
   plantAt,
   plantModel
-} from "../chunk-BIR7TR7M.js";
+} from "../chunk-Z33ELZ7A.js";
 
 // src/legacy/dashboard-data.js
 function stableRoomId(room, index = 0) {

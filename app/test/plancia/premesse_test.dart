@@ -7,6 +7,7 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gdahome/muro/sul_muro.dart';
 import 'package:gdahome/plancia/pannello.dart';
 import 'package:gdahome/plancia/premesse.dart';
 
@@ -73,6 +74,21 @@ void main() {
       expect(perLoScript(['<']), r'["\u003c"]');
     },
   );
+
+  /* Sul pannello a muro la plancia lascia fuori la Salute e Strava, e lo
+     sa da qui; nell'app del telefono il segno non c'e'. */
+  test('dentro GdAHome Muro la pagina lo sa, nel telefono no', () {
+    expect(
+      _premesse().conLePremesse(_pagina, ilWebSocket: 'WebSocket'),
+      isNot(contains('__GDAHOME_MURO__')),
+    );
+    sulMuro = true;
+    addTearDown(() => sulMuro = false);
+    expect(
+      _premesse().conLePremesse(_pagina, ilWebSocket: 'WebSocket'),
+      contains('window.__GDAHOME_MURO__=true;'),
+    );
+  });
 
   test('in testa ci va quello che la plancia deve sapere', () {
     final servita = _premesse().conLePremesse(

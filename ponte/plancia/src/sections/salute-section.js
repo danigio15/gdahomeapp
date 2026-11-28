@@ -49,6 +49,7 @@ import {
   lexicalGlobal,
   locale,
   paginaVisibile,
+  sulPannelloAMuro,
   quandoSiCambiaPagina,
   readJson,
   root,
@@ -68,6 +69,9 @@ const KEY = "__DASHBOARDMODERN_SALUTE__";
 const state = (root[KEY] ||= {
   installed: false,
   frame: 0,
+  /* Quando si e' rifatta l'ultima volta, e il giro rimandato (schedule). */
+  ultimoGiro: 0,
+  dopo: 0,
   /* «corpo» o «strava»; vuoto = il primo che c'e'. */
   vista: "",
   chi: "",
@@ -155,6 +159,8 @@ function quandoArrivato(iso, adesso = Date.now()) {
 
 /** La Salute com'e' adesso — le persone e Strava — o `null` se non c'e' niente. */
 export function vistaSalute(states = allStates() || {}) {
+  /* Sul pannello a muro la Salute non c'e' (`sulPannelloAMuro`). */
+  if (sulPannelloAMuro()) return null;
   const config = configurazioneSalute(readJson(CHIAVE_SALUTE, {}));
   const persone = personeDellaSalute(states, config);
   const strava = vistaDiStrava(states);
@@ -1008,10 +1014,40 @@ function ravvivaIRitratti(dove) {
   fermaRitrattiPersi();
 }
 
+/* A pagina non vista la Salute si rifa' al piu' ogni dieci secondi.
+ *
+ * Il giro serve a due cose: dipingere la pagina, e sapere se la sua voce nel
+ * menu va accesa. La seconda si chiedeva a ogni mazzetto di stati, anche a
+ * pagina chiusa e sotto il pannello a muro: tutte le entita' di casa guardate
+ * una per una per trovare passi e battiti, e dal microscopio sul pannello era
+ * la funzione piu' cara della plancia (400 ms ogni otto secondi). Se la
+ * pagina non si vede, la voce del menu puo' aspettare dieci secondi; aperta,
+ * si ridipinge subito come prima. */
+export const SALUTE_NON_VISTA_MS = 10_000;
+
 function schedule() {
   if (state.frame) return;
+  const vista = paginaVisibile(SALUTE_PAGE_ID) && Boolean(doc?.getElementById?.(SALUTE_PAGE_ID));
+  const adesso = Date.now();
+  if (!vista && state.ultimoGiro && adesso - state.ultimoGiro < SALUTE_NON_VISTA_MS) {
+    if (!state.dopo)
+      state.dopo =
+        root.setTimeout?.(
+          () => {
+            state.dopo = 0;
+            schedule();
+          },
+          SALUTE_NON_VISTA_MS - (adesso - state.ultimoGiro),
+        ) || 0;
+    return;
+  }
+  if (state.dopo) {
+    root.clearTimeout?.(state.dopo);
+    state.dopo = 0;
+  }
   const giro = () => {
     state.frame = 0;
+    state.ultimoGiro = Date.now();
     try {
       const vista = vistaSalute();
       if (accendiLaVoce(vista) && vista) dipingi(vista);

@@ -14,6 +14,19 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.54
+
+- **Sul pannello a muro la Salute e Strava non ci sono più, nemmeno dentro la
+  plancia.** L'app del pannello la Salute non l'aveva già, ma la plancia —
+  che è la stessa pagina del telefono — continuava a cercare passi e battiti
+  fra tutte le entità di casa a ogni cambio di stato: dal microscopio sul
+  Salone era la funzione più cara. Ora l'app del pannello lo dice alla
+  plancia, e la plancia non la cerca nemmeno. Sul telefono resta com'è; e lì,
+  a pagina chiusa, la Salute si rifà al più ogni dieci secondi.
+- **Il riposo del pannello** (l'orologio che si sposta) faceva impaginare
+  tutta la pagina a ogni cambio di stato per misurarsi. Ora si rimisura solo
+  se qualcosa è cambiato davvero, o lo schermo.
+
 ## 1.19.53
 
 - **La luce toccata cambia subito sul pannello.** Lo stato di quello che hai

@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-3GC2HOVZ.js";
+} from "../../chunk-VDS4NVN7.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -620,6 +620,7 @@ import {
   stanzaDiHomeAssistant,
   statoSecondoVerso,
   storedPlants,
+  sulPannelloAMuro,
   supportedLocales,
   t,
   tieniIlBloccoNellaScheda,
@@ -630,7 +631,7 @@ import {
   wrapFunction,
   writeIconGlyph,
   writeJsonIfChanged
-} from "../../chunk-BIR7TR7M.js";
+} from "../../chunk-Z33ELZ7A.js";
 import {
   CELLA,
   CHIAVE_CASA3D,
@@ -72934,6 +72935,9 @@ var KEY61 = "__DASHBOARDMODERN_SALUTE__";
 var state57 = root[KEY61] ||= {
   installed: false,
   frame: 0,
+  /* Quando si e' rifatta l'ultima volta, e il giro rimandato (schedule). */
+  ultimoGiro: 0,
+  dopo: 0,
   /* «corpo» o «strava»; vuoto = il primo che c'e'. */
   vista: "",
   chi: "",
@@ -72999,6 +73003,7 @@ function quandoArrivato(iso, adesso2 = Date.now()) {
   return d.toLocaleDateString(locale(), { day: "numeric", month: "short" });
 }
 function vistaSalute(states = allStates() || {}) {
+  if (sulPannelloAMuro()) return null;
   const config = configurazioneSalute(readJson(CHIAVE_SALUTE, {}));
   const persone4 = personeDellaSalute(states, config);
   const strava = vistaDiStrava(states);
@@ -73656,13 +73661,32 @@ function ravvivaIRitratti(dove3) {
   }
   fermaRitrattiPersi();
 }
+var SALUTE_NON_VISTA_MS = 1e4;
 function schedule20() {
   if (state57.frame) return;
+  const vista2 = paginaVisibile(SALUTE_PAGE_ID) && Boolean(doc?.getElementById?.(SALUTE_PAGE_ID));
+  const adesso2 = Date.now();
+  if (!vista2 && state57.ultimoGiro && adesso2 - state57.ultimoGiro < SALUTE_NON_VISTA_MS) {
+    if (!state57.dopo)
+      state57.dopo = root.setTimeout?.(
+        () => {
+          state57.dopo = 0;
+          schedule20();
+        },
+        SALUTE_NON_VISTA_MS - (adesso2 - state57.ultimoGiro)
+      ) || 0;
+    return;
+  }
+  if (state57.dopo) {
+    root.clearTimeout?.(state57.dopo);
+    state57.dopo = 0;
+  }
   const giro = () => {
     state57.frame = 0;
+    state57.ultimoGiro = Date.now();
     try {
-      const vista2 = vistaSalute();
-      if (accendiLaVoce7(vista2) && vista2) dipingi10(vista2);
+      const vista3 = vistaSalute();
+      if (accendiLaVoce7(vista3) && vista3) dipingi10(vista3);
     } catch (errore) {
       root.console?.warn?.("[DashboardModern] salute", errore);
     }
@@ -125666,7 +125690,8 @@ function disegna9() {
       img
     ])
   );
-  if (rattoppaSeCambia(nodo4.firstElementChild, corpo6, { tieni: siTiene })) {
+  const cambiato = rattoppaSeCambia(nodo4.firstElementChild, corpo6, { tieni: siTiene });
+  if (cambiato) {
     caricaLeTelecamere(nodo4, vecchie);
     for (const img of nodo4.querySelectorAll("img[data-mu-copertina]")) {
       const prima = copertine.get(`${img.className}|${img.dataset.muCopertina}`);
@@ -125678,7 +125703,13 @@ function disegna9() {
   mettiILoghiDelleRadio(nodo4);
   battitoDellaMusica();
   rimettiLaVoce(nodo4);
-  if (state121.riposo) posizionaIlRiposo(nodo4);
+  if (state121.riposo) {
+    const schermo = `${root.innerWidth || 0}x${root.innerHeight || 0}`;
+    if (cambiato || state121.riposoMisurato !== schermo) {
+      posizionaIlRiposo(nodo4);
+      state121.riposoMisurato = schermo;
+    }
+  } else state121.riposoMisurato = "";
   animaLeFeste(nodo4, { ridisegna: () => disegna9() });
   animaLeLuciAlMuro(nodo4, {
     feste: state121.fonte?.feste ?? readJson(CHIAVE_FESTE, null),
@@ -177587,7 +177618,7 @@ async function correggi() {
   S.lavoro = t("Scarico il modello… 0%", "Downloading the model… 0%");
   disegna17();
   try {
-    const { scaricaIlModello } = await import("../../modello-dal-ponte-7DNTWE2F.js");
+    const { scaricaIlModello } = await import("../../modello-dal-ponte-ZOT2DDKM.js");
     const byte = await scaricaIlModello(m, {
       quandoAvanza: (fatti, tutti) => {
         const pct4 = Math.round(fatti / Math.max(1, tutti) * 100);
@@ -177622,7 +177653,7 @@ async function usa() {
     S.lavoro = t("Caricamento… 0%", "Uploading… 0%");
     disegna17();
     try {
-      const { caricaIlModello } = await import("../../modello-dal-ponte-7DNTWE2F.js");
+      const { caricaIlModello } = await import("../../modello-dal-ponte-ZOT2DDKM.js");
       const fatto2 = await caricaIlModello(S.file.byte, {
         profilo: profilo3(),
         quandoAvanza: (fatti, tutti) => {
@@ -177646,7 +177677,7 @@ async function usa() {
     modello: { ...dati, ...S.imp, triangoli: S.triangoli, attivo: true }
   });
   if (prima && prima.id !== dati.id) {
-    const { togliIlModello } = await import("../../modello-dal-ponte-7DNTWE2F.js");
+    const { togliIlModello } = await import("../../modello-dal-ponte-ZOT2DDKM.js");
     togliIlModello(prima.id, { profilo: profilo3() });
   }
   chiudi4();
@@ -177663,7 +177694,7 @@ async function togli4() {
   );
   if (ok === false) return;
   scrivi6({ ...casaSalvata(), modello: null });
-  const { togliIlModello } = await import("../../modello-dal-ponte-7DNTWE2F.js");
+  const { togliIlModello } = await import("../../modello-dal-ponte-ZOT2DDKM.js");
   togliIlModello(m.id, { profilo: profilo3() });
   chiudi4();
 }
@@ -178433,7 +178464,7 @@ async function avviaIlModello(admin) {
   try {
     const [{ THREE, caricatori, scena: scena2 }, { scaricaIlModello }] = await Promise.all([
       caricaIlMotore(),
-      import("../../modello-dal-ponte-7DNTWE2F.js")
+      import("../../modello-dal-ponte-ZOT2DDKM.js")
     ]);
     const byte = await scaricaIlModello(m, {
       quandoAvanza: (fatti, tutti) => {
