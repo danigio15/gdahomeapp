@@ -16,6 +16,13 @@ aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
 ## 1.19.51
 
+- **L'86 si installa anche con /system pieno**: la sua partizione di sistema
+  è piena fino all'ultimo byte, e l'installazione si fermava con «mkdir:
+  /system/gdahome-removed: No space left on device». Le app Sonoff tolte si
+  mettevano da parte dentro /system stesso, e non liberavano niente. Ora
+  vanno in /data (`/data/gdahome-removed-system`): /system si libera, e
+  GdAHome OS ci sta. «Rimetti Sonoff» prima toglie GdAHome e poi le
+  rimette, da /data o da /system per i pannelli installati prima.
 - **Il Wi-Fi del pannello non va più in risparmio**: col risparmio
   energetico la radio dorme fra un segnale del router e l'altro, e quello
   che il pannello riceve arriva a scatti (le app da installare a 0,1 MB/s,

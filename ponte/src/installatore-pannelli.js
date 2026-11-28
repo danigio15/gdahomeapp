@@ -226,7 +226,13 @@ function righeDellaVelocita() {
 
 const INTESTAZIONE = () => [
   "TMP=/data/local/tmp",
-  "R=/system/gdahome-removed",
+  /* Dove si mettono da parte le app di sistema tolte: in /data, non in
+   * /system. Sull'86 /system e' pieno fino all'ultimo byte («mkdir:
+   * /system/gdahome-removed: No space left on device»): spostarle dentro
+   * /system non liberava niente, e GdAHome OS non ci stava. Spostate in
+   * /data, liberano il posto. Un pannello installato prima (il 120) le ha
+   * gia' in /system, e li' restano. */
+  "R=/system/gdahome-removed; [ -d $R ] || R=/data/gdahome-removed-system",
   "D=/data/gdahome-removed",
   `TENERE='${DA_TENERE}'`,
   `SONOFF='${DI_SONOFF}'`,
@@ -284,19 +290,24 @@ export function scriptDelRitocco() {
  * /system e da /data, l'animazione e il build.prop di prima. */
 export function scriptDelRipristino() {
   return [
-    "R=/system/gdahome-removed",
     "D=/data/gdahome-removed",
     ...APRI_IN_SCRITTURA,
-    "if [ -d $R ]; then",
-    '  [ -f $R/manifest.txt ] && while IFS="|" read -r pkg via; do [ -e $R/$pkg.removed ] && mv $R/$pkg.removed "$via" && echo "RIMESSA $pkg"; done < $R/manifest.txt',
-    "  if [ -f $R/bootanimation.zip.orig ]; then mv $R/bootanimation.zip.orig /system/media/bootanimation.zip; else rm -f /system/media/bootanimation.zip; fi",
-    "  [ -f $R/oem-bootanimation.zip.orig ] && mkdir -p /oem/media && mv $R/oem-bootanimation.zip.orig /oem/media/bootanimation.zip && echo RIMESSA animazione Sonoff",
-    "  [ -f $R/build.prop.orig ] && cp -p $R/build.prop.orig /system/build.prop",
-    "  rm -rf $R",
-    "fi",
+    /* Prima via GdAHome, poi dentro le app di prima: su un /system pieno
+     * (l'86) il posto per rimetterle e' quello che GdAHome libera. */
     "rm -rf /system/app/GdAHomeOS /system/bin/gdaserial /system/etc/init/gdahome.rc",
     "rm -f /data/local/tmp/webview-command-line",
     `rm -rf ${FOTO}`,
+    /* Le app di sistema messe da parte: in /system (i pannelli installati
+     * prima) o in /data (gli altri). */
+    "for R in /system/gdahome-removed /data/gdahome-removed-system; do",
+    "  [ -d $R ] || continue",
+    "  [ -f $R/bootanimation.zip.orig ] || [ -f /system/gdahome-removed/bootanimation.zip.orig ] || [ -f /data/gdahome-removed-system/bootanimation.zip.orig ] || rm -f /system/media/bootanimation.zip",
+    '  [ -f $R/manifest.txt ] && while IFS="|" read -r pkg via; do [ -e $R/$pkg.removed ] && mv $R/$pkg.removed "$via" && echo "RIMESSA $pkg"; done < $R/manifest.txt',
+    "  [ -f $R/bootanimation.zip.orig ] && mv $R/bootanimation.zip.orig /system/media/bootanimation.zip",
+    "  [ -f $R/oem-bootanimation.zip.orig ] && mkdir -p /oem/media && mv $R/oem-bootanimation.zip.orig /oem/media/bootanimation.zip && echo RIMESSA animazione Sonoff",
+    "  [ -f $R/build.prop.orig ] && cp -p $R/build.prop.orig /system/build.prop",
+    "  rm -rf $R",
+    "done",
     ...CHIUDI_IN_SCRITTURA,
     '[ -f $D/manifest.txt ] && while read -r pkg; do [ -f $D/$pkg.apk ] && pm install -r $D/$pkg.apk >/dev/null 2>&1 && echo "RIMESSA $pkg"; done < $D/manifest.txt',
     "rm -rf $D",
@@ -2204,7 +2215,7 @@ export class Installatore {
     );
     await chiedi(
       "Animazione d'avvio",
-      "ls -la /oem/media /system/media 2>/dev/null; ls /system/gdahome-removed 2>/dev/null",
+      "ls -la /oem/media /system/media 2>/dev/null; ls /system/gdahome-removed /data/gdahome-removed-system 2>/dev/null; df /system 2>/dev/null | tail -n1",
     );
     await chiedi(
       "Registro di GdAHome Muro",
