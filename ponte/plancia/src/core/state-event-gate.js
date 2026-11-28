@@ -118,6 +118,86 @@ function muroAcceso(root) {
   }
 }
 
+/* Le entita' appena comandate da questa pagina.
+ *
+ * «Clicco, dopo un po' la luce si accende e dopo cambia stato», dal pannello
+ * a muro. La luce e' una di quelle configurate, quindi aspettava il mazzetto:
+ * mezzo secondo, e poi il disegno di tutta la plancia, che su un pannello da
+ * quattro core lenti e' un altro mezzo secondo. Ma la luce l'ha appena toccata
+ * qualcuno, e quel qualcuno sta guardando proprio lei: il suo stato nuovo e'
+ * quello che aspetta. Un comando (`call_service`) segna le sue entita', e per
+ * quindici secondi il loro stato passa come quello di un'entita' in vista —
+ * subito, portandosi dietro il mazzetto — e il guscio si ridisegna al
+ * fotogramma dopo (`DISEGNA_SUBITO_KEY`), non al suo mezzo secondo. */
+export const TOCCATE_KEY = "__DM_ENTITA_TOCCATE__";
+export const DISEGNA_SUBITO_KEY = "__DM_DISEGNA_SUBITO__";
+export const TOCCATA_PER_MS = 15_000;
+
+function entitaDelComando(messaggio) {
+  if (messaggio?.type !== "call_service") return [];
+  const ids = [];
+  for (const dove of [messaggio.target, messaggio.service_data]) {
+    const id = dove?.entity_id;
+    for (const uno of Array.isArray(id) ? id : [id]) {
+      const pulito = typeof uno === "string" ? uno.trim() : "";
+      if (pulito && pulito !== "all") ids.push(pulito);
+    }
+  }
+  return ids;
+}
+
+/** Segna le entita' di un comando partito da questa pagina (oggetto o testo). */
+export function segnaIlComando(root, messaggio, adesso = Date.now()) {
+  try {
+    const letto = typeof messaggio === "string" ? JSON.parse(messaggio) : messaggio;
+    const ids = entitaDelComando(letto);
+    if (!ids.length) return false;
+    const toccate = (root[TOCCATE_KEY] ||= new Map());
+    for (const id of ids) toccate.set(id, adesso);
+    return true;
+  } catch (_errore) {
+    return false;
+  }
+}
+
+function toccata(root, id, adesso = Date.now()) {
+  const toccate = root[TOCCATE_KEY];
+  const quando = toccate?.get?.(id);
+  if (!quando) return false;
+  if (adesso - quando <= TOCCATA_PER_MS) return true;
+  toccate.delete(id);
+  return false;
+}
+
+/* I comandi passano dalla presa: dalla vera, o da quella del ponte quando la
+ * plancia e' ospitata (`legacy/bridge-socket.js`), che puo' arrivare dopo il
+ * cancello. Si avvolge l'invio della presa che c'e' adesso, e si ricontrolla
+ * a ogni stato che passa: se la presa e' cambiata, si avvolge anche la nuova.
+ * Un testo che non e' un comando costa un'occhiata alla parola
+ * «call_service». */
+function osservaIComandi(root) {
+  const proto = root.WebSocket?.prototype;
+  const invia = proto?.send;
+  if (typeof invia !== "function" || invia.__dmComandiOsservati) return false;
+  function sendCheSegna(dati) {
+    if (typeof dati === "string" && dati.includes('"call_service"')) segnaIlComando(root, dati);
+    return invia.call(this, dati);
+  }
+  sendCheSegna.__dmComandiOsservati = true;
+  try {
+    proto.send = sendCheSegna;
+  } catch (_errore) {
+    return false;
+  }
+  return true;
+}
+
+function disegnaSubito(root) {
+  try {
+    root[DISEGNA_SUBITO_KEY]?.();
+  } catch (_errore) {}
+}
+
 function inVista(root, id) {
   try {
     const domanda = root[IN_VISTA_KEY];
@@ -216,12 +296,15 @@ export function installStateEventGate(
   const queue = (state) => {
     const id = String(state?.entity_id || "").trim();
     if (!id) return;
+    osservaIComandi(root);
     const configured = currentInterests();
     // If neither the canonical nor legacy configuration is ready yet, remain
     // backward compatible and allow the event. Once configuration is known,
     // unrelated Home Assistant chatter is ignored.
-    const visto = inVista(root, id);
+    const comandata = toccata(root, id);
+    const visto = comandata || inVista(root, id);
     if (!visto && configured.size && !configured.has(id)) return;
+    if (comandata) disegnaSubito(root);
     const muro = muroAcceso(root);
     if (muro && visto) {
       alMuro.add(id);
@@ -263,6 +346,8 @@ export function installStateEventGate(
       root.dispatchEvent = dispatch;
     }
   };
+
+  osservaIComandi(root);
 
   Object.defineProperty(broker, "__dmStateEventGate", {
     value: Object.freeze({ flush, pendingIds, currentInterests, aggiungiChiavi }),

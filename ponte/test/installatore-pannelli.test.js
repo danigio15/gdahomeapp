@@ -11,6 +11,8 @@ import {
   scriptDelRipristino,
   scriptDelRitocco,
   RITOCCO,
+  PROGRAMMI_DI_SONOFF,
+  ALTRE_SUPERFLUE,
   DA_SALVARE,
   DI_SONOFF,
 } from "../src/installatore-pannelli.js";
@@ -67,6 +69,50 @@ test("lo script di sistema toglie il software Sonoff e le app superflue, e tiene
   assert.match(s, /build\.prop\.orig/);
   assert.match(s, /setprop persist\.adb\.tcp\.port 5555/);
   assert.match(s, /echo GDA_OK$/);
+});
+
+test("le app che Android non lascia togliere e i programmi Sonoff di init si tolgono lo stesso", () => {
+  for (const s of [scriptDiSistema(), scriptDelRitocco()]) {
+    /* Un amministratore del dispositivo (NSPanelTools): se pm uninstall
+     * rifiuta, la si ferma, la si spegne e si cancella il suo pacchetto. Gia'
+     * salvata e nel manifesto, prima: il ripristino la rimette. */
+    assert.match(s, /esito=\$\(pm uninstall "\$pkg" 2>&1 <\/dev\/null \| tail -n1\)/);
+    assert.match(s, /pm disable "\$pkg"/);
+    assert.match(s, /\/data\/app\/\?\*\) rm -rf "\$cartella"/);
+    assert.ok(s.indexOf(">> $D/manifest.txt") < s.indexOf('pm disable "$pkg"'));
+    /* zgateway: il servizio di init si ferma, il file si mette da parte. */
+    assert.ok(PROGRAMMI_DI_SONOFF.includes("zgateway"));
+    assert.match(s, /for nome in zgateway; do/);
+    assert.match(s, /stop "\$s"/);
+    assert.match(s, /mv "\$via" \$R\/\$nome\.removed/);
+    assert.match(s, /echo "\$nome\|\$via" >> \$R\/manifest\.txt/);
+    assert.match(s, /gdahome-sonoff\.rc/);
+  }
+  /* Le app di collaudo di Rockchip e quelle degli attrezzi di sblocco, ma
+   * mai quella che porta il root, e mai il motore della voce. */
+  const altre = new RegExp(ALTRE_SUPERFLUE);
+  for (const pkg of [
+    "org.fdroid.fdroid",
+    "com.termux",
+    "com.termux.boot",
+    "com.DeviceTest",
+    "android.rk.RockVideoPlayer",
+    "org.chromium.webview_shell",
+  ])
+    assert.ok(altre.test(pkg), pkg);
+  for (const pkg of ["com.svox.pico", "com.gdahome.os", "android.ext.services"])
+    assert.ok(!altre.test(pkg), pkg);
+  for (const s of [scriptDiSistema(), scriptDelRitocco()]) {
+    assert.match(s, /grep -Eq "\$ALTRE"; then perche=superflua/);
+    assert.match(s, /RESTA \$pkg \(porta il root\)/);
+    assert.match(s, /\/vendor\/\*\) mount -o rw,remount \/vendor/);
+    assert.match(s, /pm uninstall "\$pkg" 2>&1 <\/dev\/null/);
+  }
+  /* Il ripristino rimette anche loro, e toglie il file che li fermava. */
+  const r = scriptDelRipristino();
+  assert.match(r, /restorecon -R "\$via"/);
+  assert.match(r, /rm -rf [^\n]*\/system\/etc\/init\/gdahome-sonoff\.rc/);
+  assert.equal(RITOCCO, 5);
 });
 
 test("installare manda lo script come file, lo lancia, e conta le app tolte", async () => {
@@ -632,7 +678,7 @@ test("l'analisi chiede tutto, e una domanda che non risponde non ferma le altre"
     assert.match(rapporto, new RegExp(`== ${titolo} ==`));
   assert.match(rapporto, /NSPanel Pro/);
   assert.match(rapporto, /== Chi usa il processore ==\n\? scaduto/);
-  assert.ok(chiesti.every(([, attesa]) => attesa === 20_000));
+  assert.ok(chiesti.every(([, attesa]) => attesa === 20_000 || attesa === 60_000));
 });
 
 test("la velocita': processore e scheda video pronti, anche dopo il riavvio; il ripristino la toglie", () => {
@@ -1222,7 +1268,10 @@ test("il profilo della plancia detto in chiaro: quanto lavora il filo, e chi se 
     { TaskDuration: 5, ScriptDuration: 3.5, RecalcStyleDuration: 0.4, LayoutDuration: 0.8 },
     8,
   );
-  assert.match(r, /filo della pagina occupato: 50% \(script 38%, stili 5%, impaginazione 10%\)/);
+  assert.match(
+    r,
+    /filo della pagina: script 38%, stili 5%, impaginazione 10% \(compiti col microscopio acceso: 50%\)/,
+  );
   assert.match(r, /disegna muro\.js:42/);
   assert.match(r, /a riposo: 25%/);
 });

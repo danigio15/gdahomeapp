@@ -14,6 +14,32 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.53
+
+- **La luce toccata cambia subito sul pannello.** Lo stato di quello che hai
+  appena comandato non aspetta più il mezzo secondo del gruppo né il disegno
+  di tutta la plancia: per quindici secondi passa davanti a tutto. E la
+  plancia lavora meno a ogni cambio di stato: la ricerca dei sensori delle
+  bollette, la funzione più cara sul pannello, ora costa un terzo, e quasi
+  niente quando si ripete.
+- **Via anche NSPanelTools e Fully Kiosk.** Sul Corridoio erano rimaste perché
+  Android rifiutava di disinstallarle, e la pulizia non se ne accorgeva. Ora,
+  se Android rifiuta, l'add-on le ferma, le spegne e cancella il loro
+  pacchetto: al prossimo riavvio non ci sono più. Restano salvate, e
+  «Rimetti Sonoff» le rimette.
+- **Via zgateway, il gateway Zigbee di Sonoff.** Non è un'app: lo lanciava il
+  sistema all'accensione, prima di Android, e teneva occupato il chip Zigbee
+  del pannello. Ora si ferma e si mette da parte.
+- **Via le altre app inutili** rimaste su Salone e Corridoio: i collaudi della
+  scheda Rockchip, i browser di prova, il lettore video, F-Droid e Termux. Il
+  programma del root non si tocca mai.
+- Arriva anche sui pannelli già installati, al prossimo aggiornamento
+  (ritocco 5).
+- **L'analisi** dice com'è il collegamento Wi-Fi (velocità in entrata e in
+  uscita, pacchetti rifatti e persi), se un programma Sonoff gira ancora e
+  chi è amministratore del dispositivo; «Fili al lavoro» ha il tempo che le
+  serve.
+
 ## 1.19.52
 
 - **L'animazione d'avvio scrive «GdAHome»**, con le sue maiuscole e col

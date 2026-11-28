@@ -49,6 +49,7 @@ import {
   wrapFunction,
   senzaCadere,
 } from "./shared.js";
+import { DISEGNA_SUBITO_KEY } from "../core/state-event-gate.js";
 
 const KEY = "__DASHBOARDMODERN_GUSCIO_QUANDO_SERVE__";
 const state = (root[KEY] ||= {
@@ -148,6 +149,9 @@ export function richiediDisegno({ subito = false } = {}) {
 }
 
 function installaIlDisegno() {
+  /* Lo stato di un'entita' appena comandata: il disegno al fotogramma dopo,
+   * non al mezzo secondo (`core/state-event-gate.js`, DISEGNA_SUBITO_KEY). */
+  root[DISEGNA_SUBITO_KEY] = () => richiediDisegno({ subito: true });
   const attuale = root.cdRenderSoon;
   if (typeof attuale === "function" && attuale.__dmQuandoServe) return false;
   function cdRenderSoonQuandoServe() {
