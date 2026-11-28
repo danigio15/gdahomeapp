@@ -78,28 +78,58 @@ function comeSiChiama(id, stato) {
   return `${id.toLowerCase()} ${nome.replace(/[^a-z0-9]+/g, "_")}`;
 }
 
+/* Il conto si rifa' a ogni mazzetto di stati, anche sul pannello a muro, e
+ * prima metteva in fila tutti i sensori di casa con `localeCompare` — il
+ * confronto piu' caro che il browser abbia — e rifaceva il nome di ognuno
+ * per ogni voce: dal microscopio sul pannello, la funzione piu' cara della
+ * plancia (300 ms ogni otto secondi). Adesso il nome si fa una volta per
+ * sensore, e per ogni voce si tiene il primo in ordine fra quelli che si
+ * chiamano cosi', senza mettere in fila gli altri: stesso risultato.
+ *
+ * E sullo stesso registro, con lo stesso numero di entita' e le stesse
+ * scelte, per qualche secondo vale quello di prima: quali sensori sono le
+ * bollette non cambia da un mazzetto all'altro. */
+const RICORDA_I_SENSORI_MS = 5000;
+let ricordati = null;
+
 /** Quale sensore e' quale voce: la scelta salvata, o il primo che si chiama cosi'. */
-export function sensoriDellaBolletta(states = {}, salvate = {}) {
+export function sensoriDellaBolletta(states = {}, salvate = {}, adesso = Date.now()) {
   const scelte = normalizzaBollette(salvate).voci;
+  const stati = states || {};
+  const quanti = Object.keys(stati).length;
+  const chiave = JSON.stringify(scelte);
+  if (
+    ricordati &&
+    ricordati.stati === stati &&
+    ricordati.quanti === quanti &&
+    ricordati.chiave === chiave &&
+    adesso - ricordati.quando >= 0 &&
+    adesso - ricordati.quando < RICORDA_I_SENSORI_MS &&
+    Object.values(ricordati.fuori).every((id) => id in stati)
+  )
+    return { ...ricordati.fuori };
   const presi = new Set(Object.values(scelte));
   const fuori = {};
-  const candidati = Object.entries(states || {})
-    .filter(([id]) => id.startsWith("sensor."))
-    .sort(([a], [b]) => a.localeCompare(b));
+  const candidati = [];
+  for (const [id, stato] of Object.entries(stati))
+    if (id.startsWith("sensor.")) candidati.push([id, comeSiChiama(id, stato)]);
   for (const voce of VOCI_DELLA_BOLLETTA) {
     if (scelte[voce.chiave]) {
       fuori[voce.chiave] = scelte[voce.chiave];
       continue;
     }
-    const trovato = candidati.find(
-      ([id, stato]) => !presi.has(id) && voce.cerca.test(comeSiChiama(id, stato)),
-    );
+    let trovato = "";
+    for (const [id, nome] of candidati) {
+      if (presi.has(id) || !voce.cerca.test(nome)) continue;
+      if (!trovato || id.localeCompare(trovato) < 0) trovato = id;
+    }
     if (trovato) {
-      fuori[voce.chiave] = trovato[0];
-      presi.add(trovato[0]);
+      fuori[voce.chiave] = trovato;
+      presi.add(trovato);
     }
   }
-  return fuori;
+  ricordati = { stati, quanti, chiave, quando: adesso, fuori };
+  return { ...fuori };
 }
 
 const MUTI = new Set(["", "unknown", "unavailable", "none", "null"]);

@@ -162,6 +162,13 @@ export const DA_TENERE =
   "^(android|com\\.android\\.(systemui|settings|phone|shell|packageinstaller|defcontainer|externalstorage|keychain|certinstaller|location\\.fused|server\\.telecom|bluetooth|nfc|proxyhandler|vpndialogs|statementservice|storagemanager|documentsui|captiveportallogin|provision|se|mtp|inputmethod\\..*|providers\\..*|webview|wallpaperbackup|backupconfirm|sharedstoragebackup|pacprocessor|carrierconfig|managedprovisioning|cts\\..*)|com\\.google\\.android\\.webview|com\\.gdahome\\..*)$";
 /* Il software Sonoff / eWeLink, riconosciuto dal nome (SONOFF_RE). */
 export const DI_SONOFF = "sonoff|ewelink|itead|coolkit|smatek|nspanel";
+/* Le altre app che un pannello a muro non usa, che non sono di Android: i
+ * collaudi della scheda Rockchip (DeviceTest, StressTest, RkDeviceTest, la
+ * stanza OpenGL), i due browser di prova, il lettore video, e quello che gli
+ * attrezzi di sblocco portano nel sistema (F-Droid, Termux). Sul Salone e sul
+ * Corridoio c'erano ancora. */
+export const ALTRE_SUPERFLUE =
+  "^(org\\.chromium\\.webview_shell|acr\\.browser\\..*|org\\.fdroid\\..*|com\\.termux(\\..*)?|com\\.rockchip\\.devicetest|com\\.DeviceTest|com\\.cghs\\.stresstest|com\\.android\\.gl2jni|android\\.rk\\.RockVideoPlayer)$";
 /* I programmi Sonoff che init lancia da se', per nome del file. */
 export const PROGRAMMI_DI_SONOFF = ["zgateway"];
 /* Le app Android inutili a muro: si tolgono per avere memoria (SUPERFLUE_RE). */
@@ -204,6 +211,7 @@ function righeDellaPulizia() {
     '  if echo "$minuscolo" | grep -Eq "$SONOFF"; then perche=Sonoff',
     '  elif [ "$pkg" = "$CASA" ] && [ "$pkg" != com.gdahome.os ]; then perche=Sonoff',
     '  elif echo "$pkg" | grep -Eq "$SUPERFLUE"; then perche=superflua',
+    '  elif echo "$pkg" | grep -Eq "$ALTRE"; then perche=superflua',
     /* Tutto quello che qualcuno ha aggiunto (un'app in /data che non e' di
      * Android ne' di GdAHome, come l'app di Home Assistant): sul pannello gira
      * solo GdAHome. Si salva in $D e si toglie, come le altre. */
@@ -215,7 +223,7 @@ function righeDellaPulizia() {
     '      [ -f "$apk" ] || continue',
     '      cp "$apk" $D/$pkg.apk || { echo "RESTA $pkg (non si mette da parte)"; continue; }',
     '      grep -qx "$pkg" $D/manifest.txt 2>/dev/null || echo "$pkg" >> $D/manifest.txt',
-    '      esito=$(pm uninstall "$pkg" 2>&1 | tail -n1)',
+    '      esito=$(pm uninstall "$pkg" 2>&1 </dev/null | tail -n1)',
     '      if [ "$esito" = Success ]; then echo "TOLTA $pkg ($perche)"',
     /* Un amministratore del dispositivo Android non lo lascia disinstallare
      * («DELETE_FAILED_DEVICE_POLICY_MANAGER»): e' come NSPanelTools era
@@ -224,7 +232,7 @@ function righeDellaPulizia() {
      * la dimentica, amministratore compreso. Il ripristino la rimette dalla
      * copia in $D. */
     "      else",
-    '        am force-stop "$pkg" 2>/dev/null; pm disable "$pkg" >/dev/null 2>&1',
+    '        am force-stop "$pkg" </dev/null 2>/dev/null; pm disable "$pkg" </dev/null >/dev/null 2>&1',
     '        cartella=$(dirname "$apk"); case "$cartella" in /data/app/?*) rm -rf "$cartella" ;; esac',
     '        echo "TOLTA $pkg ($perche, del tutto al riavvio: ${esito:-rifiutata})"',
     "      fi ;;",
@@ -232,6 +240,9 @@ function righeDellaPulizia() {
     '      case "$apk" in /oem/*) [ $OEM = 1 ] || { echo "RESTA $pkg (/oem non si scrive)"; continue; } ;; esac',
     '      cartella=$(dirname "$apk"); sopra=$(basename "$cartella")',
     '      if [ "$sopra" = app ] || [ "$sopra" = priv-app ]; then via="$apk"; else via="$cartella"; fi',
+    '      case "$SU" in "$cartella"/*) echo "RESTA $pkg (porta il root)"; continue ;; esac',
+    /* /vendor e' una partizione sua (il lettore video di Rockchip). */
+    '      case "$apk" in /vendor/*) mount -o rw,remount /vendor 2>/dev/null && VEN=1 || { echo "RESTA $pkg (/vendor non si scrive)"; continue; } ;; esac',
     '      grep -q "^$pkg|" $R/manifest.txt 2>/dev/null && continue',
     '      mv "$via" $R/$pkg.removed && echo "$pkg|$via" >> $R/manifest.txt && echo "TOLTA $pkg ($perche)" ;;',
     "  esac",
@@ -332,6 +343,9 @@ const INTESTAZIONE = () => [
   `TENERE='${DA_TENERE}'`,
   `SONOFF='${DI_SONOFF}'`,
   `SUPERFLUE='${SUPERFLUE}'`,
+  `ALTRE='${ALTRE_SUPERFLUE}'`,
+  /* Da dove viene il root: quello non si tocca, qualunque app lo porti. */
+  'SU=$(command -v su 2>/dev/null); SU=$(readlink -f "$SU" 2>/dev/null || echo "$SU")',
 ];
 
 /* Lo script che gira sul pannello, da root. La pulizia qui sopra, poi
@@ -2424,9 +2438,9 @@ export class Installatore {
     if (!(await this.adb.connetti(indirizzo))) throw perUtente("Il pannello non risponde.");
     const pkg = this.muroPackage;
     const righe = [];
-    const chiedi = async (titolo, comando, root = true) => {
+    const chiedi = async (titolo, comando, root = true, attesa = 20_000) => {
       const detto = await this.adb
-        .shell(indirizzo, comando, { root, attesa: 20_000 })
+        .shell(indirizzo, comando, { root, attesa })
         .catch((e) => `? ${e.message}`);
       righe.push(`== ${titolo} ==\n${String(detto).trim() || "(niente)"}`);
     };
@@ -2435,7 +2449,10 @@ export class Installatore {
      * dice «GdAHome Muro 44%», ma non se e' Flutter che ridisegna la plancia
      * (raster), la casa che arriva (ui, il Dart) o Android (main): sono tre
      * strade diverse per renderlo piu' svelto. Lo stesso per la WebView. */
-    await chiedi("Fili al lavoro (8 secondi)", filiAlLavoro(pkg, 8), true);
+    /* Otto secondi di misura, piu' il giro su /proc dei due processi: sui
+     * pannelli i venti secondi delle altre domande non bastavano («ci ha
+     * messo troppo»). */
+    await chiedi("Fili al lavoro (8 secondi)", filiAlLavoro(pkg, 8), true, 60_000);
     /* E dentro la plancia, negli stessi momenti: quali funzioni tengono
      * occupato il suo filo. «Clicco, dopo un po' la luce si accende e dopo
      * cambia stato»: il tocco arriva tardi se il filo e' preso. */
@@ -2488,7 +2505,7 @@ export class Installatore {
      * lascia disinstallare. */
     await chiedi(
       "App sul pannello",
-      "pm list packages -f 2>/dev/null | sed 's/^package://' | grep -v -E '=(android|com\\.android\\.[a-z.]*)$' | sort; echo '-- amministratori:'; dumpsys device_policy 2>/dev/null | grep -E 'admin=|ComponentInfo' | head -n 5",
+      "pm list packages -f 2>/dev/null | sed 's/^package://' | grep -v -E '=(android|com\\.android\\.[a-z.]*)$' | sort; echo '-- amministratori:'; dumpsys device_policy 2>/dev/null | grep -E 'Owner|admin=|ComponentInfo|^ +[A-Za-z0-9_.]+/[A-Za-z0-9_.$]+:$' | head -n 8",
     );
     /* I programmi Sonoff che init lancia da se' (zgateway), e da dove. */
     await chiedi(
@@ -2606,7 +2623,9 @@ export function riassuntoDelProfilo(profile, prima = {}, dopo = {}, secondi = 8)
   };
   if (dopo.TaskDuration != null)
     righe.push(
-      `filo della pagina occupato: ${quota("TaskDuration")} (script ${quota("ScriptDuration")}, stili ${quota("RecalcStyleDuration")}, impaginazione ${quota("LayoutDuration")})`,
+      /* `TaskDuration` conta anche il lavoro del microscopio stesso: quello vero
+       * della plancia e' lo script, piu' stili e impaginazione. */
+      `filo della pagina: script ${quota("ScriptDuration")}, stili ${quota("RecalcStyleDuration")}, impaginazione ${quota("LayoutDuration")} (compiti col microscopio acceso: ${quota("TaskDuration")})`,
     );
   const nodi = new Map((profile?.nodes || []).map((n) => [n.id, n]));
   const proprio = new Map();

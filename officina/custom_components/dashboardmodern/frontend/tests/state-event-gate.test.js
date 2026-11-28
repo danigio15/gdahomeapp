@@ -2,9 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { CONFIG_KEYS } from "../src/core/chiavi-di-configurazione.js";
 import {
+  DISEGNA_SUBITO_KEY,
   EVENTO_DEL_MURO,
   IN_VISTA_KEY,
+  TOCCATA_PER_MS,
+  TOCCATE_KEY,
   installStateEventGate,
+  segnaIlComando,
 } from "../src/core/state-event-gate.js";
 
 function harness(delay = 0, sections = null, storageValues = {}) {
@@ -293,4 +297,79 @@ test("una chiave che non e' configurazione non fa rifare niente", async () => {
   broker.ingestState({ entity_id: "sensor.house_total", state: "2", attributes: {} });
   await new Promise((resolve) => setTimeout(resolve, 10));
   assert.equal(letture.getState, 1, "una scrittura qualunque ha rifatto l'elenco");
+});
+
+/* «Clicco, dopo un po' la luce si accende e dopo cambia stato», dal pannello
+ * a muro. La luce appena comandata non aspetta il mezzo secondo del mazzetto,
+ * e il guscio si ridisegna al fotogramma dopo. */
+test("un'entita' appena comandata passa subito, e chiede il disegno del guscio", async () => {
+  const { broker, events, root } = harness(500, {
+    luci: { stanze: [{ entity: "light.corridoio" }] },
+  });
+  let disegni = 0;
+  root[DISEGNA_SUBITO_KEY] = () => {
+    disegni += 1;
+  };
+  broker.subscription = 42;
+  assert.ok(
+    segnaIlComando(
+      root,
+      JSON.stringify({
+        id: 9,
+        type: "call_service",
+        domain: "light",
+        service: "toggle",
+        target: { entity_id: "light.corridoio" },
+      }),
+    ),
+  );
+  broker.ingestState({ entity_id: "light.corridoio", state: "on", attributes: {} });
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  assert.equal(events.length, 1, "doveva arrivare ben prima dei 500 ms");
+  assert.deepEqual(events[0].detail.entity_ids, ["light.corridoio"]);
+  assert.equal(disegni, 1);
+});
+
+test("il comando segna le entita' dal target e dai dati, per un tempo solo", () => {
+  const root = {};
+  assert.equal(segnaIlComando(root, { type: "get_states" }), false);
+  assert.equal(segnaIlComando(root, "non e' JSON"), false);
+  assert.ok(
+    segnaIlComando(
+      root,
+      {
+        type: "call_service",
+        target: { entity_id: ["light.a", "all"] },
+        service_data: { entity_id: "switch.b" },
+      },
+      1000,
+    ),
+  );
+  assert.deepEqual([...root[TOCCATE_KEY].keys()], ["light.a", "switch.b"]);
+  assert.ok(TOCCATA_PER_MS >= 5000 && TOCCATA_PER_MS <= 60_000);
+});
+
+test("i comandi si segnano dalla presa che c'e', anche se cambia dopo", async () => {
+  const mandati = [];
+  class PresaVera {
+    send(dati) {
+      mandati.push(dati);
+    }
+  }
+  const { broker, root } = harness(500, { luci: { stanze: [{ entity: "light.a" }] } });
+  root.WebSocket = PresaVera;
+  broker.ingestState({ entity_id: "light.a", state: "off", attributes: {} });
+  new PresaVera().send(JSON.stringify({ type: "call_service", target: { entity_id: "light.a" } }));
+  assert.ok(root[TOCCATE_KEY].has("light.a"));
+  assert.equal(mandati.length, 1, "il messaggio parte lo stesso");
+  /* La presa del ponte arriva dopo: al primo stato si avvolge anche lei. */
+  class PresaDelPonte {
+    send() {}
+  }
+  root.WebSocket = PresaDelPonte;
+  broker.ingestState({ entity_id: "light.a", state: "on", attributes: {} });
+  new PresaDelPonte().send(
+    JSON.stringify({ type: "call_service", service_data: { entity_id: "cover.b" } }),
+  );
+  assert.ok(root[TOCCATE_KEY].has("cover.b"));
 });

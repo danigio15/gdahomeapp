@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-CV6TB7LZ.js";
+} from "../../chunk-3GC2HOVZ.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -1245,6 +1245,63 @@ function muroAcceso(root7) {
     return false;
   }
 }
+var TOCCATE_KEY = "__DM_ENTITA_TOCCATE__";
+var DISEGNA_SUBITO_KEY = "__DM_DISEGNA_SUBITO__";
+var TOCCATA_PER_MS = 15e3;
+function entitaDelComando(messaggio) {
+  if (messaggio?.type !== "call_service") return [];
+  const ids = [];
+  for (const dove3 of [messaggio.target, messaggio.service_data]) {
+    const id = dove3?.entity_id;
+    for (const uno3 of Array.isArray(id) ? id : [id]) {
+      const pulito77 = typeof uno3 === "string" ? uno3.trim() : "";
+      if (pulito77 && pulito77 !== "all") ids.push(pulito77);
+    }
+  }
+  return ids;
+}
+function segnaIlComando(root7, messaggio, adesso2 = Date.now()) {
+  try {
+    const letto = typeof messaggio === "string" ? JSON.parse(messaggio) : messaggio;
+    const ids = entitaDelComando(letto);
+    if (!ids.length) return false;
+    const toccate = root7[TOCCATE_KEY] ||= /* @__PURE__ */ new Map();
+    for (const id of ids) toccate.set(id, adesso2);
+    return true;
+  } catch (_errore) {
+    return false;
+  }
+}
+function toccata(root7, id, adesso2 = Date.now()) {
+  const toccate = root7[TOCCATE_KEY];
+  const quando6 = toccate?.get?.(id);
+  if (!quando6) return false;
+  if (adesso2 - quando6 <= TOCCATA_PER_MS) return true;
+  toccate.delete(id);
+  return false;
+}
+function osservaIComandi(root7) {
+  const proto = root7.WebSocket?.prototype;
+  const invia3 = proto?.send;
+  if (typeof invia3 !== "function" || invia3.__dmComandiOsservati) return false;
+  function sendCheSegna(dati) {
+    if (typeof dati === "string" && dati.includes('"call_service"')) segnaIlComando(root7, dati);
+    return invia3.call(this, dati);
+  }
+  sendCheSegna.__dmComandiOsservati = true;
+  try {
+    proto.send = sendCheSegna;
+  } catch (_errore) {
+    return false;
+  }
+  return true;
+}
+function disegnaSubito(root7) {
+  try {
+    root7[DISEGNA_SUBITO_KEY]?.();
+  } catch (_errore) {
+  }
+}
 function inVista(root7, id) {
   try {
     const domanda2 = root7[IN_VISTA_KEY];
@@ -1314,9 +1371,12 @@ function installStateEventGate(broker3, root7 = globalThis, { delay = 500, chiav
   const queue = (state217) => {
     const id = String(state217?.entity_id || "").trim();
     if (!id) return;
+    osservaIComandi(root7);
     const configured2 = currentInterests();
-    const visto = inVista(root7, id);
+    const comandata = toccata(root7, id);
+    const visto = comandata || inVista(root7, id);
     if (!visto && configured2.size && !configured2.has(id)) return;
+    if (comandata) disegnaSubito(root7);
     const muro = muroAcceso(root7);
     if (muro && visto) {
       alMuro.add(id);
@@ -1351,6 +1411,7 @@ function installStateEventGate(broker3, root7 = globalThis, { delay = 500, chiav
       root7.dispatchEvent = dispatch;
     }
   };
+  osservaIComandi(root7);
   Object.defineProperty(broker3, "__dmStateEventGate", {
     value: Object.freeze({ flush, pendingIds, currentInterests, aggiungiChiavi }),
     configurable: false,
@@ -1462,6 +1523,7 @@ function richiediDisegno({ subito = false } = {}) {
   return true;
 }
 function installaIlDisegno() {
+  root[DISEGNA_SUBITO_KEY] = () => richiediDisegno({ subito: true });
   const attuale = root.cdRenderSoon;
   if (typeof attuale === "function" && attuale.__dmQuandoServe) return false;
   function cdRenderSoonQuandoServe() {
@@ -15113,7 +15175,7 @@ function flowStageModel(options = {}) {
     inAttesa = null,
     /* L'ultimo numero gia' letto per ogni cerchio, nello stesso giorno o
      * mese: un giro senza lettura non lo cancella. */
-    ricordati = null,
+    ricordati: ricordati2 = null,
     /* Quanto consuma Casa nello stesso periodo — watt nell'istantanea,
      * kilowattora nel Giorno e nel Mese — o lo stato di Home Assistant che lo
      * dice, con la sua unita'. Senza, niente residuo: vedi `conIlResiduo`. */
@@ -15134,8 +15196,8 @@ function flowStageModel(options = {}) {
     return typeof inAttesa.has === "function" ? inAttesa.has(chiave2) : Boolean(inAttesa[chiave2]);
   };
   const ricordato = (id) => {
-    if (period === "instant" || !ricordati || !id) return null;
-    return finiteOrNull2(typeof ricordati.get === "function" ? ricordati.get(id) : ricordati[id]);
+    if (period === "instant" || !ricordati2 || !id) return null;
+    return finiteOrNull2(typeof ricordati2.get === "function" ? ricordati2.get(id) : ricordati2[id]);
   };
   const eligible2 = flowStageLoads(loads);
   const visible = [];
@@ -41264,15 +41326,15 @@ function applicaLaDisposizione(pagina3 = paginaAttiva2()) {
   const nome = nomeDellaPagina(pagina3);
   const inModifica2 = state29.modifica?.pagina === pagina3;
   const salvataQui = Object.keys(tutta).some((k) => paginaDellElenco(k) === nome);
-  const toccata = Boolean(pagina3.__dmDispToccata);
-  if (!inModifica2 && !salvataQui && !toccata) return;
+  const toccata2 = Boolean(pagina3.__dmDispToccata);
+  if (!inModifica2 && !salvataQui && !toccata2) return;
   state29.occupato = true;
   state29.giri = (state29.giri || 0) + 1;
   try {
     let rimessi = 0;
     for (const elenco18 of elenchiDellaPagina(pagina3)) {
       const scelta4 = inModifica2 && state29.modifica.bozze.has(elenco18.chiave) ? state29.modifica.bozze.get(elenco18.chiave) : tutta[elenco18.chiave];
-      if ((scelta4 || inModifica2 || toccata) && applicaAlContenitore(elenco18, scelta4 || {})) rimessi += 1;
+      if ((scelta4 || inModifica2 || toccata2) && applicaAlContenitore(elenco18, scelta4 || {})) rimessi += 1;
     }
     if (!inModifica2 && !salvataQui && rimessi) pagina3.__dmDispToccata = false;
     if (inModifica2) segnaPerLaModifica(pagina3);
@@ -128428,11 +128490,11 @@ function automazioniDiCasa() {
   return elenco18.map((v) => {
     const s = vivi[v.entity_id];
     let attiva2 = s ? clean(s.state) === "on" : v.attiva === true;
-    const toccata = state122.toccate[v.entity_id];
-    if (toccata) {
-      if (ora7 - toccata.il > TOCCATA_VALE || toccata.attiva === attiva2)
+    const toccata2 = state122.toccate[v.entity_id];
+    if (toccata2) {
+      if (ora7 - toccata2.il > TOCCATA_VALE || toccata2.attiva === attiva2)
         delete state122.toccate[v.entity_id];
-      else attiva2 = toccata.attiva;
+      else attiva2 = toccata2.attiva;
     }
     const ultima = Date.parse(s?.attributes?.last_triggered || "");
     return {
@@ -131953,13 +132015,13 @@ function firmaDelProgramma(voce3) {
 }
 function bozzaDaTenere({
   bozzaDa: bozzaDa2,
-  toccata,
+  toccata: toccata2,
   appenaSalvato,
   firma: firma2,
   adesso: adesso2 = Date.now(),
   elencoIl = 0
 }) {
-  if (toccata) return "tieni";
+  if (toccata2) return "tieni";
   if (appenaSalvato && appenaSalvato.firma !== firma2) {
     if (!(elencoIl > appenaSalvato.il) && adesso2 - appenaSalvato.il < 6e5) return "tieni";
     if (adesso2 - appenaSalvato.il < 6e4) return "tieni";
@@ -174465,25 +174527,37 @@ function comeSiChiama2(id, stato3) {
   const nome = clean33(stato3?.attributes?.friendly_name).toLowerCase();
   return `${id.toLowerCase()} ${nome.replace(/[^a-z0-9]+/g, "_")}`;
 }
-function sensoriDellaBolletta(states = {}, salvate4 = {}) {
+var RICORDA_I_SENSORI_MS = 5e3;
+var ricordati = null;
+function sensoriDellaBolletta(states = {}, salvate4 = {}, adesso2 = Date.now()) {
   const scelte5 = normalizzaBollette(salvate4).voci;
+  const stati4 = states || {};
+  const quanti4 = Object.keys(stati4).length;
+  const chiave2 = JSON.stringify(scelte5);
+  if (ricordati && ricordati.stati === stati4 && ricordati.quanti === quanti4 && ricordati.chiave === chiave2 && adesso2 - ricordati.quando >= 0 && adesso2 - ricordati.quando < RICORDA_I_SENSORI_MS && Object.values(ricordati.fuori).every((id) => id in stati4))
+    return { ...ricordati.fuori };
   const presi = new Set(Object.values(scelte5));
   const fuori = {};
-  const candidati = Object.entries(states || {}).filter(([id]) => id.startsWith("sensor.")).sort(([a], [b2]) => a.localeCompare(b2));
+  const candidati = [];
+  for (const [id, stato3] of Object.entries(stati4))
+    if (id.startsWith("sensor.")) candidati.push([id, comeSiChiama2(id, stato3)]);
   for (const voce3 of VOCI_DELLA_BOLLETTA) {
     if (scelte5[voce3.chiave]) {
       fuori[voce3.chiave] = scelte5[voce3.chiave];
       continue;
     }
-    const trovato = candidati.find(
-      ([id, stato3]) => !presi.has(id) && voce3.cerca.test(comeSiChiama2(id, stato3))
-    );
+    let trovato = "";
+    for (const [id, nome] of candidati) {
+      if (presi.has(id) || !voce3.cerca.test(nome)) continue;
+      if (!trovato || id.localeCompare(trovato) < 0) trovato = id;
+    }
     if (trovato) {
-      fuori[voce3.chiave] = trovato[0];
-      presi.add(trovato[0]);
+      fuori[voce3.chiave] = trovato;
+      presi.add(trovato);
     }
   }
-  return fuori;
+  ricordati = { stati: stati4, quanti: quanti4, chiave: chiave2, quando: adesso2, fuori };
+  return { ...fuori };
 }
 var MUTI18 = /* @__PURE__ */ new Set(["", "unknown", "unavailable", "none", "null"]);
 function numero62(valore3) {
