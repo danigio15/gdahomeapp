@@ -16,6 +16,21 @@ aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
 ## 1.19.52
 
+- **Il menu del pannello è fatto per il pannello**: sul muro restano la
+  Plancia e le Notifiche (il campanello), e arriva il gruppo «Pannello», con
+  lo stesso stile del menu di sempre:
+  - **Wi-Fi**: la rete, il segnale e la velocità; «Cambia rete» apre la
+    scelta delle reti di Android;
+  - **Schermo**: la luminosità e quella automatica (l'add-on dà all'app il
+    permesso di scriverla al prossimo aggiornamento del pannello);
+  - **Suono**: il volume;
+  - **Zigbee**: il chip del pannello come coordinatore, acceso e spento da
+    qui; l'add-on trova da solo la sua porta seriale e lo mette in rete per
+    ZHA (`socket://`) e Zigbee2MQTT (`tcp://`, `ember`). Come router arriverà
+    dopo: va riprogrammato il chip;
+  - **Informazioni**: modello, Android, indirizzo, e «Riavvia il pannello».
+    Abbinare telefoni, acquisti, navigatore, salute e diagnostica dell'app sul
+    pannello non ci sono più.
 - **Fra i telefoni collegati i pannelli si chiamano col loro nome**
   («Salone», «Corridoio»), non col modello della scheda («px30_evb»), e con
   la versione dell'app del pannello, non quella dell'app del telefono da cui

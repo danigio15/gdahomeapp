@@ -1034,3 +1034,35 @@ test("fra i telefoni collegati il pannello si chiama come qui, non col modello d
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("il pannello chiede alla casa di riavviarsi o dello Zigbee: solo per se stesso", async () => {
+  const dir = cartella();
+  try {
+    const inst = installatoreFinto();
+    inst.zigbee = async ({ indirizzo, attivo }) => ({ indirizzo, attivo });
+    const pannelli = new Pannelli({ cartella: dir, installatore: inst, licenze: premium });
+    pannelli.archivio.dati.pannelli.push({
+      id: "pm_s",
+      indirizzo: "10.0.0.1",
+      stato: "pronto",
+      dispositivo: "dm_s",
+    });
+    assert.deepEqual(await pannelli.dalPannello("dm_s", { cosa: "riavvia" }), { fatto: true });
+    assert.deepEqual(inst.fatti, ["riavvia"]);
+    assert.deepEqual(await pannelli.dalPannello("dm_s", { cosa: "zigbee", attivo: true }), {
+      indirizzo: "10.0.0.1",
+      attivo: true,
+    });
+    assert.deepEqual(await pannelli.dalPannello("dm_s", { cosa: "zigbee" }), {
+      indirizzo: "10.0.0.1",
+      attivo: null,
+    });
+    /* Un telefono non e' un pannello. */
+    await assert.rejects(
+      () => pannelli.dalPannello("dm_telefono", { cosa: "riavvia" }),
+      /non e' un pannello/,
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

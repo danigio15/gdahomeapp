@@ -970,6 +970,33 @@ export class Pannelli {
     return { fatto: true };
   }
 
+  /* Il pannello a muro che chiede qualcosa di se' (`ponte/pannello`, dal
+   * menu del pannello): riavviarsi, lo Zigbee. Lo fa l'add-on, che il
+   * pannello lo tiene con l'ADB. Chi chiede e' il dispositivo del filo: si
+   * cerca il pannello che e' lui. */
+  async dalPannello(dispositivo, detto = {}) {
+    const pannello = this.archivio.dati.pannelli.find((uno) => uno.dispositivo === dispositivo);
+    if (!pannello) {
+      const e = new Error("Questo non e' un pannello a muro della casa.");
+      e.perUtente = true;
+      throw e;
+    }
+    if (detto.cosa === "riavvia") {
+      await this.installatore.riavvia({ indirizzo: pannello.indirizzo });
+      return { fatto: true };
+    }
+    if (detto.cosa === "zigbee") {
+      if (typeof this.installatore.zigbee !== "function") return { attivo: false };
+      return this.installatore.zigbee({
+        indirizzo: pannello.indirizzo,
+        attivo: typeof detto.attivo === "boolean" ? detto.attivo : null,
+      });
+    }
+    const e = new Error("Non so cosa fare.");
+    e.perUtente = true;
+    throw e;
+  }
+
   _analizza(pannello) {
     this._analisiInCorso ??= new Map();
     const gia = this._analisiInCorso.get(pannello.id);

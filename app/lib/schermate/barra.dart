@@ -1560,24 +1560,36 @@ List<Sezione> vociDellaBarra({
   bool conPremium = false,
   bool conLaSalute = true,
   Set<Sezione> bloccate = const {},
-}) => [
-  for (final una in Sezione.values)
-    if ((nellApp || !una.soloNellApp) &&
-        /* Le voci col lucchetto ci sono sempre, in casa e fuori: «senza
+  bool sulMuro = false,
+}) => sulMuro
+    /* Sul pannello a muro: la plancia, le notifiche (il campanello) e le sue
+     * impostazioni. Il resto e' del telefono. */
+    ? [
+        Sezione.plancia,
+        Sezione.notifiche,
+        for (final una in Sezione.values)
+          if (una.soloSulMuro) una,
+      ]
+    : [
+        for (final una in Sezione.values)
+          if (!una.soloSulMuro &&
+              (nellApp || !una.soloNellApp) &&
+              /* Le voci col lucchetto ci sono sempre, in casa e fuori: «senza
          * premium sono scomparse le altre opzioni tipo zigbee, automazioni:
          * devono esserci, con l'indicazione premium». Fuori casa il ponte
          * non risponde, e non si sapeva se c'e' Zigbee o chi amministra: le
          * voci sparivano. Premute, portano a Premium. */
-        ((bloccate.contains(una) && (una != Sezione.salute || conLaSalute)) ||
-            ((una != Sezione.console || conLaConsole) &&
-                (una != Sezione.premium || conPremium) &&
-                (una != Sezione.cruscotto || conIlCruscotto) &&
-                (una != Sezione.gestione || conLaGestione) &&
-                (una != Sezione.zigbee || conZigbee) &&
-                (una != Sezione.salute || conLaSalute) &&
-                (chiAmministra || !una.soloPerChiAmministra))))
-      una,
-];
+              ((bloccate.contains(una) &&
+                      (una != Sezione.salute || conLaSalute)) ||
+                  ((una != Sezione.console || conLaConsole) &&
+                      (una != Sezione.premium || conPremium) &&
+                      (una != Sezione.cruscotto || conIlCruscotto) &&
+                      (una != Sezione.gestione || conLaGestione) &&
+                      (una != Sezione.zigbee || conZigbee) &&
+                      (una != Sezione.salute || conLaSalute) &&
+                      (chiAmministra || !una.soloPerChiAmministra))))
+            una,
+      ];
 
 /// Come si chiama il tasto che apre il menu: il ☰ nella barra del titolo.
 /// Il lettore di schermo lo legge cosi', e le prove lo cercano con questo

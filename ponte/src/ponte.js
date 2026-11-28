@@ -36,6 +36,10 @@ export const SOSTITUISCI = "ponte/telefono/sostituisci";
  * `presentati` in `dispositivi.js`). Solo per se stesso. */
 export const CHI_SONO = "ponte/telefono/chi-sono";
 
+/* Il pannello a muro che chiede qualcosa di se' alla casa: riavviarsi, lo
+ * Zigbee (vedi `dalPannello` in `pannelli.js`). Solo per se stesso. */
+export const PANNELLO = "ponte/pannello";
+
 /* Quanti messaggi al secondo puo' mandare un telefono.
  *
  * Una plancia che si apre ne manda una raffica — le sottoscrizioni, i
@@ -467,6 +471,28 @@ class Collegamento {
           result: { cambiato },
         }),
       );
+      return;
+    }
+    /* Il pannello a muro che chiede qualcosa di se' alla casa (`pannelli.js`,
+     * `dalPannello`): riavviarsi, lo Zigbee. Vale solo per il pannello di
+     * questo filo: lo dice il segno, e la casa guarda che sia un pannello. */
+    if (detto.type === PANNELLO) {
+      const fai = this.ponte.alPannello;
+      if (typeof fai !== "function" || !this.dispositivo?.id) {
+        this.presa.manda(
+          JSON.stringify(no(detto.id ?? null, "ponte_pannello", "non e' un pannello")),
+        );
+        return;
+      }
+      Promise.resolve()
+        .then(() => fai(this.dispositivo.id, detto))
+        .then(
+          (result) => ({ id: detto.id ?? null, type: "result", success: true, result }),
+          (e) => no(detto.id ?? null, "ponte_pannello", e?.message || "non ha funzionato"),
+        )
+        .then((detta) => {
+          if (!this.chiuso) this.presa.manda(JSON.stringify(detta));
+        });
       return;
     }
     /* Le notifiche di questo telefono (`notifiche.js`): le sue impostazioni,

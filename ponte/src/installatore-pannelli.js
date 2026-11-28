@@ -106,6 +106,45 @@ export const FOTO = "/data/local/tmp/gdahome-copia";
  * pannello. */
 export const MURO = "GdAHome-Muro.apk";
 
+/* Le preferenze di GdAHome OS (quelle di serie di Android, per pacchetto). */
+export const PREFERENZE_DI_GDAHOME_OS =
+  "/data/data/com.gdahome.os/shared_prefs/com.gdahome.os_preferences.xml";
+
+/* Chi risponde al reset Zigbee (ASH RST: 1a c0 38 bc 7e) con un RSTACK. */
+export const CERCA_LO_ZIGBEE = [
+  "for t in /dev/ttyS1 /dev/ttyS2 /dev/ttyS3 /dev/ttyS4 /dev/ttyS5; do",
+  '  [ -c "$t" ] || continue',
+  '  stty -F "$t" 115200 raw -echo 2>/dev/null || continue',
+  "  f=/data/local/tmp/gda-zb",
+  '  cat "$t" > $f & c=$!',
+  "  sleep 0.3",
+  "  printf '\\032\\300\\070\\274\\176' > \"$t\"",
+  "  sleep 1",
+  "  kill $c 2>/dev/null",
+  '  if od -An -tx1 $f 2>/dev/null | tr -d " \\n" | grep -q c102; then echo "ZIGBEE $t"; rm -f $f; break; fi',
+  "  rm -f $f",
+  "done",
+  "true",
+].join("\n");
+
+/* Accende o spegne lo Zigbee nelle preferenze di GdAHome OS: si ferma GdAHome
+ * OS (che non le riscriva), si tolgono le due righe e si rimettono, si
+ * ridanno il padrone e l'etichetta del file, e si riparte. */
+export function scriptDelloZigbee({ attivo, seriale }) {
+  const P = PREFERENZE_DI_GDAHOME_OS;
+  return [
+    `P=${P}`,
+    'U=$(stat -c %u "$(dirname "$(dirname "$P")")")',
+    "am force-stop com.gdahome.os",
+    '[ -f "$P" ] || { mkdir -p "$(dirname "$P")"; printf "<?xml version=\'1.0\' encoding=\'utf-8\' standalone=\'yes\' ?>\\n<map>\\n</map>\\n" > "$P"; }',
+    'grep -v -e \'name="zigbee_enabled"\' -e \'name="zigbee_device"\' -e "</map>" "$P" > "$P.n"',
+    `printf '    <boolean name="zigbee_enabled" value="%s" />\\n    <string name="zigbee_device">%s</string>\\n</map>\\n' ${attivo ? "true" : "false"} ${scappa(seriale || "")} >> "$P.n"`,
+    'mv "$P.n" "$P"; chown "$U:$U" "$P" "$(dirname "$P")"; chmod 660 "$P"; restorecon "$P" 2>/dev/null',
+    "am start-foreground-service -n com.gdahome.os/.GdaService >/dev/null 2>&1 || am startservice -n com.gdahome.os/.GdaService >/dev/null 2>&1 || am broadcast -a android.intent.action.BOOT_COMPLETED -n com.gdahome.os/.BootReceiver >/dev/null 2>&1",
+    "echo GDA_OK",
+  ].join("\n");
+}
+
 /* Lo script che spegne il risparmio energetico del Wi-Fi (`_svegliaLaRete`):
  * `set ps 0` a wpa_supplicant, dove ha la sua presa, e `iw` se c'e'. */
 export const SVEGLIA_LA_RETE = [
@@ -793,6 +832,8 @@ export class Installatore {
       `dumpsys deviceidle whitelist +${this.muroPackage}`,
       "appops set com.gdahome.os WRITE_SETTINGS allow",
       `appops set ${this.muroPackage} RUN_IN_BACKGROUND allow`,
+      /* La luminosita' dal menu del pannello (`IlPannello.kt`). */
+      `appops set ${this.muroPackage} WRITE_SETTINGS allow`,
     ];
     for (const r of righe) await this.adb.shell(indirizzo, r, { root: false }).catch(() => {});
   }
@@ -1048,6 +1089,61 @@ export class Installatore {
       .shell(indirizzo, SVEGLIA_LA_RETE, { root: true, attesa: 15_000 })
       .catch(() => "");
     return String(detto || "").trim();
+  }
+
+  /* Lo Zigbee del pannello, come coordinatore (`ponte/pannello` dal menu del
+   * pannello). Lo tiene GdAHome OS: il chip in rete sulla porta 6638
+   * (`gdaserial`), per ZHA (`socket://`) e Zigbee2MQTT (`tcp://`, `ember`).
+   * La sua configurazione sta nelle preferenze di GdAHome OS: qui si leggono,
+   * e per accenderlo si scrivono — fermandolo prima, che non le riscriva
+   * lui, e riavviandolo dopo. La porta seriale del chip, se non c'e', si
+   * trova (`_trovaLoZigbee`). Torna { attivo, porta, indirizzo, seriale }. */
+  async zigbee({ indirizzo, attivo = null }) {
+    if (!(await this.adb.connetti(indirizzo))) throw perUtente("Il pannello non risponde.");
+    const leggi = async () => {
+      const xml = String(
+        await this.adb
+          .shell(indirizzo, `cat ${PREFERENZE_DI_GDAHOME_OS} 2>/dev/null`, { root: true })
+          .catch(() => ""),
+      );
+      const seriale = (/<string name="zigbee_device">([^<]*)</.exec(xml) || [])[1]?.trim() || "";
+      const porta = Number((/<string name="zigbee_port">\s*(\d+)\s*</.exec(xml) || [])[1]) || 6638;
+      const acceso = /<boolean name="zigbee_enabled" value="true"/.test(xml);
+      return {
+        attivo: acceso && Boolean(seriale),
+        porta,
+        indirizzo: `${indirizzo}:${porta}`,
+        seriale,
+      };
+    };
+    const prima = await leggi();
+    if (attivo === null || attivo === prima.attivo) return prima;
+    let seriale = prima.seriale;
+    if (attivo && !seriale) {
+      seriale = await this._trovaLoZigbee(indirizzo);
+      if (!seriale)
+        throw perUtente(
+          "Non trovo il chip Zigbee sulle porte seriali del pannello: nessuna risponde come un chip Zigbee.",
+        );
+    }
+    await this.adb.shell(indirizzo, scriptDelloZigbee({ attivo: Boolean(attivo), seriale }), {
+      root: true,
+      attesa: 30_000,
+    });
+    return leggi();
+  }
+
+  /* Quale porta seriale e' il chip Zigbee: a ognuna si manda il reset del
+   * protocollo del chip (ASH, il «RST» di EmberZNet) a 115200, e chi risponde
+   * con un RSTACK (`c1 02`) e' lui. Si salta la console (ttyS0). Si cerca
+   * solo con lo Zigbee spento: acceso, la porta e' gia' scritta. */
+  async _trovaLoZigbee(indirizzo) {
+    const detto = String(
+      await this.adb
+        .shell(indirizzo, CERCA_LO_ZIGBEE, { root: true, attesa: 30_000 })
+        .catch(() => ""),
+    );
+    return (/ZIGBEE (\/dev\/\S+)/.exec(detto) || [])[1] || "";
   }
 
   /* Quanto corre la rete nei due versi, con 3 MB per la strada diretta:
@@ -1558,6 +1654,8 @@ export class Installatore {
       "dumpsys deviceidle whitelist +com.gdahome.os",
       `dumpsys deviceidle whitelist +${this.muroPackage}`,
       `appops set ${this.muroPackage} RUN_IN_BACKGROUND allow`,
+      /* La luminosita' dal menu del pannello (`IlPannello.kt`). */
+      `appops set ${this.muroPackage} WRITE_SETTINGS allow`,
       `pm grant ${this.muroPackage} android.permission.RECORD_AUDIO`,
     ];
     for (const r of righe) await this.adb.shell(indirizzo, r, { root: true }).catch(() => {});
@@ -1891,6 +1989,8 @@ export class Installatore {
         for (const r of [
           `dumpsys deviceidle whitelist +${this.muroPackage}`,
           `appops set ${this.muroPackage} RUN_IN_BACKGROUND allow`,
+          /* La luminosita' dal menu del pannello (`IlPannello.kt`). */
+          `appops set ${this.muroPackage} WRITE_SETTINGS allow`,
         ])
           await this.adb.shell(indirizzo, r, { root: true }).catch(() => {});
       } else fase(0)("Gia' all'ultima versione", 100);

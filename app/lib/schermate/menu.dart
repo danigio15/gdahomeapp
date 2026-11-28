@@ -161,9 +161,27 @@ enum Sezione {
    * quando c'e' qualcosa da vendere: con la chiave delle licenze vuota tutto
    * e' gia' aperto, e una voce che vende l'aria sarebbe peggio di niente.
    * Vedi `vociDellaBarra` e `licenza/`. */
-  premium('evidenza', pronta: true);
+  premium('evidenza', pronta: true),
+  /* ─── Quelle del pannello a muro ──────────────────────────────────────
+   *
+   * Sul pannello il menu non e' quello del telefono: «per poter impostare il
+   * Wi-Fi come lo facciamo?». Restano Plancia e Notifiche, e arriva il gruppo
+   * «Pannello» con quello che serve a un tablet a muro. Ci sono **solo** li'
+   * (`soloSulMuro`), e sul pannello ci sono solo loro (`vociDellaBarra`).
+   * Aprono tutte la stessa pagina, ognuna alla sua parte
+   * (`schermate/il_pannello.dart`). */
+  wifiDelPannello('aria', pronta: true, soloSulMuro: true),
+  schermoDelPannello('luci', pronta: true, soloSulMuro: true),
+  suonoDelPannello('media', pronta: true, soloSulMuro: true),
+  zigbeeDelPannello('runtime', pronta: true, soloSulMuro: true),
+  ilPannello('minipc', pronta: true, soloSulMuro: true);
 
-  const Sezione(this.disegno, {this.pronta = false, this.soloNellApp = false});
+  const Sezione(
+    this.disegno, {
+    this.pronta = false,
+    this.soloNellApp = false,
+    this.soloSulMuro = false,
+  });
 
   /// Come si chiama, nella lingua di chi guarda.
   ///
@@ -235,6 +253,11 @@ enum Sezione {
     Sezione.automazioni => inLingua(it: 'Automazioni', en: 'Automations'),
     /* Il nome del prodotto, uguale nelle due lingue. */
     Sezione.premium => 'GdAHome Premium',
+    Sezione.wifiDelPannello => 'Wi-Fi',
+    Sezione.schermoDelPannello => inLingua(it: 'Schermo', en: 'Screen'),
+    Sezione.suonoDelPannello => inLingua(it: 'Suono', en: 'Sound'),
+    Sezione.zigbeeDelPannello => 'Zigbee',
+    Sezione.ilPannello => inLingua(it: 'Informazioni', en: 'About'),
   };
 
   /// In quale gruppo della barra sta.
@@ -253,6 +276,11 @@ enum Sezione {
     Sezione.segnalazioni ||
     Sezione.assistenza ||
     Sezione.premium => GruppoDellaBarra.aiuto,
+    Sezione.wifiDelPannello ||
+    Sezione.schermoDelPannello ||
+    Sezione.suonoDelPannello ||
+    Sezione.zigbeeDelPannello ||
+    Sezione.ilPannello => GruppoDellaBarra.pannello,
     _ => GruppoDellaBarra.avanzate,
   };
 
@@ -268,6 +296,9 @@ enum Sezione {
   /// Nella webapp non ci sono proprio: non sono spente, non sono grigie, non
   /// ci sono. Vedi `vociDellaBarra`.
   final bool soloNellApp;
+
+  /// Solo nell'app del pannello a muro (`sulMuro`): le sue impostazioni.
+  final bool soloSulMuro;
 
   /// Le voci di gdahome Premium. Nel menu portano il bollino ✨ PREMIUM
   /// quando la casa e' Premium, e il lucchetto quando non lo e' (vedi
@@ -306,11 +337,13 @@ enum Sezione {
 /// le cose da installatore, e in fondo l'aiuto, dove lo si va a cercare.
 enum GruppoDellaBarra {
   casa,
+  pannello,
   avanzate,
   aiuto;
 
   String get titolo => switch (this) {
     GruppoDellaBarra.casa => inLingua(it: 'Casa', en: 'Home'),
+    GruppoDellaBarra.pannello => inLingua(it: 'Pannello', en: 'Panel'),
     GruppoDellaBarra.aiuto => inLingua(it: 'Aiuto', en: 'Help'),
     GruppoDellaBarra.avanzate => inLingua(it: 'Avanzate', en: 'Advanced'),
   };

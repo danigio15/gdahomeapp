@@ -15,6 +15,7 @@ import android.view.WindowManager
 import androidx.activity.enableEdgeToEdge
 import com.gdahome.gdahome.auto.IlNavigatoreInAuto
 import com.gdahome.gdahome.orologio.IlTramiteDellOrologio
+import com.gdahome.gdahome.rete.IlPannello
 import com.gdahome.gdahome.rete.LaReteSveglia
 import com.gdahome.gdahome.salute.LaSaluteAdAppChiusa
 import io.flutter.embedding.android.FlutterFragmentActivity
@@ -85,6 +86,9 @@ class MainActivity : FlutterFragmentActivity() {
         /* L'orologio Wear OS. Nella versione col navigatore in auto l'ha gia'
          * collegato `IlNavigatoreInAuto`; rifarlo non fa danni. */
         IlTramiteDellOrologio.collega(flutterEngine.dartExecutor.binaryMessenger, this)
+        /* Le impostazioni del pannello (Wi-Fi, schermo, suono): solo
+         * nell'app del pannello, sul telefono non fa niente. */
+        IlPannello.collega(flutterEngine.dartExecutor.binaryMessenger, this)
         /* La salute ad app chiusa: il Dart accende e spegne il giro. E il
          * giro, se trova l'app aperta, sveglia questo motore invece di
          * accenderne un altro accanto (`LaSaluteAdAppChiusa.sveglia`). */

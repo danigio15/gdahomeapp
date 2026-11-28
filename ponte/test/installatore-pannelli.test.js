@@ -1147,3 +1147,58 @@ test("l'app del pannello giusta per il suo processore: 64 bit, o 32 se sa fare s
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("lo Zigbee del pannello: si legge dalle preferenze di GdAHome OS, e per accenderlo si trova il chip", async () => {
+  let xml = `<?xml version='1.0' encoding='utf-8' standalone='yes' ?>\n<map>\n    <string name="zigbee_port">6638</string>\n</map>\n`;
+  const comandi = [];
+  const adb = {
+    async connetti() {
+      return true;
+    },
+    async shell(_i, c) {
+      comandi.push(c);
+      if (c.startsWith("cat /data/data/com.gdahome.os")) return xml;
+      if (c.includes("stty -F")) return "ZIGBEE /dev/ttyS1\n";
+      if (c.includes("am force-stop com.gdahome.os")) {
+        assert.match(c, /value="%s" \/>.*true '\/dev\/ttyS1'/s);
+        xml = xml.replace(
+          "</map>",
+          `    <boolean name="zigbee_enabled" value="true" />\n    <string name="zigbee_device">/dev/ttyS1</string>\n</map>`,
+        );
+        return "GDA_OK";
+      }
+      return "";
+    },
+  };
+  const inst = new Installatore({ adb });
+  assert.deepEqual(await inst.zigbee({ indirizzo: "10.0.0.5" }), {
+    attivo: false,
+    porta: 6638,
+    indirizzo: "10.0.0.5:6638",
+    seriale: "",
+  });
+  const acceso = await inst.zigbee({ indirizzo: "10.0.0.5", attivo: true });
+  assert.equal(acceso.attivo, true);
+  assert.equal(acceso.seriale, "/dev/ttyS1");
+  /* Gia' acceso: non si tocca niente. */
+  const prima = comandi.length;
+  await inst.zigbee({ indirizzo: "10.0.0.5", attivo: true });
+  assert.equal(comandi.filter((c) => c.includes("force-stop")).length, 1);
+  assert.ok(comandi.length > prima);
+});
+
+test("senza un chip Zigbee che risponde, accenderlo lo dice invece di scrivere a vuoto", async () => {
+  const adb = {
+    async connetti() {
+      return true;
+    },
+    async shell(_i, c) {
+      if (c.includes("force-stop")) throw new Error("non doveva scrivere");
+      return "";
+    },
+  };
+  await assert.rejects(
+    () => new Installatore({ adb }).zigbee({ indirizzo: "10.0.0.5", attivo: true }),
+    /Non trovo il chip Zigbee/,
+  );
+});
