@@ -18,7 +18,12 @@ aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
 - **Sul pannello a muro niente tasto dell'assistente.** Il cerchio blu in
   basso a destra galleggiava sopra le luci: sul pannello non c'è più.
-- **Le feste costano meno al pannello.** Se è il periodo delle feste la
+- **La luce toccata cambia colore all'istante.** Prima la card cambiava col
+  disegno di tutto il pannello, fatto dentro il tocco: un paio di decimi su un
+  NSPanel. Ora il comando parte, la card cambia colore subito e il resto si
+  ridisegna al fotogramma dopo.
+- **Le feste costano meno al pannello.** Le decorazioni restano com'erano e
+  partono l'8 dicembre. Se è il periodo delle feste la
   plancia se lo chiedeva di continuo — per ogni disegno, per ogni luce, per
   la luce dello schermo — e dal microscopio era diventata la prima funzione
   del Salone. Ora la risposta vale per il minuto in cui è stata data (a

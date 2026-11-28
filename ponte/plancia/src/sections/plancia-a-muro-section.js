@@ -5522,11 +5522,41 @@ function attendi(id, cosa, valore) {
   }, 4000);
 }
 
-/* Il tocco che accende o spegne: la card cambia subito, il comando parte. */
-function alterna(id, domain, service, data = { entity_id: id }) {
-  attendi(id, "acceso", !acceso(id));
+/* Il tocco che accende o spegne: la card cambia subito, il comando parte.
+ *
+ * «C'e' ancora un piccolo delay su accensione luci.» La card cambiava col
+ * disegno, e il disegno era quello di tutto il muro, fatto dentro il tocco:
+ * su un NSPanel un paio di decimi prima che il colore cambiasse. Con la card
+ * in mano (`carta`), il comando parte, la card cambia colore adesso — una
+ * classe — e il disegno intero arriva al fotogramma dopo, a colore gia'
+ * cambiato. */
+function alterna(id, domain, service, data = { entity_id: id }, carta = null) {
+  const sara = !acceso(id);
+  attendi(id, "acceso", sara);
   comanda(domain, service, data);
+  if (carta && cambiaLaCartaSubito(carta, sara)) {
+    disegnaDopoIlColore();
+    return;
+  }
   disegna();
+}
+
+/** La card della luce accesa o spenta, adesso, senza aspettare il disegno. */
+export function cambiaLaCartaSubito(carta, accesa) {
+  if (!carta?.classList?.contains?.("mu-luce")) return false;
+  carta.classList.toggle("mu-luce-on", accesa);
+  carta.setAttribute?.("aria-pressed", String(accesa));
+  return true;
+}
+
+/* Due fotogrammi: il primo dipinge la card cambiata, il secondo il resto. */
+function disegnaDopoIlColore() {
+  const fotogramma = root.requestAnimationFrame?.bind(root);
+  if (!fotogramma) {
+    disegna();
+    return;
+  }
+  fotogramma(() => fotogramma(() => disegna()));
 }
 
 /* Quando Home Assistant dice lo stesso che il tablet aspettava, l'attesa
@@ -5766,7 +5796,7 @@ function onClick(event) {
     if (entita && dominio(entita) === "light") {
       /* «Tutta tasto»: il tocco accende e spegne, su ogni pannello. La
        * finestra della luce si apre col dito tenuto (`onPointerDown`). */
-      alterna(entita, "light", "toggle");
+      alterna(entita, "light", "toggle", undefined, bersaglio);
     } else if (entita && bersaglio.querySelector?.('[data-mu-fa="interruttore"]'))
       /* Una presa nella card della luce: non ha una finestra sua, il tocco
        * la accende e la spegne. */

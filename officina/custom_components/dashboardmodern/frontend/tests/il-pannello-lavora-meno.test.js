@@ -74,3 +74,31 @@ test("sul pannello a muro il tasto di Assist non c'e'", async () => {
   const acceso = assist.slice(assist.indexOf("function acceso()"));
   assert.match(acceso.slice(0, 400), /if \(sulPannelloAMuro\(\)\) return false;/);
 });
+
+/* «C'e' ancora un piccolo delay su accensione luci»: la card della luce
+ * cambia colore al tocco, senza aspettare il disegno di tutto il muro. */
+test("al tocco la card della luce cambia subito, e il disegno arriva dopo", async () => {
+  const { cambiaLaCartaSubito } = await import("../src/sections/plancia-a-muro-section.js");
+  const classi = new Set(["mu-carta", "mu-card", "mu-luce"]);
+  const attributi = {};
+  const carta = {
+    classList: {
+      contains: (c) => classi.has(c),
+      toggle: (c, si) => (si ? classi.add(c) : classi.delete(c)),
+    },
+    setAttribute: (k, v) => {
+      attributi[k] = v;
+    },
+  };
+  assert.equal(cambiaLaCartaSubito(carta, true), true);
+  assert.ok(classi.has("mu-luce-on"));
+  assert.equal(attributi["aria-pressed"], "true");
+  assert.equal(cambiaLaCartaSubito(carta, false), true);
+  assert.ok(!classi.has("mu-luce-on"));
+  /* Una card che non e' di una luce non si tocca: la fa il disegno. */
+  const altra = { classList: { contains: () => false, toggle: () => assert.fail() } };
+  assert.equal(cambiaLaCartaSubito(altra, true), false);
+  const muro = await read("../src/sections/plancia-a-muro-section.js");
+  assert.match(muro, /alterna\(entita, "light", "toggle", undefined, bersaglio\)/);
+  assert.match(muro, /fotogramma\(\(\) => fotogramma\(\(\) => disegna\(\)\)\)/);
+});
