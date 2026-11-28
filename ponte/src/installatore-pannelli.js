@@ -385,8 +385,9 @@ export function scriptDiSistema() {
  * pulizia totale (le app aggiunte, come quella di Home Assistant). 4:
  * l'animazione d'avvio nuova («GdAHome» e non «GDAHOME»), rimessa. 5: le app
  * che Android non lasciava togliere (NSPanelTools) e i programmi Sonoff
- * lanciati da init (zgateway). */
-export const RITOCCO = 5;
+ * lanciati da init (zgateway). 6: l'animazione del 120 in orizzontale, e
+ * piu' leggera. */
+export const RITOCCO = 6;
 export function scriptDelRitocco() {
   return [
     ...INTESTAZIONE(),
@@ -1293,7 +1294,15 @@ export class Installatore {
       await dorme(secondi * 1000);
       const { profile } = await cdp("Profiler.stop");
       const dopo = await metriche();
-      return riassuntoDelProfilo(profile, prima, dopo, secondi);
+      /* E cosa sta sul bordo destro della pagina: sul Salone, a riposo, c'e'
+       * una striscia chiara verticale, e da fuori non si sa chi la disegna.
+       * Se qui non c'e' niente di chiaro, la striscia e' fuori dalla pagina
+       * (l'app, o Android). */
+      const bordo = await cdp("Runtime.evaluate", {
+        expression: GUARDA_IL_BORDO,
+        returnByValue: true,
+      }).catch((e) => ({ result: { value: `? ${e.message}` } }));
+      return `${riassuntoDelProfilo(profile, prima, dopo, secondi)}\n-- il bordo destro:\n${bordo?.result?.value ?? "?"}`;
     } catch (errore) {
       return `non riuscita (${errore.message || errore})`;
     } finally {
@@ -2512,6 +2521,38 @@ export class Installatore {
       "Programmi Sonoff",
       `for p in /proc/[0-9]*; do e=$(readlink $p/exe 2>/dev/null); case "\${e##*/}" in ${PROGRAMMI_DI_SONOFF.join("|")}) echo "gira \${p#/proc/} $e" ;; esac; done; grep -l -E '${PROGRAMMI_DI_SONOFF.join("|")}' /*.rc /system/etc/init/*.rc /vendor/etc/init/*.rc 2>/dev/null; cat /system/etc/init/gdahome-sonoff.rc 2>/dev/null; echo '-- messi da parte:'; cat /system/gdahome-removed/manifest.txt /data/gdahome-removed-system/manifest.txt 2>/dev/null | grep -v '^com\\.' | head`,
     );
+    /* L'avvio: dove se ne va il minuto prima della plancia. Android scrive i
+     * suoi passi (`boot_progress_*`, in millisecondi dall'accensione) nel
+     * registro degli eventi; l'app quando si mostra. Si legge bene solo
+     * poco dopo un'accensione: il registro e' corto. */
+    await chiedi(
+      "Avvio",
+      "echo \"acceso da $(cut -d' ' -f1 /proc/uptime) s\"; logcat -b events -d 2>/dev/null | grep -E 'boot_progress_(start|preload_start|system_run|pms_ready|ams_ready|enable_screen)|sf_stop_bootanim|wm_boot_animation_done' | head -n 12; logcat -d 2>/dev/null | grep -E 'Displayed com\\.gdahome|Start proc [0-9]+:com\\.gdahome' | head -n 6",
+    );
+    /* Cosa parte all'avvio, tutto: i servizi di init col loro stato, i file
+     * che li dichiarano fuori da quelli di Android, le partizioni montate di
+     * Sonoff, i programmi che girano adesso (non i fili del kernel) e le app
+     * che si svegliano da sole all'accensione. Per togliere quello che e' di
+     * Sonoff nome per nome, senza toccare quello che serve ad Android. */
+    await chiedi(
+      "Cosa parte all'avvio",
+      [
+        "echo '-- servizi:'; getprop | grep -E '^\\[init\\.svc\\.' | sed 's/^\\[init\\.svc\\.//; s/\\]: \\[/ = /; s/\\]$//' | sort",
+        "echo '-- dichiarati in:'; ls /system/etc/init /vendor/etc/init /oem/etc/init / 2>/dev/null | grep -E '\\.rc$' | sort -u | tr '\\n' ' '; echo",
+        "echo '-- partizioni montate:'; grep -E 'oem|smatek|STSN|stback|vendor' /proc/mounts | cut -d' ' -f1-3",
+        "echo '-- programmi:'; for p in /proc/[0-9]*; do e=$(readlink $p/exe 2>/dev/null) || continue; echo \"$e\"; done | sort | uniq -c | sort -rn | head -n 60",
+        "echo '-- app che partono da sole:'; cmd package query-receivers --brief -a android.intent.action.BOOT_COMPLETED 2>/dev/null | grep '/' | cut -d/ -f1 | sort -u | head -n 30",
+      ].join("; "),
+      true,
+      40_000,
+    );
+    /* Il logo SONOFF dell'accensione, prima di Android: sui Rockchip sta
+     * nella partizione «resource», insieme all'albero dei dispositivi. Qui
+     * si legge e basta: quanto e' grande e cosa c'e' dentro. */
+    await chiedi(
+      "Il logo dell'accensione",
+      "P=/dev/block/by-name/resource; [ -e $P ] || P=$(ls /dev/block/platform/*/by-name/resource 2>/dev/null | head -n 1); echo \"resource: $P $(blockdev --getsize64 $P 2>/dev/null) byte\"; dd if=$P bs=512 count=64 2>/dev/null | tr -c '[:print:]' '\\n' | grep -E '.{4,}' | grep -iE 'RSCE|logo|bmp|dtb|png' | head -n 12",
+    );
     /* Le partizioni: il logo dell'accensione sta in una sua (logo, resource
      * o uboot sui Rockchip), prima di Android. */
     await chiedi(
@@ -2615,6 +2656,24 @@ export function filiAlLavoro(pkg, secondi = 8) {
 /* Il profilo della plancia detto in chiaro: quanto del tempo il filo della
  * pagina ha lavorato (script, stili, impaginazione: da Performance.getMetrics),
  * e le funzioni che si sono prese di piu', col file e la riga. */
+/* Eseguito dentro la pagina del pannello (`_alMicroscopio`): la misura della
+ * finestra, se qualcosa sborda a destra, e gli elementi che stanno negli
+ * ultimi pixel del bordo destro, a tre altezze, con la loro misura. */
+export const GUARDA_IL_BORDO = `(() => {
+  const w = innerWidth, h = innerHeight, d = document.documentElement;
+  const nome = (e) => e.tagName.toLowerCase() + (e.id ? "#" + e.id : "") +
+    (typeof e.className === "string" && e.className.trim() ? "." + e.className.trim().split(/\\s+/).slice(0, 3).join(".") : "");
+  const righe = ["finestra " + w + "x" + h + " · pagina larga " + d.scrollWidth + " · classi " + d.className];
+  for (const y of [0.25, 0.5, 0.75]) for (const x of [w - 1, w - 4, w - 10]) {
+    const tutti = document.elementsFromPoint(x, Math.round(h * y)).slice(0, 3);
+    righe.push(x + "," + Math.round(h * y) + ": " + tutti.map((e) => {
+      const r = e.getBoundingClientRect();
+      return nome(e) + " [" + Math.round(r.left) + "-" + Math.round(r.right) + "]";
+    }).join(" > "));
+  }
+  return righe.join("\\n");
+})()`;
+
 export function riassuntoDelProfilo(profile, prima = {}, dopo = {}, secondi = 8) {
   const righe = [];
   const quota = (nome) => {

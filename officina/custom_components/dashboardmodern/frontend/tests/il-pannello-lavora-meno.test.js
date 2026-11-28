@@ -57,3 +57,48 @@ test("dentro GdAHome Muro la Salute e Strava non ci sono, e non si cercano", asy
     delete globalThis.__GDAHOME_MURO__;
   }
 });
+
+test("la finestra delle feste si ricorda nello stesso minuto, e cambia a mezzanotte", async () => {
+  const { finestraDelleFeste } = await import("../src/core/feste.js");
+  const prima = finestraDelleFeste(new Date(2026, 11, 7, 23, 59, 10));
+  assert.equal(prima, null);
+  assert.equal(finestraDelleFeste(new Date(2026, 11, 7, 23, 59, 50)), null);
+  const dopo = finestraDelleFeste(new Date(2026, 11, 8, 0, 0, 5));
+  assert.ok(dopo, "l'8 dicembre e' festa");
+  assert.equal(finestraDelleFeste(new Date(2026, 11, 8, 0, 0, 40)), dopo);
+  assert.equal(finestraDelleFeste(new Date(2027, 0, 7, 0, 0, 1)), null);
+});
+
+test("sul pannello a muro il tasto di Assist non c'e'", async () => {
+  const assist = await read("../src/sections/assist-section.js");
+  const acceso = assist.slice(assist.indexOf("function acceso()"));
+  assert.match(acceso.slice(0, 400), /if \(sulPannelloAMuro\(\)\) return false;/);
+});
+
+/* «C'e' ancora un piccolo delay su accensione luci»: la card della luce
+ * cambia colore al tocco, senza aspettare il disegno di tutto il muro. */
+test("al tocco la card della luce cambia subito, e il disegno arriva dopo", async () => {
+  const { cambiaLaCartaSubito } = await import("../src/sections/plancia-a-muro-section.js");
+  const classi = new Set(["mu-carta", "mu-card", "mu-luce"]);
+  const attributi = {};
+  const carta = {
+    classList: {
+      contains: (c) => classi.has(c),
+      toggle: (c, si) => (si ? classi.add(c) : classi.delete(c)),
+    },
+    setAttribute: (k, v) => {
+      attributi[k] = v;
+    },
+  };
+  assert.equal(cambiaLaCartaSubito(carta, true), true);
+  assert.ok(classi.has("mu-luce-on"));
+  assert.equal(attributi["aria-pressed"], "true");
+  assert.equal(cambiaLaCartaSubito(carta, false), true);
+  assert.ok(!classi.has("mu-luce-on"));
+  /* Una card che non e' di una luce non si tocca: la fa il disegno. */
+  const altra = { classList: { contains: () => false, toggle: () => assert.fail() } };
+  assert.equal(cambiaLaCartaSubito(altra, true), false);
+  const muro = await read("../src/sections/plancia-a-muro-section.js");
+  assert.match(muro, /alterna\(entita, "light", "toggle", undefined, bersaglio\)/);
+  assert.match(muro, /fotogramma\(\(\) => fotogramma\(\(\) => disegna\(\)\)\)/);
+});

@@ -14,6 +14,36 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.55
+
+- **Sul pannello a muro niente tasto dell'assistente.** Il cerchio blu in
+  basso a destra galleggiava sopra le luci: sul pannello non c'è più.
+- **La luce toccata cambia colore all'istante.** Prima la card cambiava col
+  disegno di tutto il pannello, fatto dentro il tocco: un paio di decimi su un
+  NSPanel. Ora il comando parte, la card cambia colore subito e il resto si
+  ridisegna al fotogramma dopo.
+- **L'avvio del 120 a schermo intero.** Il 120 sta in orizzontale, e la sua
+  animazione d'avvio era disegnata in verticale: si vedeva una fascia
+  stretta al centro, tagliata. Ora è orizzontale, e più leggera (15
+  fotogrammi al secondo invece di 25, un giro più corto): mentre Android si
+  accende ruba meno processore. Arriva anche sui pannelli già installati
+  (ritocco 6).
+- **L'analisi dice cosa parte all'avvio**, tutto: i servizi del sistema col
+  loro stato, i file che li dichiarano, le partizioni Sonoff montate, i
+  programmi che girano e le app che si svegliano da sole; quanto ci mette
+  Android ad accendersi e l'app a comparire; e cosa c'è nella partizione del
+  logo SONOFF (solo letta). Serve a togliere quello che è di Sonoff nome per
+  nome.
+- **L'analisi guarda il bordo destro della plancia**: cosa c'è negli ultimi
+  pixel, per trovare chi disegna la striscia chiara che si vede sul Salone a
+  riposo.
+- **Le feste costano meno al pannello.** Le decorazioni restano com'erano e
+  partono l'8 dicembre. Se è il periodo delle feste la
+  plancia se lo chiedeva di continuo — per ogni disegno, per ogni luce, per
+  la luce dello schermo — e dal microscopio era diventata la prima funzione
+  del Salone. Ora la risposta vale per il minuto in cui è stata data (a
+  mezzanotte cambia comunque).
+
 ## 1.19.54
 
 - **Sul pannello a muro la Salute e Strava non ci sono più, nemmeno dentro la

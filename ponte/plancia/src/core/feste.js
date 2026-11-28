@@ -97,9 +97,25 @@ const comeData = (data) => {
  * c'e' un buco di un secondo (o di un millisecondo) fra la fine e il giorno
  * dopo: `adesso < fine` e' la regola intera.
  */
+/* La finestra cambia a mezzanotte, e la mezzanotte cade sempre all'inizio di
+ * un minuto (i fusi sono di ore, mezz'ore e quarti d'ora): dentro lo stesso
+ * minuto la risposta e' la stessa. Sul pannello a muro la si chiede di
+ * continuo — per ogni disegno, per ogni luce, per la luce dello schermo — e
+ * dal microscopio era diventata la prima funzione della plancia (210 ms ogni
+ * otto secondi): anno, mese e giorno in ora locale costano, ripetuti cosi'. */
+let finestraRicordata = { minuto: Number.NaN, finestra: null };
+
 export function finestraDelleFeste(data = new Date()) {
   const d = comeData(data);
   if (!d) return null;
+  const minuto = Math.floor(d.getTime() / 60_000);
+  if (minuto === finestraRicordata.minuto) return finestraRicordata.finestra;
+  const finestra = calcolaLaFinestra(d);
+  finestraRicordata = { minuto, finestra };
+  return finestra;
+}
+
+function calcolaLaFinestra(d) {
   const anno = d.getFullYear();
   const mese = d.getMonth();
   const giorno = d.getDate();

@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-VDS4NVN7.js";
+} from "../../chunk-RYL7LH55.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -110600,6 +110600,7 @@ function configurazione12() {
   return normalizzaAssist(readJson(CHIAVE_ASSIST, {}));
 }
 function acceso3() {
+  if (sulPannelloAMuro()) return false;
   return assistAcceso(readJson("cd_sections", {}), readJson(CHIAVE_ASSIST, {}));
 }
 function motoreDellaVoce() {
@@ -114756,9 +114757,17 @@ var comeData = (data) => {
   const d = data instanceof Date ? data : new Date(data ?? Date.now());
   return Number.isFinite(d.getTime()) ? d : null;
 };
+var finestraRicordata = { minuto: Number.NaN, finestra: null };
 function finestraDelleFeste(data = /* @__PURE__ */ new Date()) {
   const d = comeData(data);
   if (!d) return null;
+  const minuto = Math.floor(d.getTime() / 6e4);
+  if (minuto === finestraRicordata.minuto) return finestraRicordata.finestra;
+  const finestra7 = calcolaLaFinestra(d);
+  finestraRicordata = { minuto, finestra: finestra7 };
+  return finestra7;
+}
+function calcolaLaFinestra(d) {
   const anno = d.getFullYear();
   const mese = d.getMonth();
   const giorno3 = d.getDate();
@@ -125785,10 +125794,29 @@ function attendi(id, cosa, valore3) {
     disegna9();
   }, 4e3);
 }
-function alterna(id, domain, service, data = { entity_id: id }) {
-  attendi(id, "acceso", !acceso4(id));
+function alterna(id, domain, service, data = { entity_id: id }, carta = null) {
+  const sara = !acceso4(id);
+  attendi(id, "acceso", sara);
   comanda2(domain, service, data);
+  if (carta && cambiaLaCartaSubito(carta, sara)) {
+    disegnaDopoIlColore();
+    return;
+  }
   disegna9();
+}
+function cambiaLaCartaSubito(carta, accesa3) {
+  if (!carta?.classList?.contains?.("mu-luce")) return false;
+  carta.classList.toggle("mu-luce-on", accesa3);
+  carta.setAttribute?.("aria-pressed", String(accesa3));
+  return true;
+}
+function disegnaDopoIlColore() {
+  const fotogramma2 = root.requestAnimationFrame?.bind(root);
+  if (!fotogramma2) {
+    disegna9();
+    return;
+  }
+  fotogramma2(() => fotogramma2(() => disegna9()));
 }
 var ATTESE = [
   "acceso",
@@ -125983,7 +126011,7 @@ function onClick31(event) {
       return;
     }
     if (entita4 && dominio3(entita4) === "light") {
-      alterna(entita4, "light", "toggle");
+      alterna(entita4, "light", "toggle", void 0, bersaglio);
     } else if (entita4 && bersaglio.querySelector?.('[data-mu-fa="interruttore"]'))
       comanda2(dominio3(entita4), "toggle", { entity_id: entita4 });
     else if (entita4 && dominio3(entita4) === "climate")
