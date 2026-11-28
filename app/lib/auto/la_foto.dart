@@ -9,7 +9,7 @@
 ///
 /// Quindi la plancia manda poche righe da un canale suo, e qui si scrivono in
 /// un file che l'auto legge. Il formato e come si prova stanno accanto al
-/// codice che lo legge: `android/app/src/main/kotlin/.../auto/COME_SI_PROVA.md`.
+/// codice che lo legge: `android/app/src/telefono/kotlin/.../auto/COME_SI_PROVA.md`.
 ///
 /// ── Chi mette il nome della casa ────────────────────────────────────────
 ///

@@ -17,7 +17,8 @@ import 'package:gdahome/auto/sul_telefono.dart';
 
 String _leggi(String dove) => File(dove).readAsStringSync();
 
-const _kotlin = 'android/app/src/main/kotlin/com/gdahome/gdahome';
+// Il codice dell'auto e dell'orologio sta solo nell'app del telefono.
+const _kotlin = 'android/app/src/telefono/kotlin/com/gdahome/gdahome';
 const _wear = 'android/orologio/src/main/kotlin/com/gdahome/gdahome/orologio';
 
 void main() {

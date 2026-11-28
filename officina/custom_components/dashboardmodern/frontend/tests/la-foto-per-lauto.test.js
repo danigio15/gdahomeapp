@@ -210,7 +210,7 @@ test("quello che esce è la forma che l'auto sa leggere", () => {
   /* Dall'altra parte c'è Kotlin, e legge campo per campo: un nome cambiato qui
    * è una schermata vuota in macchina, senza nessun errore da nessuna parte. */
   const auto = leggi(
-    "../../../../../app/android/app/src/main/kotlin/com/gdahome/gdahome/auto/LaFotoDellaCasa.kt",
+    "../../../../../app/android/app/src/telefono/kotlin/com/gdahome/gdahome/auto/LaFotoDellaCasa.kt",
   );
   const foto = laFotoPerLAuto({
     casa: "Casa mia",

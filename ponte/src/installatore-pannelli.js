@@ -100,6 +100,13 @@ export const DA_SALVARE = /^(system|oem)(_[ab])?$/i;
  * Home Assistant (`_fotoSulPannello`). */
 export const FOTO = "/data/local/tmp/gdahome-copia";
 
+/* L'app del pannello, una per processore: quella a 64 bit (gli NSPanel, e
+ * quasi tutti i display) e quella a 32 bit per chi ha solo quelli. Una sola
+ * con dentro tutti e due pesava il doppio, e ogni MB e' tempo sul Wi-Fi di un
+ * pannello. */
+export const MURO = "GdAHome-Muro.apk";
+export const MURO_ARM = "GdAHome-Muro-arm.apk";
+
 /* Le app che non si toccano MAI: senza, Android o GdAHome non funzionano.
  * Lo stesso elenco di `gdahome-os.sh` (KEEP_RE), gia' provato sui pannelli. */
 export const DA_TENERE =
@@ -339,6 +346,20 @@ export class Installatore {
     return existsSync(this._pezzo(nome));
   }
 
+  /* Quale app del pannello, per il suo processore: quella a 32 bit solo se il
+   * pannello non sa fare i 64 e l'add-on ce l'ha; nel dubbio i 64, che e'
+   * quello di tutti i pannelli visti finora. */
+  async _muroPerIlPannello(indirizzo) {
+    const abi =
+      typeof this.adb.getprop === "function"
+        ? String(
+            (await this.adb.getprop(indirizzo, "ro.product.cpu.abilist").catch(() => "")) || "",
+          )
+        : "";
+    if (abi.trim() && !/arm64-v8a/.test(abi) && this._ceIlPezzo(MURO_ARM)) return MURO_ARM;
+    return MURO;
+  }
+
   /* Installazione completa. `avanti({passo, dettaglio, percento})` avvisa la
    * console a ogni passo. Torna { errore?, passoRotto?, os, app, modello, … }. */
   async installa({
@@ -360,7 +381,7 @@ export class Installatore {
     try {
       /* 0. I pezzi ci sono? Meglio accorgersene prima di toccare il pannello. */
       const osApk = "GdAHome-OS.apk";
-      const muroApk = "GdAHome-Muro.apk";
+      const muroApk = await this._muroPerIlPannello(indirizzo);
       if (!this._ceIlPezzo(osApk))
         return { errore: "Manca GdAHome OS in questo add-on: aggiornalo.", passoRotto: 2 };
       if (!this._ceIlPezzo(muroApk))
@@ -621,7 +642,8 @@ export class Installatore {
   async installaLeggero({ indirizzo, planciaId, utente, nome, avanti }) {
     const fase = (passo) => (testo, percento) => avanti({ passo, dettaglio: testo, percento });
     try {
-      for (const p of ["GdAHome-OS.apk", "GdAHome-Muro.apk"])
+      const muroApk = await this._muroPerIlPannello(indirizzo);
+      for (const p of ["GdAHome-OS.apk", muroApk])
         if (!this._ceIlPezzo(p))
           return {
             errore: "Mancano i pezzi di GdAHome in questo add-on: aggiornalo.",
@@ -670,7 +692,7 @@ export class Installatore {
       fase(1)(`Fatto: copiate ${spente.length} app del produttore su Home Assistant`, 100);
 
       // 2. Installazione
-      await this._installaConLaBarra(indirizzo, "GdAHome-Muro.apk", {
+      await this._installaConLaBarra(indirizzo, muroApk, {
         nome: "l'app GdAHome Muro",
         permessi: true,
         dice: (t, pc) => fase(2)(t, Math.round((pc ?? 0) * 0.45)),
@@ -1738,8 +1760,9 @@ export class Installatore {
        * che gira per minuti non diceva se andava avanti. */
       const fase = (passo) => (testo, percento) => avanti({ passo, dettaglio: testo, percento });
       avanti({ passo: 0 });
-      if (quali.includes("muro") && this._ceIlPezzo("GdAHome-Muro.apk")) {
-        await this._installaConLaBarra(indirizzo, "GdAHome-Muro.apk", {
+      const muroApk = await this._muroPerIlPannello(indirizzo);
+      if (quali.includes("muro") && this._ceIlPezzo(muroApk)) {
+        await this._installaConLaBarra(indirizzo, muroApk, {
           nome: "l'app GdAHome Muro",
           permessi: true,
           dice: fase(0),

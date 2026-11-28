@@ -298,10 +298,11 @@ jobs:
         working-directory: app
         env:
           GDAHOME_APP_ID: com.gdahome.muro
+          GDAHOME_ABI: arm64-v8a
           GDAHOME_FIRMA_DI_PROVA: si
         run: |
           flutter build apk --release \
-            --target-platform android-arm,android-arm64 \
+            --target-platform android-arm64 \
             --target lib/main_muro.dart
       # Quanto pesa, e cosa pesa di piu': sul Wi-Fi di un pannello ogni MB e'
       # tempo di installazione.

@@ -132,6 +132,18 @@ android {
     sourceSets.getByName("main") {
         java.srcDirs(if (sulMuro) "src/muro/kotlin" else "src/telefono/kotlin")
     }
+    /* L'app del pannello si costruisce una volta per processore
+     * (GDAHOME_ABI=arm64-v8a o armeabi-v7a): dentro solo le sue librerie,
+     * anche quelle dei plugin che le portano per tutti (x86_64 compreso). */
+    val abiDelMuro = System.getenv("GDAHOME_ABI")
+    if (sulMuro && !abiDelMuro.isNullOrBlank()) {
+        defaultConfig {
+            ndk {
+                abiFilters.clear()
+                abiFilters += abiDelMuro
+            }
+        }
+    }
     if (sulMuro) {
         sourceSets.getByName("release") {
             manifest.srcFile("src/muro/AndroidManifest.xml")
