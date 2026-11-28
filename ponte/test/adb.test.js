@@ -424,3 +424,56 @@ test("apriIlFile comprime al volo, e scompattato e' identico", async () => {
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("invio diretto: il pannello riceve il pezzo su una connessione sua, non da adb push", async () => {
+  const { mkdtempSync, writeFileSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { connect } = await import("node:net");
+  const dir = mkdtempSync(join(tmpdir(), "invio-"));
+  try {
+    const dati = Buffer.alloc(700_000, 7);
+    const locale = join(dir, "GdAHome-Muro.apk");
+    writeFileSync(locale, dati);
+    let comando = "";
+    const arrivati = [];
+    /* Il pannello finto: legge «nc IP PORTA > file», si collega e riceve. */
+    const avvia = (_p, argomenti) => {
+      comando = argomenti.at(-1);
+      const [, ip, porta] = /nc (\S+) (\d+) >/.exec(comando);
+      const p = new EventEmitter();
+      p.kill = () => {};
+      const s = connect(Number(porta), ip);
+      s.on("data", (b) => arrivati.push(b));
+      s.on("error", () => {});
+      return p;
+    };
+    const adb = new Adb({ avvia, chiave: null });
+    const visti = [];
+    const esito = await adb.mandaDiretto("1.2.3.4", locale, "/data/local/tmp/gda-x.apk", {
+      verso: "127.0.0.1",
+      avanzamento: (b) => visti.push(b),
+    });
+    /* Lo `sleep` tiene aperto l'ingresso di `nc`, che non se ne va prima. */
+    assert.match(comando, /^sh -c 'sleep 900 \| nc 127\.0\.0\.1 \d+ > /);
+    assert.ok(comando.includes("/data/local/tmp/gda-x.apk"));
+    assert.equal(esito.byte, dati.length);
+    await new Promise((r) => setTimeout(r, 50));
+    assert.deepEqual(Buffer.concat(arrivati), dati);
+    /* Il pannello che non si collega: causa «diretta», si va con adb. */
+    const muto = new Adb({
+      avvia: () => Object.assign(new EventEmitter(), { kill() {} }),
+      chiave: null,
+    });
+    await assert.rejects(
+      () =>
+        muto.mandaDiretto("1.2.3.4", locale, "/data/local/tmp/x.apk", {
+          verso: "127.0.0.1",
+          attesaDelCollegamento: 100,
+        }),
+      (e) => e.causa === "diretta",
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

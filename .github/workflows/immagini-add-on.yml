@@ -140,7 +140,11 @@ jobs:
           CORSA: ${{ github.run_number }}
         run: |
           versione=$(sed -n 's/^version: "\(.*\)"$/\1/p' ../ponte/config.yaml)
+          # Solo ARM (32 e 64 bit): i processori dei pannelli. La parte per i
+          # PC (x86_64) pesava un terzo dell'APK, e ogni byte in piu' e' tempo
+          # di copia sul pannello a ogni aggiornamento.
           flutter build apk --release \
+            --target-platform android-arm,android-arm64 \
             --target lib/main_muro.dart \
             --build-name="$versione" \
             --build-number="$CORSA" \

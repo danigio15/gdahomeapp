@@ -877,3 +877,66 @@ test("aggiornare un pannello leggero non fa il ritocco di sistema", async () => 
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("la strada diretta si ricorda per pannello: un inciampo su uno non rallenta gli altri", async () => {
+  const dir = pezzi();
+  try {
+    const mandati = [];
+    const spinti = [];
+    const adb = {
+      async ncSulPannello(ind) {
+        return ind === "10.0.0.9" ? "" : "nc";
+      },
+      async mandaDiretto(ind, _l, remoto) {
+        if (ind === "10.0.0.1") throw Object.assign(new Error("no"), { causa: "diretta" });
+        mandati.push([ind, remoto]);
+        return { byte: 1 };
+      },
+      async push(ind) {
+        spinti.push(ind);
+      },
+      async shell(_i, c) {
+        if (c.startsWith("stat -c %s")) return String("GdAHome-OS.apk".length);
+        if (c.startsWith("pm install")) return "Success";
+        return "";
+      },
+    };
+    const inst = new Installatore({
+      adb,
+      cartellaDeiPezzi: dir,
+      passoDellaBarra: 1,
+      indirizzoDiCasa: () => "192.168.1.8",
+    });
+    const installa = (ind) =>
+      inst._installaConLaBarra(ind, "GdAHome-OS.apk", { nome: "GdAHome OS" });
+    await installa("10.0.0.1"); // la diretta non va: adb
+    await installa("10.0.0.2"); // un altro pannello: diretta
+    await installa("10.0.0.1"); // lo stesso di prima: adb, senza riprovare
+    assert.deepEqual(spinti, ["10.0.0.1", "10.0.0.1"]);
+    assert.deepEqual(
+      mandati.map(([i]) => i),
+      ["10.0.0.2"],
+    );
+    /* Senza `nc` si va con adb, e il «niente» non si ricorda: si richiede. */
+    await installa("10.0.0.9");
+    assert.equal(inst._nc.has("10.0.0.9"), false);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("l'NSPanel si chiama NSPanel, non come la sua scheda", async () => {
+  const adb = {
+    async getprop(_i, nome) {
+      return { "ro.product.manufacturer": "rockchip", "ro.product.model": "px30_evb" }[nome] ?? "";
+    },
+    async shell(_i, c) {
+      if (c === "wm size") return "Physical size: 480x480";
+      if (c.startsWith("pm list packages")) return "package:com.eWeLinkNSPro.dev";
+      return "";
+    },
+  };
+  const chi = await new Installatore({ adb, cartellaDeiPezzi: tmpdir() }).riconosci("1.2.3.4");
+  assert.equal(chi.famiglia, "nspanel");
+  assert.equal(chi.nome, "NSPanel Pro 86");
+});

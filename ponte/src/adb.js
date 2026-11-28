@@ -22,7 +22,7 @@
  */
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { createWriteStream, mkdirSync, readFileSync, readdirSync } from "node:fs";
+import { createReadStream, createWriteStream, mkdirSync, readFileSync, readdirSync } from "node:fs";
 import { createServer } from "node:net";
 import { createGzip } from "node:zlib";
 import { tmpdir } from "node:os";
@@ -644,6 +644,133 @@ export class Adb {
           proc = this.avvia(
             this.programma,
             ["-s", this._dev(indirizzo), "exec-out", `su -c ${scappa(riga)}`],
+            { stdio: ["ignore", "ignore", "ignore"], env: this._ambiente() },
+          );
+          proc.on?.("error", () => {});
+        } catch (errore) {
+          fine(new ErroreAdb(`adb non si avvia: ${errore.message}`, { causa: "niente_adb" }));
+        }
+      });
+    });
+  }
+
+  /* Il verso opposto della copia diretta: un file dall'add-on al pannello, su
+   * una connessione di rete normale invece che con `adb push` — che su
+   * Android 8 aspetta la conferma di ogni pacchetto e va a meno di 1 MB/s.
+   * L'add-on apre una porta e manda il file a chi si collega; il pannello si
+   * collega con `nc` e scrive quello che arriva. Davanti a `nc` c'e' uno
+   * `sleep`: tiene aperto il suo ingresso, cosi' nessun `nc` se ne va prima
+   * di aver ricevuto tutto (alcuni escono quando l'ingresso finisce). Torna
+   * { byte } quando l'add-on ha mandato tutto: la misura sul pannello la
+   * guarda chi chiama. */
+  mandaDiretto(
+    indirizzo,
+    locale,
+    remoto,
+    {
+      verso,
+      nc = "nc",
+      avanzamento = null,
+      fermo = this.fermoDellaCopia,
+      attesa = ATTESE.push,
+      attesaDelCollegamento = 20_000,
+    } = {},
+  ) {
+    return new Promise((risolvi, rifiuta) => {
+      const server = createServer({ allowHalfOpen: true });
+      let proc = null;
+      let presa = null;
+      let finito = false;
+      let mandati = 0;
+      let detto = 0;
+      let ultimoDato = Date.now();
+      const fine = (errore, esito) => {
+        if (finito) return;
+        finito = true;
+        clearTimeout(scade);
+        clearTimeout(nessuno);
+        clearInterval(guardia);
+        try {
+          server.close();
+        } catch (_e) {
+          /* Gia' chiuso. */
+        }
+        /* Andato tutto: `nc` sul pannello sta finendo di scrivere, e chiudere
+         * adesso la sua sessione potrebbe tagliargli la coda. La si chiude
+         * dopo, quando chi chiama ha gia' guardato la misura. */
+        const chiudi = () => proc?.kill?.("SIGKILL");
+        if (errore) {
+          chiudi();
+          presa?.destroy();
+          rifiuta(errore);
+        } else {
+          setTimeout(chiudi, 30_000).unref?.();
+          risolvi(esito);
+        }
+      };
+      const scade = setTimeout(
+        () => fine(new ErroreAdb("l'invio ci ha messo troppo", { causa: "tempo" })),
+        attesa,
+      );
+      const nessuno = setTimeout(
+        () =>
+          fine(
+            new ErroreAdb("il pannello non si e' collegato per l'invio diretto", {
+              causa: "diretta",
+            }),
+          ),
+        attesaDelCollegamento,
+      );
+      const guardia = setInterval(
+        () => {
+          if (presa && Date.now() - ultimoDato > fermo)
+            fine(
+              new ErroreAdb(`l'invio e' fermo da ${Math.round(fermo / 1000)} secondi`, {
+                causa: "fermo",
+              }),
+            );
+        },
+        Math.min(5_000, Math.max(50, fermo / 3)),
+      );
+      server.on("error", (e) =>
+        fine(new ErroreAdb(`invio diretto: ${e.message}`, { causa: "diretta" })),
+      );
+      server.on("connection", (s) => {
+        if (presa) return s.destroy();
+        presa = s;
+        clearTimeout(nessuno);
+        ultimoDato = Date.now();
+        s.on("data", () => {
+          /* Il pannello non manda niente: se manda, si ignora. */
+        });
+        s.on("error", (e) =>
+          fine(new ErroreAdb(`invio diretto: ${e.message}`, { causa: "diretta" })),
+        );
+        const leggi = createReadStream(locale);
+        leggi.on("data", (pezzo) => {
+          mandati += pezzo.length;
+          ultimoDato = Date.now();
+          if (avanzamento && Date.now() - detto > 500) {
+            detto = Date.now();
+            avanzamento(mandati);
+          }
+          if (!s.write(pezzo)) {
+            leggi.pause();
+            s.once("drain", () => leggi.resume());
+          }
+        });
+        leggi.on("error", (e) =>
+          fine(new ErroreAdb(`non riesco a leggere ${locale}: ${e.message}`, { causa: "file" })),
+        );
+        leggi.on("end", () => s.end(() => fine(null, { byte: mandati })));
+      });
+      server.listen(0, "0.0.0.0", () => {
+        const porta = server.address().port;
+        const riga = `sleep 900 | ${nc} ${verso} ${porta} > ${scappa(remoto)}`;
+        try {
+          proc = this.avvia(
+            this.programma,
+            ["-s", this._dev(indirizzo), "exec-out", `sh -c ${scappa(riga)}`],
             { stdio: ["ignore", "ignore", "ignore"], env: this._ambiente() },
           );
           proc.on?.("error", () => {});

@@ -14,6 +14,23 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.45
+
+- **Le copie col pannello tornano veloci**: quando la copia diretta non
+  riusciva una volta sola, l'add-on se lo ricordava per tutti i pannelli e
+  fino al riavvio, e da lì ogni copia andava col vecchio adb a 0,4 MB/s. Ora
+  lo ricorda solo per quel pannello e per quella copia, e la riprova alla
+  copia dopo. La barra dice se va «diretta» o «via adb».
+- **Anche quello che si manda al pannello viaggia diretto**: l'app del
+  pannello e GdAHome OS non passano più da `adb push` (meno di 1 MB/s su
+  Android 8), ma dalla stessa connessione diretta della copia, con adb come
+  riserva; e sul pannello si guarda che siano arrivati interi.
+- **L'app del pannello più piccola**: costruita solo per i processori dei
+  pannelli (ARM), senza la parte per i PC che pesava un terzo.
+- **Il riposo del pannello non lavora più di notte**: con la plancia leggera
+  il cielo e la neve del riposo sono un'immagine ferma; e dove si muovono, il
+  giro si sveglia cinque volte al secondo, non sessanta.
+
 ## 1.19.44
 
 - **Il pannello molto più svelto: la plancia non lavora più sotto il muro.**
