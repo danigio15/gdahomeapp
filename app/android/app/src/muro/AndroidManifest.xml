@@ -21,6 +21,15 @@
     <uses-permission android:name="android.permission.health.READ_FLOORS_CLIMBED" tools:node="remove" />
     <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND" tools:node="remove" />
 
+    <!-- Le impostazioni del pannello: il nome della rete Wi-Fi (Android 8.1 lo
+         dice solo a chi ha la posizione approssimativa) e la luminosita' di
+         sistema (WRITE_SETTINGS, data dall'add-on con `appops`). -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission
+        android:name="android.permission.WRITE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
+
     <application>
         <service
             android:name="com.gdahome.gdahome.auto.GdahomeCarAppService"

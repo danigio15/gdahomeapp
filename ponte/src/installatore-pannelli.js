@@ -106,6 +106,45 @@ export const FOTO = "/data/local/tmp/gdahome-copia";
  * pannello. */
 export const MURO = "GdAHome-Muro.apk";
 
+/* Le preferenze di GdAHome OS (quelle di serie di Android, per pacchetto). */
+export const PREFERENZE_DI_GDAHOME_OS =
+  "/data/data/com.gdahome.os/shared_prefs/com.gdahome.os_preferences.xml";
+
+/* Chi risponde al reset Zigbee (ASH RST: 1a c0 38 bc 7e) con un RSTACK. */
+export const CERCA_LO_ZIGBEE = [
+  "for t in /dev/ttyS1 /dev/ttyS2 /dev/ttyS3 /dev/ttyS4 /dev/ttyS5; do",
+  '  [ -c "$t" ] || continue',
+  '  stty -F "$t" 115200 raw -echo 2>/dev/null || continue',
+  "  f=/data/local/tmp/gda-zb",
+  '  cat "$t" > $f & c=$!',
+  "  sleep 0.3",
+  "  printf '\\032\\300\\070\\274\\176' > \"$t\"",
+  "  sleep 1",
+  "  kill $c 2>/dev/null",
+  '  if od -An -tx1 $f 2>/dev/null | tr -d " \\n" | grep -q c102; then echo "ZIGBEE $t"; rm -f $f; break; fi',
+  "  rm -f $f",
+  "done",
+  "true",
+].join("\n");
+
+/* Accende o spegne lo Zigbee nelle preferenze di GdAHome OS: si ferma GdAHome
+ * OS (che non le riscriva), si tolgono le due righe e si rimettono, si
+ * ridanno il padrone e l'etichetta del file, e si riparte. */
+export function scriptDelloZigbee({ attivo, seriale }) {
+  const P = PREFERENZE_DI_GDAHOME_OS;
+  return [
+    `P=${P}`,
+    'U=$(stat -c %u "$(dirname "$(dirname "$P")")")',
+    "am force-stop com.gdahome.os",
+    '[ -f "$P" ] || { mkdir -p "$(dirname "$P")"; printf "<?xml version=\'1.0\' encoding=\'utf-8\' standalone=\'yes\' ?>\\n<map>\\n</map>\\n" > "$P"; }',
+    'grep -v -e \'name="zigbee_enabled"\' -e \'name="zigbee_device"\' -e "</map>" "$P" > "$P.n"',
+    `printf '    <boolean name="zigbee_enabled" value="%s" />\\n    <string name="zigbee_device">%s</string>\\n</map>\\n' ${attivo ? "true" : "false"} ${scappa(seriale || "")} >> "$P.n"`,
+    'mv "$P.n" "$P"; chown "$U:$U" "$P" "$(dirname "$P")"; chmod 660 "$P"; restorecon "$P" 2>/dev/null',
+    "am start-foreground-service -n com.gdahome.os/.GdaService >/dev/null 2>&1 || am startservice -n com.gdahome.os/.GdaService >/dev/null 2>&1 || am broadcast -a android.intent.action.BOOT_COMPLETED -n com.gdahome.os/.BootReceiver >/dev/null 2>&1",
+    "echo GDA_OK",
+  ].join("\n");
+}
+
 /* Lo script che spegne il risparmio energetico del Wi-Fi (`_svegliaLaRete`):
  * `set ps 0` a wpa_supplicant, dove ha la sua presa, e `iw` se c'e'. */
 export const SVEGLIA_LA_RETE = [
@@ -273,8 +312,9 @@ export function scriptDiSistema() {
  * e gira a ogni aggiornamento: se non c'e' niente da togliere, non fa niente.
  * Quando cambia cosa toglie, si alza RITOCCO e i pannelli lo rifanno. */
 /* 1: /oem. 2: la velocita' (processore, scheda video, WebView). 3: la
- * pulizia totale (le app aggiunte, come quella di Home Assistant). */
-export const RITOCCO = 3;
+ * pulizia totale (le app aggiunte, come quella di Home Assistant). 4:
+ * l'animazione d'avvio nuova («GdAHome» e non «GDAHOME»), rimessa. */
+export const RITOCCO = 4;
 export function scriptDelRitocco() {
   return [
     ...INTESTAZIONE(),
@@ -793,6 +833,8 @@ export class Installatore {
       `dumpsys deviceidle whitelist +${this.muroPackage}`,
       "appops set com.gdahome.os WRITE_SETTINGS allow",
       `appops set ${this.muroPackage} RUN_IN_BACKGROUND allow`,
+      /* La luminosita' dal menu del pannello (`IlPannello.kt`). */
+      `appops set ${this.muroPackage} WRITE_SETTINGS allow`,
     ];
     for (const r of righe) await this.adb.shell(indirizzo, r, { root: false }).catch(() => {});
   }
@@ -1048,6 +1090,145 @@ export class Installatore {
       .shell(indirizzo, SVEGLIA_LA_RETE, { root: true, attesa: 15_000 })
       .catch(() => "");
     return String(detto || "").trim();
+  }
+
+  /* Lo Zigbee del pannello, come coordinatore (`ponte/pannello` dal menu del
+   * pannello). Lo tiene GdAHome OS: il chip in rete sulla porta 6638
+   * (`gdaserial`), per ZHA (`socket://`) e Zigbee2MQTT (`tcp://`, `ember`).
+   * La sua configurazione sta nelle preferenze di GdAHome OS: qui si leggono,
+   * e per accenderlo si scrivono — fermandolo prima, che non le riscriva
+   * lui, e riavviandolo dopo. La porta seriale del chip, se non c'e', si
+   * trova (`_trovaLoZigbee`). Torna { attivo, porta, indirizzo, seriale }. */
+  async zigbee({ indirizzo, attivo = null }) {
+    if (!(await this.adb.connetti(indirizzo))) throw perUtente("Il pannello non risponde.");
+    const leggi = async () => {
+      const xml = String(
+        await this.adb
+          .shell(indirizzo, `cat ${PREFERENZE_DI_GDAHOME_OS} 2>/dev/null`, { root: true })
+          .catch(() => ""),
+      );
+      const seriale = (/<string name="zigbee_device">([^<]*)</.exec(xml) || [])[1]?.trim() || "";
+      const porta = Number((/<string name="zigbee_port">\s*(\d+)\s*</.exec(xml) || [])[1]) || 6638;
+      const acceso = /<boolean name="zigbee_enabled" value="true"/.test(xml);
+      return {
+        attivo: acceso && Boolean(seriale),
+        porta,
+        indirizzo: `${indirizzo}:${porta}`,
+        seriale,
+      };
+    };
+    const prima = await leggi();
+    if (attivo === null || attivo === prima.attivo) return prima;
+    let seriale = prima.seriale;
+    if (attivo && !seriale) {
+      seriale = await this._trovaLoZigbee(indirizzo);
+      if (!seriale)
+        throw perUtente(
+          "Non trovo il chip Zigbee sulle porte seriali del pannello: nessuna risponde come un chip Zigbee.",
+        );
+    }
+    await this.adb.shell(indirizzo, scriptDelloZigbee({ attivo: Boolean(attivo), seriale }), {
+      root: true,
+      attesa: 30_000,
+    });
+    return leggi();
+  }
+
+  /* Quale porta seriale e' il chip Zigbee: a ognuna si manda il reset del
+   * protocollo del chip (ASH, il «RST» di EmberZNet) a 115200, e chi risponde
+   * con un RSTACK (`c1 02`) e' lui. Si salta la console (ttyS0). Si cerca
+   * solo con lo Zigbee spento: acceso, la porta e' gia' scritta. */
+  async _trovaLoZigbee(indirizzo) {
+    const detto = String(
+      await this.adb
+        .shell(indirizzo, CERCA_LO_ZIGBEE, { root: true, attesa: 30_000 })
+        .catch(() => ""),
+    );
+    return (/ZIGBEE (\/dev\/\S+)/.exec(detto) || [])[1] || "";
+  }
+
+  /* Dentro la plancia, sul pannello vero: per `secondi` il profilo della
+   * WebView (Chrome DevTools, dalla presa `webview_devtools_remote_<pid>` che
+   * l'app del pannello apre, inoltrata con `adb forward`). Dice quanta parte
+   * del tempo il filo della pagina lavora — script, stili, impaginazione — e
+   * le funzioni che se lo prendono. */
+  async _alMicroscopio(indirizzo, secondi = 8) {
+    if (typeof this.adb.inoltra !== "function" || typeof globalThis.WebSocket !== "function")
+      return "non misurabile qui";
+    const pid = String(
+      await this.adb.shell(indirizzo, `pidof ${this.muroPackage}`, { root: false }).catch(() => ""),
+    )
+      .trim()
+      .split(/\s+/)[0];
+    if (!pid) return "GdAHome Muro non gira";
+    const prese = String(
+      await this.adb
+        .shell(indirizzo, "grep -o 'webview_devtools_remote_[0-9]*' /proc/net/unix | sort -u", {
+          root: true,
+        })
+        .catch(() => ""),
+    )
+      .split(/\s+/)
+      .filter(Boolean);
+    const nome = prese.find((p) => p.endsWith(`_${pid}`)) || prese[0];
+    if (!nome)
+      return "la plancia non si lascia ancora guardare: serve l'app del pannello della 1.19.52 o dopo";
+    let porta = 0;
+    let ws = null;
+    try {
+      porta = await this.adb.inoltra(indirizzo, `localabstract:${nome}`);
+      const lista = await (await fetch(`http://127.0.0.1:${porta}/json`)).json();
+      const pagina =
+        lista.find((t) => t.type === "page" && /dashboardmodern/.test(t.url)) ||
+        lista.find((t) => t.type === "page");
+      if (!pagina?.webSocketDebuggerUrl) return "nessuna pagina da guardare";
+      ws = new globalThis.WebSocket(pagina.webSocketDebuggerUrl);
+      await new Promise((ok, no) => {
+        ws.onopen = ok;
+        ws.onerror = () => no(new Error("la plancia non risponde"));
+      });
+      let n = 0;
+      const attese = new Map();
+      ws.onmessage = (e) => {
+        const m = JSON.parse(String(e.data));
+        const a = attese.get(m.id);
+        if (!a) return;
+        attese.delete(m.id);
+        if (m.error) a.no(new Error(m.error.message));
+        else a.ok(m.result);
+      };
+      const cdp = (method, params = {}) =>
+        new Promise((ok, no) => {
+          n += 1;
+          attese.set(n, { ok, no });
+          ws.send(JSON.stringify({ id: n, method, params }));
+          setTimeout(() => {
+            if (attese.delete(n)) no(new Error(`${method}: nessuna risposta`));
+          }, 20_000).unref?.();
+        });
+      const metriche = async () =>
+        Object.fromEntries(
+          ((await cdp("Performance.getMetrics")).metrics || []).map((m) => [m.name, m.value]),
+        );
+      await cdp("Performance.enable");
+      await cdp("Profiler.enable");
+      await cdp("Profiler.setSamplingInterval", { interval: 2000 });
+      const prima = await metriche();
+      await cdp("Profiler.start");
+      await dorme(secondi * 1000);
+      const { profile } = await cdp("Profiler.stop");
+      const dopo = await metriche();
+      return riassuntoDelProfilo(profile, prima, dopo, secondi);
+    } catch (errore) {
+      return `non riuscita (${errore.message || errore})`;
+    } finally {
+      try {
+        ws?.close();
+      } catch (_e) {
+        /* gia' chiusa */
+      }
+      if (porta) await this.adb.togliInoltro(indirizzo, porta);
+    }
   }
 
   /* Quanto corre la rete nei due versi, con 3 MB per la strada diretta:
@@ -1558,6 +1739,8 @@ export class Installatore {
       "dumpsys deviceidle whitelist +com.gdahome.os",
       `dumpsys deviceidle whitelist +${this.muroPackage}`,
       `appops set ${this.muroPackage} RUN_IN_BACKGROUND allow`,
+      /* La luminosita' dal menu del pannello (`IlPannello.kt`). */
+      `appops set ${this.muroPackage} WRITE_SETTINGS allow`,
       `pm grant ${this.muroPackage} android.permission.RECORD_AUDIO`,
     ];
     for (const r of righe) await this.adb.shell(indirizzo, r, { root: true }).catch(() => {});
@@ -1891,6 +2074,8 @@ export class Installatore {
         for (const r of [
           `dumpsys deviceidle whitelist +${this.muroPackage}`,
           `appops set ${this.muroPackage} RUN_IN_BACKGROUND allow`,
+          /* La luminosita' dal menu del pannello (`IlPannello.kt`). */
+          `appops set ${this.muroPackage} WRITE_SETTINGS allow`,
         ])
           await this.adb.shell(indirizzo, r, { root: true }).catch(() => {});
       } else fase(0)("Gia' all'ultima versione", 100);
@@ -2125,10 +2310,50 @@ export class Installatore {
         attesa: 3 * 60_000,
       });
       const tolte = [...String(esito).matchAll(/^TOLTA (.*)$/gm)].map((m) => m[1].trim());
+      /* L'animazione d'avvio: se quella dell'add-on e' cambiata, la nuova.
+       * Non ferma il ritocco se non riesce: si riprova al giro dopo. */
+      await this._rinfrescaLAnimazione(indirizzo).catch(() => {});
       return { fatto: /GDA_OK/.test(esito), tolte };
     } catch (_e) {
       return { fatto: false, tolte: [] };
     }
+  }
+
+  /* L'animazione d'avvio dell'add-on sul pannello, se quella che c'e' e'
+   * un'altra (si guarda l'impronta): solo su un NSPanel, che ha la sua misura
+   * di schermo, e solo dove GdAHome OS e' nel sistema. */
+  async _rinfrescaLAnimazione(indirizzo) {
+    const schermo = (await this._schermo(indirizzo)) || "";
+    if (!schermo) return false;
+    const pezzo = animazione(schermo === "480x480" ? "86" : "120");
+    if (!this._ceIlPezzo(pezzo)) return false;
+    const nostra = createHash("md5")
+      .update(readFileSync(this._pezzo(pezzo)))
+      .digest("hex");
+    const detto = String(
+      await this.adb
+        .shell(
+          indirizzo,
+          "getprop ro.gdahome.os; md5sum /system/media/bootanimation.zip 2>/dev/null",
+          { root: true },
+        )
+        .catch(() => ""),
+    );
+    if (!/^\s*\d/.test(detto)) return false;
+    if (detto.includes(nostra)) return false;
+    const tmp = "/data/local/tmp/bootanimation.zip";
+    await this._portaSu(indirizzo, pezzo, tmp, "l'animazione d'avvio");
+    const esito = await this.adb.shell(
+      indirizzo,
+      [
+        ...APRI_IN_SCRITTURA,
+        `cp ${tmp} /system/media/bootanimation.zip && chmod 644 /system/media/bootanimation.zip && chcon u:object_r:system_file:s0 /system/media/bootanimation.zip 2>/dev/null; echo FATTO $?`,
+        `rm -f ${tmp}`,
+        ...CHIUDI_IN_SCRITTURA,
+      ].join("\n"),
+      { root: true, attesa: 60_000 },
+    );
+    return /FATTO 0/.test(String(esito));
   }
 
   /* L'analisi del pannello: quello che serve per capire perche' va lento o
@@ -2150,6 +2375,12 @@ export class Installatore {
      * (raster), la casa che arriva (ui, il Dart) o Android (main): sono tre
      * strade diverse per renderlo piu' svelto. Lo stesso per la WebView. */
     await chiedi("Fili al lavoro (8 secondi)", filiAlLavoro(pkg, 8), true);
+    /* E dentro la plancia, negli stessi momenti: quali funzioni tengono
+     * occupato il suo filo. «Clicco, dopo un po' la luce si accende e dopo
+     * cambia stato»: il tocco arriva tardi se il filo e' preso. */
+    righe.push(
+      `== La plancia al microscopio (8 secondi) ==\n${await this._alMicroscopio(indirizzo, 8)}`,
+    );
     await chiedi(
       "Dispositivo",
       "getprop ro.product.model; getprop ro.build.version.release; getprop ro.board.platform; getprop ro.hardware; uptime",
@@ -2190,6 +2421,20 @@ export class Installatore {
       "dumpsys sensorservice 2>/dev/null | grep -iE -A2 'proximity|light' | head -n 30",
     );
     await chiedi("Sullo schermo", "dumpsys window | grep -m1 mCurrentFocus");
+    /* Le app che non sono di Android, col posto dove stanno: una rimasta
+     * dopo la pulizia («NSPanelTools» sul Corridoio) si vede qui, col suo
+     * nome vero. E chi e' amministratore del dispositivo: Android non lo
+     * lascia disinstallare. */
+    await chiedi(
+      "App sul pannello",
+      "pm list packages -f 2>/dev/null | sed 's/^package://' | grep -v -E '=(android|com\\.android\\.[a-z.]*)$' | sort; echo '-- amministratori:'; dumpsys device_policy 2>/dev/null | grep -E 'admin=|ComponentInfo' | head -n 5",
+    );
+    /* Le partizioni: il logo dell'accensione sta in una sua (logo, resource
+     * o uboot sui Rockchip), prima di Android. */
+    await chiedi(
+      "Partizioni",
+      "ls -l /dev/block/by-name/ /dev/block/platform/*/by-name/ 2>/dev/null | sed 's/.* \\([^ ]* -> .*\\)/\\1/' | grep -- '->' | head -n 40",
+    );
     await chiedi(
       "Rete",
       "ip -4 addr show wlan0 2>/dev/null | grep inet; dumpsys wifi 2>/dev/null | grep -m1 -E 'mWifiInfo'; ip route | head -n 3",
@@ -2266,8 +2511,10 @@ export class Installatore {
  * nucleo, i piu' occupati in cima. Dai tempi di /proc (utime+stime, in
  * centesimi di secondo), letti due volte. */
 export function filiAlLavoro(pkg, secondi = 8) {
-  /* La WebView per nome: `pgrep -f` trovava lo script stesso. */
-  const pid = `$(pidof ${pkg}) $(pidof com.android.webview:sandboxed_process0 com.google.android.webview:sandboxed_process0 2>/dev/null)`;
+  /* La WebView: il suo processo si chiama «com.android.webview:sandboxed_process0:…»
+   * (col nome del servizio dopo), e `pidof` vuole il nome esatto. Si cerca in
+   * /proc; la parentesi quadra fa si' che lo script non trovi se stesso. */
+  const pid = `$(pidof ${pkg}) $(for d in /proc/[0-9]*; do case "$(tr '\\0' ' ' < $d/cmdline 2>/dev/null)" in *webview:sandbox[e]*) echo \${d#/proc/};; esac; done)`;
   /* Senza awk, che su Android 8 puo' mancare: i campi di /proc/…/stat dopo il
    * nome (che puo' avere spazi), con `set --`. */
   return [
@@ -2278,6 +2525,49 @@ export function filiAlLavoro(pkg, secondi = 8) {
     `for p in ${pid}; do echo "-- $(tr '\\0' ' ' < /proc/$p/cmdline 2>/dev/null | cut -c1-60)"; for t in /proc/$p/task/*; do a=$(cpu $t/stat); b=$(grep "^$p/\${t##*/} " $T | cut -d' ' -f2); d=$(( a - \${b:-$a} )); [ $d -gt 0 ] && echo "$(( d * 100 / ${secondi * 100} ))% $(cat $t/comm 2>/dev/null)"; done | sort -rn | head -n 10; done`,
     `rm -f $T`,
   ].join("\n");
+}
+
+/* Il profilo della plancia detto in chiaro: quanto del tempo il filo della
+ * pagina ha lavorato (script, stili, impaginazione: da Performance.getMetrics),
+ * e le funzioni che si sono prese di piu', col file e la riga. */
+export function riassuntoDelProfilo(profile, prima = {}, dopo = {}, secondi = 8) {
+  const righe = [];
+  const quota = (nome) => {
+    const d = (Number(dopo[nome]) || 0) - (Number(prima[nome]) || 0);
+    return `${Math.round((d / secondi) * 100)}%`;
+  };
+  if (dopo.TaskDuration != null)
+    righe.push(
+      `filo della pagina occupato: ${quota("TaskDuration")} (script ${quota("ScriptDuration")}, stili ${quota("RecalcStyleDuration")}, impaginazione ${quota("LayoutDuration")})`,
+    );
+  const nodi = new Map((profile?.nodes || []).map((n) => [n.id, n]));
+  const proprio = new Map();
+  let totale = 0;
+  const campioni = profile?.samples || [];
+  const passi = profile?.timeDeltas || [];
+  for (let i = 0; i < campioni.length; i += 1) {
+    const d = Math.max(0, Number(passi[i + 1] ?? passi[i]) || 0);
+    totale += d;
+    const nodo = nodi.get(campioni[i]);
+    const cf = nodo?.callFrame || {};
+    const file = String(cf.url || "")
+      .split("/")
+      .pop()
+      .split("?")[0];
+    const chiave = file
+      ? `${cf.functionName || "(anonima)"} ${file}:${(cf.lineNumber ?? -1) + 1}`
+      : cf.functionName || "(?)";
+    proprio.set(chiave, (proprio.get(chiave) || 0) + d);
+  }
+  if (!totale) return [...righe, "nessun campione"].join("\n");
+  const ordinate = [...proprio.entries()].sort((a, b) => b[1] - a[1]);
+  const fermo = proprio.get("(idle)") || 0;
+  righe.push(`a riposo: ${Math.round((fermo / totale) * 100)}% del tempo`);
+  for (const [chi, t] of ordinate.filter(([k]) => k !== "(idle)").slice(0, 15))
+    righe.push(
+      `${((t / totale) * 100).toFixed(1).padStart(5)}%  ${Math.round(t / 1000)} ms  ${chi}`,
+    );
+  return righe.join("\n");
 }
 
 /* «2026-11-27_1542»: si legge, e si ordina da se'. */

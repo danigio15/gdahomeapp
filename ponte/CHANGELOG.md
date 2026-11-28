@@ -14,6 +14,48 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.52
+
+- **L'animazione d'avvio scrive «GdAHome»**, con le sue maiuscole e col
+  carattere dell'app (era «GDAHOME»). Arriva anche sui pannelli già
+  installati: al prossimo aggiornamento (ritocco 4) l'add-on la rimette se
+  quella sul pannello è un'altra.
+- **L'analisi elenca le app rimaste e le partizioni**: le app che non sono
+  di Android, col posto dove stanno, e chi è amministratore del dispositivo
+  (sul Corridoio era rimasta «NSPanelTools»); e le partizioni, per il logo
+  SONOFF che compare all'accensione prima di Android.
+- **L'analisi guarda dentro la plancia**: «La plancia al microscopio» — per
+  otto secondi, sul pannello vero, quanto il filo della pagina è occupato
+  (script, stili, impaginazione) e le funzioni che si prendono il tempo.
+  «Clicco, dopo un po' la luce si accende e dopo cambia stato»: il tocco
+  arriva tardi se quel filo è preso, e così si vede da chi.
+- **Il menu del pannello è fatto per il pannello**: sul muro restano la
+  Plancia e le Notifiche (il campanello), e arriva il gruppo «Pannello», con
+  lo stesso stile del menu di sempre:
+  - **Wi-Fi**: la rete, il segnale e la velocità; «Cambia rete» apre la
+    scelta delle reti di Android;
+  - **Schermo**: la luminosità e quella automatica (l'add-on dà all'app il
+    permesso di scriverla al prossimo aggiornamento del pannello);
+  - **Suono**: il volume;
+  - **Zigbee**: il chip del pannello come coordinatore, acceso e spento da
+    qui; l'add-on trova da solo la sua porta seriale e lo mette in rete per
+    ZHA (`socket://`) e Zigbee2MQTT (`tcp://`, `ember`). Come router arriverà
+    dopo: va riprogrammato il chip;
+  - **Informazioni**: modello, Android, indirizzo, e «Riavvia il pannello».
+    Abbinare telefoni, acquisti, navigatore, salute e diagnostica dell'app sul
+    pannello non ci sono più.
+- **Fra i telefoni collegati i pannelli si chiamano col loro nome**
+  («Salone», «Corridoio»), non col modello della scheda («px30_evb»), e con
+  la versione dell'app del pannello, non quella dell'app del telefono da cui
+  nasce («app 1.19.32»). Rinominare il pannello rinomina anche lui.
+- **L'analisi del pannello non cade più a metà**: con la misura della rete
+  dura un paio di minuti, e la richiesta della console tenuta aperta tanto
+  cadeva per strada («Failed to fetch»). Ora parte in sottofondo, e la
+  console chiede a che punto è ogni tre secondi, coi secondi passati.
+- **«Fili al lavoro» trova davvero la WebView**: il suo processo ha un nome
+  lungo (`com.android.webview:sandboxed_process0:…`), e la ricerca per nome
+  esatto non lo trovava.
+
 ## 1.19.51
 
 - **L'86 si installa anche con /system pieno**: la sua partizione di sistema

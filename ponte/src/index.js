@@ -457,6 +457,9 @@ export async function alzaIlPonte(opzioni = leggiLeOpzioni()) {
       };
     },
   });
+  /* Il pannello che chiede qualcosa di se' dal suo menu (riavvio, Zigbee):
+   * arriva dal suo filo (`ponte/pannello` in `ponte.js`). */
+  ponte.alPannello = (dispositivo, detto) => pannelli.dalPannello(dispositivo, detto);
   /* Gli aggiornamenti dei pannelli arrivano da soli: vedi `avviaIlGiro`. */
   pannelli.avviaIlGiro();
 

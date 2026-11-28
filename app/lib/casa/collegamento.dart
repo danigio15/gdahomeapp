@@ -49,7 +49,11 @@ Future<Map<String, String>> _presentazioneVera(
   final diChi = await archivio.proprietario();
   return {
     ...?modello?.perLaCasa(),
-    'app': versioneDiQuestApp,
+    /* Sul pannello la versione e' la sua, quella dell'add-on che l'ha
+     * portato: «app 1.19.32» era il numero dell'app del telefono. */
+    'app': sulMuro && versioneSulMuro.isNotEmpty
+        ? versioneSulMuro
+        : versioneDiQuestApp,
     /* Il numero di costruzione: «1.18.7» da solo non distingue una build
      * dall'altra, e la Gestione vuole sapere chi e' rimasto indietro. */
     'costruzione': '$costruzioneDiQuestApp',

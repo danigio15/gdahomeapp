@@ -1147,3 +1147,116 @@ test("l'app del pannello giusta per il suo processore: 64 bit, o 32 se sa fare s
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("lo Zigbee del pannello: si legge dalle preferenze di GdAHome OS, e per accenderlo si trova il chip", async () => {
+  let xml = `<?xml version='1.0' encoding='utf-8' standalone='yes' ?>\n<map>\n    <string name="zigbee_port">6638</string>\n</map>\n`;
+  const comandi = [];
+  const adb = {
+    async connetti() {
+      return true;
+    },
+    async shell(_i, c) {
+      comandi.push(c);
+      if (c.startsWith("cat /data/data/com.gdahome.os")) return xml;
+      if (c.includes("stty -F")) return "ZIGBEE /dev/ttyS1\n";
+      if (c.includes("am force-stop com.gdahome.os")) {
+        assert.match(c, /value="%s" \/>.*true '\/dev\/ttyS1'/s);
+        xml = xml.replace(
+          "</map>",
+          `    <boolean name="zigbee_enabled" value="true" />\n    <string name="zigbee_device">/dev/ttyS1</string>\n</map>`,
+        );
+        return "GDA_OK";
+      }
+      return "";
+    },
+  };
+  const inst = new Installatore({ adb });
+  assert.deepEqual(await inst.zigbee({ indirizzo: "10.0.0.5" }), {
+    attivo: false,
+    porta: 6638,
+    indirizzo: "10.0.0.5:6638",
+    seriale: "",
+  });
+  const acceso = await inst.zigbee({ indirizzo: "10.0.0.5", attivo: true });
+  assert.equal(acceso.attivo, true);
+  assert.equal(acceso.seriale, "/dev/ttyS1");
+  /* Gia' acceso: non si tocca niente. */
+  const prima = comandi.length;
+  await inst.zigbee({ indirizzo: "10.0.0.5", attivo: true });
+  assert.equal(comandi.filter((c) => c.includes("force-stop")).length, 1);
+  assert.ok(comandi.length > prima);
+});
+
+test("senza un chip Zigbee che risponde, accenderlo lo dice invece di scrivere a vuoto", async () => {
+  const adb = {
+    async connetti() {
+      return true;
+    },
+    async shell(_i, c) {
+      if (c.includes("force-stop")) throw new Error("non doveva scrivere");
+      return "";
+    },
+  };
+  await assert.rejects(
+    () => new Installatore({ adb }).zigbee({ indirizzo: "10.0.0.5", attivo: true }),
+    /Non trovo il chip Zigbee/,
+  );
+});
+
+test("il profilo della plancia detto in chiaro: quanto lavora il filo, e chi se lo prende", async () => {
+  const { riassuntoDelProfilo } = await import("../src/installatore-pannelli.js");
+  const profile = {
+    nodes: [
+      { id: 1, callFrame: { functionName: "(idle)", url: "", lineNumber: -1 } },
+      {
+        id: 2,
+        callFrame: { functionName: "disegna", url: "http://x/pacco/muro.js", lineNumber: 41 },
+      },
+    ],
+    samples: [1, 2, 2, 2],
+    timeDeltas: [0, 1000, 1000, 1000],
+  };
+  const r = riassuntoDelProfilo(
+    profile,
+    { TaskDuration: 1, ScriptDuration: 0.5, RecalcStyleDuration: 0, LayoutDuration: 0 },
+    { TaskDuration: 5, ScriptDuration: 3.5, RecalcStyleDuration: 0.4, LayoutDuration: 0.8 },
+    8,
+  );
+  assert.match(r, /filo della pagina occupato: 50% \(script 38%, stili 5%, impaginazione 10%\)/);
+  assert.match(r, /disegna muro\.js:42/);
+  assert.match(r, /a riposo: 25%/);
+});
+
+test("l'animazione d'avvio nuova arriva sui pannelli gia' installati, solo se e' cambiata", async () => {
+  const dir = pezzi();
+  try {
+    const comandi = [];
+    let sulPannello = "vecchia";
+    const adb = {
+      async shell(_i, c) {
+        comandi.push(c);
+        if (c === "wm size") return "Physical size: 480x480";
+        if (c.startsWith("getprop ro.gdahome.os"))
+          return `2\n${sulPannello}  /system/media/bootanimation.zip`;
+        if (c.includes("cp /data/local/tmp/bootanimation.zip")) return "FATTO 0";
+        return "";
+      },
+      async push() {},
+    };
+    const inst = new Installatore({ adb, cartellaDeiPezzi: dir });
+    assert.equal(await inst._rinfrescaLAnimazione("x"), true);
+    assert.ok(
+      comandi.some((c) => c.includes("cp /data/local/tmp/bootanimation.zip /system/media/")),
+    );
+    /* Gia' quella: non si tocca. */
+    sulPannello = (await import("node:crypto"))
+      .createHash("md5")
+      .update(readFileSync(join(dir, "bootanimation-86.zip")))
+      .digest("hex");
+    comandi.length = 0;
+    assert.equal(await inst._rinfrescaLAnimazione("x"), false);
+    assert.ok(!comandi.some((c) => c.includes("cp /data/local/tmp/bootanimation.zip")));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

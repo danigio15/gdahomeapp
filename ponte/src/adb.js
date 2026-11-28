@@ -375,6 +375,24 @@ export class Adb {
     }
   }
 
+  /* Una porta di qui che porta a una presa del pannello (`adb forward`):
+   * torna il numero della porta. */
+  async inoltra(indirizzo, remoto) {
+    const detto = await this.comando(["-s", this._dev(indirizzo), "forward", "tcp:0", remoto], {
+      attesa: ATTESE.svelto,
+    });
+    const porta = Number(String(detto).trim().split(/\s+/).pop());
+    if (!Number.isFinite(porta) || porta <= 0)
+      throw new ErroreAdb("adb forward non ha dato la porta");
+    return porta;
+  }
+
+  async togliInoltro(indirizzo, porta) {
+    await this.comando(["-s", this._dev(indirizzo), "forward", "--remove", `tcp:${porta}`], {
+      attesa: ATTESE.svelto,
+    }).catch(() => {});
+  }
+
   async stacca(indirizzo) {
     try {
       await this.comando(["disconnect", this._dev(indirizzo)]);

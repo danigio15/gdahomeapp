@@ -687,6 +687,7 @@ export class Pannelli {
     if (esito.abbinatoIl) pannello.abbinatoIl = esito.abbinatoIl;
     pannello.errore = "";
     pannello.vistoIl = this.adesso();
+    this._nomeAlDispositivo(pannello);
     /* Installato, ma non entrato nella casa: si dice, e il giro degli
      * aggiornamenti riprova l'abbinamento da solo. */
     pannello.avviso = esito.avviso || "";
@@ -815,6 +816,11 @@ export class Pannelli {
     if (cosa === "aggiorna") return this._aggiorna(pannello);
     if (cosa === "riavvia") return this._riavvia(pannello);
     if (cosa === "analisi") return this._analisi(pannello);
+    /* L'analisi in sottofondo: con la misura della rete dura un paio di
+     * minuti, e una richiesta tenuta aperta tanto cade per strada («Failed
+     * to fetch»). «analizza» la fa partire, «rapporto» dice a che punto e'. */
+    if (cosa === "analizza") return this._analizza(pannello);
+    if (cosa === "rapporto") return this._rapporto(pannello);
     if (cosa === "sonoff") return this._sonoff(pannello);
     const e = new Error("Azione sconosciuta.");
     e.perUtente = true;
@@ -917,6 +923,7 @@ export class Pannelli {
     let controllati = 0;
     let aggiornati = 0;
     for (const pannello of this.archivio.dati.pannelli) {
+      this._nomeAlDispositivo(pannello);
       if (pannello.stato !== "pronto" || this.lavori.has(pannello.id)) {
         /* Anche un'installazione andata male puo' aver lasciato la copia. */
         if (pannello.copiaDaPortare && !this.lavori.has(pannello.id)) this._portaLaCopia(pannello);
@@ -961,6 +968,58 @@ export class Pannelli {
   async _riavvia(pannello) {
     await this.installatore.riavvia({ indirizzo: pannello.indirizzo });
     return { fatto: true };
+  }
+
+  /* Il pannello a muro che chiede qualcosa di se' (`ponte/pannello`, dal
+   * menu del pannello): riavviarsi, lo Zigbee. Lo fa l'add-on, che il
+   * pannello lo tiene con l'ADB. Chi chiede e' il dispositivo del filo: si
+   * cerca il pannello che e' lui. */
+  async dalPannello(dispositivo, detto = {}) {
+    const pannello = this.archivio.dati.pannelli.find((uno) => uno.dispositivo === dispositivo);
+    if (!pannello) {
+      const e = new Error("Questo non e' un pannello a muro della casa.");
+      e.perUtente = true;
+      throw e;
+    }
+    if (detto.cosa === "riavvia") {
+      await this.installatore.riavvia({ indirizzo: pannello.indirizzo });
+      return { fatto: true };
+    }
+    if (detto.cosa === "zigbee") {
+      if (typeof this.installatore.zigbee !== "function") return { attivo: false };
+      return this.installatore.zigbee({
+        indirizzo: pannello.indirizzo,
+        attivo: typeof detto.attivo === "boolean" ? detto.attivo : null,
+      });
+    }
+    const e = new Error("Non so cosa fare.");
+    e.perUtente = true;
+    throw e;
+  }
+
+  _analizza(pannello) {
+    this._analisiInCorso ??= new Map();
+    const gia = this._analisiInCorso.get(pannello.id);
+    if (gia && !gia.fatto) return { avviata: true, dal: gia.dal };
+    const una = { fatto: false, dal: this.adesso(), rapporto: "", errore: "" };
+    this._analisiInCorso.set(pannello.id, una);
+    this._analisi(pannello)
+      .then(({ rapporto }) => {
+        una.rapporto = rapporto;
+      })
+      .catch((e) => {
+        una.errore = messaggioDi(e);
+      })
+      .finally(() => {
+        una.fatto = true;
+      });
+    return { avviata: true, dal: una.dal };
+  }
+
+  _rapporto(pannello) {
+    const una = this._analisiInCorso?.get(pannello.id);
+    if (!una) return { fatto: true, errore: "Nessuna analisi in corso." };
+    return { ...una, secondi: Math.round((this.adesso() - una.dal) / 1000) };
   }
 
   async _analisi(pannello) {
@@ -1026,7 +1085,20 @@ export class Pannelli {
     }
     pannello.nome = String(nome || "").slice(0, 40);
     this._salva();
+    this._nomeAlDispositivo(pannello);
     return { nome: pannello.nome };
+  }
+
+  /* Fra i telefoni collegati il pannello si chiama come qui («Salone»,
+   * «Corridoio»), non col modello della sua scheda («px30_evb»), che l'app
+   * dice di se' a ogni collegamento. Rinominato come da una persona, il
+   * modello non lo rifa' piu'. */
+  _nomeAlDispositivo(pannello) {
+    if (!pannello?.dispositivo || !pannello.nome) return;
+    if (typeof this.dispositivi?.rinomina !== "function") return;
+    const uno = this.dispositivi.elenco?.().find?.((d) => d.id === pannello.dispositivo);
+    if (!uno || (uno.nome === pannello.nome && uno.rinominato)) return;
+    this.dispositivi.rinomina(pannello.dispositivo, pannello.nome);
   }
 
   /* Togliere un pannello dall'elenco. Uno che ha GdAHome sopra non si toglie

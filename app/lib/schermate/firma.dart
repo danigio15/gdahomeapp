@@ -16,6 +16,7 @@ library;
 import 'package:flutter/material.dart';
 
 import '../parole.dart';
+import '../muro/sul_muro.dart';
 import '../versione.dart';
 
 /// La passa il workflow che costruisce il pacchetto. Fuori da li' non c'e' —
@@ -42,7 +43,11 @@ class Firma extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.only(top: spazioSopra),
       child: Text(
-        'GdAHome $numeroDiQuestApp',
+        /* Sul pannello la versione e' la sua (quella dell'add-on che l'ha
+         * portato), non quella dell'app del telefono da cui nasce. */
+        sulMuro && versioneSulMuro.isNotEmpty
+            ? 'GdAHome Muro $versioneSulMuro'
+            : 'GdAHome $numeroDiQuestApp',
         textAlign: TextAlign.center,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
           color: colori.onSurfaceVariant.withValues(alpha: 0.7),

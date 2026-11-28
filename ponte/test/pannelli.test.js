@@ -965,3 +965,104 @@ test("un lavoro sul pannello mette in pausa la copia in viaggio, che riparte dop
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("l'analisi in sottofondo: «analizza» la fa partire, «rapporto» la segue fino alla fine", async () => {
+  const dir = cartella();
+  try {
+    let lascia;
+    const inst = installatoreFinto();
+    inst.analisi = () => new Promise((r) => (lascia = r));
+    const pannelli = new Pannelli({ cartella: dir, installatore: inst, licenze: premium });
+    pannelli.archivio.dati.pannelli.push({ id: "pm_a", indirizzo: "10.0.0.1", stato: "pronto" });
+    assert.equal((await pannelli.azione("pm_a", "analizza")).avviata, true);
+    /* Una seconda richiesta non ne fa partire un'altra. */
+    await pannelli.azione("pm_a", "analizza");
+    assert.equal((await pannelli.azione("pm_a", "rapporto")).fatto, false);
+    lascia("== Dispositivo ==\nNSPanel");
+    await new Promise((r) => setTimeout(r, 5));
+    const r = await pannelli.azione("pm_a", "rapporto");
+    assert.equal(r.fatto, true);
+    assert.match(r.rapporto, /NSPanel/);
+    assert.match(r.rapporto, /Collegamento con la casa/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("fra i telefoni collegati il pannello si chiama come qui, non col modello della scheda", async () => {
+  const dir = cartella();
+  try {
+    const rinominati = [];
+    const elenco = [{ id: "dm_s", nome: "px30_evb", rinominato: false }];
+    const dispositivi = {
+      elenco: () => elenco,
+      rinomina: (id, nome) => {
+        rinominati.push([id, nome]);
+        Object.assign(
+          elenco.find((d) => d.id === id),
+          { nome, rinominato: true },
+        );
+      },
+    };
+    const inst = installatoreFinto();
+    inst.versioniDeiPezzi = () => ({});
+    inst.versioniSulPannello = async () => ({});
+    inst.daAggiornare = () => [];
+    const pannelli = new Pannelli({
+      cartella: dir,
+      installatore: inst,
+      licenze: premium,
+      dispositivi,
+      adb: adbFinto(),
+    });
+    pannelli.archivio.dati.pannelli.push({
+      id: "pm_s",
+      indirizzo: "10.0.0.1",
+      nome: "Salone",
+      stato: "pronto",
+      dispositivo: "dm_s",
+    });
+    await pannelli.controllaGliAggiornamenti({ installaDaSolo: false });
+    assert.deepEqual(rinominati, [["dm_s", "Salone"]]);
+    /* Gia' a posto: non si riscrive a ogni giro. */
+    await pannelli.controllaGliAggiornamenti({ installaDaSolo: false });
+    assert.equal(rinominati.length, 1);
+    /* Rinominare il pannello rinomina anche lui. */
+    pannelli.rinomina("pm_s", "Soggiorno");
+    assert.deepEqual(rinominati.at(-1), ["dm_s", "Soggiorno"]);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("il pannello chiede alla casa di riavviarsi o dello Zigbee: solo per se stesso", async () => {
+  const dir = cartella();
+  try {
+    const inst = installatoreFinto();
+    inst.zigbee = async ({ indirizzo, attivo }) => ({ indirizzo, attivo });
+    const pannelli = new Pannelli({ cartella: dir, installatore: inst, licenze: premium });
+    pannelli.archivio.dati.pannelli.push({
+      id: "pm_s",
+      indirizzo: "10.0.0.1",
+      stato: "pronto",
+      dispositivo: "dm_s",
+    });
+    assert.deepEqual(await pannelli.dalPannello("dm_s", { cosa: "riavvia" }), { fatto: true });
+    assert.deepEqual(inst.fatti, ["riavvia"]);
+    assert.deepEqual(await pannelli.dalPannello("dm_s", { cosa: "zigbee", attivo: true }), {
+      indirizzo: "10.0.0.1",
+      attivo: true,
+    });
+    assert.deepEqual(await pannelli.dalPannello("dm_s", { cosa: "zigbee" }), {
+      indirizzo: "10.0.0.1",
+      attivo: null,
+    });
+    /* Un telefono non e' un pannello. */
+    await assert.rejects(
+      () => pannelli.dalPannello("dm_telefono", { cosa: "riavvia" }),
+      /non e' un pannello/,
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

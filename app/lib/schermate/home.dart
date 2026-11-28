@@ -58,6 +58,8 @@ import '../notifiche/dietro_il_velo.dart';
 import '../notifiche/dove_apre.dart';
 import '../notifiche/postino.dart';
 import 'impostazioni_app.dart';
+import 'il_pannello.dart';
+import '../muro/sul_muro.dart';
 import 'novita.dart';
 import 'navigatore_qui/qui.dart';
 import 'zigbee.dart';
@@ -1120,6 +1122,17 @@ class _HomeState extends State<Home> {
                                   quandoVaMessoNellaPlancia:
                                       _loMettiNellaPlancia,
                                 ),
+                                /* Le impostazioni del pannello a muro: una
+                                 * pagina sola, ognuna alla sua parte. */
+                                Sezione.wifiDelPannello ||
+                                Sezione.schermoDelPannello ||
+                                Sezione.suonoDelPannello ||
+                                Sezione.zigbeeDelPannello ||
+                                Sezione.ilPannello => SchermataDelPannello(
+                                  collegamento: collegamento,
+                                  parte: sezione,
+                                  visibile: _sezione == sezione,
+                                ),
                               },
                             ),
                       ),
@@ -1143,6 +1156,9 @@ class _HomeState extends State<Home> {
                 /* Nel browser la Salute non c'e' (`laSaluteCe`). */
                 conLaSalute: laSaluteCe,
                 bloccate: _bloccate,
+                /* Sul pannello a muro: la plancia, le notifiche e le sue
+                 * impostazioni (`il_pannello.dart`). */
+                sulMuro: sulMuro,
               ),
               bloccate: _bloccate,
               apriPremium: () => unawaited(
