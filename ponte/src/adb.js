@@ -24,7 +24,7 @@ import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { createReadStream, createWriteStream, mkdirSync, readFileSync, readdirSync } from "node:fs";
 import { createServer } from "node:net";
-import { createGzip } from "node:zlib";
+import { createGunzip, createGzip } from "node:zlib";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -539,6 +539,7 @@ export class Adb {
       attesa = ATTESE.pull,
       attesaDelCollegamento = 20_000,
       comprimi = false,
+      compressoDalPannello = false,
     } = {},
   ) {
     return new Promise((risolvi, rifiuta) => {
@@ -603,6 +604,53 @@ export class Adb {
         presa = s;
         clearTimeout(nessuno);
         ultimoDato = Date.now();
+        /* Il pannello comprime prima di spedire (`dd | gzip -1 | nc`): sul
+         * filo passano molti meno byte — le partizioni sono per lo piu' vuote
+         * — e su un Wi-Fi lento e' tutta la differenza. Il file su Home
+         * Assistant e' quello che arriva, gia' .gz; byte e impronta si contano
+         * scompattandolo al volo, cosi' la garanzia resta quella di sempre:
+         * l'immagine com'era sul pannello. */
+        if (compressoDalPannello) {
+          file = createWriteStream(dove);
+          file.on("error", (e) =>
+            fine(new ErroreAdb(`non riesco a scrivere ${dove}: ${e.message}`, { causa: "spazio" })),
+          );
+          const scompatta = createGunzip();
+          scompatta.on("data", (pezzo) => {
+            let buono = pezzo;
+            if (limite) {
+              const resta = limite - scritti;
+              if (resta <= 0) return;
+              if (buono.length > resta) buono = buono.subarray(0, resta);
+            }
+            scritti += buono.length;
+            impronta.update(buono);
+            if (avanzamento && Date.now() - detto > 500) {
+              detto = Date.now();
+              avanzamento(scritti);
+            }
+          });
+          scompatta.on("end", () =>
+            fine(null, { byte: scritti, ricevuti: byte, md5: impronta.digest("hex") }),
+          );
+          scompatta.on("error", (e) =>
+            fine(
+              new ErroreAdb(`la copia compressa e' rovinata: ${e.message}`, { causa: "rovinata" }),
+            ),
+          );
+          s.on("data", (tutto) => {
+            byte += tutto.length;
+            ultimoDato = Date.now();
+            scompatta.write(tutto);
+            if (!file.write(tutto)) {
+              s.pause();
+              file.once("drain", () => s.resume());
+            }
+          });
+          s.on("end", () => scompatta.end());
+          s.on("error", () => scompatta.end());
+          return;
+        }
         file = apriIlFile(dove, comprimi);
         file.on("error", (e) =>
           fine(new ErroreAdb(`non riesco a scrivere ${dove}: ${e.message}`, { causa: "spazio" })),
