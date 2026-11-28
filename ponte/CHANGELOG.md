@@ -16,6 +16,10 @@ aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
 ## 1.19.52
 
+- **Fra i telefoni collegati i pannelli si chiamano col loro nome**
+  («Salone», «Corridoio»), non col modello della scheda («px30_evb»), e con
+  la versione dell'app del pannello, non quella dell'app del telefono da cui
+  nasce («app 1.19.32»). Rinominare il pannello rinomina anche lui.
 - **L'analisi del pannello non cade più a metà**: con la misura della rete
   dura un paio di minuti, e la richiesta della console tenuta aperta tanto
   cadeva per strada («Failed to fetch»). Ora parte in sottofondo, e la

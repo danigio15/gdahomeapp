@@ -988,3 +988,49 @@ test("l'analisi in sottofondo: «analizza» la fa partire, «rapporto» la segue
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("fra i telefoni collegati il pannello si chiama come qui, non col modello della scheda", async () => {
+  const dir = cartella();
+  try {
+    const rinominati = [];
+    const elenco = [{ id: "dm_s", nome: "px30_evb", rinominato: false }];
+    const dispositivi = {
+      elenco: () => elenco,
+      rinomina: (id, nome) => {
+        rinominati.push([id, nome]);
+        Object.assign(
+          elenco.find((d) => d.id === id),
+          { nome, rinominato: true },
+        );
+      },
+    };
+    const inst = installatoreFinto();
+    inst.versioniDeiPezzi = () => ({});
+    inst.versioniSulPannello = async () => ({});
+    inst.daAggiornare = () => [];
+    const pannelli = new Pannelli({
+      cartella: dir,
+      installatore: inst,
+      licenze: premium,
+      dispositivi,
+      adb: adbFinto(),
+    });
+    pannelli.archivio.dati.pannelli.push({
+      id: "pm_s",
+      indirizzo: "10.0.0.1",
+      nome: "Salone",
+      stato: "pronto",
+      dispositivo: "dm_s",
+    });
+    await pannelli.controllaGliAggiornamenti({ installaDaSolo: false });
+    assert.deepEqual(rinominati, [["dm_s", "Salone"]]);
+    /* Gia' a posto: non si riscrive a ogni giro. */
+    await pannelli.controllaGliAggiornamenti({ installaDaSolo: false });
+    assert.equal(rinominati.length, 1);
+    /* Rinominare il pannello rinomina anche lui. */
+    pannelli.rinomina("pm_s", "Soggiorno");
+    assert.deepEqual(rinominati.at(-1), ["dm_s", "Soggiorno"]);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

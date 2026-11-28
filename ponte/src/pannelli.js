@@ -687,6 +687,7 @@ export class Pannelli {
     if (esito.abbinatoIl) pannello.abbinatoIl = esito.abbinatoIl;
     pannello.errore = "";
     pannello.vistoIl = this.adesso();
+    this._nomeAlDispositivo(pannello);
     /* Installato, ma non entrato nella casa: si dice, e il giro degli
      * aggiornamenti riprova l'abbinamento da solo. */
     pannello.avviso = esito.avviso || "";
@@ -922,6 +923,7 @@ export class Pannelli {
     let controllati = 0;
     let aggiornati = 0;
     for (const pannello of this.archivio.dati.pannelli) {
+      this._nomeAlDispositivo(pannello);
       if (pannello.stato !== "pronto" || this.lavori.has(pannello.id)) {
         /* Anche un'installazione andata male puo' aver lasciato la copia. */
         if (pannello.copiaDaPortare && !this.lavori.has(pannello.id)) this._portaLaCopia(pannello);
@@ -1056,7 +1058,20 @@ export class Pannelli {
     }
     pannello.nome = String(nome || "").slice(0, 40);
     this._salva();
+    this._nomeAlDispositivo(pannello);
     return { nome: pannello.nome };
+  }
+
+  /* Fra i telefoni collegati il pannello si chiama come qui («Salone»,
+   * «Corridoio»), non col modello della sua scheda («px30_evb»), che l'app
+   * dice di se' a ogni collegamento. Rinominato come da una persona, il
+   * modello non lo rifa' piu'. */
+  _nomeAlDispositivo(pannello) {
+    if (!pannello?.dispositivo || !pannello.nome) return;
+    if (typeof this.dispositivi?.rinomina !== "function") return;
+    const uno = this.dispositivi.elenco?.().find?.((d) => d.id === pannello.dispositivo);
+    if (!uno || (uno.nome === pannello.nome && uno.rinominato)) return;
+    this.dispositivi.rinomina(pannello.dispositivo, pannello.nome);
   }
 
   /* Togliere un pannello dall'elenco. Uno che ha GdAHome sopra non si toglie
