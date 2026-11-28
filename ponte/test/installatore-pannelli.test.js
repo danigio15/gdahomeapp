@@ -1202,3 +1202,27 @@ test("senza un chip Zigbee che risponde, accenderlo lo dice invece di scrivere a
     /Non trovo il chip Zigbee/,
   );
 });
+
+test("il profilo della plancia detto in chiaro: quanto lavora il filo, e chi se lo prende", async () => {
+  const { riassuntoDelProfilo } = await import("../src/installatore-pannelli.js");
+  const profile = {
+    nodes: [
+      { id: 1, callFrame: { functionName: "(idle)", url: "", lineNumber: -1 } },
+      {
+        id: 2,
+        callFrame: { functionName: "disegna", url: "http://x/pacco/muro.js", lineNumber: 41 },
+      },
+    ],
+    samples: [1, 2, 2, 2],
+    timeDeltas: [0, 1000, 1000, 1000],
+  };
+  const r = riassuntoDelProfilo(
+    profile,
+    { TaskDuration: 1, ScriptDuration: 0.5, RecalcStyleDuration: 0, LayoutDuration: 0 },
+    { TaskDuration: 5, ScriptDuration: 3.5, RecalcStyleDuration: 0.4, LayoutDuration: 0.8 },
+    8,
+  );
+  assert.match(r, /filo della pagina occupato: 50% \(script 38%, stili 5%, impaginazione 10%\)/);
+  assert.match(r, /disegna muro\.js:42/);
+  assert.match(r, /a riposo: 25%/);
+});

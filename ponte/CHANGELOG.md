@@ -16,6 +16,11 @@ aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
 ## 1.19.52
 
+- **L'analisi guarda dentro la plancia**: «La plancia al microscopio» — per
+  otto secondi, sul pannello vero, quanto il filo della pagina è occupato
+  (script, stili, impaginazione) e le funzioni che si prendono il tempo.
+  «Clicco, dopo un po' la luce si accende e dopo cambia stato»: il tocco
+  arriva tardi se quel filo è preso, e così si vede da chi.
 - **Il menu del pannello è fatto per il pannello**: sul muro restano la
   Plancia e le Notifiche (il campanello), e arriva il gruppo «Pannello», con
   lo stesso stile del menu di sempre:

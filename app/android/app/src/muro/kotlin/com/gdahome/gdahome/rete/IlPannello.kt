@@ -29,6 +29,10 @@ object IlPannello {
 
     fun collega(messaggi: BinaryMessenger, activity: android.app.Activity) {
         val app = activity.applicationContext
+        /* La plancia si lascia guardare dall'add-on (l'«Analisi hardware»:
+         * dove passa il tempo, funzione per funzione). La presa e' locale al
+         * pannello, e ci arriva solo l'ADB, che e' dell'add-on. */
+        runCatching { android.webkit.WebView.setWebContentsDebuggingEnabled(true) }
         MethodChannel(messaggi, CANALE).setMethodCallHandler { chiamata, risposta ->
             runCatching {
                 when (chiamata.method) {

@@ -1146,6 +1146,90 @@ export class Installatore {
     return (/ZIGBEE (\/dev\/\S+)/.exec(detto) || [])[1] || "";
   }
 
+  /* Dentro la plancia, sul pannello vero: per `secondi` il profilo della
+   * WebView (Chrome DevTools, dalla presa `webview_devtools_remote_<pid>` che
+   * l'app del pannello apre, inoltrata con `adb forward`). Dice quanta parte
+   * del tempo il filo della pagina lavora — script, stili, impaginazione — e
+   * le funzioni che se lo prendono. */
+  async _alMicroscopio(indirizzo, secondi = 8) {
+    if (typeof this.adb.inoltra !== "function" || typeof globalThis.WebSocket !== "function")
+      return "non misurabile qui";
+    const pid = String(
+      await this.adb.shell(indirizzo, `pidof ${this.muroPackage}`, { root: false }).catch(() => ""),
+    )
+      .trim()
+      .split(/\s+/)[0];
+    if (!pid) return "GdAHome Muro non gira";
+    const prese = String(
+      await this.adb
+        .shell(indirizzo, "grep -o 'webview_devtools_remote_[0-9]*' /proc/net/unix | sort -u", {
+          root: true,
+        })
+        .catch(() => ""),
+    )
+      .split(/\s+/)
+      .filter(Boolean);
+    const nome = prese.find((p) => p.endsWith(`_${pid}`)) || prese[0];
+    if (!nome)
+      return "la plancia non si lascia ancora guardare: serve l'app del pannello della 1.19.52 o dopo";
+    let porta = 0;
+    let ws = null;
+    try {
+      porta = await this.adb.inoltra(indirizzo, `localabstract:${nome}`);
+      const lista = await (await fetch(`http://127.0.0.1:${porta}/json`)).json();
+      const pagina =
+        lista.find((t) => t.type === "page" && /dashboardmodern/.test(t.url)) ||
+        lista.find((t) => t.type === "page");
+      if (!pagina?.webSocketDebuggerUrl) return "nessuna pagina da guardare";
+      ws = new globalThis.WebSocket(pagina.webSocketDebuggerUrl);
+      await new Promise((ok, no) => {
+        ws.onopen = ok;
+        ws.onerror = () => no(new Error("la plancia non risponde"));
+      });
+      let n = 0;
+      const attese = new Map();
+      ws.onmessage = (e) => {
+        const m = JSON.parse(String(e.data));
+        const a = attese.get(m.id);
+        if (!a) return;
+        attese.delete(m.id);
+        if (m.error) a.no(new Error(m.error.message));
+        else a.ok(m.result);
+      };
+      const cdp = (method, params = {}) =>
+        new Promise((ok, no) => {
+          n += 1;
+          attese.set(n, { ok, no });
+          ws.send(JSON.stringify({ id: n, method, params }));
+          setTimeout(() => {
+            if (attese.delete(n)) no(new Error(`${method}: nessuna risposta`));
+          }, 20_000).unref?.();
+        });
+      const metriche = async () =>
+        Object.fromEntries(
+          ((await cdp("Performance.getMetrics")).metrics || []).map((m) => [m.name, m.value]),
+        );
+      await cdp("Performance.enable");
+      await cdp("Profiler.enable");
+      await cdp("Profiler.setSamplingInterval", { interval: 2000 });
+      const prima = await metriche();
+      await cdp("Profiler.start");
+      await dorme(secondi * 1000);
+      const { profile } = await cdp("Profiler.stop");
+      const dopo = await metriche();
+      return riassuntoDelProfilo(profile, prima, dopo, secondi);
+    } catch (errore) {
+      return `non riuscita (${errore.message || errore})`;
+    } finally {
+      try {
+        ws?.close();
+      } catch (_e) {
+        /* gia' chiusa */
+      }
+      if (porta) await this.adb.togliInoltro(indirizzo, porta);
+    }
+  }
+
   /* Quanto corre la rete nei due versi, con 3 MB per la strada diretta:
    * da Home Assistant al pannello (come un'app che si installa) e dal
    * pannello a Home Assistant (come la copia di sicurezza). Prima col Wi-Fi
@@ -2250,6 +2334,12 @@ export class Installatore {
      * (raster), la casa che arriva (ui, il Dart) o Android (main): sono tre
      * strade diverse per renderlo piu' svelto. Lo stesso per la WebView. */
     await chiedi("Fili al lavoro (8 secondi)", filiAlLavoro(pkg, 8), true);
+    /* E dentro la plancia, negli stessi momenti: quali funzioni tengono
+     * occupato il suo filo. «Clicco, dopo un po' la luce si accende e dopo
+     * cambia stato»: il tocco arriva tardi se il filo e' preso. */
+    righe.push(
+      `== La plancia al microscopio (8 secondi) ==\n${await this._alMicroscopio(indirizzo, 8)}`,
+    );
     await chiedi(
       "Dispositivo",
       "getprop ro.product.model; getprop ro.build.version.release; getprop ro.board.platform; getprop ro.hardware; uptime",
@@ -2380,6 +2470,49 @@ export function filiAlLavoro(pkg, secondi = 8) {
     `for p in ${pid}; do echo "-- $(tr '\\0' ' ' < /proc/$p/cmdline 2>/dev/null | cut -c1-60)"; for t in /proc/$p/task/*; do a=$(cpu $t/stat); b=$(grep "^$p/\${t##*/} " $T | cut -d' ' -f2); d=$(( a - \${b:-$a} )); [ $d -gt 0 ] && echo "$(( d * 100 / ${secondi * 100} ))% $(cat $t/comm 2>/dev/null)"; done | sort -rn | head -n 10; done`,
     `rm -f $T`,
   ].join("\n");
+}
+
+/* Il profilo della plancia detto in chiaro: quanto del tempo il filo della
+ * pagina ha lavorato (script, stili, impaginazione: da Performance.getMetrics),
+ * e le funzioni che si sono prese di piu', col file e la riga. */
+export function riassuntoDelProfilo(profile, prima = {}, dopo = {}, secondi = 8) {
+  const righe = [];
+  const quota = (nome) => {
+    const d = (Number(dopo[nome]) || 0) - (Number(prima[nome]) || 0);
+    return `${Math.round((d / secondi) * 100)}%`;
+  };
+  if (dopo.TaskDuration != null)
+    righe.push(
+      `filo della pagina occupato: ${quota("TaskDuration")} (script ${quota("ScriptDuration")}, stili ${quota("RecalcStyleDuration")}, impaginazione ${quota("LayoutDuration")})`,
+    );
+  const nodi = new Map((profile?.nodes || []).map((n) => [n.id, n]));
+  const proprio = new Map();
+  let totale = 0;
+  const campioni = profile?.samples || [];
+  const passi = profile?.timeDeltas || [];
+  for (let i = 0; i < campioni.length; i += 1) {
+    const d = Math.max(0, Number(passi[i + 1] ?? passi[i]) || 0);
+    totale += d;
+    const nodo = nodi.get(campioni[i]);
+    const cf = nodo?.callFrame || {};
+    const file = String(cf.url || "")
+      .split("/")
+      .pop()
+      .split("?")[0];
+    const chiave = file
+      ? `${cf.functionName || "(anonima)"} ${file}:${(cf.lineNumber ?? -1) + 1}`
+      : cf.functionName || "(?)";
+    proprio.set(chiave, (proprio.get(chiave) || 0) + d);
+  }
+  if (!totale) return [...righe, "nessun campione"].join("\n");
+  const ordinate = [...proprio.entries()].sort((a, b) => b[1] - a[1]);
+  const fermo = proprio.get("(idle)") || 0;
+  righe.push(`a riposo: ${Math.round((fermo / totale) * 100)}% del tempo`);
+  for (const [chi, t] of ordinate.filter(([k]) => k !== "(idle)").slice(0, 15))
+    righe.push(
+      `${((t / totale) * 100).toFixed(1).padStart(5)}%  ${Math.round(t / 1000)} ms  ${chi}`,
+    );
+  return righe.join("\n");
 }
 
 /* «2026-11-27_1542»: si legge, e si ordina da se'. */
