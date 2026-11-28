@@ -924,3 +924,19 @@ test("la strada diretta si ricorda per pannello: un inciampo su uno non rallenta
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("l'NSPanel si chiama NSPanel, non come la sua scheda", async () => {
+  const adb = {
+    async getprop(_i, nome) {
+      return { "ro.product.manufacturer": "rockchip", "ro.product.model": "px30_evb" }[nome] ?? "";
+    },
+    async shell(_i, c) {
+      if (c === "wm size") return "Physical size: 480x480";
+      if (c.startsWith("pm list packages")) return "package:com.eWeLinkNSPro.dev";
+      return "";
+    },
+  };
+  const chi = await new Installatore({ adb, cartellaDeiPezzi: tmpdir() }).riconosci("1.2.3.4");
+  assert.equal(chi.famiglia, "nspanel");
+  assert.equal(chi.nome, "NSPanel Pro 86");
+});

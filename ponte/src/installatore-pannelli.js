@@ -462,10 +462,13 @@ export class Installatore {
       root,
       scrivibile,
       percorso: percorsoDelPannello({ root, scrivibile }),
+      /* L'NSPanel per nome, non per la sua scheda («Rockchip px30_evb»). */
       nome:
         famiglia === "shelly"
           ? "Shelly Wall Display"
-          : nomeDelModello({ produttore, marca, modello }),
+          : famiglia === "nspanel"
+            ? `NSPanel Pro ${schermo === "480x480" ? "86" : "120"}`
+            : nomeDelModello({ produttore, marca, modello }),
       schermo,
       android,
     };
