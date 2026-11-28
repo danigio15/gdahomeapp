@@ -647,6 +647,9 @@ export class Pannelli {
       utente: pannello.utente,
       nome: pannello.nome,
       avanti: ({ passo, dettaglio, percento }) => passi.passo(passo, dettaglio, percento),
+      /* Un nuovo tentativo riusa la copia di sicurezza di quello prima. */
+      fotoDiPrima: pannello.copiaDaPortare || null,
+      copiaDiPrima: leggero ? "" : pannello.copia || "",
     });
     if (esito.errore) {
       passi.male(esito.passoRotto ?? 0, esito.errore);

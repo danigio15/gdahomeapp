@@ -1101,3 +1101,29 @@ test("se la fotografia sul pannello inciampa, l'installazione va avanti con la c
   assert.equal(esito.nonCiSta, true);
   assert.match(esito.perche, /niente su/);
 });
+
+test("un nuovo tentativo riusa la fotografia di prima: il sistema puo' essere gia' cambiato", async () => {
+  const dir = pezzi();
+  try {
+    const adb = pannelloConPosto();
+    adb.root = async () => "0";
+    adb.getprop = async () => "8.1.0";
+    adb.file.set("/data/local/tmp/gdahome-copia/system.img", 1000);
+    const inst = new Installatore({ adb, cartellaDeiPezzi: dir, passoDellaBarra: 1 });
+    inst.riconosci = async () => ({ famiglia: "nspanel" });
+    inst._installaOs = async () => ({ errore: "si ferma qui" });
+    const foto = { cartella: "/data/local/tmp/gdahome-copia", partizioni: { system: 1000 } };
+    const detti = [];
+    const esito = await inst.installa({
+      indirizzo: "1.2.3.4",
+      nome: "x",
+      avanti: ({ passo, dettaglio }) => detti.push([passo, dettaglio]),
+      fotoDiPrima: foto,
+    });
+    assert.equal(esito.errore, "si ferma qui");
+    assert.ok(!adb.comandi.some((c) => /^dd if=/.test(c) || /^rm -rf .*gdahome-copia/.test(c)));
+    assert.ok(detti.some(([p, d]) => p === 1 && /tentativo di prima/.test(d)));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

@@ -27,6 +27,10 @@ aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
   l'app, GdAHome OS e l'animazione d'avvio vanno sul pannello per la strada
   diretta, con la barra, come negli aggiornamenti (prima con `adb`, lento e
   muto sul Wi-Fi dell'86).
+- **Il nuovo tentativo riusa la copia di sicurezza di prima**: quella
+  fatta prima dell'errore è il sistema com'era; rifarla poteva fotografare
+  un sistema già cambiato a metà, e sovrapporsi a quella in viaggio verso
+  Home Assistant.
 - **Se la copia sul pannello inciampa**, l'installazione non si ferma: va
   con la copia per la rete.
 - **Il tasto e la barra dell'installazione restano nella scheda**: sul

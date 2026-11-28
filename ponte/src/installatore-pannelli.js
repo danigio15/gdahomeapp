@@ -32,7 +32,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { scappa } from "./adb.js";
 
 /* Dove tenere le copie di sicurezza: la cartella condivisa di Home Assistant,
@@ -341,7 +341,15 @@ export class Installatore {
 
   /* Installazione completa. `avanti({passo, dettaglio, percento})` avvisa la
    * console a ogni passo. Torna { errore?, passoRotto?, os, app, modello, … }. */
-  async installa({ indirizzo, planciaId, utente, nome, avanti: dillo }) {
+  async installa({
+    indirizzo,
+    planciaId,
+    utente,
+    nome,
+    avanti: dillo,
+    fotoDiPrima = null,
+    copiaDiPrima = "",
+  }) {
     /* Il passo a cui si e' arrivati: un errore inatteso si segna li', non
      * sempre sulla «Verifica». */
     let passo = 0;
@@ -382,24 +390,46 @@ export class Installatore {
 
       // 2. Copia di sicurezza: prima la fotografia sul pannello, che e'
       // svelta; se non c'e' posto, la copia di sempre verso Home Assistant.
+      //
+      // Un nuovo tentativo dopo un errore riusa la copia del tentativo di
+      // prima: e' quella del sistema com'era, mentre adesso potrebbe essere
+      // gia' cambiato a meta'. E non la si rifa' per niente.
       avanti({ passo: 1, dettaglio: "Leggo le partizioni…" });
-      const foto = await this._fotoSulPannello(indirizzo, (dettaglio, percento) =>
-        avanti({ passo: 1, dettaglio, percento }),
-      );
-      const copia = foto.foto
-        ? { foto: foto.foto }
-        : await this._copiaDiSicurezza(
-            indirizzo,
-            nome || indirizzo,
-            (fatte, tutte, quale, percento) =>
-              avanti({
-                passo: 1,
-                dettaglio: quale
-                  ? `${quale} (${fatte + 1}/${tutte})`
-                  : `fatta: ${tutte} partizioni`,
-                percento: percento ?? Math.round((fatte / tutte) * 100),
-              }),
-          );
+      const riusata = fotoDiPrima && (await this._fotoCe(indirizzo, fotoDiPrima));
+      if (riusata)
+        avanti({
+          passo: 1,
+          dettaglio: "gia' fatta sul pannello, al tentativo di prima",
+          percento: 100,
+        });
+      else if (copiaDiPrima && existsSync(copiaDiPrima))
+        avanti({
+          passo: 1,
+          dettaglio: `gia' su Home Assistant, dal tentativo di prima (${basename(copiaDiPrima)})`,
+          percento: 100,
+        });
+      const foto =
+        riusata || (copiaDiPrima && existsSync(copiaDiPrima))
+          ? { gia: true }
+          : await this._fotoSulPannello(indirizzo, (dettaglio, percento) =>
+              avanti({ passo: 1, dettaglio, percento }),
+            );
+      const copia = foto.gia
+        ? {}
+        : foto.foto
+          ? { foto: foto.foto }
+          : await this._copiaDiSicurezza(
+              indirizzo,
+              nome || indirizzo,
+              (fatte, tutte, quale, percento) =>
+                avanti({
+                  passo: 1,
+                  dettaglio: quale
+                    ? `${quale} (${fatte + 1}/${tutte})`
+                    : `fatta: ${tutte} partizioni`,
+                  percento: percento ?? Math.round((fatte / tutte) * 100),
+                }),
+            );
       if (copia.errore) return { errore: copia.errore, passoRotto: 1 };
       /* La fotografia sul pannello va su Home Assistant dopo, in sottofondo:
        * lo dice ogni uscita da qui in poi, anche un errore. */
@@ -956,6 +986,23 @@ export class Installatore {
    * di toccare il sistema, e verso Home Assistant ci va dopo, in sottofondo
    * (`portaLaCopia`). Torna { foto }, { nonCiSta } se sul pannello non c'e'
    * posto, o { errore }. */
+  /* La fotografia di un tentativo di prima e' ancora sul pannello, intera? */
+  async _fotoCe(indirizzo, foto) {
+    const nomi = Object.keys(foto?.partizioni || {});
+    if (!foto?.cartella || !nomi.length) return false;
+    for (const p of nomi) {
+      const n = Number(
+        String(
+          await this.adb
+            .shell(indirizzo, `stat -c %s ${foto.cartella}/${p}.img 2>/dev/null`, { root: true })
+            .catch(() => ""),
+        ).trim(),
+      );
+      if (n !== Number(foto.partizioni[p])) return false;
+    }
+    return true;
+  }
+
   async _fotoSulPannello(indirizzo, avanti = () => {}) {
     try {
       return await this._fotografa(indirizzo, avanti);
