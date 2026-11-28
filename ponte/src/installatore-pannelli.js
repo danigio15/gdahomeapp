@@ -100,6 +100,13 @@ export const DA_SALVARE = /^(system|oem)(_[ab])?$/i;
  * Home Assistant (`_fotoSulPannello`). */
 export const FOTO = "/data/local/tmp/gdahome-copia";
 
+/* L'app del pannello, una per processore: quella a 64 bit (gli NSPanel, e
+ * quasi tutti i display) e quella a 32 bit per chi ha solo quelli. Una sola
+ * con dentro tutti e due pesava il doppio, e ogni MB e' tempo sul Wi-Fi di un
+ * pannello. */
+export const MURO = "GdAHome-Muro.apk";
+export const MURO_ARM = "GdAHome-Muro-arm.apk";
+
 /* Le app che non si toccano MAI: senza, Android o GdAHome non funzionano.
  * Lo stesso elenco di `gdahome-os.sh` (KEEP_RE), gia' provato sui pannelli. */
 export const DA_TENERE =
@@ -339,6 +346,20 @@ export class Installatore {
     return existsSync(this._pezzo(nome));
   }
 
+  /* Quale app del pannello, per il suo processore: quella a 32 bit solo se il
+   * pannello non sa fare i 64 e l'add-on ce l'ha; nel dubbio i 64, che e'
+   * quello di tutti i pannelli visti finora. */
+  async _muroPerIlPannello(indirizzo) {
+    const abi =
+      typeof this.adb.getprop === "function"
+        ? String(
+            (await this.adb.getprop(indirizzo, "ro.product.cpu.abilist").catch(() => "")) || "",
+          )
+        : "";
+    if (abi.trim() && !/arm64-v8a/.test(abi) && this._ceIlPezzo(MURO_ARM)) return MURO_ARM;
+    return MURO;
+  }
+
   /* Installazione completa. `avanti({passo, dettaglio, percento})` avvisa la
    * console a ogni passo. Torna { errore?, passoRotto?, os, app, modello, … }. */
   async installa({
@@ -360,7 +381,7 @@ export class Installatore {
     try {
       /* 0. I pezzi ci sono? Meglio accorgersene prima di toccare il pannello. */
       const osApk = "GdAHome-OS.apk";
-      const muroApk = "GdAHome-Muro.apk";
+      const muroApk = await this._muroPerIlPannello(indirizzo);
       if (!this._ceIlPezzo(osApk))
         return { errore: "Manca GdAHome OS in questo add-on: aggiornalo.", passoRotto: 2 };
       if (!this._ceIlPezzo(muroApk))
@@ -621,7 +642,8 @@ export class Installatore {
   async installaLeggero({ indirizzo, planciaId, utente, nome, avanti }) {
     const fase = (passo) => (testo, percento) => avanti({ passo, dettaglio: testo, percento });
     try {
-      for (const p of ["GdAHome-OS.apk", "GdAHome-Muro.apk"])
+      const muroApk = await this._muroPerIlPannello(indirizzo);
+      for (const p of ["GdAHome-OS.apk", muroApk])
         if (!this._ceIlPezzo(p))
           return {
             errore: "Mancano i pezzi di GdAHome in questo add-on: aggiornalo.",
@@ -670,7 +692,7 @@ export class Installatore {
       fase(1)(`Fatto: copiate ${spente.length} app del produttore su Home Assistant`, 100);
 
       // 2. Installazione
-      await this._installaConLaBarra(indirizzo, "GdAHome-Muro.apk", {
+      await this._installaConLaBarra(indirizzo, muroApk, {
         nome: "l'app GdAHome Muro",
         permessi: true,
         dice: (t, pc) => fase(2)(t, Math.round((pc ?? 0) * 0.45)),
@@ -1738,8 +1760,9 @@ export class Installatore {
        * che gira per minuti non diceva se andava avanti. */
       const fase = (passo) => (testo, percento) => avanti({ passo, dettaglio: testo, percento });
       avanti({ passo: 0 });
-      if (quali.includes("muro") && this._ceIlPezzo("GdAHome-Muro.apk")) {
-        await this._installaConLaBarra(indirizzo, "GdAHome-Muro.apk", {
+      const muroApk = await this._muroPerIlPannello(indirizzo);
+      if (quali.includes("muro") && this._ceIlPezzo(muroApk)) {
+        await this._installaConLaBarra(indirizzo, muroApk, {
           nome: "l'app GdAHome Muro",
           permessi: true,
           dice: fase(0),
@@ -2000,6 +2023,12 @@ export class Installatore {
         .catch((e) => `? ${e.message}`);
       righe.push(`== ${titolo} ==\n${String(detto).trim() || "(niente)"}`);
     };
+    /* Prima di tutto, mentre chi ha chiesto l'analisi usa il pannello: dove
+     * va il processore, filo per filo, in otto secondi. `dumpsys cpuinfo`
+     * dice «GdAHome Muro 44%», ma non se e' Flutter che ridisegna la plancia
+     * (raster), la casa che arriva (ui, il Dart) o Android (main): sono tre
+     * strade diverse per renderlo piu' svelto. Lo stesso per la WebView. */
+    await chiedi("Fili al lavoro (8 secondi)", filiAlLavoro(pkg, 8), true);
     await chiedi(
       "Dispositivo",
       "getprop ro.product.model; getprop ro.build.version.release; getprop ro.board.platform; getprop ro.hardware; uptime",
@@ -2100,6 +2129,24 @@ export class Installatore {
       return { errore: scusa(errore) };
     }
   }
+}
+
+/* Lo script dei fili: per GdAHome Muro e per la WebView (il suo processo
+ * «sandboxed»), quanto ha lavorato ogni filo in `secondi`, in percento di un
+ * nucleo, i piu' occupati in cima. Dai tempi di /proc (utime+stime, in
+ * centesimi di secondo), letti due volte. */
+export function filiAlLavoro(pkg, secondi = 8) {
+  const pid = `$(pidof ${pkg}) $(pgrep -f sandboxed_process 2>/dev/null)`;
+  /* Senza awk, che su Android 8 puo' mancare: i campi di /proc/…/stat dopo il
+   * nome (che puo' avere spazi), con `set --`. */
+  return [
+    `T=/data/local/tmp/gda-fili`,
+    `cpu(){ set -- $(sed 's/^.*) //' $1 2>/dev/null); echo $(( \${12:-0} + \${13:-0} )); }`,
+    `: > $T; for p in ${pid}; do for t in /proc/$p/task/*; do echo "$p/\${t##*/} $(cpu $t/stat)" >> $T; done; done`,
+    `sleep ${secondi}`,
+    `for p in ${pid}; do echo "-- $(tr '\\0' ' ' < /proc/$p/cmdline 2>/dev/null | cut -c1-60)"; for t in /proc/$p/task/*; do a=$(cpu $t/stat); b=$(grep "^$p/\${t##*/} " $T | cut -d' ' -f2); d=$(( a - \${b:-$a} )); [ $d -gt 0 ] && echo "$(( d * 100 / ${secondi * 100} ))% $(cat $t/comm 2>/dev/null)"; done | sort -rn | head -n 10; done`,
+    `rm -f $T`,
+  ].join("\n");
 }
 
 /* «2026-11-27_1542»: si legge, e si ordina da se'. */

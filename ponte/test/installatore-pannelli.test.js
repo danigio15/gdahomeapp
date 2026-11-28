@@ -1127,3 +1127,23 @@ test("un nuovo tentativo riusa la fotografia di prima: il sistema puo' essere gi
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("l'app del pannello giusta per il suo processore: 64 bit, o 32 se sa fare solo quelli", async () => {
+  const dir = pezzi();
+  try {
+    writeFileSync(join(dir, "GdAHome-Muro-arm.apk"), "arm");
+    const con = (abi) =>
+      new Installatore({ adb: { getprop: async () => abi }, cartellaDeiPezzi: dir });
+    assert.equal(
+      await con("arm64-v8a,armeabi-v7a,armeabi")._muroPerIlPannello("x"),
+      "GdAHome-Muro.apk",
+    );
+    assert.equal(await con("armeabi-v7a,armeabi")._muroPerIlPannello("x"), "GdAHome-Muro-arm.apk");
+    /* Nel dubbio, i 64 bit: e' quello di tutti i pannelli visti finora. */
+    assert.equal(await con("")._muroPerIlPannello("x"), "GdAHome-Muro.apk");
+    rmSync(join(dir, "GdAHome-Muro-arm.apk"));
+    assert.equal(await con("armeabi-v7a")._muroPerIlPannello("x"), "GdAHome-Muro.apk");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

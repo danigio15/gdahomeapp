@@ -113,6 +113,12 @@ jobs:
           flutter-version: 3.47.5
           channel: stable
           cache: true
+      # Il pannello non guida, non inquadra QR code e non conta i passi: via
+      # navigatore, lettore e salute prima di costruire
+      # (`strumenti/app-del-muro.mjs`, e `src/muro` nella parte Android).
+      - name: Via quello che sul muro non serve
+        working-directory: app
+        run: node strumenti/app-del-muro.mjs
       - run: flutter pub get
         working-directory: app
       - name: La chiave del pannello
@@ -140,17 +146,23 @@ jobs:
           CORSA: ${{ github.run_number }}
         run: |
           versione=$(sed -n 's/^version: "\(.*\)"$/\1/p' ../ponte/config.yaml)
-          # Solo ARM (32 e 64 bit): i processori dei pannelli. La parte per i
-          # PC (x86_64) pesava un terzo dell'APK, e ogni byte in piu' e' tempo
-          # di copia sul pannello a ogni aggiornamento.
-          flutter build apk --release \
-            --target-platform android-arm,android-arm64 \
-            --target lib/main_muro.dart \
-            --build-name="$versione" \
-            --build-number="$CORSA" \
-            --dart-define=VERSIONE="$versione-$CORSA"
           mkdir -p "$GITHUB_WORKSPACE/app-muro"
-          cp build/app/outputs/flutter-apk/app-release.apk "$GITHUB_WORKSPACE/app-muro/GdAHome-Muro.apk"
+          # Una per processore: 64 bit (GdAHome-Muro.apk, gli NSPanel e quasi
+          # tutti i display) e 32 bit (GdAHome-Muro-arm.apk). L'add-on manda
+          # a ogni pannello la sua (`_muroPerIlPannello`): una con dentro
+          # tutti e due pesava il doppio, e ogni MB e' tempo di copia sul
+          # pannello. Stesso numero di versione per tutte e due.
+          for coppia in "android-arm64 arm64-v8a GdAHome-Muro.apk" "android-arm armeabi-v7a GdAHome-Muro-arm.apk"; do
+            set -- $coppia
+            GDAHOME_ABI="$2" flutter build apk --release \
+              --target-platform "$1" \
+              --target lib/main_muro.dart \
+              --build-name="$versione" \
+              --build-number="$CORSA" \
+              --dart-define=VERSIONE="$versione-$CORSA"
+            cp build/app/outputs/flutter-apk/app-release.apk "$GITHUB_WORKSPACE/app-muro/$3"
+          done
+          ls -la "$GITHUB_WORKSPACE/app-muro"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: app-gdahome-muro
@@ -265,7 +277,7 @@ jobs:
         run: |
           docker run --rm --platform ${{ matrix.piattaforma }} --entrypoint sh \
             ghcr.io/${{ github.repository_owner }}/gdahome-${{ matrix.arch }}:${{ steps.dati.outputs.versione }} \
-            -c 'for p in GdAHome-OS.apk GdAHome-Muro.apk versioni.json gdaserial-arm64-v8a bootanimation-86.zip bootanimation-120.zip; do test -s /app/muro/$p || { echo "manca /app/muro/$p"; exit 1; }; done; ls -la /app/muro'
+            -c 'for p in GdAHome-OS.apk GdAHome-Muro.apk GdAHome-Muro-arm.apk versioni.json gdaserial-arm64-v8a bootanimation-86.zip bootanimation-120.zip; do test -s /app/muro/$p || { echo "manca /app/muro/$p"; exit 1; }; done; ls -la /app/muro'
       - name: Pubblica gdahome-${{ matrix.arch }}
         if: github.ref == 'refs/heads/main'
         run: docker push ghcr.io/${{ github.repository_owner }}/gdahome-${{ matrix.arch }}:${{ steps.dati.outputs.versione }}

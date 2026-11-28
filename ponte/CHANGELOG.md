@@ -14,6 +14,21 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.50
+
+- **L'app del pannello pesa 26 MB invece di 103**: era costruita con tutto
+  quello del telefono — il navigatore (mappe, dati di colonnine, ZTL e
+  autovelox, Android Auto, Bluetooth), il lettore di QR code, la salute,
+  l'orologio — che a muro non serve. Ora si costruisce senza
+  (`app/strumenti/app-del-muro.mjs`, e `src/muro` nella parte Android), e una
+  volta per processore: 64 bit per gli NSPanel e quasi tutti i display, 32
+  bit per chi sa fare solo quelli. L'add-on manda a ogni pannello la sua.
+  Sul Wi-Fi lento dell'86 sono quattro volte meno dati a ogni installazione
+  e aggiornamento.
+- **L'analisi dice dove va il processore, filo per filo**: otto secondi di
+  misura su GdAHome Muro e sulla WebView, mentre si usa il pannello. Serve a
+  capire se la plancia pesa per Flutter che la ridisegna o per altro.
+
 ## 1.19.49
 
 - **La copia in sottofondo lascia la linea all'installazione**: sull'86,

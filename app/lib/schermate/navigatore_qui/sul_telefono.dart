@@ -89,7 +89,7 @@ void lasciaLaCasaPerLaProva(Object chi) => _lasciaLaCasa(chi);
 Future<GdanavApp>? _acceso;
 
 /// Il filo col servizio dell'auto, nella versione col navigatore in auto
-/// (`android/app/src/main/kotlin/.../auto/IlNavigatoreInAuto.kt`).
+/// (`android/app/src/telefono/kotlin/.../auto/IlNavigatoreInAuto.kt`).
 const _auto = MethodChannel('gdahome/navigatore');
 
 /* Se lo schermo dell'auto e' quello di gdanav. Nella gdahome di sempre il

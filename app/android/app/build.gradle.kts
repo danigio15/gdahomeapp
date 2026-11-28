@@ -47,7 +47,14 @@ val firmaDiProvaChiesta = System.getenv("GDAHOME_FIRMA_DI_PROVA") == "si"
 // navigazione, e non IOT. Stesso nome e stessa firma di sempre. Le differenze
 // stanno tutte in `src/navigatore`. Per costruire la gdahome di prima, solo
 // IOT in auto, si mette `GDAHOME_NAVIGATORE=no`.
-val colNavigatore = System.getenv("GDAHOME_NAVIGATORE") != "no"
+// GdAHome Muro, l'app del pannello (GDAHOME_APP_ID=com.gdahome.muro): niente
+// navigatore, ne' auto, ne' orologio, ne' salute. Il codice che li usa sta in
+// `src/telefono`, e al suo posto il pannello prende `src/muro`, con le sole
+// chiamate che `MainActivity` fa, vuote; il manifesto di `src/muro` toglie i
+// servizi e i permessi. Le dipendenze Flutter le toglie, prima di costruire,
+// `strumenti/app-del-muro.mjs`.
+val sulMuro = System.getenv("GDAHOME_APP_ID") == "com.gdahome.muro"
+val colNavigatore = !sulMuro && System.getenv("GDAHOME_NAVIGATORE") != "no"
 
 android {
     // La chiave con cui si firmano i pacchetti di prova.
@@ -122,6 +129,27 @@ android {
         versionName = flutter.versionName
     }
 
+    sourceSets.getByName("main") {
+        java.srcDirs(if (sulMuro) "src/muro/kotlin" else "src/telefono/kotlin")
+    }
+    /* L'app del pannello si costruisce una volta per processore
+     * (GDAHOME_ABI=arm64-v8a o armeabi-v7a): dentro solo le sue librerie,
+     * anche quelle dei plugin che le portano per tutti (x86_64 compreso). */
+    val abiDelMuro = System.getenv("GDAHOME_ABI")
+    if (sulMuro && !abiDelMuro.isNullOrBlank()) {
+        defaultConfig {
+            ndk {
+                abiFilters.clear()
+                abiFilters += abiDelMuro
+            }
+        }
+    }
+    if (sulMuro) {
+        sourceSets.getByName("release") {
+            manifest.srcFile("src/muro/AndroidManifest.xml")
+        }
+    }
+
     if (colNavigatore) {
         sourceSets.getByName("release") {
             manifest.srcFile("src/navigatore/AndroidManifest.xml")
@@ -188,12 +216,15 @@ flutter {
  * si compila e in auto non compare. */
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
-    implementation("androidx.car.app:app:1.4.0")
-    implementation("androidx.car.app:app-projected:1.4.0")
+    /* L'auto e l'orologio: solo nell'app del telefono (`src/telefono`). */
+    if (!sulMuro) {
+        implementation("androidx.car.app:app:1.4.0")
+        implementation("androidx.car.app:app-projected:1.4.0")
 
-    /* L'orologio Wear OS: il Data Layer, che porta la fotografia al polso e
-     * da li' riporta i tocchi (`orologio/IlTramiteDellOrologio.kt`). */
-    implementation("com.google.android.gms:play-services-wearable:19.0.0")
+        /* L'orologio Wear OS: il Data Layer, che porta la fotografia al polso e
+         * da li' riporta i tocchi (`orologio/IlTramiteDellOrologio.kt`). */
+        implementation("com.google.android.gms:play-services-wearable:19.0.0")
+    }
 
     /* Lo schermo intero di Android 15 anche sui telefoni di prima
      * (`enableEdgeToEdge` in MainActivity). Arrivava gia' con Flutter, per
