@@ -162,6 +162,8 @@ export const DA_TENERE =
   "^(android|com\\.android\\.(systemui|settings|phone|shell|packageinstaller|defcontainer|externalstorage|keychain|certinstaller|location\\.fused|server\\.telecom|bluetooth|nfc|proxyhandler|vpndialogs|statementservice|storagemanager|documentsui|captiveportallogin|provision|se|mtp|inputmethod\\..*|providers\\..*|webview|wallpaperbackup|backupconfirm|sharedstoragebackup|pacprocessor|carrierconfig|managedprovisioning|cts\\..*)|com\\.google\\.android\\.webview|com\\.gdahome\\..*)$";
 /* Il software Sonoff / eWeLink, riconosciuto dal nome (SONOFF_RE). */
 export const DI_SONOFF = "sonoff|ewelink|itead|coolkit|smatek|nspanel";
+/* I programmi Sonoff che init lancia da se', per nome del file. */
+export const PROGRAMMI_DI_SONOFF = ["zgateway"];
 /* Le app Android inutili a muro: si tolgono per avere memoria (SUPERFLUE_RE). */
 export const SUPERFLUE =
   "^com\\.android\\.(browser|calendar|contacts|dialer|mms|email|exchange|gallery3d|gallery|music|musicfx|camera2?|deskclock|calculator2|soundrecorder|quicksearchbox|launcher3?|wallpaper\\.livepicker|wallpapercropper|dreams\\..*|printspooler|bips|egg|htmlviewer|bookmarkprovider|galaxy4|noisefield|phasebeam|magicsmoke|musicvis|stk|calllogbackup|cellbroadcastreceiver|emergency|smspush|onetimeinitializer|apps\\.tag|printservice\\.recommendation|traceur|companiondevicemanager|wallpaper|webview\\.shell)$";
@@ -177,6 +179,7 @@ const APRI_IN_SCRITTURA = [
 const CHIUDI_IN_SCRITTURA = [
   "sync",
   "[ $OEM = 1 ] && mount -o ro,remount /oem 2>/dev/null",
+  '[ "${VEN:-0}" = 1 ] && mount -o ro,remount /vendor 2>/dev/null',
   "mount -o ro,remount /system 2>/dev/null || mount -o ro,remount / 2>/dev/null || true",
 ];
 
@@ -208,7 +211,23 @@ function righeDellaPulizia() {
     "  else continue; fi",
     '  case "$apk" in',
     "    /data/*)",
-    '      cp "$apk" $D/$pkg.apk && pm uninstall "$pkg" >/dev/null 2>&1 && echo "$pkg" >> $D/manifest.txt && echo "TOLTA $pkg ($perche)" ;;',
+    /* Gia' cancellata da un giro prima, aspetta solo il riavvio. */
+    '      [ -f "$apk" ] || continue',
+    '      cp "$apk" $D/$pkg.apk || { echo "RESTA $pkg (non si mette da parte)"; continue; }',
+    '      grep -qx "$pkg" $D/manifest.txt 2>/dev/null || echo "$pkg" >> $D/manifest.txt',
+    '      esito=$(pm uninstall "$pkg" 2>&1 | tail -n1)',
+    '      if [ "$esito" = Success ]; then echo "TOLTA $pkg ($perche)"',
+    /* Un amministratore del dispositivo Android non lo lascia disinstallare
+     * («DELETE_FAILED_DEVICE_POLICY_MANAGER»): e' come NSPanelTools era
+     * rimasta sul Corridoio, in silenzio. Da root la si ferma, la si spegne
+     * e si cancella il suo pacchetto: al riavvio Android non la trova piu' e
+     * la dimentica, amministratore compreso. Il ripristino la rimette dalla
+     * copia in $D. */
+    "      else",
+    '        am force-stop "$pkg" 2>/dev/null; pm disable "$pkg" >/dev/null 2>&1',
+    '        cartella=$(dirname "$apk"); case "$cartella" in /data/app/?*) rm -rf "$cartella" ;; esac',
+    '        echo "TOLTA $pkg ($perche, del tutto al riavvio: ${esito:-rifiutata})"',
+    "      fi ;;",
     "    *)",
     '      case "$apk" in /oem/*) [ $OEM = 1 ] || { echo "RESTA $pkg (/oem non si scrive)"; continue; } ;; esac',
     '      cartella=$(dirname "$apk"); sopra=$(basename "$cartella")',
@@ -218,9 +237,46 @@ function righeDellaPulizia() {
     "  esac",
     "done < $TMP/gda-app.txt",
     "rm -f $TMP/gda-app.txt",
+    ...righeDeiProgrammiSonoff(),
     /* L'animazione Sonoff di /oem: finche' c'e', Android mostra quella. */
     "if [ -f /oem/media/bootanimation.zip ]; then",
     '  if [ $OEM = 1 ] && mv /oem/media/bootanimation.zip $R/oem-bootanimation.zip.orig; then echo "TOLTA animazione Sonoff (/oem)"; else echo "RESTA animazione Sonoff (/oem non si scrive)"; fi',
+    "fi",
+  ];
+}
+
+/* I programmi Sonoff che non sono app: `init` li lancia all'accensione,
+ * prima di Android, e la pulizia delle app non li vedeva. zgateway e' il
+ * gateway Zigbee di Sonoff: girava ancora sul Corridoio e teneva la porta
+ * seriale del chip Zigbee, che serve a GdAHome. Si fermano (anche il servizio
+ * di init, che se no li rilancia) e il loro file si mette da parte come le
+ * app di sistema, col suo posto nel manifesto: senza, init non li lancia
+ * piu', e il ripristino li rimette. Se il file non si puo' spostare, li ferma
+ * `gdahome-sonoff.rc` a ogni accensione. */
+function righeDeiProgrammiSonoff() {
+  return [
+    "FERMI=''",
+    `for nome in ${PROGRAMMI_DI_SONOFF.join(" ")}; do`,
+    '  grep -q "^$nome|" $R/manifest.txt 2>/dev/null && continue',
+    /* Dove sta: da quello che gira, se no nei posti dei programmi. */
+    "  via=''; pid=''",
+    '  for p in /proc/[0-9]*; do e=$(readlink $p/exe 2>/dev/null); [ "${e##*/}" = "$nome" ] && { via="$e"; pid="$pid ${p#/proc/}"; }; done',
+    '  [ -n "$via" ] || for d in /system/bin /system/xbin /vendor/bin /oem/bin; do [ -f $d/$nome ] && { via=$d/$nome; break; }; done',
+    '  [ -n "$via" ] || continue',
+    /* Il servizio di init che lo lancia: si ferma, se no lo rilancia. */
+    '  servizi=$(cat /*.rc /system/etc/init/*.rc /vendor/etc/init/*.rc /oem/etc/init/*.rc 2>/dev/null | grep -E "^service [^ ]+ [^ ]*/$nome( |$)" | sed "s/^service \\([^ ]*\\) .*/\\1/")',
+    '  for s in $servizi; do stop "$s" 2>/dev/null; done',
+    "  for x in $pid; do kill $x 2>/dev/null; done",
+    '  case "$via" in /oem/*) [ $OEM = 1 ] || via_no=1 ;; /vendor/*) mount -o rw,remount /vendor 2>/dev/null && VEN=1 ;; esac',
+    '  if [ "${via_no:-0}" != 1 ] && mv "$via" $R/$nome.removed 2>/dev/null; then',
+    '    echo "$nome|$via" >> $R/manifest.txt; echo "TOLTA $nome (programma Sonoff, $via)"',
+    "  else",
+    '    FERMI="$FERMI $servizi"; echo "RESTA $nome (fermato, e fermato a ogni accensione)"',
+    "  fi; via_no=0",
+    "done",
+    'if [ -n "$(echo $FERMI)" ]; then',
+    "  { echo '# GdAHome OS: i programmi Sonoff fermi (installatore-pannelli.js)'; echo 'on property:sys.boot_completed=1'; for s in $FERMI; do echo \"    stop $s\"; done; } > /system/etc/init/gdahome-sonoff.rc",
+    "  chmod 644 /system/etc/init/gdahome-sonoff.rc; chcon u:object_r:system_file:s0 /system/etc/init/gdahome-sonoff.rc 2>/dev/null || true",
     "fi",
   ];
 }
@@ -313,8 +369,10 @@ export function scriptDiSistema() {
  * Quando cambia cosa toglie, si alza RITOCCO e i pannelli lo rifanno. */
 /* 1: /oem. 2: la velocita' (processore, scheda video, WebView). 3: la
  * pulizia totale (le app aggiunte, come quella di Home Assistant). 4:
- * l'animazione d'avvio nuova («GdAHome» e non «GDAHOME»), rimessa. */
-export const RITOCCO = 4;
+ * l'animazione d'avvio nuova («GdAHome» e non «GDAHOME»), rimessa. 5: le app
+ * che Android non lasciava togliere (NSPanelTools) e i programmi Sonoff
+ * lanciati da init (zgateway). */
+export const RITOCCO = 5;
 export function scriptDelRitocco() {
   return [
     ...INTESTAZIONE(),
@@ -334,7 +392,7 @@ export function scriptDelRipristino() {
     ...APRI_IN_SCRITTURA,
     /* Prima via GdAHome, poi dentro le app di prima: su un /system pieno
      * (l'86) il posto per rimetterle e' quello che GdAHome libera. */
-    "rm -rf /system/app/GdAHomeOS /system/bin/gdaserial /system/etc/init/gdahome.rc",
+    "rm -rf /system/app/GdAHomeOS /system/bin/gdaserial /system/etc/init/gdahome.rc /system/etc/init/gdahome-sonoff.rc",
     "rm -f /data/local/tmp/webview-command-line",
     `rm -rf ${FOTO}`,
     /* Le app di sistema messe da parte: in /system (i pannelli installati
@@ -342,7 +400,10 @@ export function scriptDelRipristino() {
     "for R in /system/gdahome-removed /data/gdahome-removed-system; do",
     "  [ -d $R ] || continue",
     "  [ -f $R/bootanimation.zip.orig ] || [ -f /system/gdahome-removed/bootanimation.zip.orig ] || [ -f /data/gdahome-removed-system/bootanimation.zip.orig ] || rm -f /system/media/bootanimation.zip",
-    '  [ -f $R/manifest.txt ] && while IFS="|" read -r pkg via; do [ -e $R/$pkg.removed ] && mv $R/$pkg.removed "$via" && echo "RIMESSA $pkg"; done < $R/manifest.txt',
+    '  [ -f $R/manifest.txt ] && while IFS="|" read -r pkg via; do',
+    '    case "$via" in /vendor/*) mount -o rw,remount /vendor 2>/dev/null && VEN=1 ;; esac',
+    '    [ -e $R/$pkg.removed ] && mv $R/$pkg.removed "$via" && { restorecon -R "$via" 2>/dev/null; echo "RIMESSA $pkg"; }',
+    "  done < $R/manifest.txt",
     "  [ -f $R/bootanimation.zip.orig ] && mv $R/bootanimation.zip.orig /system/media/bootanimation.zip",
     "  [ -f $R/oem-bootanimation.zip.orig ] && mkdir -p /oem/media && mv $R/oem-bootanimation.zip.orig /oem/media/bootanimation.zip && echo RIMESSA animazione Sonoff",
     "  [ -f $R/build.prop.orig ] && cp -p $R/build.prop.orig /system/build.prop",
@@ -2429,6 +2490,11 @@ export class Installatore {
       "App sul pannello",
       "pm list packages -f 2>/dev/null | sed 's/^package://' | grep -v -E '=(android|com\\.android\\.[a-z.]*)$' | sort; echo '-- amministratori:'; dumpsys device_policy 2>/dev/null | grep -E 'admin=|ComponentInfo' | head -n 5",
     );
+    /* I programmi Sonoff che init lancia da se' (zgateway), e da dove. */
+    await chiedi(
+      "Programmi Sonoff",
+      `for p in /proc/[0-9]*; do e=$(readlink $p/exe 2>/dev/null); case "\${e##*/}" in ${PROGRAMMI_DI_SONOFF.join("|")}) echo "gira \${p#/proc/} $e" ;; esac; done; grep -l -E '${PROGRAMMI_DI_SONOFF.join("|")}' /*.rc /system/etc/init/*.rc /vendor/etc/init/*.rc 2>/dev/null; cat /system/etc/init/gdahome-sonoff.rc 2>/dev/null; echo '-- messi da parte:'; cat /system/gdahome-removed/manifest.txt /data/gdahome-removed-system/manifest.txt 2>/dev/null | grep -v '^com\\.' | head`,
+    );
     /* Le partizioni: il logo dell'accensione sta in una sua (logo, resource
      * o uboot sui Rockchip), prima di Android. */
     await chiedi(
@@ -2437,7 +2503,9 @@ export class Installatore {
     );
     await chiedi(
       "Rete",
-      "ip -4 addr show wlan0 2>/dev/null | grep inet; dumpsys wifi 2>/dev/null | grep -m1 -E 'mWifiInfo'; ip route | head -n 3",
+      /* Con la velocita' del collegamento e i pacchetti persi o rifatti:
+       * una rete lenta solo verso il pannello si vede li'. */
+      "ip -4 addr show wlan0 2>/dev/null | grep inet; dumpsys wifi 2>/dev/null | grep -m1 -E 'mWifiInfo'; ip route | head -n 3; echo '-- collegamento:'; iw dev wlan0 link 2>/dev/null | grep -E 'freq|signal|bitrate'; iw dev wlan0 station dump 2>/dev/null | grep -E 'rx bitrate|tx bitrate|tx retries|tx failed|rx drop'; tail -n 1 /proc/net/wireless 2>/dev/null; ip -s link show wlan0 2>/dev/null | tail -n 4",
     );
     /* Quanto ci mette il pannello a raggiungere Home Assistant: un comando
      * luce che tarda puo' essere la rete (Wi-Fi debole, pacchetti persi) o il
