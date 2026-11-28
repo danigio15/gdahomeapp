@@ -16,6 +16,10 @@ aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
 ## 1.19.52
 
+- **L'animazione d'avvio scrive «GdAHome»**, con le sue maiuscole e col
+  carattere dell'app (era «GDAHOME»). Arriva anche sui pannelli già
+  installati: al prossimo aggiornamento (ritocco 4) l'add-on la rimette se
+  quella sul pannello è un'altra.
 - **L'analisi elenca le app rimaste e le partizioni**: le app che non sono
   di Android, col posto dove stanno, e chi è amministratore del dispositivo
   (sul Corridoio era rimasta «NSPanelTools»); e le partizioni, per il logo

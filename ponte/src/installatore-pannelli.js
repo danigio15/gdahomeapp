@@ -312,8 +312,9 @@ export function scriptDiSistema() {
  * e gira a ogni aggiornamento: se non c'e' niente da togliere, non fa niente.
  * Quando cambia cosa toglie, si alza RITOCCO e i pannelli lo rifanno. */
 /* 1: /oem. 2: la velocita' (processore, scheda video, WebView). 3: la
- * pulizia totale (le app aggiunte, come quella di Home Assistant). */
-export const RITOCCO = 3;
+ * pulizia totale (le app aggiunte, come quella di Home Assistant). 4:
+ * l'animazione d'avvio nuova («GdAHome» e non «GDAHOME»), rimessa. */
+export const RITOCCO = 4;
 export function scriptDelRitocco() {
   return [
     ...INTESTAZIONE(),
@@ -2309,10 +2310,50 @@ export class Installatore {
         attesa: 3 * 60_000,
       });
       const tolte = [...String(esito).matchAll(/^TOLTA (.*)$/gm)].map((m) => m[1].trim());
+      /* L'animazione d'avvio: se quella dell'add-on e' cambiata, la nuova.
+       * Non ferma il ritocco se non riesce: si riprova al giro dopo. */
+      await this._rinfrescaLAnimazione(indirizzo).catch(() => {});
       return { fatto: /GDA_OK/.test(esito), tolte };
     } catch (_e) {
       return { fatto: false, tolte: [] };
     }
+  }
+
+  /* L'animazione d'avvio dell'add-on sul pannello, se quella che c'e' e'
+   * un'altra (si guarda l'impronta): solo su un NSPanel, che ha la sua misura
+   * di schermo, e solo dove GdAHome OS e' nel sistema. */
+  async _rinfrescaLAnimazione(indirizzo) {
+    const schermo = (await this._schermo(indirizzo)) || "";
+    if (!schermo) return false;
+    const pezzo = animazione(schermo === "480x480" ? "86" : "120");
+    if (!this._ceIlPezzo(pezzo)) return false;
+    const nostra = createHash("md5")
+      .update(readFileSync(this._pezzo(pezzo)))
+      .digest("hex");
+    const detto = String(
+      await this.adb
+        .shell(
+          indirizzo,
+          "getprop ro.gdahome.os; md5sum /system/media/bootanimation.zip 2>/dev/null",
+          { root: true },
+        )
+        .catch(() => ""),
+    );
+    if (!/^\s*\d/.test(detto)) return false;
+    if (detto.includes(nostra)) return false;
+    const tmp = "/data/local/tmp/bootanimation.zip";
+    await this._portaSu(indirizzo, pezzo, tmp, "l'animazione d'avvio");
+    const esito = await this.adb.shell(
+      indirizzo,
+      [
+        ...APRI_IN_SCRITTURA,
+        `cp ${tmp} /system/media/bootanimation.zip && chmod 644 /system/media/bootanimation.zip && chcon u:object_r:system_file:s0 /system/media/bootanimation.zip 2>/dev/null; echo FATTO $?`,
+        `rm -f ${tmp}`,
+        ...CHIUDI_IN_SCRITTURA,
+      ].join("\n"),
+      { root: true, attesa: 60_000 },
+    );
+    return /FATTO 0/.test(String(esito));
   }
 
   /* L'analisi del pannello: quello che serve per capire perche' va lento o

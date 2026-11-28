@@ -1226,3 +1226,37 @@ test("il profilo della plancia detto in chiaro: quanto lavora il filo, e chi se 
   assert.match(r, /disegna muro\.js:42/);
   assert.match(r, /a riposo: 25%/);
 });
+
+test("l'animazione d'avvio nuova arriva sui pannelli gia' installati, solo se e' cambiata", async () => {
+  const dir = pezzi();
+  try {
+    const comandi = [];
+    let sulPannello = "vecchia";
+    const adb = {
+      async shell(_i, c) {
+        comandi.push(c);
+        if (c === "wm size") return "Physical size: 480x480";
+        if (c.startsWith("getprop ro.gdahome.os"))
+          return `2\n${sulPannello}  /system/media/bootanimation.zip`;
+        if (c.includes("cp /data/local/tmp/bootanimation.zip")) return "FATTO 0";
+        return "";
+      },
+      async push() {},
+    };
+    const inst = new Installatore({ adb, cartellaDeiPezzi: dir });
+    assert.equal(await inst._rinfrescaLAnimazione("x"), true);
+    assert.ok(
+      comandi.some((c) => c.includes("cp /data/local/tmp/bootanimation.zip /system/media/")),
+    );
+    /* Gia' quella: non si tocca. */
+    sulPannello = (await import("node:crypto"))
+      .createHash("md5")
+      .update(readFileSync(join(dir, "bootanimation-86.zip")))
+      .digest("hex");
+    comandi.length = 0;
+    assert.equal(await inst._rinfrescaLAnimazione("x"), false);
+    assert.ok(!comandi.some((c) => c.includes("cp /data/local/tmp/bootanimation.zip")));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
