@@ -1293,7 +1293,15 @@ export class Installatore {
       await dorme(secondi * 1000);
       const { profile } = await cdp("Profiler.stop");
       const dopo = await metriche();
-      return riassuntoDelProfilo(profile, prima, dopo, secondi);
+      /* E cosa sta sul bordo destro della pagina: sul Salone, a riposo, c'e'
+       * una striscia chiara verticale, e da fuori non si sa chi la disegna.
+       * Se qui non c'e' niente di chiaro, la striscia e' fuori dalla pagina
+       * (l'app, o Android). */
+      const bordo = await cdp("Runtime.evaluate", {
+        expression: GUARDA_IL_BORDO,
+        returnByValue: true,
+      }).catch((e) => ({ result: { value: `? ${e.message}` } }));
+      return `${riassuntoDelProfilo(profile, prima, dopo, secondi)}\n-- il bordo destro:\n${bordo?.result?.value ?? "?"}`;
     } catch (errore) {
       return `non riuscita (${errore.message || errore})`;
     } finally {
@@ -2615,6 +2623,24 @@ export function filiAlLavoro(pkg, secondi = 8) {
 /* Il profilo della plancia detto in chiaro: quanto del tempo il filo della
  * pagina ha lavorato (script, stili, impaginazione: da Performance.getMetrics),
  * e le funzioni che si sono prese di piu', col file e la riga. */
+/* Eseguito dentro la pagina del pannello (`_alMicroscopio`): la misura della
+ * finestra, se qualcosa sborda a destra, e gli elementi che stanno negli
+ * ultimi pixel del bordo destro, a tre altezze, con la loro misura. */
+export const GUARDA_IL_BORDO = `(() => {
+  const w = innerWidth, h = innerHeight, d = document.documentElement;
+  const nome = (e) => e.tagName.toLowerCase() + (e.id ? "#" + e.id : "") +
+    (typeof e.className === "string" && e.className.trim() ? "." + e.className.trim().split(/\\s+/).slice(0, 3).join(".") : "");
+  const righe = ["finestra " + w + "x" + h + " · pagina larga " + d.scrollWidth + " · classi " + d.className];
+  for (const y of [0.25, 0.5, 0.75]) for (const x of [w - 1, w - 4, w - 10]) {
+    const tutti = document.elementsFromPoint(x, Math.round(h * y)).slice(0, 3);
+    righe.push(x + "," + Math.round(h * y) + ": " + tutti.map((e) => {
+      const r = e.getBoundingClientRect();
+      return nome(e) + " [" + Math.round(r.left) + "-" + Math.round(r.right) + "]";
+    }).join(" > "));
+  }
+  return righe.join("\\n");
+})()`;
+
 export function riassuntoDelProfilo(profile, prima = {}, dopo = {}, secondi = 8) {
   const righe = [];
   const quota = (nome) => {

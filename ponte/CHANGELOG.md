@@ -22,6 +22,9 @@ aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
   disegno di tutto il pannello, fatto dentro il tocco: un paio di decimi su un
   NSPanel. Ora il comando parte, la card cambia colore subito e il resto si
   ridisegna al fotogramma dopo.
+- **L'analisi guarda il bordo destro della plancia**: cosa c'è negli ultimi
+  pixel, per trovare chi disegna la striscia chiara che si vede sul Salone a
+  riposo.
 - **Le feste costano meno al pannello.** Le decorazioni restano com'erano e
   partono l'8 dicembre. Se è il periodo delle feste la
   plancia se lo chiedeva di continuo — per ogni disegno, per ogni luce, per
