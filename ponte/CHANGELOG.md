@@ -14,6 +14,22 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.53
+
+- **Via anche NSPanelTools.** Era rimasta sul Corridoio perché Android non
+  lasciava disinstallarla, e la pulizia non se ne accorgeva. Ora, se Android
+  rifiuta, l'add-on la ferma, la spegne e cancella il suo pacchetto: al
+  prossimo riavvio non c'è più. Resta salvata, e «Rimetti Sonoff» la rimette.
+- **Via zgateway, il gateway Zigbee di Sonoff.** Non è un'app: lo lanciava
+  il sistema all'accensione, prima di Android, e teneva occupato il chip
+  Zigbee del pannello. Ora si ferma e si mette da parte; anche lui torna con
+  «Rimetti Sonoff».
+- Arriva anche sui pannelli già installati, al prossimo aggiornamento
+  (ritocco 5).
+- **L'analisi dice com'è il collegamento Wi-Fi**: la velocità a cui va in
+  entrata e in uscita, i pacchetti rifatti e persi, e se un programma Sonoff
+  gira ancora.
+
 ## 1.19.52
 
 - **L'animazione d'avvio scrive «GdAHome»**, con le sue maiuscole e col
