@@ -22,6 +22,7 @@ library;
 
 import 'dart:convert';
 
+import '../muro/sul_muro.dart';
 import 'il_fondo.dart';
 import 'il_velo_di_gdahome.dart';
 import 'pannello.dart';
@@ -1045,6 +1046,10 @@ class Premesse {
         'window.__DASHBOARDMODERN_PRIMARY__=${quale?.primario ?? true};'
         'window.__DASHBOARDMODERN_LOCALE__=${perLoScript(lingua)};'
         'window.__GDAHOME__=true;'
+        /* Dentro GdAHome Muro, l'app del pannello: la plancia lascia fuori
+           quello che sul muro non c'e' (la Salute, Strava), e non lo cerca
+           nemmeno (`sulPannelloAMuro` in `sections/shared.js`). */
+        '${sulMuro ? 'window.__GDAHOME_MURO__=true;' : ''}'
         /* Le vesti di questa plancia, se chi ha montato l'impianto le ha
            scelte: la parola del velo e la scritta della testata, in due
            pezzi. La pagina le legge al momento di disegnare — il velo con lo

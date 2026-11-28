@@ -5394,7 +5394,8 @@ export function disegna() {
       img,
     ]),
   );
-  if (rattoppaSeCambia(nodo.firstElementChild, corpo, { tieni: siTiene })) {
+  const cambiato = rattoppaSeCambia(nodo.firstElementChild, corpo, { tieni: siTiene });
+  if (cambiato) {
     caricaLeTelecamere(nodo, vecchie);
     /* La copertina che c'era resta la stessa immagine: niente lampo. */
     for (const img of nodo.querySelectorAll("img[data-mu-copertina]")) {
@@ -5407,7 +5408,16 @@ export function disegna() {
   mettiILoghiDelleRadio(nodo);
   battitoDellaMusica();
   rimettiLaVoce(nodo);
-  if (state.riposo) posizionaIlRiposo(nodo);
+  /* Misurare il riposo vuol dire far impaginare la pagina intera, adesso:
+   * dal microscopio, quasi 400 ms ogni otto secondi su un NSPanel. Si
+   * rimisura solo se qualcosa e' cambiato davvero, o lo schermo. */
+  if (state.riposo) {
+    const schermo = `${root.innerWidth || 0}x${root.innerHeight || 0}`;
+    if (cambiato || state.riposoMisurato !== schermo) {
+      posizionaIlRiposo(nodo);
+      state.riposoMisurato = schermo;
+    }
+  } else state.riposoMisurato = "";
   animaLeFeste(nodo, { ridisegna: () => disegna() });
   animaLeLuciAlMuro(nodo, {
     feste: state.fonte?.feste ?? readJson(CHIAVE_FESTE, null),

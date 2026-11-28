@@ -19,7 +19,7 @@ import {
   settimaneDalleStatistiche,
   vistaDiStrava,
 } from "../core/strava.js";
-import { allStates, chiediAHomeAssistant, esc, locale, t } from "./shared.js";
+import { allStates, chiediAHomeAssistant, esc, locale, sulPannelloAMuro, t } from "./shared.js";
 
 const ARANCIO = "#fc4c02";
 const SETTIMANE = 12;
@@ -63,6 +63,8 @@ function quando(iso) {
 
 /** Strava com'e' adesso, o `null` se in casa non c'e'. */
 export function vistaStrava(states = allStates() || {}) {
+  /* Sul pannello a muro Strava non c'e', come la Salute. */
+  if (sulPannelloAMuro()) return null;
   return vistaDiStrava(states);
 }
 

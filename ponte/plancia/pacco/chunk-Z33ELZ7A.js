@@ -6203,6 +6203,9 @@ function quandoSiCambiaPagina(callback) {
 }
 var SEGNO_DEL_PARCHEGGIO = "__DASHBOARDMODERN_PARCHEGGIATA__";
 var MURO_ACCESO = "dm-muro-acceso";
+function sulPannelloAMuro() {
+  return root2.__GDAHOME_MURO__ === true;
+}
 function planciaVisibile(documento = doc) {
   if (root2[SEGNO_DEL_PARCHEGGIO] === true) return false;
   if (documento?.documentElement?.classList?.contains?.(MURO_ACCESO)) return false;
@@ -6792,6 +6795,7 @@ export {
   contenutoNoto,
   readJson,
   quandoSiCambiaPagina,
+  sulPannelloAMuro,
   planciaVisibile,
   paginaVisibile,
   ilCambioTocca,

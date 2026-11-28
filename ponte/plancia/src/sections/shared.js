@@ -800,6 +800,20 @@ const SEGNO_DEL_PARCHEGGIO = "__DASHBOARDMODERN_PARCHEGGIATA__";
 /* La classe che il pannello a muro mette sulla pagina finche' la copre. */
 export const MURO_ACCESO = "dm-muro-acceso";
 
+/**
+ * La plancia gira dentro GdAHome Muro, l'app del pannello a muro.
+ *
+ * Lo dice l'app stessa, nelle premesse della pagina (`window.__GDAHOME_MURO__`,
+ * `app/lib/plancia/premesse.dart`). Sul pannello non c'e' una persona a cui
+ * contare i passi: l'app del pannello la Salute non ce l'ha, e la plancia non
+ * deve nemmeno cercarla — a ogni cambio di stato guardava tutte le entita' di
+ * casa per trovare passi e battiti, e dal microscopio era la funzione piu'
+ * cara sul pannello.
+ */
+export function sulPannelloAMuro() {
+  return root.__GDAHOME_MURO__ === true;
+}
+
 export function planciaVisibile(documento = doc) {
   if (root[SEGNO_DEL_PARCHEGGIO] === true) return false;
   /* Il pannello a muro copre la plancia tutta (`plancia-a-muro-section.js`):
