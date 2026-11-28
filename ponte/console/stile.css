@@ -2474,6 +2474,30 @@ code {
   background: var(--acceso);
 }
 
+.viaggio {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.viaggio small {
+  color: var(--tenue);
+}
+
+.viaggio .barra {
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--linea);
+}
+
+.viaggio .barra > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--acceso);
+}
+
 @keyframes gira-il-segno {
   to {
     transform: rotate(360deg);

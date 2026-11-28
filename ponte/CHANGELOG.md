@@ -14,6 +14,18 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.47
+
+- **La copia di sicurezza non si aspetta più**: invece di mandarla subito
+  per il Wi-Fi (sull'86, mezz'ora e più), l'add-on la fa sul pannello
+  stesso, da memoria a memoria, in un minuto o due, e poi installa subito.
+  Il paracadute c'è già prima di toccare il sistema. La copia va su Home
+  Assistant dopo, in sottofondo, con GdAHome già acceso: la riga del
+  pannello la mostra con la sua barra, e quando è arrivata (stessa impronta
+  MD5) si cancella dal pannello. Se il pannello si riavvia o si spegne a
+  metà, riprende da solo. Senza un paio di GB liberi sul pannello si va come
+  prima, per la rete; la verifica lo dice.
+
 ## 1.19.46
 
 - **La copia di sicurezza la comprime il pannello, prima di spedirla**: su un

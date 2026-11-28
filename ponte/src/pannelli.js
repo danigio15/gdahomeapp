@@ -117,6 +117,7 @@ export class Pannelli {
       return {
         ...uno,
         lavoro: lavoro ? { ...lavoro, passi: lavoro.passi.map((p) => ({ ...p })) } : null,
+        viaggio: this._inViaggio?.get(uno.id)?.viaggio || null,
       };
     });
     return { pannelli, premium: this._premium(), adb };
@@ -476,7 +477,17 @@ export class Pannelli {
           grave: true,
           detto: `Poco spazio sul pannello: servono 200 MB, liberi ${mostraByte(gb)}`,
         };
-      return { ok: true, detto: `Spazio sul pannello: liberi ${mostraByte(gb)}` };
+      /* Con un paio di GB la copia di sicurezza si fa sul pannello in un
+       * minuto, e va su Home Assistant dopo; senza, va per la rete subito. */
+      if (gb < 2.2 * 1024 ** 3)
+        return {
+          ok: true,
+          detto: `Spazio sul pannello: liberi ${mostraByte(gb)} (la copia di sicurezza andra' per la rete: piu' lenta)`,
+        };
+      return {
+        ok: true,
+        detto: `Spazio sul pannello: liberi ${mostraByte(gb)} (la copia di sicurezza si fa sul pannello, in un minuto)`,
+      };
     } catch (_e) {
       return { ok: true, detto: "Spazio sul pannello: non misurato" };
     }
@@ -642,9 +653,11 @@ export class Pannelli {
       if (esito.casaDiPrima) pannello.casaDiPrima = esito.casaDiPrima;
       if (esito.spente) pannello.spente = esito.spente;
       if (esito.copia) pannello.copia = esito.copia;
+      if (esito.copiaDaPortare) pannello.copiaDaPortare = esito.copiaDaPortare;
       pannello.stato = "errore";
       pannello.errore = esito.errore;
       this._salva();
+      this._portaLaCopia(pannello);
       return;
     }
     pannello.stato = "pronto";
@@ -659,6 +672,7 @@ export class Pannelli {
     if (esito.casaDiPrima) pannello.casaDiPrima = esito.casaDiPrima;
     if (esito.spente) pannello.spente = esito.spente;
     if (esito.copia) pannello.copia = esito.copia;
+    if (esito.copiaDaPortare) pannello.copiaDaPortare = esito.copiaDaPortare;
     if (esito.nomeDelModello) pannello.nomeDelModello = esito.nomeDelModello;
     if (esito.abbinatoIl) pannello.abbinatoIl = esito.abbinatoIl;
     pannello.errore = "";
@@ -668,6 +682,9 @@ export class Pannelli {
     pannello.avviso = esito.avviso || "";
     if (esito.avviso) pannello.aggiornabile = true;
     this._salva();
+    /* La copia di sicurezza e' sul pannello: ora, a GdAHome acceso, va su
+     * Home Assistant per conto suo. */
+    this._portaLaCopia(pannello);
     if (esito.avviso) {
       /* GdAHome OS e' a posto: i passi sono fatti, tranne l'abbinamento,
        * che dice cosa succede adesso. */
@@ -684,6 +701,58 @@ export class Pannelli {
       const l = this.lavori.get(pannello.id);
       if (l && l.finito && !l.errore) this.lavori.delete(pannello.id);
     }, 8000).unref?.();
+  }
+
+  /* La copia di sicurezza fotografata sul pannello (`copiaDaPortare`) va su
+   * Home Assistant in sottofondo: chi installa non la aspetta. La console ne
+   * vede l'avanzamento (`viaggio`). Se il pannello si riavvia o si spegne a
+   * meta', si riprova fra qualche minuto, e poi a ogni giro. Una sola per
+   * pannello alla volta. */
+  _portaLaCopia(pannello, { riprova = 10 * 60_000 } = {}) {
+    if (!pannello?.copiaDaPortare || typeof this.installatore.portaLaCopia !== "function")
+      return null;
+    this._inViaggio ??= new Map();
+    const gia = this._inViaggio.get(pannello.id);
+    if (gia) return gia.lavoro;
+    const viaggio = { percento: 0, detto: "", errore: "" };
+    const lavoro = this.installatore
+      .portaLaCopia({
+        indirizzo: pannello.indirizzo,
+        nome: pannello.nome || pannello.indirizzo,
+        foto: pannello.copiaDaPortare,
+        avanti: (detto, percento) => {
+          viaggio.detto = detto || "";
+          if (percento != null) viaggio.percento = percento;
+        },
+      })
+      .catch((e) => ({ errore: messaggioDi(e) }))
+      .then((esito) => {
+        if (esito.dir) {
+          pannello.copia = esito.dir;
+          delete pannello.copiaDaPortare;
+          delete pannello.copiaNonArrivata;
+        } else if (esito.persa) {
+          delete pannello.copiaDaPortare;
+          pannello.copiaNonArrivata = esito.errore;
+        } else {
+          pannello.copiaNonArrivata = esito.errore || "non arrivata";
+        }
+        this._salva();
+        return esito;
+      })
+      .finally(() => {
+        this._inViaggio.delete(pannello.id);
+        /* Non arrivata: si riprova presto, poche volte; poi ci pensa il giro. */
+        if (pannello.copiaDaPortare && riprova) {
+          this._riprove ??= new Map();
+          const volte = (this._riprove.get(pannello.id) || 0) + 1;
+          this._riprove.set(pannello.id, volte);
+          if (volte <= 6)
+            setTimeout(() => this._portaLaCopia(pannello, { riprova }), riprova).unref?.();
+        }
+      });
+    this._inViaggio.set(pannello.id, { viaggio, lavoro });
+    return lavoro;
   }
 
   _nomeDellaPlancia(id) {
@@ -806,12 +875,21 @@ export class Pannelli {
     let controllati = 0;
     let aggiornati = 0;
     for (const pannello of this.archivio.dati.pannelli) {
-      if (pannello.stato !== "pronto" || this.lavori.has(pannello.id)) continue;
+      if (pannello.stato !== "pronto" || this.lavori.has(pannello.id)) {
+        /* Anche un'installazione andata male puo' aver lasciato la copia. */
+        if (pannello.copiaDaPortare && !this.lavori.has(pannello.id)) this._portaLaCopia(pannello);
+        continue;
+      }
       const prova = await this.adb.provaCollegamento(pannello.indirizzo).catch(() => null);
       pannello.acceso = Boolean(prova?.ok);
       if (!prova?.ok) continue;
       controllati += 1;
       pannello.vistoIl = this.adesso();
+      /* Una copia di sicurezza rimasta sul pannello riparte da qui. */
+      if (pannello.copiaDaPortare) {
+        this._riprove?.delete(pannello.id);
+        this._portaLaCopia(pannello);
+      }
       const sul = await this.installatore.versioniSulPannello(pannello.indirizzo);
       pannello.versioni = sul;
       if (sul.os?.nome) pannello.os = sul.os.nome;

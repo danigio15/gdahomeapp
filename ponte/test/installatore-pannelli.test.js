@@ -940,3 +940,117 @@ test("l'NSPanel si chiama NSPanel, non come la sua scheda", async () => {
   assert.equal(chi.famiglia, "nspanel");
   assert.equal(chi.nome, "NSPanel Pro 86");
 });
+
+/* Un pannello con posto in /data: la fotografia delle partizioni si fa li',
+ * da memoria a memoria, e la copia verso Home Assistant parte dopo. */
+function pannelloConPosto({ misura = 1000, liberi = 4 * 1024 ** 3 } = {}) {
+  const comandi = [];
+  const file = new Map();
+  return {
+    comandi,
+    file,
+    async shell(_i, c) {
+      comandi.push(c);
+      if (c.includes("by-name; do")) return "/dev/block/by-name\n";
+      if (c.startsWith("ls ")) return "boot\nsystem\nuserdata\n";
+      if (c.startsWith("blockdev")) return String(misura);
+      if (c.startsWith("df -k /data"))
+        return `/dev/x 28000000 1000000 ${Math.floor(liberi / 1024)} 4% /data`;
+      const dd = /^dd if=\S+ of=(\S+) /.exec(c);
+      if (dd) {
+        file.set(dd[1], misura);
+        return `${misura}\n`;
+      }
+      if (c.startsWith("stat -c %s")) return String(misura);
+      if (c.startsWith("md5sum")) return `${"a".repeat(32)}  x`;
+      if (c.includes("|| echo MANCA"))
+        return [...c.matchAll(/\[ -f (\S+) \]/g)].some(([, f]) => !file.has(f))
+          ? "MANCA\nFINE"
+          : "FINE";
+      return "";
+    },
+    async connetti() {
+      return true;
+    },
+  };
+}
+
+test("la copia di sicurezza si fotografa sul pannello: niente rete, si installa subito", async () => {
+  const adb = pannelloConPosto();
+  let scritte = 0;
+  const inst = new Installatore({
+    adb,
+    passoDellaBarra: 1,
+    scriviCopia: async () => {
+      scritte += 1;
+      return { byte: 1000, md5: "a".repeat(32) };
+    },
+  });
+  const detti = [];
+  const esito = await inst._fotoSulPannello("1.2.3.4", (d, p) => detti.push([d, p]));
+  assert.equal(esito.errore, undefined);
+  assert.deepEqual(esito.foto.partizioni, { system: 1000 });
+  assert.equal(esito.foto.cartella, "/data/local/tmp/gdahome-copia");
+  assert.ok(
+    adb.comandi.some((c) =>
+      c.startsWith(
+        "dd if='/dev/block/by-name/system' of=/data/local/tmp/gdahome-copia/system.img bs=4194304",
+      ),
+    ),
+  );
+  /* Niente verso Home Assistant, niente impronta adesso: quelle sono dopo. */
+  assert.equal(scritte, 0);
+  assert.ok(!adb.comandi.some((c) => c.startsWith("md5sum")));
+  assert.ok(detti.some(([d]) => /sul pannello/.test(d)));
+});
+
+test("senza posto sul pannello la fotografia non si fa, e la copia va come prima", async () => {
+  const poco = new Installatore({ adb: pannelloConPosto({ liberi: 100 * 1024 ** 2 }) });
+  assert.equal((await poco._fotoSulPannello("1.2.3.4")).nonCiSta, true);
+  /* Una fotografia che non viene intera si toglie, e lo si dice. */
+  const adb = pannelloConPosto();
+  const shell = adb.shell;
+  adb.shell = async (i, c) => (/^dd if=/.test(c) ? "400\n" : shell(i, c));
+  const rotta = await new Installatore({ adb })._fotoSulPannello("1.2.3.4");
+  assert.match(rotta.errore, /non e' completa/);
+  assert.ok(adb.comandi.includes("rm -rf /data/local/tmp/gdahome-copia"));
+});
+
+test("la fotografia va su Home Assistant dopo, dai file del pannello, e poi si toglie", async () => {
+  const copie = mkdtempSync(join(tmpdir(), "copie-"));
+  try {
+    const adb = pannelloConPosto();
+    adb.file.set("/data/local/tmp/gdahome-copia/system.img", 1000);
+    const comandi = [];
+    const inst = new Installatore({
+      adb,
+      cartellaDelleCopie: copie,
+      scriviCopia: async (_i, comando) => {
+        comandi.push(comando);
+        return { byte: 1000, md5: "a".repeat(32) };
+      },
+    });
+    const foto = {
+      cartella: "/data/local/tmp/gdahome-copia",
+      partizioni: { system: 1000 },
+      quando: "2026-11-28T05:40:00.000Z",
+    };
+    const esito = await inst.portaLaCopia({ indirizzo: "1.2.3.4", nome: "Corridoio", foto });
+    assert.equal(esito.errore, undefined);
+    assert.match(comandi[0], /dd if='\/data\/local\/tmp\/gdahome-copia\/system\.img'/);
+    assert.match(readFileSync(join(esito.dir, "MD5SUMS"), "utf8"), /a{32} {2}system\.img/);
+    assert.match(esito.dir, /Corridoio-2026-11-28_\d{4}$/);
+    assert.equal(adb.comandi.at(-1), "rm -rf /data/local/tmp/gdahome-copia");
+
+    /* Se sul pannello non c'e' piu', e' persa: non si riprova per sempre. */
+    adb.file.clear();
+    const persa = await inst.portaLaCopia({ indirizzo: "1.2.3.4", nome: "x", foto });
+    assert.equal(persa.persa, true);
+  } finally {
+    rmSync(copie, { recursive: true, force: true });
+  }
+});
+
+test("tornare a Sonoff toglie anche la fotografia rimasta sul pannello", () => {
+  assert.ok(scriptDelRipristino().includes("rm -rf /data/local/tmp/gdahome-copia"));
+});
