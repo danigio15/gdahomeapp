@@ -14,6 +14,22 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.51
+
+- **Il Wi-Fi del pannello non va più in risparmio**: col risparmio
+  energetico la radio dorme fra un segnale del router e l'altro, e quello
+  che il pannello riceve arriva a scatti (le app da installare a 0,1 MB/s,
+  mentre nell'altro verso si andava a 0,5; il ping fra 9 e 46 ms). Un
+  pannello è sempre attaccato alla corrente: l'add-on spegne il risparmio
+  prima di ogni installazione, aggiornamento e copia, e l'app del pannello
+  lo tiene spento finché gira (`LaReteSveglia`). Sul telefono no.
+- **L'analisi misura la rete nei due versi**: 3 MB verso il pannello e dal
+  pannello, prima col Wi-Fi com'è e poi col risparmio spento, e il ping coi
+  pacchetti grandi (una MTU sbagliata fra la macchina di Home Assistant e
+  la rete fa passare i piccoli e fermare i trasferimenti).
+- **«Fili al lavoro» trova anche la WebView** (prima cercandola trovava lo
+  script stesso).
+
 ## 1.19.50
 
 - **L'app del pannello pesa 26 MB invece di 103**: era costruita con tutto

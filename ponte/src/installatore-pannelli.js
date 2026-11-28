@@ -16,7 +16,7 @@
  * segreto della casa passa dalla stessa porta cifrata di sempre, non da una
  * scorciatoia.
  */
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { createGzip } from "node:zlib";
 import {
   createReadStream,
@@ -105,6 +105,16 @@ export const FOTO = "/data/local/tmp/gdahome-copia";
  * con dentro tutti e due pesava il doppio, e ogni MB e' tempo sul Wi-Fi di un
  * pannello. */
 export const MURO = "GdAHome-Muro.apk";
+
+/* Lo script che spegne il risparmio energetico del Wi-Fi (`_svegliaLaRete`):
+ * `set ps 0` a wpa_supplicant, dove ha la sua presa, e `iw` se c'e'. */
+export const SVEGLIA_LA_RETE = [
+  "for s in /data/vendor/wifi/wpa/sockets /data/misc/wifi/sockets; do",
+  '  [ -d "$s" ] && wpa_cli -p "$s" -i wlan0 set ps 0 2>/dev/null | grep -q OK && echo "risparmio Wi-Fi spento (wpa_supplicant)"',
+  "done",
+  'command -v iw >/dev/null 2>&1 && iw dev wlan0 set power_save off 2>/dev/null && echo "risparmio Wi-Fi spento (iw)"',
+  "true",
+].join("\n");
 export const MURO_ARM = "GdAHome-Muro-arm.apk";
 
 /* Le app che non si toccano MAI: senza, Android o GdAHome non funzionano.
@@ -396,6 +406,7 @@ export class Installatore {
         return { errore: "Il pannello non risponde piu'.", passoRotto: 0 };
       if ((await this.adb.root(indirizzo)) !== "0")
         return { errore: "Il pannello non e' sbloccato (root).", passoRotto: 0 };
+      await this._svegliaLaRete(indirizzo);
       const schermo = (await this._schermo(indirizzo)) || "";
       /* Un NSPanel e' un 86 o un 120; un altro display con root va per la
        * stessa strada, ma senza il nome e senza l'animazione d'avvio del
@@ -1013,6 +1024,103 @@ export class Installatore {
    * di toccare il sistema, e verso Home Assistant ci va dopo, in sottofondo
    * (`portaLaCopia`). Torna { foto }, { nonCiSta } se sul pannello non c'e'
    * posto, o { errore }. */
+  /* Il risparmio energetico del Wi-Fi, spento. Col risparmio la radio del
+   * pannello dorme fra un segnale del router e l'altro: quello che manda
+   * parte subito, quello che riceve aspetta. Sugli NSPanel (Realtek) i dati
+   * da Home Assistant arrivavano a 0,1 MB/s — un'app da installare, minuti —
+   * mentre la copia nell'altro verso andava a 0,5. Un pannello e' sempre
+   * attaccato alla corrente: il risparmio non serve. Da root, per le strade
+   * che ci sono (wpa_supplicant, `iw`); dopo l'installazione lo tiene spento
+   * l'app del pannello (`LaReteSveglia`). Dice cosa ha fatto. */
+  async _svegliaLaRete(indirizzo) {
+    const detto = await this.adb
+      .shell(indirizzo, SVEGLIA_LA_RETE, { root: true, attesa: 15_000 })
+      .catch(() => "");
+    return String(detto || "").trim();
+  }
+
+  /* Quanto corre la rete nei due versi, con 3 MB per la strada diretta:
+   * da Home Assistant al pannello (come un'app che si installa) e dal
+   * pannello a Home Assistant (come la copia di sicurezza). Prima col Wi-Fi
+   * com'e', poi col risparmio energetico spento: la differenza dice se era
+   * lui. */
+  async _misuraLaRete(indirizzo) {
+    const verso = this.indirizzoDiCasa?.() || "";
+    const nc = verso ? await this._ncDelPannello(indirizzo).catch(() => "") : "";
+    if (!verso || !nc || typeof this.adb.mandaDiretto !== "function")
+      return "non misurabile (manca nc sul pannello o l'indirizzo di casa)";
+    const misura = 3 * 1024 ** 2;
+    const dir = mkdtempSync(join(tmpdir(), "gda-rete-"));
+    const prova = join(dir, "prova.bin");
+    const ritorno = join(dir, "ritorno.bin");
+    writeFileSync(prova, randomBytes(misura));
+    const mbs = (ms) =>
+      `${(misura / 1024 ** 2 / Math.max(0.001, ms / 1000)).toFixed(2).replace(".", ",")} MB/s`;
+    const giro = async () => {
+      const righe = [];
+      let t = Date.now();
+      try {
+        await this.adb.mandaDiretto(indirizzo, prova, "/data/local/tmp/gda-rete.bin", {
+          verso,
+          nc,
+          attesa: 40_000,
+          fermo: 15_000,
+        });
+        /* Mandato non vuol dire arrivato: si guarda la misura sul pannello. */
+        let arrivato = false;
+        for (let k = 0; k < 80 && !arrivato; k += 1) {
+          const n = Number(
+            String(
+              await this.adb
+                .shell(indirizzo, "stat -c %s /data/local/tmp/gda-rete.bin 2>/dev/null", {
+                  root: true,
+                  attesa: 10_000,
+                })
+                .catch(() => ""),
+            ).trim(),
+          );
+          arrivato = n === misura;
+          if (!arrivato) await dorme(250);
+        }
+        righe.push(
+          arrivato
+            ? `verso il pannello: ${mbs(Date.now() - t)}`
+            : `verso il pannello: non arrivata intera in ${Math.round((Date.now() - t) / 1000)} s`,
+        );
+      } catch (e) {
+        righe.push(`verso il pannello: non riuscita (${e.message || e})`);
+      }
+      t = Date.now();
+      try {
+        await this.copiaDiretta(
+          indirizzo,
+          `dd if=/dev/urandom bs=65536 count=${misura / 65536} 2>/dev/null`,
+          ritorno,
+          { verso, nc, limite: misura, attesa: 40_000, fermo: 15_000 },
+        );
+        righe.push(`dal pannello: ${mbs(Date.now() - t)}`);
+      } catch (e) {
+        righe.push(`dal pannello: non riuscita (${e.message || e})`);
+      }
+      return righe.join(" · ");
+    };
+    try {
+      const prima = await giro();
+      const sveglia = await this._svegliaLaRete(indirizzo);
+      const dopo = await giro();
+      return [
+        `Wi-Fi com'era: ${prima}`,
+        sveglia ? sveglia : "risparmio Wi-Fi: nessun comando per spegnerlo su questo pannello",
+        `Wi-Fi sveglio: ${dopo}`,
+      ].join("\n");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+      await this.adb
+        .shell(indirizzo, "rm -f /data/local/tmp/gda-rete.bin", { root: true })
+        .catch(() => {});
+    }
+  }
+
   /* La fotografia di un tentativo di prima e' ancora sul pannello, intera? */
   async _fotoCe(indirizzo, foto) {
     const nomi = Object.keys(foto?.partizioni || {});
@@ -1126,6 +1234,7 @@ export class Installatore {
   async portaLaCopia({ indirizzo, nome, foto, avanti = () => {} }) {
     try {
       if (!(await this.adb.connetti(indirizzo))) return { errore: "Il pannello non risponde." };
+      await this._svegliaLaRete(indirizzo);
       const ci = String(
         await this.adb
           .shell(
@@ -1754,6 +1863,7 @@ export class Installatore {
   async aggiorna({ indirizzo, avanti = () => {}, abbina = null, percorso = "completo" }) {
     try {
       if (!(await this.adb.connetti(indirizzo))) return { errore: "Il pannello non risponde." };
+      await this._svegliaLaRete(indirizzo);
       const prima = await this.versioniSulPannello(indirizzo);
       const quali = this.daAggiornare(prima);
       /* Ogni passo con la sua barra: «App GdAHome Muro» ferma su un cerchio
@@ -2077,8 +2187,17 @@ export class Installatore {
      * luce che tarda puo' essere la rete (Wi-Fi debole, pacchetti persi) o il
      * pannello. Il ping lo separa. */
     const casa = this.indirizzoDiCasa?.() || "";
-    if (casa)
-      await chiedi("Rete verso Home Assistant", `ping -c 5 -i 0.3 -W 1 ${casa} | tail -n 3`, false);
+    if (casa) {
+      /* Anche coi pacchetti grandi: se quelli si perdono (una MTU sbagliata
+       * fra la macchina di Home Assistant e la rete), i piccoli passano e i
+       * trasferimenti verso il pannello si fermano. */
+      await chiedi(
+        "Rete verso Home Assistant",
+        `ping -c 5 -i 0.3 -W 1 ${casa} | tail -n 2; echo "-- pacchetti grandi (1500 byte):"; ping -c 5 -i 0.3 -W 1 -s 1472 ${casa} | tail -n 2`,
+        false,
+      );
+      righe.push(`== Velocita' della rete ==\n${await this._misuraLaRete(indirizzo)}`);
+    }
     await chiedi(
       "Abbinamento",
       `ls -la /data/data/${pkg}/files/ 2>/dev/null; cat /data/data/${pkg}/files/${ESITO} 2>/dev/null`,
@@ -2136,7 +2255,8 @@ export class Installatore {
  * nucleo, i piu' occupati in cima. Dai tempi di /proc (utime+stime, in
  * centesimi di secondo), letti due volte. */
 export function filiAlLavoro(pkg, secondi = 8) {
-  const pid = `$(pidof ${pkg}) $(pgrep -f sandboxed_process 2>/dev/null)`;
+  /* La WebView per nome: `pgrep -f` trovava lo script stesso. */
+  const pid = `$(pidof ${pkg}) $(pidof com.android.webview:sandboxed_process0 com.google.android.webview:sandboxed_process0 2>/dev/null)`;
   /* Senza awk, che su Android 8 puo' mancare: i campi di /proc/…/stat dopo il
    * nome (che puo' avere spazi), con `set --`. */
   return [

@@ -15,6 +15,7 @@ import android.view.WindowManager
 import androidx.activity.enableEdgeToEdge
 import com.gdahome.gdahome.auto.IlNavigatoreInAuto
 import com.gdahome.gdahome.orologio.IlTramiteDellOrologio
+import com.gdahome.gdahome.rete.LaReteSveglia
 import com.gdahome.gdahome.salute.LaSaluteAdAppChiusa
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -65,6 +66,9 @@ class MainActivity : FlutterFragmentActivity() {
         if (IlNavigatoreInAuto.acceso(this)) IlNavigatoreInAuto.motore(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        /* Sul pannello il Wi-Fi resta sveglio (`rete/LaReteSveglia`); sul
+         * telefono non fa niente. */
+        LaReteSveglia.tieni(this)
     }
 
     override fun getCachedEngineId(): String? =
