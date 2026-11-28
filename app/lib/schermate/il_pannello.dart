@@ -204,15 +204,31 @@ class _StatoDellaSchermata extends State<SchermataDelPannello> {
         Insegna('Wi-Fi'),
         Scheda(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-          child: ListTile(
-            key: const Key('pannello-wifi'),
-            leading: const Cerchietto(icona: Icons.wifi_rounded),
-            title: Text(rete),
-            subtitle: dettagli.isEmpty ? null : Text(dettagli),
-            trailing: FilledButton.tonal(
-              onPressed: () => _canale.invokeMethod('apriWifi'),
-              child: Text(inLingua(it: 'Cambia rete', en: 'Change network')),
-            ),
+          /* Il tasto sotto la riga, non in coda: un tasto in coda a una
+           * ListTile non ha misura, e la riga andava in errore. */
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ListTile(
+                key: const Key('pannello-wifi'),
+                leading: const Cerchietto(icona: Icons.wifi_rounded),
+                title: Text(rete),
+                subtitle: dettagli.isEmpty ? null : Text(dettagli),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: FilledButton.tonalIcon(
+                    icon: const Icon(Icons.wifi_find_rounded),
+                    onPressed: () => _canale.invokeMethod('apriWifi'),
+                    label: Text(
+                      inLingua(it: 'Cambia rete', en: 'Change network'),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 8),

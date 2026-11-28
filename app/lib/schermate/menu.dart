@@ -170,10 +170,10 @@ enum Sezione {
    * (`soloSulMuro`), e sul pannello ci sono solo loro (`vociDellaBarra`).
    * Aprono tutte la stessa pagina, ognuna alla sua parte
    * (`schermate/il_pannello.dart`). */
-  wifiDelPannello('aria', pronta: true, soloSulMuro: true),
+  wifiDelPannello('presenza', pronta: true, soloSulMuro: true),
   schermoDelPannello('luci', pronta: true, soloSulMuro: true),
   suonoDelPannello('media', pronta: true, soloSulMuro: true),
-  zigbeeDelPannello('runtime', pronta: true, soloSulMuro: true),
+  zigbeeDelPannello('macchine', pronta: true, soloSulMuro: true),
   ilPannello('minipc', pronta: true, soloSulMuro: true);
 
   const Sezione(
