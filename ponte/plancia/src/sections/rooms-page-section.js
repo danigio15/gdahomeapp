@@ -2037,6 +2037,28 @@ function apriLaVoce(entity) {
     );
     if (!scheda) return false;
     scheda.scrollIntoView?.({ block: "center", behavior: "smooth" });
+    /* «Se tocco l'icona per entrare dentro (tipo la cappa), ci entro ma me
+     * l'accende pure.» Per entrare si simulava un tocco sulla scheda, e su
+     * quella di un elettrodomestico il tocco e' l'interruttore: la cappa si
+     * apriva e si accendeva. Adesso si apre il dettaglio con la sua funzione,
+     * senza toccare niente; la luce col suo tasto «apri», non con la scheda
+     * (che e' la levetta). Le altre schede, che al tocco si aprono e basta,
+     * restano come sono. */
+    const indice = Number(scheda.getAttribute?.("data-idx"));
+    if (
+      scheda.hasAttribute?.("data-appliance-id") &&
+      Number.isInteger(indice) &&
+      typeof root.apriApplianceDetail === "function"
+    ) {
+      root.apriApplianceDetail(indice);
+      return true;
+    }
+    const apri = scheda.querySelector?.("[data-dm-lucip-open]");
+    if (apri) {
+      apri.click?.();
+      return true;
+    }
+    if (scheda.hasAttribute?.("data-dm-lucip")) return true;
     scheda.click?.();
     return true;
   };

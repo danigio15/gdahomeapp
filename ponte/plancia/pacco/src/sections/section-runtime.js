@@ -411,7 +411,7 @@ import {
   volumeDopoIlPasso,
   waitForHostedBridge,
   wattsFromState
-} from "../../chunk-PRLZNAM2.js";
+} from "../../chunk-VJX7NOJN.js";
 import {
   MODELLO_MASSIMO,
   TRIANGOLI_DA_AVVISO,
@@ -92277,6 +92277,17 @@ function apriLaVoce(entity2) {
     );
     if (!scheda9) return false;
     scheda9.scrollIntoView?.({ block: "center", behavior: "smooth" });
+    const indice = Number(scheda9.getAttribute?.("data-idx"));
+    if (scheda9.hasAttribute?.("data-appliance-id") && Number.isInteger(indice) && typeof root.apriApplianceDetail === "function") {
+      root.apriApplianceDetail(indice);
+      return true;
+    }
+    const apri9 = scheda9.querySelector?.("[data-dm-lucip-open]");
+    if (apri9) {
+      apri9.click?.();
+      return true;
+    }
+    if (scheda9.hasAttribute?.("data-dm-lucip")) return true;
     scheda9.click?.();
     return true;
   };
