@@ -173,8 +173,8 @@ enum Sezione {
   wifiDelPannello('presenza', pronta: true, soloSulMuro: true),
   schermoDelPannello('luci', pronta: true, soloSulMuro: true),
   suonoDelPannello('media', pronta: true, soloSulMuro: true),
-  zigbeeDelPannello('macchine', pronta: true, soloSulMuro: true),
-  ilPannello('minipc', pronta: true, soloSulMuro: true);
+  zigbeeDelPannello('azioni', pronta: true, soloSulMuro: true),
+  ilPannello('todo', pronta: true, soloSulMuro: true);
 
   const Sezione(
     this.disegno, {
