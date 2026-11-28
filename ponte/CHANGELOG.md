@@ -20,6 +20,9 @@ aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
   dura un paio di minuti, e la richiesta della console tenuta aperta tanto
   cadeva per strada («Failed to fetch»). Ora parte in sottofondo, e la
   console chiede a che punto è ogni tre secondi, coi secondi passati.
+- **«Fili al lavoro» trova davvero la WebView**: il suo processo ha un nome
+  lungo (`com.android.webview:sandboxed_process0:…`), e la ricerca per nome
+  esatto non lo trovava.
 
 ## 1.19.51
 

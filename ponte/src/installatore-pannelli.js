@@ -2266,8 +2266,10 @@ export class Installatore {
  * nucleo, i piu' occupati in cima. Dai tempi di /proc (utime+stime, in
  * centesimi di secondo), letti due volte. */
 export function filiAlLavoro(pkg, secondi = 8) {
-  /* La WebView per nome: `pgrep -f` trovava lo script stesso. */
-  const pid = `$(pidof ${pkg}) $(pidof com.android.webview:sandboxed_process0 com.google.android.webview:sandboxed_process0 2>/dev/null)`;
+  /* La WebView: il suo processo si chiama «com.android.webview:sandboxed_process0:…»
+   * (col nome del servizio dopo), e `pidof` vuole il nome esatto. Si cerca in
+   * /proc; la parentesi quadra fa si' che lo script non trovi se stesso. */
+  const pid = `$(pidof ${pkg}) $(for d in /proc/[0-9]*; do case "$(tr '\\0' ' ' < $d/cmdline 2>/dev/null)" in *webview:sandbox[e]*) echo \${d#/proc/};; esac; done)`;
   /* Senza awk, che su Android 8 puo' mancare: i campi di /proc/…/stat dopo il
    * nome (che puo' avere spazi), con `set --`. */
   return [
