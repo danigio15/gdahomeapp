@@ -921,3 +921,47 @@ test("la copia fotografata sul pannello va su Home Assistant dopo, in sottofondo
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("un lavoro sul pannello mette in pausa la copia in viaggio, che riparte dopo", async () => {
+  const dir = cartella();
+  try {
+    const foto = { cartella: "/data/local/tmp/gdahome-copia", partizioni: { system: 1000 } };
+    const inst = installatoreFinto();
+    const fermate = [];
+    let viaggi = 0;
+    const sblocchi = [];
+    inst.fermaLaCopia = async (ind) => {
+      fermate.push(ind);
+      sblocchi.shift()?.({ errore: "nessun dato" });
+    };
+    inst.portaLaCopia = () => {
+      viaggi += 1;
+      return new Promise((r) => sblocchi.push(r));
+    };
+    const pannelli = new Pannelli({ cartella: dir, installatore: inst, licenze: premium });
+    pannelli.archivio.dati.pannelli.push({
+      id: "pm_c",
+      indirizzo: "192.168.1.120",
+      stato: "errore",
+      copiaDaPortare: foto,
+    });
+    const pannello = pannelli._trova("pm_c");
+    pannelli._portaLaCopia(pannello, { riprova: 0, attesa: 5 });
+    assert.equal(viaggi, 1);
+    /* Parte un lavoro: la copia si ferma, e non riparte finche' dura. */
+    const passi = pannelli._lavoro("pm_c", "Installazione…", ["Verifica"]);
+    assert.deepEqual(fermate, ["192.168.1.120"]);
+    await new Promise((r) => setTimeout(r, 30));
+    assert.equal(viaggi, 1);
+    assert.equal(pannello.copiaNonArrivata, undefined);
+    /* Finito il lavoro, riparte da sola. */
+    passi.finito();
+    await new Promise((r) => setTimeout(r, 30));
+    assert.equal(viaggi, 2);
+    sblocchi.shift()?.({ dir: "/share/gdahome-os/x" });
+    await new Promise((r) => setTimeout(r, 5));
+    assert.equal(pannello.copia, "/share/gdahome-os/x");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

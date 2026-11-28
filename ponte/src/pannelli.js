@@ -550,6 +550,11 @@ export class Pannelli {
       iniziatoIl: this.adesso(),
     };
     this.lavori.set(id, lavoro);
+    /* Un lavoro sul pannello ha la precedenza sulla copia di sicurezza che
+     * viaggia in sottofondo: sul Wi-Fi lento dell'86 si dividevano la linea,
+     * e l'app da installare andava a 0,1 MB/s. La copia si ferma, e riparte
+     * da sola a lavoro finito. */
+    this._mettiInPausaLaCopia(id);
     return {
       /* Segna il passo `i` «in corso», con un eventuale dettaglio e percento. */
       passo: (i, dettaglio, percento) => {
@@ -687,9 +692,6 @@ export class Pannelli {
     pannello.avviso = esito.avviso || "";
     if (esito.avviso) pannello.aggiornabile = true;
     this._salva();
-    /* La copia di sicurezza e' sul pannello: ora, a GdAHome acceso, va su
-     * Home Assistant per conto suo. */
-    this._portaLaCopia(pannello);
     if (esito.avviso) {
       /* GdAHome OS e' a posto: i passi sono fatti, tranne l'abbinamento,
        * che dice cosa succede adesso. */
@@ -697,9 +699,14 @@ export class Pannelli {
       passi.oggetto.passi.forEach((p) => (p.stato = "fatto"));
       if (passi.oggetto.passi[rotto])
         passi.oggetto.passi[rotto].dettaglio = "non e' entrato nella casa: riprovo da solo";
-      return void passi.male(rotto, esito.avviso);
+      passi.male(rotto, esito.avviso);
+      this._portaLaCopia(pannello);
+      return;
     }
     passi.finito();
+    /* La copia di sicurezza e' sul pannello: ora, a GdAHome acceso, va su
+     * Home Assistant per conto suo. */
+    this._portaLaCopia(pannello);
     /* Il lavoro finito resta un attimo a schermo, poi sparisce dal prossimo
      * elenco: la riga torna quella normale, accesa. */
     setTimeout(() => {
@@ -713,12 +720,32 @@ export class Pannelli {
    * vede l'avanzamento (`viaggio`). Se il pannello si riavvia o si spegne a
    * meta', si riprova fra qualche minuto, e poi a ogni giro. Una sola per
    * pannello alla volta. */
-  _portaLaCopia(pannello, { riprova = 10 * 60_000 } = {}) {
+  _mettiInPausaLaCopia(id) {
+    if (!this._inViaggio?.has(id)) return;
+    const pannello = this._trova(id);
+    this._inPausa ??= new Set();
+    this._inPausa.add(id);
+    if (pannello && typeof this.installatore.fermaLaCopia === "function")
+      this.installatore.fermaLaCopia(pannello.indirizzo).catch(() => {});
+  }
+
+  _alLavoro(id) {
+    const l = this.lavori.get(id);
+    return Boolean(l && !l.finito);
+  }
+
+  _portaLaCopia(pannello, { riprova = 10 * 60_000, attesa = 60_000 } = {}) {
     if (!pannello?.copiaDaPortare || typeof this.installatore.portaLaCopia !== "function")
       return null;
     this._inViaggio ??= new Map();
     const gia = this._inViaggio.get(pannello.id);
     if (gia) return gia.lavoro;
+    /* Mentre sul pannello si lavora, la copia aspetta il suo turno. */
+    if (this._alLavoro(pannello.id)) {
+      if (attesa)
+        setTimeout(() => this._portaLaCopia(pannello, { riprova, attesa }), attesa).unref?.();
+      return null;
+    }
     const viaggio = { percento: 0, detto: "", errore: "" };
     const lavoro = this.installatore
       .portaLaCopia({
@@ -747,6 +774,16 @@ export class Pannelli {
       })
       .finally(() => {
         this._inViaggio.delete(pannello.id);
+        /* Fermata per far posto a un lavoro: riparte quando quello finisce,
+         * senza contare come un tentativo andato male. */
+        if (this._inPausa?.delete(pannello.id)) {
+          if (pannello.copiaDaPortare) {
+            delete pannello.copiaNonArrivata;
+            this._salva();
+            this._portaLaCopia(pannello, { riprova, attesa });
+          }
+          return;
+        }
         /* Non arrivata: si riprova presto, poche volte; poi ci pensa il giro. */
         if (pannello.copiaDaPortare && riprova) {
           this._riprove ??= new Map();

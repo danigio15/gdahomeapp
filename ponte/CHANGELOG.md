@@ -14,6 +14,17 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.49
+
+- **La copia in sottofondo lascia la linea all'installazione**: sull'86,
+  dopo l'aggiornamento dell'add-on, la copia di sicurezza ripartiva verso
+  Home Assistant mentre si installava, e l'app GdAHome Muro arrivava a
+  0,1 MB/s. Ora un lavoro sul pannello (installazione, aggiornamento,
+  ritorno a Sonoff) mette in pausa la copia, che riparte da sola a lavoro
+  finito, senza contarlo come un tentativo andato male.
+- **Una copia a metà non resta in «gdahome-os»**: se non arriva intera, la
+  sua cartella su Home Assistant si toglie.
+
 ## 1.19.48
 
 - **Un pannello in errore si riprova**: dopo un'installazione andata male
