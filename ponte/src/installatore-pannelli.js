@@ -96,6 +96,9 @@ export function nomeDelModello({ produttore = "", marca = "", modello = "" } = {
 }
 
 export const DA_SALVARE = /^(system|oem)(_[ab])?$/i;
+/* Dove sta, sul pannello, la fotografia delle partizioni prima che arrivi a
+ * Home Assistant (`_fotoSulPannello`). */
+export const FOTO = "/data/local/tmp/gdahome-copia";
 
 /* Le app che non si toccano MAI: senza, Android o GdAHome non funzionano.
  * Lo stesso elenco di `gdahome-os.sh` (KEEP_RE), gia' provato sui pannelli. */
@@ -276,6 +279,7 @@ export function scriptDelRipristino() {
     "fi",
     "rm -rf /system/app/GdAHomeOS /system/bin/gdaserial /system/etc/init/gdahome.rc",
     "rm -f /data/local/tmp/webview-command-line",
+    `rm -rf ${FOTO}`,
     ...CHIUDI_IN_SCRITTURA,
     '[ -f $D/manifest.txt ] && while read -r pkg; do [ -f $D/$pkg.apk ] && pm install -r $D/$pkg.apk >/dev/null 2>&1 && echo "RIMESSA $pkg"; done < $D/manifest.txt',
     "rm -rf $D",
@@ -369,19 +373,30 @@ export class Installatore {
         dettaglio: `NSPanel Pro ${modello || "?"} · Android ${android} · root ok`,
       });
 
-      // 2. Copia di sicurezza
+      // 2. Copia di sicurezza: prima la fotografia sul pannello, che e'
+      // svelta; se non c'e' posto, la copia di sempre verso Home Assistant.
       avanti({ passo: 1, dettaglio: "Leggo le partizioni…" });
-      const copia = await this._copiaDiSicurezza(
-        indirizzo,
-        nome || indirizzo,
-        (fatte, tutte, quale, percento) =>
-          avanti({
-            passo: 1,
-            dettaglio: quale ? `${quale} (${fatte + 1}/${tutte})` : `fatta: ${tutte} partizioni`,
-            percento: percento ?? Math.round((fatte / tutte) * 100),
-          }),
+      const foto = await this._fotoSulPannello(indirizzo, (dettaglio, percento) =>
+        avanti({ passo: 1, dettaglio, percento }),
       );
+      const copia = foto.foto
+        ? { foto: foto.foto }
+        : await this._copiaDiSicurezza(
+            indirizzo,
+            nome || indirizzo,
+            (fatte, tutte, quale, percento) =>
+              avanti({
+                passo: 1,
+                dettaglio: quale
+                  ? `${quale} (${fatte + 1}/${tutte})`
+                  : `fatta: ${tutte} partizioni`,
+                percento: percento ?? Math.round((fatte / tutte) * 100),
+              }),
+          );
       if (copia.errore) return { errore: copia.errore, passoRotto: 1 };
+      /* La fotografia sul pannello va su Home Assistant dopo, in sottofondo:
+       * lo dice ogni uscita da qui in poi, anche un errore. */
+      const daPortare = copia.foto ? { copiaDaPortare: copia.foto } : {};
 
       /* Ogni passo dice la fase in cui e', con la sua barra: «Installazione»
        * ferma su «Copio i file sul pannello…» non diceva se andava avanti. */
@@ -389,12 +404,12 @@ export class Installatore {
 
       // 3. Installazione
       const inst = await this._installaOs(indirizzo, modello, osApk, muroApk, fase(2));
-      if (inst.errore) return { errore: inst.errore, passoRotto: 2 };
+      if (inst.errore) return { errore: inst.errore, passoRotto: 2, ...daPortare };
       fase(2)(`Fatto: tolte ${inst.tolte ?? 0} app Sonoff e superflue`, 100);
 
       // 4. Abbinamento
       const abb = await this._abbina(indirizzo, { nome, utente, planciaId }, fase(3));
-      if (abb.errore) return { errore: abb.errore, passoRotto: 3 };
+      if (abb.errore) return { errore: abb.errore, passoRotto: 3, ...daPortare };
       fase(3)("Fatto: il foglietto e' sul pannello, entra nella casa al riavvio", 100);
 
       // 5. Riavvio, e GdAHome OS che parte davvero
@@ -404,7 +419,7 @@ export class Installatore {
         ...this.attesaDelRiavvio,
         dice: fase(4),
       });
-      if (dopo.errore) return { errore: dopo.errore, passoRotto: 4 };
+      if (dopo.errore) return { errore: dopo.errore, passoRotto: 4, ...daPortare };
 
       /* E il pannello e' entrato davvero nella casa? GdAHome OS ha aperto
        * GdAHome Muro, che legge il foglietto e si collega. Se non succede, il
@@ -431,6 +446,7 @@ export class Installatore {
         modello,
         schermo,
         dispositivo: abb.dispositivo,
+        ...daPortare,
       };
     } catch (errore) {
       return { errore: scusa(errore) };
@@ -765,15 +781,9 @@ export class Installatore {
     return m ? `${m[1]}x${m[2]}` : "";
   }
 
-  /* La copia di sicurezza: ogni partizione del pannello (tranne i dati
-   * dell'utente e la cache) in /share/gdahome-os/<pannello>-<data>/, nella
-   * cartella condivisa di Home Assistant, dove chi ci abita la vede e la puo'
-   * portare via. Ogni partizione arriva in streaming (`copiaInFile`), e vale
-   * solo se byte e md5 tornano con quelli letti sul pannello. Prima di
-   * cominciare si guarda che su Home Assistant ci sia posto. */
-  async _copiaDiSicurezza(indirizzo, nome, avanti) {
-    /* Una copia nuova riprova la diretta, anche se l'ultima volta non e' andata. */
-    this._senzaDiretta?.delete(indirizzo);
+  /* Le partizioni da salvare (`DA_SALVARE`) e quanto pesano: { byName, nomi,
+   * misure, totale } o { errore }. */
+  async _lePartizioni(indirizzo) {
     let byName = "";
     try {
       byName = (
@@ -818,9 +828,36 @@ export class Installatore {
       misure[p] = Number.isFinite(n) && n > 0 ? n : 0;
       totale += misure[p];
     }
+    return { byName, nomi, misure, totale };
+  }
+
+  /* La copia di sicurezza: ogni partizione del pannello (tranne i dati
+   * dell'utente e la cache) in /share/gdahome-os/<pannello>-<data>/, nella
+   * cartella condivisa di Home Assistant, dove chi ci abita la vede e la puo'
+   * portare via. Ogni partizione arriva in streaming (`copiaInFile`), e vale
+   * solo se byte e md5 tornano con quelli letti sul pannello. Prima di
+   * cominciare si guarda che su Home Assistant ci sia posto.
+   *
+   * Con `foto` la copia parte dai file che `_fotoSulPannello` ha gia' fatto
+   * sul pannello (`<cartella>/<partizione>.img`), non dalle partizioni: e'
+   * il viaggio in sottofondo, a GdAHome OS gia' installato. */
+  async _copiaDiSicurezza(indirizzo, nome, avanti, { foto = null } = {}) {
+    /* Una copia nuova riprova la diretta, anche se l'ultima volta non e' andata. */
+    this._senzaDiretta?.delete(indirizzo);
+    const parti = foto
+      ? {
+          nomi: Object.keys(foto.partizioni || {}),
+          misure: { ...foto.partizioni },
+          totale: Object.values(foto.partizioni || {}).reduce((a, b) => a + (Number(b) || 0), 0),
+        }
+      : await this._lePartizioni(indirizzo);
+    if (parti.errore) return parti;
+    const { byName, nomi, misure, totale } = parti;
+    if (!nomi.length) return { errore: "La copia sul pannello non dice quali partizioni ha." };
+    const quando = foto?.quando ? new Date(foto.quando) : new Date();
 
     /* Il posto su Home Assistant, con un margine. */
-    const dir = join(this.copie, `${cartellaSicura(nome)}-${dataPerCartella(new Date())}`);
+    const dir = join(this.copie, `${cartellaSicura(nome)}-${dataPerCartella(quando)}`);
     try {
       mkdirSync(dir, { recursive: true });
     } catch (errore) {
@@ -851,7 +888,7 @@ export class Installatore {
         percento(0),
       );
       try {
-        const sorgente = scappa(`${byName}/${p}`);
+        const sorgente = scappa(foto ? `${foto.cartella}/${p}.img` : `${byName}/${p}`);
         /* L'impronta sul pannello: la copia deve tornare con questa. */
         const atteso = String(
           await this.adb.shell(indirizzo, `md5sum ${sorgente}`, {
@@ -896,10 +933,115 @@ export class Installatore {
     writeFileSync(join(dir, "MD5SUMS"), `${righe.join("\n")}\n`);
     writeFileSync(
       join(dir, "info.json"),
-      `${JSON.stringify({ pannello: nome, indirizzo, quando: new Date().toISOString(), partizioni: misure, compressa: "gzip" }, null, 2)}\n`,
+      `${JSON.stringify({ pannello: nome, indirizzo, quando: quando.toISOString(), partizioni: misure, compressa: "gzip" }, null, 2)}\n`,
     );
     avanti(nomi.length, nomi.length, "");
     return { dir };
+  }
+
+  /* La fotografia sul pannello: le partizioni da salvare copiate in file su
+   * /data del pannello stesso, da memoria a memoria. Ci mette un minuto o
+   * due, contro la mezz'ora del Wi-Fi di un pannello lento (l'86 fa 0,5
+   * MB/s): chi installa non aspetta la rete. Il paracadute c'e' gia' prima
+   * di toccare il sistema, e verso Home Assistant ci va dopo, in sottofondo
+   * (`portaLaCopia`). Torna { foto }, { nonCiSta } se sul pannello non c'e'
+   * posto, o { errore }. */
+  async _fotoSulPannello(indirizzo, avanti = () => {}) {
+    const parti = await this._lePartizioni(indirizzo);
+    if (parti.errore) return parti;
+    const { byName, nomi, misure, totale } = parti;
+    if (!totale || nomi.some((p) => !misure[p])) return { nonCiSta: true };
+    const liberi = await this._liberiSulPannello(indirizzo);
+    if (liberi == null || liberi < totale + 300 * 1024 ** 2) return { nonCiSta: true, liberi };
+    const cartella = FOTO;
+    await this.adb.shell(indirizzo, `rm -rf ${cartella}; mkdir -p ${cartella}`, { root: true });
+    const partito = Date.now();
+    let fatti = 0;
+    for (let i = 0; i < nomi.length; i += 1) {
+      const p = nomi[i];
+      const file = `${cartella}/${p}.img`;
+      const dice = (byte) => {
+        const secondi = Math.max(1, (Date.now() - partito) / 1000);
+        const alSecondo = (fatti + byte) / secondi;
+        const restano = Math.max(0, totale - fatti - byte);
+        const s = alSecondo > 0 ? Math.ceil(restano / alSecondo) : 0;
+        const manca = s > 0 ? ` · ${s < 90 ? `~${s} s` : `~${Math.ceil(s / 60)} min`}` : "";
+        avanti(
+          `${p} · ${mostraByte(byte)} di ${mostraByte(misure[p])} sul pannello${manca} (${i + 1}/${nomi.length})`,
+          Math.round(((fatti + byte) / totale) * 100),
+        );
+      };
+      dice(0);
+      let fermo = false;
+      const guarda = (async () => {
+        while (!fermo) {
+          await dorme(this.passoDellaBarra);
+          if (fermo) break;
+          const n = Number(
+            String(
+              await this.adb
+                .shell(indirizzo, `stat -c %s ${file} 2>/dev/null`, { root: true })
+                .catch(() => ""),
+            ).trim(),
+          );
+          if (!fermo && Number.isFinite(n) && n > 0) dice(Math.min(n, misure[p]));
+        }
+      })();
+      let misurato = NaN;
+      try {
+        const detto = await this.adb.shell(
+          indirizzo,
+          `dd if=${scappa(`${byName}/${p}`)} of=${file} bs=4194304 2>/dev/null; sync; stat -c %s ${file} 2>/dev/null`,
+          { root: true, attesa: 20 * 60_000 },
+        );
+        misurato = Number(String(detto).trim().split(/\s+/).pop());
+      } catch (_e) {
+        /* Si vede qui sotto: la misura non torna. */
+      } finally {
+        fermo = true;
+        await guarda;
+      }
+      if (misurato !== misure[p]) {
+        await this.adb.shell(indirizzo, `rm -rf ${cartella}`, { root: true }).catch(() => {});
+        return { errore: `la copia di ${p} sul pannello non e' completa.` };
+      }
+      fatti += misure[p];
+    }
+    return { foto: { cartella, partizioni: misure, quando: new Date().toISOString() } };
+  }
+
+  /* Il viaggio in sottofondo: la fotografia sul pannello va su Home
+   * Assistant (compressa, con le sue impronte, come la copia di sempre), e
+   * poi si toglie dal pannello. `avanti(detto, percento)`. Torna { dir }, o
+   * { errore } — con `persa` se sul pannello la fotografia non c'e' piu'. */
+  async portaLaCopia({ indirizzo, nome, foto, avanti = () => {} }) {
+    try {
+      if (!(await this.adb.connetti(indirizzo))) return { errore: "Il pannello non risponde." };
+      const ci = String(
+        await this.adb
+          .shell(
+            indirizzo,
+            Object.keys(foto.partizioni || {})
+              .map((p) => `[ -f ${foto.cartella}/${p}.img ] || echo MANCA`)
+              .join("; ") + "; echo FINE",
+            { root: true },
+          )
+          .catch(() => ""),
+      );
+      if (!/FINE/.test(ci)) return { errore: "Il pannello non risponde." };
+      if (/MANCA/.test(ci)) return { errore: "La copia sul pannello non c'e' piu'.", persa: true };
+      const copia = await this._copiaDiSicurezza(
+        indirizzo,
+        nome || indirizzo,
+        (_fatte, _tutte, quale, percento) => avanti(quale, percento),
+        { foto },
+      );
+      if (copia.errore) return copia;
+      await this.adb.shell(indirizzo, `rm -rf ${foto.cartella}`, { root: true }).catch(() => {});
+      return { dir: copia.dir };
+    } catch (errore) {
+      return { errore: scusa(errore) };
+    }
   }
 
   /* Una partizione, con le sue prove. Prima in streaming, due volte: dopo i

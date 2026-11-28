@@ -860,3 +860,55 @@ test("verifica di un display senza root: niente root richiesto, copia del softwa
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("la copia fotografata sul pannello va su Home Assistant dopo, in sottofondo, con la sua barra", async () => {
+  const dir = cartella();
+  try {
+    const foto = { cartella: "/data/local/tmp/gdahome-copia", partizioni: { system: 1000 } };
+    const inst = installatoreFinto({
+      installa: { os: "2.0.0", app: "1.19.47", modello: "86", copiaDaPortare: foto },
+    });
+    let lascia;
+    const arrivata = new Promise((r) => (lascia = r));
+    const viaggi = [];
+    inst.portaLaCopia = async ({ foto: f, avanti }) => {
+      viaggi.push(f);
+      avanti("system · 500 B di 1000 B", 50);
+      await arrivata;
+      return { dir: "/share/gdahome-os/Corridoio-2026-11-28_0540" };
+    };
+    inst.versioniDeiPezzi = () => ({});
+    inst.versioniSulPannello = async () => ({});
+    inst.daAggiornare = () => [];
+    const pannelli = new Pannelli({
+      cartella: dir,
+      installatore: inst,
+      licenze: premium,
+      adb: adbFinto(),
+    });
+    const { id } = await pannelli.installa({ indirizzo: "192.168.1.120", nome: "Corridoio" });
+    await finoAllaFine(pannelli, id);
+    /* L'installazione e' finita, la copia viaggia: la console la vede. */
+    const durante = (await pannelli.elenco()).pannelli.find((p) => p.id === id);
+    assert.equal(durante.stato, "pronto");
+    assert.deepEqual(durante.viaggio, {
+      percento: 50,
+      detto: "system · 500 B di 1000 B",
+      errore: "",
+    });
+    assert.deepEqual(durante.copiaDaPortare, foto);
+    /* Il giro non ne fa partire una seconda mentre la prima e' in viaggio. */
+    pannelli.lavori.delete(id);
+    const giro = await pannelli.controllaGliAggiornamenti({ installaDaSolo: false });
+    assert.equal(giro.controllati, 1);
+    assert.equal(viaggi.length, 1);
+    lascia();
+    await pannelli._inViaggio.get(id)?.lavoro;
+    const dopo = (await pannelli.elenco()).pannelli.find((p) => p.id === id);
+    assert.equal(dopo.viaggio, null);
+    assert.equal(dopo.copiaDaPortare, undefined);
+    assert.equal(dopo.copia, "/share/gdahome-os/Corridoio-2026-11-28_0540");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

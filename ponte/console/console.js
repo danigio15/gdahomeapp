@@ -1732,7 +1732,12 @@
         var alLavoro = (detti.pannelli || []).some(function (uno) {
           return uno.lavoro && !uno.lavoro.finito;
         });
+        /* La copia di sicurezza che viaggia in sottofondo ha la sua barra. */
+        var inViaggio = (detti.pannelli || []).some(function (uno) {
+          return uno.viaggio;
+        });
         if (alLavoro) giroDeiPannelli = setTimeout(aggiornaIPannelli, 2000);
+        else if (inViaggio) giroDeiPannelli = setTimeout(aggiornaIPannelli, 4000);
       })
       .catch(function (errore) {
         avvisa("avviso-pannelli", errore.message);
@@ -1744,6 +1749,27 @@
     if (!dove) return;
     dove.textContent = parole || "";
     dove.hidden = !parole;
+  }
+
+  /* La copia di sicurezza che va dal pannello a Home Assistant, a GdAHome
+   * gia' acceso: una riga e la sua barra. */
+  function ilViaggio(viaggio) {
+    var tutto = vediPagina.createElement("div");
+    tutto.className = "viaggio";
+    var testo = vediPagina.createElement("small");
+    testo.textContent =
+      due(
+        "Copia di sicurezza verso Home Assistant, in sottofondo",
+        "Backup copying to Home Assistant, in the background",
+      ) + (viaggio.detto ? ": " + viaggio.detto : "…");
+    tutto.appendChild(testo);
+    var barra = vediPagina.createElement("div");
+    barra.className = "barra";
+    var pieno = vediPagina.createElement("span");
+    pieno.style.width = Math.max(0, Math.min(100, Number(viaggio.percento) || 0)) + "%";
+    barra.appendChild(pieno);
+    tutto.appendChild(barra);
+    return tutto;
   }
 
   /* I passi di un lavoro: spuntati, quello in corso, quelli dopo. */
@@ -1951,6 +1977,7 @@
       sotto.appendChild(vediPagina.createTextNode(" · " + resto.join(" · ")));
       nome.appendChild(sotto);
       if (alLavoro) nome.appendChild(iPassi(uno.lavoro));
+      else if (uno.viaggio) nome.appendChild(ilViaggio(uno.viaggio));
       riga.appendChild(nome);
 
       var tasti = vediPagina.createElement("div");
