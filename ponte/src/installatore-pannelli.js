@@ -933,16 +933,24 @@ export class Installatore {
         ? await this._ncDelPannello(indirizzo)
         : "";
     if (nc) {
+      /* Se il pannello sa comprimere, comprime lui: sul filo passa molto meno
+       * (vedi `copiaDiretta`). Senza coda di zeri: sulla connessione diretta
+       * non si perde niente per strada, e la misura la dice lo scompattato. */
+      const gz = await this._gzipDelPannello(indirizzo);
       const diretta = await this.copiaDiretta(
         indirizzo,
-        `{ dd if=${sorgente} bs=4194304; dd if=/dev/zero bs=1048576 count=1; } 2>/dev/null`,
+        gz
+          ? `dd if=${sorgente} bs=4194304 2>/dev/null | ${gz} -1`
+          : `{ dd if=${sorgente} bs=4194304; dd if=/dev/zero bs=1048576 count=1; } 2>/dev/null`,
         dove,
         {
           verso,
           nc,
           limite: misura,
-          avanzamento: avanzamento && ((b) => avanzamento(b, "diretta")),
-          comprimi: true,
+          avanzamento:
+            avanzamento && ((b) => avanzamento(b, gz ? "diretta, compressa" : "diretta")),
+          comprimi: !gz,
+          compressoDalPannello: Boolean(gz),
         },
       ).catch((e) => ({ errore: e.message || String(e), causa: e.causa }));
       if (!diretta.errore && buona(diretta)) return { md5: diretta.md5 };
@@ -1003,6 +1011,29 @@ export class Installatore {
         : "";
     if (nc) this._nc.set(indirizzo, nc);
     return nc;
+  }
+
+  /* Il `gzip` del pannello (o quello di toybox), o "" se non c'e'. Chiesto
+   * una volta per pannello, ricordato solo se c'e'. */
+  async _gzipDelPannello(indirizzo) {
+    this._gz ??= new Map();
+    if (this._gz.has(indirizzo)) return this._gz.get(indirizzo);
+    const detto = String(
+      await this.adb
+        .shell(
+          indirizzo,
+          "command -v gzip 2>/dev/null || { toybox gzip --help >/dev/null 2>&1 && echo 'toybox gzip'; }",
+          { root: true, attesa: 10_000 },
+        )
+        .catch(() => ""),
+    )
+      .trim()
+      .split("\n")
+      .pop()
+      .trim();
+    const gz = /(^|\/)gzip$|^toybox gzip$/.test(detto) ? detto : "";
+    if (gz) this._gz.set(indirizzo, gz);
+    return gz;
   }
 
   /* I byte liberi in /data sul pannello, o null. */

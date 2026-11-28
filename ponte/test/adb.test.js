@@ -477,3 +477,49 @@ test("invio diretto: il pannello riceve il pezzo su una connessione sua, non da 
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("copia diretta compressa dal pannello: arriva .gz, e misura e impronta sono dell'immagine com'era", async () => {
+  const { mkdtempSync, readFileSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { connect } = await import("node:net");
+  const { gzipSync, gunzipSync } = await import("node:zlib");
+  const { createHash } = await import("node:crypto");
+  const dir = mkdtempSync(join(tmpdir(), "compressa-"));
+  try {
+    /* Una partizione per lo piu' vuota, come quelle del pannello. */
+    const immagine = Buffer.concat([Buffer.alloc(200_000, 9), Buffer.alloc(3_000_000, 0)]);
+    const compressa = gzipSync(immagine, { level: 1 });
+    let comando = "";
+    const avvia = (_p, argomenti) => {
+      comando = argomenti.at(-1);
+      const [, ip, porta] = /\| (?:\S+ )*?nc (\S+) (\d+)'$/.exec(comando);
+      const p = new EventEmitter();
+      p.kill = () => {};
+      const s = connect(Number(porta), ip, () => {
+        /* A pezzi, come arriva dalla rete. */
+        s.write(compressa.subarray(0, 1000));
+        s.end(compressa.subarray(1000));
+      });
+      s.on("error", () => {});
+      return p;
+    };
+    const adb = new Adb({ avvia, chiave: null });
+    const dove = join(dir, "system.img.gz");
+    const esito = await adb.copiaDiretta(
+      "1.2.3.4",
+      "dd if=/dev/block/by-name/system bs=4194304 2>/dev/null | gzip -1",
+      dove,
+      { verso: "127.0.0.1", limite: immagine.length, compressoDalPannello: true },
+    );
+    assert.equal(esito.byte, immagine.length);
+    assert.equal(esito.md5, createHash("md5").update(immagine).digest("hex"));
+    /* Sul filo e' passato molto meno dell'immagine. */
+    assert.ok(esito.ricevuti < immagine.length / 20);
+    /* Il file e' il .gz arrivato, e scompattato e' l'immagine. */
+    assert.deepEqual(gunzipSync(readFileSync(dove)), immagine);
+    assert.match(comando, /gzip -1 \| nc 127\.0\.0\.1 \d+'$/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

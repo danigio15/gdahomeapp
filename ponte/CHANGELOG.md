@@ -14,6 +14,21 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.46
+
+- **La copia di sicurezza la comprime il pannello, prima di spedirla**: su un
+  pannello col Wi-Fi lento (l'86 a 0,5 MB/s anche sulla strada diretta) il
+  limite era il filo, e sul filo passava la partizione intera, per lo più
+  vuota. Ora, se il pannello sa comprimere, comprime lui (`gzip -1`): la
+  `oem` da 256 MB diventa pochi MB, la `system` molto meno di 1,5 GB.
+  L'impronta MD5 si controlla sui dati scompattati: la copia resta
+  l'immagine com'era sul pannello. La barra dice «diretta, compressa».
+- **Stanze: entrare in un elettrodomestico non lo accende più**: toccando la
+  riga della cappa (o del forno) si apriva la sua pagina simulando un tocco
+  sulla scheda, e su quella scheda il tocco è l'interruttore: si entrava e si
+  accendeva. Ora si apre il dettaglio senza comandare niente; una luce si
+  apre col suo tasto «apri», non con la levetta.
+
 ## 1.19.45
 
 - **Le copie col pannello tornano veloci**: quando la copia diretta non
