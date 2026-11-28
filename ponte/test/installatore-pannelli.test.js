@@ -44,6 +44,7 @@ function adbCheRicorda(esitoDelloScript = "TOLTA com.sonoff.launcher (Sonoff)\nG
     },
     async shell(_ind, comando) {
       fatti.push(["shell", comando]);
+      if (comando.startsWith("pm install")) return "Success";
       return comando.startsWith("sh ") ? esitoDelloScript : "";
     },
     async connetti() {
@@ -84,7 +85,12 @@ test("installare manda lo script come file, lo lancia, e conta le app tolte", as
     assert.equal(esito.errore, undefined);
     assert.equal(esito.tolte, 2);
     /* Prima l'interfaccia, poi i pezzi di sistema, poi lo script. */
-    assert.deepEqual(adb.fatti[0], ["install", "GdAHome-Muro.apk"]);
+    assert.deepEqual(adb.fatti[0], ["push", "/data/local/tmp/gda-GdAHome-Muro.apk"]);
+    assert.ok(
+      adb.fatti.some(
+        ([c, x]) => c === "shell" && /^pm install -r -g .*gda-GdAHome-Muro\.apk/.test(x),
+      ),
+    );
     assert.ok(adb.mandati["/data/local/tmp/gda-os.sh"].includes(DI_SONOFF));
     assert.ok(adb.fatti.some(([c, x]) => c === "shell" && x === "sh /data/local/tmp/gda-os.sh"));
     /* L'86 riceve la sua animazione, e GdAHome OS diventa la schermata home. */
@@ -1053,4 +1059,45 @@ test("la fotografia va su Home Assistant dopo, dai file del pannello, e poi si t
 
 test("tornare a Sonoff toglie anche la fotografia rimasta sul pannello", () => {
   assert.ok(scriptDelRipristino().includes("rm -rf /data/local/tmp/gdahome-copia"));
+});
+
+test("un errore inatteso nell'installazione dice il perche' e il passo, non sempre la Verifica", async () => {
+  const dir = pezzi();
+  try {
+    const adb = pannelloConPosto();
+    adb.root = async () => "0";
+    adb.getprop = async () => "8.1.0";
+    adb.connetti = async () => true;
+    const shell = adb.shell;
+    adb.shell = async (i, c) => {
+      if (c.startsWith("pm install") || c.startsWith("pm path")) throw new Error("pm si e' rotto");
+      return shell(i, c);
+    };
+    adb.install = async () => {
+      throw new Error("pm si e' rotto");
+    };
+    adb.push = async () => {};
+    const inst = new Installatore({ adb, cartellaDeiPezzi: dir, passoDellaBarra: 1 });
+    inst.riconosci = async () => ({ famiglia: "nspanel" });
+    inst._installaOs = async () => {
+      throw new Error("pm si e' rotto");
+    };
+    const esito = await inst.installa({ indirizzo: "1.2.3.4", nome: "x", avanti: () => {} });
+    assert.match(esito.errore, /\(pm si e' rotto\)/);
+    assert.equal(esito.passoRotto, 2);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("se la fotografia sul pannello inciampa, l'installazione va avanti con la copia per la rete", async () => {
+  const adb = pannelloConPosto();
+  const shell = adb.shell;
+  adb.shell = async (i, c) => {
+    if (c.startsWith("rm -rf /data/local/tmp/gdahome-copia; mkdir")) throw new Error("niente su");
+    return shell(i, c);
+  };
+  const esito = await new Installatore({ adb })._fotoSulPannello("1.2.3.4");
+  assert.equal(esito.nonCiSta, true);
+  assert.match(esito.perche, /niente su/);
 });

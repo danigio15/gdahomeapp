@@ -276,9 +276,11 @@ export class Pannelli {
       throw e;
     }
     /* Un indirizzo che e' gia' un pannello GdAHome non si installa di nuovo:
-     * lo si dice, invece di farlo ricominciare da capo. */
+     * lo si dice, invece di farlo ricominciare da capo. Uno la cui
+     * installazione e' andata male si', invece: e' «Riprova l'installazione»,
+     * e prima restava bloccato li', senza un tasto per riprovare. */
     const gia = this.archivio.dati.pannelli.find(
-      (uno) => uno.indirizzo === pulito && uno.stato !== "sonoff",
+      (uno) => uno.indirizzo === pulito && uno.stato !== "sonoff" && uno.stato !== "errore",
     );
     if (gia) {
       const e = new Error(

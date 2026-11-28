@@ -1991,6 +1991,17 @@
           controllaIlPannello();
         });
         tasti.appendChild(installa);
+      } else if (uno.stato === "errore" && !alLavoro) {
+        /* Un'installazione andata male si riprova da qui: stesso pannello,
+         * stessa riga. Prima non c'era nessun tasto, e restava li'. */
+        var riprova = unTasto(due("Riprova l'installazione", "Retry the install"), "");
+        riprova.disabled = !premium;
+        riprova.addEventListener("click", function () {
+          trova("indirizzo-pannello").value = uno.indirizzo;
+          vaiA("nuovo-pannello");
+          controllaIlPannello();
+        });
+        tasti.appendChild(riprova);
       } else if (uno.aggiornabile && !alLavoro) {
         var aggiorna = unTasto(
           uno.avviso ? due("Riprova l'abbinamento", "Retry pairing") : due("Aggiorna", "Update"),

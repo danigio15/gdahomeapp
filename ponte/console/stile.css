@@ -1521,6 +1521,19 @@ summary:focus-visible,
   margin-top: 4px;
 }
 
+/* Un tasto dal testo lungo («Installa GdAHome OS — al resto pensiamo noi»)
+ * su un telefono va a capo, invece di allargare la colonna: prima usciva
+ * dalla scheda, e la barra dei passi con lui. */
+.tappa-corpo {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.tappa-corpo .bottoni > button {
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+}
+
 .tappa-corpo .avviso {
   margin: 0;
 }

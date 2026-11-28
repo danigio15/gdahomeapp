@@ -485,6 +485,15 @@ test("verifica: un indirizzo che e' gia' un pannello GdAHome non si reinstalla",
       () => pannelli.verifica("192.168.1.100"),
       (e) => e.causa === "gia_gdahome" && /Salone/.test(e.message),
     );
+    /* Uno la cui installazione e' andata male si riprova: niente blocco. */
+    pannelli.archivio.dati.pannelli.push({
+      id: "pm_b",
+      indirizzo: "192.168.1.120",
+      nome: "Corridoio",
+      stato: "errore",
+    });
+    const v = await pannelli.verifica("192.168.1.120");
+    assert.equal(v.indirizzo, "192.168.1.120");
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

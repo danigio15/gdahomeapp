@@ -14,6 +14,24 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.48
+
+- **Un pannello in errore si riprova**: dopo un'installazione andata male
+  la riga non aveva nessun tasto, e «Aggiungi un pannello» con lo stesso
+  indirizzo rispondeva che era «già GdAHome». Ora c'è «Riprova
+  l'installazione», e la verifica lo lascia passare.
+- **L'errore dice il perché**: «Qualcosa non ha funzionato» ora porta tra
+  parentesi la causa vera (intera nel registro dell'add-on), e si segna sul
+  passo dove è successo, non sempre sulla «Verifica».
+- **L'installazione non resta ferma su «Installo l'app GdAHome Muro…»**:
+  l'app, GdAHome OS e l'animazione d'avvio vanno sul pannello per la strada
+  diretta, con la barra, come negli aggiornamenti (prima con `adb`, lento e
+  muto sul Wi-Fi dell'86).
+- **Se la copia sul pannello inciampa**, l'installazione non si ferma: va
+  con la copia per la rete.
+- **Il tasto e la barra dell'installazione restano nella scheda**: sul
+  telefono il tasto lungo non andava a capo e usciva dal bordo, con la barra.
+
 ## 1.19.47
 
 - **La copia di sicurezza non si aspetta più**: invece di mandarla subito

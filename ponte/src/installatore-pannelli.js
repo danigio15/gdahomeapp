@@ -341,7 +341,14 @@ export class Installatore {
 
   /* Installazione completa. `avanti({passo, dettaglio, percento})` avvisa la
    * console a ogni passo. Torna { errore?, passoRotto?, os, app, modello, … }. */
-  async installa({ indirizzo, planciaId, utente, nome, avanti }) {
+  async installa({ indirizzo, planciaId, utente, nome, avanti: dillo }) {
+    /* Il passo a cui si e' arrivati: un errore inatteso si segna li', non
+     * sempre sulla «Verifica». */
+    let passo = 0;
+    const avanti = (cosa) => {
+      passo = cosa.passo ?? passo;
+      dillo(cosa);
+    };
     try {
       /* 0. I pezzi ci sono? Meglio accorgersene prima di toccare il pannello. */
       const osApk = "GdAHome-OS.apk";
@@ -400,7 +407,10 @@ export class Installatore {
 
       /* Ogni passo dice la fase in cui e', con la sua barra: «Installazione»
        * ferma su «Copio i file sul pannello…» non diceva se andava avanti. */
-      const fase = (passo) => (testo, percento) => avanti({ passo, dettaglio: testo, percento });
+      const fase = (n) => {
+        passo = n;
+        return (testo, percento) => avanti({ passo: n, dettaglio: testo, percento });
+      };
 
       // 3. Installazione
       const inst = await this._installaOs(indirizzo, modello, osApk, muroApk, fase(2));
@@ -449,7 +459,7 @@ export class Installatore {
         ...daPortare,
       };
     } catch (errore) {
-      return { errore: scusa(errore) };
+      return { errore: scusa(errore), passoRotto: passo };
     }
   }
 
@@ -947,6 +957,18 @@ export class Installatore {
    * (`portaLaCopia`). Torna { foto }, { nonCiSta } se sul pannello non c'e'
    * posto, o { errore }. */
   async _fotoSulPannello(indirizzo, avanti = () => {}) {
+    try {
+      return await this._fotografa(indirizzo, avanti);
+    } catch (errore) {
+      /* Qualunque inciampo qui non ferma l'installazione: si torna alla
+       * copia per la rete, che c'era prima. */
+      console.error(`[pannelli] fotografia sul pannello ${indirizzo}:`, errore);
+      await this.adb.shell(indirizzo, `rm -rf ${FOTO}`, { root: true }).catch(() => {});
+      return { nonCiSta: true, perche: errore?.message || String(errore) };
+    }
+  }
+
+  async _fotografa(indirizzo, avanti) {
     const parti = await this._lePartizioni(indirizzo);
     if (parti.errore) return parti;
     const { byName, nomi, misure, totale } = parti;
@@ -1223,18 +1245,36 @@ export class Installatore {
     try {
       /* Prima l'app GdAHome Muro (l'interfaccia): se qualcosa va storto dopo,
        * il pannello ce l'ha gia'. */
+      /* Come negli aggiornamenti: per la strada diretta e con la barra. Con
+       * `adb install` sul Wi-Fi lento dell'86 si restava minuti fermi su
+       * «Installo l'app GdAHome Muro…», senza sapere se andava avanti. */
+      const dentro = (k) => (testo, percento) =>
+        dice(
+          `${testo} (${k}/${fasi})`,
+          Math.round(((k - 1 + Math.min(100, percento ?? 0) / 100) / fasi) * 100),
+        );
       a(1, "Installo l'app GdAHome Muro…");
-      await this.adb.install(indirizzo, this._pezzo(muroApk), { permessi: true });
+      await this._installaConLaBarra(indirizzo, muroApk, {
+        nome: "l'app GdAHome Muro",
+        permessi: true,
+        dice: dentro(1),
+      });
       /* La WebView, se c'e' il pezzo e serve. */
       if (this._ceIlPezzo("webview.apk"))
         await this.adb.install(indirizzo, this._pezzo("webview.apk")).catch(() => {});
       /* I pezzi di sistema. */
       a(2, "Copio GdAHome OS sul pannello…");
-      await this.adb.push(indirizzo, this._pezzo(osApk), `${tmp}/GdAHome-OS.apk`);
+      await this._portaSu(indirizzo, osApk, `${tmp}/GdAHome-OS.apk`, "GdAHome OS", dentro(2));
       const anim = modello ? animazione(modello) : "";
       a(3, "Copio l'animazione d'avvio…");
       if (anim && this._ceIlPezzo(anim))
-        await this.adb.push(indirizzo, this._pezzo(anim), `${tmp}/bootanimation.zip`);
+        await this._portaSu(
+          indirizzo,
+          anim,
+          `${tmp}/bootanimation.zip`,
+          "l'animazione d'avvio",
+          dentro(3),
+        );
       const serial = "gdaserial-arm64-v8a";
       a(4, "Copio il ponte Zigbee…");
       if (this._ceIlPezzo(serial))
@@ -1818,6 +1858,15 @@ export class Installatore {
     }
   }
 
+  /* Un pezzo sul pannello, dove serve: per la strada diretta con la barra,
+   * o con `adb push` se quella non va. */
+  async _portaSu(indirizzo, pezzo, remoto, nome, dice = () => {}) {
+    const locale = this._pezzo(pezzo);
+    const misura = statSync(locale).size || 1;
+    if (await this._mandaDiretto(indirizzo, locale, remoto, misura, nome, dice, Date.now())) return;
+    await this.adb.push(indirizzo, locale, remoto);
+  }
+
   /* Installa da /data/local/tmp quello che c'e' gia' sul pannello. */
   async _installaDaQui(indirizzo, remoto, { nome, permessi = false, dice = () => {} }) {
     dice(`Installo ${nome}…`, 90);
@@ -2054,5 +2103,14 @@ function scusa(errore) {
   if (errore?.causa === "non_autorizzato")
     return "Il pannello chiede di autorizzare questo add-on: tocca «Consenti» sullo schermo.";
   if (errore?.causa === "spazio") return "Spazio insufficiente sul pannello.";
-  return "Qualcosa non ha funzionato sul pannello. Riprova.";
+  /* Il perche' vero, in breve: senza, «Qualcosa non ha funzionato» non
+   * dice dove guardare. Intero nel registro dell'add-on. */
+  console.error("[pannelli]", errore);
+  const breve = String(errore?.message || errore || "")
+    .split("\n")[0]
+    .trim()
+    .slice(0, 160);
+  return breve
+    ? `Qualcosa non ha funzionato sul pannello (${breve}). Riprova.`
+    : "Qualcosa non ha funzionato sul pannello. Riprova.";
 }
