@@ -2189,29 +2189,60 @@
     trova("titolo-analisi").textContent =
       due("Analisi di «", "Check of “") + ilNomeDelPannello(uno) + due("»", "”");
     stato.textContent = due(
-      "Chiedo al pannello come sta… ci vuole una ventina di secondi.",
-      "Asking the panel how it's doing… it takes about twenty seconds.",
+      "Chiedo al pannello come sta… ci vuole un paio di minuti: intanto usalo, scorri e accendi qualche luce.",
+      "Asking the panel how it's doing… it takes a couple of minutes: meanwhile use it, scroll and switch a few lights.",
     );
     testo.hidden = true;
     copia.hidden = true;
     scheda.hidden = false;
     scheda.scrollIntoView({ behavior: "smooth", block: "start" });
-    return chiedi("api/pannelli/" + encodeURIComponent(uno.id) + "/analisi", {
-      method: "POST",
-      body: "{}",
-    })
-      .then(function (risposta) {
-        testo.textContent = (risposta && risposta.rapporto) || "";
-        testo.hidden = false;
-        copia.hidden = false;
-        stato.textContent = due(
-          "Fatto. Copialo e mandalo a chi ti aiuta: dice come sta il pannello e cosa lo rallenta.",
-          "Done. Copy it and send it to whoever is helping you: it says how the panel is doing and what slows it down.",
-        );
+    /* In sottofondo: la misura della rete la fa durare un paio di minuti, e
+     * una richiesta tenuta aperta tanto cadeva per strada («Failed to
+     * fetch»). Si fa partire, e si chiede a che punto e'. */
+    var via = "api/pannelli/" + encodeURIComponent(uno.id);
+    var fatta = function (risposta) {
+      testo.textContent = (risposta && risposta.rapporto) || "";
+      testo.hidden = false;
+      copia.hidden = false;
+      stato.textContent = due(
+        "Fatto. Copialo e mandalo a chi ti aiuta: dice come sta il pannello e cosa lo rallenta.",
+        "Done. Copy it and send it to whoever is helping you: it says how the panel is doing and what slows it down.",
+      );
+    };
+    var andataMale = function (parole) {
+      stato.textContent = due("L'analisi non è riuscita: ", "The check failed: ") + parole;
+    };
+    var sbagli = 0;
+    var guarda = function () {
+      chiedi(via + "/rapporto", { method: "POST", body: "{}" })
+        .then(function (r) {
+          sbagli = 0;
+          if (r && r.fatto) {
+            if (r.errore) andataMale(r.errore);
+            else fatta(r);
+            return;
+          }
+          stato.textContent = due(
+            "Misuro il pannello e la rete… " + ((r && r.secondi) || 0) + " s (un paio di minuti).",
+            "Measuring the panel and the network… " +
+              ((r && r.secondi) || 0) +
+              " s (a couple of minutes).",
+          );
+          setTimeout(guarda, 3000);
+        })
+        .catch(function (errore) {
+          /* Un intoppo di rete della console non ferma l'analisi: si riprova. */
+          sbagli += 1;
+          if (sbagli > 5) return andataMale(errore.message);
+          setTimeout(guarda, 3000);
+        });
+    };
+    return chiedi(via + "/analizza", { method: "POST", body: "{}" })
+      .then(function () {
+        setTimeout(guarda, 3000);
       })
       .catch(function (errore) {
-        stato.textContent =
-          due("L'analisi non è riuscita: ", "The check failed: ") + errore.message;
+        andataMale(errore.message);
       });
   }
 

@@ -14,6 +14,13 @@ alla riga «Versione» della Panoramica. Sono due numeri perché sono due cose.
 suoi (`app/CHANGELOG.md`): un rilascio dell'app non fa più comparire un
 aggiornamento dell'add-on che dentro non ha niente di nuovo, e al contrario.
 
+## 1.19.52
+
+- **L'analisi del pannello non cade più a metà**: con la misura della rete
+  dura un paio di minuti, e la richiesta della console tenuta aperta tanto
+  cadeva per strada («Failed to fetch»). Ora parte in sottofondo, e la
+  console chiede a che punto è ogni tre secondi, coi secondi passati.
+
 ## 1.19.51
 
 - **L'86 si installa anche con /system pieno**: la sua partizione di sistema

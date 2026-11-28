@@ -965,3 +965,26 @@ test("un lavoro sul pannello mette in pausa la copia in viaggio, che riparte dop
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("l'analisi in sottofondo: «analizza» la fa partire, «rapporto» la segue fino alla fine", async () => {
+  const dir = cartella();
+  try {
+    let lascia;
+    const inst = installatoreFinto();
+    inst.analisi = () => new Promise((r) => (lascia = r));
+    const pannelli = new Pannelli({ cartella: dir, installatore: inst, licenze: premium });
+    pannelli.archivio.dati.pannelli.push({ id: "pm_a", indirizzo: "10.0.0.1", stato: "pronto" });
+    assert.equal((await pannelli.azione("pm_a", "analizza")).avviata, true);
+    /* Una seconda richiesta non ne fa partire un'altra. */
+    await pannelli.azione("pm_a", "analizza");
+    assert.equal((await pannelli.azione("pm_a", "rapporto")).fatto, false);
+    lascia("== Dispositivo ==\nNSPanel");
+    await new Promise((r) => setTimeout(r, 5));
+    const r = await pannelli.azione("pm_a", "rapporto");
+    assert.equal(r.fatto, true);
+    assert.match(r.rapporto, /NSPanel/);
+    assert.match(r.rapporto, /Collegamento con la casa/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

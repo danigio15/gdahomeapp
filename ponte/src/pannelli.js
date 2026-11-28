@@ -815,6 +815,11 @@ export class Pannelli {
     if (cosa === "aggiorna") return this._aggiorna(pannello);
     if (cosa === "riavvia") return this._riavvia(pannello);
     if (cosa === "analisi") return this._analisi(pannello);
+    /* L'analisi in sottofondo: con la misura della rete dura un paio di
+     * minuti, e una richiesta tenuta aperta tanto cade per strada («Failed
+     * to fetch»). «analizza» la fa partire, «rapporto» dice a che punto e'. */
+    if (cosa === "analizza") return this._analizza(pannello);
+    if (cosa === "rapporto") return this._rapporto(pannello);
     if (cosa === "sonoff") return this._sonoff(pannello);
     const e = new Error("Azione sconosciuta.");
     e.perUtente = true;
@@ -961,6 +966,31 @@ export class Pannelli {
   async _riavvia(pannello) {
     await this.installatore.riavvia({ indirizzo: pannello.indirizzo });
     return { fatto: true };
+  }
+
+  _analizza(pannello) {
+    this._analisiInCorso ??= new Map();
+    const gia = this._analisiInCorso.get(pannello.id);
+    if (gia && !gia.fatto) return { avviata: true, dal: gia.dal };
+    const una = { fatto: false, dal: this.adesso(), rapporto: "", errore: "" };
+    this._analisiInCorso.set(pannello.id, una);
+    this._analisi(pannello)
+      .then(({ rapporto }) => {
+        una.rapporto = rapporto;
+      })
+      .catch((e) => {
+        una.errore = messaggioDi(e);
+      })
+      .finally(() => {
+        una.fatto = true;
+      });
+    return { avviata: true, dal: una.dal };
+  }
+
+  _rapporto(pannello) {
+    const una = this._analisiInCorso?.get(pannello.id);
+    if (!una) return { fatto: true, errore: "Nessuna analisi in corso." };
+    return { ...una, secondi: Math.round((this.adesso() - una.dal) / 1000) };
   }
 
   async _analisi(pannello) {
